@@ -24,6 +24,7 @@
 namespace localization_common {
 template <typename MeasurementType>
 class MeasurementBuffer {
+ public:
   void AddMeasurement(const Time time, const MeasurementType& measurement) { measurements_.emplace(time, measurement); }
 
   boost::optional<MeasurementType> GetMeasurement(const localization_common::Time time) {
@@ -32,13 +33,48 @@ class MeasurementBuffer {
     return measurement_it->second;
   }
 
+  boost::optional<MeasurementType> GetNearbyMeasurement(const localization_common::Time time, const double tolerance) {
+    const auto upper_bound_it = measurements_.lower_bound(time);
+    if (upper_bound_it == measurements_.begin()) {
+      if (ValidTime(upper_bound_it->first, time, tolerance)) {
+        return upper_bound_it->second;
+      } else {
+        return boost::none;
+      }
+    }
+    if (upper_bound_it == measurements_.end()) {
+      const auto last_measurement_it = measurements_.rbegin();
+      if (ValidTime(last_measurement_it->first, time, tolerance)) {
+        return last_measurement_it->second;
+      } else {
+        return boost::none;
+      }
+    }
+
+    const auto lower_bound_it = std::prev(upper_bound_it);
+    const double lower_bound_time_diff = std::abs(lower_bound_it->first - time);
+    const double upper_bound_time_diff = std::abs(upper_bound_it->first - time);
+    const auto closest_measurement_it =
+      lower_bound_time_diff <= upper_bound_time_diff ? lower_bound_it : upper_bound_it;
+    if (ValidTime(closest_measurement_it->first, time, tolerance)) {
+      return closest_measurement_it->second;
+    }
+    return boost::none;
+  }
+
   void ClearBuffer(const Time oldest_allowed_time) {
     const auto measurement_it = measurements_.find(oldest_allowed_time);
     if (measurement_it == measurements_.end()) return;
     measurements_.erase(measurements_.begin(), measurement_it);
   }
 
+  const std::map<Time, MeasurementType>& measurements() { return measurements_; }
+
  private:
+  bool ValidTime(const localization_common::Time time_a, const localization_common::Time time_b,
+                 const double tolerance) {
+    return std::abs(time_a - time_b) <= tolerance;
+  }
   std::map<Time, MeasurementType> measurements_;
 };
 }  // namespace localization_common

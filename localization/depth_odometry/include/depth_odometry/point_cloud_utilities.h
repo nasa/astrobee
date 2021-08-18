@@ -27,34 +27,56 @@
 #include <pcl/point_types.h>
 
 namespace depth_odometry {
-void EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const double search_radius,
-                     pcl::PointCloud<pcl::PointNormal>& cloud_with_normals);
-Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
-                         const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud);
+void EstimateNormals(const pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double search_radius,
+                     pcl::PointCloud<pcl::PointXYZINormal>& cloud_with_normals);
+Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
+                         const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud);
 // TODO(rsoussan): Move these functions to utilities
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
-  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals);
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals);
 Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
                                      const gtsam::Pose3& relative_transform);
-bool ValidPointNormal(const pcl::PointNormal& point);
-void RemoveNansAndZerosFromPointXYZs(pcl::PointCloud<pcl::PointXYZ>& cloud);
-void RemoveNansAndZerosFromPointNormals(pcl::PointCloud<pcl::PointNormal>& cloud);
+
+template <typename PointType>
+bool ValidPoint(const PointType& point) = delete;
+
+template <>
+bool ValidPoint<pcl::PointXYZ>(const pcl::PointXYZ& point);
+
+template <>
+bool ValidPoint<pcl::PointXYZI>(const pcl::PointXYZI& point);
+
+template <>
+bool ValidPoint<pcl::PointNormal>(const pcl::PointNormal& point);
+
+template <>
+bool ValidPoint<pcl::PointXYZINormal>(const pcl::PointXYZINormal& point);
 
 template <typename PointXYZType>
-bool ValidPoint(const PointXYZType& point) {
-  bool valid_point = true;
+bool ValidPointXYZ(const PointXYZType& point) {
   const bool finite_point = pcl_isfinite(point.x) && pcl_isfinite(point.y) && pcl_isfinite(point.z);
   const bool nonzero_point = point.x != 0 || point.y != 0 || point.z != 0;
-  valid_point &= finite_point;
-  valid_point &= nonzero_point;
-  return valid_point;
+  return finite_point && nonzero_point;
 }
 
-template <typename ValidatorFunction, typename PointType>
-void RemoveNansAndZerosFromPointTypes(ValidatorFunction validator, pcl::PointCloud<PointType>& cloud) {
+template <typename PointNormalType>
+bool ValidNormal(const PointNormalType& point) {
+  const bool finite_normal =
+    pcl_isfinite(point.normal_x) && pcl_isfinite(point.normal_y) && pcl_isfinite(point.normal_z);
+  const bool nonzero_normal = point.normal_x != 0 || point.normal_y != 0 || point.normal_z != 0;
+  return finite_normal && nonzero_normal;
+}
+
+template <typename PointIntensityType>
+bool ValidIntensity(const PointIntensityType& point) {
+  return pcl_isfinite(point.intensity);
+}
+
+template <typename PointType>
+void RemoveNansAndZerosFromPoints(pcl::PointCloud<PointType>& cloud) {
   size_t new_index = 0;
   for (const auto& point : cloud.points) {
-    const bool valid_point = validator(point);
+    const bool valid_point = ValidPoint(point);
     if (!valid_point) continue;
     cloud.points[new_index++] = point;
   }

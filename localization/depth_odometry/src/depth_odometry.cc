@@ -42,33 +42,45 @@ DepthOdometry::DepthOdometry() {
   icp_.reset(new ICP(params_.icp));
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
-  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
-  RemoveNansAndZerosFromPointXYZs(*(depth_cloud.second));
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthImageCallback(
+  const lm::DepthImageMeasurement& depth_image_measurement) {
+  // TODO(rsoussan): Ensure only one of these is enabled
+  if (params_.depth_point_cloud_registration_enabled) return PointCloudCallback(depth_image_measurement);
+  if (params_.depth_image_registration_enabled) return ImageCallback(depth_image_measurement);
+  return boost::none;
+}
+
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::PointCloudCallback(
+  const lm::DepthImageMeasurement& depth_image_measurement) {
+  pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
+  pcl::copyPointCloud(*(depth_image_measurement.point_cloud), *filtered_cloud);
+  RemoveNansAndZerosFromPoints(*filtered_cloud);
   if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) {
-    latest_depth_cloud_ = depth_cloud;
+    latest_depth_cloud_ = std::make_pair(depth_image_measurement.timestamp, filtered_cloud);
     return boost::none;
   }
-  if (depth_cloud.first < latest_depth_cloud_.first) {
-    LogWarning("DepthCloudCallback: Out of order measurement received.");
+  const lc::Time timestamp = depth_image_measurement.timestamp;
+  if (timestamp < latest_depth_cloud_.first) {
+    LogWarning("PointCloudCallback: Out of order measurement received.");
     return boost::none;
   }
-  LogError("t: " << std::setprecision(15) << depth_cloud.first);
+  LogError("t: " << std::setprecision(15) << timestamp);
   previous_depth_cloud_ = latest_depth_cloud_;
-  latest_depth_cloud_ = depth_cloud;
+  latest_depth_cloud_ = std::make_pair(depth_image_measurement.timestamp, filtered_cloud);
+
   const double time_diff = latest_depth_cloud_.first - previous_depth_cloud_.first;
   if (time_diff > params_.max_time_diff) {
-    LogWarning("DepthCloudCallback: Time difference too large, time diff: " << time_diff);
+    LogWarning("PointCloudCallback: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
   auto relative_transform = icp_->ComputeRelativeTransform(previous_depth_cloud_.second, latest_depth_cloud_.second);
   if (!relative_transform) {
-    LogWarning("DepthCloudCallback: Failed to get relative transform.");
+    LogWarning("PointCloudCallback: Failed to get relative transform.");
     return boost::none;
   }
 
   if (!CovarianceSane(relative_transform->second)) {
-    LogWarning("DepthCloudCallback: Sanity check failed - invalid covariance.");
+    LogWarning("PointCloudCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
@@ -84,14 +96,14 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   return relative_transform;
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthImageCallback(
-  const lm::ImageMeasurement& depth_image) {
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::ImageCallback(
+  const lm::DepthImageMeasurement& depth_image) {
   if (!previous_depth_image_ && !latest_depth_image_) {
     latest_depth_image_ = depth_image;
     return boost::none;
   }
   if (depth_image.timestamp < latest_depth_image_->timestamp) {
-    LogWarning("DepthImageCallback: Out of order measurement received.");
+    LogWarning("ImageCallback: Out of order measurement received.");
     return boost::none;
   }
   LogError("t: " << std::setprecision(15) << depth_image.timestamp);
@@ -99,14 +111,14 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   latest_depth_image_ = depth_image;
   const double time_diff = latest_depth_image_->timestamp - previous_depth_image_->timestamp;
   if (time_diff > params_.max_time_diff) {
-    LogWarning("DepthImageCallback: Time difference too large, time diff: " << time_diff);
+    LogWarning("ImageCallback: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
 
-  depth_image_aligner_->AddLatestImage(latest_depth_image_->image, latest_depth_image_->timestamp);
+  depth_image_aligner_->AddLatestDepthImage(*latest_depth_image_);
   auto relative_transform = depth_image_aligner_->ComputeRelativeTransform();
   if (!relative_transform) {
-    LogWarning("DepthImageCallback: Failed to get relative transform.");
+    LogWarning("ImageCallback: Failed to get relative transform.");
     return boost::none;
   }
 

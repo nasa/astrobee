@@ -33,24 +33,26 @@ class ICP {
   ICP(const ICPParams& params);
   const pcl::Correspondences& correspondences() const;
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+    const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
 
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> RunICP(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+    const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> RunCoarseToFineICP(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+    const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
-  void FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
-                             const pcl::PointCloud<pcl::PointNormal>& target_cloud,
+  void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
+                             const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
                              pcl::Correspondences& correspondences) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
-    const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud_transformed, const Eigen::Isometry3d& relative_transform);
-  Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
+    const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
+    const Eigen::Isometry3d& relative_transform);
+  Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointXYZINormal& source_point,
+                                       const pcl::PointXYZINormal& target_point,
                                        const Eigen::Isometry3d& relative_transform) const;
 
   pcl::Correspondences correspondences_;

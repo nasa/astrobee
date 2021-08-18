@@ -47,7 +47,7 @@ ICP::ICP(const ICPParams& params) : params_(params) {}
 const pcl::Correspondences& ICP::correspondences() const { return correspondences_; }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::ComputeRelativeTransform(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
   if (params_.coarse_to_fine) {
     return RunCoarseToFineICP(source_cloud, target_cloud, initial_estimate);
@@ -57,14 +57,14 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunICP(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
   static lc::Timer icp_timer("ICP");
   icp_timer.Start();
-  pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>);
   EstimateNormals(target_cloud, params_.search_radius, *target_cloud_with_normals);
 
-  pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>);
   if (params_.symmetric_objective) {
     EstimateNormals(source_cloud, params_.search_radius, *source_cloud_with_normals);
   } else {
@@ -72,14 +72,15 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
   }
 
   LogError("target pre remove size: " << target_cloud_with_normals->points.size());
-  RemoveNansAndZerosFromPointNormals(*source_cloud_with_normals);
-  RemoveNansAndZerosFromPointNormals(*target_cloud_with_normals);
+  RemoveNansAndZerosFromPoints(*source_cloud_with_normals);
+  RemoveNansAndZerosFromPoints(*target_cloud_with_normals);
   LogError("target post remove size: " << target_cloud_with_normals->points.size());
 
-  pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
+  pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal> icp;
   if (params_.symmetric_objective) {
-    auto symmetric_transformation_estimation = boost::make_shared<
-      pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<pcl::PointNormal, pcl::PointNormal>>();
+    auto symmetric_transformation_estimation =
+      boost::make_shared<pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<pcl::PointXYZINormal,
+                                                                                             pcl::PointXYZINormal>>();
     symmetric_transformation_estimation->setEnforceSameDirectionNormals(params_.enforce_same_direction_normals);
     icp.transformation_estimation_ = symmetric_transformation_estimation;
   }
@@ -87,10 +88,11 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
   if (params_.correspondence_rejector_surface_normal) {
     pcl::registration::CorrespondenceRejectorSurfaceNormal2::Ptr correspondence_rejector_surface_normal(
       new pcl::registration::CorrespondenceRejectorSurfaceNormal2());
-    correspondence_rejector_surface_normal->initializeDataContainer<pcl::PointXYZ, pcl::PointNormal>();
+    correspondence_rejector_surface_normal->initializeDataContainer<pcl::PointXYZI, pcl::PointXYZINormal>();
     correspondence_rejector_surface_normal->setThreshold(params_.correspondence_rejector_surface_normal_threshold);
-    correspondence_rejector_surface_normal->setInputNormals<pcl::PointXYZ, pcl::PointNormal>(source_cloud_with_normals);
-    correspondence_rejector_surface_normal->setTargetNormals<pcl::PointXYZ, pcl::PointNormal>(
+    correspondence_rejector_surface_normal->setInputNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+      source_cloud_with_normals);
+    correspondence_rejector_surface_normal->setTargetNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
       target_cloud_with_normals);
     icp.addCorrespondenceRejector(correspondence_rejector_surface_normal);
   }
@@ -98,7 +100,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
   icp.setInputSource(source_cloud_with_normals);
   icp.setInputTarget(target_cloud_with_normals);
   icp.setMaximumIterations(params_.max_iterations);
-  pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr result(new pcl::PointCloud<pcl::PointXYZINormal>);
   icp.align(*result, initial_estimate.matrix().cast<float>());
 
   if (!icp.hasConverged()) {
@@ -127,15 +129,15 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunCoarseToFineICP(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
   static lc::Timer coarse_to_fine_icp_timer("Coarse To Fine ICP");
   coarse_to_fine_icp_timer.Start();
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> latest_relative_transform(
     std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{initial_estimate, Eigen::Matrix<double, 6, 6>()});
   for (int i = 0; i < params_.num_coarse_to_fine_levels; ++i) {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr icp_source_cloud;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr icp_target_cloud;
+    pcl::PointCloud<pcl::PointXYZI>::Ptr icp_source_cloud;
+    pcl::PointCloud<pcl::PointXYZI>::Ptr icp_target_cloud;
     if (i == params_.num_coarse_to_fine_levels - 1 && !params_.downsample_last_coarse_to_fine_iteration) {
       icp_source_cloud = source_cloud;
       icp_target_cloud = target_cloud;
@@ -145,8 +147,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
       const double leaf_size = leaf_size_ratio * params_.coarse_to_fine_final_leaf_size;
       LogError("i: " << i << ", leaf size ratio " << leaf_size_ratio << ", leaf size: " << leaf_size);
       // TODO(rsoussan): Why does template deduction fail without this?
-      icp_source_cloud = DownsamplePointCloud<pcl::PointXYZ>(source_cloud, leaf_size);
-      icp_target_cloud = DownsamplePointCloud<pcl::PointXYZ>(target_cloud, leaf_size);
+      icp_source_cloud = DownsamplePointCloud<pcl::PointXYZI>(source_cloud, leaf_size);
+      icp_target_cloud = DownsamplePointCloud<pcl::PointXYZI>(target_cloud, leaf_size);
       LogError("source pre downsample size: " << source_cloud->points.size()
                                               << ", post: " << icp_source_cloud->points.size());
       LogError("target pre downsample size: " << target_cloud->points.size()
@@ -163,7 +165,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
   return latest_relative_transform;
 }
 
-Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
+Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointXYZINormal& source_point,
+                                          const pcl::PointXYZINormal& target_point,
                                           const Eigen::Isometry3d& relative_transform) const {
   const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
   const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
@@ -171,8 +174,8 @@ Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointNormal& source_point, 
   return depth_odometry::Jacobian(gt_point, gt_normal, gt_relative_transform);
 }
 
-void ICP::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
-                                const pcl::PointCloud<pcl::PointNormal>& target_cloud,
+void ICP::FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
+                                const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
                                 pcl::Correspondences& correspondences) const {
   for (auto correspondence_it = correspondences.begin(); correspondence_it != correspondences.end();) {
     const auto& input_point = (input_cloud)[correspondence_it->index_query];
@@ -190,9 +193,10 @@ void ICP::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_c
 }
 
 Eigen::Matrix<double, 6, 6> ICP::ComputeCovarianceMatrix(
-  const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
-  const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
-  const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud_transformed, const Eigen::Isometry3d& relative_transform) {
+  const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
+  const Eigen::Isometry3d& relative_transform) {
   icp.correspondence_estimation_->setInputSource(source_cloud_transformed);
   correspondences_.clear();
   // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object

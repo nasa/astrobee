@@ -103,7 +103,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
     // Test each correspondence
     for (size_t i = 0; i < original_correspondences.size(); ++i) {
       // TODO(rsoussan): Abs val?
-      if (std::abs(boost::static_pointer_cast<DataContainer<pcl::PointXYZ, pcl::PointNormal> >(data_container_)
+      if (std::abs(boost::static_pointer_cast<DataContainer<pcl::PointXYZI, pcl::PointXYZINormal> >(data_container_)
                      ->getCorrespondenceScoreFromNormals(original_correspondences[i])) > threshold_) {
         remaining_correspondences[number_valid_correspondences++] = original_correspondences[i];
       }
@@ -229,7 +229,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    return (boost::static_pointer_cast<DataContainer<pcl::PointXYZ, NormalT> >(data_container_)->getInputNormals());
+    return (boost::static_pointer_cast<DataContainer<pcl::PointXYZI, NormalT> >(data_container_)->getInputNormals());
   }
 
   /** \brief Set the normals computed on the target point cloud
@@ -257,7 +257,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    return (boost::static_pointer_cast<DataContainer<pcl::PointXYZ, NormalT> >(data_container_)->getTargetNormals());
+    return (boost::static_pointer_cast<DataContainer<pcl::PointXYZI, NormalT> >(data_container_)->getTargetNormals());
   }
 
   /** \brief See if this rejector requires source points */
@@ -265,10 +265,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Blob method for setting the source cloud */
   void setSourcePoints(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZ, Normal>();
-    PointCloud<PointXYZ>::Ptr cloud(new PointCloud<PointXYZ>);
+    if (!data_container_) initializeDataContainer<PointXYZI, Normal>();
+    PointCloud<PointXYZI>::Ptr cloud(new PointCloud<PointXYZI>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setInputSource<PointXYZ>(cloud);
+    setInputSource<PointXYZI>(cloud);
   }
 
   /** \brief See if this rejector requires a target cloud */
@@ -276,10 +276,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Method for setting the target cloud */
   void setTargetPoints(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZ, Normal>();
-    PointCloud<PointXYZ>::Ptr cloud(new PointCloud<PointXYZ>);
+    if (!data_container_) initializeDataContainer<PointXYZI, Normal>();
+    PointCloud<PointXYZI>::Ptr cloud(new PointCloud<PointXYZI>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setInputTarget<PointXYZ>(cloud);
+    setInputTarget<PointXYZI>(cloud);
   }
 
   /** \brief See if this rejector requires source normals */
@@ -287,10 +287,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Blob method for setting the source normals */
   void setSourceNormals(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZ, pcl::PointNormal>();
-    PointCloud<pcl::PointNormal>::Ptr cloud(new PointCloud<pcl::PointNormal>);
+    if (!data_container_) initializeDataContainer<PointXYZI, pcl::PointXYZINormal>();
+    PointCloud<pcl::PointXYZINormal>::Ptr cloud(new PointCloud<pcl::PointXYZINormal>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setInputNormals<PointXYZ, pcl::PointNormal>(cloud);
+    setInputNormals<PointXYZI, pcl::PointXYZINormal>(cloud);
   }
 
   /** \brief See if this rejector requires target normals*/
@@ -298,10 +298,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Method for setting the target normals */
   void setTargetNormals(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZ, pcl::PointNormal>();
-    PointCloud<pcl::PointNormal>::Ptr cloud(new PointCloud<pcl::PointNormal>);
+    if (!data_container_) initializeDataContainer<PointXYZI, pcl::PointXYZINormal>();
+    PointCloud<pcl::PointXYZINormal>::Ptr cloud(new PointCloud<pcl::PointXYZINormal>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setTargetNormals<PointXYZ, pcl::PointNormal>(cloud);
+    setTargetNormals<PointXYZI, pcl::PointXYZINormal>(cloud);
   }
 
  protected:

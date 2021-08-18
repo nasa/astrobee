@@ -72,22 +72,26 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 }
 
 void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  const auto pose_msg = depth_odometry_wrapper_.DepthCloudCallback(depth_cloud_msg);
-  if (!pose_msg) return;
-  odom_pub_.publish(*pose_msg);
-  const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
-  point_cloud_correspondences_pub_.publish(correspondences_msg);
-  if (params_.publish_point_clouds) {
-    PublishPointClouds();
+  const auto pose_msgs = depth_odometry_wrapper_.DepthCloudCallback(depth_cloud_msg);
+  for (const auto& pose_msg : pose_msgs) {
+    odom_pub_.publish(pose_msg);
   }
+  // TODO(rsoussan): add this back
+  // const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
+  // point_cloud_correspondences_pub_.publish(correspondences_msg);
+  // if (params_.publish_point_clouds) {
+  //  PublishPointClouds();
+  //}
 }
 
 void DepthOdometryNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  const auto pose_msg = depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
-  if (!pose_msg) return;
-  odom_pub_.publish(*pose_msg);
-  const auto correspondences_msg = depth_odometry_wrapper_.GetDepthImageCorrespondencesMsg();
-  image_correspondences_pub_.publish(correspondences_msg);
+  const auto pose_msgs = depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
+  for (const auto& pose_msg : pose_msgs) {
+    odom_pub_.publish(pose_msg);
+  }
+  // TODO(rsoussan): add this back
+  // const auto correspondences_msg = depth_odometry_wrapper_.GetDepthImageCorrespondencesMsg();
+  // image_correspondences_pub_.publish(correspondences_msg);
 }
 
 void DepthOdometryNodelet::PublishPointClouds() const {

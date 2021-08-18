@@ -22,6 +22,7 @@
 
 namespace depth_odometry {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
   brisk_detector_ =
@@ -32,28 +33,26 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : pa
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
 DepthImageAligner::ComputeRelativeTransform() {
-  if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
+  if (!previous_brisk_depth_image_ || !latest_brisk_depth_image_) return boost::none;
   std::vector<cv::DMatch> matches;
-  flann_matcher_->match(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches);
+  flann_matcher_->match(previous_brisk_depth_image_->descriptors(), latest_brisk_depth_image_->descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());
   const auto filtered_end = std::remove_if(matches.begin(), matches.end(), [this](const cv::DMatch& match) {
     return match.distance > params_.max_match_hamming_distance;
   });
   matches.erase(filtered_end, matches.end());
-  correspondences_.reset(new ImageCorrespondences(matches, previous_brisk_image_->keypoints(),
-                                                  latest_brisk_image_->keypoints(), previous_image_time_,
-                                                  latest_image_time_));
-  LogError("keypoints a: " << previous_brisk_image_->keypoints().size()
-                           << ", b: " << latest_brisk_image_->keypoints().size());
+  correspondences_.reset(
+    new ImageCorrespondences(matches, previous_brisk_depth_image_->keypoints(), latest_brisk_depth_image_->keypoints(),
+                             previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp));
+  LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
+                           << ", b: " << latest_brisk_depth_image_->keypoints().size());
   LogError("matches post filtering: " << matches.size());
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{Eigen::Isometry3d::Identity(),
                                                                    Eigen::Matrix<double, 6, 6>::Zero()};
 }
 
-void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image, const lc::Time latest_image_time) {
-  previous_brisk_image_ = std::move(latest_brisk_image_);
-  latest_brisk_image_.reset(new BriskImage(latest_image, brisk_detector_));
-  previous_image_time_ = latest_image_time_;
-  latest_image_time_ = latest_image_time;
+void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& latest_depth_image) {
+  previous_brisk_depth_image_ = std::move(latest_brisk_depth_image_);
+  latest_brisk_depth_image_.reset(new BriskDepthImageMeasurement(latest_depth_image, brisk_detector_));
 }
 }  // namespace depth_odometry

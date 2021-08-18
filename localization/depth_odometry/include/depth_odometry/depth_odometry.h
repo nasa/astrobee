@@ -22,6 +22,7 @@
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/icp.h>
 #include <localization_common/time.h>
+#include <localization_measurements/depth_image_measurement.h>
 #include <localization_measurements/image_measurement.h>
 
 #include <boost/optional.hpp>
@@ -34,14 +35,12 @@ namespace depth_odometry {
 class DepthOdometry {
  public:
   DepthOdometry();
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthCloudCallback(
-    std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageCallback(
-    const localization_measurements::ImageMeasurement& depth_image);
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const {
+    const localization_measurements::DepthImageMeasurement& depth_image);
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud() const {
     return previous_depth_cloud_;
   }
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const {
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> latest_depth_cloud() const {
     return latest_depth_cloud_;
   }
   localization_common::Time previous_depth_image_time() const { return previous_depth_image_->timestamp; }
@@ -52,14 +51,19 @@ class DepthOdometry {
   const DepthOdometryParams& params() const { return params_; }
 
  private:
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> PointCloudCallback(
+    const localization_measurements::DepthImageMeasurement& depth_image);
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ImageCallback(
+    const localization_measurements::DepthImageMeasurement& depth_image);
+
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
 
   std::unique_ptr<ICP> icp_;
   std::unique_ptr<DepthImageAligner> depth_image_aligner_;
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
-  boost::optional<localization_measurements::ImageMeasurement> previous_depth_image_;
-  boost::optional<localization_measurements::ImageMeasurement> latest_depth_image_;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud_;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> latest_depth_cloud_;
+  boost::optional<localization_measurements::DepthImageMeasurement> previous_depth_image_;
+  boost::optional<localization_measurements::DepthImageMeasurement> latest_depth_image_;
   DepthOdometryParams params_;
   Eigen::Isometry3d latest_relative_transform_;
 };

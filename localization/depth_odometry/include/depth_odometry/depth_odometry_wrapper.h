@@ -21,6 +21,7 @@
 #include <depth_odometry/depth_odometry.h>
 #include <ff_msgs/ImageCorrespondences.h>
 #include <ff_msgs/PointCloudCorrespondences.h>
+#include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 
 #include <pcl_conversions/pcl_conversions.h>
@@ -32,9 +33,9 @@
 namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
-  boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthCloudCallback(
+  std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthCloudCallback(
     const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-  boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthImageCallback(
+  std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthImageCallback(
     const sensor_msgs::ImageConstPtr& depth_image_msg);
   ff_msgs::PointCloudCorrespondences GetPointCloudCorrespondencesMsg() const;
   ff_msgs::ImageCorrespondences GetDepthImageCorrespondencesMsg() const;
@@ -43,7 +44,11 @@ class DepthOdometryWrapper {
   sensor_msgs::PointCloud2 GetTransformedPreviousPointCloudMsg() const;
 
  private:
+  std::vector<geometry_msgs::PoseWithCovarianceStamped> ProcessDepthImageAndCloudMeasurementsIfAvailable();
+
   DepthOdometry depth_odometry_;
+  localization_common::MeasurementBuffer<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;
+  localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> image_buffer_;
 };
 }  // namespace depth_odometry
 

@@ -34,47 +34,56 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthCloudCallback(
+std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  if (!depth_odometry_.params().depth_point_cloud_registration_enabled) return boost::none;
-  const lc::Time timestamp = lc::TimeFromHeader(depth_cloud_msg->header);
-  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud{
-    timestamp, pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>())};
-  pcl::fromROSMsg(*depth_cloud_msg, *(depth_cloud.second));
-  const auto relative_pose = depth_odometry_.DepthCloudCallback(depth_cloud);
-  if (!relative_pose) {
-    LogError("DepthCloudCallback: Failed to get relative pose.");
-    return boost::none;
-  }
-
-  // LogError("rel pose: " << std::endl << relative_pose->first.matrix());
-
-  geometry_msgs::PoseWithCovarianceStamped pose_msg;
-  mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
-  lc::TimeToHeader(depth_cloud.first, pose_msg.header);
-  return pose_msg;
+  point_cloud_buffer_.AddMeasurement(lc::TimeFromHeader(depth_cloud_msg->header), depth_cloud_msg);
+  return ProcessDepthImageAndCloudMeasurementsIfAvailable();
 }
 
-boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthImageCallback(
+std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthImageCallback(
   const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  if (!depth_odometry_.params().depth_image_registration_enabled) return boost::none;
-  const auto depth_image = lm::MakeImageMeasurement(depth_image_msg, sensor_msgs::image_encodings::MONO16);
-  if (!depth_image) {
-    LogError("DepthImageCallback: Failed to make depth image.");
-    return boost::none;
+  image_buffer_.AddMeasurement(lc::TimeFromHeader(depth_image_msg->header), depth_image_msg);
+  return ProcessDepthImageAndCloudMeasurementsIfAvailable();
+}
+
+std::vector<geometry_msgs::PoseWithCovarianceStamped>
+DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
+  std::vector<lm::DepthImageMeasurement> depth_image_measurements;
+  boost::optional<lc::Time> latest_added_point_cloud_msg_time;
+  boost::optional<lc::Time> latest_added_image_msg_time;
+  // Point clouds and depth images for the same measurement arrive on different topics.
+  // Correlate pairs of these if possible.
+  for (const auto& depth_image_msg : image_buffer_.measurements()) {
+    const auto depth_image_msg_timestamp = depth_image_msg.first;
+    const auto point_cloud_msg = point_cloud_buffer_.GetNearbyMeasurement(
+      depth_image_msg_timestamp, depth_odometry_.params().max_image_and_point_cloud_time_diff);
+    if (point_cloud_msg) {
+      const auto depth_image_measurement = lm::MakeDepthImageMeasurement(*point_cloud_msg, depth_image_msg.second);
+      if (!depth_image_measurement) {
+        LogError("ProcessDepthImageAndCloudMeasurementsIfAvailable: Failed to create depth image measurement.");
+        continue;
+      }
+      depth_image_measurements.emplace_back(*depth_image_measurement);
+      latest_added_point_cloud_msg_time = lc::TimeFromHeader((*point_cloud_msg)->header);
+      latest_added_image_msg_time = depth_image_msg_timestamp;
+    }
   }
 
-  const auto relative_pose = depth_odometry_.DepthImageCallback(*depth_image);
-  if (!relative_pose) {
-    LogError("DepthImageCallback: Failed to get relative pose.");
-    return boost::none;
-  }
+  if (latest_added_point_cloud_msg_time) point_cloud_buffer_.ClearBuffer(*latest_added_point_cloud_msg_time);
+  if (latest_added_image_msg_time) image_buffer_.ClearBuffer(*latest_added_image_msg_time);
 
-  // TODO(rsoussan): Make function that does this, use new PoseWithCovariance type (add both to loc common)
-  geometry_msgs::PoseWithCovarianceStamped pose_msg;
-  mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
-  lc::TimeToHeader(depth_image->timestamp, pose_msg.header);
-  return pose_msg;
+  std::vector<geometry_msgs::PoseWithCovarianceStamped> relative_pose_msgs;
+  for (const auto& depth_image_measurement : depth_image_measurements) {
+    const auto relative_pose = depth_odometry_.DepthImageCallback(depth_image_measurement);
+    if (relative_pose) {
+      // TODO(rsoussan): Make function that does this, use new PoseWithCovariance type (add both to loc common)
+      geometry_msgs::PoseWithCovarianceStamped pose_msg;
+      mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
+      lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);
+      relative_pose_msgs.emplace_back(pose_msg);
+    }
+  }
+  return relative_pose_msgs;
 }
 
 ff_msgs::PointCloudCorrespondences DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
@@ -127,7 +136,7 @@ sensor_msgs::PointCloud2 DepthOdometryWrapper::GetLatestPointCloudMsg() const {
 }
 
 sensor_msgs::PointCloud2 DepthOdometryWrapper::GetTransformedPreviousPointCloudMsg() const {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   const Eigen::Isometry3d latest_relative_transform = depth_odometry_.latest_relative_transform();
   pcl::transformPointCloud(*(depth_odometry_.latest_depth_cloud().second), *transformed_cloud,
                            latest_relative_transform.matrix().cast<float>());

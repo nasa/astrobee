@@ -31,11 +31,11 @@
 #include <pcl/search/impl/kdtree.hpp>
 
 namespace depth_odometry {
-void EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const double search_radius,
-                     pcl::PointCloud<pcl::PointNormal>& cloud_with_normals) {
-  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+void EstimateNormals(const pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double search_radius,
+                     pcl::PointCloud<pcl::PointXYZINormal>& cloud_with_normals) {
+  pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> ne;
   ne.setInputCloud(cloud);
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>());
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(search_radius);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
@@ -44,12 +44,12 @@ void EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const doub
 }
 
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
-  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals) {
-  pcl::FPFHEstimation<pcl::PointNormal, pcl::PointNormal, pcl::FPFHSignature33> feature_estimator;
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals) {
+  pcl::FPFHEstimation<pcl::PointXYZINormal, pcl::PointXYZINormal, pcl::FPFHSignature33> feature_estimator;
   feature_estimator.setInputCloud(cloud_with_normals);
   feature_estimator.setInputNormals(cloud_with_normals);
   // TODO(rsoussan): Pass in kd tree from normal estimation?
-  pcl::search::KdTree<pcl::PointNormal>::Ptr kd_tree(new pcl::search::KdTree<pcl::PointNormal>);
+  pcl::search::KdTree<pcl::PointXYZINormal>::Ptr kd_tree(new pcl::search::KdTree<pcl::PointXYZINormal>);
   feature_estimator.setSearchMethod(kd_tree);
   // pcl: IMPORTANT: the radius used here has to be larger than the radius used to estimate the surface normals!!!
   feature_estimator.setRadiusSearch(0.05);  // 0.2??
@@ -58,12 +58,12 @@ pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
   return features;
 }
 
-Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
-                         const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) {
+Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
+                         const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud) {
   const auto source_features = EstimateHistogramFeatures(source_cloud);
   const auto target_features = EstimateHistogramFeatures(target_cloud);
 
-  pcl::SampleConsensusInitialAlignment<pcl::PointNormal, pcl::PointNormal, pcl::FPFHSignature33> sac_ia_aligner;
+  pcl::SampleConsensusInitialAlignment<pcl::PointXYZINormal, pcl::PointXYZINormal, pcl::FPFHSignature33> sac_ia_aligner;
   sac_ia_aligner.setInputSource(source_cloud);
   sac_ia_aligner.setInputTarget(target_cloud);
   sac_ia_aligner.setSourceFeatures(source_features);
@@ -72,7 +72,7 @@ Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_clo
   sac_ia_aligner.setMinSampleDistance(0);
   sac_ia_aligner.setNumberOfSamples(100);
   sac_ia_aligner.setCorrespondenceRandomness(1);
-  pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr result(new pcl::PointCloud<pcl::PointXYZINormal>);
   sac_ia_aligner.align(*result);
   // std::cout  <<"sac has converged:"<<scia.hasConverged()<<"  score: "<<scia.getFitnessScore()<<endl;
   // TODO(rsoussan): make boost optional, set thresholds for ransacia fitness and make sure it converged!
@@ -88,22 +88,23 @@ Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Ve
   return normal.transpose() * H1;
 }
 
-bool ValidPointNormal(const pcl::PointNormal& point) {
-  bool valid_point = true;
-  valid_point &= ValidPoint(point);
-  const bool finite_normal =
-    pcl_isfinite(point.normal_x) && pcl_isfinite(point.normal_y) && pcl_isfinite(point.normal_z);
-  const bool nonzero_normal = point.normal_x != 0 || point.normal_y != 0 || point.normal_z != 0;
-  valid_point &= finite_normal;
-  valid_point &= nonzero_normal;
-  return valid_point;
+template <>
+bool ValidPoint<pcl::PointXYZ>(const pcl::PointXYZ& point) {
+  return ValidPointXYZ(point);
 }
 
-void RemoveNansAndZerosFromPointXYZs(pcl::PointCloud<pcl::PointXYZ>& cloud) {
-  RemoveNansAndZerosFromPointTypes(ValidPoint<pcl::PointXYZ>, cloud);
+template <>
+bool ValidPoint<pcl::PointXYZI>(const pcl::PointXYZI& point) {
+  return ValidPointXYZ(point) && ValidIntensity(point);
 }
 
-void RemoveNansAndZerosFromPointNormals(pcl::PointCloud<pcl::PointNormal>& cloud) {
-  RemoveNansAndZerosFromPointTypes(ValidPointNormal, cloud);
+template <>
+bool ValidPoint<pcl::PointNormal>(const pcl::PointNormal& point) {
+  return ValidPointXYZ(point) && ValidNormal(point);
+}
+
+template <>
+bool ValidPoint<pcl::PointXYZINormal>(const pcl::PointXYZINormal& point) {
+  return ValidPointXYZ(point) && ValidNormal(point) && ValidIntensity(point);
 }
 }  // namespace depth_odometry
