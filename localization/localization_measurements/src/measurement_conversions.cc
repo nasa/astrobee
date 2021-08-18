@@ -153,10 +153,53 @@ boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageC
   return ImageMeasurement(cv_image->image, timestamp);
 }
 
-PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  const lc::Time timestamp = lc::TimeFromHeader(depth_cloud_msg->header);
+PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
+  const lc::Time timestamp = lc::TimeFromHeader(point_cloud_msg->header);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
+  return PointCloudMeasurement(timestamp, point_cloud);
+}
+
+boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
+  const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg, const sensor_msgs::ImageConstPtr& image_msg) {
+  const auto timestamp = lc::TimeFromHeader(image_msg->header);
+  // TODO(rsoussan): Unify image and point cloud conversion with other functions
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::MONO16);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return boost::none;
+  }
+  const auto& intensities = cv_image->image;
+
   pcl::PointCloud<pcl::PointXYZ>::Ptr depth_cloud(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::fromROSMsg(*depth_cloud_msg, *depth_cloud);
-  return PointCloudMeasurement(timestamp, depth_cloud);
+
+  if (static_cast<int>(intensities.cols) != static_cast<int>(depth_cloud->width) ||
+      static_cast<int>(intensities.rows) != static_cast<int>(depth_cloud->height)) {
+    LogError("MakeDepthImageMeasurement: Image and Point Cloud dimensions do not match.");
+    return boost::none;
+  }
+  // if (dense_map::matType(intensities) != "8UC1")
+  //  LOG(FATAL) << "Extracted depth image should be of type: 8UC1.";
+
+  pcl::PointCloud<pcl::PointXYZI>::Ptr depth_cloud_with_intensities(new pcl::PointCloud<pcl::PointXYZI>());
+  depth_cloud_with_intensities->width = intensities.cols;
+  depth_cloud_with_intensities->height = intensities.rows;
+  depth_cloud_with_intensities->points.resize(depth_cloud_with_intensities->width *
+                                              depth_cloud_with_intensities->height);
+
+  int index = 0;
+  for (int row = 0; row < intensities.rows; ++row) {
+    for (int col = 0; col < intensities.cols; ++col) {
+      depth_cloud_with_intensities->points[index].x = depth_cloud->points[index].x;
+      depth_cloud_with_intensities->points[index].y = depth_cloud->points[index].y;
+      depth_cloud_with_intensities->points[index].z = depth_cloud->points[index].z;
+      depth_cloud_with_intensities->points[index].intensity = static_cast<float>(intensities.at<ushort>(row, col));
+      ++index;
+    }
+  }
+  return DepthImageMeasurement(intensities, depth_cloud_with_intensities, timestamp);
 }
 }  // namespace localization_measurements
