@@ -19,7 +19,8 @@
 set -e
 
 # short help
-usage_string="$scriptname [-h] [-n <use ubuntu 18 installation>]"
+usage_string="$scriptname [-h] [-x <use ubuntu 16 installation>]
+    [-b <use ubuntu 18 installation>] [-f <use ubuntu 20 installation>]"
 #[-t make_target]
 
 usage()
@@ -27,10 +28,12 @@ usage()
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
 
-os="xenial"
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
 while [ "$1" != "" ]; do
     case $1 in
+        -x | --xenial )                 os="xenial"
+                                        ;;
         -b | --bionic )                 os="bionic"
                                         ;;
         -f | --focal )                  os="focal"
