@@ -58,7 +58,7 @@ PYTHON=''
 
 if [ "$os" = "bionic" ]; then
   UBUNTU_VERSION=ubuntu18.04
-  ROS_VERSION=bionic
+  ROS_VERSION=melodic
   PYTHON=''
 
 elif [ "$os" = "focal" ]; then
