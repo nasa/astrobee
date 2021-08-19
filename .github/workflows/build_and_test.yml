@@ -28,7 +28,7 @@ jobs:
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile \
                           --build-arg UBUNTU_VERSION=ubuntu16.04 \
-                          -t test
+                          -t astrobee/astrobee:test-ubuntu16.04
 
   build-bionic:
 
@@ -50,7 +50,7 @@ jobs:
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile \
                           --build-arg UBUNTU_VERSION=ubuntu18.04 \
-                          -t test
+                          -t astrobee/astrobee:test-ubuntu18.04
 
   build-focal:
 
@@ -72,4 +72,4 @@ jobs:
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile \
                           --build-arg UBUNTU_VERSION=ubuntu20.04 \
-                          -t test
+                          -t astrobee/astrobee:test-ubuntu20.04
