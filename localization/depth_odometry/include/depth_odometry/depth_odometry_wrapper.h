@@ -42,6 +42,10 @@ class DepthOdometryWrapper {
   sensor_msgs::PointCloud2 GetPreviousPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetLatestPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetTransformedPreviousPointCloudMsg() const;
+  bool depth_image_registration_enabled() const { return depth_odometry_.params().depth_image_registration_enabled; }
+  bool depth_point_cloud_registration_enabled() const {
+    return depth_odometry_.params().depth_point_cloud_registration_enabled;
+  }
 
  private:
   std::vector<geometry_msgs::PoseWithCovarianceStamped> ProcessDepthImageAndCloudMeasurementsIfAvailable();
