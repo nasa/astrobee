@@ -21,7 +21,7 @@
 
 #include <traj_opt_basic/trajectory.h>
 #include <traj_opt_basic/types.h>
-#include <planner_qp/Trajectory.h>
+#include <traj_opt_msgs/Trajectory.h>
 
 #include <string>
 #include <vector>
@@ -44,7 +44,7 @@ namespace traj_opt {
 // Declare the visual class for this display.
 //
 // Each instance of TrajectoryVisual represents the visualization of a single
-// planner_qp::Trajectory message.  Currently it just shows an arrow with
+// traj_opt_msgs::Trajectory message.  Currently it just shows an arrow with
 // the direction and magnitude of the acceleration vector, but could
 // easily be expanded to include more of the message data.
 
@@ -62,7 +62,7 @@ class TrajectoryVisual {
 
   void draw();
   // Configure the visual to show the data in the message.
-  void setMessage(const planner_qp::Trajectory::ConstPtr& msg);
+  void setMessage(const traj_opt_msgs::Trajectory::ConstPtr& msg);
 
   // Set the pose of the coordinate frame the message refers to.
   // These could be done inside setMessage(), but that would require

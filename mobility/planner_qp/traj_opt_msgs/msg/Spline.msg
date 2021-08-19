@@ -15,9 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Trajectory message used by the QP planner.
+# Spline message used by the QP planner.
 
-Header header
-int32 dimensions
-string[] dimension_names
-planner_qp/Spline[] data
+int32 segments
+float32 t_total
+traj_opt_msgs/Polynomial[] segs

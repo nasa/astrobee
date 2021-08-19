@@ -1,0 +1,65 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+cmake_minimum_required(VERSION 2.8.3)
+project(traj_opt_ros)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-deprecated-declarations  -Werror=return-type -DQT_NO_KEYWORDS")
+
+# Qt Stuff, assume Qt5
+set(CMAKE_AUTOMOC ON)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rviz
+  traj_opt_basic
+  traj_opt_msgs
+)
+
+message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+find_package(Qt5 REQUIRED Core Widgets)
+set(QT_LIBRARIES Qt5::Widgets)
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES
+    traj_ros_bridge
+    ${PROJECT_NAME}
+  CATKIN_DEPENDS
+    roscpp
+    rviz
+  	traj_opt_basic
+  	traj_opt_msgs
+)
+
+###########
+## Build ##
+###########
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${QT_QTCORE_INCLUDE_DIR}
+  ${QT_QTGUI_INCLUDE_DIR}
+)
+
+add_library(traj_ros_bridge
+	src/ros_bridge.cpp)
+add_library(${PROJECT_NAME}
+	src/trajectory_visual.cpp
+	src/trajectory_display.cpp
+	${MOC_FILES})
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES} ${rviz_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)

@@ -88,7 +88,7 @@ class Planner : public planner::PlannerImplementation {
   ros::NodeHandle *nh_;
   ros::Subscriber pcl_sub_;
 
-  std::vector<planner_qp::Trajectory> traj_history_;
+  std::vector<traj_opt_msgs::Trajectory> traj_history_;
 
  protected:
   bool InitializePlanner(ros::NodeHandle *nh) {

@@ -14,16 +14,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# Trajectory message used by the QP planner.
 
-# this flag is needed by CGAL
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
-set(NASA ON CACHE BOOL "Use NASA's wonderful build system on all traj_opt packages" FORCE)
-
-# QP planner
-add_subdirectory(traj_opt_basic)
-add_subdirectory(traj_opt_pro)
-add_subdirectory(traj_opt_msgs)
-add_subdirectory(traj_opt_ros)
-
-add_subdirectory(planner_qp)
+Header header
+int32 dimensions
+string[] dimension_names
+traj_opt_msgs/Spline[] data

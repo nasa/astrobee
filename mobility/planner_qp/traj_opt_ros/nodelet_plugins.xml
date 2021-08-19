@@ -1,0 +1,11 @@
+<library path="lib/libtraj_opt_ros">
+  <class name="traj_opt_ros/Trajectory"
+         type="traj_opt::TrajectoryDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      View trajectory messages in rviz natively!! 
+      Currently supports Mike's style and Sikang's style
+      Defaults to the better style :P 
+    </description>
+  </class>
+</library>

@@ -14,9 +14,30 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-#
-# Spline message used by the QP planner.
 
-int32 segments
-float32 t_total
-planner_qp/Polynomial[] segs
+cmake_minimum_required(VERSION 2.8.3)
+
+project(traj_opt_msgs)
+
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  std_msgs
+)
+
+
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  Polynomial.msg
+  SolverInfo.msg
+  Spline.msg
+  Trajectory.msg
+)
+
+generate_messages(
+  DEPENDENCIES std_msgs
+)
+
+catkin_package(
+  LIBRARIES
+)

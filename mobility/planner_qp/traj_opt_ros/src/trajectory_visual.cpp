@@ -294,7 +294,7 @@ void TrajectoryVisual::setCurve() {
 }
 
 void TrajectoryVisual::setMessage(
-    const planner_qp::Trajectory::ConstPtr& msg) {
+    const traj_opt_msgs::Trajectory::ConstPtr& msg) {
   traj_.reset(new traj_opt::MsgTrajectory(TrajRosBridge::convert(*msg)));
 
   setCurve();
