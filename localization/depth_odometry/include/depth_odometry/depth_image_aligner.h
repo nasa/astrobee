@@ -51,6 +51,8 @@ class DepthImageAligner {
   std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
   boost::optional<ImageCorrespondences> correspondences_;
   cv::Ptr<cv::CLAHE> clahe_;
+  cv::Mat intrinsics_;
+  cv::Mat distortion_params_;
 };
 }  // namespace depth_odometry
 

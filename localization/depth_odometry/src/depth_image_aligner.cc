@@ -30,6 +30,19 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : pa
   flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
     params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
+  const auto focal_lengths = params_.camera_params->GetFocalVector();
+  const auto distortion_params = params_.camera_params->GetDistortion();
+  const auto principal_points = params_.camera_params->GetOpticalOffset();
+  intrinsics_ = cv::Mat::zeros(3, 3, cv::DataType<double>::type);
+  intrinsics_.at<double>(0, 0) = focal_lengths[0];
+  intrinsics_.at<double>(1, 1) = focal_lengths[1];
+  intrinsics_.at<double>(0, 2) = principal_points[0];
+  intrinsics_.at<double>(1, 2) = principal_points[1];
+  intrinsics_.at<double>(2, 2) = 1;
+  distortion_params_ = cv::Mat(4, 1, cv::DataType<double>::type);
+  for (int i = 0; i < 4; ++i) {
+    distortion_params_.at<double>(i, 0) = distortion_params[i];
+  }
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>

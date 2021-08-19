@@ -30,6 +30,7 @@ namespace lm = localization_measurements;
 DepthOdometry::DepthOdometry() {
   // TODO(rsoussan): remove this
   config_reader::ConfigReader config;
+  config.AddFile("cameras.config");
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
   config.AddFile("localization/depth_odometry.config");
