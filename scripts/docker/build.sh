@@ -28,7 +28,7 @@ usage()
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
 
-DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -38,11 +38,11 @@ while [ "$1" != "" ]; do
                                         ;;
         -f | --focal )                  os="focal"
                                         ;;
-        -h | --help )           		usage
-                                		exit
-                                		;;
-        * )                     		usage
-                                		exit 1
+        -h | --help )                   usage
+                                        exit
+                                        ;;
+        * )                             usage
+                                        exit 1
     esac
     shift
 done
@@ -51,26 +51,30 @@ done
 thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../..
 echo "Astrobee path: "${rootdir}/
-if [ "$os" = "xenial" ]; then
-    docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_xenial.Dockerfile \
-                -t astrobee/astrobee:base-latest-xenial
-    docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_xenial.Dockerfile \
-                -t astrobee/astrobee:latest-xenial
-elif [ "$os" = "bionic" ]; then
-    docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_bionic.Dockerfile \
-                -t astrobee/astrobee:base-latest-bionic
-    docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_bionic.Dockerfile \
-                -t astrobee/astrobee:latest-bionic
+
+UBUNTU_VERSION=ubuntu16.04
+ROS_VERSION=kinetic
+PYTHON=''
+
+if [ "$os" = "bionic" ]; then
+  UBUNTU_VERSION=ubuntu18.04
+  ROS_VERSION=bionic
+  PYTHON=''
+
 elif [ "$os" = "focal" ]; then
-    docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_focal.Dockerfile \
-                -t astrobee/astrobee:base-latest-focal
-    docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_focal.Dockerfile \
-                -t astrobee/astrobee:latest-focal
+  UBUNTU_VERSION=ubuntu20.04
+  ROS_VERSION=noetic
+  PYTHON='3'
 fi
 
+echo "Building $UBUNTU_VERSION image"
+docker build ${rootdir}/ \
+            -f ${rootdir}/scripts/docker/astrobee_base.Dockerfile \
+            --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
+            --build-arg ROS_VERSION=${ROS_VERSION} \
+            --build-arg PYTHON=${PYTHON} \
+            -t astrobee/astrobee:base-latest-${UBUNTU_VERSION}
+docker build ${rootdir}/ \
+            -f ${rootdir}/scripts/docker/astrobee.Dockerfile \
+            --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
+            -t astrobee/astrobee:latest-${UBUNTU_VERSION}
