@@ -20,6 +20,8 @@
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 
+#include <opencv2/calib3d.hpp>
+
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -55,13 +57,28 @@ DepthImageAligner::ComputeRelativeTransform() {
     return match.distance > params_.max_match_hamming_distance;
   });
   matches.erase(filtered_end, matches.end());
+  std::vector<cv::Point3d> match_points_3d;
+  std::vector<cv::Point2d> match_image_points;
+  for (const auto& match : matches) {
+    match_image_points.emplace_back(previous_brisk_depth_image_->keypoints()[match.queryIdx].pt);
+    const auto& latest_point = latest_brisk_depth_image_->keypoints()[match.trainIdx].pt;
+    const auto& pcl_latest_point = latest_brisk_depth_image_->Point3D(latest_point.y, latest_point.x);
+    match_points_3d.emplace_back(cv::Point3d(pcl_latest_point.x, pcl_latest_point.y, pcl_latest_point.z));
+  }
+  cv::Mat rotation;
+  cv::Mat translation;
+  cv::solvePnPRansac(match_points_3d, match_image_points, intrinsics_, distortion_params_, rotation, translation);
+  Eigen::Isometry3d relative_transform;
+  relative_transform.linear() =
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Map(reinterpret_cast<const double*>(rotation.data));
+  relative_transform.translation() = Eigen::Vector3d::Map(reinterpret_cast<const double*>(translation.data));
   correspondences_ =
     ImageCorrespondences(matches, previous_brisk_depth_image_->keypoints(), latest_brisk_depth_image_->keypoints(),
                          previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp);
   LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
                            << ", b: " << latest_brisk_depth_image_->keypoints().size());
   LogError("matches post filtering: " << matches.size());
-  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{Eigen::Isometry3d::Identity(),
+  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform,
                                                                    Eigen::Matrix<double, 6, 6>::Zero()};
 }
 

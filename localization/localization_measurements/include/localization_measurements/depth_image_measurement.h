@@ -32,6 +32,8 @@ struct DepthImageMeasurement : public Measurement {
   DepthImageMeasurement(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud,
                         const localization_common::Time timestamp)
       : Measurement(timestamp), image(image), point_cloud(point_cloud) {}
+
+  const pcl::PointXYZI& Point3D(const int row, const int col) { return point_cloud->points[image.rows * row + col]; }
   cv::Mat image;
   pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud;
 };
