@@ -29,6 +29,10 @@ struct DepthImageAlignerParams {
   int brisk_threshold;
   int brisk_octaves;
   float brisk_float_pattern_scale;
+  // CLAHE params
+  bool use_clahe;
+  int clahe_grid_length;
+  double clahe_clip_limit;
 };
 }  // namespace depth_odometry
 

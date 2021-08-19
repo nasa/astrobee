@@ -29,6 +29,7 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : pa
     cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
   flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
     params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
+  clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
@@ -53,6 +54,11 @@ DepthImageAligner::ComputeRelativeTransform() {
 
 void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& latest_depth_image) {
   previous_brisk_depth_image_ = std::move(latest_brisk_depth_image_);
-  latest_brisk_depth_image_.reset(new BriskDepthImageMeasurement(latest_depth_image, brisk_detector_));
+  if (params_.use_clahe) {
+    lm::DepthImageMeasurement clahe_depth_image = latest_depth_image;
+    clahe_->apply(latest_depth_image.image, clahe_depth_image.image);
+    latest_brisk_depth_image_.reset(new BriskDepthImageMeasurement(clahe_depth_image, brisk_detector_));
+  } else
+    latest_brisk_depth_image_.reset(new BriskDepthImageMeasurement(latest_depth_image, brisk_detector_));
 }
 }  // namespace depth_odometry

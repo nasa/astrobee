@@ -48,6 +48,9 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.brisk_threshold = mc::LoadInt(config, "brisk_threshold");
   params.brisk_octaves = mc::LoadInt(config, "brisk_octaves");
   params.brisk_float_pattern_scale = mc::LoadFloat(config, "brisk_float_pattern_scale");
+  params.use_clahe = mc::LoadBool(config, "use_clahe");
+  params.clahe_grid_length = mc::LoadInt(config, "clahe_grid_length");
+  params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");
 }
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {

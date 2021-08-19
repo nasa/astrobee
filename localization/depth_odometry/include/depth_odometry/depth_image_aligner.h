@@ -28,6 +28,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <Eigen/Geometry>
 
@@ -49,6 +50,7 @@ class DepthImageAligner {
   cv::Ptr<cv::BRISK> brisk_detector_;
   std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
   boost::optional<ImageCorrespondences> correspondences_;
+  cv::Ptr<cv::CLAHE> clahe_;
 };
 }  // namespace depth_odometry
 
