@@ -89,8 +89,8 @@ void DepthOdometryImageDisplay::createCorrespondencesImage() {
   if (!source_image_msg || !target_image_msg) return;
   clearImageBuffer(source_time);
 
-  auto source_image_measurement = lm::MakeImageMeasurement(source_image_msg, sensor_msgs::image_encodings::MONO16);
-  auto target_image_measurement = lm::MakeImageMeasurement(target_image_msg, sensor_msgs::image_encodings::MONO16);
+  auto source_image_measurement = lm::MakeImageMeasurement(source_image_msg, sensor_msgs::image_encodings::RGB8);
+  auto target_image_measurement = lm::MakeImageMeasurement(target_image_msg, sensor_msgs::image_encodings::RGB8);
   if (!source_image_measurement || !target_image_measurement) return;
   auto& source_image = source_image_measurement->image;
   auto& target_image = target_image_measurement->image;

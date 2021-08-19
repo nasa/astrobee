@@ -166,7 +166,7 @@ boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
   // TODO(rsoussan): Unify image and point cloud conversion with other functions
   cv_bridge::CvImagePtr cv_image;
   try {
-    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::MONO16);
+    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::MONO8);
   } catch (cv_bridge::Exception& e) {
     LogError("cv_bridge exception: " << e.what());
     return boost::none;
