@@ -67,12 +67,14 @@ void DepthOdometryAdder::AddDepthOdometry() {
 
       if (depth_odometry_wrapper_.depth_point_cloud_registration_enabled()) {
         const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
-        ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg.header);
-        // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
-        // expects depth image to arrive first
-        correspondences_timestamp.sec += 1;
-        output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_POINT_CLOUD_CORRESPONDENCES,
-                          correspondences_timestamp, correspondences_msg);
+        if (correspondences_msg) {
+          ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg->header);
+          // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
+          // expects depth image to arrive first
+          correspondences_timestamp.sec += 1;
+          output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_POINT_CLOUD_CORRESPONDENCES,
+                            correspondences_timestamp, *correspondences_msg);
+        }
       }
     } else if (string_ends_with(msg.getTopic(), depth_image_topic)) {
       const sensor_msgs::ImageConstPtr& depth_image_msg = msg.instantiate<sensor_msgs::Image>();
@@ -83,12 +85,14 @@ void DepthOdometryAdder::AddDepthOdometry() {
       }
       if (depth_odometry_wrapper_.depth_image_registration_enabled()) {
         const auto correspondences_msg = depth_odometry_wrapper_.GetDepthImageCorrespondencesMsg();
-        ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg.header);
-        // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
-        // expects depth image to arrive first
-        correspondences_timestamp.sec += 1;
-        output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES, correspondences_timestamp,
-                          correspondences_msg);
+        if (correspondences_msg) {
+          ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg->header);
+          // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
+          // expects depth image to arrive first
+          correspondences_timestamp.sec += 1;
+          output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES,
+                            correspondences_timestamp, *correspondences_msg);
+        }
       }
     }
     output_bag_.write(msg.getTopic(), msg.getTime(), msg);

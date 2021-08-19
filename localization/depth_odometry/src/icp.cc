@@ -44,8 +44,6 @@ namespace lc = localization_common;
 
 ICP::ICP(const ICPParams& params) : params_(params) {}
 
-const pcl::Correspondences& ICP::correspondences() const { return correspondences_; }
-
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::ComputeRelativeTransform(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
@@ -198,18 +196,18 @@ Eigen::Matrix<double, 6, 6> ICP::ComputeCovarianceMatrix(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
   const Eigen::Isometry3d& relative_transform) {
   icp.correspondence_estimation_->setInputSource(source_cloud_transformed);
-  correspondences_.clear();
+  correspondences_ = pcl::Correspondences();
   // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
-  icp.correspondence_estimation_->determineCorrespondences(correspondences_, icp.corr_dist_threshold_);
+  icp.correspondence_estimation_->determineCorrespondences(*correspondences_, icp.corr_dist_threshold_);
   const auto& target_cloud = icp.target_;
-  FilterCorrespondences(*source_cloud, *target_cloud, correspondences_);
-  const int num_correspondences = correspondences_.size();
+  FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
+  const int num_correspondences = correspondences_->size();
   LogError("a size: " << source_cloud->size());
   LogError("b size: " << target_cloud->size());
   LogError("num correspondences: " << num_correspondences);
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   int index = 0;
-  for (const auto correspondence : correspondences_) {
+  for (const auto correspondence : *correspondences_) {
     const auto& input_point = (*source_cloud)[correspondence.index_query];
     const auto& target_point = (*target_cloud)[correspondence.index_match];
     const Eigen::Matrix<double, 1, 6> jacobian = Jacobian(input_point, target_point, relative_transform);

@@ -86,8 +86,9 @@ DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
   return relative_pose_msgs;
 }
 
-ff_msgs::PointCloudCorrespondences DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
+boost::optional<ff_msgs::PointCloudCorrespondences> DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
   const auto& correspondences = depth_odometry_.point_cloud_correspondences();
+  if (!correspondences) return boost::none;
   const auto previous_time = depth_odometry_.previous_depth_cloud().first;
   const auto latest_time = depth_odometry_.latest_depth_cloud().first;
   ff_msgs::PointCloudCorrespondences correspondences_msg;
@@ -96,7 +97,7 @@ ff_msgs::PointCloudCorrespondences DepthOdometryWrapper::GetPointCloudCorrespond
   correspondences_msg.source_time = ros::Time(previous_time);
   correspondences_msg.target_time = ros::Time(latest_time);
 
-  for (const auto& correspondence : correspondences) {
+  for (const auto& correspondence : *correspondences) {
     ff_msgs::PointCloudCorrespondence correspondence_msg;
     correspondence_msg.source_index = correspondence.index_query;
     correspondence_msg.target_index = correspondence.index_match;
@@ -105,15 +106,16 @@ ff_msgs::PointCloudCorrespondences DepthOdometryWrapper::GetPointCloudCorrespond
   return correspondences_msg;
 }
 
-ff_msgs::ImageCorrespondences DepthOdometryWrapper::GetDepthImageCorrespondencesMsg() const {
+boost::optional<ff_msgs::ImageCorrespondences> DepthOdometryWrapper::GetDepthImageCorrespondencesMsg() const {
   const auto& correspondences = depth_odometry_.image_correspondences();
+  if (!correspondences) return boost::none;
   ff_msgs::ImageCorrespondences correspondences_msg;
-  lc::TimeToHeader(correspondences.target_time(), correspondences_msg.header);
+  lc::TimeToHeader(correspondences->target_time(), correspondences_msg.header);
   correspondences_msg.header.frame_id = "haz_cam";
-  correspondences_msg.source_time = ros::Time(correspondences.source_time());
-  correspondences_msg.target_time = ros::Time(correspondences.target_time());
+  correspondences_msg.source_time = ros::Time(correspondences->source_time());
+  correspondences_msg.target_time = ros::Time(correspondences->target_time());
 
-  for (const auto& correspondence : correspondences.correspondences()) {
+  for (const auto& correspondence : correspondences->correspondences()) {
     ff_msgs::ImageCorrespondence correspondence_msg;
     correspondence_msg.source_point.x = correspondence.source_point.x();
     correspondence_msg.source_point.y = correspondence.source_point.y();

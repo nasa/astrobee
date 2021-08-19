@@ -41,9 +41,9 @@ DepthImageAligner::ComputeRelativeTransform() {
     return match.distance > params_.max_match_hamming_distance;
   });
   matches.erase(filtered_end, matches.end());
-  correspondences_.reset(
-    new ImageCorrespondences(matches, previous_brisk_depth_image_->keypoints(), latest_brisk_depth_image_->keypoints(),
-                             previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp));
+  correspondences_ =
+    ImageCorrespondences(matches, previous_brisk_depth_image_->keypoints(), latest_brisk_depth_image_->keypoints(),
+                         previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp);
   LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
                            << ", b: " << latest_brisk_depth_image_->keypoints().size());
   LogError("matches post filtering: " << matches.size());

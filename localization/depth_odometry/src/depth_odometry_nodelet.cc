@@ -78,7 +78,8 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   }
   if (depth_odometry_wrapper_.depth_point_cloud_registration_enabled()) {
     const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
-    point_cloud_correspondences_pub_.publish(correspondences_msg);
+    if (!correspondences_msg) return;
+    point_cloud_correspondences_pub_.publish(*correspondences_msg);
     if (params_.publish_point_clouds) {
       PublishPointClouds();
     }
@@ -92,7 +93,8 @@ void DepthOdometryNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& 
   }
   if (depth_odometry_wrapper_.depth_image_registration_enabled()) {
     const auto correspondences_msg = depth_odometry_wrapper_.GetDepthImageCorrespondencesMsg();
-    image_correspondences_pub_.publish(correspondences_msg);
+    if (!correspondences_msg) return;
+    image_correspondences_pub_.publish(*correspondences_msg);
   }
 }
 

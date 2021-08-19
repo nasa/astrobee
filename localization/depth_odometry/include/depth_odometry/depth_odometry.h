@@ -43,8 +43,10 @@ class DepthOdometry {
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> latest_depth_cloud() const {
     return latest_depth_cloud_;
   }
-  const pcl::Correspondences& point_cloud_correspondences() const { return icp_->correspondences(); }
-  const ImageCorrespondences& image_correspondences() const { return depth_image_aligner_->correspondences(); }
+  const boost::optional<pcl::Correspondences>& point_cloud_correspondences() const { return icp_->correspondences(); }
+  const boost::optional<ImageCorrespondences>& image_correspondences() const {
+    return depth_image_aligner_->correspondences();
+  }
   Eigen::Isometry3d latest_relative_transform() const { return latest_relative_transform_; }
   const DepthOdometryParams& params() const { return params_; }
 
