@@ -18,6 +18,10 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
 
+#include <camera/camera_params.h>
+
+#include <memory>
+
 namespace depth_odometry {
 struct DepthImageAlignerParams {
   int max_match_hamming_distance;
@@ -33,6 +37,7 @@ struct DepthImageAlignerParams {
   bool use_clahe;
   int clahe_grid_length;
   double clahe_clip_limit;
+  std::shared_ptr<camera::CameraParameters> camera_params;
 };
 }  // namespace depth_odometry
 

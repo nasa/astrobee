@@ -51,6 +51,7 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.use_clahe = mc::LoadBool(config, "use_clahe");
   params.clahe_grid_length = mc::LoadInt(config, "clahe_grid_length");
   params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");
+  params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
 }
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
