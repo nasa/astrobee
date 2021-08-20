@@ -22,6 +22,8 @@
 #include <localization_common/time.h>
 #include <localization_measurements/measurement.h>
 
+#include <boost/optional.hpp>
+
 #include <opencv2/core.hpp>
 
 #include <pcl/point_cloud.h>
@@ -33,7 +35,13 @@ struct DepthImageMeasurement : public Measurement {
                         const localization_common::Time timestamp)
       : Measurement(timestamp), image(image), point_cloud(point_cloud) {}
 
-  const pcl::PointXYZI& Point3D(const int col, const int row) { return point_cloud->points[image.cols * row + col]; }
+  boost::optional<const pcl::PointXYZI&> Point3D(const int col, const int row) {
+    if (col >= image.cols || row >= image.rows) return boost::none;
+    return point_cloud->points[image.cols * row + col];
+  }
+  boost::optional<const pcl::PointXYZI&> Point3D(const double col, const double row) {
+    return Point3D(static_cast<int>(std::round(col)), static_cast<int>(std::round(row)));
+  }
   cv::Mat image;
   pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud;
 };
