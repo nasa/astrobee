@@ -21,6 +21,7 @@
 
 #include <graph_optimizer/factor_adder.h>
 #include <graph_localizer/semantic_loc_factor_adder_params.h>
+#include <graph_localizer/hungarian_assigner.h>
 #include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -65,7 +66,8 @@ class SemanticLocFactorAdder : public graph_optimizer::FactorAdder<localization_
   const std::vector<SemanticMatch>& last_matches() const { return last_matches_; }
 
  private:
-  std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
+  std::shared_ptr<HungarianAssigner> assigner_;
+
   std::vector<SemanticMatch> last_matches_;
 
   void ComputeFactorsToAdd(std::vector<graph_optimizer::FactorsToAdd> &factors_to_add,
