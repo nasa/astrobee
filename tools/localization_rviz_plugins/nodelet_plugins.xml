@@ -5,6 +5,7 @@
     <description>
       Depth Odometry Display
     </description>
+  </class>
   <class name="localization_rviz_plugins/Graph"
          type="localization_rviz_plugins::LocalizationGraphDisplay"
          base_class_type="rviz::Display">
