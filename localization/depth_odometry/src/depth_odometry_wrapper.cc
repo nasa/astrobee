@@ -58,7 +58,8 @@ DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
     const auto point_cloud_msg = point_cloud_buffer_.GetNearbyMeasurement(
       depth_image_msg_timestamp, depth_odometry_.params().max_image_and_point_cloud_time_diff);
     if (point_cloud_msg) {
-      const auto depth_image_measurement = lm::MakeDepthImageMeasurement(*point_cloud_msg, depth_image_msg.second);
+      const auto depth_image_measurement = lm::MakeDepthImageMeasurement(*point_cloud_msg, depth_image_msg.second,
+                                                                         depth_odometry_.params().haz_cam_T_haz_depth);
       if (!depth_image_measurement) {
         LogError("ProcessDepthImageAndCloudMeasurementsIfAvailable: Failed to create depth image measurement.");
         continue;
