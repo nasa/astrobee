@@ -119,7 +119,7 @@ void SemanticLocFactorAdder::SetCombinedNavState(const boost::optional<localizat
 }
 
 std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::SemanticDetsMeasurement& semantic_dets) {
-  if (last_combined_nav_state_.timestamp() != semantic_dets.timestamp) {
+  if (std::abs(last_combined_nav_state_.timestamp() - semantic_dets.timestamp) < 0.1) {
     return std::vector<go::FactorsToAdd>(); // return empty set, no factors
   }
 
@@ -131,10 +131,14 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
   lm::MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.timestamp = semantic_dets.timestamp;
   // Outer loop through objects so we only do transform/projection once
-  LogDebug("SemanticLoc: adding sem loc factors");
+  LogInfo("SemanticLoc: adding sem loc factors");
   std::set<const lm::SemanticDet*> used_dets;
   for (const auto& classes : object_poses_) {
     int cls = classes.first;
+    // ignore cameras and laptops
+    if (cls == 1 || cls == 0) {
+      continue;
+    }
     for (const auto& world_T_obj : classes.second) {
       Eigen::Vector2d cam_obj_px;
       try {
@@ -158,7 +162,7 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
         } else {
           dist = (cam_obj_px - det.image_point).norm();
         }
-        // Don't use handrails for now
+
         if (dist < best_dist && cls == det.class_id && used_dets.count(&det) == 0) {
           second_best_dist = best_dist;
           best_dist = dist;
@@ -172,7 +176,7 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
         used_dets.insert(best_det);
         last_matches_.push_back(SemanticMatch(cls, cam_obj_px, best_det->image_point, best_det->bounding_box));
 
-        LogDebug("SemanticLoc: adding matched proj measurement with dist: " << best_dist);
+        LogInfo("SemanticLoc: adding matched proj measurement with dist: " << best_dist);
         lm::MatchedProjection mp(best_det->image_point, best_det->bounding_box, world_T_obj.translation(), semantic_dets.timestamp);
         matched_projections_measurement.matched_projections.push_back(mp);
       } else {

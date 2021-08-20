@@ -185,11 +185,17 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
     return lower_bound_or_equal_combined_nav_state;
   }
 
+  lc::Time bounded_time = time;
+  if (lower_bound_or_equal_combined_nav_state->timestamp() < time) {
+    LogWarning("GetCombinedNavState: Asked for future time, falling back to most recent.");
+    bounded_time = lower_bound_or_equal_combined_nav_state->timestamp();
+  }
+
   // Pim predict from lower bound state rather than closest state so there is no
   // need to reverse predict (going backwards in time) using a pim prediction which is not yet supported in gtsam.
   auto integrated_pim = latest_imu_integrator_->IntegratedPim(lower_bound_or_equal_combined_nav_state->bias(),
                                                               lower_bound_or_equal_combined_nav_state->timestamp(),
-                                                              time, latest_imu_integrator_->pim_params());
+                                                              bounded_time, latest_imu_integrator_->pim_params());
   if (!integrated_pim) {
     LogError("GetCombinedNavState: Failed to create integrated pim.");
     return boost::none;
@@ -266,7 +272,7 @@ void GraphLocalizer::AddSemanticDetsMeasurement(const lm::SemanticDetsMeasuremen
     semantic_object_tracker_->UpdateObjectTracks(semantic_dets_measurement.semantic_dets);
   }
   if (params_.factor.semantic_loc_adder.enabled) {
-    LogDebug("AddSemanticDetsMeasurement: Adding gt semantic factors.");
+    LogInfo("AddSemanticDetsMeasurement: Adding gt semantic factors.");
     semantic_loc_factor_adder_->SetCombinedNavState(GetCombinedNavState(semantic_dets_measurement.timestamp));
     BufferFactors(semantic_loc_factor_adder_->AddFactors(semantic_dets_measurement));
   }
