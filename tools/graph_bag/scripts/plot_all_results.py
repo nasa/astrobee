@@ -22,6 +22,7 @@ import os
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--output-dir', default='')
+  parser.add_argument('--gt-path', default=None)
   args = parser.parse_args()
 
   # Find bagfiles with bag prefix in current directory, fail if none found
@@ -37,5 +38,9 @@ if __name__ == '__main__':
     output_file_name = os.path.splitext(os.path.basename(bag_name))[0] + '_output.pdf'
     if args.output_dir:
       output_file_name = args.output_dir + '/' + output_file_name
-    plot_command = 'rosrun graph_bag plot_results_main.py ' + bag_name + ' --output-file ' + output_file_name
+
+    extra_args = ''
+    if args.gt_path is not None:
+        extra_args += ' -g ' + args.gt_path
+    plot_command = 'rosrun graph_bag plot_results_main.py ' + bag_name + ' --output-file ' + output_file_name + extra_args
     os.system(plot_command)
