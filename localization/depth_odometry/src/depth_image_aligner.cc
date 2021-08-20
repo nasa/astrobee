@@ -17,6 +17,7 @@
  */
 
 #include <depth_odometry/depth_image_aligner.h>
+#include <depth_odometry/point_cloud_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 
@@ -60,10 +61,11 @@ DepthImageAligner::ComputeRelativeTransform() {
   std::vector<cv::Point3d> match_points_3d;
   std::vector<cv::Point2d> match_image_points;
   for (const auto& match : matches) {
+    const auto& latest_image_point = latest_brisk_depth_image_->keypoints()[match.trainIdx].pt;
+    const auto& latest_point_3d = latest_brisk_depth_image_->Point3D(latest_image_point.x, latest_image_point.y);
+    if (!ValidPoint(latest_point_3d)) continue;
+    match_points_3d.emplace_back(cv::Point3d(latest_point_3d.x, latest_point_3d.y, latest_point_3d.z));
     match_image_points.emplace_back(previous_brisk_depth_image_->keypoints()[match.queryIdx].pt);
-    const auto& latest_point = latest_brisk_depth_image_->keypoints()[match.trainIdx].pt;
-    const auto& pcl_latest_point = latest_brisk_depth_image_->Point3D(latest_point.y, latest_point.x);
-    match_points_3d.emplace_back(cv::Point3d(pcl_latest_point.x, pcl_latest_point.y, pcl_latest_point.z));
   }
   cv::Mat rotation;
   cv::Mat translation;
