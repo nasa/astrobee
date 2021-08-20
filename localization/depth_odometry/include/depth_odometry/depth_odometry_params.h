@@ -36,6 +36,7 @@ struct DepthOdometryParams {
   bool inital_estimate_with_ransac_ia;
   bool frame_change_transform;
   Eigen::Isometry3d body_T_haz_cam;
+  Eigen::Isometry3d haz_cam_T_haz_depth;
 };
 }  // namespace depth_odometry
 
