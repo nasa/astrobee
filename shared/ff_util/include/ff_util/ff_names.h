@@ -299,8 +299,7 @@
 #define TOPIC_LOCALIZATION_HR_CLOUD                 "loc/hr/cloud"
 #define TOPIC_LOCALIZATION_HR_MARKER                "loc/hr/marker"
 #define TOPIC_LOCALIZATION_DEPTH_ODOM               "loc/depth/odom"
-#define TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES "loc/depth/image_correspondences"
-#define TOPIC_LOCALIZATION_DEPTH_POINT_CLOUD_CORRESPONDENCES "loc/depth/point_cloud_correspondences"
+#define TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES "loc/depth/correspondences"
 
 #define TOPIC_LOCALIZATION_OF_DEBUG                 "loc/of/debug_img"
 

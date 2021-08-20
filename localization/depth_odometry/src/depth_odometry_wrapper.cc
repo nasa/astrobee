@@ -86,19 +86,19 @@ DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
   return relative_pose_msgs;
 }
 
-boost::optional<ff_msgs::PointCloudCorrespondences> DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
+boost::optional<ff_msgs::DepthImageCorrespondences> DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
   const auto& correspondences = depth_odometry_.point_cloud_correspondences();
   if (!correspondences) return boost::none;
   const auto previous_time = depth_odometry_.previous_depth_cloud().first;
   const auto latest_time = depth_odometry_.latest_depth_cloud().first;
-  ff_msgs::PointCloudCorrespondences correspondences_msg;
+  ff_msgs::DepthImageCorrespondences correspondences_msg;
   lc::TimeToHeader(latest_time, correspondences_msg.header);
   correspondences_msg.header.frame_id = "haz_cam";
   correspondences_msg.source_time = ros::Time(previous_time);
   correspondences_msg.target_time = ros::Time(latest_time);
 
   for (const auto& correspondence : *correspondences) {
-    ff_msgs::PointCloudCorrespondence correspondence_msg;
+    ff_msgs::DepthImageCorrespondence correspondence_msg;
     correspondence_msg.source_index = correspondence.index_query;
     correspondence_msg.target_index = correspondence.index_match;
     correspondences_msg.correspondences.push_back(correspondence_msg);
@@ -106,23 +106,23 @@ boost::optional<ff_msgs::PointCloudCorrespondences> DepthOdometryWrapper::GetPoi
   return correspondences_msg;
 }
 
-boost::optional<ff_msgs::ImageCorrespondences> DepthOdometryWrapper::GetDepthImageCorrespondencesMsg() const {
+boost::optional<ff_msgs::DepthImageCorrespondences> DepthOdometryWrapper::GetImageCorrespondencesMsg() const {
   const auto& correspondences = depth_odometry_.image_correspondences();
   if (!correspondences) return boost::none;
-  ff_msgs::ImageCorrespondences correspondences_msg;
+  ff_msgs::DepthImageCorrespondences correspondences_msg;
   lc::TimeToHeader(correspondences->target_time(), correspondences_msg.header);
   correspondences_msg.header.frame_id = "haz_cam";
   correspondences_msg.source_time = ros::Time(correspondences->source_time());
   correspondences_msg.target_time = ros::Time(correspondences->target_time());
 
   for (const auto& correspondence : correspondences->correspondences()) {
-    ff_msgs::ImageCorrespondence correspondence_msg;
-    correspondence_msg.source_point.x = correspondence.source_point.x();
-    correspondence_msg.source_point.y = correspondence.source_point.y();
-    correspondence_msg.target_point.x = correspondence.target_point.x();
-    correspondence_msg.target_point.y = correspondence.target_point.y();
+    ff_msgs::DepthImageCorrespondence correspondence_msg;
+    // TODO(rsoussan): Get 224 from image.cols
+    correspondence_msg.source_index = correspondence.source_point.x() + correspondence.source_point.y() * 224;
+    correspondence_msg.target_index = correspondence.target_point.x() + correspondence.target_point.y() * 224;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
+
   return correspondences_msg;
 }
 

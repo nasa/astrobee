@@ -33,7 +33,7 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
  create_library(TARGET ${PROJECT_NAME} 
    LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements 
    INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-   ADD_SRCS src/depth_odometry_image_display.cc src/depth_odometry_point_cloud_display.cc src/localization_graph_display.cc src/localization_graph_panel.cc src/pose_display.cc src/utilities.cc src/imu_augmentor_display.cc src/sparse_mapping_display.cc ${MOC_FILES}
+   ADD_SRCS src/depth_odometry_display.cc src/localization_graph_display.cc src/localization_graph_panel.cc src/pose_display.cc src/utilities.cc src/imu_augmentor_display.cc src/sparse_mapping_display.cc ${MOC_FILES}
    DEPS gtsam rviz 
  )
 

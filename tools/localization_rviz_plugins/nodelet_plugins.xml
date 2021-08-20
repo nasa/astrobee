@@ -1,18 +1,10 @@
 <library path="lib/liblocalization_rviz_plugins">
- <class name="localization_rviz_plugins/DepthOdometryImage"
-         type="localization_rviz_plugins::DepthOdometryImageDisplay"
+ <class name="localization_rviz_plugins/DepthOdometry"
+         type="localization_rviz_plugins::DepthOdometryDisplay"
          base_class_type="rviz::Display">
     <description>
-      Depth Odometry Image Display
+      Depth Odometry Display
     </description>
- </class>
- <class name="localization_rviz_plugins/DepthOdometryPointCloud"
-         type="localization_rviz_plugins::DepthOdometryPointCloudDisplay"
-         base_class_type="rviz::Display">
-    <description>
-      Depth Odometry Point Cloud Display
-    </description>
-  </class>
   <class name="localization_rviz_plugins/Graph"
          type="localization_rviz_plugins::LocalizationGraphDisplay"
          base_class_type="rviz::Display">
