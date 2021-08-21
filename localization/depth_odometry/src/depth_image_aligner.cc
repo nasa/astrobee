@@ -16,36 +16,25 @@
  * under the License.
  */
 
+#include <camera/camera_params.h>
+#include <camera/camera_model.h>
 #include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/point_cloud_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
-
-#include <opencv2/calib3d.hpp>
+#include <sparse_mapping/reprojection.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
-DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
+DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
+    : params_(params), cam_(*(params_.camera_params)) {
   brisk_detector_ =
     cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
   flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
     params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
-  const auto focal_lengths = params_.camera_params->GetFocalVector();
-  const auto distortion_params = params_.camera_params->GetDistortion();
-  const auto principal_points = params_.camera_params->GetOpticalOffset();
-  intrinsics_ = cv::Mat::zeros(3, 3, cv::DataType<double>::type);
-  intrinsics_.at<double>(0, 0) = focal_lengths[0];
-  intrinsics_.at<double>(1, 1) = focal_lengths[1];
-  intrinsics_.at<double>(0, 2) = principal_points[0];
-  intrinsics_.at<double>(1, 2) = principal_points[1];
-  intrinsics_.at<double>(2, 2) = 1;
-  distortion_params_ = cv::Mat(4, 1, cv::DataType<double>::type);
-  for (int i = 0; i < 4; ++i) {
-    distortion_params_.at<double>(i, 0) = distortion_params[i];
-  }
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
@@ -58,6 +47,9 @@ DepthImageAligner::ComputeRelativeTransform() {
     return match.distance > params_.max_match_hamming_distance;
   });
   matches.erase(filtered_end, matches.end());
+  LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
+                           << ", b: " << latest_brisk_depth_image_->keypoints().size());
+  LogError("matches post filtering: " << matches.size());
   std::vector<cv::Point3d> match_points_3d;
   std::vector<cv::Point2d> match_image_points;
   for (const auto& match : matches) {
@@ -70,40 +62,35 @@ DepthImageAligner::ComputeRelativeTransform() {
     match_image_points.emplace_back(image_point);
     // LogError("3d point: " << latest_point_3d->x << ", " << latest_point_3d->y << ", " << latest_point_3d->z);
     // LogError("image point: " << image_point.x << ", " << image_point.y);
-    cv::Mat zero_r(cv::Mat::eye(3, 3, cv::DataType<double>::type));
-    cv::Mat zero_t(cv::Mat::zeros(3, 1, cv::DataType<double>::type));
-    {
-      std::vector<cv::Point2d> projected_points;
-      std::vector<cv::Point3d> object_points;
-      object_points.emplace_back(cv::Point3d(latest_point_3d->x, latest_point_3d->y, latest_point_3d->z));
-      cv::projectPoints(object_points, zero_r, zero_t, intrinsics_, distortion_params_, projected_points);
-      const auto& projected_point = projected_points[0];
-      LogError("projected point: " << projected_point.x << ", " << projected_point.y);
-      const auto& diff = image_point - projected_point;
-      const double diff_norm = std::sqrt(diff.x * diff.x + diff.y * diff.y);
-      LogError("diff norm: " << diff_norm);
-      if (diff_norm > 1) LogError("large diff norm!!!");
-    }
   }
-  cv::Mat rodrigues_rotation;
-  cv::Mat translation;
-  const bool success = cv::solvePnPRansac(match_points_3d, match_image_points, intrinsics_, distortion_params_,
-                                          rodrigues_rotation, translation);
-  if (!success) {
-    LogError("ComputeRelativeTransform: Failed to compute Ransac PnP relative transform.");
+  LogError("pnp points: " << match_points_3d.size());
+  if (match_points_3d.size() < 4) {
+    LogError("ComputeRelativeTransform: Too few points for Ransac PnP, need 4 but given " << match_points_3d.size()
+                                                                                          << ".");
+    return boost::none;
   }
-  cv::Mat rotation;
-  cv::Rodrigues(rodrigues_rotation, rotation);
-  Eigen::Isometry3d relative_transform;
-  relative_transform.linear() =
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Map(reinterpret_cast<const double*>(rotation.data));
-  relative_transform.translation() = Eigen::Vector3d::Map(reinterpret_cast<const double*>(translation.data));
+  std::vector<Eigen::Vector3d> inlier_landmarks;
+  std::vector<Eigen::Vector2d> inlier_observations;
+
+  std::vector<Eigen::Vector3d> landmarks;
+  std::vector<Eigen::Vector2d> observations;
+  for (int i = 0; i < match_points_3d.size(); ++i) {
+    const auto& landmark = match_points_3d[i];
+    landmarks.emplace_back(Eigen::Vector3d(landmark.x, landmark.y, landmark.z));
+    const auto& image_point = match_image_points[i];
+    // RansacEstimateCamera expects image points in undistorted centered frame
+    Eigen::Vector2d undistorted_c_observation;
+    params_.camera_params->Convert<camera::DISTORTED, camera::UNDISTORTED_C>(
+      Eigen::Vector2d(image_point.x, image_point.y), &undistorted_c_observation);
+    observations.emplace_back(undistorted_c_observation);
+  }
+  sparse_mapping::RansacEstimateCamera(landmarks, observations, 100, 8, &cam_, &inlier_landmarks, &inlier_observations);
+  LogError("num inliear obs: " << inlier_observations.size());
+  const Eigen::Isometry3d relative_transform(cam_.GetTransform().matrix());
   correspondences_ =
     ImageCorrespondences(matches, previous_brisk_depth_image_->keypoints(), latest_brisk_depth_image_->keypoints(),
                          previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp);
-  LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
-                           << ", b: " << latest_brisk_depth_image_->keypoints().size());
-  LogError("matches post filtering: " << matches.size());
+
   LogError("rel trafo trans: " << relative_transform.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.translation().norm());
   if (relative_transform.translation().norm() > 10) {

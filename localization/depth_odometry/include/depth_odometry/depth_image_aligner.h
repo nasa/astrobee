@@ -18,6 +18,7 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
+#include <camera/camera_model.h>
 #include <depth_odometry/brisk_depth_image_measurement.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/image_correspondences.h>
@@ -51,8 +52,7 @@ class DepthImageAligner {
   std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
   boost::optional<ImageCorrespondences> correspondences_;
   cv::Ptr<cv::CLAHE> clahe_;
-  cv::Mat intrinsics_;
-  cv::Mat distortion_params_;
+  camera::CameraModel cam_;
 };
 }  // namespace depth_odometry
 
