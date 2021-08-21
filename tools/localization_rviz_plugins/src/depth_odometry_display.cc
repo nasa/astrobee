@@ -68,31 +68,13 @@ void DepthOdometryDisplay::reset() {
 void DepthOdometryDisplay::clearDisplay() {}
 
 void DepthOdometryDisplay::imageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
-  img_buffer_.emplace(lc::TimeFromHeader(image_msg->header), image_msg);
+  img_buffer_.AddMeasurement(lc::TimeFromHeader(image_msg->header), image_msg);
 }
 
 void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
-  point_cloud_buffer_.emplace(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
-}
-
-sensor_msgs::ImageConstPtr DepthOdometryDisplay::getImage(const localization_common::Time time) {
-  const auto img_it = img_buffer_.find(time);
-  if (img_it == img_buffer_.end()) return nullptr;
-  return img_it->second;
-}
-
-void DepthOdometryDisplay::clearImageBuffer(const localization_common::Time oldest_graph_time) {
-  const auto img_it = img_buffer_.find(oldest_graph_time);
-  if (img_it == img_buffer_.end()) return;
-  img_buffer_.erase(img_buffer_.begin(), img_it);
-}
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometryDisplay::getPointCloud(const localization_common::Time time) {
-  const auto point_cloud_it = point_cloud_buffer_.find(time);
-  if (point_cloud_it == point_cloud_buffer_.end()) return nullptr;
-  return point_cloud_it->second;
+  point_cloud_buffer_.AddMeasurement(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
 }
 
 void DepthOdometryDisplay::processMessage(const ff_msgs::DepthImageCorrespondences::ConstPtr& correspondences_msg) {
@@ -105,15 +87,15 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   if (!latest_correspondences_msg_) return;
   const lc::Time source_time = lc::TimeFromRosTime(latest_correspondences_msg_->source_time);
   const lc::Time target_time = lc::TimeFromRosTime(latest_correspondences_msg_->target_time);
-  const auto source_image_msg = getImage(source_time);
-  const auto target_image_msg = getImage(target_time);
+  const auto source_image_msg = img_buffer_.GetMeasurement(source_time);
+  const auto target_image_msg = img_buffer_.GetMeasurement(target_time);
   if (!source_image_msg || !target_image_msg) return;
-  clearImageBuffer(source_time);
+  img_buffer_.ClearBuffer(source_time);
 
   // TODO(rsoussan): make function for this, unify with loc graph display
   cv_bridge::CvImagePtr source_cv_image;
   try {
-    source_cv_image = cv_bridge::toCvCopy(source_image_msg, sensor_msgs::image_encodings::RGB8);
+    source_cv_image = cv_bridge::toCvCopy(*source_image_msg, sensor_msgs::image_encodings::RGB8);
   } catch (cv_bridge::Exception& e) {
     LogError("cv_bridge exception: " << e.what());
     return;
@@ -122,7 +104,7 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
 
   cv_bridge::CvImagePtr target_cv_image;
   try {
-    target_cv_image = cv_bridge::toCvCopy(target_image_msg, sensor_msgs::image_encodings::RGB8);
+    target_cv_image = cv_bridge::toCvCopy(*target_image_msg, sensor_msgs::image_encodings::RGB8);
   } catch (cv_bridge::Exception& e) {
     LogError("cv_bridge exception: " << e.what());
     return;
@@ -164,11 +146,11 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
 
 void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImageCorrespondence& correspondence,
                                                        const lc::Time source_time, const lc::Time target_time) {
-  const auto source_point_cloud = getPointCloud(source_time);
-  const auto target_point_cloud = getPointCloud(target_time);
+  const auto source_point_cloud = point_cloud_buffer_.GetNearbyMeasurement(source_time, 0.05);
+  const auto target_point_cloud = point_cloud_buffer_.GetNearbyMeasurement(target_time, 0.05);
   if (!source_point_cloud || !target_point_cloud) return;
   geometry_msgs::PointStamped source_correspondence_point_msg;
-  const auto source_correspondence_point = source_point_cloud->points[correspondence.source_index];
+  const auto source_correspondence_point = (*source_point_cloud)->points[correspondence.source_index];
   source_correspondence_point_msg.point.x = source_correspondence_point.x;
   source_correspondence_point_msg.point.y = source_correspondence_point.y;
   source_correspondence_point_msg.point.z = source_correspondence_point.z;
@@ -177,7 +159,7 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImage
   source_correspondence_point_pub_.publish(source_correspondence_point_msg);
 
   geometry_msgs::PointStamped target_correspondence_point_msg;
-  const auto target_correspondence_point = target_point_cloud->points[correspondence.target_index];
+  const auto target_correspondence_point = (*target_point_cloud)->points[correspondence.target_index];
   target_correspondence_point_msg.point.x = target_correspondence_point.x;
   target_correspondence_point_msg.point.y = target_correspondence_point.y;
   target_correspondence_point_msg.point.z = target_correspondence_point.z;
@@ -187,12 +169,14 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImage
 
   {
     const auto source_cloud_msg =
-      lm::MakePointCloudMsg(*source_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
+      lm::MakePointCloudMsg(**source_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
     source_point_cloud_pub_.publish(source_cloud_msg);
     const auto target_cloud_msg =
-      lm::MakePointCloudMsg(*target_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
+      lm::MakePointCloudMsg(**target_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
     target_point_cloud_pub_.publish(target_cloud_msg);
   }
+
+  point_cloud_buffer_.ClearBuffer(source_time);
 }
 }  // namespace localization_rviz_plugins
 

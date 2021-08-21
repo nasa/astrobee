@@ -23,6 +23,7 @@
 // Required for Qt
 #ifndef Q_MOC_RUN
 #include <ff_msgs/DepthImageCorrespondences.h>
+#include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 #include <image_transport/image_transport.h>
 #include <pcl/point_cloud.h>
@@ -61,10 +62,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthIma
   void publishCorrespondencePoints(const ff_msgs::DepthImageCorrespondence& correspondence,
                                    const localization_common::Time source_time,
                                    const localization_common::Time target_time);
-  void clearImageBuffer(const localization_common::Time oldest_allowed_time);
   void clearDisplay();
-  sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr getPointCloud(const localization_common::Time time);
 
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
   ff_msgs::DepthImageCorrespondences::ConstPtr latest_correspondences_msg_;
@@ -74,9 +72,8 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthIma
   ros::Publisher source_point_cloud_pub_, target_point_cloud_pub_;
   image_transport::Publisher correspondence_image_pub_;
   ros::NodeHandle nh_;
-  // TODO(rsoussan): Create seperate class for image buffer, unify with loc graph display
-  std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
-  std::map<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
+  localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> img_buffer_;
+  localization_common::MeasurementBuffer<pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT
