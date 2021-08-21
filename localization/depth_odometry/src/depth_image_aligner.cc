@@ -52,6 +52,7 @@ DepthImageAligner::ComputeRelativeTransform() {
   LogError("matches post filtering: " << matches.size());
   std::vector<cv::Point3d> match_points_3d;
   std::vector<cv::Point2d> match_image_points;
+  std::vector<cv::DMatch> filtered_matches;
   for (const auto& match : matches) {
     const auto& latest_image_point = latest_brisk_depth_image_->keypoints()[match.trainIdx].pt;
     const auto& latest_point_3d =
@@ -62,6 +63,7 @@ DepthImageAligner::ComputeRelativeTransform() {
     match_image_points.emplace_back(image_point);
     // LogError("3d point: " << latest_point_3d->x << ", " << latest_point_3d->y << ", " << latest_point_3d->z);
     // LogError("image point: " << image_point.x << ", " << image_point.y);
+    filtered_matches.emplace_back(match);
   }
   LogError("pnp points: " << match_points_3d.size());
   if (match_points_3d.size() < 4) {
@@ -74,7 +76,7 @@ DepthImageAligner::ComputeRelativeTransform() {
 
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<Eigen::Vector2d> observations;
-  for (int i = 0; i < match_points_3d.size(); ++i) {
+  for (size_t i = 0; i < match_points_3d.size(); ++i) {
     const auto& landmark = match_points_3d[i];
     landmarks.emplace_back(Eigen::Vector3d(landmark.x, landmark.y, landmark.z));
     const auto& image_point = match_image_points[i];
@@ -84,12 +86,19 @@ DepthImageAligner::ComputeRelativeTransform() {
       Eigen::Vector2d(image_point.x, image_point.y), &undistorted_c_observation);
     observations.emplace_back(undistorted_c_observation);
   }
+
+  LogError("filtered matches: " << filtered_matches.size());
+  LogError("landmarks: " << landmarks.size() << ", observations: " << observations.size());
   sparse_mapping::RansacEstimateCamera(landmarks, observations, 100, 8, &cam_, &inlier_landmarks, &inlier_observations);
   LogError("num inliear obs: " << inlier_observations.size());
+  if (inlier_observations.size() < 5) {
+    LogError("ComputeRelativeTransform: Too few inlier matches.");
+    return boost::none;
+  }
   const Eigen::Isometry3d relative_transform(cam_.GetTransform().matrix());
-  correspondences_ =
-    ImageCorrespondences(matches, previous_brisk_depth_image_->keypoints(), latest_brisk_depth_image_->keypoints(),
-                         previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp);
+  correspondences_ = ImageCorrespondences(filtered_matches, previous_brisk_depth_image_->keypoints(),
+                                          latest_brisk_depth_image_->keypoints(),
+                                          previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp);
 
   LogError("rel trafo trans: " << relative_transform.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.translation().norm());
