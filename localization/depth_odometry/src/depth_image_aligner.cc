@@ -89,10 +89,12 @@ DepthImageAligner::ComputeRelativeTransform() {
 
   LogError("filtered matches: " << filtered_matches.size());
   LogError("landmarks: " << landmarks.size() << ", observations: " << observations.size());
-  sparse_mapping::RansacEstimateCamera(landmarks, observations, 100, 8, &cam_, &inlier_landmarks, &inlier_observations);
+  sparse_mapping::RansacEstimateCamera(landmarks, observations, params_.num_ransac_iterations,
+                                       params_.max_inlier_tolerance, &cam_, &inlier_landmarks, &inlier_observations);
   LogError("num inliear obs: " << inlier_observations.size());
-  if (inlier_observations.size() < 5) {
-    LogError("ComputeRelativeTransform: Too few inlier matches.");
+  if (inlier_observations.size() < params_.min_num_inliers) {
+    LogError("ComputeRelativeTransform: Too few inlier matches, num matches: "
+             << inlier_observations.size() << ", min num matches: " << params_.min_num_inliers << ".");
     return boost::none;
   }
   const Eigen::Isometry3d relative_transform(cam_.GetTransform().matrix());

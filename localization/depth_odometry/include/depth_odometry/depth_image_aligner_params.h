@@ -37,6 +37,11 @@ struct DepthImageAlignerParams {
   bool use_clahe;
   int clahe_grid_length;
   double clahe_clip_limit;
+  // RansacEstimateCamera params
+  int num_ransac_iterations;
+  int max_inlier_tolerance;
+  // Other
+  int min_num_inliers;
   std::shared_ptr<camera::CameraParameters> camera_params;
 };
 }  // namespace depth_odometry

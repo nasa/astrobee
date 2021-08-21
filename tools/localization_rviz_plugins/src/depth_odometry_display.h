@@ -64,7 +64,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthIma
   void clearImageBuffer(const localization_common::Time oldest_allowed_time);
   void clearDisplay();
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
-  pcl::PointCloud<pcl::PointXYZI>::Ptr getPointCloud(const localization_common::Time time);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr getPointCloud(const localization_common::Time time);
 
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
   ff_msgs::DepthImageCorrespondences::ConstPtr latest_correspondences_msg_;
@@ -76,7 +76,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthIma
   ros::NodeHandle nh_;
   // TODO(rsoussan): Create seperate class for image buffer, unify with loc graph display
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
-  std::map<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> point_cloud_buffer_;
+  std::map<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT
