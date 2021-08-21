@@ -43,27 +43,16 @@ struct DepthImageMeasurement : public Measurement {
     return Point3D(static_cast<int>(std::round(col)), static_cast<int>(std::round(row)));
   }
   boost::optional<pcl::PointXYZI> InterpolatePoint3D(const double col, const double row) {
-    double col_alpha = std::remainder(col, 1);
-    double row_alpha = std::remainder(row, 1);
+    double col_alpha = col - std::floor(col);
+    double row_alpha = row - std::floor(row);
     const auto floor_col_floor_row_point = Point3D(std::floor(col), std::floor(row));
     const auto ceil_col_floor_row_point = Point3D(std::ceil(col), std::floor(row));
     const auto floor_col_ceil_row_point = Point3D(std::floor(col), std::ceil(row));
     const auto ceil_col_ceil_row_point = Point3D(std::ceil(col), std::ceil(row));
-    // Some index is out of bounds
-    if (!ceil_col_ceil_row_point) {
-      // Both ceils are out of bounds
-      if (!ceil_col_floor_row_point && !floor_col_ceil_row_point) {
-        if (!floor_col_floor_row_point) return boost::none;
-        return *floor_col_floor_row_point;
-      }
-      // Col ceil out of bounds
-      if (!floor_col_ceil_row_point) {
-        return Interpolate(row_alpha, *floor_col_floor_row_point, *floor_col_ceil_row_point);
-      }
-      // Row ceil out of bounds
-      return Interpolate(col_alpha, *floor_col_floor_row_point, *ceil_col_floor_row_point);
-    }
-    // Interpolate column points for each row option, then interpolate these results using row weights
+    if (!ValidAccessedPoint(floor_col_floor_row_point) || !ValidAccessedPoint(ceil_col_floor_row_point) ||
+        !ValidAccessedPoint(floor_col_ceil_row_point) || !ValidAccessedPoint(ceil_col_ceil_row_point))
+      return boost::none;
+    // Interpolate column points for each row option using col weights, then interpolate these results using row weights
     const auto col_interpolated_floor_row =
       Interpolate(col_alpha, *floor_col_floor_row_point, *ceil_col_floor_row_point);
     const auto col_interpolated_ceil_row = Interpolate(col_alpha, *floor_col_ceil_row_point, *ceil_col_ceil_row_point);
@@ -82,6 +71,16 @@ struct DepthImageMeasurement : public Measurement {
     interpolated_point.z = beta * point_a.z + alpha * point_b.z;
     interpolated_point.intensity = beta * point_a.intensity + alpha * point_b.intensity;
     return interpolated_point;
+  }
+
+  bool ValidAccessedPoint(const boost::optional<const pcl::PointXYZI&> point) { return point && ValidPoint(*point); }
+
+  // TODO(rsoussan): Unify this with depth odometry point_cloud_utilities.cc
+  bool ValidPoint(const pcl::PointXYZI& point) {
+    const bool finite_point = pcl_isfinite(point.x) && pcl_isfinite(point.y) && pcl_isfinite(point.z);
+    const bool nonzero_point = point.x != 0 || point.y != 0 || point.z != 0;
+    const bool valid_intensity = pcl_isfinite(point.intensity);
+    return finite_point && nonzero_point && valid_intensity;
   }
 };
 }  // namespace localization_measurements
