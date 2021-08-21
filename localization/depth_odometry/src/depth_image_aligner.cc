@@ -62,14 +62,38 @@ DepthImageAligner::ComputeRelativeTransform() {
   std::vector<cv::Point2d> match_image_points;
   for (const auto& match : matches) {
     const auto& latest_image_point = latest_brisk_depth_image_->keypoints()[match.trainIdx].pt;
-    const auto& latest_point_3d = latest_brisk_depth_image_->Point3D(latest_image_point.x, latest_image_point.y);
-    if (!ValidPoint(latest_point_3d)) continue;
-    match_points_3d.emplace_back(cv::Point3d(latest_point_3d.x, latest_point_3d.y, latest_point_3d.z));
-    match_image_points.emplace_back(previous_brisk_depth_image_->keypoints()[match.queryIdx].pt);
+    const auto& latest_point_3d =
+      latest_brisk_depth_image_->InterpolatePoint3D(latest_image_point.x, latest_image_point.y);
+    if (!latest_point_3d || !ValidPoint(*latest_point_3d)) continue;
+    match_points_3d.emplace_back(cv::Point3d(latest_point_3d->x, latest_point_3d->y, latest_point_3d->z));
+    const auto image_point = static_cast<cv::Point2d>(previous_brisk_depth_image_->keypoints()[match.queryIdx].pt);
+    match_image_points.emplace_back(image_point);
+    // LogError("3d point: " << latest_point_3d->x << ", " << latest_point_3d->y << ", " << latest_point_3d->z);
+    // LogError("image point: " << image_point.x << ", " << image_point.y);
+    cv::Mat zero_r(cv::Mat::eye(3, 3, cv::DataType<double>::type));
+    cv::Mat zero_t(cv::Mat::zeros(3, 1, cv::DataType<double>::type));
+    {
+      std::vector<cv::Point2d> projected_points;
+      std::vector<cv::Point3d> object_points;
+      object_points.emplace_back(cv::Point3d(latest_point_3d->x, latest_point_3d->y, latest_point_3d->z));
+      cv::projectPoints(object_points, zero_r, zero_t, intrinsics_, distortion_params_, projected_points);
+      const auto& projected_point = projected_points[0];
+      LogError("projected point: " << projected_point.x << ", " << projected_point.y);
+      const auto& diff = image_point - projected_point;
+      const double diff_norm = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+      LogError("diff norm: " << diff_norm);
+      if (diff_norm > 1) LogError("large diff norm!!!");
+    }
+  }
+  cv::Mat rodrigues_rotation;
+  cv::Mat translation;
+  const bool success = cv::solvePnPRansac(match_points_3d, match_image_points, intrinsics_, distortion_params_,
+                                          rodrigues_rotation, translation);
+  if (!success) {
+    LogError("ComputeRelativeTransform: Failed to compute Ransac PnP relative transform.");
   }
   cv::Mat rotation;
-  cv::Mat translation;
-  cv::solvePnPRansac(match_points_3d, match_image_points, intrinsics_, distortion_params_, rotation, translation);
+  cv::Rodrigues(rodrigues_rotation, rotation);
   Eigen::Isometry3d relative_transform;
   relative_transform.linear() =
     Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Map(reinterpret_cast<const double*>(rotation.data));
@@ -80,6 +104,13 @@ DepthImageAligner::ComputeRelativeTransform() {
   LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
                            << ", b: " << latest_brisk_depth_image_->keypoints().size());
   LogError("matches post filtering: " << matches.size());
+  LogError("rel trafo trans: " << relative_transform.translation().matrix());
+  LogError("rel trafo trans norm: " << relative_transform.translation().norm());
+  if (relative_transform.translation().norm() > 10) {
+    LogError("large norm!!!");
+    return boost::none;
+  }
+
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform,
                                                                    Eigen::Matrix<double, 6, 6>::Zero()};
 }
