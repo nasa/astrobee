@@ -19,7 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
 #include <camera/camera_model.h>
-#include <depth_odometry/brisk_depth_image_measurement.h>
+#include <depth_odometry/feature_depth_image_measurement.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/image_correspondences.h>
 #include <localization_common/time.h>
@@ -46,9 +46,9 @@ class DepthImageAligner {
 
  private:
   DepthImageAlignerParams params_;
-  std::unique_ptr<BriskDepthImageMeasurement> previous_brisk_depth_image_;
-  std::unique_ptr<BriskDepthImageMeasurement> latest_brisk_depth_image_;
-  cv::Ptr<cv::BRISK> brisk_detector_;
+  std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
+  std::unique_ptr<FeatureDepthImageMeasurement> latest_feature_depth_image_;
+  cv::Ptr<cv::Feature2D> feature_detector_;
   std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
   boost::optional<ImageCorrespondences> correspondences_;
   cv::Ptr<cv::CLAHE> clahe_;

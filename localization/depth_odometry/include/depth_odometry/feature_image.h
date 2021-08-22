@@ -15,11 +15,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef DEPTH_ODOMETRY_FEATURE_IMAGE_H_
+#define DEPTH_ODOMETRY_FEATURE_IMAGE_H_
 
-#include <depth_odometry/brisk_image.h>
+#include <opencv2/core.hpp>
+#include <opencv2/features2d.hpp>
 
 namespace depth_odometry {
-BriskImage::BriskImage(const cv::Mat& image, const cv::Ptr<cv::BRISK> brisk_detector) : image_(image) {
-  brisk_detector->detectAndCompute(image_, cv::Mat(), keypoints_, descriptors_);
-}
+class FeatureImage {
+ public:
+  FeatureImage(const cv::Mat& image, const cv::Ptr<cv::Feature2D> feature_detector);
+  const cv::Mat& image() const { return image_; }
+  const std::vector<cv::KeyPoint>& keypoints() const { return keypoints_; }
+  const cv::Mat& descriptors() const { return descriptors_; }
+
+ private:
+  cv::Mat image_;
+  std::vector<cv::KeyPoint> keypoints_;
+  cv::Mat descriptors_;
+};
 }  // namespace depth_odometry
+
+#endif  // DEPTH_ODOMETRY_FEATURE_IMAGE_H_

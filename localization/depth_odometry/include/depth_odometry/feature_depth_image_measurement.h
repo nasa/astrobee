@@ -15,22 +15,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_BRISK_DEPTH_IMAGE_MEASUREMENT_H_
-#define DEPTH_ODOMETRY_BRISK_DEPTH_IMAGE_MEASUREMENT_H_
+#ifndef DEPTH_ODOMETRY_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
+#define DEPTH_ODOMETRY_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
 
-#include <depth_odometry/brisk_image.h>
+#include <depth_odometry/feature_image.h>
 #include <localization_measurements/depth_image_measurement.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 
 namespace depth_odometry {
-class BriskDepthImageMeasurement : public localization_measurements::DepthImageMeasurement, public BriskImage {
+class FeatureDepthImageMeasurement : public localization_measurements::DepthImageMeasurement, public FeatureImage {
  public:
-  BriskDepthImageMeasurement(const localization_measurements::DepthImageMeasurement& depth_image_measurement,
-                             const cv::Ptr<cv::BRISK> brisk_detector)
-      : DepthImageMeasurement(depth_image_measurement), BriskImage(depth_image_measurement.image, brisk_detector) {}
+  FeatureDepthImageMeasurement(const localization_measurements::DepthImageMeasurement& depth_image_measurement,
+                               const cv::Ptr<cv::Feature2D> feature_detector)
+      : DepthImageMeasurement(depth_image_measurement), FeatureImage(depth_image_measurement.image, feature_detector) {}
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_BRISK_DEPTH_IMAGE_MEASUREMENT_H_
+#endif  // DEPTH_ODOMETRY_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_

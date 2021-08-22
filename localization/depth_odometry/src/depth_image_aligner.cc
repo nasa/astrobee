@@ -24,13 +24,15 @@
 #include <localization_common/timer.h>
 #include <sparse_mapping/reprojection.h>
 
+#include <opencv2/xfeatures2d.hpp>
+
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
     : params_(params), cam_(*(params_.camera_params)) {
-  brisk_detector_ =
+  feature_detector_ =
     cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
   flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
     params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
@@ -39,27 +41,28 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
 DepthImageAligner::ComputeRelativeTransform() {
-  if (!previous_brisk_depth_image_ || !latest_brisk_depth_image_) return boost::none;
+  if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   std::vector<cv::DMatch> matches;
-  flann_matcher_->match(previous_brisk_depth_image_->descriptors(), latest_brisk_depth_image_->descriptors(), matches);
+  flann_matcher_->match(previous_feature_depth_image_->descriptors(), latest_feature_depth_image_->descriptors(),
+                        matches);
   LogError("matches pre filtering: " << matches.size());
   const auto filtered_end = std::remove_if(matches.begin(), matches.end(), [this](const cv::DMatch& match) {
     return match.distance > params_.max_match_hamming_distance;
   });
   matches.erase(filtered_end, matches.end());
-  LogError("keypoints a: " << previous_brisk_depth_image_->keypoints().size()
-                           << ", b: " << latest_brisk_depth_image_->keypoints().size());
+  LogError("keypoints a: " << previous_feature_depth_image_->keypoints().size()
+                           << ", b: " << latest_feature_depth_image_->keypoints().size());
   LogError("matches post filtering: " << matches.size());
   std::vector<cv::Point3d> match_points_3d;
   std::vector<cv::Point2d> match_image_points;
   std::vector<cv::DMatch> filtered_matches;
   for (const auto& match : matches) {
-    const auto& latest_image_point = latest_brisk_depth_image_->keypoints()[match.trainIdx].pt;
+    const auto& latest_image_point = latest_feature_depth_image_->keypoints()[match.trainIdx].pt;
     const auto& latest_point_3d =
-      latest_brisk_depth_image_->InterpolatePoint3D(latest_image_point.x, latest_image_point.y);
+      latest_feature_depth_image_->InterpolatePoint3D(latest_image_point.x, latest_image_point.y);
     if (!latest_point_3d || !ValidPoint(*latest_point_3d)) continue;
     match_points_3d.emplace_back(cv::Point3d(latest_point_3d->x, latest_point_3d->y, latest_point_3d->z));
-    const auto image_point = static_cast<cv::Point2d>(previous_brisk_depth_image_->keypoints()[match.queryIdx].pt);
+    const auto image_point = static_cast<cv::Point2d>(previous_feature_depth_image_->keypoints()[match.queryIdx].pt);
     match_image_points.emplace_back(image_point);
     // LogError("3d point: " << latest_point_3d->x << ", " << latest_point_3d->y << ", " << latest_point_3d->z);
     // LogError("image point: " << image_point.x << ", " << image_point.y);
@@ -98,9 +101,9 @@ DepthImageAligner::ComputeRelativeTransform() {
     return boost::none;
   }
   const Eigen::Isometry3d relative_transform(cam_.GetTransform().matrix());
-  correspondences_ = ImageCorrespondences(filtered_matches, previous_brisk_depth_image_->keypoints(),
-                                          latest_brisk_depth_image_->keypoints(),
-                                          previous_brisk_depth_image_->timestamp, latest_brisk_depth_image_->timestamp);
+  correspondences_ = ImageCorrespondences(
+    filtered_matches, previous_feature_depth_image_->keypoints(), latest_feature_depth_image_->keypoints(),
+    previous_feature_depth_image_->timestamp, latest_feature_depth_image_->timestamp);
 
   LogError("rel trafo trans: " << relative_transform.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.translation().norm());
@@ -114,12 +117,12 @@ DepthImageAligner::ComputeRelativeTransform() {
 }
 
 void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& latest_depth_image) {
-  previous_brisk_depth_image_ = std::move(latest_brisk_depth_image_);
+  previous_feature_depth_image_ = std::move(latest_feature_depth_image_);
   if (params_.use_clahe) {
     lm::DepthImageMeasurement clahe_depth_image = latest_depth_image;
     clahe_->apply(latest_depth_image.image, clahe_depth_image.image);
-    latest_brisk_depth_image_.reset(new BriskDepthImageMeasurement(clahe_depth_image, brisk_detector_));
+    latest_feature_depth_image_.reset(new FeatureDepthImageMeasurement(clahe_depth_image, feature_detector_));
   } else
-    latest_brisk_depth_image_.reset(new BriskDepthImageMeasurement(latest_depth_image, brisk_detector_));
+    latest_feature_depth_image_.reset(new FeatureDepthImageMeasurement(latest_depth_image, feature_detector_));
 }
 }  // namespace depth_odometry
