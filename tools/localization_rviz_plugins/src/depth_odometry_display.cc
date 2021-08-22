@@ -68,13 +68,13 @@ void DepthOdometryDisplay::reset() {
 void DepthOdometryDisplay::clearDisplay() {}
 
 void DepthOdometryDisplay::imageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
-  img_buffer_.AddMeasurement(lc::TimeFromHeader(image_msg->header), image_msg);
+  img_buffer_.Add(lc::TimeFromHeader(image_msg->header), image_msg);
 }
 
 void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
-  point_cloud_buffer_.AddMeasurement(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
+  point_cloud_buffer_.Add(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
 }
 
 void DepthOdometryDisplay::processMessage(const ff_msgs::DepthImageCorrespondences::ConstPtr& correspondences_msg) {
@@ -87,8 +87,8 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   if (!latest_correspondences_msg_) return;
   const lc::Time source_time = lc::TimeFromRosTime(latest_correspondences_msg_->source_time);
   const lc::Time target_time = lc::TimeFromRosTime(latest_correspondences_msg_->target_time);
-  const auto source_image_msg = img_buffer_.GetMeasurement(source_time);
-  const auto target_image_msg = img_buffer_.GetMeasurement(target_time);
+  const auto source_image_msg = img_buffer_.Get(source_time);
+  const auto target_image_msg = img_buffer_.Get(target_time);
   if (!source_image_msg || !target_image_msg) return;
   img_buffer_.EraseIncluding(source_time);
 
@@ -146,8 +146,8 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
 
 void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImageCorrespondence& correspondence,
                                                        const lc::Time source_time, const lc::Time target_time) {
-  const auto source_point_cloud = point_cloud_buffer_.GetNearbyMeasurement(source_time, 0.05);
-  const auto target_point_cloud = point_cloud_buffer_.GetNearbyMeasurement(target_time, 0.05);
+  const auto source_point_cloud = point_cloud_buffer_.GetNearby(source_time, 0.05);
+  const auto target_point_cloud = point_cloud_buffer_.GetNearby(target_time, 0.05);
   if (!source_point_cloud || !target_point_cloud) return;
   geometry_msgs::PointStamped source_correspondence_point_msg;
   const auto source_correspondence_point = (*source_point_cloud)->points[correspondence.source_index];

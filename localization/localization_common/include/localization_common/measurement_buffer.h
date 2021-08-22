@@ -25,15 +25,15 @@ namespace localization_common {
 template <typename MeasurementType>
 class MeasurementBuffer {
  public:
-  void AddMeasurement(const Time time, const MeasurementType& measurement) { measurements_.emplace(time, measurement); }
+  void Add(const Time time, const MeasurementType& measurement) { measurements_.emplace(time, measurement); }
 
-  boost::optional<MeasurementType> GetMeasurement(const localization_common::Time time) {
+  boost::optional<MeasurementType> Get(const localization_common::Time time) {
     const auto measurement_it = measurements_.find(time);
     if (measurement_it == measurements_.end()) return boost::none;
     return measurement_it->second;
   }
 
-  boost::optional<MeasurementType> GetNearbyMeasurement(const localization_common::Time time, const double tolerance) {
+  boost::optional<MeasurementType> GetNearby(const localization_common::Time time, const double tolerance) {
     const auto upper_bound_it = measurements_.lower_bound(time);
     if (upper_bound_it == measurements_.begin()) {
       if (ValidTime(upper_bound_it->first, time, tolerance)) {

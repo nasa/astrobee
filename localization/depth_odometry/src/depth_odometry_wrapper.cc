@@ -36,13 +36,13 @@ namespace mc = msg_conversions;
 
 std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  point_cloud_buffer_.AddMeasurement(lc::TimeFromHeader(depth_cloud_msg->header), depth_cloud_msg);
+  point_cloud_buffer_.Add(lc::TimeFromHeader(depth_cloud_msg->header), depth_cloud_msg);
   return ProcessDepthImageAndCloudMeasurementsIfAvailable();
 }
 
 std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthImageCallback(
   const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  image_buffer_.AddMeasurement(lc::TimeFromHeader(depth_image_msg->header), depth_image_msg);
+  image_buffer_.Add(lc::TimeFromHeader(depth_image_msg->header), depth_image_msg);
   return ProcessDepthImageAndCloudMeasurementsIfAvailable();
 }
 
@@ -55,7 +55,7 @@ DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
   // Correlate pairs of these if possible.
   for (const auto& depth_image_msg : image_buffer_.measurements()) {
     const auto depth_image_msg_timestamp = depth_image_msg.first;
-    const auto point_cloud_msg = point_cloud_buffer_.GetNearbyMeasurement(
+    const auto point_cloud_msg = point_cloud_buffer_.GetNearby(
       depth_image_msg_timestamp, depth_odometry_.params().max_image_and_point_cloud_time_diff);
     if (point_cloud_msg) {
       const auto depth_image_measurement = lm::MakeDepthImageMeasurement(*point_cloud_msg, depth_image_msg.second,
