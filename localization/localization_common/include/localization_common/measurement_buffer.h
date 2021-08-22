@@ -62,9 +62,13 @@ class MeasurementBuffer {
     return boost::none;
   }
 
-  void ClearBuffer(const Time oldest_allowed_time) {
-    const auto measurement_it = measurements_.find(oldest_allowed_time);
-    if (measurement_it == measurements_.end()) return;
+  void EraseUpTo(const Time oldest_allowed_time) {
+    const auto measurement_it = measurements_.lower_bound(oldest_allowed_time);
+    measurements_.erase(measurements_.begin(), measurement_it);
+  }
+
+  void EraseIncluding(const Time oldest_allowed_time) {
+    const auto measurement_it = measurements_.upper_bound(oldest_allowed_time);
     measurements_.erase(measurements_.begin(), measurement_it);
   }
 

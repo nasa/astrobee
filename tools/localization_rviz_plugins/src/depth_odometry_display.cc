@@ -90,7 +90,7 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   const auto source_image_msg = img_buffer_.GetMeasurement(source_time);
   const auto target_image_msg = img_buffer_.GetMeasurement(target_time);
   if (!source_image_msg || !target_image_msg) return;
-  img_buffer_.ClearBuffer(source_time);
+  img_buffer_.EraseIncluding(source_time);
 
   // TODO(rsoussan): make function for this, unify with loc graph display
   cv_bridge::CvImagePtr source_cv_image;
@@ -176,7 +176,7 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImage
     target_point_cloud_pub_.publish(target_cloud_msg);
   }
 
-  point_cloud_buffer_.ClearBuffer(source_time);
+  point_cloud_buffer_.EraseIncluding(source_time);
 }
 }  // namespace localization_rviz_plugins
 
