@@ -32,8 +32,12 @@ namespace lm = localization_measurements;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
     : params_(params), cam_(*(params_.camera_params)) {
-  feature_detector_ =
-    cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
+  if (params_.detector == "brisk") {
+    feature_detector_ =
+      cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
+  } else if (params_.detector == "surf") {
+    feature_detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
+  }
   flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
     params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));

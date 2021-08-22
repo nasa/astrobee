@@ -21,6 +21,7 @@
 #include <camera/camera_params.h>
 
 #include <memory>
+#include <string>
 
 namespace depth_odometry {
 struct DepthImageAlignerParams {
@@ -29,10 +30,14 @@ struct DepthImageAlignerParams {
   int flann_table_number;
   int flann_key_size;
   int flann_multi_probe_level;
+  // Feature detector params
+  std::string detector;
   // Brisk params
   int brisk_threshold;
   int brisk_octaves;
   float brisk_float_pattern_scale;
+  // Surf params
+  int surf_threshold;
   // CLAHE params
   bool use_clahe;
   int clahe_grid_length;

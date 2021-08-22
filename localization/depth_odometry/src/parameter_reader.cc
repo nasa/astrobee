@@ -46,9 +46,11 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.flann_table_number = mc::LoadInt(config, "flann_table_number");
   params.flann_key_size = mc::LoadInt(config, "flann_key_size");
   params.flann_multi_probe_level = mc::LoadInt(config, "flann_multi_probe_level");
+  params.detector = mc::LoadString(config, "detector");
   params.brisk_threshold = mc::LoadInt(config, "brisk_threshold");
   params.brisk_octaves = mc::LoadInt(config, "brisk_octaves");
   params.brisk_float_pattern_scale = mc::LoadFloat(config, "brisk_float_pattern_scale");
+  params.surf_threshold = mc::LoadInt(config, "surf_threshold");
   params.use_clahe = mc::LoadBool(config, "use_clahe");
   params.clahe_grid_length = mc::LoadInt(config, "clahe_grid_length");
   params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");
