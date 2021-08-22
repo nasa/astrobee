@@ -92,7 +92,7 @@ DepthImageAligner::ComputeRelativeTransform() {
   sparse_mapping::RansacEstimateCamera(landmarks, observations, params_.num_ransac_iterations,
                                        params_.max_inlier_tolerance, &cam_, &inlier_landmarks, &inlier_observations);
   LogError("num inliear obs: " << inlier_observations.size());
-  if (inlier_observations.size() < params_.min_num_inliers) {
+  if (static_cast<int>(inlier_observations.size()) < params_.min_num_inliers) {
     LogError("ComputeRelativeTransform: Too few inlier matches, num matches: "
              << inlier_observations.size() << ", min num matches: " << params_.min_num_inliers << ".");
     return boost::none;
