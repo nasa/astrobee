@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_HUNGARIAN_ASSIGNER_H_
 #define GRAPH_LOCALIZER_HUNGARIAN_ASSIGNER_H_
 
+#include <graph_localizer/semantic_loc_factor_adder_params.h>
 #include <localization_measurements/semantic_dets_measurement.h>
 #include <localization_common/utilities.h>
 #include <map>
@@ -26,19 +27,18 @@
 namespace graph_localizer {
 class HungarianAssigner {
 public:
-  HungarianAssigner(const gtsam::Pose3& body_T_cam, const gtsam::Cal3_S2& cam_intrinsics);
+  HungarianAssigner(const SemanticLocFactorAdderParams& params);
 
   typedef std::pair<const localization_measurements::SemanticDet*, const Eigen::Isometry3d*> Assignment;
   typedef std::vector<Assignment> AssignmentSet;
   AssignmentSet assign(const Eigen::Isometry3d& world_T_body, const localization_measurements::SemanticDets &dets);
 private:
-  gtsam::Pose3 body_T_cam_;
-  gtsam::Cal3_S2 cam_intrinsics_;
+  const SemanticLocFactorAdderParams params_;
   std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
 
   typedef std::pair<size_t, size_t> AssignmentInd;
   typedef std::vector<AssignmentInd> AssignmentIndSet;
-  AssignmentIndSet tryAssignment(const Eigen::ArrayXXd& cost_matrix, Eigen::ArrayXXi &cell_state, size_t num_actual_rows);
+  AssignmentIndSet tryAssignment(const Eigen::ArrayXXd& cost_matrix, Eigen::ArrayXXi &cell_state, int num_actual_rows);
   AssignmentIndSet solve(const Eigen::ArrayXXd& cost_matrix_in);
 };
 } // namespace graph_localizer

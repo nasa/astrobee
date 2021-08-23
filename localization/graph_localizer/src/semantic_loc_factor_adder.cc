@@ -33,7 +33,7 @@ SemanticLocFactorAdder::SemanticLocFactorAdder(const SemanticLocFactorAdderParam
                                                const go::GraphActionCompleterType graph_action_completer_type)
     : SemanticLocFactorAdder::Base(params), 
       graph_action_completer_type_(graph_action_completer_type) {
-  assigner_ = std::make_shared<HungarianAssigner>(params.body_T_cam, *params.cam_intrinsics);
+  assigner_ = std::make_shared<HungarianAssigner>(params);
 }
 
 void SemanticLocFactorAdder::ComputeFactorsToAdd(std::vector<go::FactorsToAdd> &factors_to_add,
@@ -86,7 +86,6 @@ void SemanticLocFactorAdder::SetCombinedNavState(const boost::optional<localizat
 }
 
 std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::SemanticDetsMeasurement& semantic_dets) {
-  LogError(semantic_dets.timestamp);
   if (std::abs(last_combined_nav_state_.timestamp() - semantic_dets.timestamp) < 0.1) {
     return std::vector<go::FactorsToAdd>(); // return empty set, no factors
   }
@@ -123,6 +122,8 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   std::vector<go::FactorsToAdd> factors_to_add;
   ComputeFactorsToAdd(factors_to_add, matched_projections_measurement);
+
+  LogError("Factor stamp: " << std::fixed << std::setprecision(20) << semantic_dets.timestamp);
 
   return factors_to_add;
 }

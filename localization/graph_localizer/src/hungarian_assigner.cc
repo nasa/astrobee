@@ -25,8 +25,8 @@ namespace graph_localizer {
 namespace lm = localization_measurements;
 namespace lc = localization_common;
 
-HungarianAssigner::HungarianAssigner(const gtsam::Pose3& body_T_cam, const gtsam::Cal3_S2& cam_intrinsics) :
-    body_T_cam_(body_T_cam), cam_intrinsics_(cam_intrinsics) {
+HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params) :
+    params_(params) {
   config_reader::ConfigReader object_loc_config;
   object_loc_config.AddFile("semantic_objects.config");
   if (!object_loc_config.ReadFiles()) {
@@ -40,6 +40,7 @@ HungarianAssigner::HungarianAssigner(const gtsam::Pose3& body_T_cam, const gtsam
   for (int i=1; i<=N; i++) {
     config_reader::ConfigReader::Table object(&objects, i);
     object.GetInt("class", &obj_cls);
+    //if (obj_cls == 2) continue; // ignore handrails
     if (object_poses_.count(obj_cls) == 0) {
       object_poses_[obj_cls] = std::vector<Eigen::Isometry3d>();
     }
@@ -63,16 +64,16 @@ HungarianAssigner::HungarianAssigner(const gtsam::Pose3& body_T_cam, const gtsam
   }
 }
 
-HungarianAssigner::AssignmentIndSet HungarianAssigner::tryAssignment(const Eigen::ArrayXXd& cost_matrix, Eigen::ArrayXXi &cell_state, size_t num_actual_rows) {
+HungarianAssigner::AssignmentIndSet HungarianAssigner::tryAssignment(const Eigen::ArrayXXd& cost_matrix, Eigen::ArrayXXi &cell_state, int num_actual_rows) {
   cell_state = (cost_matrix > 0.001).cast<int>();
   LogDebug(cost_matrix);
 
   AssignmentIndSet assignment_set;
 
-  size_t row_zero_count_min = 1;
+  int row_zero_count_min = 1;
   while (true) {
     Eigen::ArrayXi row_zero_count = (cell_state == 0).cast<int>().rowwise().sum();
-    for (size_t row=0; row<cell_state.rows(); row++) {
+    for (int row=0; row<cell_state.rows(); row++) {
       if (row_zero_count(row) == row_zero_count_min) {
         // make assignment
         Eigen::ArrayXi::Index col, ind;
@@ -86,7 +87,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::tryAssignment(const Eigen
           cell_state(ind, col) = 3; // Mark as "scratched out" 0
           row_zero_count(ind)--;
         }
-        for (size_t col=0; col<cell_state.cols(); col++) {
+        for (int col=0; col<cell_state.cols(); col++) {
           if (cell_state(row, col) == 0) {
             cell_state(row, col) = 3;
           }
@@ -121,7 +122,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
     return {AssignmentInd(min_row, min_col)};
   }
 
-  for (size_t row=0; row<cost_matrix.rows(); row++) {
+  for (int row=0; row<cost_matrix.rows(); row++) {
     cost_matrix.row(row) -= cost_matrix.row(row).minCoeff();
   }
 
@@ -138,7 +139,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
     return assignment;
   }
 
-  for (size_t col=0; col<cost_matrix.cols(); col++) {
+  for (int col=0; col<cost_matrix.cols(); col++) {
     cost_matrix.col(col) -= cost_matrix.col(col).minCoeff();
   }
   LogDebug("Subbed cols");
@@ -150,10 +151,10 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
     if (assignment.size() == old_rows) {
       break;
     }
-    std::set<size_t> marked_rows, marked_cols;
+    std::set<int> marked_rows, marked_cols;
 
     // mark rows having no assignments
-    for (size_t row=0; row<cell_state.rows(); row++) {
+    for (int row=0; row<cell_state.rows(); row++) {
       if ((cell_state.row(row) != 2).all()) {
         marked_rows.insert(row);
       }
@@ -166,7 +167,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
       marked_col_cnt = marked_cols.size();
       // mark columns having zeros in newly marked rows
       for (const auto& marked_row : marked_rows) {
-        for (size_t col=0; col<cell_state.cols(); col++) {
+        for (int col=0; col<cell_state.cols(); col++) {
           if (cell_state(marked_row, col) != 1) {
             if (marked_cols.count(col) == 0) {
               marked_cols.insert(col);
@@ -176,7 +177,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
       }
       // mark rows having assignments in newly marked cols
       for (const auto& marked_col : marked_cols) {
-        for (size_t row=0; row<cell_state.rows(); row++) {
+        for (int row=0; row<cell_state.rows(); row++) {
           if (cell_state(row, marked_col) == 2) {
             if (marked_rows.count(row) == 0) {
               marked_rows.insert(row);
@@ -191,9 +192,9 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
     
     // find lowest value of unmarked cols, marked rows
     double lowest_val = std::numeric_limits<double>::max();
-    for (size_t row=0; row<cell_state.rows(); row++) {
+    for (int row=0; row<cell_state.rows(); row++) {
       if (marked_rows.count(row) != 0) {
-        for (size_t col=0; col<cell_state.cols(); col++) {
+        for (int col=0; col<cell_state.cols(); col++) {
           if (marked_cols.count(col) == 0 && cost_matrix(row, col) < lowest_val) {
             LogDebug("Found new lowest unmarked");
             lowest_val = cost_matrix(row, col);
@@ -203,14 +204,14 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
     }
 
     // subtract from all rows crossed
-    for (size_t row=0; row<cell_state.rows(); row++) {
+    for (int row=0; row<cell_state.rows(); row++) {
       if (marked_rows.count(row) != 0) {
         cost_matrix.row(row) -= lowest_val;
       }
     }
 
     // add to all cols crossed
-    for (size_t col=0; col<cell_state.cols(); col++) {
+    for (int col=0; col<cell_state.cols(); col++) {
       if (marked_cols.count(col) != 0) {
         cost_matrix.col(col) += lowest_val;
       }
@@ -231,8 +232,8 @@ HungarianAssigner::AssignmentSet HungarianAssigner::assign(const Eigen::Isometry
     std::vector<const Eigen::Isometry3d*> associated_objs;
     for (const auto& world_T_obj : classes.second) {
       try {
-        const auto world_T_cam = lc::GtPose(world_T_body).compose(body_T_cam_);
-        gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_cam, cam_intrinsics_);
+        const auto world_T_cam = lc::GtPose(world_T_body).compose(params_.body_T_cam);
+        gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_cam, *params_.cam_intrinsics);
         cam_objs_px.push_back(camera.project(world_T_obj.translation()));
         associated_objs.push_back(&world_T_obj);
       } catch (gtsam::CheiralityException e) {
@@ -242,23 +243,27 @@ HungarianAssigner::AssignmentSet HungarianAssigner::assign(const Eigen::Isometry
     }
 
     std::vector<const lm::SemanticDet*> associated_dets;
-    Eigen::ArrayXXd det_locs_px(2,0);
+    Eigen::ArrayXXd det_locs_px(4,0);
     for (const auto& det : dets) {
       if (det.class_id == cls) {
         det_locs_px.conservativeResize(det_locs_px.rows(), det_locs_px.cols()+1);
-        det_locs_px.col(det_locs_px.cols()-1) = det.image_point;
+        det_locs_px.block<2,1>(0, det_locs_px.cols()-1) = det.image_point;
+        det_locs_px.block<2,1>(2, det_locs_px.cols()-1) = det.bounding_box;
         associated_dets.push_back(&det);
       }
     }
 
     Eigen::ArrayXXd cost_matrix(det_locs_px.cols(), cam_objs_px.size());
-    size_t ind = 0;
+    int ind = 0;
     for (const auto& obj_loc_px : cam_objs_px) {
-      auto diff = det_locs_px.colwise() - obj_loc_px.array();
+      Eigen::ArrayXXd diff = det_locs_px.block(0,0,2,det_locs_px.cols()).colwise() - obj_loc_px.array();
+      if (params_.scale_matching_distance_with_bbox) {
+        diff /= det_locs_px.block(2,0,2,det_locs_px.cols())/2;
+      }
       cost_matrix.col(ind++) = (diff.row(0).pow(2) + diff.row(1).pow(2)).sqrt();
-      for (size_t row=0; row<cost_matrix.rows(); row++) {
-        if (cost_matrix(row, ind) > 200) {
-          cost_matrix(row, ind) = 200;
+      for (int row=0; row<cost_matrix.rows(); row++) {
+        if (cost_matrix(row, ind) > params_.matching_distance_thresh) {
+          cost_matrix(row, ind) = params_.matching_distance_thresh;
         }
       }
     }
@@ -273,7 +278,7 @@ HungarianAssigner::AssignmentSet HungarianAssigner::assign(const Eigen::Isometry
     const auto raw_assign = solve(cost_matrix);
     for (const auto& a : raw_assign) {
       AssignmentInd assignment_ind = a;
-      if (cost_matrix(a.first, a.second) >= 200 - 0.0001) {
+      if (cost_matrix(a.first, a.second) >= params_.matching_distance_thresh - 0.0001) {
         continue;
       }
       if (transposed) {
