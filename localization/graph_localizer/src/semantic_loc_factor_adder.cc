@@ -86,6 +86,7 @@ void SemanticLocFactorAdder::SetCombinedNavState(const boost::optional<localizat
 }
 
 std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::SemanticDetsMeasurement& semantic_dets) {
+  LogError(semantic_dets.timestamp);
   if (std::abs(last_combined_nav_state_.timestamp() - semantic_dets.timestamp) < 0.1) {
     return std::vector<go::FactorsToAdd>(); // return empty set, no factors
   }
@@ -97,7 +98,6 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   lm::MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.timestamp = semantic_dets.timestamp;
-  // Outer loop through objects so we only do transform/projection once
   LogDebug("SemanticLoc: adding sem loc factors");
 
   const auto assignments = assigner_->assign(world_T_body, semantic_dets.semantic_dets);

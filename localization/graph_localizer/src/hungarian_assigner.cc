@@ -65,7 +65,7 @@ HungarianAssigner::HungarianAssigner(const gtsam::Pose3& body_T_cam, const gtsam
 
 HungarianAssigner::AssignmentIndSet HungarianAssigner::tryAssignment(const Eigen::ArrayXXd& cost_matrix, Eigen::ArrayXXi &cell_state, size_t num_actual_rows) {
   cell_state = (cost_matrix > 0.001).cast<int>();
-  LogInfo(cost_matrix);
+  LogDebug(cost_matrix);
 
   AssignmentIndSet assignment_set;
 
@@ -102,7 +102,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::tryAssignment(const Eigen
     }
   }
 
-  LogInfo(cell_state);
+  LogDebug(cell_state);
 
   return assignment_set;
 }
@@ -117,7 +117,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
   if (cost_matrix.cols() == 1 || cost_matrix.rows() == 1) {
     Eigen::ArrayXXd::Index min_row, min_col;
     cost_matrix.minCoeff(&min_row, &min_col);
-    LogInfo("Trivial case");
+    LogDebug("Trivial case");
     return {AssignmentInd(min_row, min_col)};
   }
 
@@ -130,7 +130,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
     cost_matrix.conservativeResize(cost_matrix.cols(), cost_matrix.cols());
     cost_matrix.block(old_rows, 0, cost_matrix.cols()-old_rows, cost_matrix.cols()) = 0;
   }
-  LogInfo("Subbed rows");
+  LogDebug("Subbed rows");
 
   Eigen::ArrayXXi cell_state;
   auto assignment = tryAssignment(cost_matrix, cell_state, old_rows);
@@ -141,12 +141,12 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
   for (size_t col=0; col<cost_matrix.cols(); col++) {
     cost_matrix.col(col) -= cost_matrix.col(col).minCoeff();
   }
-  LogInfo("Subbed cols");
+  LogDebug("Subbed cols");
 
   while (true) {
     assignment = tryAssignment(cost_matrix, cell_state, old_rows);
-    LogInfo("Assigned " << assignment.size());
-    LogInfo(old_rows << " actual rows");
+    LogDebug("Assigned " << assignment.size());
+    LogDebug(old_rows << " actual rows");
     if (assignment.size() == old_rows) {
       break;
     }
@@ -186,8 +186,8 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
       }
     }
 
-    LogInfo("Marked rows: " << marked_row_cnt);
-    LogInfo("Marked cols: " << marked_col_cnt);
+    LogDebug("Marked rows: " << marked_row_cnt);
+    LogDebug("Marked cols: " << marked_col_cnt);
     
     // find lowest value of unmarked cols, marked rows
     double lowest_val = std::numeric_limits<double>::max();
@@ -195,7 +195,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
       if (marked_rows.count(row) != 0) {
         for (size_t col=0; col<cell_state.cols(); col++) {
           if (marked_cols.count(col) == 0 && cost_matrix(row, col) < lowest_val) {
-            LogInfo("Found new lowest unmarked");
+            LogDebug("Found new lowest unmarked");
             lowest_val = cost_matrix(row, col);
           }
         }
@@ -216,7 +216,7 @@ HungarianAssigner::AssignmentIndSet HungarianAssigner::solve(const Eigen::ArrayX
       }
     }
 
-    LogInfo("One iteration completed");
+    LogDebug("One iteration completed");
   }
 
   return assignment;
