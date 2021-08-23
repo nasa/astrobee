@@ -51,7 +51,9 @@ OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
                             bool& successful) {
   completed = true;
   successful = true;
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_ENABLE_ASTROBEE_INTERCOMMS) {
+    successful = exec_->EnableAstrobeeIntercomms(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
     successful = exec_->NoOp(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA) {
     successful = exec_->SetCamera(cmd);

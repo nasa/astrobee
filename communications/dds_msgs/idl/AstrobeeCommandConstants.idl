@@ -234,6 +234,9 @@ module rapid {
 
       const rapid::String32 SETTINGS = "Settings";
 
+      //@copy-declaration /** Starts the Astrobee intercommunication software. This enables the robot to send and receive a subset of data to and from other Astrobees in the network. Please note, this command must be executed on each robot needed in the communication. */
+      const rapid::String32 SETTINGS_METHOD_ENABLE_ASTROBEE_INTERCOMMS = "enableAstrobeeIntercomms";
+
       //@copy-declaration /** Sets camera parameters.<p/>The Astrobee camera control life cycle is as follows:<ul><li>When the Astrobee flight software stack is started, recording and streaming are initially disabled for all cameras, and the default camera parameters are as specified in the astrobee/config/cameras.config file.</li><li>For each camera, while recording and streaming are disabled, you may use this Settings.setCamera command to adjust its parameters.</li><li>For each camera, you may enable/disable recording imagery to onboard storage using Settings.setCameraRecording.</li><li>For each camera, you may enable/disable live imagery downlink using Settings.setCameraStreaming.</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA = "setCamera";
 

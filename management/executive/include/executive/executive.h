@@ -51,6 +51,7 @@
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PerchAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
+#include <ff_msgs/ResponseOnly.h>
 #include <ff_msgs/SetDataToDisk.h>
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
@@ -202,6 +203,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool AutoReturn(ff_msgs::CommandStampedPtr const& cmd);
   bool CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool Dock(ff_msgs::CommandStampedPtr const& cmd);
+  bool EnableAstrobeeIntercomms(ff_msgs::CommandStampedPtr const& cmd);
   bool Fault(ff_msgs::CommandStampedPtr const& cmd);
   bool GripperControl(ff_msgs::CommandStampedPtr const& cmd);
   bool IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd);
@@ -305,6 +307,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient set_inertia_client_, set_rate_client_;
   ros::ServiceClient set_data_client_, enable_recording_client_;
   ros::ServiceClient eps_terminate_client_;
+  ros::ServiceClient enable_astrobee_intercommunication_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
