@@ -28,16 +28,18 @@ class HungarianAssigner {
 public:
   HungarianAssigner(const gtsam::Pose3& body_T_cam, const gtsam::Cal3_S2& cam_intrinsics);
 
-  typedef std::pair<size_t, size_t> Assignment;
+  typedef std::pair<const localization_measurements::SemanticDet*, const Eigen::Isometry3d*> Assignment;
   typedef std::vector<Assignment> AssignmentSet;
-  void assign(const Eigen::Isometry3d& world_T_body, const localization_measurements::SemanticDets &dets);
+  AssignmentSet assign(const Eigen::Isometry3d& world_T_body, const localization_measurements::SemanticDets &dets);
 private:
   gtsam::Pose3 body_T_cam_;
   gtsam::Cal3_S2 cam_intrinsics_;
   std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
 
-  AssignmentSet tryAssignment(const Eigen::ArrayXXd& cost_matrix);
-  AssignmentSet solve(Eigen::ArrayXXd& cost_matrix);
+  typedef std::pair<size_t, size_t> AssignmentInd;
+  typedef std::vector<AssignmentInd> AssignmentIndSet;
+  AssignmentIndSet tryAssignment(const Eigen::ArrayXXd& cost_matrix, Eigen::ArrayXXi &cell_state, size_t num_actual_rows);
+  AssignmentIndSet solve(const Eigen::ArrayXXd& cost_matrix_in);
 };
 } // namespace graph_localizer
 

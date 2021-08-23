@@ -100,14 +100,21 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
   // Outer loop through objects so we only do transform/projection once
   LogDebug("SemanticLoc: adding sem loc factors");
 
-  assigner_->assign(world_T_body, semantic_dets.semantic_dets);
+  const auto assignments = assigner_->assign(world_T_body, semantic_dets.semantic_dets);
 
-  // Actually build factor
-  /*
-  last_matches_.push_back(SemanticMatch(cls, cam_obj_px, best_det->image_point, best_det->bounding_box));
-  lm::MatchedProjection mp(best_det->image_point, best_det->bounding_box, world_T_obj.translation(), semantic_dets.timestamp);
-  matched_projections_measurement.matched_projections.push_back(mp);
-  */
+  for (const auto& assignment : assignments) {
+    // Actually build factor
+    const Eigen::Isometry3d world_T_obj = *assignment.second;
+    const lm::SemanticDet *best_det = assignment.first;
+    lm::MatchedProjection mp(best_det->image_point, best_det->bounding_box, world_T_obj.translation(), semantic_dets.timestamp);
+    matched_projections_measurement.matched_projections.push_back(mp);
+
+    // Visualization
+    const auto world_T_cam = lc::GtPose(world_T_body).compose(params().body_T_cam);
+    gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_cam, *params().cam_intrinsics);
+    last_matches_.push_back(SemanticMatch(best_det->class_id, camera.project(world_T_obj.translation()), 
+                                          best_det->image_point, best_det->bounding_box));
+  }
 
   // only for visualizing unmatched detections
   for (const auto& det : semantic_dets.semantic_dets) {
