@@ -1,3 +1,22 @@
+astrobee (0.15.1) testing; urgency=medium
+
+  * Separated config files for DDS communications to avoid conflict
+  * Increased plan name length
+  * Pico proxy was added to the MLP launch file
+  * System monitor now attempts to reload nodelets that die on startup
+  * Other fixes/software and documentation improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 02 Aug 2021 10:34:26 -0700
+
+astrobee (0.15.0) testing; urgency=medium
+
+  * Perching functional
+  * Ubuntu 20 compatibility
+  * Added astrobee to astrobee coms
+  * Various other fixes/software improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 21 Jul 2021 02:21:10 -0700
+
 astrobee (0.14.3) testing; urgency=medium
 
   * Rotation fallback fix

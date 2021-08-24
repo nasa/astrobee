@@ -20,14 +20,13 @@
 import vector3ds
 
 
-class ImuMeasurements():
+class ImuMeasurements:
+    def __init__(self):
+        self.accelerations = vector3ds.Vector3ds()
+        self.angular_velocities = vector3ds.Vector3ds()
+        self.times = []
 
-  def __init__(self):
-    self.accelerations = vector3ds.Vector3ds()
-    self.angular_velocities = vector3ds.Vector3ds()
-    self.times = []
-
-  def add_imu_measurement(self, msg):
-    self.accelerations.add_vector3d(msg.linear_acceleration)
-    self.angular_velocities.add_vector3d(msg.angular_velocity)
-    self.times.append(msg.header.stamp.secs + 1e-9 * msg.header.stamp.nsecs)
+    def add_imu_measurement(self, msg):
+        self.accelerations.add_vector3d(msg.linear_acceleration)
+        self.angular_velocities.add_vector3d(msg.angular_velocity)
+        self.times.append(msg.header.stamp.secs + 1e-9 * msg.header.stamp.nsecs)

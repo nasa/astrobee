@@ -36,20 +36,20 @@ module rapid {
       //@copy-declaration /** Calibrates the bias parameters of Astrobee's IMU.<p/>Astrobee's IMU biases slowly drift over time. While Astrobee is actively running its localization system and maintaining a position fix, its EKF automatically corrects for bias drift under the assumption that the local environment is inertially fixed. If the localization system is turned off or loses its fix for an extended period, this command should be used to explicitly calibrate the biases prior to restarting motion. It works by integrating the robot's linear acceleration and angular velocity for about five seconds, and taking the resulting average values as the new zero. During the calibration period, the robot must remain stationary (e.g. docked or perched on a handrail, not held by an astronaut). */
       const rapid::String32 ADMIN_METHOD_INITIALIZE_BIAS = "initializeBias";
 
-      //@copy-declaration /** Not implemented. This command is intended to load a ROS nodelet in the Astrobee flight software.<p/>There is an internal service advertised by the system monitor that provides a method very similar to this command, but as of Oct 2020, there is no way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP. */
+      //@copy-declaration /** This command is intended to load a ROS nodelet in the Astrobee flight software. Please note, the underlying system monitor service can't load nodelets that run on the HLP. */
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET = "loadNodelet";
 
       //@copy-declaration /** Name of nodelet */
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_NODELET_NAME = "nodeletName";
       const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_NODELET_NAME = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Type of nodelet (namespace/classname). If left blank, the system monitor will default to the type specified in its config file, which should normally work fine. */
-      const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_TYPE = "type";
-      const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_TYPE = rapid::RAPID_STRING;
-
       //@copy-declaration /** Which nodelet manager should load the nodelet. If left blank, the system monitor will default to using the managerName specified in the last heartbeat it received from the requested nodelet. (That should normally work fine, assuming the nodelet sent out at least one valid heartbeat.) */
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_MANAGER_NAME = "managerName";
       const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_MANAGER_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Type of nodelet (namespace/classname). If left blank, the system monitor will default to the type specified in its config file, which should normally work fine. */
+      const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_TYPE = "type";
+      const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_TYPE = rapid::RAPID_STRING;
 
       //@copy-declaration /** With the current implementation, you should leave this field blank. Specifying a non-empty string (unique id) will activate bond notifications.<p/>Background: ROS nodelets provide a 'bond' mechanism that enables the process requesting a nodelet load (in our case the system monitor) to receive automatic notification if that nodelet crashes. However, our system monitor instead relies on a custom heartbeat message to detect liveness, and it is not currently configured to do anything useful with bond notifications, even if they are activated. */
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_BOND_ID = "bondId";
@@ -68,7 +68,7 @@ module rapid {
       const rapid::String32 ADMIN_METHOD_SWITCH_LOCALIZATION_PARAM_MODE = "mode";
       const rapid::DataType ADMIN_METHOD_SWITCH_LOCALIZATION_DTYPE_MODE = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Not implemented. This command is intended to unload a ROS nodelet in Astrobee's flight software. Its primary use is in the system monitor's fault response table, where it is the usual response if initialization of a nodelet fails. As of Oct 2020, there is an internal service that implements this function, but there is no way to invoke it through a standard Astrobee API call. Also, the internal service can't unload nodes running on the HLP. */
+      //@copy-declaration /** This command is intended to unload a ROS nodelet in Astrobee's flight software. Its primary use is in the system monitor's fault response table, where it is the usual response if initialization of a nodelet fails. Please note, the internal service can't unload nodes running on the HLP. */
       const rapid::String32 ADMIN_METHOD_UNLOAD_NODELET = "unloadNodelet";
 
       //@copy-declaration /** Name of nodelet */
@@ -446,11 +446,11 @@ module rapid {
       const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_BACK = "Back";
       const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_FRONT = "Front";
 
-      const rapid::String32 SETTINGS_FLIGHT_MODE_OFF = "Off";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "Quiet";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_NOMINAL = "Nominal";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "Difficult";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_PRECISION = "Precision";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_OFF = "off";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "quiet";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_NOMINAL = "nominal";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "difficult";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_PRECISION = "precision";
 
       const rapid::String32 SETTINGS_PLANNER_TYPE_TRAPEZOIDAL = "trapezoidal";
       const rapid::String32 SETTINGS_PLANNER_TYPE_QUADRATIC_PROGRAM = "qp";

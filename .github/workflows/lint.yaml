@@ -5,10 +5,27 @@ name: Check for lint errors
 on: ['push', 'pull_request']
 
 jobs:
-  lint_check:
+  lint_check_cpp:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     - name: Check repo for lint errors
       run: ./scripts/git/cpplint_repo.py .
+
+  lint_check_python:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install linters
+      run: |
+        pip install black
+        pip install isort
+
+    - name: Run black
+      run: |
+        black . --diff --extend-exclude cmake --check
+    - name: Run isort
+      run: |
+        isort . --diff --extend-skip cmake --profile black --check-only

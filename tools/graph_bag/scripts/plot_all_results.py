@@ -19,23 +19,32 @@
 import argparse
 import os
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--output-dir', default='')
-  args = parser.parse_args()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output-dir", default="")
+    args = parser.parse_args()
 
-  # Find bagfiles with bag prefix in current directory, fail if none found
-  bag_names = [bag for bag in os.listdir('.') if os.path.isfile(bag) and bag.endswith('.bag')]
-  bag_names = sorted(set(bag_names))
-  if (len(bag_names) == 0):
-    print('No bag files found')
-    sys.exit()
-  else:
-    print('Found ' + str(len(bag_names)) + ' bags.')
+    # Find bagfiles with bag prefix in current directory, fail if none found
+    bag_names = [
+        bag for bag in os.listdir(".") if os.path.isfile(bag) and bag.endswith(".bag")
+    ]
+    bag_names = sorted(set(bag_names))
+    if len(bag_names) == 0:
+        print("No bag files found")
+        sys.exit()
+    else:
+        print(("Found " + str(len(bag_names)) + " bags."))
 
-  for bag_name in bag_names:
-    output_file_name = os.path.splitext(os.path.basename(bag_name))[0] + '_output.pdf'
-    if args.output_dir:
-      output_file_name = args.output_dir + '/' + output_file_name
-    plot_command = 'rosrun graph_bag plot_results_main.py ' + bag_name + ' --output-file ' + output_file_name
-    os.system(plot_command)
+    for bag_name in bag_names:
+        output_file_name = (
+            os.path.splitext(os.path.basename(bag_name))[0] + "_output.pdf"
+        )
+        if args.output_dir:
+            output_file_name = args.output_dir + "/" + output_file_name
+        plot_command = (
+            "rosrun graph_bag plot_results_main.py "
+            + bag_name
+            + " --output-file "
+            + output_file_name
+        )
+        os.system(plot_command)

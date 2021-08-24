@@ -43,7 +43,7 @@ module rapid {
         //@copy-c-declaration typedef PlanStatus Type;
 
         //@copy-declaration /**  the name of the currently executing/paused plan */
-        public String32 planName;
+        public String128 planName;
 
         //@copy-declaration /**  The current station or segment */
         public long currentPoint;

@@ -17,30 +17,32 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import rospy
-import rosgraph
 import os
-import socket
-import time
-import subprocess
 import signal
+import socket
+import subprocess
+import time
 
+import rosgraph
+import rospy
 from ff_hw_msgs.msg import PmcCommand
-from ff_msgs.msg import EkfState, FamCommand, ControlState, CommandStamped
+from ff_msgs.msg import CommandStamped, ControlState, EkfState, FamCommand
 from ff_msgs.srv import SetBool
 from geometry_msgs.msg import PoseStamped
 from rosgraph_msgs.msg import Log
 from std_srvs.srv import Empty
 
+
 def is_shutdown():
     return rospy.is_shutdown()
+
 
 class RosSubscriberManager:
     subscribers = dict()
     rosmaster = None
     logger_function = None
 
-    def __init__(self, node_name, logger_function = None):
+    def __init__(self, node_name, logger_function=None):
         self.logger_function = logger_function
         self.__ensure_ros_master()
         rospy.init_node(node_name, anonymous=False, disable_signals=True)
@@ -53,13 +55,18 @@ class RosSubscriberManager:
 
     def __ensure_ros_master(self):
         try:
-            rosgraph.Master('/rostopic').getPid()
+            rosgraph.Master("/rostopic").getPid()
         except socket.error:
             if self.logger_function != None:
-                self.logger_function('Starting roscore.', '#FFB266')
+                self.logger_function("Starting roscore.", "#FFB266")
 
-            self.rosmaster = subprocess.Popen("roscore", preexec_fn=os.setsid, shell=True,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.rosmaster = subprocess.Popen(
+                "roscore",
+                preexec_fn=os.setsid,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             time.sleep(1)
 
     def stop_all(self):
@@ -68,31 +75,31 @@ class RosSubscriberManager:
             os.killpg(os.getpgid(self.rosmaster.pid), signal.SIGINT)
             rosmaster.wait()
 
-class RosCommandExecutor:
 
+class RosCommandExecutor:
     def __init__(self):
         pass
 
     def reset_ekf(self):
         try:
-            reset = rospy.ServiceProxy('gnc/ekf/reset', Empty)
+            reset = rospy.ServiceProxy("gnc/ekf/reset", Empty)
             reset()
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
+        except rospy.ServiceException as e:
+            print(("Service call failed: %s" % e))
 
     def initialize_bias(self):
         try:
-            initialize = rospy.ServiceProxy('/gnc/ekf/init_bias', Empty)
+            initialize = rospy.ServiceProxy("/gnc/ekf/init_bias", Empty)
             initialize()
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
+        except rospy.ServiceException as e:
+            print(("Service call failed: %s" % e))
 
     def toggle_pmc(self, current_value):
         try:
-            pmc_enable = rospy.ServiceProxy('/hw/pmc/enable', SetBool)
+            pmc_enable = rospy.ServiceProxy("/hw/pmc/enable", SetBool)
             new_value = not current_value
             pmc_enable(new_value)
             return new_value
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
+        except rospy.ServiceException as e:
+            print(("Service call failed: %s" % e))
             return current_value

@@ -18,7 +18,7 @@
   <arg name="topic" default="/hw/depth_haz/extended"/>
   <arg name="topic_type" default="extended"/>
   <arg name="amplitude_factor" default="100.0"/>
-  <node name="$(anon pico_proxy)" pkg="pico_driver" type="pico_proxy" output="screen">
+  <node name="pico_proxy" pkg="pico_driver" type="pico_proxy" output="screen">
     <param name="topic" type="string" value="$(arg topic)"/>
     <param name="topic_type" type="string" value="$(arg topic_type)"/>
     <param name="amplitude_factor" type="double" value="$(arg amplitude_factor)"/>

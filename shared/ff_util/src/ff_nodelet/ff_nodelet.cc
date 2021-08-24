@@ -54,7 +54,7 @@ FreeFlyerNodelet::~FreeFlyerNodelet() {
 }
 
 // Called directly by Gazebo and indirectly through onInit() by nodelet
-void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt) {
+void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name) {
   // Copy the node handles
   nh_ = nh;
   nh_mt_ = nh_mt;
@@ -65,7 +65,9 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt) {
 
   // If not set, try and grab the node name from the launch file
   if (node_.empty()) {
-    if (getName().empty()) {
+    if (plugin_name != "") {
+      node_ = plugin_name;
+    } else if (getName().empty()) {
       FF_FATAL("Node name not specified.");
     } else {
       // If a robot name has been specified, remove it from the node name
@@ -117,7 +119,7 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt) {
 // Called by the nodelet framework to initialize the nodelet. Note that this is
 // *NOT* called by the Gazebo plugins They enter directly via a Setup(...) call.
 void FreeFlyerNodelet::onInit() {
-  Setup(getNodeHandle(), getMTNodeHandle());
+  Setup(getNodeHandle(), getMTNodeHandle(), "");
 }
 
 void FreeFlyerNodelet::ReadConfig() {
