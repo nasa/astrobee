@@ -18,9 +18,11 @@
 
 #include <camera/camera_params.h>
 #include <camera/camera_model.h>
+#include <depth_odometry/brisk_feature_matcher.h>
 #include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/good_features_to_track_detector.h>
 #include <depth_odometry/point_cloud_utilities.h>
+#include <depth_odometry/surf_feature_matcher.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 #include <sparse_mapping/reprojection.h>
@@ -36,36 +38,26 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
   if (params_.detector == "brisk") {
     feature_detector_ =
       cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
-    flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
-      params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
+    feature_matcher_.reset(new BriskFeatureMatcher(params_.brisk_feature_matcher));
   } else if (params_.detector == "surf") {
     feature_detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
-    flann_matcher_.reset(new cv::FlannBasedMatcher());
+    feature_matcher_.reset(new SurfFeatureMatcher(params_.surf_feature_matcher));
   } else if (params_.detector == "lk_optical_flow") {
     feature_detector_.reset(new cv::GoodFeaturesToTrackDetector());
-    flann_matcher_.reset(new cv::FlannBasedMatcher());
+    // TODO(rsoussan): change this!!!
+    feature_matcher_.reset(new SurfFeatureMatcher(params_.surf_feature_matcher));
   }
-
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
 DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
-  std::vector<cv::DMatch> matches;
-  flann_matcher_->match(previous_feature_depth_image_->descriptors(), latest_feature_depth_image_->descriptors(),
-                        matches);
-  LogError("matches pre filtering: " << matches.size());
-  const auto filtered_end = std::remove_if(matches.begin(), matches.end(), [this](const cv::DMatch& match) {
-    return match.distance > params_.max_match_hamming_distance;
-  });
-  matches.erase(filtered_end, matches.end());
-  LogError("keypoints a: " << previous_feature_depth_image_->keypoints().size()
-                           << ", b: " << latest_feature_depth_image_->keypoints().size());
-  LogError("matches post filtering: " << matches.size());
+  const auto matches = feature_matcher_->Match(*previous_feature_depth_image_, *latest_feature_depth_image_);
   std::vector<cv::Point3d> match_points_3d;
   std::vector<cv::Point2d> match_image_points;
   std::vector<cv::DMatch> filtered_matches;
+  // Get 3D points for image features
   for (const auto& match : matches) {
     const auto& latest_image_point = latest_feature_depth_image_->keypoints()[match.trainIdx].pt;
     const auto& latest_point_3d =

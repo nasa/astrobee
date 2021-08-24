@@ -38,14 +38,24 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");
   params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
-  params.haz_cam_T_haz_depth = msg_conversions::LoadEigenTransform(config, "hazcam_depth_to_image_transform");
+  params.haz_cam_T_haz_depth =
+    Eigen::Isometry3d::Identity();  // msg_conversions::LoadEigenTransform(config, "hazcam_depth_to_image_transform");
+}
+
+void LoadBriskFeatureMatcherParams(config_reader::ConfigReader& config, BriskFeatureMatcherParams& params) {
+  params.max_match_hamming_distance = mc::LoadInt(config, "brisk_max_match_hamming_distance");
+  params.flann_table_number = mc::LoadInt(config, "brisk_flann_table_number");
+  params.flann_key_size = mc::LoadInt(config, "brisk_flann_key_size");
+  params.flann_multi_probe_level = mc::LoadInt(config, "brisk_flann_multi_probe_level");
+}
+
+void LoadSurfFeatureMatcherParams(config_reader::ConfigReader& config, SurfFeatureMatcherParams& params) {
+  params.max_match_distance = mc::LoadDouble(config, "surf_max_match_distance");
 }
 
 void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params) {
-  params.max_match_hamming_distance = mc::LoadInt(config, "max_match_hamming_distance");
-  params.flann_table_number = mc::LoadInt(config, "flann_table_number");
-  params.flann_key_size = mc::LoadInt(config, "flann_key_size");
-  params.flann_multi_probe_level = mc::LoadInt(config, "flann_multi_probe_level");
+  LoadBriskFeatureMatcherParams(config, params.brisk_feature_matcher);
+  LoadSurfFeatureMatcherParams(config, params.surf_feature_matcher);
   params.detector = mc::LoadString(config, "detector");
   params.brisk_threshold = mc::LoadInt(config, "brisk_threshold");
   params.brisk_octaves = mc::LoadInt(config, "brisk_octaves");

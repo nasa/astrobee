@@ -19,14 +19,18 @@
 #define DEPTH_ODOMETRY_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
+#include <depth_odometry/brisk_feature_matcher_params.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_odometry_nodelet_params.h>
 #include <depth_odometry/depth_odometry_params.h>
+#include <depth_odometry/surf_feature_matcher_params.h>
 #include <depth_odometry/icp_params.h>
 
 namespace depth_odometry {
 void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
+void LoadBriskFeatureMatcherParams(config_reader::ConfigReader& config, BriskFeatureMatcherParams& params);
+void LoadSurfFeatureMatcherParams(config_reader::ConfigReader& config, SurfFeatureMatcherParams& params);
 void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params);
 }  // namespace depth_odometry

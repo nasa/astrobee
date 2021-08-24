@@ -19,17 +19,18 @@
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
 
 #include <camera/camera_params.h>
+#include <depth_odometry/brisk_feature_matcher_params.h>
+//#include <depth_odometry/lk_optical_flow_feature_matcher_params.h>
+#include <depth_odometry/surf_feature_matcher_params.h>
 
 #include <memory>
 #include <string>
 
 namespace depth_odometry {
 struct DepthImageAlignerParams {
-  int max_match_hamming_distance;
-  // Flann params
-  int flann_table_number;
-  int flann_key_size;
-  int flann_multi_probe_level;
+  BriskFeatureMatcherParams brisk_feature_matcher;
+  // LKOpticalFlowFeatureMatcherParams lk_optical_flow_feature_matcher;
+  SurfFeatureMatcherParams surf_feature_matcher;
   // Feature detector params
   std::string detector;
   // Brisk params
