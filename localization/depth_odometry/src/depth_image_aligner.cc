@@ -19,6 +19,7 @@
 #include <camera/camera_params.h>
 #include <camera/camera_model.h>
 #include <depth_odometry/depth_image_aligner.h>
+#include <depth_odometry/good_features_to_track_detector.h>
 #include <depth_odometry/point_cloud_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
@@ -40,7 +41,11 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
   } else if (params_.detector == "surf") {
     feature_detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
     flann_matcher_.reset(new cv::FlannBasedMatcher());
+  } else if (params_.detector == "lk_optical_flow") {
+    feature_detector_.reset(new cv::GoodFeaturesToTrackDetector());
+    flann_matcher_.reset(new cv::FlannBasedMatcher());
   }
+
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
