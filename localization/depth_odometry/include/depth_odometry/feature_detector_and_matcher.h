@@ -15,23 +15,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_SURF_FEATURE_MATCHER_H_
-#define DEPTH_ODOMETRY_SURF_FEATURE_MATCHER_H_
+#ifndef DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
+#define DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
 
 #include <depth_odometry/feature_image.h>
-#include <depth_odometry/feature_matcher.h>
-#include <depth_odometry/surf_feature_matcher_params.h>
+
+#include <opencv2/features2d.hpp>
 
 namespace depth_odometry {
-class SurfFeatureMatcher : public FeatureMatcher {
+class FeatureDetectorAndMatcher {
  public:
-  SurfFeatureMatcher(const SurfFeatureMatcherParams& params);
-  std::vector<cv::DMatch> Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
+  virtual std::vector<cv::DMatch> Match(const FeatureImage& image_a, const FeatureImage& image_b) = 0;
+  const cv::Ptr<cv::Feature2D>& detector() { return detector_; }
 
  private:
-  SurfFeatureMatcherParams params_;
-  cv::FlannBasedMatcher flann_matcher_;
+  cv::Ptr<cv::Feature2D> detector_;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_SURF_FEATURE_MATCHER_H_
+#endif  // DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_

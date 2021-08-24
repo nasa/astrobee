@@ -20,7 +20,7 @@
 
 #include <camera/camera_model.h>
 #include <depth_odometry/feature_depth_image_measurement.h>
-#include <depth_odometry/feature_matcher.h>
+#include <depth_odometry/feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/image_correspondences.h>
 #include <localization_common/time.h>
@@ -49,7 +49,7 @@ class DepthImageAligner {
   DepthImageAlignerParams params_;
   std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<FeatureDepthImageMeasurement> latest_feature_depth_image_;
-  std::unique_ptr<FeatureMatcher> feature_matcher_;
+  std::unique_ptr<FeatureDetectorAndMatcher> feature_detector_and_matcher_;
   cv::Ptr<cv::Feature2D> feature_detector_;
   boost::optional<ImageCorrespondences> correspondences_;
   cv::Ptr<cv::CLAHE> clahe_;

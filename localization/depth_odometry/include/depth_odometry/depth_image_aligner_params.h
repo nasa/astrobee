@@ -19,18 +19,18 @@
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
 
 #include <camera/camera_params.h>
-#include <depth_odometry/brisk_feature_matcher_params.h>
-//#include <depth_odometry/lk_optical_flow_feature_matcher_params.h>
-#include <depth_odometry/surf_feature_matcher_params.h>
+#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
+//#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <depth_odometry/surf_feature_detector_and_matcher_params.h>
 
 #include <memory>
 #include <string>
 
 namespace depth_odometry {
 struct DepthImageAlignerParams {
-  BriskFeatureMatcherParams brisk_feature_matcher;
-  // LKOpticalFlowFeatureMatcherParams lk_optical_flow_feature_matcher;
-  SurfFeatureMatcherParams surf_feature_matcher;
+  BriskFeatureDetectorAndMatcherParams brisk_feature_detector_and_matcher;
+  // LKOpticalFlowFeatureDetectorAndMatcherParams lk_optical_flow_feature_detector_and_matcher;
+  SurfFeatureDetectorAndMatcherParams surf_feature_detector_and_matcher;
   // Feature detector params
   std::string detector;
   // Brisk params

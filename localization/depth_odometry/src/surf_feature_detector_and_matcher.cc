@@ -16,13 +16,14 @@
  * under the License.
  */
 
-#include <depth_odometry/surf_feature_matcher.h>
-#include <depth_odometry/surf_feature_matcher_params.h>
+#include <depth_odometry/surf_feature_detector_and_matcher.h>
+#include <depth_odometry/surf_feature_detector_and_matcher_params.h>
 #include <localization_common/logger.h>
 
 namespace depth_odometry {
-SurfFeatureMatcher::SurfFeatureMatcher(const SurfFeatureMatcherParams& params) : params_(params) {}
-std::vector<cv::DMatch> SurfFeatureMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
+SurfFeatureDetectorAndMatcher::SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params)
+    : params_(params) {}
+std::vector<cv::DMatch> SurfFeatureDetectorAndMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
   std::vector<cv::DMatch> matches;
   flann_matcher_.match(image_a.descriptors(), image_b.descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());

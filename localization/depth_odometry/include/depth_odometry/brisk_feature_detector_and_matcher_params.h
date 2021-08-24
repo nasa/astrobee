@@ -15,11 +15,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_BRISK_FEATURE_MATCHER_PARAMS_H_
-#define DEPTH_ODOMETRY_BRISK_FEATURE_MATCHER_PARAMS_H_
+#ifndef DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#define DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
 
 namespace depth_odometry {
-struct BriskFeatureMatcherParams {
+struct BriskFeatureDetectorAndMatcherParams {
   int max_match_hamming_distance;
   int flann_table_number;
   int flann_key_size;
@@ -27,4 +27,4 @@ struct BriskFeatureMatcherParams {
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_BRISK_FEATURE_MATCHER_PARAMS_H_
+#endif  // DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_

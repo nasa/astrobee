@@ -16,16 +16,17 @@
  * under the License.
  */
 
-#include <depth_odometry/brisk_feature_matcher.h>
-#include <depth_odometry/brisk_feature_matcher_params.h>
+#include <depth_odometry/brisk_feature_detector_and_matcher.h>
+#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
 #include <localization_common/logger.h>
 
 namespace depth_odometry {
-BriskFeatureMatcher::BriskFeatureMatcher(const BriskFeatureMatcherParams& params)
+BriskFeatureDetectorAndMatcher::BriskFeatureDetectorAndMatcher(const BriskFeatureDetectorAndMatcherParams& params)
     : params_(params),
       flann_matcher_(cv::makePtr<cv::flann::LshIndexParams>(params_.flann_table_number, params_.flann_key_size,
                                                             params_.flann_multi_probe_level)) {}
-std::vector<cv::DMatch> BriskFeatureMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
+std::vector<cv::DMatch> BriskFeatureDetectorAndMatcher::Match(const FeatureImage& image_a,
+                                                              const FeatureImage& image_b) {
   std::vector<cv::DMatch> matches;
   flann_matcher_.match(image_a.descriptors(), image_b.descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());

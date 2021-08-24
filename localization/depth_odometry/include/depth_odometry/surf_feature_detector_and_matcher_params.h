@@ -15,16 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_FEATURE_MATCHER_H_
-#define DEPTH_ODOMETRY_FEATURE_MATCHER_H_
-
-#include <depth_odometry/feature_image.h>
+#ifndef DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#define DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
 
 namespace depth_odometry {
-class FeatureMatcher {
- public:
-  virtual std::vector<cv::DMatch> Match(const FeatureImage& image_a, const FeatureImage& image_b) = 0;
+struct SurfFeatureDetectorAndMatcherParams {
+  int max_match_distance;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_FEATURE_MATCHER_H_
+#endif  // DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
