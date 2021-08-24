@@ -29,12 +29,13 @@ class HungarianAssigner {
 public:
   HungarianAssigner(const SemanticLocFactorAdderParams& params);
 
-  typedef std::pair<const localization_measurements::SemanticDet*, const Eigen::Isometry3d*> Assignment;
+  typedef std::pair<size_t, std::shared_ptr<const Eigen::Isometry3d>> Assignment;
   typedef std::vector<Assignment> AssignmentSet;
   AssignmentSet assign(const Eigen::Isometry3d& world_T_body, const localization_measurements::SemanticDets &dets);
 private:
   const SemanticLocFactorAdderParams params_;
-  std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
+  // map from class to vector of positions, map for easy lookup
+  std::map<int, std::vector<std::shared_ptr<Eigen::Isometry3d>>> object_poses_; 
 
   typedef std::pair<size_t, size_t> AssignmentInd;
   typedef std::vector<AssignmentInd> AssignmentIndSet;

@@ -40,24 +40,24 @@ HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params)
   for (int i=1; i<=N; i++) {
     config_reader::ConfigReader::Table object(&objects, i);
     object.GetInt("class", &obj_cls);
-    //if (obj_cls == 2) continue; // ignore handrails
     if (object_poses_.count(obj_cls) == 0) {
-      object_poses_[obj_cls] = std::vector<Eigen::Isometry3d>();
+      object_poses_[obj_cls] = std::vector<std::shared_ptr<Eigen::Isometry3d>>();
     }
 
     config_reader::ConfigReader::Table pos(&object, "pos");
     config_reader::ConfigReader::Table rot(&object, "rot");
 
-    Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
-    pos.GetReal(1, &(pose.translation().x()));
-    pos.GetReal(2, &(pose.translation().y()));
-    pos.GetReal(3, &(pose.translation().z()));
+    std::shared_ptr<Eigen::Isometry3d> pose(new Eigen::Isometry3d());
+    *pose = Eigen::Isometry3d::Identity();
+    pos.GetReal(1, &(pose->translation().x()));
+    pos.GetReal(2, &(pose->translation().y()));
+    pos.GetReal(3, &(pose->translation().z()));
     Eigen::Quaterniond quat;
     rot.GetReal(1, &(quat.x())); 
     rot.GetReal(2, &(quat.y())); 
     rot.GetReal(3, &(quat.z())); 
     rot.GetReal(4, &(quat.w())); 
-    pose.rotate(quat);
+    pose->rotate(quat);
 
     // unneccessary copy here, but in init not a big deal
     object_poses_[obj_cls].push_back(pose);
@@ -229,28 +229,30 @@ HungarianAssigner::AssignmentSet HungarianAssigner::assign(const Eigen::Isometry
     int cls = classes.first;
     // Build the cost matrix
     std::vector<Eigen::Vector2d> cam_objs_px;
-    std::vector<const Eigen::Isometry3d*> associated_objs;
+    std::vector<std::shared_ptr<const Eigen::Isometry3d>> associated_objs;
     for (const auto& world_T_obj : classes.second) {
       try {
         const auto world_T_cam = lc::GtPose(world_T_body).compose(params_.body_T_cam);
         gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_cam, *params_.cam_intrinsics);
-        cam_objs_px.push_back(camera.project(world_T_obj.translation()));
-        associated_objs.push_back(&world_T_obj);
+        cam_objs_px.push_back(camera.project(world_T_obj->translation()));
+        associated_objs.push_back(world_T_obj);
       } catch (gtsam::CheiralityException e) {
         // Point behind camera
         continue;
       }
     }
 
-    std::vector<const lm::SemanticDet*> associated_dets;
+    std::vector<size_t> associated_dets;
+    size_t det_ind = 0;
     Eigen::ArrayXXd det_locs_px(4,0);
     for (const auto& det : dets) {
       if (det.class_id == cls) {
         det_locs_px.conservativeResize(det_locs_px.rows(), det_locs_px.cols()+1);
         det_locs_px.block<2,1>(0, det_locs_px.cols()-1) = det.image_point;
         det_locs_px.block<2,1>(2, det_locs_px.cols()-1) = det.bounding_box;
-        associated_dets.push_back(&det);
+        associated_dets.push_back(det_ind);
       }
+      det_ind++;
     }
 
     Eigen::ArrayXXd cost_matrix(det_locs_px.cols(), cam_objs_px.size());

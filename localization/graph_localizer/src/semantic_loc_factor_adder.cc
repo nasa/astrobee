@@ -103,15 +103,15 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   for (const auto& assignment : assignments) {
     // Actually build factor
-    const Eigen::Isometry3d world_T_obj = *assignment.second;
-    const lm::SemanticDet *best_det = assignment.first;
-    lm::MatchedProjection mp(best_det->image_point, best_det->bounding_box, world_T_obj.translation(), semantic_dets.timestamp);
+    const auto world_T_obj = assignment.second;
+    const auto *best_det = &semantic_dets.semantic_dets[assignment.first];
+    lm::MatchedProjection mp(best_det->image_point, best_det->bounding_box, world_T_obj->translation(), semantic_dets.timestamp);
     matched_projections_measurement.matched_projections.push_back(mp);
 
     // Visualization
     const auto world_T_cam = lc::GtPose(world_T_body).compose(params().body_T_cam);
     gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_cam, *params().cam_intrinsics);
-    last_matches_.push_back(SemanticMatch(best_det->class_id, camera.project(world_T_obj.translation()), 
+    last_matches_.push_back(SemanticMatch(best_det->class_id, camera.project(world_T_obj->translation()), 
                                           best_det->image_point, best_det->bounding_box));
   }
 
@@ -122,8 +122,6 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   std::vector<go::FactorsToAdd> factors_to_add;
   ComputeFactorsToAdd(factors_to_add, matched_projections_measurement);
-
-  LogError("Factor stamp: " << std::fixed << std::setprecision(20) << semantic_dets.timestamp);
 
   return factors_to_add;
 }
