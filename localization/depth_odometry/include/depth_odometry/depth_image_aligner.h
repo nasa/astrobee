@@ -50,7 +50,6 @@ class DepthImageAligner {
   std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<FeatureDepthImageMeasurement> latest_feature_depth_image_;
   std::unique_ptr<FeatureDetectorAndMatcher> feature_detector_and_matcher_;
-  cv::Ptr<cv::Feature2D> feature_detector_;
   boost::optional<ImageCorrespondences> correspondences_;
   cv::Ptr<cv::CLAHE> clahe_;
   camera::CameraModel cam_;

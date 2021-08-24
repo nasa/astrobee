@@ -24,7 +24,10 @@ namespace depth_odometry {
 BriskFeatureDetectorAndMatcher::BriskFeatureDetectorAndMatcher(const BriskFeatureDetectorAndMatcherParams& params)
     : params_(params),
       flann_matcher_(cv::makePtr<cv::flann::LshIndexParams>(params_.flann_table_number, params_.flann_key_size,
-                                                            params_.flann_multi_probe_level)) {}
+                                                            params_.flann_multi_probe_level)) {
+  detector_ = cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
+}
+
 std::vector<cv::DMatch> BriskFeatureDetectorAndMatcher::Match(const FeatureImage& image_a,
                                                               const FeatureImage& image_b) {
   std::vector<cv::DMatch> matches;

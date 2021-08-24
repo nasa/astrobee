@@ -44,6 +44,9 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                               BriskFeatureDetectorAndMatcherParams& params) {
+  params.brisk_threshold = mc::LoadInt(config, "brisk_threshold");
+  params.brisk_octaves = mc::LoadInt(config, "brisk_octaves");
+  params.brisk_float_pattern_scale = mc::LoadFloat(config, "brisk_float_pattern_scale");
   params.max_match_hamming_distance = mc::LoadInt(config, "brisk_max_match_hamming_distance");
   params.flann_table_number = mc::LoadInt(config, "brisk_flann_table_number");
   params.flann_key_size = mc::LoadInt(config, "brisk_flann_key_size");
@@ -52,6 +55,7 @@ void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& confi
 
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                              SurfFeatureDetectorAndMatcherParams& params) {
+  params.surf_threshold = mc::LoadInt(config, "surf_threshold");
   params.max_match_distance = mc::LoadDouble(config, "surf_max_match_distance");
 }
 
@@ -59,10 +63,6 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   LoadBriskFeatureDetectorAndMatcherParams(config, params.brisk_feature_detector_and_matcher);
   LoadSurfFeatureDetectorAndMatcherParams(config, params.surf_feature_detector_and_matcher);
   params.detector = mc::LoadString(config, "detector");
-  params.brisk_threshold = mc::LoadInt(config, "brisk_threshold");
-  params.brisk_octaves = mc::LoadInt(config, "brisk_octaves");
-  params.brisk_float_pattern_scale = mc::LoadFloat(config, "brisk_float_pattern_scale");
-  params.surf_threshold = mc::LoadInt(config, "surf_threshold");
   params.use_clahe = mc::LoadBool(config, "use_clahe");
   params.clahe_grid_length = mc::LoadInt(config, "clahe_grid_length");
   params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");

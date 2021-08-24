@@ -28,7 +28,7 @@ class FeatureDetectorAndMatcher {
   virtual std::vector<cv::DMatch> Match(const FeatureImage& image_a, const FeatureImage& image_b) = 0;
   const cv::Ptr<cv::Feature2D>& detector() { return detector_; }
 
- private:
+ protected:
   cv::Ptr<cv::Feature2D> detector_;
 };
 }  // namespace depth_odometry

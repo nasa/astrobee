@@ -20,6 +20,11 @@
 
 namespace depth_odometry {
 struct BriskFeatureDetectorAndMatcherParams {
+  // Detection
+  int brisk_threshold;
+  int brisk_octaves;
+  float brisk_float_pattern_scale;
+  // Matching
   int max_match_hamming_distance;
   int flann_table_number;
   int flann_key_size;

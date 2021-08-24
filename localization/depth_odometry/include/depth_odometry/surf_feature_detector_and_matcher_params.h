@@ -20,6 +20,7 @@
 
 namespace depth_odometry {
 struct SurfFeatureDetectorAndMatcherParams {
+  int surf_threshold;
   int max_match_distance;
 };
 }  // namespace depth_odometry

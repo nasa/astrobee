@@ -27,8 +27,6 @@
 #include <localization_common/timer.h>
 #include <sparse_mapping/reprojection.h>
 
-#include <opencv2/xfeatures2d.hpp>
-
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -36,14 +34,10 @@ namespace lm = localization_measurements;
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
     : params_(params), cam_(*(params_.camera_params)) {
   if (params_.detector == "brisk") {
-    feature_detector_ =
-      cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
     feature_detector_and_matcher_.reset(new BriskFeatureDetectorAndMatcher(params_.brisk_feature_detector_and_matcher));
   } else if (params_.detector == "surf") {
-    feature_detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
     feature_detector_and_matcher_.reset(new SurfFeatureDetectorAndMatcher(params_.surf_feature_detector_and_matcher));
   } else if (params_.detector == "lk_optical_flow") {
-    feature_detector_.reset(new cv::GoodFeaturesToTrackDetector());
     // TODO(rsoussan): change this!!!
     feature_detector_and_matcher_.reset(new SurfFeatureDetectorAndMatcher(params_.surf_feature_detector_and_matcher));
   }
@@ -124,8 +118,10 @@ void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& lat
   if (params_.use_clahe) {
     lm::DepthImageMeasurement clahe_depth_image = latest_depth_image;
     clahe_->apply(latest_depth_image.image, clahe_depth_image.image);
-    latest_feature_depth_image_.reset(new FeatureDepthImageMeasurement(clahe_depth_image, feature_detector_));
+    latest_feature_depth_image_.reset(
+      new FeatureDepthImageMeasurement(clahe_depth_image, feature_detector_and_matcher_->detector()));
   } else
-    latest_feature_depth_image_.reset(new FeatureDepthImageMeasurement(latest_depth_image, feature_detector_));
+    latest_feature_depth_image_.reset(
+      new FeatureDepthImageMeasurement(latest_depth_image, feature_detector_and_matcher_->detector()));
 }
 }  // namespace depth_odometry
