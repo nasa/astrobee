@@ -20,14 +20,14 @@ jobs:
 
     - name: Build code for Ubuntu 16
       run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=ubuntu16.04
+                          --build-arg UBUNTU_VERSION=16.04
                           --build-arg ROS_VERSION=kinetic
                           --build-arg PYTHON=''
                           -t astrobee/astrobee:latest-ubuntu16.04
 
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=ubuntu16.04
+                          --build-arg UBUNTU_VERSION=16.04
                           -t astrobee/astrobee:test-ubuntu16.04
 
   build-bionic:

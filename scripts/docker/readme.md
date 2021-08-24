@@ -12,13 +12,18 @@ The docker image for the astrobee FSW is divided throughout 2 docker files.
 
 Available docker files:
 
-    astrobee_base_xenial - Contains installation of all astrobee dependencies the Ubuntu 16.04 + ROS kinetic setup.
-    astrobee_base_bionic - Contains installation of all astrobee dependencies the Ubuntu 18.04 + ROS melodic setup.
-    astrobee_base_focal - Contains installation of all astrobee dependencies the Ubuntu 20.04 + ROS noetic setup.
+- `astrobee_base.Dockerfile` - Contains installation of all astrobee dependencies the Ubuntu + ROS setup.
+- `astrobee.Dockerfile` - Builds the astrobee FSW code on top of astrobee_base.
 
-    astrobee_xenial - Builds the astrobee FSW code on top of astrobee_base_xenial.
-    astrobee_bionic - Builds the astrobee FSW code on top of astrobee_base_bionic.
-    astrobee_focal - Builds the astrobee FSW code on top of astrobee_base_focal.
+The Docker files accept the following version args (note that they must match up):
+
+- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04", "18.04", and "20.04". Defautls to "16.04". 
+- `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic". Defaults to "kinetic"
+- `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3". Defaults to "".
+
+If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
+If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
+If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
 
 
 ## Building the docker images
