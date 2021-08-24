@@ -20,7 +20,7 @@
 #include <camera/camera_model.h>
 #include <depth_odometry/brisk_feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner.h>
-#include <depth_odometry/good_features_to_track_detector.h>
+#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher.h>
 #include <depth_odometry/point_cloud_utilities.h>
 #include <depth_odometry/surf_feature_detector_and_matcher.h>
 #include <localization_common/logger.h>
@@ -35,13 +35,16 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
     : params_(params), cam_(*(params_.camera_params)) {
   if (params_.detector == "brisk") {
     feature_detector_and_matcher_.reset(new BriskFeatureDetectorAndMatcher(params_.brisk_feature_detector_and_matcher));
+  } else if (params_.detector == "lk_optical_flow") {
+    feature_detector_and_matcher_.reset(
+      new LKOpticalFlowFeatureDetectorAndMatcher(params_.lk_optical_flow_feature_detector_and_matcher));
   } else if (params_.detector == "surf") {
     feature_detector_and_matcher_.reset(new SurfFeatureDetectorAndMatcher(params_.surf_feature_detector_and_matcher));
-  } else if (params_.detector == "lk_optical_flow") {
-    // TODO(rsoussan): change this!!!
-    feature_detector_and_matcher_.reset(new SurfFeatureDetectorAndMatcher(params_.surf_feature_detector_and_matcher));
+    clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
+  } else {
+    LogFatal("DepthImageAligner: Invalid feature detector and matcher.");
+    std::exit(1);
   }
-  clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>

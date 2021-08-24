@@ -23,6 +23,7 @@
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_odometry_nodelet_params.h>
 #include <depth_odometry/depth_odometry_params.h>
+#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
 #include <depth_odometry/surf_feature_detector_and_matcher_params.h>
 #include <depth_odometry/icp_params.h>
 
@@ -31,6 +32,8 @@ void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOd
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                               BriskFeatureDetectorAndMatcherParams& params);
+void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
+                                                      LKOpticalFlowFeatureDetectorAndMatcherParams& params);
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                              SurfFeatureDetectorAndMatcherParams& params);
 void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);

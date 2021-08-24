@@ -53,6 +53,9 @@ void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& confi
   params.flann_multi_probe_level = mc::LoadInt(config, "brisk_flann_multi_probe_level");
 }
 
+void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
+                                                      LKOpticalFlowFeatureDetectorAndMatcherParams& params) {}
+
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                              SurfFeatureDetectorAndMatcherParams& params) {
   params.surf_threshold = mc::LoadInt(config, "surf_threshold");
@@ -61,6 +64,7 @@ void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config
 
 void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params) {
   LoadBriskFeatureDetectorAndMatcherParams(config, params.brisk_feature_detector_and_matcher);
+  LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config, params.lk_optical_flow_feature_detector_and_matcher);
   LoadSurfFeatureDetectorAndMatcherParams(config, params.surf_feature_detector_and_matcher);
   params.detector = mc::LoadString(config, "detector");
   params.use_clahe = mc::LoadBool(config, "use_clahe");

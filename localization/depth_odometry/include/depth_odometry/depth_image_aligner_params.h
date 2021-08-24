@@ -20,7 +20,7 @@
 
 #include <camera/camera_params.h>
 #include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
-//#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
 #include <depth_odometry/surf_feature_detector_and_matcher_params.h>
 
 #include <memory>
@@ -29,7 +29,7 @@
 namespace depth_odometry {
 struct DepthImageAlignerParams {
   BriskFeatureDetectorAndMatcherParams brisk_feature_detector_and_matcher;
-  // LKOpticalFlowFeatureDetectorAndMatcherParams lk_optical_flow_feature_detector_and_matcher;
+  LKOpticalFlowFeatureDetectorAndMatcherParams lk_optical_flow_feature_detector_and_matcher;
   SurfFeatureDetectorAndMatcherParams surf_feature_detector_and_matcher;
   std::string detector;
   // CLAHE params
