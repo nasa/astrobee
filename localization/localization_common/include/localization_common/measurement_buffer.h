@@ -74,6 +74,8 @@ class MeasurementBuffer {
 
   const std::map<Time, MeasurementType>& measurements() { return measurements_; }
 
+  size_t size() { return measurements_.size(); }
+
  private:
   bool ValidTime(const localization_common::Time time_a, const localization_common::Time time_b,
                  const double tolerance) {

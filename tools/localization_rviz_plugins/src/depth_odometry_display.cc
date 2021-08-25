@@ -152,15 +152,11 @@ void DepthOdometryDisplay::createProjectionImage() {
   pcl::transformPointCloud(**source_point_cloud, *transformed_point_cloud, *relative_pose);
 
   auto source_image_measurement = lm::MakeImageMeasurement(*source_image_msg, sensor_msgs::image_encodings::RGB8);
-  if (!source_image_measurement) {
-    return;
-  }
+  if (!source_image_measurement) return;
   auto& source_image = source_image_measurement->image;
 
   auto target_image_measurement = lm::MakeImageMeasurement(*target_image_msg, sensor_msgs::image_encodings::RGB8);
-  if (!target_image_measurement) {
-    return;
-  }
+  if (!target_image_measurement) return;
   auto& target_image = target_image_measurement->image;
 
   // Draw optical flow tracks in target image, add projected 3D points as well
@@ -190,7 +186,8 @@ void DepthOdometryDisplay::createProjectionImage() {
   source_image.copyTo(projection_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(projection_image.image(cv::Rect(0, rows, cols, rows)));
   projection_image_pub_.publish(projection_image.toImageMsg());
-  point_cloud_buffer_.EraseUpTo(source_time);
+  // Account for time offset when erasing point cloud buffer
+  point_cloud_buffer_.EraseUpTo(source_time - 0.05);
   img_buffer_.EraseUpTo(source_time);
 }
 
@@ -202,25 +199,21 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   const auto source_image_msg = img_buffer_.Get(source_time);
   const auto target_image_msg = img_buffer_.Get(target_time);
   if (!source_image_msg || !target_image_msg) return;
+  const auto relative_pose = relative_pose_buffer_.Get(target_time);
+  if (!relative_pose) return;
 
-  // TODO(rsoussan): make function for this, unify with loc graph display
-  cv_bridge::CvImagePtr source_cv_image;
-  try {
-    source_cv_image = cv_bridge::toCvCopy(*source_image_msg, sensor_msgs::image_encodings::RGB8);
-  } catch (cv_bridge::Exception& e) {
-    LogError("cv_bridge exception: " << e.what());
-    return;
-  }
-  auto& source_image = source_cv_image->image;
+  const auto source_point_cloud = point_cloud_buffer_.GetNearby(source_time, 0.05);
+  if (!source_point_cloud) return;
 
-  cv_bridge::CvImagePtr target_cv_image;
-  try {
-    target_cv_image = cv_bridge::toCvCopy(*target_image_msg, sensor_msgs::image_encodings::RGB8);
-  } catch (cv_bridge::Exception& e) {
-    LogError("cv_bridge exception: " << e.what());
-    return;
-  }
-  auto& target_image = target_cv_image->image;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_point_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::transformPointCloud(**source_point_cloud, *transformed_point_cloud, *relative_pose);
+
+  auto source_image_measurement = lm::MakeImageMeasurement(*source_image_msg, sensor_msgs::image_encodings::RGB8);
+  if (!source_image_measurement) return;
+  auto& source_image = source_image_measurement->image;
+  auto target_image_measurement = lm::MakeImageMeasurement(*target_image_msg, sensor_msgs::image_encodings::RGB8);
+  if (!target_image_measurement) return;
+  auto& target_image = target_image_measurement->image;
 
   // Create correspondence image
   // Draw source image above target image, add correspondences as points outlined
@@ -238,6 +231,7 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   const int source_correspondence_row = source_correspondence_index / cols;
   const int source_correspondence_col = source_correspondence_index - cols * source_correspondence_row;
   const cv::Point source_correspondence_image_point(source_correspondence_col, source_correspondence_row);
+  const auto projected_source_point = projectPoint(transformed_point_cloud->points[source_correspondence_index]);
   const int target_correspondence_index = correspondence.target_index;
   const int target_correspondence_row = target_correspondence_index / cols;
   const int target_correspondence_col = target_correspondence_index - cols * target_correspondence_row;
@@ -249,11 +243,12 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   cv::circle(target_image, target_correspondence_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
   cv::rectangle(target_image, target_correspondence_image_point - rectangle_offset,
                 target_correspondence_image_point + rectangle_offset, cv::Scalar(0, 255, 0), 8);
+  cv::circle(target_image, projected_source_point, 3 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
   source_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());
   publishCorrespondencePoints(correspondence, source_time, target_time);
-}
+} 
 
 void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImageCorrespondence& correspondence,
                                                        const lc::Time source_time, const lc::Time target_time) {
