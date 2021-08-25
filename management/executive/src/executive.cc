@@ -3715,7 +3715,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                             SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET);
 
   set_collision_distance_client_ = nh_.serviceClient<ff_msgs::SetFloat>(
-                                    SERVICE_MOBILITY_UPDATE_COLLISION_DISTANCE);
+                                    SERVICE_MOBILITY_SET_COLLISION_DISTANCE);
 
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order

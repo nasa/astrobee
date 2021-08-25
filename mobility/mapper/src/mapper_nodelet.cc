@@ -87,7 +87,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   globals_.octomap.SetResolution(map_resolution);
   globals_.octomap.SetMaxRange(max_range);
   globals_.octomap.SetMinRange(min_range);
-  globals_.octomap.SetMemory(memory_time);
+  globals_.octomap.SetMemoryTime(memory_time);
   globals_.octomap.SetMapInflation(collision_distance + robot_radius);
   globals_.octomap.SetCamFrustum(cam_fov, aspect_ratio);
   globals_.octomap.SetOccupancyThreshold(occupancy_threshold);
@@ -161,12 +161,18 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     &MapperNodelet::ResetCallback, this);
 
   // Services
-  resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MAP_RESOLUTION,
-    &MapperNodelet::UpdateResolution, this);
-  memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MEMORY_TIME,
-    &MapperNodelet::UpdateMemoryTime, this);
-  collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_COLLISION_DISTANCE,
-    &MapperNodelet::CollisionDistance, this);
+  set_resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_MAP_RESOLUTION,
+    &MapperNodelet::SetResolution, this);
+  set_memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_MEMORY_TIME,
+    &MapperNodelet::SetMemoryTime, this);
+  set_collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_COLLISION_DISTANCE,
+    &MapperNodelet::SetCollisionDistance, this);
+  get_resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MAP_RESOLUTION,
+    &MapperNodelet::GetResolution, this);
+  get_memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MEMORY_TIME,
+    &MapperNodelet::GetMemoryTime, this);
+  get_collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_COLLISION_DISTANCE,
+    &MapperNodelet::GetCollisionDistance, this);
   reset_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_RESET_MAP,
     &MapperNodelet::ResetMap, this);
   get_free_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_FREE_MAP,
