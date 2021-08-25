@@ -190,6 +190,8 @@ void DepthOdometryDisplay::createProjectionImage() {
   source_image.copyTo(projection_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(projection_image.image(cv::Rect(0, rows, cols, rows)));
   projection_image_pub_.publish(projection_image.toImageMsg());
+  point_cloud_buffer_.EraseUpTo(source_time);
+  img_buffer_.EraseUpTo(source_time);
 }
 
 void DepthOdometryDisplay::createCorrespondencesImage() {
@@ -284,9 +286,6 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImage
       lm::MakePointCloudMsg(**target_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
     target_point_cloud_pub_.publish(target_cloud_msg);
   }
-
-  point_cloud_buffer_.EraseUpTo(source_time);
-  img_buffer_.EraseUpTo(source_time);
 }
 }  // namespace localization_rviz_plugins
 
