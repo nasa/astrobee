@@ -321,7 +321,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       [this](FSM::Event const& event) -> FSM::State {
         switch (event) {
         case TOLERANCE_POS_ENDPOINT:
-          return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION_SETPOINT);
+          return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION_ENDPOINT);
         case TOLERANCE_POS:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION);
         case TOLERANCE_ATT:
@@ -753,7 +753,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       result.fsm_result = "Replanning failed";
       client_c_.CancelGoal();
       break;
-    case RESPONSE::TOLERANCE_VIOLATION_POSITION_SETPOINT:
+    case RESPONSE::TOLERANCE_VIOLATION_POSITION_ENDPOINT:
       result.fsm_result = "Endpoint position tolerance violated";
       break;
     case RESPONSE::TOLERANCE_VIOLATION_POSITION:
@@ -1266,7 +1266,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // Control result
   void CResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     ff_msgs::ControlResultConstPtr const& result) {
-    // Check if it reached the setpoint
+    // Check if it reached the endpoint
       if (flight_mode_.tolerance_pos_endpoint > 0.0 &&
           pos_error_ > flight_mode_.tolerance_pos_endpoint) {
         // If tolerance is present more that the allowable time
