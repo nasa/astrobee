@@ -119,8 +119,10 @@ boost::optional<ff_msgs::DepthImageCorrespondences> DepthOdometryWrapper::GetIma
   for (const auto& correspondence : correspondences->matches) {
     ff_msgs::DepthImageCorrespondence correspondence_msg;
     // TODO(rsoussan): Get 224 from image.cols
-    correspondence_msg.source_index = correspondence.point_a.x() + correspondence.point_a.y() * 224;
-    correspondence_msg.target_index = correspondence.point_b.x() + correspondence.point_b.y() * 224;
+    correspondence_msg.source_index =
+      std::round(correspondence.point_a.x()) + std::round(correspondence.point_a.y()) * 224;
+    correspondence_msg.target_index =
+      std::round(correspondence.point_b.x()) + std::round(correspondence.point_b.y()) * 224;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
 
