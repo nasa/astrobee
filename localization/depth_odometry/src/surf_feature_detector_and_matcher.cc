@@ -27,7 +27,7 @@ SurfFeatureDetectorAndMatcher::SurfFeatureDetectorAndMatcher(const SurfFeatureDe
     : params_(params) {
   detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
 }
-std::vector<cv::DMatch> SurfFeatureDetectorAndMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
+FeatureMatches SurfFeatureDetectorAndMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
   std::vector<cv::DMatch> matches;
   flann_matcher_.match(image_a.descriptors(), image_b.descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());
@@ -37,6 +37,13 @@ std::vector<cv::DMatch> SurfFeatureDetectorAndMatcher::Match(const FeatureImage&
   matches.erase(filtered_end, matches.end());
   LogError("keypoints a: " << image_a.keypoints().size() << ", b: " << image_b.keypoints().size());
   LogError("matches post filtering: " << matches.size());
-  return matches;
+  FeatureMatches feature_matches;
+  for (const auto& match : matches) {
+    const auto& point_a = image_a.keypoints()[match.queryIdx].pt;
+    const auto& point_b = image_b.keypoints()[match.trainIdx].pt;
+    feature_matches.emplace_back(Eigen::Vector2d(point_a.x, point_a.y), Eigen::Vector2d(point_b.x, point_b.y),
+                                 match.distance);
+  }
+  return feature_matches;
 }
 }  // namespace depth_odometry

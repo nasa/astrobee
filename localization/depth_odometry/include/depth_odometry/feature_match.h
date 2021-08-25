@@ -15,23 +15,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
-#define DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#ifndef DEPTH_ODOMETRY_FEATURE_MATCH_H_
+#define DEPTH_ODOMETRY_FEATURE_MATCH_H_
 
 #include <depth_odometry/feature_image.h>
-#include <depth_odometry/feature_detector_and_matcher.h>
-#include <depth_odometry/surf_feature_detector_and_matcher_params.h>
+
+#include <Eigen/Core>
 
 namespace depth_odometry {
-class SurfFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
- public:
-  SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
+struct FeatureMatch {
+  FeatureMatch(const Eigen::Vector2d& point_a, const Eigen::Vector2d& point_b, const double distance)
+      : point_a(point_a), point_b(point_b), distance(distance) {}
+  Eigen::Vector2d point_a;
+  Eigen::Vector2d point_b;
+  double distance;
 
- private:
-  SurfFeatureDetectorAndMatcherParams params_;
-  cv::FlannBasedMatcher flann_matcher_;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+using FeatureMatches = std::vector<FeatureMatch>;
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#endif  // DEPTH_ODOMETRY_FEATURE_MATCH_H_

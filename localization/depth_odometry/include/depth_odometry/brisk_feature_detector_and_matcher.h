@@ -26,7 +26,7 @@ namespace depth_odometry {
 class BriskFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
   BriskFeatureDetectorAndMatcher(const BriskFeatureDetectorAndMatcherParams& params);
-  std::vector<cv::DMatch> Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
+  FeatureMatches Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
 
  private:
   BriskFeatureDetectorAndMatcherParams params_;

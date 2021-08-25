@@ -15,23 +15,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
-#define DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#ifndef DEPTH_ODOMETRY_STAMPED_FEATURE_MATCHES_H_
+#define DEPTH_ODOMETRY_STAMPED_FEATURE_MATCHES_H_
 
-#include <depth_odometry/feature_image.h>
-#include <depth_odometry/feature_detector_and_matcher.h>
-#include <depth_odometry/surf_feature_detector_and_matcher_params.h>
+#include <depth_odometry/feature_match.h>
+#include <localization_common/time.h>
 
 namespace depth_odometry {
-class SurfFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
- public:
-  SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
-
- private:
-  SurfFeatureDetectorAndMatcherParams params_;
-  cv::FlannBasedMatcher flann_matcher_;
+struct StampedFeatureMatches {
+  StampedFeatureMatches(const FeatureMatches& matches, const localization_common::Time source_time,
+                        const localization_common::Time target_time)
+      : matches(matches), source_time(source_time), target_time(target_time) {}
+  FeatureMatches matches;
+  localization_common::Time source_time;
+  localization_common::Time target_time;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#endif  // DEPTH_ODOMETRY_STAMPED_FEATURE_MATCHES_H_

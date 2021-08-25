@@ -30,8 +30,7 @@ LKOpticalFlowFeatureDetectorAndMatcher::LKOpticalFlowFeatureDetectorAndMatcher(
   detector_.reset(new cv::GoodFeaturesToTrackDetector());
 }
 
-std::vector<cv::DMatch> LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& image_a,
-                                                                      const FeatureImage& image_b) {
+FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
   // TODO(rsoussan): Make these params!
   const int max_iterations = 10;
   const double termination_epsilon = 0.03;
@@ -55,38 +54,21 @@ std::vector<cv::DMatch> LKOpticalFlowFeatureDetectorAndMatcher::Match(const Feat
                            backward_status, backward_errors, window_size, max_level, termination_criteria, 0,
                            min_eigen_threshold);
 
-  // Remove corners with false status and with large displacements
-  // RefineCorners();
-
-  std::vector<cv::DMatch> matches;
+  // Find matches between forward and backward passes
+  const double max_flow_distance = 180;
+  const double max_backward_match_distance = 0.5;
+  FeatureMatches matches;
+  for (int i = 0; i < static_cast<int>(matched_forward_features.size()); ++i) {
+    const auto& point_a = image_a.feature_points()[i];
+    const auto& forward_point = matched_forward_features[i];
+    if (!(forward_status[i] && backward_status[i])) continue;
+    const bool valid_forward_match = cv::norm(point_a - forward_point) <= max_flow_distance;
+    const double backward_match_distance = cv::norm(point_a - matched_backward_features[i]);
+    const bool valid_backward_match = backward_match_distance <= max_backward_match_distance;
+    if (!(valid_forward_match && valid_backward_match)) continue;
+    matches.emplace_back(Eigen::Vector2d(point_a.x, point_a.y), Eigen::Vector2d(forward_point.x, forward_point.y),
+                         backward_match_distance);
+  }
   return matches;
 }
-
-/*void LKOpticalFlowFeatureDetectorAndMatcher::RefineCorners() {
-  // Remove corners with 'false' status and with more displacement than max_flow_magnitude
-  size_t k = 0;
-  for (size_t i = 0; i < curr_corners_.size(); ++i) {
-    // ignore pixels that weren't tracked, were too far away, and are near the image border
-    bool too_far = cv::norm(prev_corners_[i] - curr_corners_[i]) > max_flow_magnitude_;
-    //int x_border_dist = std::min(curr_corners_[i].x, image_curr_.cols - curr_corners_[i].x);
-    //int y_border_dist = std::min(curr_corners_[i].y, image_curr_.rows - curr_corners_[i].y);
-    //bool on_border = x_border_dist < 10 || y_border_dist < 10;
-    //bool on_corner = x_border_dist < 60 && y_border_dist < 60;
-    bool backwards_ok = cv::norm(prev_corners_[i] - backwards_corners_[i]) < 0.5 &&
-                        backwards_status_[i];
-
-    // ignore points that don't have the same matching in both directions
-    if (status_[i] && !too_far && !on_border && !on_corner && backwards_ok) {
-      curr_corners_[k] = curr_corners_[i];
-      prev_corners_[k] = prev_corners_[i];
-      id_list_[k] = id_list_[i];
-      ++k;
-    }
-  }
-  // printf("Filtered corners from %lu to %lu.\n", corners_[1].size(), k);
-  curr_corners_.resize(k);
-  prev_corners_.resize(k);
-  id_list_.resize(k);
-}*/
-
 }  // namespace depth_odometry

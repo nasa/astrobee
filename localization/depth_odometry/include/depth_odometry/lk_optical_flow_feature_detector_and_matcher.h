@@ -26,7 +26,7 @@ namespace depth_odometry {
 class LKOpticalFlowFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
   LKOpticalFlowFeatureDetectorAndMatcher(const LKOpticalFlowFeatureDetectorAndMatcherParams& params);
-  std::vector<cv::DMatch> Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
+  FeatureMatches Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
 
  private:
   LKOpticalFlowFeatureDetectorAndMatcherParams params_;

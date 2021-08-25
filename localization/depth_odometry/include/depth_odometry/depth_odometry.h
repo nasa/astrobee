@@ -44,8 +44,8 @@ class DepthOdometry {
     return latest_depth_cloud_;
   }
   const boost::optional<pcl::Correspondences>& point_cloud_correspondences() const { return icp_->correspondences(); }
-  const boost::optional<ImageCorrespondences>& image_correspondences() const {
-    return depth_image_aligner_->correspondences();
+  const boost::optional<StampedFeatureMatches>& image_correspondences() const {
+    return depth_image_aligner_->matches();
   }
   Eigen::Isometry3d latest_relative_transform() const { return latest_relative_transform_; }
   const DepthOdometryParams& params() const { return params_; }
