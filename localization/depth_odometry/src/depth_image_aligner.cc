@@ -52,8 +52,10 @@ DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   auto matches = feature_detector_and_matcher_->Match(*previous_feature_depth_image_, *latest_feature_depth_image_);
 
-  std::vector<Eigen::Vector3d> target_landmarks;
   std::vector<Eigen::Vector2d> source_observations;
+  std::vector<Eigen::Vector3d> source_landmarks;
+  std::vector<Eigen::Vector2d> target_observations;
+  std::vector<Eigen::Vector3d> target_landmarks;
   // Get 3D points for image features
   for (auto match_it = matches.begin(); match_it != matches.end();) {
     const auto& source_image_point = match_it->source_point;
@@ -67,11 +69,26 @@ DepthImageAligner::ComputeRelativeTransform() {
     const Eigen::Vector3d target_landmark(target_point_3d->x, target_point_3d->y, target_point_3d->z);
     target_landmarks.emplace_back(target_landmark);
 
+    // It's ok if source landmark interpolation fails since this is not used for camera estimation
+    const auto& source_point_3d =
+      previous_feature_depth_image_->InterpolatePoint3D(source_image_point.x(), source_image_point.y());
+    Eigen::Vector3d source_landmark(Eigen::Vector3d::Zero());
+    if (source_point_3d && ValidPoint(*source_point_3d)) {
+      source_landmark = Eigen::Vector3d(source_point_3d->x, source_point_3d->y, source_point_3d->z);
+    }
+    source_landmarks.emplace_back(source_landmark);
+
     // RansacEstimateCamera expects image points in undistorted centered frame
     Eigen::Vector2d undistorted_source_image_point;
     params_.camera_params->Convert<camera::DISTORTED, camera::UNDISTORTED_C>(source_image_point,
                                                                              &undistorted_source_image_point);
     source_observations.emplace_back(undistorted_source_image_point);
+
+    Eigen::Vector2d undistorted_target_image_point;
+    params_.camera_params->Convert<camera::DISTORTED, camera::UNDISTORTED_C>(target_image_point,
+                                                                             &undistorted_target_image_point);
+    target_observations.emplace_back(undistorted_target_image_point);
+
     ++match_it;
   }
   if (target_landmarks.size() < 4) {
@@ -95,34 +112,28 @@ DepthImageAligner::ComputeRelativeTransform() {
   }
   const Eigen::Isometry3d relative_transform(cam_.GetTransform().matrix());
 
-  std::vector<Eigen::Vector3d> inlier_source_landmarks;
-  std::vector<Eigen::Vector2d> inlier_target_observations;
-  for (int i = 0, inlier_index = 0; i < static_cast<int>(source_observations.size()) &&
-                                    inlier_index < static_cast<int>(inlier_source_observations.size());
+  // Remove outlier target observations and source landmarks (since these aren't filled by RansacEstimateCamera)
+  auto source_landmarks_it = source_landmarks.begin();
+  auto target_observations_it = target_observations.begin();
+  for (int i = 0, inlier_index = 0;
+       i < static_cast<int>(source_observations.size()) &&
+       inlier_index < static_cast<int>(inlier_source_observations.size()) &&
+       source_landmarks_it != source_landmarks.end() && target_observations_it != target_observations.end();
        ++i) {
     if (source_observations[i].isApprox(inlier_source_observations[inlier_index]) &&
         target_landmarks[i].isApprox(inlier_target_landmarks[inlier_index])) {
-      const auto& source_point_3d = previous_feature_depth_image_->InterpolatePoint3D(
-        inlier_source_observations[inlier_index].x(), inlier_source_observations[inlier_index].y());
-      // It's ok if source landmark interpolation fails since this is not used for camera estimation
-      Eigen::Vector3d source_landmark(Eigen::Vector3d::Zero());
-      if (source_point_3d && ValidPoint(*source_point_3d)) {
-        source_landmark = Eigen::Vector3d(source_point_3d->x, source_point_3d->y, source_point_3d->z);
-      }
-      inlier_source_landmarks.emplace_back(source_landmark);
-
-      const auto& target_image_point = matches[i].target_point;
-      Eigen::Vector2d undistorted_target_image_point;
-      params_.camera_params->Convert<camera::DISTORTED, camera::UNDISTORTED_C>(target_image_point,
-                                                                               &undistorted_target_image_point);
-      inlier_target_observations.emplace_back(undistorted_target_image_point);
+      LogError("inlier index: " << inlier_index << ", total size: " << inlier_source_observations.size());
       ++inlier_index;
+      ++source_landmarks_it;
+      ++target_observations_it;
+      continue;
     }
+    source_landmarks_it = source_landmarks.erase(source_landmarks_it);
+    target_observations_it = target_observations.erase(target_observations_it);
   }
 
-  matches_ = DepthMatches(inlier_source_observations, inlier_target_observations, inlier_source_landmarks,
-                          inlier_target_landmarks, previous_feature_depth_image_->timestamp,
-                          latest_feature_depth_image_->timestamp);
+  matches_ = DepthMatches(inlier_source_observations, target_observations, source_landmarks, inlier_target_landmarks,
+                          previous_feature_depth_image_->timestamp, latest_feature_depth_image_->timestamp);
   LogError("rel trafo trans: " << relative_transform.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.translation().norm());
   if (relative_transform.translation().norm() > 10) {
