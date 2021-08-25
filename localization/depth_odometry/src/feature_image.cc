@@ -21,5 +21,6 @@
 namespace depth_odometry {
 FeatureImage::FeatureImage(const cv::Mat& image, const cv::Ptr<cv::Feature2D> feature_detector) : image_(image) {
   feature_detector->detectAndCompute(image_, cv::Mat(), keypoints_, descriptors_);
+  cv::KeyPoint::convert(keypoints_, feature_points_);
 }
 }  // namespace depth_odometry
