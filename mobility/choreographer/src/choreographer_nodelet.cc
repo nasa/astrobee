@@ -97,7 +97,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     PMC_TIMEOUT                    = (1<<10),     // PMC has timed out
     CONTROL_SUCCESS                = (1<<11),     // Control success
     CONTROL_FAILED                 = (1<<12),     // Control failure
-    TOLERANCE_POS_SETPOINT         = (1<<13),     // Setpoint position tolerance failure
+    TOLERANCE_POS_ENDPOINT         = (1<<13),     // Endpoint position tolerance failure
     TOLERANCE_POS                  = (1<<14),     // Position tolerance failure
     TOLERANCE_ATT                  = (1<<15),     // Attitude tolerance failure
     TOLERANCE_VEL                  = (1<<16),     // Velocity tolerance failure
@@ -317,10 +317,10 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // [12]
     fsm_.Add(STATE::CONTROLLING,
       TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL
-      | TOLERANCE_OMEGA | TOLERANCE_POS_SETPOINT,
+      | TOLERANCE_OMEGA | TOLERANCE_POS_ENDPOINT,
       [this](FSM::Event const& event) -> FSM::State {
         switch (event) {
-        case TOLERANCE_POS_SETPOINT:
+        case TOLERANCE_POS_ENDPOINT:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION_SETPOINT);
         case TOLERANCE_POS:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION);
@@ -754,7 +754,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       client_c_.CancelGoal();
       break;
     case RESPONSE::TOLERANCE_VIOLATION_POSITION_SETPOINT:
-      result.fsm_result = "Setpoint position tolerance violated";
+      result.fsm_result = "Endpoint position tolerance violated";
       break;
     case RESPONSE::TOLERANCE_VIOLATION_POSITION:
       result.fsm_result = "Position tolerance violated";
@@ -1267,14 +1267,14 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   void CResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     ff_msgs::ControlResultConstPtr const& result) {
     // Check if it reached the setpoint
-      if (flight_mode_.tolerance_pos_setpoint > 0.0 &&
-          pos_error_ > flight_mode_.tolerance_pos_setpoint) {
+      if (flight_mode_.tolerance_pos_endpoint > 0.0 &&
+          pos_error_ > flight_mode_.tolerance_pos_endpoint) {
         // If tolerance is present more that the allowable time
-        NODELET_DEBUG_STREAM("Setpoint position tolerance violated");
+        NODELET_DEBUG_STREAM("Endpoint position tolerance violated");
         NODELET_DEBUG_STREAM("- Value: " << pos_error_
                                         << ", Thresh: "
-                                        << flight_mode_.tolerance_pos_setpoint);
-        return fsm_.Update(TOLERANCE_POS_SETPOINT);
+                                        << flight_mode_.tolerance_pos_endpoint);
+        return fsm_.Update(TOLERANCE_POS_ENDPOINT);
       }
 
     switch (result_code) {

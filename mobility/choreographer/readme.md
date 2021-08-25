@@ -54,7 +54,7 @@ To ensure that the robot is following the desired trajectory, the choreographer 
 
 | Parameter                        | Description |
 |:---------------------------------|:----------- |
-| ```tolerance_pos_setpoint```     | End of motion position tolerance. Checked when the trajectory finishes and the robot is stopped |
+| ```tolerance_pos_endpoint```     | End of motion position tolerance. Checked when the trajectory finishes and the robot is stopped |
 | ```tolerance_pos```              | Position tolerance checked thoughout the entire trajectory |
 | ```tolerance_vel```              | Velocity tolerance checked thoughout the entire trajectory |
 | ```tolerance_att```              | Attitude tolerance checked thoughout the entire trajectory |
