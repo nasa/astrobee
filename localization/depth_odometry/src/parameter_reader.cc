@@ -54,7 +54,16 @@ void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& confi
 }
 
 void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
-                                                      LKOpticalFlowFeatureDetectorAndMatcherParams& params) {}
+                                                      LKOpticalFlowFeatureDetectorAndMatcherParams& params) {
+  params.max_iterations = mc::LoadInt(config, "lk_max_iterations");
+  params.termination_epsilon = mc::LoadDouble(config, "lk_termination_epsilon");
+  params.window_width = mc::LoadInt(config, "lk_window_width");
+  params.window_height = mc::LoadInt(config, "lk_window_height");
+  params.max_level = mc::LoadInt(config, "lk_max_level");
+  params.min_eigen_threshold = mc::LoadDouble(config, "lk_min_eigen_threshold");
+  params.max_flow_distance = mc::LoadDouble(config, "lk_max_flow_distance");
+  params.max_backward_match_distance = mc::LoadDouble(config, "lk_max_backward_match_distance");
+}
 
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                              SurfFeatureDetectorAndMatcherParams& params) {

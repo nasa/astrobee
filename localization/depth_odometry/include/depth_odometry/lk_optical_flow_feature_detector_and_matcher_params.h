@@ -19,7 +19,16 @@
 #define DEPTH_ODOMETRY_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
 
 namespace depth_odometry {
-struct LKOpticalFlowFeatureDetectorAndMatcherParams {};
+struct LKOpticalFlowFeatureDetectorAndMatcherParams {
+  int max_iterations;
+  double termination_epsilon;
+  int window_width;
+  int window_height;
+  int max_level;
+  double min_eigen_threshold;
+  double max_flow_distance;
+  double max_backward_match_distance;
+};
 }  // namespace depth_odometry
 
 #endif  // DEPTH_ODOMETRY_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
