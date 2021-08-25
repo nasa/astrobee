@@ -26,7 +26,7 @@ namespace depth_odometry {
 class SurfFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
   SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const FeatureImage& image_a, const FeatureImage& image_b) final;
+  FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) final;
 
  private:
   SurfFeatureDetectorAndMatcherParams params_;

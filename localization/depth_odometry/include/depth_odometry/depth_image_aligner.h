@@ -22,7 +22,7 @@
 #include <depth_odometry/feature_depth_image_measurement.h>
 #include <depth_odometry/feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner_params.h>
-#include <depth_odometry/stamped_feature_matches.h>
+#include <depth_odometry/depth_matches.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 
@@ -43,14 +43,14 @@ class DepthImageAligner {
   DepthImageAligner(const DepthImageAlignerParams& params);
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform();
   void AddLatestDepthImage(const localization_measurements::DepthImageMeasurement& latest_depth_image);
-  const boost::optional<StampedFeatureMatches>& matches() const { return matches_; }
+  const boost::optional<DepthMatches>& matches() const { return matches_; }
 
  private:
   DepthImageAlignerParams params_;
   std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<FeatureDepthImageMeasurement> latest_feature_depth_image_;
   std::unique_ptr<FeatureDetectorAndMatcher> feature_detector_and_matcher_;
-  boost::optional<StampedFeatureMatches> matches_;
+  boost::optional<DepthMatches> matches_;
   cv::Ptr<cv::CLAHE> clahe_;
   camera::CameraModel cam_;
 };

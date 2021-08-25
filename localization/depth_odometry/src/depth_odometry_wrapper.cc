@@ -116,13 +116,13 @@ boost::optional<ff_msgs::DepthImageCorrespondences> DepthOdometryWrapper::GetIma
   correspondences_msg.source_time = ros::Time(correspondences->source_time);
   correspondences_msg.target_time = ros::Time(correspondences->target_time);
 
-  for (const auto& correspondence : correspondences->matches) {
+  for (int i = 0; i < static_cast<int>(correspondences->source_image_points.size()); ++i) {
+    const auto& source_point = correspondences->source_image_points[i];
+    const auto& target_point = correspondences->target_image_points[i];
     ff_msgs::DepthImageCorrespondence correspondence_msg;
     // TODO(rsoussan): Get 224 from image.cols
-    correspondence_msg.source_index =
-      std::round(correspondence.point_a.x()) + std::round(correspondence.point_a.y()) * 224;
-    correspondence_msg.target_index =
-      std::round(correspondence.point_b.x()) + std::round(correspondence.point_b.y()) * 224;
+    correspondence_msg.source_index = std::round(source_point.x()) + std::round(source_point.y()) * 224;
+    correspondence_msg.target_index = std::round(target_point.x()) + std::round(target_point.y()) * 224;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
 

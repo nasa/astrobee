@@ -28,22 +28,23 @@ BriskFeatureDetectorAndMatcher::BriskFeatureDetectorAndMatcher(const BriskFeatur
   detector_ = cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
 }
 
-FeatureMatches BriskFeatureDetectorAndMatcher::Match(const FeatureImage& image_a, const FeatureImage& image_b) {
+FeatureMatches BriskFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
+                                                     const FeatureImage& target_image) {
   std::vector<cv::DMatch> matches;
-  flann_matcher_.match(image_a.descriptors(), image_b.descriptors(), matches);
+  flann_matcher_.match(source_image.descriptors(), target_image.descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());
   const auto filtered_end = std::remove_if(matches.begin(), matches.end(), [this](const cv::DMatch& match) {
     return match.distance > params_.max_match_hamming_distance;
   });
   matches.erase(filtered_end, matches.end());
-  LogError("keypoints a: " << image_a.keypoints().size() << ", b: " << image_b.keypoints().size());
+  LogError("keypoints a: " << source_image.keypoints().size() << ", b: " << target_image.keypoints().size());
   LogError("matches post filtering: " << matches.size());
   FeatureMatches feature_matches;
   for (const auto& match : matches) {
-    const auto& point_a = image_a.keypoints()[match.queryIdx].pt;
-    const auto& point_b = image_b.keypoints()[match.trainIdx].pt;
-    feature_matches.emplace_back(Eigen::Vector2d(point_a.x, point_a.y), Eigen::Vector2d(point_b.x, point_b.y),
-                                 match.distance);
+    const auto& source_point = source_image.keypoints()[match.queryIdx].pt;
+    const auto& target_point = target_image.keypoints()[match.trainIdx].pt;
+    feature_matches.emplace_back(Eigen::Vector2d(source_point.x, source_point.y),
+                                 Eigen::Vector2d(target_point.x, target_point.y), match.distance);
   }
   return feature_matches;
 }

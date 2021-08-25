@@ -24,10 +24,10 @@
 
 namespace depth_odometry {
 struct FeatureMatch {
-  FeatureMatch(const Eigen::Vector2d& point_a, const Eigen::Vector2d& point_b, const double distance)
-      : point_a(point_a), point_b(point_b), distance(distance) {}
-  Eigen::Vector2d point_a;
-  Eigen::Vector2d point_b;
+  FeatureMatch(const Eigen::Vector2d& source_point, const Eigen::Vector2d& target_point, const double distance)
+      : source_point(source_point), target_point(target_point), distance(distance) {}
+  Eigen::Vector2d source_point;
+  Eigen::Vector2d target_point;
   double distance;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

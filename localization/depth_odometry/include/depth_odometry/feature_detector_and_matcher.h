@@ -26,7 +26,7 @@
 namespace depth_odometry {
 class FeatureDetectorAndMatcher {
  public:
-  virtual FeatureMatches Match(const FeatureImage& image_a, const FeatureImage& image_b) = 0;
+  virtual FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) = 0;
   const cv::Ptr<cv::Feature2D>& detector() { return detector_; }
 
  protected:
