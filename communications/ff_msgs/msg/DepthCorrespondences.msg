@@ -19,4 +19,4 @@
 Header header
 time source_time 
 time target_time
-ff_msgs/DepthImageCorrespondence[] correspondences
+ff_msgs/DepthCorrespondence[] correspondences

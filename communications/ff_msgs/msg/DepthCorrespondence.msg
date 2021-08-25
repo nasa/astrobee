@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-int32 source_index 
-int32 target_index
-
+ImagePoint source_image_point
+ImagePoint target_image_point
+geometry_msgs/Point source_point_3d
+geometry_msgs/Point target_point_3d

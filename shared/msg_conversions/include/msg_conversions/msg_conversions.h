@@ -99,6 +99,12 @@ void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
   msg_vector.z = vector.z();
 }
 
+template <typename VectorType, typename MsgVectorType>
+void Vector2DToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
+  msg_vector.x = vector.x();
+  msg_vector.y = vector.y();
+}
+
 template <typename RotationType, typename MsgRotationType>
 RotationType RotationFromMsg(const MsgRotationType& msg_rotation) {
   return RotationType(msg_rotation.w, msg_rotation.x, msg_rotation.y, msg_rotation.z);

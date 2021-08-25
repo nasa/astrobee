@@ -19,7 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_WRAPPER_H_
 
 #include <depth_odometry/depth_odometry.h>
-#include <ff_msgs/DepthImageCorrespondences.h>
+#include <ff_msgs/DepthCorrespondences.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 
@@ -36,8 +36,8 @@ class DepthOdometryWrapper {
     const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
   std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthImageCallback(
     const sensor_msgs::ImageConstPtr& depth_image_msg);
-  boost::optional<ff_msgs::DepthImageCorrespondences> GetPointCloudCorrespondencesMsg() const;
-  boost::optional<ff_msgs::DepthImageCorrespondences> GetImageCorrespondencesMsg() const;
+  boost::optional<ff_msgs::DepthCorrespondences> GetPointCloudCorrespondencesMsg() const;
+  boost::optional<ff_msgs::DepthCorrespondences> GetImageCorrespondencesMsg() const;
   sensor_msgs::PointCloud2 GetPreviousPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetLatestPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetTransformedPreviousPointCloudMsg() const;
