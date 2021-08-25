@@ -40,11 +40,11 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
       new LKOpticalFlowFeatureDetectorAndMatcher(params_.lk_optical_flow_feature_detector_and_matcher));
   } else if (params_.detector == "surf") {
     feature_detector_and_matcher_.reset(new SurfFeatureDetectorAndMatcher(params_.surf_feature_detector_and_matcher));
-    clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
   } else {
     LogFatal("DepthImageAligner: Invalid feature detector and matcher.");
     std::exit(1);
   }
+  clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
