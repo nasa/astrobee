@@ -52,10 +52,15 @@ bool ValidPoint<pcl::PointNormal>(const pcl::PointNormal& point);
 template <>
 bool ValidPoint<pcl::PointXYZINormal>(const pcl::PointXYZINormal& point);
 
+template <typename Type>
+bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
+  return std::abs(point) <= epsilon;
+}
+
 template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point) {
   const bool finite_point = pcl_isfinite(point.x) && pcl_isfinite(point.y) && pcl_isfinite(point.z);
-  const bool nonzero_point = point.x != 0 || point.y != 0 || point.z != 0;
+  const bool nonzero_point = !ApproxZero(point.x) || !ApproxZero(point.y) || !ApproxZero(point.z);
   return finite_point && nonzero_point;
 }
 
@@ -63,7 +68,7 @@ template <typename PointNormalType>
 bool ValidNormal(const PointNormalType& point) {
   const bool finite_normal =
     pcl_isfinite(point.normal_x) && pcl_isfinite(point.normal_y) && pcl_isfinite(point.normal_z);
-  const bool nonzero_normal = point.normal_x != 0 || point.normal_y != 0 || point.normal_z != 0;
+  const bool nonzero_normal = !ApproxZero(point.normal_x) || !ApproxZero(point.normal_y) || !ApproxZero(point.normal_z);
   return finite_normal && nonzero_normal;
 }
 
