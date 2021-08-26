@@ -47,3 +47,16 @@ A replanning approach is implemented to support obstacle avoidance using the qp-
 Internally, the choreographer is encoded as a finite state machine depicted below and implemented using the ff_util/FSM class. This class essentially captures a map of (state, event) -> lambda function relationships. The state of the system is moved forward by setting the initial state and then pushing a sequence of events to the FSM.
 
 \dotfile choreographer_fsm "Choreographer finite state machine"
+
+## Trajectory checks
+
+To ensure that the robot is following the desired trajectory, the choreographer overviews the controller feedback and cancels the movement if the motion value is above the defined values for a certain amout of time. The parameters are tuned according to the flight mode chosen.  A zero value for any of these parameters disables the check.
+
+| Parameter                        | Description |
+|:---------------------------------|:----------- |
+| ```tolerance_pos_endpoint```     | End of motion position tolerance. Checked when the trajectory finishes and the robot is stopped |
+| ```tolerance_pos```              | Position tolerance checked thoughout the entire trajectory |
+| ```tolerance_vel```              | Velocity tolerance checked thoughout the entire trajectory |
+| ```tolerance_att```              | Attitude tolerance checked thoughout the entire trajectory |
+| ```tolerance_omega```            | Omega tolerance checked thoughout the entire trajectory. |
+| ```tolerance_time```             | Time for sync check |
