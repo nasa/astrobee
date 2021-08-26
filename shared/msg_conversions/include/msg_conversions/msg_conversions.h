@@ -86,6 +86,7 @@ void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
 void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg);
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovariance& pose_cov_msg);
 
 template <typename VectorType, typename MsgVectorType>
 VectorType VectorFromMsg(const MsgVectorType& msg_vector) {

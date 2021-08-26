@@ -36,7 +36,6 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
   params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");
-  params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
   params.haz_cam_T_haz_depth =
     Eigen::Isometry3d::Identity();  // msg_conversions::LoadEigenTransform(config, "hazcam_depth_to_image_transform");

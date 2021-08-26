@@ -27,7 +27,6 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/image_encodings.h>
 
 namespace depth_odometry {
@@ -35,20 +34,19 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthCloudCallback(
+std::vector<ff_msgs::Odometry> DepthOdometryWrapper::DepthCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
   point_cloud_buffer_.Add(lc::TimeFromHeader(depth_cloud_msg->header), depth_cloud_msg);
   return ProcessDepthImageAndCloudMeasurementsIfAvailable();
 }
 
-std::vector<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthImageCallback(
+std::vector<ff_msgs::Odometry> DepthOdometryWrapper::DepthImageCallback(
   const sensor_msgs::ImageConstPtr& depth_image_msg) {
   image_buffer_.Add(lc::TimeFromHeader(depth_image_msg->header), depth_image_msg);
   return ProcessDepthImageAndCloudMeasurementsIfAvailable();
 }
 
-std::vector<geometry_msgs::PoseWithCovarianceStamped>
-DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
+std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
   std::vector<lm::DepthImageMeasurement> depth_image_measurements;
   boost::optional<lc::Time> latest_added_point_cloud_msg_time;
   boost::optional<lc::Time> latest_added_image_msg_time;
@@ -74,19 +72,18 @@ DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
   if (latest_added_point_cloud_msg_time) point_cloud_buffer_.EraseIncluding(*latest_added_point_cloud_msg_time);
   if (latest_added_image_msg_time) image_buffer_.EraseIncluding(*latest_added_image_msg_time);
 
-  std::vector<geometry_msgs::PoseWithCovarianceStamped> relative_pose_msgs;
+  std::vector<ff_msgs::Odometry> relative_pose_msgs;
   for (const auto& depth_image_measurement : depth_image_measurements) {
     auto relative_transform = depth_odometry_.DepthImageCallback(depth_image_measurement);
     if (relative_transform) {
       // TODO(rsoussan): Make function that does this, use new PoseWithCovariance type (add both to loc common)
-      geometry_msgs::PoseWithCovarianceStamped pose_msg;
-      if (depth_odometry_.params().frame_change_transform) {
-        relative_transform->pose = depth_odometry_.params().body_T_haz_cam * relative_transform->pose *
-                                   depth_odometry_.params().body_T_haz_cam.inverse();
-        // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated
-        // by rotation matrix)
-      }
-      mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg);
+      ff_msgs::Odometry pose_msg;
+      const Eigen::Isometry3d body_F_a_T_b = depth_odometry_.params().body_T_haz_cam * relative_transform->pose *
+                                             depth_odometry_.params().body_T_haz_cam.inverse();
+      // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated
+      // by rotation matrix)
+      mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg.sensor_F_a_T_b);
+      mc::EigenPoseCovarianceToMsg(body_F_a_T_b, relative_transform->covariance, pose_msg.body_F_a_T_b);
       lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);
       relative_pose_msgs.emplace_back(pose_msg);
     }

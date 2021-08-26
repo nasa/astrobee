@@ -27,8 +27,6 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
@@ -58,7 +56,7 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
     "/hw/depth_haz/extended/amplitude_int";
   depth_image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::DepthImageCallback, this);
-  odom_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
+  odom_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
   depth_image_correspondences_pub_ =
     nh->advertise<ff_msgs::DepthImageCorrespondences>(TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES, 10);
   if (params_.publish_point_clouds) {

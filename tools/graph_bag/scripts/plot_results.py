@@ -542,6 +542,14 @@ def load_pose_msgs(vec_of_poses, bag, bag_start_time):
         poses.add_msg(msg, msg.header.stamp, bag_start_time)
         break
 
+def load_odometry_msgs(vec_of_poses, bag, bag_start_time):
+  topics = [poses.topic for poses in vec_of_poses]
+  for topic, msg, t in bag.read_messages(topics):
+    for poses in vec_of_poses:
+      if poses.topic == topic:
+        poses.add_msg_with_covariance(msg.body_F_a_T_b, msg.header.stamp, bag_start_time)
+        break
+
 def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
   topics = [poses.topic for poses in vec_of_poses]
   for topic, msg, t in bag.read_messages(topics):
@@ -589,7 +597,7 @@ def create_plots(bagfile,
   vec_of_poses = [ar_tag_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag, bag_start_time)
   depth_odom_relative_poses = poses.Poses('Depth Odom', '/loc/depth/odom')
-  load_pose_with_cov_msgs([depth_odom_relative_poses], bag, bag_start_time)
+  load_odometry_msgs([depth_odom_relative_poses], bag, bag_start_time)
   groundtruth_vec_of_poses = [sparse_mapping_poses]
   load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
 

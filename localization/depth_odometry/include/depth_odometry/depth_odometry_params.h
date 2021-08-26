@@ -34,7 +34,6 @@ struct DepthOdometryParams {
   double position_covariance_threshold;
   double orientation_covariance_threshold;
   bool inital_estimate_with_ransac_ia;
-  bool frame_change_transform;
   Eigen::Isometry3d body_T_haz_cam;
   Eigen::Isometry3d haz_cam_T_haz_depth;
 };
