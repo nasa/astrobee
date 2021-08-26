@@ -23,7 +23,7 @@
 // Required for Qt
 #ifndef Q_MOC_RUN
 #include <camera/camera_params.h>
-#include <ff_msgs/DepthImageCorrespondences.h>
+#include <ff_msgs/DepthCorrespondences.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
@@ -44,7 +44,7 @@ class SceneNode;
 }
 
 namespace localization_rviz_plugins {
-class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthImageCorrespondences> {
+class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCorrespondences> {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
               DepthOdometryDisplay();
@@ -59,13 +59,13 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthIma
   void createCorrespondencesImage();
 
  private:
-  void processMessage(const ff_msgs::DepthImageCorrespondences::ConstPtr& correspondences_msg);
+  void processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg);
   void createProjectionImage();
-  cv::Point2f projectPoint(const pcl::PointXYZ& point_3d);
+  cv::Point2f projectPoint(const Eigen::Vector3d& point_3d);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
   void depthOdomCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& depth_odom_msg);
-  void publishCorrespondencePoints(const ff_msgs::DepthImageCorrespondence& correspondence,
+  void publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
                                    const localization_common::Time source_time,
                                    const localization_common::Time target_time);
   void clearDisplay();
@@ -74,7 +74,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthIma
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
   cv::Mat intrinsics_;
   cv::Mat distortion_params_;
-  ff_msgs::DepthImageCorrespondences::ConstPtr latest_correspondences_msg_;
+  ff_msgs::DepthCorrespondences::ConstPtr latest_correspondences_msg_;
   image_transport::Subscriber image_sub_;
   ros::Subscriber point_cloud_sub_, depth_odom_sub_;
   ros::Publisher source_correspondence_point_pub_, target_correspondence_point_pub_;

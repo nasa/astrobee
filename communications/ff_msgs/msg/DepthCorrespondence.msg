@@ -17,5 +17,5 @@
 #
 ImagePoint source_image_point
 ImagePoint target_image_point
-geometry_msgs/Point source_point_3d
-geometry_msgs/Point target_point_3d
+geometry_msgs/Point source_3d_point
+geometry_msgs/Point target_3d_point

@@ -93,6 +93,11 @@ VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
 }
 
 template <typename VectorType, typename MsgVectorType>
+VectorType Vector2dFromMsg(const MsgVectorType& msg_vector) {
+  return VectorType(msg_vector.x, msg_vector.y);
+}
+
+template <typename VectorType, typename MsgVectorType>
 void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
   msg_vector.x = vector.x();
   msg_vector.y = vector.y();
@@ -100,7 +105,7 @@ void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
 }
 
 template <typename VectorType, typename MsgVectorType>
-void Vector2DToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
+void Vector2dToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
   msg_vector.x = vector.x();
   msg_vector.y = vector.y();
 }

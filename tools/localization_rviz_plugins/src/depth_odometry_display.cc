@@ -17,6 +17,7 @@
  */
 #include <QObject>
 #include <ff_util/ff_names.h>
+#include <graph_bag/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
@@ -36,8 +37,10 @@
 #include "utilities.h"               // NOLINT
 
 namespace localization_rviz_plugins {
+namespace gb = graph_bag;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
 
 DepthOdometryDisplay::DepthOdometryDisplay() {
   int ff_argc = 1;
@@ -118,18 +121,18 @@ void DepthOdometryDisplay::depthOdomCallback(const geometry_msgs::PoseWithCovari
   relative_pose_buffer_.Add(time, pose);
 }
 
-void DepthOdometryDisplay::processMessage(const ff_msgs::DepthImageCorrespondences::ConstPtr& correspondences_msg) {
+void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg) {
   latest_correspondences_msg_ = correspondences_msg;
   createCorrespondencesImage();
   createProjectionImage();
 }
 
-cv::Point2f DepthOdometryDisplay::projectPoint(const pcl::PointXYZ& point_3d) {
+cv::Point2f DepthOdometryDisplay::projectPoint(const Eigen::Vector3d& point_3d) {
   cv::Mat zero_r(cv::Mat::eye(3, 3, cv::DataType<double>::type));
   cv::Mat zero_t(cv::Mat::zeros(3, 1, cv::DataType<double>::type));
   std::vector<cv::Point2d> projected_points;
   std::vector<cv::Point3d> object_points;
-  object_points.emplace_back(cv::Point3d(point_3d.x, point_3d.y, point_3d.z));
+  object_points.emplace_back(cv::Point3d(point_3d.x(), point_3d.y(), point_3d.z()));
   cv::projectPoints(object_points, zero_r, zero_t, intrinsics_, distortion_params_, projected_points);
   return projected_points[0];
 }
@@ -142,14 +145,8 @@ void DepthOdometryDisplay::createProjectionImage() {
   const auto target_image_msg = img_buffer_.Get(target_time);
   if (!source_image_msg || !target_image_msg) return;
 
-  const auto relative_pose = relative_pose_buffer_.Get(target_time);
-  if (!relative_pose) return;
-
-  const auto source_point_cloud = point_cloud_buffer_.GetNearby(source_time, 0.05);
-  if (!source_point_cloud) return;
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_point_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::transformPointCloud(**source_point_cloud, *transformed_point_cloud, *relative_pose);
+  const auto source_T_target = relative_pose_buffer_.Get(target_time);
+  if (!source_T_target) return;
 
   auto source_image_measurement = lm::MakeImageMeasurement(*source_image_msg, sensor_msgs::image_encodings::RGB8);
   if (!source_image_measurement) return;
@@ -167,21 +164,18 @@ void DepthOdometryDisplay::createProjectionImage() {
   projection_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
   for (const auto& correspondence : latest_correspondences_msg_->correspondences) {
-    const int source_correspondence_index = correspondence.source_index;
-    const int source_correspondence_row = source_correspondence_index / cols;
-    const int source_correspondence_col = source_correspondence_index - cols * source_correspondence_row;
-    const cv::Point source_correspondence_image_point(source_correspondence_col, source_correspondence_row);
-    const auto projected_source_point = projectPoint(transformed_point_cloud->points[source_correspondence_index]);
-    const int target_correspondence_index = correspondence.target_index;
-    const int target_correspondence_row = target_correspondence_index / cols;
-    const int target_correspondence_col = target_correspondence_index - cols * target_correspondence_row;
-    const cv::Point target_correspondence_image_point(target_correspondence_col, target_correspondence_row);
-    cv::circle(source_image, source_correspondence_image_point, 1 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    cv::circle(target_image, target_correspondence_image_point, 1 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    cv::circle(target_image, projected_source_point, 1 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
-    cv::line(target_image, target_correspondence_image_point, source_correspondence_image_point, cv::Scalar(0, 255, 0),
-             2, 8, 0);
-    cv::line(target_image, target_correspondence_image_point, projected_source_point, cv::Scalar(255, 0, 0), 2, 8, 0);
+    const cv::Point source_image_point =
+      gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point), *camera_params_);
+    const Eigen::Vector3d target_3d_point = mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
+    const Eigen::Vector3d frame_changed_target_3d_point = *source_T_target * target_3d_point;
+    const auto projected_target_point = projectPoint(frame_changed_target_3d_point);
+    const cv::Point target_image_point =
+      gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point), *camera_params_);
+    cv::circle(source_image, source_image_point, 1 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+    cv::circle(source_image, projected_target_point, 1 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
+    cv::line(source_image, target_image_point, source_image_point, cv::Scalar(0, 255, 0), 2, 8, 0);
+    cv::line(source_image, source_image_point, projected_target_point, cv::Scalar(255, 0, 0), 2, 8, 0);
+    cv::circle(target_image, target_image_point, 1 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
   }
   source_image.copyTo(projection_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(projection_image.image(cv::Rect(0, rows, cols, rows)));
@@ -199,14 +193,8 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   const auto source_image_msg = img_buffer_.Get(source_time);
   const auto target_image_msg = img_buffer_.Get(target_time);
   if (!source_image_msg || !target_image_msg) return;
-  const auto relative_pose = relative_pose_buffer_.Get(target_time);
-  if (!relative_pose) return;
-
-  const auto source_point_cloud = point_cloud_buffer_.GetNearby(source_time, 0.05);
-  if (!source_point_cloud) return;
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_point_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::transformPointCloud(**source_point_cloud, *transformed_point_cloud, *relative_pose);
+  const auto source_T_target = relative_pose_buffer_.Get(target_time);
+  if (!source_T_target) return;
 
   auto source_image_measurement = lm::MakeImageMeasurement(*source_image_msg, sensor_msgs::image_encodings::RGB8);
   if (!source_image_measurement) return;
@@ -227,51 +215,43 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   correspondence_index_slider_->setMaximum(latest_correspondences_msg_->correspondences.size() - 1);
   const int correspondence_index = correspondence_index_slider_->getInt();
   const auto correspondence = latest_correspondences_msg_->correspondences[correspondence_index];
-  const int source_correspondence_index = correspondence.source_index;
-  const int source_correspondence_row = source_correspondence_index / cols;
-  const int source_correspondence_col = source_correspondence_index - cols * source_correspondence_row;
-  const cv::Point source_correspondence_image_point(source_correspondence_col, source_correspondence_row);
-  const auto projected_source_point = projectPoint(transformed_point_cloud->points[source_correspondence_index]);
-  const int target_correspondence_index = correspondence.target_index;
-  const int target_correspondence_row = target_correspondence_index / cols;
-  const int target_correspondence_col = target_correspondence_index - cols * target_correspondence_row;
-  const cv::Point target_correspondence_image_point(target_correspondence_col, target_correspondence_row);
+  const cv::Point source_image_point =
+    gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point), *camera_params_);
+  const Eigen::Vector3d target_3d_point = mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
+  const Eigen::Vector3d frame_changed_target_3d_point = *source_T_target * target_3d_point;
+  const auto projected_target_point = projectPoint(frame_changed_target_3d_point);
+  const cv::Point target_image_point =
+    gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point), *camera_params_);
   const cv::Point rectangle_offset(40, 40);
-  cv::circle(source_image, source_correspondence_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-  cv::rectangle(source_image, source_correspondence_image_point - rectangle_offset,
-                source_correspondence_image_point + rectangle_offset, cv::Scalar(0, 255, 0), 8);
-  cv::circle(target_image, target_correspondence_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-  cv::rectangle(target_image, target_correspondence_image_point - rectangle_offset,
-                target_correspondence_image_point + rectangle_offset, cv::Scalar(0, 255, 0), 8);
-  cv::circle(target_image, projected_source_point, 3 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
+  cv::circle(source_image, source_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+  cv::rectangle(source_image, source_image_point - rectangle_offset, source_image_point + rectangle_offset,
+                cv::Scalar(0, 255, 0), 8);
+  cv::circle(source_image, projected_target_point, 3 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
+  cv::circle(target_image, target_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+  cv::rectangle(target_image, target_image_point - rectangle_offset, target_image_point + rectangle_offset,
+                cv::Scalar(0, 255, 0), 8);
   source_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());
   publishCorrespondencePoints(correspondence, source_time, target_time);
-} 
+}
 
-void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthImageCorrespondence& correspondence,
+void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
                                                        const lc::Time source_time, const lc::Time target_time) {
   const auto source_point_cloud = point_cloud_buffer_.GetNearby(source_time, 0.05);
   const auto target_point_cloud = point_cloud_buffer_.GetNearby(target_time, 0.05);
   if (!source_point_cloud || !target_point_cloud) return;
-  geometry_msgs::PointStamped source_correspondence_point_msg;
-  const auto source_correspondence_point = (*source_point_cloud)->points[correspondence.source_index];
-  source_correspondence_point_msg.point.x = source_correspondence_point.x;
-  source_correspondence_point_msg.point.y = source_correspondence_point.y;
-  source_correspondence_point_msg.point.z = source_correspondence_point.z;
-  source_correspondence_point_msg.header.stamp = ros::Time::now();
-  source_correspondence_point_msg.header.frame_id = "haz_cam";
-  source_correspondence_point_pub_.publish(source_correspondence_point_msg);
+  geometry_msgs::PointStamped source_3d_point_msg;
+  source_3d_point_msg.point = correspondence.source_3d_point;
+  source_3d_point_msg.header.stamp = ros::Time::now();
+  source_3d_point_msg.header.frame_id = "haz_cam";
+  source_correspondence_point_pub_.publish(source_3d_point_msg);
 
-  geometry_msgs::PointStamped target_correspondence_point_msg;
-  const auto target_correspondence_point = (*target_point_cloud)->points[correspondence.target_index];
-  target_correspondence_point_msg.point.x = target_correspondence_point.x;
-  target_correspondence_point_msg.point.y = target_correspondence_point.y;
-  target_correspondence_point_msg.point.z = target_correspondence_point.z;
-  target_correspondence_point_msg.header.stamp = ros::Time::now();
-  target_correspondence_point_msg.header.frame_id = "haz_cam";
-  target_correspondence_point_pub_.publish(target_correspondence_point_msg);
+  geometry_msgs::PointStamped target_3d_point_msg;
+  target_3d_point_msg.point = correspondence.target_3d_point;
+  target_3d_point_msg.header.stamp = ros::Time::now();
+  target_3d_point_msg.header.frame_id = "haz_cam";
+  target_correspondence_point_pub_.publish(target_3d_point_msg);
 
   {
     const auto source_cloud_msg =

@@ -120,10 +120,10 @@ boost::optional<ff_msgs::DepthCorrespondences> DepthOdometryWrapper::GetImageCor
 
   for (int i = 0; i < static_cast<int>(correspondences->source_image_points.size()); ++i) {
     ff_msgs::DepthCorrespondence correspondence_msg;
-    mc::Vector2DToMsg(correspondences->source_image_points[i], correspondence_msg.source_image_point);
-    mc::Vector2DToMsg(correspondences->target_image_points[i], correspondence_msg.target_image_point);
-    mc::VectorToMsg(correspondences->source_3d_points[i], correspondence_msg.source_point_3d);
-    mc::VectorToMsg(correspondences->target_3d_points[i], correspondence_msg.target_point_3d);
+    mc::Vector2dToMsg(correspondences->source_image_points[i], correspondence_msg.source_image_point);
+    mc::Vector2dToMsg(correspondences->target_image_points[i], correspondence_msg.target_image_point);
+    mc::VectorToMsg(correspondences->source_3d_points[i], correspondence_msg.source_3d_point);
+    mc::VectorToMsg(correspondences->target_3d_points[i], correspondence_msg.target_3d_point);
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
 
