@@ -24,7 +24,7 @@
 #ifndef Q_MOC_RUN
 #include <camera/camera_params.h>
 #include <ff_msgs/DepthCorrespondences.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <ff_msgs/Odometry.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 #include <image_transport/image_transport.h>
@@ -64,7 +64,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   cv::Point2f projectPoint(const Eigen::Vector3d& point_3d);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
-  void depthOdomCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& depth_odom_msg);
+  void depthOdomCallback(const ff_msgs::OdometryConstPtr& depth_odom_msg);
   void publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
                                    const localization_common::Time source_time,
                                    const localization_common::Time target_time);

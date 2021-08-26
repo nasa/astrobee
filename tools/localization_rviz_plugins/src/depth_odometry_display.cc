@@ -66,7 +66,7 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
   intrinsics_.at<double>(1, 2) = principal_points[1];
   intrinsics_.at<double>(2, 2) = 1;
   distortion_params_ = cv::Mat(4, 1, cv::DataType<double>::type);
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < distortion_params.size(); ++i) {
     distortion_params_.at<double>(i, 0) = distortion_params[i];
   }
 
@@ -84,9 +84,9 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
   point_cloud_sub_ = nh_.subscribe<sensor_msgs::PointCloud2>(
     point_cloud_topic, 10, &DepthOdometryDisplay::pointCloudCallback, this, ros::TransportHints().tcpNoDelay());
-  depth_odom_sub_ = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10,
-                                                                            &DepthOdometryDisplay::depthOdomCallback,
-                                                                            this, ros::TransportHints().tcpNoDelay());
+  depth_odom_sub_ =
+    nh_.subscribe<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10, &DepthOdometryDisplay::depthOdomCallback, this,
+                                     ros::TransportHints().tcpNoDelay());
   correspondence_image_pub_ = image_transport.advertise("/depth_odom/correspondence_image", 1);
   projection_image_pub_ = image_transport.advertise("/depth_odom/projection_image", 1);
   source_correspondence_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("source_point_with_correspondence", 10);
@@ -114,9 +114,9 @@ void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2Cons
   point_cloud_buffer_.Add(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
 }
 
-void DepthOdometryDisplay::depthOdomCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& depth_odom_msg) {
+void DepthOdometryDisplay::depthOdomCallback(const ff_msgs::OdometryConstPtr& depth_odom_msg) {
   // TODO(rsoussan): Add better conversion from pose_msg to isometry3d
-  const auto pose = msg_conversions::ros_pose_to_eigen_transform(depth_odom_msg->pose.pose);
+  const auto pose = msg_conversions::ros_pose_to_eigen_transform(depth_odom_msg->sensor_F_a_T_b.pose);
   const auto time = lc::TimeFromHeader(depth_odom_msg->header);
   relative_pose_buffer_.Add(time, pose);
 }
@@ -233,7 +233,7 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   source_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());
-  publishCorrespondencePoints(correspondence, source_time, target_time);
+  // publishCorrespondencePoints(correspondence, source_time, target_time);
 }
 
 void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
