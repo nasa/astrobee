@@ -162,7 +162,7 @@ PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2Co
 
 boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg, const sensor_msgs::ImageConstPtr& image_msg,
-  const Eigen::Isometry3d image_T_depth_cam) {
+  const Eigen::Affine3d image_A_depth_cam) {
   const auto timestamp = lc::TimeFromHeader(image_msg->header);
   // TODO(rsoussan): Unify image and point cloud conversion with other functions
   cv_bridge::CvImagePtr cv_image;
@@ -194,7 +194,7 @@ boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
     for (int col = 0; col < intensities.cols; ++col) {
       const auto& point = depth_cloud->points[index];
       const Eigen::Vector3d depth_cam_t_point(point.x, point.y, point.z);
-      const Eigen::Vector3d image_t_point = image_T_depth_cam * depth_cam_t_point;
+      const Eigen::Vector3d image_t_point = image_A_depth_cam * depth_cam_t_point;
       depth_cloud_with_intensities->points[index].x = image_t_point.x();
       depth_cloud_with_intensities->points[index].y = image_t_point.y();
       depth_cloud_with_intensities->points[index].z = image_t_point.z();

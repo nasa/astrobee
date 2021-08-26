@@ -71,7 +71,7 @@ PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2Co
 
 boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg, const sensor_msgs::ImageConstPtr& image_msg,
-  const Eigen::Isometry3d image_T_depth_cam = Eigen::Isometry3d::Identity());
+  const Eigen::Affine3d image_A_depth_cam = Eigen::Affine3d::Identity());
 
 // TODO(rsoussan): Move this somewhere else?
 template <typename PointType>
