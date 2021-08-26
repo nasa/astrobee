@@ -43,7 +43,7 @@ DepthOdometry::DepthOdometry() {
   icp_.reset(new ICP(params_.icp));
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthImageCallback(
+boost::optional<lc::PoseWithCovariance> DepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   // TODO(rsoussan): Ensure only one of these is enabled
   if (params_.depth_point_cloud_registration_enabled) return PointCloudCallback(depth_image_measurement);
@@ -51,7 +51,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   return boost::none;
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::PointCloudCallback(
+boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   pcl::copyPointCloud(*(depth_image_measurement.point_cloud), *filtered_cloud);
@@ -80,25 +80,24 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
     return boost::none;
   }
 
-  if (!CovarianceSane(relative_transform->second)) {
+  if (!CovarianceSane(relative_transform->covariance)) {
     LogWarning("PointCloudCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
-  if (params_.frame_change_transform) {
+  /*if (params_.frame_change_transform) {
     relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
     // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
     // rotation matrix)
-  }
+  }*/
 
   // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
-  latest_relative_transform_ = relative_transform->first;
+  if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
+  latest_relative_transform_ = relative_transform->pose;
   return relative_transform;
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::ImageCallback(
-  const lm::DepthImageMeasurement& depth_image) {
+boost::optional<lc::PoseWithCovariance> DepthOdometry::ImageCallback(const lm::DepthImageMeasurement& depth_image) {
   if (!previous_depth_image_ && !latest_depth_image_) {
     latest_depth_image_ = depth_image;
     return boost::none;
@@ -119,16 +118,21 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   depth_image_aligner_->AddLatestDepthImage(*latest_depth_image_);
   auto relative_transform = depth_image_aligner_->ComputeRelativeTransform();
   if (!relative_transform) {
-    LogWarning("ImageCallback: Failed to get relative transform.");
+    LogError("ImageCallback: Failed to get relative transform.");
     return boost::none;
+  } else {
+    LogError("got trafo!: " << relative_transform->pose.translation().norm());
   }
 
-  if (params_.frame_change_transform) {
+  /*if (params_.frame_change_transform) {
+    LogError("do bTh: " << std::endl << params_.body_T_haz_cam.matrix());
+    LogError("do rel trafo pre change: " << std::endl << relative_transform->first.matrix());
     relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
-  }
+  }*/
 
   // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  // if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
+  if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
+  LogError("do trafo: " << std::endl << relative_transform->pose.matrix());
   // latest_relative_transform_ = relative_transform->first;
   return relative_transform;
 }

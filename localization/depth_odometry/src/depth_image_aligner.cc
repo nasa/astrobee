@@ -47,8 +47,7 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
-DepthImageAligner::ComputeRelativeTransform() {
+boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   auto matches = feature_detector_and_matcher_->Match(*previous_feature_depth_image_, *latest_feature_depth_image_);
 
@@ -141,8 +140,7 @@ DepthImageAligner::ComputeRelativeTransform() {
     return boost::none;
   }
 
-  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform,
-                                                                   Eigen::Matrix<double, 6, 6>::Zero()};
+  return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
 }
 
 void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& latest_depth_image) {

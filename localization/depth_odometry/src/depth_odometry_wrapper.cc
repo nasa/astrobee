@@ -76,11 +76,17 @@ DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
 
   std::vector<geometry_msgs::PoseWithCovarianceStamped> relative_pose_msgs;
   for (const auto& depth_image_measurement : depth_image_measurements) {
-    const auto relative_pose = depth_odometry_.DepthImageCallback(depth_image_measurement);
-    if (relative_pose) {
+    auto relative_transform = depth_odometry_.DepthImageCallback(depth_image_measurement);
+    if (relative_transform) {
       // TODO(rsoussan): Make function that does this, use new PoseWithCovariance type (add both to loc common)
       geometry_msgs::PoseWithCovarianceStamped pose_msg;
-      mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
+      if (depth_odometry_.params().frame_change_transform) {
+        relative_transform->pose = depth_odometry_.params().body_T_haz_cam * relative_transform->pose *
+                                   depth_odometry_.params().body_T_haz_cam.inverse();
+        // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated
+        // by rotation matrix)
+      }
+      mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg);
       lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);
       relative_pose_msgs.emplace_back(pose_msg);
     }

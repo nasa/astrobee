@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_ICP_H_
 
 #include <depth_odometry/icp_params.h>
+#include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
 
 #include <boost/optional.hpp>
@@ -32,15 +33,15 @@ class ICP {
  public:
   ICP(const ICPParams& params);
   const boost::optional<pcl::Correspondences>& correspondences() const { return correspondences_; }
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
+  boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
 
  private:
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> RunICP(
+  boost::optional<localization_common::PoseWithCovariance> RunICP(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> RunCoarseToFineICP(
+  boost::optional<localization_common::PoseWithCovariance> RunCoarseToFineICP(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
   void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,

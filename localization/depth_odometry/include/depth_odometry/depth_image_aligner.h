@@ -23,6 +23,7 @@
 #include <depth_odometry/feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_matches.h>
+#include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 
@@ -41,7 +42,7 @@ namespace depth_odometry {
 class DepthImageAligner {
  public:
   DepthImageAligner(const DepthImageAlignerParams& params);
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform();
+  boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform();
   void AddLatestDepthImage(const localization_measurements::DepthImageMeasurement& latest_depth_image);
   const boost::optional<DepthMatches>& matches() const { return matches_; }
 

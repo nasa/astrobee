@@ -44,7 +44,7 @@ namespace lc = localization_common;
 
 ICP::ICP(const ICPParams& params) : params_(params) {}
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::ComputeRelativeTransform(
+boost::optional<lc::PoseWithCovariance> ICP::ComputeRelativeTransform(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
   if (params_.coarse_to_fine) {
@@ -54,9 +54,9 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
   }
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunICP(
-  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
-  const Eigen::Isometry3d& initial_estimate) {
+boost::optional<lc::PoseWithCovariance> ICP::RunICP(const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud,
+                                                    const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+                                                    const Eigen::Isometry3d& initial_estimate) {
   static lc::Timer icp_timer("ICP");
   icp_timer.Start();
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>);
@@ -123,16 +123,16 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
   const Eigen::Matrix<double, 6, 6> covariance =
     ComputeCovarianceMatrix(icp, source_cloud_with_normals, result, relative_transform);
   icp_timer.StopAndLog();
-  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform, covariance};
+  return lc::PoseWithCovariance(relative_transform, covariance);
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunCoarseToFineICP(
-  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
-  const Eigen::Isometry3d& initial_estimate) {
+boost::optional<lc::PoseWithCovariance> ICP::RunCoarseToFineICP(const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud,
+                                                                const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+                                                                const Eigen::Isometry3d& initial_estimate) {
   static lc::Timer coarse_to_fine_icp_timer("Coarse To Fine ICP");
   coarse_to_fine_icp_timer.Start();
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> latest_relative_transform(
-    std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{initial_estimate, Eigen::Matrix<double, 6, 6>()});
+  boost::optional<lc::PoseWithCovariance> latest_relative_transform =
+    lc::PoseWithCovariance(initial_estimate, Eigen::Matrix<double, 6, 6>());
   for (int i = 0; i < params_.num_coarse_to_fine_levels; ++i) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr icp_source_cloud;
     pcl::PointCloud<pcl::PointXYZI>::Ptr icp_target_cloud;
@@ -152,7 +152,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
       LogError("target pre downsample size: " << target_cloud->points.size()
                                               << ", post: " << icp_target_cloud->points.size());
     }
-    latest_relative_transform = RunICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->first);
+    latest_relative_transform = RunICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->pose);
     if (!latest_relative_transform) {
       LogWarning("RunCoarseToFineICP: Failed to get relative transform.");
       coarse_to_fine_icp_timer.StopAndLog();

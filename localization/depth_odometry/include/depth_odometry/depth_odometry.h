@@ -21,6 +21,7 @@
 #include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/icp.h>
+#include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 #include <localization_measurements/image_measurement.h>
@@ -35,7 +36,7 @@ namespace depth_odometry {
 class DepthOdometry {
  public:
   DepthOdometry();
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageCallback(
+  boost::optional<localization_common::PoseWithCovariance> DepthImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image);
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud() const {
     return previous_depth_cloud_;
@@ -49,9 +50,9 @@ class DepthOdometry {
   const DepthOdometryParams& params() const { return params_; }
 
  private:
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> PointCloudCallback(
+  boost::optional<localization_common::PoseWithCovariance> PointCloudCallback(
     const localization_measurements::DepthImageMeasurement& depth_image);
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ImageCallback(
+  boost::optional<localization_common::PoseWithCovariance> ImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image);
 
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
