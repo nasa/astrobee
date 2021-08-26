@@ -61,7 +61,7 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     const auto& target_image_point = match_it->target_point;
     const auto& target_point_3d =
       latest_feature_depth_image_->InterpolatePoint3D(target_image_point.x(), target_image_point.y());
-    if (!target_point_3d || !ValidPoint(*target_point_3d)) {
+    if (!target_point_3d || !ValidPoint(*target_point_3d) || target_point_3d->z < 0) {
       match_it = matches.erase(match_it);
       continue;
     }
