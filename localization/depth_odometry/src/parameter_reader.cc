@@ -78,8 +78,8 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.use_clahe = mc::LoadBool(config, "use_clahe");
   params.clahe_grid_length = mc::LoadInt(config, "clahe_grid_length");
   params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");
-  params.max_x_distance_to_border = mc::LoadDouble(config, "max_x_distance_to_border");
-  params.max_y_distance_to_border = mc::LoadDouble(config, "max_y_distance_to_border");
+  params.min_x_distance_to_border = mc::LoadDouble(config, "min_x_distance_to_border");
+  params.min_y_distance_to_border = mc::LoadDouble(config, "min_y_distance_to_border");
   params.num_ransac_iterations = mc::LoadInt(config, "num_ransac_iterations");
   params.max_inlier_tolerance = mc::LoadInt(config, "max_inlier_tolerance");
   params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");

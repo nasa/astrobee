@@ -53,8 +53,8 @@ bool DepthImageAligner::ValidImagePoint(const Eigen::Vector2d& image_point) cons
   const int rows = latest_feature_depth_image_->rows();
   const double x_distance_to_border = std::min(image_point.x(), cols - image_point.x());
   const double y_distance_to_border = std::min(image_point.y(), rows - image_point.y());
-  return (x_distance_to_border <= params_.max_x_distance_to_border &&
-          y_distance_to_border <= params_.max_y_distance_to_border);
+  return (x_distance_to_border >= params_.min_x_distance_to_border &&
+          y_distance_to_border >= params_.min_y_distance_to_border);
 }
 
 boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
