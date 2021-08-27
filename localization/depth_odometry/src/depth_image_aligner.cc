@@ -107,6 +107,8 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
+  CorrectLandmarks(target_observations, target_landmarks);
+
   LogError("filtered_matches: " << matches.size());
   LogError("landmarks: " << target_landmarks.size() << ", observations: " << source_observations.size());
   std::vector<Eigen::Vector3d> inlier_target_landmarks;
@@ -152,6 +154,23 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   }
 
   return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
+}
+
+void DepthImageAligner::CorrectLandmarks(const std::vector<Eigen::Vector2d>& observations,
+                                         std::vector<Eigen::Vector3d>& landmarks) {
+  if (landmarks.size() < 4) return;
+  std::vector<Eigen::Vector3d> inlier_landmarks;
+  sparse_mapping::RansacEstimateCamera(landmarks, observations, params_.num_ransac_iterations,
+                                       params_.max_inlier_tolerance, &cam_, &inlier_landmarks);
+  if (static_cast<int>(inlier_landmarks.size()) < params_.min_num_inliers) {
+    LogError("CorrectLandmarks: Too few inlier matches, num matches: "
+             << inlier_landmarks.size() << ", min num matches: " << params_.min_num_inliers << ".");
+    return;
+  }
+  const Eigen::Isometry3d haz_image_T_haz_depth(cam_.GetTransform().matrix());
+  for (auto& landmark : landmarks) {
+    landmark = haz_image_T_haz_depth * landmark;
+  }
 }
 
 void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& latest_depth_image) {
