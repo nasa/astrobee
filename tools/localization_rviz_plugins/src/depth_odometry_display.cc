@@ -164,12 +164,12 @@ void DepthOdometryDisplay::createProjectionImage() {
   projection_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
   for (const auto& correspondence : latest_correspondences_msg_->correspondences) {
-    const cv::Point source_image_point =
+    const cv::Point2f source_image_point =
       gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point), *camera_params_);
     const Eigen::Vector3d target_3d_point = mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
     const Eigen::Vector3d frame_changed_target_3d_point = *source_T_target * target_3d_point;
     const auto projected_target_point = projectPoint(frame_changed_target_3d_point);
-    const cv::Point target_image_point =
+    const cv::Point2f target_image_point =
       gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point), *camera_params_);
     cv::circle(source_image, source_image_point, 1 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
     cv::circle(source_image, projected_target_point, 1 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
@@ -215,14 +215,14 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   correspondence_index_slider_->setMaximum(latest_correspondences_msg_->correspondences.size() - 1);
   const int correspondence_index = correspondence_index_slider_->getInt();
   const auto correspondence = latest_correspondences_msg_->correspondences[correspondence_index];
-  const cv::Point source_image_point =
+  const cv::Point2f source_image_point =
     gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point), *camera_params_);
   const Eigen::Vector3d target_3d_point = mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
   const Eigen::Vector3d frame_changed_target_3d_point = *source_T_target * target_3d_point;
   const auto projected_target_point = projectPoint(frame_changed_target_3d_point);
-  const cv::Point target_image_point =
+  const cv::Point2f target_image_point =
     gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point), *camera_params_);
-  const cv::Point rectangle_offset(40, 40);
+  const cv::Point2f rectangle_offset(40, 40);
   cv::circle(source_image, source_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
   cv::rectangle(source_image, source_image_point - rectangle_offset, source_image_point + rectangle_offset,
                 cv::Scalar(0, 255, 0), 8);
