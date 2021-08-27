@@ -20,5 +20,14 @@
 # Header with timestamp
 std_msgs/Header header
 
+# Processor that the heartbeat came from
+string heartbeat_processor
+
+# Current time on the mlp
+time mlp_time
+
+# Time in the heartbeat
+time heartbeat_time
+
 # Time diff in seconds between llp and mlp
 float32 time_diff_sec

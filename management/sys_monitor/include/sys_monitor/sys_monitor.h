@@ -213,6 +213,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   config_reader::ConfigReader config_params_;
 
   bool time_diff_fault_triggered_;
+  bool log_time_diff_llp_, log_time_diff_hlp_;
   int pub_queue_size_, sub_queue_size_;
   int num_current_blocking_fault_;
   unsigned int startup_time_, reload_nodelet_timeout_, heartbeat_pub_rate_;
