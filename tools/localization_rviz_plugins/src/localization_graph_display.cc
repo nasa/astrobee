@@ -200,7 +200,7 @@ void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera
   for (int i = 0; i < num_images && i < 16; ++i) {
     const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 20 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    const cv::Point rectangle_offset(40, 40);
+    const cv::Point2f rectangle_offset(40, 40);
     cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
                   cv::Scalar(0, 255, 0), 8);
     // TODO(rsoussan): account for case where triangulation fails
@@ -381,7 +381,7 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(
   for (int i = 0; i < num_images && i < 16; ++i) {
     const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    const cv::Point rectangle_offset(40, 40);
+    const cv::Point2f rectangle_offset(40, 40);
     cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
                   cv::Scalar(0, 255, 0), 8);
     if (point) {
