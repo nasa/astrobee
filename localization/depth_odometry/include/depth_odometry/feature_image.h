@@ -26,6 +26,8 @@ class FeatureImage {
  public:
   FeatureImage(const cv::Mat& image, const cv::Ptr<cv::Feature2D> feature_detector);
   const cv::Mat& image() const { return image_; }
+  const int rows() const { return image_.rows; }
+  const int cols() const { return image_.cols; }
   const std::vector<cv::KeyPoint>& keypoints() const { return keypoints_; }
   const std::vector<cv::Point2f>& feature_points() const { return feature_points_; }
   const cv::Mat& descriptors() const { return descriptors_; }

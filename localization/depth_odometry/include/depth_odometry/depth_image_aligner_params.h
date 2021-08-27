@@ -40,6 +40,8 @@ struct DepthImageAlignerParams {
   int num_ransac_iterations;
   int max_inlier_tolerance;
   // Other
+  double max_x_distance_to_border;
+  double max_y_distance_to_border;
   int min_num_inliers;
   std::shared_ptr<camera::CameraParameters> camera_params;
 };

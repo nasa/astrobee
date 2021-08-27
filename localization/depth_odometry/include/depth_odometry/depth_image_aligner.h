@@ -47,6 +47,8 @@ class DepthImageAligner {
   const boost::optional<DepthMatches>& matches() const { return matches_; }
 
  private:
+  bool ValidImagePoint(const Eigen::Vector2d& image_point) const;
+
   DepthImageAlignerParams params_;
   std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<FeatureDepthImageMeasurement> latest_feature_depth_image_;

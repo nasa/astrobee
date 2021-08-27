@@ -47,6 +47,16 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
 
+bool DepthImageAligner::ValidImagePoint(const Eigen::Vector2d& image_point) const {
+  // TODO(rsoussan): Get these from somewhere else
+  const int cols = latest_feature_depth_image_->cols();
+  const int rows = latest_feature_depth_image_->rows();
+  const double x_distance_to_border = std::min(image_point.x(), cols - image_point.x());
+  const double y_distance_to_border = std::min(image_point.y(), rows - image_point.y());
+  return (x_distance_to_border <= params_.max_x_distance_to_border &&
+          y_distance_to_border <= params_.max_y_distance_to_border);
+}
+
 boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   auto matches = feature_detector_and_matcher_->Match(*previous_feature_depth_image_, *latest_feature_depth_image_);
@@ -61,7 +71,8 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     const auto& target_image_point = match_it->target_point;
     const auto& target_point_3d =
       latest_feature_depth_image_->InterpolatePoint3D(target_image_point.x(), target_image_point.y());
-    if (!target_point_3d || !ValidPoint(*target_point_3d) || target_point_3d->z < 0) {
+    if (!target_point_3d || !ValidPoint(*target_point_3d) || target_point_3d->z < 0 ||
+        !ValidImagePoint(source_image_point)) {
       match_it = matches.erase(match_it);
       continue;
     }
