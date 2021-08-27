@@ -141,14 +141,21 @@ void SysMonitor::SetFaultState(unsigned int fault_id, bool adding_fault) {
   if (fault_state_.faults.size() > 0) {
     if (num_current_blocking_fault_ > 0) {
       fault_state_.state = ff_msgs::FaultState::BLOCKED;
+      fault_state_.hr_state = "There are ";
+      fault_state_.hr_state += std::to_string(num_current_blocking_fault_);
+      fault_state_.hr_state += " blocking faults currently occurring.";
     } else if (num_current_blocking_fault_ < 0) {
       // This should never happen but add output just in case
       NODELET_ERROR("Number of blocking faults is negative!!");
     } else {
       fault_state_.state = ff_msgs::FaultState::FAULT;
+      fault_state_.hr_state = "There are ";
+      fault_state_.hr_state += std::to_string(fault_state_.faults.size());
+      fault_state_.hr_state += " faults currently occurring.";
     }
   } else {  // No faults
     fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
+    fault_state_.hr_state = "Functional";
   }
 }
 
@@ -160,7 +167,10 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
   if (watch_dogs_.count(hb->node) > 0) {
     WatchdogPtr wd = watch_dogs_.at(hb->node);
     wd->ResetTimer();
-    if (wd->nodelet_manager() == "") {
+    // Check if the manager in the heartbeat matches the manager in the config.
+    // If not, replace the manager with what is in the heartbeat since that is
+    // more accurate.
+    if (wd->nodelet_manager() != hb->nodelet_manager) {
       wd->nodelet_manager(hb->nodelet_manager);
     }
 
@@ -324,6 +334,15 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
                                    true,
                                    true);
 
+  // Create a reload nodelet timer. Timer will be used to check if the nodelets
+  // that died on startup got restarted successfully.
+  reload_nodelet_timer_ = nh_.createTimer(
+                                      ros::Duration(reload_nodelet_timeout_),
+                                      &SysMonitor::ReloadNodeletTimerCallback,
+                                      this,
+                                      true,
+                                      false);
+
   // Create a timer to publish the heartbeat for the system monitor.
   heartbeat_timer_ = nh_.createTimer(ros::Duration(heartbeat_pub_rate_),
                                      &SysMonitor::PublishHeartbeatCallback,
@@ -358,16 +377,15 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
                                         pub_queue_size_,
                                         false);
 
-  fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
-
-
   // Set up service
   unload_load_nodelet_service_ = nh_.advertiseService(
                             SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET,
                             &SysMonitor::NodeletService,
                             this);
 
-  // Publish fault state when first starting up
+  // Initialize and publish fault state when first starting up
+  fault_state_.state = ff_msgs::FaultState::STARTING_UP;
+  fault_state_.hr_state = "System starting up.";
   PublishFaultState();
 
   // Publish fault config so the ground knows what faults to expect
@@ -507,13 +525,86 @@ void SysMonitor::PublishTimeDiff(float time_diff_sec) {
 }
 
 void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
+  ff_msgs::UnloadLoadNodelet::Request load_req;
+  int load_result;
+
   for (auto it = watch_dogs_.begin(); it != watch_dogs_.end(); ++it) {
+    // Try restarting nodelet if we never received a heartbeat from it
     if (!it->second->heartbeat_started()) {
-      std::string err_msg = "Never received heartbeat from " + it->first;
-      AddFault(it->second->fault_id(), err_msg);
-      PublishFaultResponse(it->second->fault_id());
-      it->second->hb_fault_occurring(true);
+      // Only need to set the name. Everything else will be looked up from the
+      // config
+      load_req.name = it->first;
+      load_result = LoadNodelet(load_req);
+
+      // Check if loading the nodelet successed. Later checks will make sure the
+      // nodelet started up successfully.
+      if (load_result != ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
+        AddFault(it->second->fault_id(),
+            ("Never received heartbeat from and unable to load " + it->first));
+        PublishFaultResponse(it->second->fault_id());
+        it->second->hb_fault_occurring(true);
+      } else {
+        // Add nodelet to list of nodelets being restarted
+        reloaded_nodelets_.push_back(it->first);
+      }
     }
+  }
+
+  // Check if nodelets had to be reloaded and set state appropriately
+  if (reloaded_nodelets_.size() == 0) {
+    // If a critical fault occurred before the startup timer is triggered, the
+    // state might be set to fault or blocked. In this case, we don't want to
+    // set the state to functional
+    if (fault_state_.state == ff_msgs::FaultState::STARTING_UP) {
+      fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
+      fault_state_.hr_state = "Functional";
+    }
+  } else {
+    reload_nodelet_timer_.start();
+    fault_state_.state = ff_msgs::FaultState::RELOADING_NODELETS;
+    fault_state_.hr_state = "The following nodelets died on startup and are ";
+    fault_state_.hr_state += "being reloaded:";
+    for (unsigned int i = 0; i < reloaded_nodelets_.size(); i++) {
+      fault_state_.hr_state += " " + reloaded_nodelets_[i] + ",";
+    }
+
+    // Remove ending comma
+    fault_state_.hr_state.pop_back();
+    fault_state_.hr_state += ".";
+  }
+
+  PublishFaultState();
+}
+
+// This function is meant to catch any nodes that died on startup, were reloaded
+// and died or became unresponsive after reload.
+void SysMonitor::ReloadNodeletTimerCallback(ros::TimerEvent const& te) {
+  std::string nodelets_not_running = "";
+  for (unsigned int i = 0; i < reloaded_nodelets_.size(); i++) {
+    WatchdogPtr wd = watch_dogs_.at(reloaded_nodelets_[i]);
+    if (!wd->heartbeat_started()) {
+      AddFault(wd->fault_id(),
+               ("Never received heartbeat and reload failed for " +
+                reloaded_nodelets_[i]));
+      PublishFaultResponse(wd->fault_id());
+      wd->hb_fault_occurring(true);
+      nodelets_not_running += " " + reloaded_nodelets_[i] + ",";
+    }
+  }
+
+  // If the system monitor state is still reloading nodelets, that means either
+  // all the nodelets were reloaded successfully or all of the critical nodelets
+  // are running. So the state can be set to functional.
+  if (fault_state_.state == ff_msgs::FaultState::RELOADING_NODELETS) {
+    fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
+    fault_state_.hr_state = "Functional";
+    if (nodelets_not_running != "") {
+      fault_state_.hr_state += " but the following nodelets aren't running";
+      // Remove ending comma
+      nodelets_not_running.pop_back();
+      fault_state_.hr_state += nodelets_not_running + ".";
+    }
+    PublishFaultState();
   }
 }
 
@@ -534,7 +625,15 @@ bool SysMonitor::ReadParams() {
   // the specified startup time.
   if (!config_params_.GetUInt("startup_time_sec", &startup_time_)) {
     NODELET_WARN("Unable to read startup time.");
-    startup_time_ = 90;
+    startup_time_ = 60;
+  }
+
+  // Get restart nodelet timeout. Used to check if a nodelet was successfully
+  // restarted if it died on startup
+  if (!config_params_.GetUInt("reload_nodelet_timeout_sec",
+                                                    &reload_nodelet_timeout_)) {
+    NODELET_WARN("Unable to read reload nodelet timeout.");
+    reload_nodelet_timeout_ = 20;
   }
 
   if (!config_params_.GetUInt("heartbeat_pub_rate_sec", &heartbeat_pub_rate_)) {
@@ -700,21 +799,26 @@ bool SysMonitor::ReadParams() {
     }
   }
 
-  // Extract nodelet type and add to watchdog map
-  if (config_params_.CheckValExists("nodelet_types")) {
-    std::string type = "";
+  // Extract nodelet manager and type and add it to watchdog map
+  if (config_params_.CheckValExists("nodelet_info")) {
+    std::string type = "", manager = "";
     config_reader::ConfigReader::Table types_tbl(&config_params_,
-                                                              "nodelet_types");
+                                                              "nodelet_info");
     int types_tbl_size = types_tbl.GetSize() + 1;
     for (i = 1; i < types_tbl_size; i++) {
       config_reader::ConfigReader::Table type_entry(&types_tbl, i);
       if (!type_entry.GetStr("name", &node_name)) {
-        NODELET_WARN("Name not found at %i in types table.", i);
+        NODELET_WARN("Name not found at %i in nodelet info table.", i);
         continue;
       }
 
       if (!type_entry.GetStr("type", &type)) {
-        NODELET_WARN("Type not found at %i in types table.", i);
+        NODELET_WARN("Type not found at %i in nodelet info table.", i);
+        continue;
+      }
+
+      if (!type_entry.GetStr("manager", &manager)) {
+        NODELET_WARN("Manager not found at %i in nodelet info table.", i);
         continue;
       }
 
@@ -733,6 +837,7 @@ bool SysMonitor::ReadParams() {
       // Check to make sure node got added to watchdog maps
       if (watch_dogs_.count(node_name) > 0) {
         watch_dogs_.at(node_name)->nodelet_type(type);
+        watch_dogs_.at(node_name)->nodelet_manager(manager);
       } else {
         NODELET_WARN("Couldn't add type, %s wasn't in fault table.",
                                                             node_name.c_str());
@@ -881,18 +986,13 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
 
 bool SysMonitor::NodeletService(ff_msgs::UnloadLoadNodelet::Request &req,
                                 ff_msgs::UnloadLoadNodelet::Response &res) {
-  bool successful = true;
   if (req.load) {
     res.result = LoadNodelet(req);
   } else {
     res.result = UnloadNodelet(req.name, req.manager_name);
   }
 
-  if (res.result != ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
-    successful = false;
-    NODELET_ERROR("Unload/load nodelet failed with result %i.", res.result);
-  }
-  return successful;
+  return true;
 }
 
 int SysMonitor::LoadNodelet(ff_msgs::UnloadLoadNodelet::Request &req) {

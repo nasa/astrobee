@@ -23,37 +23,51 @@ import os
 import plot_creator
 import utilities
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--directory', default=None, help='Directory where results csv files are stored')
-  parser.add_argument('--write_values', '-v', action='store_true', help='Write parameter sweep values to a plot in pdf')
-  parser.add_argument('--write_values_table', '-t', action='store_true', help='Write parameter sweep values to a table in pdf')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--directory", default=None, help="Directory where results csv files are stored"
+    )
+    parser.add_argument(
+        "--write_values",
+        "-v",
+        action="store_true",
+        help="Write parameter sweep values to a plot in pdf",
+    )
+    parser.add_argument(
+        "--write_values_table",
+        "-t",
+        action="store_true",
+        help="Write parameter sweep values to a table in pdf",
+    )
 
-  args = parser.parse_args()
-  if args.write_values_table and not args.write_values:
-    print("If write_values_table enabled, write_values must be as well.")
-    exit()
+    args = parser.parse_args()
+    if args.write_values_table and not args.write_values:
+        print("If write_values_table enabled, write_values must be as well.")
+        exit()
 
-  directory = args.directory
-  if directory == None:
-    directory = os.getcwd()
+    directory = args.directory
+    if directory == None:
+        directory = os.getcwd()
 
-  dataframes = []
+    dataframes = []
 
-  results_filestring = '*results.csv'
-  results_files = utilities.get_files(directory, results_filestring)
-  if len(results_files) == 0:
-    print("No results csv files found in directory " + directory)
-    exit()
+    results_filestring = "*results.csv"
+    results_files = utilities.get_files(directory, results_filestring)
+    if len(results_files) == 0:
+        print(("No results csv files found in directory " + directory))
+        exit()
 
-  dataframes.append(plot_creator.load_dataframe(results_files))
+    dataframes.append(plot_creator.load_dataframe(results_files))
 
-  if args.write_values:
-    values_filestring = '*values.csv'
-    values_files = utilities.get_files(directory, values_filestring)
-    values_dataframe = plot_creator.load_dataframe(values_files)
-    values_dataframe.columns.name = 'values'
-    dataframes.append(values_dataframe)
+    if args.write_values:
+        values_filestring = "*values.csv"
+        values_files = utilities.get_files(directory, values_filestring)
+        values_dataframe = plot_creator.load_dataframe(values_files)
+        values_dataframe.columns.name = "values"
+        dataframes.append(values_dataframe)
 
-  pdf_filename = 'result_plots.pdf'
-  plot_creator.create_pdf(dataframes, pdf_filename, args.write_values_table, os.path.basename(directory))
+    pdf_filename = "result_plots.pdf"
+    plot_creator.create_pdf(
+        dataframes, pdf_filename, args.write_values_table, os.path.basename(directory)
+    )

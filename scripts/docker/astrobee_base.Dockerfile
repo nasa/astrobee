@@ -1,12 +1,14 @@
-# This will set up an Astrobee kinetic docker container using the non-NASA install
+# This will set up an Astrobee melodic docker container using the non-NASA install
 # instructions.
 # This image is the base, meaning that it contains all the installation context,
 # but it doesn't copy or build the entire code.
-# This image builds on top of the base kinetic image building the code.
-
 # You must set the docker context to be the repository root directory
 
-FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04
+ARG UBUNTU_VERSION=ubuntu16.04
+FROM nvidia/opengl:1.0-glvnd-runtime-$UBUNTU_VERSION
+
+ARG ROS_VERSION=kinetic
+ARG PYTHON=''
 
 # try to suppress certain warnings during apt-get calls
 ARG DEBIAN_FRONTEND=noninteractive
@@ -22,23 +24,31 @@ RUN apt-get update \
     sudo \
     wget \
   && rm -rf /var/lib/apt/lists/*
-COPY ./scripts/setup/*.sh /setup/astrobee/
-COPY ./scripts/setup/debians /setup/astrobee/debians
-
-# this command is expected to have output on stderr, so redirect to suppress warning
-RUN /setup/astrobee/add_ros_repository.sh >/dev/null 2>&1
-
-RUN apt-get update && apt-get install -y \
-  libtinyxml-dev \
-  ros-kinetic-opencv3 \
-  && rm -rf /var/lib/apt/lists/*
 
 # suppress detached head warnings later
 RUN git config --global advice.detachedHead false
 
+# Install ROS --------------------------------------------------------------------
+COPY ./scripts/setup/*.sh /setup/astrobee/
+
+# this command is expected to have output on stderr, so redirect to suppress warning
+RUN /setup/astrobee/add_ros_repository.sh >/dev/null 2>&1
+
+RUN apt-get update \
+  && apt-get install -y \
+  debhelper \
+  libtinyxml-dev \
+  ros-${ROS_VERSION}-desktop \
+  python${PYTHON}-rosdep \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Astrobee----------------------------------------------------------------
+COPY ./scripts/setup/debians /setup/astrobee/debians
+
 RUN apt-get update \
   && /setup/astrobee/debians/build_install_debians.sh \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /setup/astrobee/debians
 
 COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
@@ -58,7 +68,7 @@ RUN useradd -m $USERNAME && \
         groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/noetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
   chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'

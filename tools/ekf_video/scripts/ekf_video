@@ -18,14 +18,15 @@
 # under the License.
 
 import argparse
-import sys
+import math
 import os
 import os.path
-import math
+import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/../../ekf_bag/scripts')
 import environment
+
 
 def run_ekf(astrobee_map, astrobee_bag, output_file, ekf_in_bag = False, features_in_bag=False, image_topic=None, use_jem=False):
   cmd = '' if ekf_in_bag else '--run_ekf %s' % ('' if features_in_bag else '--gen_features')

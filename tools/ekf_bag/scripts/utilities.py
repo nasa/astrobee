@@ -18,44 +18,52 @@
 import datetime
 import glob
 import os
+
 import rospkg
+
 
 # Forward errors so we can recover failures
 # even when running commands through multiprocessing
 # pooling
 def full_traceback(func):
-  import traceback, functools
+    import functools
+    import traceback
 
-  @functools.wraps(func)
-  def wrapper(*args, **kwargs):
-    try:
-      return func(*args, **kwargs)
-    except Exception as e:
-      msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
-      raise type(e)(msg)
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
+            raise type(e)(msg)
 
-  return wrapper
+    return wrapper
+
 
 def get_files(directory, file_string):
-  return glob.glob(os.path.join(directory, file_string))
+    return glob.glob(os.path.join(directory, file_string))
+
 
 def create_directory(directory=None):
-  if directory == None:
-    directory = os.path.join(os.getcwd(), datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-  if os.path.exists(directory):
-    print(directory + " already exists!")
-    exit()
-  os.makedirs(directory)
-  return directory
+    if directory == None:
+        directory = os.path.join(
+            os.getcwd(), datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        )
+    if os.path.exists(directory):
+        print((directory + " already exists!"))
+        exit()
+    os.makedirs(directory)
+    return directory
+
 
 def get_gnc_config(gnc_config):
-  if gnc_config == None:
-    #Load from astrobee/config/gnc.confg
-    astrobee_path = rospkg.RosPack().get_path('astrobee')
-    gnc_config = os.path.join(astrobee_path, 'config/gnc.config')
-  else:
-    if not os.path.exists(gnc_config):
-      print("GNC config does not exists! {}".format(gnc_config))
-      exit()
+    if gnc_config == None:
+        # Load from astrobee/config/gnc.confg
+        astrobee_path = rospkg.RosPack().get_path("astrobee")
+        gnc_config = os.path.join(astrobee_path, "config/gnc.config")
+    else:
+        if not os.path.exists(gnc_config):
+            print(("GNC config does not exists! {}".format(gnc_config)))
+            exit()
 
-  return gnc_config
+    return gnc_config
