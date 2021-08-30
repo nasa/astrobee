@@ -70,7 +70,7 @@ class ReprojectionError {
   template <typename T>
   bool operator()(const T* depth_image_A_depth_cloud_array, T* reprojection_error) const {
     const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_array);
-    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_feature_;
+    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_feature_.cast<T>();
     const Eigen::Matrix<T, 2, 1> reprojected_pixel =
       (intrinsics_matrix_.cast<T>() * depth_image_F_point_3d).hnormalized();
 
