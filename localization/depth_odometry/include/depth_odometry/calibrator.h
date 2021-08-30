@@ -43,11 +43,15 @@ class Calibrator {
     const Eigen::Matrix<T, 3, 1> normalized_compact_quaternion = compact_quaternion / norm;
     const Eigen::Quaternion<T> quaternion(norm, normalized_compact_quaternion[0], normalized_compact_quaternion[1],
                                           normalized_compact_quaternion[2]);
+    const Eigen::Matrix<T, 3, 3> rotation(quaternion);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> translation(&affine_data[3]);
     const T scale = affine_data[6];
     const Eigen::Matrix<T, 3, 3> scale_matrix(Eigen::Matrix<T, 3, 3>::Identity() * scale);
     Eigen::Transform<T, 3, Eigen::Affine> affine_3;
-    affine_3.fromPositionOrientationScale(translation, quaternion, scale_matrix);
+    affine_3.linear() = scale_matrix * rotation;
+    affine_3.translation() = translation;
+    // TODO(rsoussan): why doesnt't this work?
+    // affine_3.fromPositionOrientationScale(translation, rotation, scale_matrix);
     return affine_3;
   }
 
@@ -70,7 +74,8 @@ class ReprojectionError {
   template <typename T>
   bool operator()(const T* depth_image_A_depth_cloud_array, T* reprojection_error) const {
     const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_array);
-    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_feature_.cast<T>();
+    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d =
+      depth_image_A_depth_cloud * depth_cloud_F_point_3d_feature_.cast<T>();
     const Eigen::Matrix<T, 2, 1> reprojected_pixel =
       (intrinsics_matrix_.cast<T>() * depth_image_F_point_3d).hnormalized();
 

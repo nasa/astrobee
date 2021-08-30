@@ -16,23 +16,39 @@
  * under the License.
  */
 
-#include <ff_common/init.h>
 #include <depth_odometry/calibrator.h>
+#include <depth_odometry/depth_matches.h>
+#include <ff_common/init.h>
+#include <ff_msgs/DepthCorrespondences.h>
+#include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+
 namespace po = boost::program_options;
 namespace lc = localization_common;
+namespace mc = msg_conversions;
 
-std::vector<DepthMatches> LoadMatches(const rosbag::Bag& bag) {
+// TODO(rsoussan): unify with graph_bag, put this in common location
+bool string_ends_with(const std::string& str, const std::string& ending) {
+  if (str.length() >= ending.length()) {
+    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
+  } else {
+    return false;
+  }
+}
+
+std::vector<depth_odometry::DepthMatches> LoadMatches(const rosbag::Bag& bag) {
   std::vector<std::string> topics;
   topics.push_back(TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES);
   topics.push_back(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES);
   rosbag::View view(bag, rosbag::TopicQuery(topics));
-  std::vector<DepthMatches> depth_matches;
+  std::vector<depth_odometry::DepthMatches> depth_matches;
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES)) {
       const ff_msgs::DepthCorrespondencesConstPtr& correspondences_msg =
@@ -41,16 +57,16 @@ std::vector<DepthMatches> LoadMatches(const rosbag::Bag& bag) {
       std::vector<Eigen::Vector2d> target_image_points;
       std::vector<Eigen::Vector3d> source_3d_points;
       std::vector<Eigen::Vector3d> target_3d_points;
-      for (const auto& correspondence : correspondences_msg.correspondences) {
-          source_image_points.emplace_back(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point);
-          target_image_points.emplace_back(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point);
-          source_3d_points.emplace_back(mc::VectorFromMsg<Eigen::Vector3d>(correspondence.source_3d_point);
-          target_3d_points.emplace_back(mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
+      for (const auto& correspondence : correspondences_msg->correspondences) {
+        source_image_points.emplace_back(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point));
+        target_image_points.emplace_back(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point));
+        source_3d_points.emplace_back(mc::VectorFromMsg<Eigen::Vector3d>(correspondence.source_3d_point));
+        target_3d_points.emplace_back(mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point));
       }
-      const auto source_time = lc::TimeFromRosTime(correspondences_msg.source_time);
-      const auto target_time = lc::TimeFromRosTime(correspondences_msg.target_time);
-      depth_matches.emplace_back(DepthMatches(source_image_points, target_image_points, source_3d_points,
-                                              target_3d_points, source_time, target_time));
+      const auto source_time = lc::TimeFromRosTime(correspondences_msg->source_time);
+      const auto target_time = lc::TimeFromRosTime(correspondences_msg->target_time);
+      depth_matches.emplace_back(depth_odometry::DepthMatches(
+        source_image_points, target_image_points, source_3d_points, target_3d_points, source_time, target_time));
     }
   }
   return depth_matches;
@@ -81,7 +97,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  const std::string input_bag = vm["bagfile"].as<std::string>();
+  const std::string input_bagfile = vm["bagfile"].as<std::string>();
   const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
@@ -89,11 +105,10 @@ int main(int argc, char** argv) {
   int ff_argc = 1;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
 
-  if (!boost::filesystem::exists(input_bag)) {
-    LogFatal("Bagfile " << input_bag << " not found.");
+  if (!boost::filesystem::exists(input_bagfile)) {
+    LogFatal("Bagfile " << input_bagfile << " not found.");
   }
 
-  boost::filesystem::path input_bag_path(input_bag);
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
@@ -101,11 +116,12 @@ int main(int argc, char** argv) {
     LogFatal("Failed to read config files.");
   }
 
-  const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identitiy());
-  const camera::CameraParameters camera_params(&config, "haz_cam");
+  const rosbag::Bag input_bag(input_bagfile, rosbag::bagmode::Read);
   const auto depth_matches = LoadMatches(input_bag);
-  Calibrator calibrator;
+  const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
+  const camera::CameraParameters camera_params(&config, "haz_cam");
+  depth_odometry::Calibrator calibrator;
   const Eigen::Affine3d depth_image_A_depth_cloud =
-    calibrator(depth_matches, initial_depth_image_A_depth_cloud, camera_params);
+    calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud, camera_params);
   // TODO: write this to file! also write summary stats? time take? final total error? etc?
 }
