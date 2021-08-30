@@ -23,6 +23,8 @@ SysMonitor::SysMonitor() :
   ff_util::FreeFlyerNodelet(NODE_SYS_MONITOR, false),
   time_diff_node_("imu_aug"),
   time_diff_fault_triggered_(false),
+  log_time_llp_(true),
+  log_time_hlp_(true),
   pub_queue_size_(10),
   sub_queue_size_(100),
   time_drift_thres_sec_(0.25) {
@@ -163,6 +165,61 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
   uint i = 0, j = 0, tmp_id;
   bool fault_found = true;
 
+  // Report time if the heartbeat came from the imu aug or guest science manager
+  // node.
+  if (hb->node == time_diff_node_ || hb->node == "guest_science_manager") {
+    ff_msgs::TimeSyncStamped time_sync_msg;
+    ros::Time time_now = ros::Time::now();
+
+    // Check time drift from llp, use time in imu_aug heartbeat
+    if (hb->node == time_diff_node_) {
+      time_sync_msg.remote_processor = "LLP";
+
+      // Output time difference to the ros log for the first imu aug heartbeat
+      if (log_time_llp_) {
+        NODELET_INFO_STREAM("LLP time is " << hb->header.stamp <<
+                            " and the MLP time is " << time_now << ".");
+        log_time_llp_ = false;
+      }
+
+      // Check for time drift. If time difference is great than the threshold,
+      // trigger fault
+      // This fault only applies to clock skew between the MLP and the LLP since
+      // this skew causes navigation failures.
+      float time_diff_sec = (time_now - hb->header.stamp).toSec();
+      if (abs(time_diff_sec) > time_drift_thres_sec_) {
+        if (!time_diff_fault_triggered_) {
+          std::string key = ff_util::fault_keys[ff_util::TIME_DIFF_TOO_HIGH];
+          unsigned int id = faults_[key];
+          AddFault(id, ("Time diff is: " + std::to_string(abs(time_diff_sec))));
+          PublishFaultResponse(id);
+          time_diff_fault_triggered_ = true;
+        }
+      } else {
+        if (time_diff_fault_triggered_) {
+          std::string key = ff_util::fault_keys[ff_util::TIME_DIFF_TOO_HIGH];
+          unsigned int id = faults_[key];
+          RemoveFault(id);
+          time_diff_fault_triggered_ = false;
+        }
+      }
+    } else {
+      time_sync_msg.remote_processor = "HLP";
+      // Output time difference to the ros log for the first guest science
+      // manager heartbeat
+      if (log_time_hlp_) {
+        NODELET_INFO_STREAM("HLP time is " << hb->header.stamp <<
+                            " and the MLP time is "<< time_now << ".");
+        log_time_hlp_ = false;
+      }
+    }
+
+    time_sync_msg.header.stamp = ros::Time::now();
+    time_sync_msg.mlp_time = time_now;
+    time_sync_msg.remote_time = hb->header.stamp;
+    pub_time_sync_.publish(time_sync_msg);
+  }
+
   // Check to see if node heartbeat is set up in watchdogs
   if (watch_dogs_.count(hb->node) > 0) {
     WatchdogPtr wd = watch_dogs_.at(hb->node);
@@ -180,31 +237,6 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
       RemoveFault(wd->fault_id());
     }
 
-    // Check time drift, use time in imu_aug heartbeat
-    if (hb->node == time_diff_node_) {
-      float time_diff_sec = (ros::Time::now() - hb->header.stamp).toSec();
-      PublishTimeDiff(time_diff_sec);
-      // Check if time difference is great than threshold. If it is, trigger
-      // fault
-      if (abs(time_diff_sec) > time_drift_thres_sec_) {
-        if (!time_diff_fault_triggered_) {
-          std::string key = ff_util::fault_keys[ff_util::TIME_DIFF_TOO_HIGH];
-          unsigned int id = faults_[key];
-          AddFault(id, ("Time diff is: " +
-                        std::to_string(abs(time_diff_sec))));
-          PublishFaultResponse(id);
-          time_diff_fault_triggered_ = true;
-        }
-      } else {
-        if (time_diff_fault_triggered_) {
-          std::string key = ff_util::fault_keys[ff_util::TIME_DIFF_TOO_HIGH];
-          unsigned int id = faults_[key];
-          RemoveFault(id);
-          time_diff_fault_triggered_ = false;
-        }
-      }
-    }
-
     // Get last heartbeat for fault comparison
     ff_msgs::HeartbeatConstPtr previous_hb = wd->previous_hb();
 
@@ -215,10 +247,10 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
       for (i = 0; i < previous_hb->faults.size(); i++) {
         RemoveFault(previous_hb->faults[i].id);
       }
+      // Set previous hb to null so that we don't compare the faults with the
+      // last time the nodelet was run
       previous_hb = NULL;
     }
-    // Set previous hb to null so that we don't compare the faults with the last
-    // time the nodelet was run
 
     // Check to see if this is the first heartbeat from the node
     if (!previous_hb) {
@@ -372,8 +404,8 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
                                             pub_queue_size_,
                                             true);
 
-  pub_time_diff_ = nh_.advertise<ff_msgs::TimeDiffStamped>(
-                                        TOPIC_MANAGEMENT_SYS_MONITOR_TIME_DIFF,
+  pub_time_sync_ = nh_.advertise<ff_msgs::TimeSyncStamped>(
+                                        TOPIC_MANAGEMENT_SYS_MONITOR_TIME_SYNC,
                                         pub_queue_size_,
                                         false);
 
@@ -394,6 +426,14 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
   num_current_blocking_fault_ = 0;
 
   OutputFaultTables();
+
+  // Add guest science manager to the list of unwatched heartbeats. The guest
+  // science manager heartbeat is only used to report the time on the HLP.
+  // It doesn't make sense to monitor the guest science heartbeat and trigger a
+  // fault if it is missing because the guest science manager doesn't start up
+  // with the flight software, isn't run all the time, and cannot be un/loaded
+  // like the nodes that run on the MLP and LLP.
+  unwatched_heartbeats_.push_back("guest_science_manager");
 }
 
 // Function used for debugging purposes only
@@ -515,13 +555,6 @@ void SysMonitor::PublishHeartbeat(bool initialization_fault) {
 
   heartbeat_.header.stamp = ros::Time::now();
   pub_heartbeat_.publish(heartbeat_);
-}
-
-void SysMonitor::PublishTimeDiff(float time_diff_sec) {
-  ff_msgs::TimeDiffStamped time_diff_msg;
-  time_diff_msg.header.stamp = ros::Time::now();
-  time_diff_msg.time_diff_sec = time_diff_sec;
-  pub_time_diff_.publish(time_diff_msg);
 }
 
 void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
