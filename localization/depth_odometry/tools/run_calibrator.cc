@@ -112,6 +112,7 @@ int main(int argc, char** argv) {
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
+  config.AddFile("cameras.config");
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
