@@ -60,8 +60,9 @@ Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_set
   // TODO(rsoussan): change this if optimizing for intrinsics!
   Eigen::Matrix3d intrinsics_matrix = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
   ceres::Problem problem;
+  const int max_num_matches = 100;
   for (const auto& match_set : match_sets) {
-    for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()); ++i) {
+    for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < max_num_matches; ++i) {
       AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i], intrinsics_matrix,
                       depth_image_A_depth_cloud, problem);
     }
@@ -69,13 +70,9 @@ Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_set
 
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.max_num_iterations = 10000;
+  options.max_num_iterations = 100;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
-  // compile! (B)
-  // Test! (C)
-  // use only a few iterations
-  // use only a few reprojection costs
 }
 }  // namespace depth_odometry
