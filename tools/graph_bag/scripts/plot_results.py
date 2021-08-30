@@ -28,6 +28,7 @@ import vector3d_plotter
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 import geometry_msgs
@@ -117,6 +118,28 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
   position_plotter.add_pose_position(integrated_graph_localization_states)
   position_plotter.plot(pdf)
 
+def add_error_plots(pdf, sparse_mapping_poses, graph_localization_states):
+  colors = ['r', 'b', 'g']
+  pos_error, rot_error, stamps = graph_localization_states.compute_error(sparse_mapping_poses)
+  np.save('errors.npy', (pos_error, rot_error, stamps), allow_pickle=True)
+
+  plt.figure()
+  plt.scatter(stamps,
+              pos_error, c='r', marker='.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Position Error (m)')
+  plt.title('Position Error from Ground Truth')
+  pdf.savefig()
+  plt.close()
+
+  plt.figure()
+  plt.scatter(stamps,
+              rot_error, c='r', marker='.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Rotation Error (Radians)')
+  plt.title('Rotation Error from Ground Truth')
+  pdf.savefig()
+  plt.close()
 
 def plot_features(feature_counts,
                   times,
@@ -581,6 +604,7 @@ def create_plots(bagfile,
   with PdfPages(output_pdf_file) as pdf:
     add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
                     imu_augmented_graph_localization_states)
+    add_error_plots(pdf, sparse_mapping_poses, graph_localization_states)
     if has_imu_bias_tester_poses:
       add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses)
       add_imu_bias_tester_velocities(pdf, imu_bias_tester_velocities)
