@@ -188,7 +188,7 @@
 #define TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG           "mgt/sys_monitor/config"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_STATE            "mgt/sys_monitor/state"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT        "mgt/sys_monitor/heartbeat"
-#define TOPIC_MANAGEMENT_SYS_MONITOR_TIME_DIFF        "mgt/sys_monitor/time_diff"
+#define TOPIC_MANAGEMENT_SYS_MONITOR_TIME_SYNC        "mgt/sys_monitor/time_sync"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_STATE            "mgt/data_bagger/state"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS           "mgt/data_bagger/topics"
 #define TOPIC_MANAGEMENT_CAMERA_STATE                 "mgt/camera_state"

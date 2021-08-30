@@ -33,7 +33,7 @@
 #include <ff_msgs/FaultConfig.h>
 #include <ff_msgs/FaultInfo.h>
 #include <ff_msgs/FaultState.h>
-#include <ff_msgs/TimeDiffStamped.h>
+#include <ff_msgs/TimeSyncStamped.h>
 #include <ff_msgs/UnloadLoadNodelet.h>
 #include <ff_util/ff_faults.h>
 #include <ff_util/ff_names.h>
@@ -195,7 +195,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle nh_;
   ros::Publisher pub_cmd_, pub_heartbeat_;
   ros::Publisher pub_fault_config_, pub_fault_state_;
-  ros::Publisher pub_time_diff_;
+  ros::Publisher pub_time_sync_;
   ros::Timer reload_params_timer_, startup_timer_, reload_nodelet_timer_;
   ros::Timer heartbeat_timer_;
   ros::ServiceServer unload_load_nodelet_service_;
@@ -213,7 +213,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   config_reader::ConfigReader config_params_;
 
   bool time_diff_fault_triggered_;
-  bool log_time_diff_llp_, log_time_diff_hlp_;
+  bool log_time_llp_, log_time_hlp_;
   int pub_queue_size_, sub_queue_size_;
   int num_current_blocking_fault_;
   unsigned int startup_time_, reload_nodelet_timeout_, heartbeat_pub_rate_;
