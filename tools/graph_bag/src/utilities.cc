@@ -82,6 +82,7 @@ void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
 boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
                                                                   const std::vector<graph_localizer::SemanticLocFactorAdder::SemanticMatch>& sem_matches,
                                                                   const cv::Mat& map_x, const cv::Mat& map_y, bool show_img) {
+  float resize_scale = 0.5;
   cv_bridge::CvImagePtr semantic_match_image;
   try {
     semantic_match_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
@@ -106,18 +107,18 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
 
     if (match.have_map_point) {
       map_pt = cv::Point(match.map_point_px[0], match.map_point_px[1]) + size_half;
-      cv::circle(viz, map_pt, 5, cv::Scalar(0,255,0), cv::FILLED);
-      cv::putText(viz, class_names[match.cls], map_pt, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,255,0), 2);
+      cv::circle(viz, map_pt, 5/resize_scale, cv::Scalar(0,255,0), cv::FILLED);
+      cv::putText(viz, class_names[match.cls], map_pt, cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
     }
 
     if (match.have_matched_det) {
       cv::Point center = cv::Point(match.det_center_px[0], match.det_center_px[1]) + size_half;
       cv::Point size = cv::Point(match.det_bbox_size_px[0], match.det_bbox_size_px[1]);
       if (match.have_map_point) {
-        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 2);
-        cv::line(viz, center, map_pt, cv::Scalar(0,0,255), 2, cv::LINE_AA);
+        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 2/resize_scale);
+        cv::line(viz, center, map_pt, cv::Scalar(0,0,255), 2/resize_scale, cv::LINE_AA);
       } else {
-        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 1);
+        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 1/resize_scale);
       }
     }
   }
@@ -126,6 +127,9 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
     cv::imshow("Semantic Matches", viz);
     cv::waitKey(2);
   }
+
+  // cut image in half
+  cv::resize(viz, viz, cv::Size(0,0), 0.5, 0.5);
 
   return semantic_match_image->toImageMsg();
 }
