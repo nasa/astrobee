@@ -26,6 +26,7 @@ namespace depth_odometry {
 struct CalibratorParams {
   int max_num_iterations;
   int max_num_match_sets;
+  double function_tolerance;
   std::shared_ptr<camera::CameraParameters> camera_params;
 };
 }  // namespace depth_odometry

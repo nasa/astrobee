@@ -84,6 +84,7 @@ Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_set
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::ITERATIVE_SCHUR;
   options.max_num_iterations = params_.max_num_iterations;
+  options.function_tolerance = params_.function_tolerance;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";

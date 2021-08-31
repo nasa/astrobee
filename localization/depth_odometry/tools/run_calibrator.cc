@@ -75,6 +75,7 @@ std::vector<depth_odometry::DepthMatches> LoadMatches(const rosbag::Bag& bag) {
 void LoadCalibratorParams(config_reader::ConfigReader& config, depth_odometry::CalibratorParams& params) {
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
+  params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
   params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
 }
 
