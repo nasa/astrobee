@@ -32,10 +32,6 @@ void Calibrator::AddCostFunction(const Eigen::Vector2d& image_point, const Eigen
   // change intrinsics to be a parameter! set to constant initially!
   // toggle const vs non const to switch between intrinsics vs affine vs both calibration!!!
   // TODO: pass this? delete at end?
-  LogError("image pt: " << image_point.matrix());
-  LogError("pt3d: " << point_3d.matrix());
-  LogError("intrinsics: " << intrinsics_matrix.matrix());
-  LogError("depthAdepth: " << depth_image_A_depth_cloud_vector.matrix());
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
   ceres::CostFunction* reprojection_cost_function = new ceres::AutoDiffCostFunction<ReprojectionError, 2, 7>(
     new ReprojectionError(intrinsics_matrix, image_point, point_3d));
@@ -47,30 +43,23 @@ Eigen::Matrix<double, 7, 1> Calibrator::VectorFromAffine3d(const Eigen::Affine3d
   Eigen::Matrix3d rotation;
   Eigen::Matrix3d scale_matrix;
   affine_3d.computeRotationScaling(&rotation, &scale_matrix);
-  LogError("rot: " << rotation.matrix());
-  LogError("scale: " << scale_matrix.matrix());
   // Assumes uniform scaling, which is (i*the case for Affine3d
   const double scale = scale_matrix(0, 0);
   Eigen::Quaterniond quaternion(rotation);
-  LogError("quat: " << quaternion.matrix());
   // Use normalized x,y,z components for compact quaternion
   // TODO(rsoussan): Is this normalize call necessary?
   quaternion.normalize();
   Eigen::Vector3d compact_quaternion = quaternion.vec();
-  LogError("cq: " << compact_quaternion.matrix());
   Eigen::Matrix<double, 7, 1> affine_3d_vector;
   affine_3d_vector.head<3>() = compact_quaternion;
   affine_3d_vector.block<3, 1>(3, 0) = affine_3d.translation();
   affine_3d_vector(6, 0) = scale;
-  LogError("vec affine: " << affine_3d_vector.matrix());
   return affine_3d_vector;
 }
 
 Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
                                       const Eigen::Affine3d& initial_depth_image_A_depth_cloud) {
-  LogError("cal dAd: " << initial_depth_image_A_depth_cloud.matrix());
   Eigen::Matrix<double, 7, 1> depth_image_A_depth_cloud = VectorFromAffine3d(initial_depth_image_A_depth_cloud);
-  LogError("cal dAdv: " << depth_image_A_depth_cloud.matrix());
   Eigen::Matrix3d intrinsics_matrix = params_.camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
   ceres::Problem problem;
   for (const auto& match_set : match_sets) {
