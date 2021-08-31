@@ -120,9 +120,11 @@ int main(int argc, char** argv) {
   const rosbag::Bag input_bag(input_bagfile, rosbag::bagmode::Read);
   const auto depth_matches = LoadMatches(input_bag);
   const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
+  LogError("init depth_A_depth: " << initial_depth_image_A_depth_cloud.matrix());
   const camera::CameraParameters camera_params(&config, "haz_cam");
   depth_odometry::Calibrator calibrator;
   const Eigen::Affine3d depth_image_A_depth_cloud =
     calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud, camera_params);
+  LogError("final depth_A_depth: " << depth_image_A_depth_cloud.matrix());
   // TODO: write this to file! also write summary stats? time take? final total error? etc?
 }

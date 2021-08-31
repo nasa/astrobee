@@ -25,6 +25,7 @@
 #include <Eigen/Geometry>
 
 #include <ceres/problem.h>
+#include <ceres/jet.h>
 
 namespace depth_odometry {
 // TODO(rsoussan): Does this need to be a class?
@@ -34,16 +35,24 @@ class Calibrator {
                             const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
                             const camera::CameraParameters& camera_params);
 
-  // Assumes axis angle parameterization for rotations
+  // Assumes compact quaternion parameterization for rotations
   // TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
   template <typename T>
   static Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> compact_quaternion(affine_data);
-    const T norm = compact_quaternion.norm();
-    const Eigen::Matrix<T, 3, 1> normalized_compact_quaternion = compact_quaternion / norm;
-    const Eigen::Quaternion<T> quaternion(norm, normalized_compact_quaternion[0], normalized_compact_quaternion[1],
-                                          normalized_compact_quaternion[2]);
-    const Eigen::Matrix<T, 3, 3> rotation(quaternion);
+    Eigen::Matrix<T, 3, 3> rotation;
+    // For a quaternion, sqrt(x^2+y^2+z^2+w^2) = 1
+    // Since a compact quaternion provides the x,y,z compenents, to recover w use:
+    // w^2 = 1 - (x^2 + y^2 + z^2)
+    const T w_squared = 1.0 - compact_quaternion.squaredNorm();
+    // Catch invalid quaternion
+    if (w_squared < 0.0) {
+      rotation = Eigen::Matrix<T, 3, 3>::Identity();
+    } else {
+      const Eigen::Quaternion<T> quaternion(ceres::sqrt(w_squared), compact_quaternion[0], compact_quaternion[1],
+                                            compact_quaternion[2]);
+      rotation = Eigen::Matrix<T, 3, 3>(quaternion);
+    }
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> translation(&affine_data[3]);
     const T scale = affine_data[6];
     const Eigen::Matrix<T, 3, 3> scale_matrix(Eigen::Matrix<T, 3, 3>::Identity() * scale);
@@ -52,6 +61,25 @@ class Calibrator {
     affine_3.translation() = translation;
     // TODO(rsoussan): why doesnt't this work?
     // affine_3.fromPositionOrientationScale(translation, rotation, scale_matrix);
+    {
+      // Eigen::Map<const Eigen::Matrix<T, 7, 1>> vec(affine_data);
+      // Eigen::Map<const Eigen::Matrix<T, 3, 1>> vec(affine_data);
+      // LogError("affine data: " << vec.matrix());
+      std::cout << "affine data: ";
+      for (int i = 0; i < 7; ++i) {
+        std::cout << affine_data[i] << ", ";
+      }
+      std::cout << std::endl;
+      std::cout << "affine mat: ";
+      for (int row = 0; row < 4; ++row) {
+        std::cout << std::endl;
+        for (int col = 0; col < 4; ++col) {
+          int index = row + col * 4;
+          std::cout << affine_3.data()[index] << ", ";
+        }
+      }
+      std::cout << std::endl;
+    }
     return affine_3;
   }
 
