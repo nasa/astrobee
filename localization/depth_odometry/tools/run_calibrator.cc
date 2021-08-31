@@ -76,7 +76,15 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, depth_odometry::C
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
-  params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
+  const bool sim = mc::LoadBool(config, "sim");
+  if (sim) {
+    const Eigen::Vector2i image_size(171, 224);
+    const Eigen::Vector2d focal_length(186.40017522, 186.40017522);
+    const Eigen::Vector2d optical_center(111.5, 85);
+    params.camera_params.reset(new camera::CameraParameters(image_size, focal_length, optical_center));
+  } else {
+    params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
+  }
 }
 
 int main(int argc, char** argv) {
@@ -131,6 +139,7 @@ int main(int argc, char** argv) {
   const auto depth_matches = LoadMatches(input_bag);
   const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
   LogError("init depth_A_depth: " << std::endl << initial_depth_image_A_depth_cloud.matrix());
+  LogError("num depth match sets: " << depth_matches.size());
   depth_odometry::Calibrator calibrator(params);
   const Eigen::Affine3d depth_image_A_depth_cloud =
     calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud);

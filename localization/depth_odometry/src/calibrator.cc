@@ -71,8 +71,7 @@ Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_set
   LogError("cal dAd: " << initial_depth_image_A_depth_cloud.matrix());
   Eigen::Matrix<double, 7, 1> depth_image_A_depth_cloud = VectorFromAffine3d(initial_depth_image_A_depth_cloud);
   LogError("cal dAdv: " << depth_image_A_depth_cloud.matrix());
-  // TODO(rsoussan): change this if optimizing for intrinsics!
-  Eigen::Matrix3d intrinsics_matrix = params_.camera_params->GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  Eigen::Matrix3d intrinsics_matrix = params_.camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
   ceres::Problem problem;
   for (const auto& match_set : match_sets) {
     for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
