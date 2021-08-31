@@ -72,6 +72,12 @@ std::vector<depth_odometry::DepthMatches> LoadMatches(const rosbag::Bag& bag) {
   return depth_matches;
 }
 
+void LoadCalibratorParams(config_reader::ConfigReader& config, depth_odometry::CalibratorParams& params) {
+  params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
+  params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
+  params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
+}
+
 int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
@@ -113,18 +119,20 @@ int main(int argc, char** argv) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
   config.AddFile("cameras.config");
+  config.AddFile("localization/depth_odometry_calibrator.config");
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
+  depth_odometry::CalibratorParams params;
+  LoadCalibratorParams(config, params);
 
   const rosbag::Bag input_bag(input_bagfile, rosbag::bagmode::Read);
   const auto depth_matches = LoadMatches(input_bag);
   const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
-  LogError("init depth_A_depth: " << initial_depth_image_A_depth_cloud.matrix());
-  const camera::CameraParameters camera_params(&config, "haz_cam");
-  depth_odometry::Calibrator calibrator;
+  LogError("init depth_A_depth: " << std::endl << initial_depth_image_A_depth_cloud.matrix());
+  depth_odometry::Calibrator calibrator(params);
   const Eigen::Affine3d depth_image_A_depth_cloud =
-    calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud, camera_params);
-  LogError("final depth_A_depth: " << depth_image_A_depth_cloud.matrix());
+    calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud);
+  LogError("final depth_A_depth: " << std::endl << depth_image_A_depth_cloud.matrix());
   // TODO: write this to file! also write summary stats? time take? final total error? etc?
 }

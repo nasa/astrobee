@@ -67,17 +67,15 @@ Eigen::Matrix<double, 7, 1> Calibrator::VectorFromAffine3d(const Eigen::Affine3d
 }
 
 Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
-                                      const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
-                                      const camera::CameraParameters& camera_params) {
+                                      const Eigen::Affine3d& initial_depth_image_A_depth_cloud) {
   LogError("cal dAd: " << initial_depth_image_A_depth_cloud.matrix());
   Eigen::Matrix<double, 7, 1> depth_image_A_depth_cloud = VectorFromAffine3d(initial_depth_image_A_depth_cloud);
   LogError("cal dAdv: " << depth_image_A_depth_cloud.matrix());
   // TODO(rsoussan): change this if optimizing for intrinsics!
-  Eigen::Matrix3d intrinsics_matrix = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  Eigen::Matrix3d intrinsics_matrix = params_.camera_params->GetIntrinsicMatrix<camera::UNDISTORTED_C>();
   ceres::Problem problem;
-  const int max_num_matches = 10;
   for (const auto& match_set : match_sets) {
-    for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < max_num_matches; ++i) {
+    for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
       AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i], intrinsics_matrix,
                       depth_image_A_depth_cloud, problem);
     }
@@ -85,7 +83,7 @@ Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_set
 
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.max_num_iterations = 1000;
+  options.max_num_iterations = params_.max_num_iterations;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";

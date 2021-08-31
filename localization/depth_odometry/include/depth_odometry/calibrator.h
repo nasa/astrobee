@@ -18,7 +18,7 @@
 #ifndef DEPTH_ODOMETRY_CALIBRATOR_H_
 #define DEPTH_ODOMETRY_CALIBRATOR_H_
 
-#include <camera/camera_params.h>
+#include <depth_odometry/calibrator_params.h>
 #include <depth_odometry/depth_matches.h>
 
 #include <Eigen/Core>
@@ -28,12 +28,11 @@
 #include <ceres/jet.h>
 
 namespace depth_odometry {
-// TODO(rsoussan): Does this need to be a class?
 class Calibrator {
  public:
+  Calibrator(const CalibratorParams& params) : params_(params) {}
   Eigen::Affine3d Calibrate(const std::vector<DepthMatches>& match_sets,
-                            const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
-                            const camera::CameraParameters& camera_params);
+                            const Eigen::Affine3d& initial_depth_image_A_depth_cloud);
 
   // Assumes compact quaternion parameterization for rotations
   // TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
@@ -89,6 +88,8 @@ class Calibrator {
                        Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector, ceres::Problem& problem);
 
   static Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
+
+  CalibratorParams params_;
 };
 
 class ReprojectionError {
