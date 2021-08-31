@@ -60,7 +60,7 @@ class Calibrator {
     affine_3.translation() = translation;
     // TODO(rsoussan): why doesnt't this work?
     // affine_3.fromPositionOrientationScale(translation, rotation, scale_matrix);
-    {
+    /*{
       // Eigen::Map<const Eigen::Matrix<T, 7, 1>> vec(affine_data);
       // Eigen::Map<const Eigen::Matrix<T, 3, 1>> vec(affine_data);
       // LogError("affine data: " << vec.matrix());
@@ -78,7 +78,7 @@ class Calibrator {
         }
       }
       std::cout << std::endl;
-    }
+    }*/
     return affine_3;
   }
 
