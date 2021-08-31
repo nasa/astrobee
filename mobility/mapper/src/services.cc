@@ -64,7 +64,7 @@ bool MapperNodelet::SetCollisionDistance(ff_msgs::SetFloat::Request &req,
   res.success = true;
   return true;
 }
-bool MapperNodelet::GetCollisionDistance(ff_msgs::GetFloat::Request &req,
+bool MapperNodelet::GetMapInflation(ff_msgs::GetFloat::Request &req,
                                  ff_msgs::GetFloat::Response &res) {
   res.data = globals_.octomap.GetMapInflation();
   res.success = true;

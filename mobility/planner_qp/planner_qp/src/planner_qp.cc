@@ -887,167 +887,27 @@ class Planner : public planner::PlannerImplementation {
     for (auto &p : points) {
       mapper_points_.push_back(Vec3f(p.x, p.y, p.z));
     }
+    // Declare keepout points
+    vec_Vec3f keepout_points_mapper = mapper_points_;
 
-    // Get zones
-    std::vector<ff_msgs::Zone> zones;
-    bool got = GetZones(zones);
-    if (!got) return false;
-
-    // Check min and max of keepin zones to use as map boundries
-    Vec3f min, max, zmin, zmax;
-    min << 1000.0, 1000.0, 1000.0;
-    max << -1000.0, -1000.0, -1000.0;
-    uint num_keepin = 0;
-    for (auto &zone : zones) {
-      if (zone.type == ff_msgs::Zone::KEEPIN) {
-        zmin << zone.min.x, zone.min.y, zone.min.z;
-        zmax << zone.max.x, zone.max.y, zone.max.z;
-        for (int i = 0; i < 3; i++) {
-          min(i) = std::min(min(i), zmin(i));
-          min(i) = std::min(min(i), zmax(i));
-          max(i) = std::max(max(i), zmin(i));
-          max(i) = std::max(max(i), zmax(i));
-        }
-        num_keepin++;
-      }
-    }
-    if (num_keepin == 0) {
-      ROS_ERROR("Zero keepin zones!! Plan failed");
+    // Get zones map
+    std::vector<signed char> map;
+    Vec3f origin;
+    Vec3i dim;
+    if (!GetZonesMap(map, origin, dim, map_res_)) {
+      ROS_ERROR_STREAM("PlannerQP: Failed to get points from zones service");
       return false;
     }
 
-    // Based on zones boundries and obstacle map resolution, specify dimensions
-    map_res_ = static_cast<double>(resf);
-    min = Vec3f(std::floor(min(0) / map_res_) * map_res_,
-                std::floor(min(1) / map_res_) * map_res_,
-                std::floor(min(2) / map_res_) * map_res_) - Vec3f::Ones() * map_res_ * 2.0;
-    max = Vec3f(std::ceil(max(0) / map_res_) * map_res_,
-                std::ceil(max(1) / map_res_) * map_res_,
-                std::ceil(max(2) / map_res_) * map_res_) + Vec3f::Ones() * map_res_ * 2.0;
-
-
-    Vec3f origin = min;
-    Vec3f dimf = (max - min) / map_res_;
-    Vec3i dim(std::ceil(dimf(0)), std::ceil(dimf(1)), std::ceil(dimf(2)));
-    int num_cell = dim(0) * dim(1) * dim(2);
-
-
-    // Declare voxel map
-    std::vector<signed char> map(num_cell, 0);
     jps_map_util_.reset(new JPS::VoxelMapUtil());
-    jps_map_util_->setMap(origin, dim, map, map_res_);
-
-    // Declare keepout points
-    vec_Vec3f keepout_points_mapper = mapper_points_;
-    vec_Vec3f keepout_points_zones;
-
-
-    // Keepin/Keepout zones:
-    // To reduce computational load, only the contourn of the keepin/keepout
-    // zones is defined as occupied, to minimize the number of points that
-    // are inflated
-    // 0) The voxel map starts with all voxels set to unknown
-    // 1) We add the contourn of the keepin zones as occupied
-    // 2) We set the interior of the keepin zones to free, this corrects the
-    // case where keepin zones are connected and a contourn was put between them
-    // 4) Add keepout zones
-    // 5) Set all remaining space as free
-    // 6) Inflate using the robot radius and the collision distance
-    // 7) Add obstacle map points
-
-    // 1) Keepin Zones add contour as occupied
-    for (auto &zone : zones) {
-      if (zone.type == ff_msgs::Zone::KEEPIN) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-        Vec3f tmp = Vec3f::Zero();
-        for (int i = 0; i < 3; i++) {
-          int j = (i + 1) % 3;
-          int k = (i + 2) % 3;
-          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
-            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-              tmp(j) = zx;
-              tmp(k) = zy;
-              tmp(i) = zmin(i) - map_res_ * 1.001;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-              tmp(i) = zmax(i) + map_res_ * 1.001;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-            }
-          }
-        }
-      }
-    }
-    // 2) We set the interior of the keepin zones to free, this corrects the
-    // case where keepin zones are connected and a contourn was put between them
-    for (auto &zone : zones) {
-      if (zone.type == ff_msgs::Zone::KEEPIN) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-        // add points on surface
-        Vec3f tmp = Vec3f::Zero();
-        for (auto zx = zmin(0); zx <= zmax(0); zx += map_res_) {
-          for (auto zy = zmin(1); zy <= zmax(1); zy += map_res_) {
-            for (auto zz = zmin(2); zz <= zmax(2); zz += map_res_) {
-              tmp(0) = zx;
-              tmp(1) = zy;
-              tmp(2) = zz;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_free_;
-            }
-          }
-        }
-      }
-    }
-
-    // 4) Add keepout zones
-    for (auto &zone : zones) {
-      if (zone.type == ff_msgs::Zone::KEEPOUT) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-        // add points on surface
-        Vec3f tmp = Vec3f::Zero();
-        for (int i = 0; i < 3; i++) {
-          int j = (i + 1) % 3;
-          int k = (i + 2) % 3;
-          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
-            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-              tmp(j) = zx;
-              tmp(k) = zy;
-              tmp(i) = zmin(i);
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-              tmp(i) = zmax(i);
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-            }
-          }
-        }
-      }
-    }
-
-    // set voxel map using keepin/keepout zones
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
     // 5) Set all remaining space as free
     jps_map_util_->freeUnKnown();
 
-    // 6) Inflate using the robot radius and the collision distance
-    double radius, col_dist;
-    if (!cfg_mapper_.Get<double>("robot_radius", radius)) radius = 0.28;
-    if (!cfg_mapper_.Get<double>("collision_distance", col_dist)) col_dist = 0.0;
-    jps_map_util_->dilate(radius + col_dist, radius + col_dist);     // sets dilating radius
-    jps_map_util_->dilating();                                       // this dilates the entire map
 
     // 7) Add obstacle map points
-    jps_map_util_->dilate(map_res_, map_res_);            // sets dilating radius
+    jps_map_util_->dilate(map_res_ / 2, map_res_ / 2);    // sets dilating radius
     jps_map_util_->add3DPoints(keepout_points_mapper);    // add keepout points from mapper
 
     OUTPUT_DEBUG("PlannerQP: Map origin " << origin.transpose() << " dim "

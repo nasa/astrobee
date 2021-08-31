@@ -171,8 +171,8 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     &MapperNodelet::GetResolution, this);
   get_memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MEMORY_TIME,
     &MapperNodelet::GetMemoryTime, this);
-  get_collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_COLLISION_DISTANCE,
-    &MapperNodelet::GetCollisionDistance, this);
+  get_collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MAP_INFLATION,
+    &MapperNodelet::GetMapInflation, this);
   reset_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_RESET_MAP,
     &MapperNodelet::ResetMap, this);
   get_free_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_FREE_MAP,

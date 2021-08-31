@@ -138,7 +138,7 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   bool SetCollisionDistance(ff_msgs::SetFloat::Request &req,
                     ff_msgs::SetFloat::Response &res);
   // Update collision distance
-  bool GetCollisionDistance(ff_msgs::GetFloat::Request &req,
+  bool GetMapInflation(ff_msgs::GetFloat::Request &req,
                     ff_msgs::GetFloat::Response &res);
 
   // Reset the map

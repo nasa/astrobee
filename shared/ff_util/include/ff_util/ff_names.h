@@ -239,7 +239,7 @@
 #define SERVICE_MOBILITY_SET_COLLISION_DISTANCE     "mob/mapper/set_collision_distance"
 #define SERVICE_MOBILITY_GET_MAP_RESOLUTION         "mob/mapper/get_map_resolution"
 #define SERVICE_MOBILITY_GET_MEMORY_TIME            "mob/mapper/get_memory_time"
-#define SERVICE_MOBILITY_GET_COLLISION_DISTANCE     "mob/mapper/get_collision_distance"
+#define SERVICE_MOBILITY_GET_MAP_INFLATION          "mob/mapper/get_map_inflation"
 #define SERVICE_MOBILITY_RESET_MAP                  "mob/mapper/reset_map"
 #define SERVICE_MOBILITY_GET_FREE_MAP               "mob/mapper/get_free_map"
 #define SERVICE_MOBILITY_GET_OBSTACLE_MAP           "mob/mapper/get_obstacle_map"
