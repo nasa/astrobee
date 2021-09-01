@@ -64,8 +64,6 @@ Eigen::Matrix<double, 4, 1> Calibrator::VectorFromIntrinsicsMatrix(const Eigen::
   intrinsics_vector(1, 0) = intrinsics(1, 1);
   intrinsics_vector(2, 0) = intrinsics(0, 2);
   intrinsics_vector(3, 0) = intrinsics(1, 2);
-  LogError("intrinsics: " << std::endl << intrinsics.matrix());
-  LogError("intrinsics vec: " << std::endl << intrinsics_vector.matrix());
   return intrinsics_vector;
 }
 
@@ -79,8 +77,14 @@ void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
   ceres::Problem problem;
   problem.AddParameterBlock(depth_image_A_depth_cloud.data(), 7);
   problem.AddParameterBlock(intrinsics.data(), 4);
-  if (!params_.calibrate_depth_image_A_depth_haz) problem.SetParameterBlockConstant(depth_image_A_depth_cloud.data());
-  if (!params_.calibrate_intrinsics) problem.SetParameterBlockConstant(intrinsics.data());
+  if (!params_.calibrate_depth_image_A_depth_haz)
+    problem.SetParameterBlockConstant(depth_image_A_depth_cloud.data());
+  else
+    LogError("Calibrating depth_image_A_depth_haz.");
+  if (!params_.calibrate_intrinsics)
+    problem.SetParameterBlockConstant(intrinsics.data());
+  else
+    LogError("Calibrating intrinsics.");
   for (const auto& match_set : match_sets) {
     for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
       AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i], depth_image_A_depth_cloud,
