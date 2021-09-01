@@ -17,6 +17,7 @@
  */
 
 #include <depth_odometry/calibrator.h>
+#include <localization_common/logger.h>
 
 #include <ceres/ceres.h>
 #include <ceres/solver.h>
