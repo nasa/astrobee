@@ -110,6 +110,47 @@ class Calibrator {
     return intrinsics;
   }
 
+  template <typename T>
+  static Eigen::Matrix<T, 2, 1> Distort(const Eigen::Matrix<T, 4, 1>& distortion,
+                                        const Eigen::Matrix<T, 4, 1>& intrinsics,
+                                        const Eigen::Matrix<T, 2, 1>& undistorted_point) {
+    const T& k1 = distortion[0];
+    const T& k2 = distortion[1];
+    const T& p1 = distortion[2];
+    const T& p2 = distortion[3];
+    // TODO(rsoussan): Support 5 distortion params?
+    const T k3 = 0;
+
+    const T& f_x = intrinsics[0];
+    const T& f_y = intrinsics[1];
+    const T& p_x = intrinsics[2];
+    const T& p_y = intrinsics[3];
+
+    // Distortion model expects image coordinates to be in relative coordinates
+    const T& x = undistorted_point[0];
+    const T& y = undistorted_point[1];
+    const T relative_x = (x - p_x) / f_x;
+    const T relative_y = (y - p_y) / f_y;
+
+    // Squared norm
+    const T r2 = relative_x * relative_x + relative_y * relative_y;
+
+    // Apply radial distortion
+    const T radial_distortion_coeff = 1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2;
+    T distorted_relative_x = relative_x * radial_distortion_coeff;
+    T distorted_relative_y = relative_y * radial_distortion_coeff;
+
+    // Apply tangential distortion
+    distorted_relative_x =
+      distorted_relative_x + (2 * p1 * relative_x * relative_y + p2 * (r2 + 2 * relative_x * relative_x));
+    distorted_relative_y =
+      distorted_relative_y + (p1 * (r2 + 2 * relative_y * relative_y) + 2 * p2 * relative_x * relative_y);
+
+    // Convert back to absolute coordinates
+    const Eigen::Matrix<T, 2, 1> distorted_point(distorted_relative_x * f_x + p_x, distorted_relative_y * f_y + p_y);
+    return distorted_point;
+  }
+
   const CalibratorParams& params() { return params_; }
 
  private:
