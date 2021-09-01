@@ -144,7 +144,9 @@ int main(int argc, char** argv) {
   depth_odometry::Calibrator calibrator(params);
   const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
   const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
-  const Eigen::Matrix<double, 4, 1> initial_distortion = calibrator.params().camera_params->GetDistortion();
+  const Eigen::VectorXd distortion = calibrator.params().camera_params->GetDistortion();
+  const Eigen::Matrix<double, 4, 1> initial_distortion =
+    distortion.size() == 4 ? distortion : Eigen::Matrix<double, 4, 1>::Zero();
   LogError("init depth_A_depth: " << std::endl << initial_depth_image_A_depth_cloud.matrix());
   LogError("init intrinsics: " << std::endl << initial_intrinsics.matrix());
   LogError("init distortion: " << std::endl << initial_distortion.matrix());
