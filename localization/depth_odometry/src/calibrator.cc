@@ -79,9 +79,8 @@ void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
   ceres::Problem problem;
   problem.AddParameterBlock(depth_image_A_depth_cloud.data(), 7);
   problem.AddParameterBlock(intrinsics.data(), 4);
-  // TODO(rsoussan): add params for which params to optimize for!!!
-  problem.SetParameterBlockConstant(depth_image_A_depth_cloud.data());
-  // problem.SetParameterBlockConstant(intrinsics.data());
+  if (!params_.calibrate_depth_image_A_depth_haz) problem.SetParameterBlockConstant(depth_image_A_depth_cloud.data());
+  if (!params_.calibrate_intrinsics) problem.SetParameterBlockConstant(intrinsics.data());
   for (const auto& match_set : match_sets) {
     for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
       AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i], depth_image_A_depth_cloud,

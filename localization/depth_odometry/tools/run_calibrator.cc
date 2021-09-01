@@ -76,6 +76,8 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, depth_odometry::C
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
+  params.calibrate_intrinsics = mc::LoadBool(config, "calibrate_intrinsics");
+  params.calibrate_depth_image_A_depth_haz = mc::LoadBool(config, "calibrate_depth_image_A_depth_haz");
   const bool sim = mc::LoadBool(config, "sim");
   if (sim) {
     const Eigen::Vector2i image_size(171, 224);

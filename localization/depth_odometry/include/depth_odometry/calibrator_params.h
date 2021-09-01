@@ -24,9 +24,13 @@
 
 namespace depth_odometry {
 struct CalibratorParams {
+  bool calibrate_intrinsics;
+  bool calibrate_depth_image_A_depth_haz;
+  // Optimization Options
   int max_num_iterations;
-  int max_num_match_sets;
   double function_tolerance;
+  // Other
+  int max_num_match_sets;
   std::shared_ptr<camera::CameraParameters> camera_params;
 };
 }  // namespace depth_odometry
