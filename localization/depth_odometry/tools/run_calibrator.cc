@@ -137,12 +137,17 @@ int main(int argc, char** argv) {
 
   const rosbag::Bag input_bag(input_bagfile, rosbag::bagmode::Read);
   const auto depth_matches = LoadMatches(input_bag);
-  const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
-  LogError("init depth_A_depth: " << std::endl << initial_depth_image_A_depth_cloud.matrix());
   LogError("num depth match sets: " << depth_matches.size());
   depth_odometry::Calibrator calibrator(params);
-  const Eigen::Affine3d depth_image_A_depth_cloud =
-    calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud);
-  LogError("final depth_A_depth: " << std::endl << depth_image_A_depth_cloud.matrix());
+  const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
+  const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
+  LogError("init depth_A_depth: " << std::endl << initial_depth_image_A_depth_cloud.matrix());
+  LogError("init intrinsics: " << std::endl << initial_intrinsics.matrix());
+  Eigen::Affine3d calibrated_depth_image_A_depth_cloud;
+  Eigen::Matrix3d calibrated_intrinsics;
+  calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud, initial_intrinsics,
+                       calibrated_depth_image_A_depth_cloud, calibrated_intrinsics);
+  LogError("calibrated depth_A_depth: " << std::endl << calibrated_depth_image_A_depth_cloud.matrix());
+  LogError("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());
   // TODO: write this to file! also write summary stats? time take? final total error? etc?
 }

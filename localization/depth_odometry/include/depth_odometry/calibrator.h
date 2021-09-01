@@ -31,8 +31,9 @@ namespace depth_odometry {
 class Calibrator {
  public:
   Calibrator(const CalibratorParams& params) : params_(params) {}
-  Eigen::Affine3d Calibrate(const std::vector<DepthMatches>& match_sets,
-                            const Eigen::Affine3d& initial_depth_image_A_depth_cloud);
+  void Calibrate(const std::vector<DepthMatches>& match_sets, const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
+                 const Eigen::Matrix3d& initial_intrinsics, Eigen::Affine3d& calibrated_depth_image_A_depth_cloud,
+                 Eigen::Matrix3d& calibrated_intrinsics);
 
   // Assumes compact quaternion parameterization for rotations
   // TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
@@ -82,31 +83,43 @@ class Calibrator {
     return affine_3;
   }
 
+  // Assumes storage as focal lengths followed by principal points
+  template <typename T>
+  static Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
+    Eigen::Matrix<T, 3, 3> intrinsics(Eigen::Matrix<T, 3, 3>::Identity());
+    intrinsics(0, 0) = intrinsics_data[0];
+    intrinsics(1, 1) = intrinsics_data[1];
+    intrinsics(0, 2) = intrinsics_data[2];
+    intrinsics(1, 2) = intrinsics_data[3];
+    return intrinsics;
+  }
+
+  const CalibratorParams& params() { return params_; }
+
  private:
   void AddCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
-                       const Eigen::Matrix3d& intrinsics_matrix,
-                       Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector, ceres::Problem& problem);
+                       Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
+                       Eigen::Matrix<double, 4, 1>& intrinsics_vector, ceres::Problem& problem);
 
   static Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
+
+  static Eigen::Matrix<double, 4, 1> VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics);
 
   CalibratorParams params_;
 };
 
 class ReprojectionError {
  public:
-  ReprojectionError(const Eigen::Matrix3d& intrinsics_matrix, const Eigen::Vector2d& image_feature,
-                    const Eigen::Vector3d& depth_cloud_F_point_3d_feature)
-      : intrinsics_matrix_(intrinsics_matrix),
-        image_feature_(image_feature),
-        depth_cloud_F_point_3d_feature_(depth_cloud_F_point_3d_feature) {}
+  ReprojectionError(const Eigen::Vector2d& image_feature, const Eigen::Vector3d& depth_cloud_F_point_3d_feature)
+      : image_feature_(image_feature), depth_cloud_F_point_3d_feature_(depth_cloud_F_point_3d_feature) {}
 
   template <typename T>
-  bool operator()(const T* depth_image_A_depth_cloud_array, T* reprojection_error) const {
-    const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_array);
+  bool operator()(const T* depth_image_A_depth_cloud_data, const T* intrinsics_data, T* reprojection_error) const {
+    const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_data);
     const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d =
       depth_image_A_depth_cloud * depth_cloud_F_point_3d_feature_.cast<T>();
-    const Eigen::Matrix<T, 2, 1> reprojected_pixel =
-      (intrinsics_matrix_.cast<T>() * depth_image_F_point_3d).hnormalized();
+    const auto intrinsics = Calibrator::Intrinsics<T>(intrinsics_data);
+    const Eigen::Matrix<T, 2, 1> reprojected_pixel = (intrinsics * depth_image_F_point_3d).hnormalized();
 
     reprojection_error[0] = image_feature_[0] - reprojected_pixel[0];
     reprojection_error[1] = image_feature_[1] - reprojected_pixel[1];
@@ -114,7 +127,6 @@ class ReprojectionError {
   }
 
  private:
-  Eigen::Matrix3d intrinsics_matrix_;
   Eigen::Vector2d image_feature_;
   Eigen::Vector3d depth_cloud_F_point_3d_feature_;
 };

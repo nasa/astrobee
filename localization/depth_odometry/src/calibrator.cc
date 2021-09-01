@@ -26,16 +26,16 @@
 
 namespace depth_odometry {
 void Calibrator::AddCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
-                                 const Eigen::Matrix3d& intrinsics_matrix,
                                  Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
-                                 ceres::Problem& problem) {
+                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector, ceres::Problem& problem) {
   // change intrinsics to be a parameter! set to constant initially!
   // toggle const vs non const to switch between intrinsics vs affine vs both calibration!!!
   // TODO: pass this? delete at end?
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
-  ceres::CostFunction* reprojection_cost_function = new ceres::AutoDiffCostFunction<ReprojectionError, 2, 7>(
-    new ReprojectionError(intrinsics_matrix, image_point, point_3d));
-  problem.AddResidualBlock(reprojection_cost_function, huber_loss, depth_image_A_depth_cloud_vector.data());
+  ceres::CostFunction* reprojection_cost_function =
+    new ceres::AutoDiffCostFunction<ReprojectionError, 2, 7, 4>(new ReprojectionError(image_point, point_3d));
+  problem.AddResidualBlock(reprojection_cost_function, huber_loss, depth_image_A_depth_cloud_vector.data(),
+                           intrinsics_vector.data());
 }
 
 // Organize as compact quaternion, translation, scale
@@ -57,15 +57,28 @@ Eigen::Matrix<double, 7, 1> Calibrator::VectorFromAffine3d(const Eigen::Affine3d
   return affine_3d_vector;
 }
 
-Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
-                                      const Eigen::Affine3d& initial_depth_image_A_depth_cloud) {
+// Stored as focal points then principal points
+Eigen::Matrix<double, 4, 1> Calibrator::VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics) {
+  Eigen::Matrix<double, 4, 1> intrinsics_vector;
+  intrinsics_vector(0, 0) = intrinsics(0, 0);
+  intrinsics_vector(1, 0) = intrinsics(1, 1);
+  intrinsics_vector(2, 0) = intrinsics(0, 2);
+  intrinsics_vector(3, 0) = intrinsics(1, 2);
+  return intrinsics_vector;
+}
+
+void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
+                           const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
+                           const Eigen::Matrix3d& initial_intrinsics,
+                           Eigen::Affine3d& calibrated_depth_image_A_depth_cloud,
+                           Eigen::Matrix3d& calibrated_intrinsics) {
   Eigen::Matrix<double, 7, 1> depth_image_A_depth_cloud = VectorFromAffine3d(initial_depth_image_A_depth_cloud);
-  Eigen::Matrix3d intrinsics_matrix = params_.camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
+  Eigen::Matrix<double, 4, 1> intrinsics = VectorFromIntrinsicsMatrix(initial_intrinsics);
   ceres::Problem problem;
   for (const auto& match_set : match_sets) {
     for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
-      AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i], intrinsics_matrix,
-                      depth_image_A_depth_cloud, problem);
+      AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i], depth_image_A_depth_cloud,
+                      intrinsics, problem);
     }
   }
 
@@ -76,6 +89,7 @@ Eigen::Affine3d Calibrator::Calibrate(const std::vector<DepthMatches>& match_set
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
-  return Affine3<double>(depth_image_A_depth_cloud.data());
+  calibrated_depth_image_A_depth_cloud = Affine3<double>(depth_image_A_depth_cloud.data());
+  calibrated_intrinsics = Intrinsics<double>(intrinsics.data());
 }
 }  // namespace depth_odometry
