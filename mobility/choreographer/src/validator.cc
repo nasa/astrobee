@@ -24,7 +24,6 @@ namespace choreographer {
 
 // Get Zones Map
 bool Validator::GetZonesMap() {
-    ROS_ERROR_STREAM("calculate map");
     ff_msgs::GetFloat srv;
     if (get_resolution_.call(srv)) {
       map_res_ = srv.response.data;

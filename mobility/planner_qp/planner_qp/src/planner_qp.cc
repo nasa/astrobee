@@ -902,17 +902,29 @@ class Planner : public planner::PlannerImplementation {
     jps_map_util_.reset(new JPS::VoxelMapUtil());
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
-    // 5) Set all remaining space as free
+    // Set all remaining space as free
     jps_map_util_->freeUnKnown();
 
-
-    // 7) Add obstacle map points
+    // Add obstacle map points
     jps_map_util_->dilate(map_res_ / 2, map_res_ / 2);    // sets dilating radius
     jps_map_util_->add3DPoints(keepout_points_mapper);    // add keepout points from mapper
 
     OUTPUT_DEBUG("PlannerQP: Map origin " << origin.transpose() << " dim "
                                           << dim.transpose() << " resolution "
                                           << map_res_);
+
+    // inflate map for planning further from walls, the minimum inflation is the map resolution,
+    // this parameter is adjusted to generate trajectories further from the walls
+    double planner_distance = map_res_;
+    if (!cfg_.Get<double>("planner_distance", planner_distance)) {
+      ROS_ERROR_STREAM("planner_distance not defined");
+    }
+    if (planner_distance < map_res_)
+      planner_distance = map_res_;
+
+    jps_map_util_->dilate(planner_distance, planner_distance);    // sets dilating radius
+    jps_map_util_->dilating();                                    // dillate entire map
+
 
     jps_planner_.reset(new JPS::JPS3DUtil(false));
     jps_planner_->setMapUtil(jps_map_util_.get());
