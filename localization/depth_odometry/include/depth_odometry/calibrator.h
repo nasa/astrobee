@@ -32,8 +32,9 @@ class Calibrator {
  public:
   Calibrator(const CalibratorParams& params) : params_(params) {}
   void Calibrate(const std::vector<DepthMatches>& match_sets, const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
-                 const Eigen::Matrix3d& initial_intrinsics, Eigen::Affine3d& calibrated_depth_image_A_depth_cloud,
-                 Eigen::Matrix3d& calibrated_intrinsics);
+                 const Eigen::Matrix3d& initial_intrinsics, const Eigen::Matrix<double, 4, 1>& intial_distortion,
+                 Eigen::Affine3d& calibrated_depth_image_A_depth_cloud, Eigen::Matrix3d& calibrated_intrinsics,
+                 Eigen::Matrix<double, 4, 1>& calibrated_distortion);
 
   // Assumes compact quaternion parameterization for rotations
   // TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization

@@ -143,13 +143,17 @@ int main(int argc, char** argv) {
   depth_odometry::Calibrator calibrator(params);
   const Eigen::Affine3d initial_depth_image_A_depth_cloud(Eigen::Affine3d::Identity());
   const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
+  const Eigen::Matrix<double, 4, 1> initial_distortion = calibrator.params().camera_params->GetDistortion();
   LogError("init depth_A_depth: " << std::endl << initial_depth_image_A_depth_cloud.matrix());
   LogError("init intrinsics: " << std::endl << initial_intrinsics.matrix());
+  LogError("init distortion: " << std::endl << initial_distortion.matrix());
   Eigen::Affine3d calibrated_depth_image_A_depth_cloud;
   Eigen::Matrix3d calibrated_intrinsics;
-  calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud, initial_intrinsics,
-                       calibrated_depth_image_A_depth_cloud, calibrated_intrinsics);
+  Eigen::Matrix<double, 4, 1> calibrated_distortion;
+  calibrator.Calibrate(depth_matches, initial_depth_image_A_depth_cloud, initial_intrinsics, initial_distortion,
+                       calibrated_depth_image_A_depth_cloud, calibrated_intrinsics, calibrated_distortion);
   LogError("calibrated depth_A_depth: " << std::endl << calibrated_depth_image_A_depth_cloud.matrix());
   LogError("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());
+  LogError("calibrated distortion: " << std::endl << calibrated_distortion.matrix());
   // TODO: write this to file! also write summary stats? time take? final total error? etc?
 }
