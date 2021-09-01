@@ -91,6 +91,22 @@ class Calibrator {
     intrinsics(1, 1) = intrinsics_data[1];
     intrinsics(0, 2) = intrinsics_data[2];
     intrinsics(1, 2) = intrinsics_data[3];
+    /*{
+      std::cout << "intrinsics data: ";
+      for (int i = 0; i < 4; ++i) {
+        std::cout << intrinsics_data[i] << ", ";
+      }
+      std::cout << std::endl;
+      std::cout << "intrinsics mat: ";
+      for (int row = 0; row < 3; ++row) {
+        std::cout << std::endl;
+        for (int col = 0; col < 3; ++col) {
+          int index = row + col * 3;
+          std::cout << intrinsics.data()[index] << ", ";
+        }
+      }
+      std::cout << std::endl;
+    }*/
     return intrinsics;
   }
 
