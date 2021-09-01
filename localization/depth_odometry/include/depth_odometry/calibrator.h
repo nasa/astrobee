@@ -157,7 +157,8 @@ class Calibrator {
  private:
   void AddCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                        Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
-                       Eigen::Matrix<double, 4, 1>& intrinsics_vector, ceres::Problem& problem);
+                       Eigen::Matrix<double, 4, 1>& intrinsics_vector, const Eigen::Matrix<4, 1>& distortion,
+                       ceres::Problem& problem);
 
   static Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
 
