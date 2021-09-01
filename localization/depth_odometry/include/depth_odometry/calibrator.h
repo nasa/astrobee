@@ -167,25 +167,32 @@ class Calibrator {
 
 class ReprojectionError {
  public:
-  ReprojectionError(const Eigen::Vector2d& image_feature, const Eigen::Vector3d& depth_cloud_F_point_3d_feature)
-      : image_feature_(image_feature), depth_cloud_F_point_3d_feature_(depth_cloud_F_point_3d_feature) {}
+  ReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& depth_cloud_F_point_3d)
+      : image_point_(image_point), depth_cloud_F_point_3d_(depth_cloud_F_point_3d) {}
 
   template <typename T>
-  bool operator()(const T* depth_image_A_depth_cloud_data, const T* intrinsics_data, T* reprojection_error) const {
-    const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_data);
-    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d =
-      depth_image_A_depth_cloud * depth_cloud_F_point_3d_feature_.cast<T>();
+  bool operator()(const T* depth_image_A_depth_cloud_data, const T* intrinsics_data, const T* distortion_data,
+                  T* reprojection_error) const {
+    // Handle type conversions
+    Eigen::Map<const Eigen::Matrix<T, 4, 1>> distortion(distortion_data);
+    Eigen::Map<const Eigen::Matrix<T, 4, 1>> intrinsics_vector(intrinsics_data);
     const auto intrinsics = Calibrator::Intrinsics<T>(intrinsics_data);
-    const Eigen::Matrix<T, 2, 1> reprojected_pixel = (intrinsics * depth_image_F_point_3d).hnormalized();
+    const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_data);
 
-    reprojection_error[0] = image_feature_[0] - reprojected_pixel[0];
-    reprojection_error[1] = image_feature_[1] - reprojected_pixel[1];
+    // Compute error
+    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_.cast<T>();
+    const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * depth_image_F_point_3d).hnormalized();
+    const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
+      Distort(distortion, intrinsics_vector, undistorted_reprojected_point_3d);
+
+    reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
+    reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];
     return true;
   }
 
  private:
-  Eigen::Vector2d image_feature_;
-  Eigen::Vector3d depth_cloud_F_point_3d_feature_;
+  Eigen::Vector2d image_point_;
+  Eigen::Vector3d depth_cloud_F_point_3d_;
 };
 }  // namespace depth_odometry
 
