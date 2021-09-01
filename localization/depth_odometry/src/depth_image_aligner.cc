@@ -107,7 +107,7 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
-  CorrectLandmarks(target_observations, target_landmarks);
+  // CorrectLandmarks(target_observations, target_landmarks);
 
   LogError("filtered_matches: " << matches.size());
   LogError("landmarks: " << target_landmarks.size() << ", observations: " << source_observations.size());
@@ -134,7 +134,6 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
        ++i) {
     if (source_observations[i].isApprox(inlier_source_observations[inlier_index]) &&
         target_landmarks[i].isApprox(inlier_target_landmarks[inlier_index])) {
-      LogError("inlier index: " << inlier_index << ", total size: " << inlier_source_observations.size());
       ++inlier_index;
       ++source_landmarks_it;
       ++target_observations_it;
