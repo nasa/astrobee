@@ -95,8 +95,6 @@ class Planner : public planner::PlannerImplementation {
     // Grab some configuration parameters for this node from the LUA config
     cfg_.Initialize(GetPrivateHandle(), "mobility/planner_qp.config");
     cfg_.Listen(boost::bind(&Planner::ReconfigureCallback, this, _1));
-    cfg_mapper_.Initialize(GetPrivateHandle(), "mobility/mapper.config");
-    cfg_mapper_.Listen(boost::bind(&Planner::ReconfigureCallbackMapper, this, _1));
 
     // Setup a timer to forward diagnostics
     timer_d_ =
@@ -135,11 +133,6 @@ class Planner : public planner::PlannerImplementation {
     cfg_.Reconfigure(config);
 
     if (!cfg_.Get<double>("iteration_replay", traj_it_)) traj_it_ = 1.0;
-    return true;
-  }
-
-  bool ReconfigureCallbackMapper(dynamic_reconfigure::Config &config) {
-    cfg_.Reconfigure(config);
     return true;
   }
 
@@ -379,7 +372,6 @@ class Planner : public planner::PlannerImplementation {
 
  protected:
   ff_util::ConfigServer cfg_;
-  ff_util::ConfigServer cfg_mapper_;
   ros::Timer timer_d_, timer_a_, timer_fb_;
   boost::shared_ptr<traj_opt::NonlinearTrajectory> trajectory_;
   tf::Quaternion start_orientation_;
@@ -977,11 +969,6 @@ class Planner : public planner::PlannerImplementation {
 
  private:
   vec_Vec3f mapper_points_;
-
-  // Voxel map values
-  char val_occ_ = 100;         // Assume occupied cell has value 100
-  char val_free_ = 0;          // Assume free cell has value 0
-  char val_unknown_ = -1;      // Assume unknown cell has value -1
 
   void map_callback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &msg) {
     // clear old points

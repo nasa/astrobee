@@ -229,12 +229,12 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   // Ensure all clients are connected
   void ConnectedCallback(void) {
     NODELET_DEBUG_STREAM("ConnectedCallback()");
-    if (!client_z_.IsConnected()) return;  // Zones
+    if (!client_z_.IsConnected()) return;    // Zones
     if (!client_z_m_.IsConnected()) return;  // Zones Map
-    if (!client_r_.IsConnected()) return;  // Register
-    if (!client_o_.IsConnected()) return;  // Register
-    if (!client_f_.IsConnected()) return;  // Register
-    if (state_ != INITIALIZING) return;    // Don't initialize twice
+    if (!client_r_.IsConnected()) return;    // Register
+    if (!client_o_.IsConnected()) return;    // Register
+    if (!client_f_.IsConnected()) return;    // Register
+    if (state_ != INITIALIZING) return;      // Don't initialize twice
     // Register this planner
     NODELET_DEBUG_STREAM("Registering planner");
     client_r_.Call(registration_);

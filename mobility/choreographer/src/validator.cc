@@ -69,7 +69,7 @@ bool Validator::GetZonesMap() {
 
 
     // Declare voxel map
-    std::vector<signed char> map(num_cell, -1);
+    std::vector<signed char> map(num_cell, val_unknown_);
     jps_map_util_.reset(new JPS::VoxelMapUtil());
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
