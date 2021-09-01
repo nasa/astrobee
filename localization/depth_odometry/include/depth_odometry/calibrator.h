@@ -112,15 +112,14 @@ class Calibrator {
   }
 
   template <typename T>
-  static Eigen::Matrix<T, 2, 1> Distort(const Eigen::Matrix<T, 4, 1>& distortion,
-                                        const Eigen::Matrix<T, 4, 1>& intrinsics,
+  static Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
                                         const Eigen::Matrix<T, 2, 1>& undistorted_point) {
     const T& k1 = distortion[0];
     const T& k2 = distortion[1];
     const T& p1 = distortion[2];
     const T& p2 = distortion[3];
     // TODO(rsoussan): Support 5 distortion params?
-    const T k3 = 0;
+    const T k3(0.0);
 
     const T& f_x = intrinsics[0];
     const T& f_y = intrinsics[1];
@@ -137,15 +136,15 @@ class Calibrator {
     const T r2 = relative_x * relative_x + relative_y * relative_y;
 
     // Apply radial distortion
-    const T radial_distortion_coeff = 1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2;
+    const T radial_distortion_coeff = 1.0 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2;
     T distorted_relative_x = relative_x * radial_distortion_coeff;
     T distorted_relative_y = relative_y * radial_distortion_coeff;
 
     // Apply tangential distortion
     distorted_relative_x =
-      distorted_relative_x + (2 * p1 * relative_x * relative_y + p2 * (r2 + 2 * relative_x * relative_x));
+      distorted_relative_x + (2.0 * p1 * relative_x * relative_y + p2 * (r2 + 2.0 * relative_x * relative_x));
     distorted_relative_y =
-      distorted_relative_y + (p1 * (r2 + 2 * relative_y * relative_y) + 2 * p2 * relative_x * relative_y);
+      distorted_relative_y + (p1 * (r2 + 2.0 * relative_y * relative_y) + 2.0 * p2 * relative_x * relative_y);
 
     // Convert back to absolute coordinates
     const Eigen::Matrix<T, 2, 1> distorted_point(distorted_relative_x * f_x + p_x, distorted_relative_y * f_y + p_y);
@@ -157,7 +156,7 @@ class Calibrator {
  private:
   void AddCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                        Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
-                       Eigen::Matrix<double, 4, 1>& intrinsics_vector, const Eigen::Matrix<4, 1>& distortion,
+                       Eigen::Matrix<double, 4, 1>& intrinsics_vector, Eigen::Matrix<double, 4, 1>& distortion,
                        ceres::Problem& problem);
 
   static Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
@@ -176,8 +175,6 @@ class ReprojectionError {
   bool operator()(const T* depth_image_A_depth_cloud_data, const T* intrinsics_data, const T* distortion_data,
                   T* reprojection_error) const {
     // Handle type conversions
-    Eigen::Map<const Eigen::Matrix<T, 4, 1>> distortion(distortion_data);
-    Eigen::Map<const Eigen::Matrix<T, 4, 1>> intrinsics_vector(intrinsics_data);
     const auto intrinsics = Calibrator::Intrinsics<T>(intrinsics_data);
     const auto depth_image_A_depth_cloud = Calibrator::Affine3<T>(depth_image_A_depth_cloud_data);
 
@@ -185,7 +182,7 @@ class ReprojectionError {
     const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_.cast<T>();
     const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * depth_image_F_point_3d).hnormalized();
     const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
-      Distort(distortion, intrinsics_vector, undistorted_reprojected_point_3d);
+      Calibrator::Distort(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
 
     reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
     reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];

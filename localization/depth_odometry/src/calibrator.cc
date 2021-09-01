@@ -35,7 +35,7 @@ void Calibrator::AddCostFunction(const Eigen::Vector2d& image_point, const Eigen
   // TODO: pass this? delete at end?
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
   ceres::CostFunction* reprojection_cost_function =
-    new ceres::AutoDiffCostFunction<ReprojectionError, 2, 7, 4>(new ReprojectionError(image_point, point_3d));
+    new ceres::AutoDiffCostFunction<ReprojectionError, 2, 7, 4, 4>(new ReprojectionError(image_point, point_3d));
   problem.AddResidualBlock(reprojection_cost_function, huber_loss, depth_image_A_depth_cloud_vector.data(),
                            intrinsics_vector.data(), distortion.data());
 }
