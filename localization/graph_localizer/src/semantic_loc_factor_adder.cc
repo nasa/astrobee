@@ -53,7 +53,7 @@ void SemanticLocFactorAdder::ComputeFactorsToAdd(std::vector<go::FactorsToAdd> &
 
   double noise_scale = params().projection_noise_scale;
   if (params().scale_projection_noise_with_num_landmarks) {
-    noise_scale *= std::pow((num_semantic_objects_averager_.average() / static_cast<double>(num_objects)), 2);
+    noise_scale *= std::pow((3. / static_cast<double>(num_objects)), 2);
   }
 
   int num_tolerant_projection_factors = 0;
@@ -63,8 +63,12 @@ void SemanticLocFactorAdder::ComputeFactorsToAdd(std::vector<go::FactorsToAdd> &
     const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
                                measurement.timestamp);
     // TODO(rsoussan): Pass sigma insted of already constructed isotropic noise
-    const gtsam::SharedIsotropic scaled_noise(
-      gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
+    gtsam::SharedNoiseModel scaled_noise;
+    if (params().scale_matching_distance_with_bbox) {
+      scaled_noise = gtsam::SharedDiagonal(gtsam::noiseModel::Diagonal::Sigmas(noise_scale * matched_projection.bounding_box));
+    } else {
+      scaled_noise = gtsam::SharedIsotropic(gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
+    }
     gtsam::TolerantProjectionFactor<>::shared_ptr tolerant_projection_factor(new gtsam::TolerantProjectionFactor<>(
       matched_projection.image_point, matched_projection.bounding_box*params().cost_tolerance, matched_projection.map_point, 
       Robust(scaled_noise, params().huber_k), key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
@@ -122,6 +126,7 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   std::vector<go::FactorsToAdd> factors_to_add;
   ComputeFactorsToAdd(factors_to_add, matched_projections_measurement);
+  LogInfo("Timestamp: " << semantic_dets.timestamp);
 
   return factors_to_add;
 }

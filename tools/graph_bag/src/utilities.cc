@@ -100,7 +100,7 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
   viz = undist_viz(cv::Rect(top_left.x, top_left.y, original_size.width, original_size.height));
 
   // This is rather ugly to hardcode
-  const std::vector<std::string> class_names = {"laptop", "camera", "handrail", "light", "vent"};
+  const std::vector<std::string> class_names = {"laptop", "camera", "handrail", "light", "window", "hatch", "express", "vent"};
   for (const auto& match : sem_matches) {
     cv::Point size_half(viz.size().width/2., viz.size().height/2.);
     cv::Point map_pt;
