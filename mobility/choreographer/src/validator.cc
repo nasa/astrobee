@@ -22,6 +22,49 @@
 
 namespace choreographer {
 
+
+// Process zone
+  void Validator::ProcessZone(std::vector<signed char> &map, int type, char cell_value, bool surface) {
+    Vec3f zmin, zmax;
+    for (auto &zone : zones_.zones) {
+      if (zone.type == type) {
+        zmin << std::min(zone.min.x, zone.max.x),
+            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
+        zmax << std::max(zone.min.x, zone.max.x),
+            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
+        Vec3f tmp = Vec3f::Zero();
+        for (int i = 0; i < 3; i++) {
+          int j = (i + 1) % 3;
+          int k = (i + 2) % 3;
+          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
+            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
+              // Attribute the desired value to the surface around zone
+              if (surface) {
+                tmp(j) = zx;
+                tmp(k) = zy;
+                tmp(i) = zmin(i) - map_res_ * 1.001;
+                map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
+                    cell_value;
+                tmp(i) = zmax(i) + map_res_ * 1.001;
+                map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
+                    cell_value;
+              // Attribute the desired value to the volume of the zone
+              } else {
+                for (auto zz = zmin(2); zz <= zmax(2); zz += map_res_) {
+                  tmp(0) = zx;
+                  tmp(1) = zy;
+                  tmp(2) = zz;
+                  map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
+                      cell_value;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
 // Get Zones Map
 bool Validator::GetZonesMap() {
     ff_msgs::GetFloat srv;
@@ -69,94 +112,25 @@ bool Validator::GetZonesMap() {
     Vec3i dim(std::ceil(dimf(0)), std::ceil(dimf(1)), std::ceil(dimf(2)));
     int num_cell = dim(0) * dim(1) * dim(2);
 
-
-    // Declare voxel map
-    std::vector<signed char> map(num_cell, val_unknown_);
-    jps_map_util_.reset(new JPS::VoxelMapUtil());
-    jps_map_util_->setMap(origin, dim, map, map_res_);
-
     // Keepin/Keepout zones:
     // To reduce computational load, only the contour of the keepin/keepout
     // zones is defined as occupied, to minimize the number of points that
     // are inflated
     // 0) The voxel map starts with all voxels set to unknown
+    // Declare voxel map
+    std::vector<signed char> map(num_cell, val_unknown_);
+    jps_map_util_.reset(new JPS::VoxelMapUtil());
+    jps_map_util_->setMap(origin, dim, map, map_res_);
+
     // 1) Keepin Zones add contour as occupied
-    for (auto &zone : zones_.zones) {
-      if (zone.type == ff_msgs::Zone::KEEPIN) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-        Vec3f tmp = Vec3f::Zero();
-        for (int i = 0; i < 3; i++) {
-          int j = (i + 1) % 3;
-          int k = (i + 2) % 3;
-          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
-            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-              tmp(j) = zx;
-              tmp(k) = zy;
-              tmp(i) = zmin(i) - map_res_ * 1.001;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-              tmp(i) = zmax(i) + map_res_ * 1.001;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-            }
-          }
-        }
-      }
-    }
+    ProcessZone(map, ff_msgs::Zone::KEEPIN, val_occ_, true);
+
     // 2) We set the interior of the keepin zones to free, this corrects the
     // case where keepin zones are connected and a contourn was put between them
-    for (auto &zone : zones_.zones) {
-      if (zone.type == ff_msgs::Zone::KEEPIN) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-        // add points on surface
-        Vec3f tmp = Vec3f::Zero();
-        for (auto zx = zmin(0); zx <= zmax(0); zx += map_res_) {
-          for (auto zy = zmin(1); zy <= zmax(1); zy += map_res_) {
-            for (auto zz = zmin(2); zz <= zmax(2); zz += map_res_) {
-              tmp(0) = zx;
-              tmp(1) = zy;
-              tmp(2) = zz;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_free_;
-            }
-          }
-        }
-      }
-    }
+    ProcessZone(map, ff_msgs::Zone::KEEPIN, val_free_, false);
 
     // 4) Add keepout zones
-    for (auto &zone : zones_.zones) {
-      if (zone.type == ff_msgs::Zone::KEEPOUT) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-        // add points on surface
-        Vec3f tmp = Vec3f::Zero();
-        for (int i = 0; i < 3; i++) {
-          int j = (i + 1) % 3;
-          int k = (i + 2) % 3;
-          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
-            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-              tmp(j) = zx;
-              tmp(k) = zy;
-              tmp(i) = zmin(i);
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-              tmp(i) = zmax(i);
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  val_occ_;
-            }
-          }
-        }
-      }
-    }
+    ProcessZone(map, ff_msgs::Zone::KEEPOUT, val_occ_, true);
 
     // set voxel map using keepin/keepout zones
     jps_map_util_->setMap(origin, dim, map, map_res_);

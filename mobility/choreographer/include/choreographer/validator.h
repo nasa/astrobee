@@ -42,6 +42,7 @@
 
 // STL includes
 #include <string>
+#include <vector>
 
 namespace choreographer {
 
@@ -74,7 +75,10 @@ class Validator {
   // Markers for keep in / keep out zones
   void PublishMarkers();
 
-  // Check if a point is inside a cuboid
+  // Process zones when building the occupancy map
+  void ProcessZone(std::vector<signed char>& map, int type, char cell_value, bool surface);
+
+  // Build the occupancy map
   bool GetZonesMap();
 
   // Callback to get the keep in/out zones
