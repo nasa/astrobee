@@ -19,9 +19,8 @@
 set -e
 
 # short help
-usage_string="$scriptname [-h] [-x <use ubuntu 16 installation>]
-    [-b <use ubuntu 18 installation>] [-f <use ubuntu 20 installation>]"
-#[-t make_target]
+usage_string="$scriptname [-h] [-x <use ubuntu 16.04 image>]\
+ [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]"
 
 usage()
 {
@@ -52,29 +51,29 @@ thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../..
 echo "Astrobee path: "${rootdir}/
 
-UBUNTU_VERSION=ubuntu16.04
+UBUNTU_VERSION=16.04
 ROS_VERSION=kinetic
 PYTHON=''
 
 if [ "$os" = "bionic" ]; then
-  UBUNTU_VERSION=ubuntu18.04
+  UBUNTU_VERSION=18.04
   ROS_VERSION=melodic
   PYTHON=''
 
 elif [ "$os" = "focal" ]; then
-  UBUNTU_VERSION=ubuntu20.04
+  UBUNTU_VERSION=20.04
   ROS_VERSION=noetic
   PYTHON='3'
 fi
 
-echo "Building $UBUNTU_VERSION image"
+echo "Building Ubuntu $UBUNTU_VERSION image"
 docker build ${rootdir}/ \
             -f ${rootdir}/scripts/docker/astrobee_base.Dockerfile \
             --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
             --build-arg ROS_VERSION=${ROS_VERSION} \
             --build-arg PYTHON=${PYTHON} \
-            -t astrobee/astrobee:base-latest-${UBUNTU_VERSION}
+            -t astrobee/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
 docker build ${rootdir}/ \
             -f ${rootdir}/scripts/docker/astrobee.Dockerfile \
             --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
-            -t astrobee/astrobee:latest-${UBUNTU_VERSION}
+            -t astrobee/astrobee:latest-ubuntu${UBUNTU_VERSION}
