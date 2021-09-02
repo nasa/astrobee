@@ -41,7 +41,7 @@
 #include <ff_msgs/Zone.h>
 #include <ff_msgs/RegisterPlanner.h>
 #include <ff_msgs/GetZones.h>
-#include <ff_msgs/GetZonesMap.h>
+#include <ff_msgs/GetOccupancyMap.h>
 #include <ff_msgs/GetMap.h>
 
 // Voxel map
@@ -127,7 +127,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
   // Get the keepin and keepout zones
   bool GetZonesMap(std::vector<signed char> &map, Vec3f &origin, Vec3i &dim, double &map_res) {
-    ff_msgs::GetZonesMap srv;
+    ff_msgs::GetOccupancyMap srv;
     if (client_z_m_.Call(srv)) {
       map.resize(srv.response.map.size());
       map = srv.response.map;
@@ -312,7 +312,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   State state_;                                          // Planner state
   ff_util::FreeFlyerActionServer<ff_msgs::PlanAction> server_p_;
   ff_util::FreeFlyerServiceClient<ff_msgs::GetZones> client_z_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::GetZonesMap> client_z_m_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetOccupancyMap> client_z_m_;
   ff_util::FreeFlyerServiceClient<ff_msgs::RegisterPlanner> client_r_;
   ff_util::FreeFlyerServiceClient<ff_msgs::GetMap> client_f_, client_o_;
   ff_msgs::RegisterPlanner registration_;                // Registration info

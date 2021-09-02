@@ -34,7 +34,7 @@
 #include <ff_msgs/Zone.h>
 #include <ff_msgs/SetZones.h>
 #include <ff_msgs/GetZones.h>
-#include <ff_msgs/GetZonesMap.h>
+#include <ff_msgs/GetOccupancyMap.h>
 #include <ff_msgs/GetFloat.h>
 
 // Voxel map
@@ -82,8 +82,8 @@ class Validator {
                        ff_msgs::GetZones::Response& res);
 
   // Callback to get the keep in/out zones map
-  bool GetZonesMapCallback(ff_msgs::GetZonesMap::Request& req,
-                       ff_msgs::GetZonesMap::Response& res);
+  bool GetZonesMapCallback(ff_msgs::GetOccupancyMap::Request& req,
+                       ff_msgs::GetOccupancyMap::Response& res);
 
   // Callback to set the keep in/out zones
   bool SetZonesCallback(ff_msgs::SetZones::Request& req,

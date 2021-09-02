@@ -32,8 +32,10 @@ bool Validator::GetZonesMap() {
 
     // Check min and max of keepin zones to use as map boundries
     Vec3f min, max, zmin, zmax;
-    min << 1000.0, 1000.0, 1000.0;
-    max << -1000.0, -1000.0, -1000.0;
+    min << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
+                                              std::numeric_limits<float>::max();
+    max << std::numeric_limits<float>::min(), std::numeric_limits<float>::min(),
+                                              std::numeric_limits<float>::min();
     uint num_keepin = 0;
     for (auto &zone : zones_.zones) {
       if (zone.type == ff_msgs::Zone::KEEPIN) {
@@ -74,7 +76,7 @@ bool Validator::GetZonesMap() {
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
     // Keepin/Keepout zones:
-    // To reduce computational load, only the contourn of the keepin/keepout
+    // To reduce computational load, only the contour of the keepin/keepout
     // zones is defined as occupied, to minimize the number of points that
     // are inflated
     // 0) The voxel map starts with all voxels set to unknown
@@ -161,7 +163,7 @@ bool Validator::GetZonesMap() {
 
     // 6) Inflate using the robot radius and the collision distance
     double inflation = map_res_;
-    if (get_resolution_.call(srv)) {
+    if (get_map_inflation_.call(srv)) {
       inflation = srv.response.data;
     }
     jps_map_util_->dilate(inflation, inflation);     // sets dilating radius
@@ -313,7 +315,7 @@ bool Validator::GetZonesCallback(
 
 // Callback to get the keep in/out zones
 bool Validator::GetZonesMapCallback(
-  ff_msgs::GetZonesMap::Request &req, ff_msgs::GetZonesMap::Response &res) {
+  ff_msgs::GetOccupancyMap::Request &req, ff_msgs::GetOccupancyMap::Response &res) {
   res.timestamp = zones_.timestamp;
   std::vector<signed char> map = jps_map_util_->getMap();
   res.map.resize(map.size());
