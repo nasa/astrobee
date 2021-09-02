@@ -49,9 +49,20 @@ Internally, the choreographer is encoded as a finite state machine depicted belo
 \dotfile choreographer_fsm "Choreographer finite state machine"
 
 
-## Trajectory Validator
+## Trajectory checks
 
-Validates planned trajectories based on keep-in and keep-out zones.
+To ensure that the robot is following the desired trajectory, the choreographer overviews the controller feedback and cancels the movement if the motion value is above the defined values for a certain amout of time. The parameters are tuned according to the flight mode chosen.  A zero value for any of these parameters disables the check.
+
+| Parameter                        | Description |
+|:---------------------------------|:----------- |
+| ```tolerance_pos_endpoint```     | End of motion position tolerance. Checked when the trajectory finishes and the robot is stopped |
+| ```tolerance_pos```              | Position tolerance checked thoughout the entire trajectory |
+| ```tolerance_vel```              | Velocity tolerance checked thoughout the entire trajectory |
+| ```tolerance_att```              | Attitude tolerance checked thoughout the entire trajectory |
+| ```tolerance_omega```            | Omega tolerance checked thoughout the entire trajectory. |
+| ```tolerance_time```             | Time for sync check |
+
+The planned trajectories are also checked against the keep-in and keep-out zones.
 
 The keep-in and keep-out zones describe safe and unsafe areas for flight
 respectively. Each zone is a cuboid in 3-space, and is fully-defined by the
@@ -102,3 +113,4 @@ arrays render keep-in and keep-out zones as semi-transparent green and red
 cuboids. The two example zones should be rendered as shown below:
 
 ![alt text](../images/mobility/zones.png "How the RVIZ user interface draws zones")
+

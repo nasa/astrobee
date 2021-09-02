@@ -825,7 +825,6 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       // Move to the approach pose.
       case APPROACH_POSE:
         msg.header.frame_id = platform_name_ + "handrail/approach";
-        ROS_ERROR_STREAM("transform " << msg.header.frame_id);
         goal.states.push_back(msg);
         break;
       // Move to the recovery pose. This option is currently used to move to the
