@@ -17,9 +17,9 @@ Available docker files:
 
 The Docker files accept the following version args (note that they must match up):
 
-- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04", "18.04", and "20.04". Defautls to "16.04". 
-- `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic". Defaults to "kinetic"
-- `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3". Defaults to "".
+- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04", "18.04", and "20.04".
+- `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic".
+- `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3".
 
 If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
 If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
@@ -31,14 +31,17 @@ If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` 
 To build the docker images, run:
     
     ./build.sh
-The option --bionic is used for ubuntu 18 docker images, and --focal is used for ubuntu 20 docker images.
+The build script will automatically detect the current Ubuntu OS version and define the docker files variables
+`UBUNTU_VERSION`, `ROS_VERSION`, and `PYTHON`. If a specific version is desired, the option --xenial, --bionic,
+and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
 
 ## Run the container
 
 To run the docker container:
 
     ./run.sh
-The option --bionic is used for ubuntu 18 docker images, and --focal is used for ubuntu 20 docker images.
+It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
+--xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
 
 To open another terminal inside the docker container:
 

@@ -19,9 +19,8 @@
 set -e
 
 # short help
-usage_string="$scriptname [-h] [-x <use ubuntu 16 installation>]
-    [-b <use ubuntu 18 installation>] [-f <use ubuntu 20 installation>]"
-#[-t make_target]
+usage_string="$scriptname [-h] [-x <use ubuntu 16.04 image>]\
+ [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]"
 
 usage()
 {
