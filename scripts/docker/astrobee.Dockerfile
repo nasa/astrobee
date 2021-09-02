@@ -2,8 +2,8 @@
 # This image builds on top of the base melodic image building the code.
 # You must set the docker context to be the repository root directory
 
-ARG UBUNTU_VERSION=ubuntu16.04
-FROM astrobee/astrobee:base-latest-$UBUNTU_VERSION
+ARG UBUNTU_VERSION=16.04
+FROM astrobee/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
 
 ENV USERNAME astrobee
 
