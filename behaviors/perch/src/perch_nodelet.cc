@@ -201,7 +201,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // [11] - If we successfully stopped, we switch to perch localization (future work)
     fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_PERCH);
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::PERCHING_SWITCHING_TO_PL_LOC;
       });
     // [12] - With all steps done, we conclude we are perched.
