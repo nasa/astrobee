@@ -28,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 # System dependencies are found with CMake's conventions
 find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Gui)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 find_package(FFMPEG REQUIRED )
 
 catkin_package(

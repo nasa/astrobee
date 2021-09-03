@@ -18,17 +18,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(marker_tracking)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  nodelet
   ff_util
-  ff_hw_msgs
-  config_reader
-  camera
-  msg_conversions
+  message_runtime
+  std_msgs
+  geometry_msgs
+  cv_bridge
+  image_transport
+  camera msg_conversions
 )
 
 # System dependencies are found with CMake's conventions
@@ -59,7 +60,7 @@ set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions
+  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions
 )
 
 ###########

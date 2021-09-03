@@ -24,7 +24,7 @@ add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS
 )
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 
 if (USE_CTC)
   set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)

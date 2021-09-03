@@ -1,0 +1,4 @@
+# creates a relay to a python script source file, acting as that file.
+# The purpose is that of a symlink
+with open("@PYTHON_SCRIPT@", 'r') as fh:
+    exec(fh.read())

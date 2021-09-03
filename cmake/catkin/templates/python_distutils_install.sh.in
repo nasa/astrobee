@@ -1,0 +1,28 @@
+#!/bin/sh -x
+
+if [ -n "$DESTDIR" ] ; then
+    case $DESTDIR in
+        /*) # ok
+            ;;
+        *)
+            /bin/echo "DESTDIR argument must be absolute... "
+            /bin/echo "otherwise python's distutils will bork things."
+            exit 1
+    esac
+    DESTDIR_ARG="--root=$DESTDIR"
+fi
+
+cd "@INSTALL_CMD_WORKING_DIRECTORY@"
+
+# Note that PYTHONPATH is pulled from the environment to support installing
+# into one location when some dependencies were installed in another
+# location, #123.
+/usr/bin/env \
+    PYTHONPATH="@CMAKE_INSTALL_PREFIX@/@PYTHON_INSTALL_DIR@:@CMAKE_BINARY_DIR@/@PYTHON_INSTALL_DIR@:$PYTHONPATH" \
+    CATKIN_BINARY_DIR="@CMAKE_BINARY_DIR@" \
+    "@PYTHON_EXECUTABLE@" \
+    "@CMAKE_CURRENT_SOURCE_DIR@/setup.py" \
+    build --build-base "@CMAKE_CURRENT_BINARY_DIR@" \
+    install \
+    $DESTDIR_ARG \
+    @SETUPTOOLS_ARG_EXTRA@ --prefix="@CMAKE_INSTALL_PREFIX@" --install-scripts="@CMAKE_INSTALL_PREFIX@/@CATKIN_GLOBAL_BIN_DESTINATION@"
