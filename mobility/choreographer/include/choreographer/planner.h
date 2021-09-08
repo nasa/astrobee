@@ -41,7 +41,11 @@
 #include <ff_msgs/Zone.h>
 #include <ff_msgs/RegisterPlanner.h>
 #include <ff_msgs/GetZones.h>
+#include <ff_msgs/GetOccupancyMap.h>
 #include <ff_msgs/GetMap.h>
+
+// Voxel map
+#include <jps3d/planner/jps_3d_util.h>
 
 #include <memory>
 #include <string>
@@ -121,6 +125,23 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
     }
     return false;
   }
+  // Get the keepin and keepout zones
+  bool GetZonesMap(std::vector<signed char> &map, Vec3f &origin, Vec3i &dim, double &map_res) {
+    ff_msgs::GetOccupancyMap srv;
+    if (client_z_m_.Call(srv)) {
+      map.resize(srv.response.map.size());
+      map = srv.response.map;
+      origin[0] = srv.response.origin.x;
+      origin[1] = srv.response.origin.y;
+      origin[2] = srv.response.origin.z;
+      dim[0] = srv.response.dim.x;
+      dim[1] = srv.response.dim.y;
+      dim[2] = srv.response.dim.z;
+      map_res = srv.response.resolution;
+      return true;
+    }
+    return false;
+  }
   bool GetFreeMap(pcl::PointCloud<pcl::PointXYZ> *points, float *resolution) {
     ff_msgs::GetMap srv;
     if (client_f_.Call(srv)) {
@@ -154,8 +175,12 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
     server_p_.Create(nh, topic);
     // Initialize the get zone call
     client_z_.SetConnectedCallback(std::bind(&PlannerImplementation::ConnectedCallback, this));
-    client_z_.SetTimeoutCallback(std::bind(&PlannerImplementation::GetZoneTimeoutCallback, this));
+    client_z_.SetTimeoutCallback(std::bind(&PlannerImplementation::GetZonesTimeoutCallback, this));
     client_z_.Create(nh, SERVICE_MOBILITY_GET_ZONES);
+    // Initialize the get zone map call
+    client_z_m_.SetConnectedCallback(std::bind(&PlannerImplementation::ConnectedCallback, this));
+    client_z_m_.SetTimeoutCallback(std::bind(&PlannerImplementation::GetZonesMapTimeoutCallback, this));
+    client_z_m_.Create(nh, SERVICE_MOBILITY_GET_ZONES_MAP);
     // Initialize the register planner call
     client_r_.SetConnectedCallback(std::bind(&PlannerImplementation::ConnectedCallback, this));
     client_r_.SetTimeoutCallback(std::bind(&PlannerImplementation::RegisterTimeoutCallback, this));
@@ -204,11 +229,12 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   // Ensure all clients are connected
   void ConnectedCallback(void) {
     NODELET_DEBUG_STREAM("ConnectedCallback()");
-    if (!client_z_.IsConnected()) return;  // Zone
-    if (!client_r_.IsConnected()) return;  // Register
-    if (!client_o_.IsConnected()) return;  // Register
-    if (!client_f_.IsConnected()) return;  // Register
-    if (state_ != INITIALIZING) return;    // Don't initialize twice
+    if (!client_z_.IsConnected()) return;    // Zones
+    if (!client_z_m_.IsConnected()) return;  // Zones Map
+    if (!client_r_.IsConnected()) return;    // Register
+    if (!client_o_.IsConnected()) return;    // Register
+    if (!client_f_.IsConnected()) return;    // Register
+    if (state_ != INITIALIZING) return;      // Don't initialize twice
     // Register this planner
     NODELET_DEBUG_STREAM("Registering planner");
     client_r_.Call(registration_);
@@ -222,8 +248,13 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
   // Timeout on a trajectory generation request
-  void GetZoneTimeoutCallback(void) {
-    return InitFault("Timeout connecting to the get zone service");
+  void GetZonesTimeoutCallback(void) {
+    return InitFault("Timeout connecting to the get zones service");
+  }
+
+  // Timeout on a trajectory generation request
+  void GetZonesMapTimeoutCallback(void) {
+    return InitFault("Timeout connecting to the get zones map service");
   }
 
   // Timeout on a free map request
@@ -281,6 +312,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   State state_;                                          // Planner state
   ff_util::FreeFlyerActionServer<ff_msgs::PlanAction> server_p_;
   ff_util::FreeFlyerServiceClient<ff_msgs::GetZones> client_z_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetOccupancyMap> client_z_m_;
   ff_util::FreeFlyerServiceClient<ff_msgs::RegisterPlanner> client_r_;
   ff_util::FreeFlyerServiceClient<ff_msgs::GetMap> client_f_, client_o_;
   ff_msgs::RegisterPlanner registration_;                // Registration info

@@ -93,7 +93,10 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
           return this;
         }
 
-        if (!exec_->ConfigureMobility(cmd->cmd_id)) {
+        if (!exec_->ConfigureMobility(false, err_msg)) {
+          AckCmd(cmd->cmd_id,
+                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                 err_msg);
           return this;
         }
 
@@ -137,6 +140,8 @@ OpState* OpStateTeleop::HandleResult(
                               std::string const& result_response,
                               std::string const& cmd_id,
                               Action const& action) {
+  std::string err_msg;
+
   if (state == ff_util::FreeFlyerActionState::Enum::SUCCESS) {
     // If the action was reacquire, we have more work to do
     if (action == REACQUIRE) {
@@ -155,7 +160,10 @@ OpState* OpStateTeleop::HandleResult(
           return OpStateRepo::Instance()->ready()->StartupState();
         }
 
-        if (!exec_->ConfigureMobility(move_cmd_->cmd_id)) {
+        if (!exec_->ConfigureMobility(false, err_msg)) {
+          AckCmd(move_cmd_->cmd_id,
+                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                 err_msg);
           move_cmd_ = NULL;
           return OpStateRepo::Instance()->ready()->StartupState();
         }
