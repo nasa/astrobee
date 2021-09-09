@@ -17,14 +17,28 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 project(traj_opt_ros)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-deprecated-declarations  -Werror=return-type -DQT_NO_KEYWORDS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations  -Werror=return-type -DQT_NO_KEYWORDS")
 
 # Qt Stuff, assume Qt5
 set(CMAKE_AUTOMOC ON)
 
-find_package(catkin REQUIRED COMPONENTS
+
+# build rviz plugin if not cross compiling
+if(NOT USE_CTC)
+  message("bbbb")
+  set(CMAKE_AUTOMOC ON)
+  find_package(catkin COMPONENTS rviz QUIET)
+  if(rviz_QT_VERSION)
+    message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+    find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
+    set(QT_LIBRARIES Qt5::Widgets)
+  endif()
+endif()
+
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
-  rviz
   traj_opt_basic
   traj_opt_msgs
 )
@@ -37,10 +51,9 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
     traj_ros_bridge
-    ${PROJECT_NAME}
+    # ${PROJECT_NAME}
   CATKIN_DEPENDS
     roscpp
-    rviz
   	traj_opt_basic
   	traj_opt_msgs
 )
@@ -58,8 +71,33 @@ include_directories(
 
 add_library(traj_ros_bridge
 	src/ros_bridge.cpp)
-add_library(${PROJECT_NAME}
-	src/trajectory_visual.cpp
-	src/trajectory_display.cpp
-	${MOC_FILES})
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES} ${rviz_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
+target_link_libraries(traj_ros_bridge ${catkin_LIBRARIES})
+
+if (NOT USE_CTC)
+  if(rviz_QT_VERSION)
+  add_library(${PROJECT_NAME}
+  	src/trajectory_visual.cpp
+  	src/trajectory_display.cpp
+  	${MOC_FILES})
+  target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES} ${rviz_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
+  endif()
+endif (NOT USE_CTC)
+
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS traj_ros_bridge
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

@@ -19,13 +19,16 @@ if (ENABLE_PICOFLEXX)
 cmake_minimum_required(VERSION 2.8.3)
 project(pico_driver)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   nodelet
   ff_msgs
+  ff_util
+  cv_bridge
 )
 
 # System dependencies are found with CMake's conventions
@@ -33,7 +36,7 @@ find_package(royale REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp nodelet ff_msgs
+  CATKIN_DEPENDS roscpp nodelet ff_msgs ff_util cv_bridge
 )
 
 ###########
@@ -45,6 +48,8 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
+  ${royale_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -52,7 +57,7 @@ add_library(pico_driver
   src/pico_driver.cc
 )
 add_dependencies(pico_driver ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pico_driver ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+target_link_libraries(pico_driver ${royale_LIBRARIES} ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: bag_to_csv
 add_executable(pico_proxy tools/pico_proxy.cc)
@@ -64,9 +69,10 @@ target_link_libraries(pico_proxy
 add_executable(pico_tool tools/pico_tool.cc)
 add_dependencies(pico_tool ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pico_tool
-  pico_driver gflags glog ${catkin_LIBRARIES})
+  pico_driver gflags glog ${royale_LIBRARIES} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
   # Pico flexx initialization fault tester
   add_rostest_gtest(test_init_pico_flexx
     test/test_init_pico_flexx.test

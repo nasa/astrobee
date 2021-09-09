@@ -38,18 +38,42 @@ if(INTEL_MKL)
   include_directories(${INTEL_MKL_INCLUDES})
 endif()
 
-# Find required packages
-find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   traj_opt_basic
 )
 
 find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
+
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+if (USE_CTC)
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set(OpenCV_LIBS ${OpenCV_LIBS} "${OpenCV_INSTALL_PATH}/lib/arm-linux-gnueabihf/lib${__cvcomponent}3.so")
+  endforeach(__cvcomponent)
+endif (USE_CTC)
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-    traj_opt_pro
+    traj_opt_pro fancy_custom_backend ${OpenCV_LIBRARIES}
 )
 
 
@@ -81,3 +105,21 @@ add_library(fancy_custom_backend
   src/nonlinear_solver.cpp
   src/nonlinear_trajectory.cpp)
 target_link_libraries(fancy_custom_backend traj_opt_pro ${OpenCV_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME} fancy_custom_backend
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

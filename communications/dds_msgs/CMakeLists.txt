@@ -14,17 +14,16 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-# if (USE_DDS)
+if (USE_DDS)
 cmake_minimum_required(VERSION 2.8.3)
 project(dds_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
 )
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 
 if (USE_CTC)
   set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)
@@ -34,9 +33,7 @@ endif (USE_CTC)
 
 set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
-# find_package(QtXml REQUIRED)
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 find_package(Qt4 4.6.0 REQUIRED QtXml)
 
 find_package(Miro REQUIRED)
@@ -63,14 +60,14 @@ include_directories(
   ${SORACORE_IDL_DIR}/rapidDds
 )
 
-# message(STATUS "Copying IDL files")
-file(GLOB DDS_IDL_FILES
+# Copying IDL files
+file(GLOB ASTROBEE_IDL_FILES
   "idl/*.idl")
-file(COPY ${DDS_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${ASTROBEE_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-file(GLOB DDS_IDL_FILEZ
+file(GLOB SORACORE_IDL_FILES
   "${SORACORE_IDL_DIR}/rapidDds/*.idl")
-file(COPY ${DDS_IDL_FILEZ} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${SORACORE_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIB_NAME "rapidExtAstrobee")
 
@@ -101,8 +98,24 @@ target_include_directories(${LIB_NAME} PUBLIC
 ## Install ##
 #############
 
-install(TARGETS ${LIB_NAME} DESTINATION lib)
+
+# Mark libraries for installation
+install(TARGETS ${LIB_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
 install(FILES ${rapidExtAstrobee_GENERATED_HEADERS}
         DESTINATION include/${LIB_NAME})
 
-# endif (USE_DDS)
+message("rapidExtAstrobee_GENERATED_HEADERS ${rapidExtAstrobee_GENERATED_HEADERS}")
+
+# Mark cpp header files for installation
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/../
+  FILES_MATCHING PATTERN "dds_msgs/*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+endif (USE_DDS)

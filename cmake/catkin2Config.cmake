@@ -92,15 +92,24 @@ if(catkin2_FIND_COMPONENTS)
       endforeach()
 
       # find package component
-      if(catkin2_FIND_REQUIRED)
-        find_package(${component} REQUIRED NO_MODULE PATHS ${paths}
-          NO_DEFAULT_PATH)
-      elseif(catkin2_FIND_QUIETLY)
+      if(catkin_FIND_REQUIRED)
+        # try without REQUIRED first
+        find_package(${component} NO_MODULE PATHS ${paths}
+          NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        if(NOT ${component}_FOUND)
+          # show better message to help users with the CMake error message coming up
+          message(STATUS "Could not find the required component '${component}'. "
+            "The following CMake error indicates that you either need to install the package "
+            "with the same name or change your environment so that it can be found.")
+          find_package(${component} REQUIRED NO_MODULE PATHS ${paths}
+            NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        endif()
+      elseif(catkin_FIND_QUIETLY)
         find_package(${component} QUIET NO_MODULE PATHS ${paths}
-          NO_DEFAULT_PATH)
+          NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
       else()
         find_package(${component} NO_MODULE PATHS ${paths}
-          NO_DEFAULT_PATH)
+          NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
       endif()
 
       # ROS Packages give their library packages via hard coded

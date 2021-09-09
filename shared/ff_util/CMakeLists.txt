@@ -22,7 +22,8 @@ project(ff_util)
 add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   config_reader
   roscpp
   nodelet
@@ -117,7 +118,6 @@ if (CATKIN_ENABLE_TESTING)
   include_directories(${catkin_INCLUDE_DIRS} include)
 
   # ff_action
-
   add_rostest_gtest(ff_action_nominal_behaviour
     test/ff_action_nominal_behaviour.test
     test/ff_action_nominal_behaviour.cc)
@@ -165,9 +165,28 @@ endif()
 ## Install ##
 #############
 
+# Mark libraries for installation
+install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer jsonloader
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/jsonloader/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/../jsonloader/
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
-
-install(DIRECTORY config/ DESTINATION config)

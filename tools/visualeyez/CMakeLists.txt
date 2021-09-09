@@ -18,10 +18,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(visualeyez)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   nodelet
   pluginlib
@@ -36,6 +38,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
+
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(Ceres REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -60,6 +65,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
+  ${CERES_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -75,7 +81,7 @@ target_link_libraries(visualeyez ${catkin_LIBRARIES})
 add_executable(visualeyez_tool tools/visualeyez_tool.cc)
 add_dependencies(visualeyez_tool ${catkin_EXPORTED_TARGETS})
 target_link_libraries(visualeyez_tool
-  visualeyez gflags ${catkin_LIBRARIES})
+  visualeyez gflags ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES} ${catkin_LIBRARIES})
 
 # Only test if it is enabled
 if (CATKIN_ENABLE_TESTING)

@@ -18,10 +18,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(fam_cmd_i2c)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   rospy
   ff_msgs

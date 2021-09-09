@@ -21,12 +21,15 @@ project(sparse_mapping)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
+  ff_msgs
+  ff_common
   camera
   interest_point
   config_reader
-  ff_common
 )
 
 # System dependencies are found with CMake's conventions
@@ -60,7 +63,7 @@ set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES sparse_mapping
-  CATKIN_DEPENDS camera interest_point config_reader ff_common
+  CATKIN_DEPENDS ff_msgs ff_common camera interest_point config_reader
 )
 
 ###########
@@ -229,3 +232,21 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif()
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

@@ -27,7 +27,9 @@ find_package(GTSAM REQUIRED)
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   nodelet
   camera
   config_reader
@@ -135,6 +137,20 @@ endif()
 #############
 ## Install ##
 #############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
 
 # Mark launch files for installation
 install(DIRECTORY launch/

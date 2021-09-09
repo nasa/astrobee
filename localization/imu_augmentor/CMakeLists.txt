@@ -27,7 +27,9 @@ find_package(GTSAM REQUIRED)
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   nodelet
   ff_util
   imu_integration

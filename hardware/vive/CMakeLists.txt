@@ -18,7 +18,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vive)
 
-find_package(catkin REQUIRED COMPONENTS
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   nodelet
   ff_util

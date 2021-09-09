@@ -147,7 +147,7 @@ foreach(filename
 endforeach()
 
 # output catkin version for debugging
-_catkin_package_xml(${CMAKE_BINARY_DIR}/catkin/catkin_generated/version DIRECTORY ${catkin_EXTRAS_DIR}/..)
+# _catkin_package_xml(${CMAKE_BINARY_DIR}/catkin/catkin_generated/version DIRECTORY ${catkin_EXTRAS_DIR}/..)
 #message(STATUS "catkin ${catkin_VERSION}")
 # ensure that no current package name is set
 unset(_CATKIN_CURRENT_PACKAGE)

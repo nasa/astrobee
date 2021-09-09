@@ -18,10 +18,12 @@
 cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(executive)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   ff_msgs
   ff_hw_msgs
@@ -35,16 +37,8 @@ find_package(cmake_modules REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 # Find jsoncpp
-find_package(jsoncpp REQUIRED)
-find_path(
-  JSONCPP_INCLUDE_DIR 
-  NAMES jsoncpp/json/json.h json/json.h
-  DOC "jsoncpp include dir"
-)
-if (EXISTS "${JSONCPP_INCLUDE_DIR}/jsoncpp/json/json.h" )
-  set (JSONCPP_INCLUDE_DIR "${JSONCPP_INCLUDE_DIR}/jsoncpp")
-endif ()
-
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(JsonCpp REQUIRED)
 
 catkin_package(
   LIBRARIES
@@ -140,9 +134,14 @@ endif()
 ## Install ##
 #############
 
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
-
-install(DIRECTORY config/ DESTINATION config)

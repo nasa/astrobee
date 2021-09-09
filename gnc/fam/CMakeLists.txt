@@ -18,10 +18,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(fam)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+## Find catkin macros and libraries
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   nodelet
   ff_msgs
@@ -66,13 +68,16 @@ add_library(fam
 add_dependencies(fam ${catkin_EXPORTED_TARGETS})
 target_link_libraries(fam ${catkin_LIBRARIES})
 
-# create_library(TARGET fam
-#   LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions ff_common config_reader ff_nodelet
-#   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-#   DEPS ff_msgs ff_hw_msgs)
 #############
 ## Install ##
 #############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark launch files for installation
 install(DIRECTORY launch/

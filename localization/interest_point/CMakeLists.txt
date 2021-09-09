@@ -18,10 +18,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(interest_point)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
   roscpp
 )
 
@@ -48,11 +49,16 @@ if (${OpenCV_VERSION} MATCHES "3.3.1")
     endif()
   endforeach(__cvcomponent)
 endif()
+if (USE_CTC)
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set(OpenCV_LIBS ${OpenCV_LIBS} "${OpenCV_INSTALL_PATH}/lib/arm-linux-gnueabihf/lib${__cvcomponent}3.so")
+  endforeach(__cvcomponent)
+endif (USE_CTC)
 set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES interest_point
+  LIBRARIES interest_point  ${OpenCV_LIBRARIES}
   CATKIN_DEPENDS
 #  DEPENDS system_lib
 )
@@ -78,7 +84,7 @@ add_library(interest_point
   src/matching.cc
 )
 add_dependencies(interest_point ${catkin_EXPORTED_TARGETS})
-target_link_libraries(interest_point ${catkin_LIBRARIES})
+target_link_libraries(interest_point ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 if(CATKIN_ENABLE_TESTING)
@@ -93,3 +99,21 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif()
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
