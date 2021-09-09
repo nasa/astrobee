@@ -34,8 +34,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "ArmStateSupport.h"
-#include "AstrobeeConstants.h"
+#include "dds_msgs/ArmStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
 
 namespace ff {
 

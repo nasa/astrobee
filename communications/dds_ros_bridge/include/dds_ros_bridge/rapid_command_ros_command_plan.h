@@ -33,7 +33,7 @@
 #include "ff_msgs/CommandArg.h"
 #include "ff_msgs/CommandStamped.h"
 
-#include "AstrobeeCommandConstants.h"
+#include "dds_msgs/AstrobeeCommandConstants.h"
 
 #include "knDds/DdsTypedSupplier.h"
 

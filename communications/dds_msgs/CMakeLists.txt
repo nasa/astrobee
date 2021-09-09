@@ -73,8 +73,6 @@ set(LIB_NAME "rapidExtAstrobee")
 
 include(CreateDdsMsgTargets)
 
-message("SORACORE_IDL_DIR ${SORACORE_IDL_DIR}")
-
 set(EXTRA_RTIDDS_IDL_ARGS -I${SORACORE_IDL_DIR}/rapidDds)
 create_dds_msg_targets(
   NAME ${LIB_NAME}
@@ -98,7 +96,6 @@ target_include_directories(${LIB_NAME} PUBLIC
 ## Install ##
 #############
 
-
 # Mark libraries for installation
 install(TARGETS ${LIB_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -108,8 +105,6 @@ install(TARGETS ${LIB_NAME}
 
 install(FILES ${rapidExtAstrobee_GENERATED_HEADERS}
         DESTINATION include/${LIB_NAME})
-
-message("rapidExtAstrobee_GENERATED_HEADERS ${rapidExtAstrobee_GENERATED_HEADERS}")
 
 # Mark cpp header files for installation
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
