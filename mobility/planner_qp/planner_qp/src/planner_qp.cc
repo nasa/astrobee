@@ -27,6 +27,7 @@
 #include <pluginlib/class_list_macros.h>
 
 // For the planner implementation API
+#include <decomp_util/ellipse_decomp.h>
 #include <choreographer/planner.h>
 
 // Keepout zones for the planner
@@ -36,9 +37,6 @@
 #include <traj_opt_basic/types.h>
 #include <traj_opt_pro/nonlinear_trajectory.h>
 #include <traj_opt_ros/ros_bridge.h>
-
-#include <decomp_util/ellipse_decomp.h>
-#include <jps3d/planner/jps_3d_util.h>
 
 #include <mapper/point_cloud.h>
 #include <pcl/point_types.h>
