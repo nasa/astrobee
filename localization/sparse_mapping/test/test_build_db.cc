@@ -132,3 +132,9 @@ void RunWithDB(std::string const& detector_name) {
 TEST(build_db_dbow2_orgbrisk, write_descriptors_build_db) {
   RunWithDB("ORGBRISK");
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char **argv){
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

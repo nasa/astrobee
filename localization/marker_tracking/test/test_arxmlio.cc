@@ -49,3 +49,9 @@ TEST(AR_XML_IO, Reading) {
   EXPECT_NEAR(-0.993, ar_tags[29].row(BL)[0], 1e-3);
   EXPECT_NEAR(-0.824, ar_tags[29].row(BL)[2], 1e-3);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

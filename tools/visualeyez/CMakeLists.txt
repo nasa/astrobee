@@ -75,7 +75,7 @@ add_library(visualeyez
   src/visualeyez_server.cc
 )
 add_dependencies(visualeyez ${catkin_EXPORTED_TARGETS})
-target_link_libraries(visualeyez ${catkin_LIBRARIES})
+target_link_libraries(visualeyez ${CERES_LIBRARIES} ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: visualeyez_tool
 add_executable(visualeyez_tool tools/visualeyez_tool.cc)

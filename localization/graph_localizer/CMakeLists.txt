@@ -42,6 +42,30 @@ find_package(catkin2 REQUIRED COMPONENTS
   msg_conversions
 )
 
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+if (USE_CTC)
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set(OpenCV_LIBS ${OpenCV_LIBS} "${OpenCV_INSTALL_PATH}/lib/arm-linux-gnueabihf/lib${__cvcomponent}3.so")
+  endforeach(__cvcomponent)
+endif (USE_CTC)
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
@@ -78,7 +102,7 @@ add_library(${PROJECT_NAME}
   ${cc_files}
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
 
 if(CATKIN_ENABLE_TESTING)
@@ -88,49 +112,49 @@ if(CATKIN_ENABLE_TESTING)
     test/test_rotation_factor_adder.cc
   )
   target_link_libraries(test_rotation_factor_adder
-    graph_localizer gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
   add_rostest_gtest(test_rotation_factor
     test/test_rotation_factor.test
     test/test_rotation_factor.cc
   )
   target_link_libraries(test_rotation_factor
-    graph_localizer gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
   add_rostest_gtest(test_point_to_line_factor
     test/test_point_to_line_factor.test
     test/test_point_to_line_factor.cc
   )
   target_link_libraries(test_point_to_line_factor
-    graph_localizer gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
   add_rostest_gtest(test_point_to_line_segment_factor
     test/test_point_to_line_segment_factor.test
     test/test_point_to_line_segment_factor.cc
   )
   target_link_libraries(test_point_to_line_segment_factor
-    graph_localizer gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
   add_rostest_gtest(test_point_to_plane_factor
     test/test_point_to_plane_factor.test
     test/test_point_to_plane_factor.cc
   )
   target_link_libraries(test_point_to_plane_factor
-    graph_localizer localization_measurements gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
   add_rostest_gtest(test_point_to_handrail_endpoint_factor
     test/test_point_to_handrail_endpoint_factor.test
     test/test_point_to_handrail_endpoint_factor.cc
   )
   target_link_libraries(test_point_to_handrail_endpoint_factor
-    graph_localizer gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
   add_rostest_gtest(test_silu
     test/test_silu.test
     test/test_silu.cc
   )
   target_link_libraries(test_silu
-    graph_localizer gtsam
+    graph_localizer gtsam ${catkin_LIBRARIES} glog
   )
 endif()
 

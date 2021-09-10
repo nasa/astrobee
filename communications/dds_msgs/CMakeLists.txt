@@ -41,7 +41,7 @@ find_package(RtiDds REQUIRED)
 find_package(Soracore REQUIRED)
 
 catkin_package(
-  INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
+  INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/..
   LIBRARIES
     rapidExtAstrobee
 )
@@ -64,10 +64,6 @@ file(GLOB ASTROBEE_IDL_FILES
   "idl/*.idl")
 file(COPY ${ASTROBEE_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-file(GLOB SORACORE_IDL_FILES
-  "${SORACORE_IDL_DIR}/rapidDds/*.idl")
-file(COPY ${SORACORE_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
 set(LIB_NAME "rapidExtAstrobee")
 
 include(CreateDdsMsgTargets)
@@ -76,7 +72,7 @@ set(EXTRA_RTIDDS_IDL_ARGS -I${SORACORE_IDL_DIR}/rapidDds)
 create_dds_msg_targets(
   NAME ${LIB_NAME}
   DIR ${CMAKE_CURRENT_BINARY_DIR}
-  INCLUDES "-I${CMAKE_SOURCE_DIR}/rapidDds")
+  INCLUDES "-I${SORACORE_IDL_DIR}/rapidDds")
 
 add_library(${LIB_NAME} ${rapidExtAstrobee_GENERATED})
 target_link_libraries(${LIB_NAME}

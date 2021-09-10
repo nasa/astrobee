@@ -68,7 +68,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_thread.cc
   )
   target_link_libraries(test_thread
-    ${catkin_LIBRARIES} glog
+    ff_common
   )
 
 endif()

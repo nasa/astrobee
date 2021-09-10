@@ -67,7 +67,7 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_init_sys_monitor
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
   # System monitor tester
   add_rostest_gtest(test_sys_monitor
@@ -76,7 +76,7 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_sys_monitor
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
 endif()
 

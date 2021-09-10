@@ -84,8 +84,7 @@ add_library(interest_point
   src/matching.cc
 )
 add_dependencies(interest_point ${catkin_EXPORTED_TARGETS})
-target_link_libraries(interest_point ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
+target_link_libraries(interest_point ${OPENMVG_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -95,7 +94,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_matching.cc
   )
   target_link_libraries(test_matching
-    interest_point
+    interest_point glog
   )
 
 endif()

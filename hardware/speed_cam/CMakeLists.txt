@@ -78,7 +78,7 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_init_speed_cam
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
 endif()
 

@@ -74,7 +74,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_init_choreographer.cc
   )
   target_link_libraries(test_init_choreographer
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
   if(ENABLE_INTEGRATION_TESTING)
     # Choreographer test obstacles
@@ -84,7 +84,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_obstacle
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
 
     # Choreographer test zones keepin
@@ -94,7 +94,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_zones_keepin
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
 
     # Choreographer test zones keepout
@@ -104,7 +104,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_zones_keepout
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
 
     # Choreographer test zones nominal
@@ -114,7 +114,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_zones_nominal
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
   endif()
 endif()

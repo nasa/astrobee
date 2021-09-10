@@ -58,3 +58,9 @@ TEST(MarkerDetector, ConfigLoader) {
   EXPECT_NEAR(diag1(1), diag2(1), 1E-2);
   EXPECT_NEAR(diag1(2), diag2(2), 1E-2);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

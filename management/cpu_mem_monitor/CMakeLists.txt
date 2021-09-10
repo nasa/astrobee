@@ -63,7 +63,7 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_init_llp_cpu_mem_monitor
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
   # mlp CPU monitor initialization fault tester
   add_rostest_gtest(test_init_mlp_cpu_mem_monitor
@@ -72,7 +72,7 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_init_mlp_cpu_mem_monitor
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
 
 endif()

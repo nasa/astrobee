@@ -196,7 +196,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_build_db.cc
   )
   target_link_libraries(test_build_db
-    sparse_mapping
+    sparse_mapping glog
   )
 
   add_rostest_gtest(test_nvm_fileio
@@ -228,7 +228,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_sparse_map.cc
   )
   target_link_libraries(test_sparse_map
-    sparse_mapping
+    sparse_mapping glog
   )
 
 endif()
