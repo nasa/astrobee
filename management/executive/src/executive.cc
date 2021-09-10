@@ -1171,19 +1171,13 @@ bool Executive::ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv) {
   return true;
 }
 
-// Functions used to set variables that are used to configure mobility before a
+// Function used to set variables that are used to configure mobility before a
 // move or execute
-bool Executive::ConfigureMobility(std::string const& cmd_id) {
-  bool successful = true;
-
-  // Initialize config clients if they haven't been initialized
+bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
+  // Initialize choreographer config client if it hasn't been initialized
   if (!choreographer_cfg_) {
     choreographer_cfg_ =
               std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
-  }
-
-  if (!mapper_cfg_) {
-    mapper_cfg_ = std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
   }
 
   // Set values for configuring, these values will persist until changed
@@ -1207,93 +1201,40 @@ bool Executive::ConfigureMobility(std::string const& cmd_id) {
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   // This function is not used for the first segment of a plan so always disable
   // move to start
-  choreographer_cfg_->Set<bool>("enable_bootstrapping", false);
-  choreographer_cfg_->Set<bool>("enable_replanning",
-                                              agent_state_.replanning_enabled);
-
-  // Mapper
-  mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
-
-  std::string err_msg = "";
-
-  // Reconfigure choreographer, mapper
-  if (!choreographer_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg = "Couldn't configure the mobilty::choreographer node! ";
-  }
-
-  if (!mapper_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg += "Couldn't configure the mobility::mapper node!";
-  }
-
-  // Ack error
-  if (!successful) {
-    NODELET_ERROR("%s", err_msg.c_str());
-    state_->AckCmd(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
-  }
-
-  return successful;
-}
-
-bool Executive::ConfigureMobility(bool move_to_start,
-                                  std::string& err_msg) {
-  bool successful = true;
-
-  // TODO(Katie) Change when Ted changes the sequencer
-
-  // Initialize config clients if they haven't been initialized
-  if (!choreographer_cfg_) {
-    choreographer_cfg_ =
-              std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
-  }
-
-  if (!mapper_cfg_) {
-    mapper_cfg_ =
-                  std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
-  }
-
-  // Set values for configuring, these values will persist until changed
-  // Choreographer
-  choreographer_cfg_->Set<double>("desired_vel",
-                                          agent_state_.target_linear_velocity);
-  choreographer_cfg_->Set<double>("desired_accel",
-                                          agent_state_.target_linear_accel);
-  choreographer_cfg_->Set<double>("desired_omega",
-                                          agent_state_.target_angular_velocity);
-  choreographer_cfg_->Set<double>("desired_alpha",
-                                          agent_state_.target_angular_accel);
-  choreographer_cfg_->Set<bool>("enable_faceforward",
-                                              !agent_state_.holonomic_enabled);
-  choreographer_cfg_->Set<bool>("enable_collision_checking",
-                                                  agent_state_.check_obstacles);
-  choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
-  choreographer_cfg_->Set<bool>("enable_timesync", false);
-  choreographer_cfg_->Set<bool>("enable_immediate",
-                                                agent_state_.immediate_enabled);
-  choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
   choreographer_cfg_->Set<bool>("enable_replanning",
                                               agent_state_.replanning_enabled);
 
-  // Mapper
-  mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
-
-  // Clear err_msg
-  err_msg = "";
-
-  // Reconfigure choreographer, planner, mapper
+  // Reconfigure choreographer
   if (!choreographer_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg = "Couldn't configure the mobilty::choreographer node! ";
+    err_msg = "Couldn't configure the choreographer!";
+    return false;
   }
 
-  if (!mapper_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg += "Couldn't configure the mobility::mapper node!";
+  // Set the collision distance in the mapper
+  ff_msgs::SetFloat collision_distance_srv;
+  collision_distance_srv.request.data = agent_state_.collision_distance;
+
+  // Check to make sure the service is valid and running
+  // Don't use the check service exists function since we don't want to
+  // ack if we are executing a plan
+  if (!set_collision_distance_client_.exists()) {
+    err_msg = "Set collision distance service isn't running! ";
+    err_msg += "Node may have died!";
+    return false;
   }
 
-  return successful;
+  if (!set_collision_distance_client_.call(collision_distance_srv)) {
+    err_msg = "Set collision distance service returned false.";
+    return false;
+  }
+
+  if (!collision_distance_srv.response.success) {
+    err_msg = "Set collision distance service was not successful.";
+    return false;
+  }
+
+  return true;
 }
 
 // Used to check the mobility state for commands that can only be executed when
@@ -1329,7 +1270,6 @@ bool Executive::FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd) {
   }
   return false;
 }
-
 
 bool Executive::LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
   bool load = true;
@@ -3773,6 +3713,9 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   unload_load_nodelet_client_ = nh_.serviceClient<ff_msgs::UnloadLoadNodelet>(
                             SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET);
+
+  set_collision_distance_client_ = nh_.serviceClient<ff_msgs::SetFloat>(
+                                    SERVICE_MOBILITY_SET_COLLISION_DISTANCE);
 
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order

@@ -4,7 +4,11 @@
 # but it doesn't copy or build the entire code.
 # You must set the docker context to be the repository root directory
 
-FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu20.04
+ARG UBUNTU_VERSION=16.04
+FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu$UBUNTU_VERSION
+
+ARG ROS_VERSION=kinetic
+ARG PYTHON=''
 
 # try to suppress certain warnings during apt-get calls
 ARG DEBIAN_FRONTEND=noninteractive
@@ -14,17 +18,17 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt-get update \
   && apt-get install -y apt-utils 2>&1 | grep -v "debconf: delaying package configuration, since apt-utils is not installed" \
   && apt-get install -y \
-    build-essential \
-    git \
-    lsb-release \
-    sudo \
-    wget \
+  build-essential \
+  git \
+  lsb-release \
+  sudo \
+  wget \
   && rm -rf /var/lib/apt/lists/*
 
 # suppress detached head warnings later
 RUN git config --global advice.detachedHead false
 
-# Install ROS Noetic----------------------------------------------------------------
+# Install ROS --------------------------------------------------------------------
 COPY ./scripts/setup/*.sh /setup/astrobee/
 
 # this command is expected to have output on stderr, so redirect to suppress warning
@@ -34,8 +38,8 @@ RUN apt-get update \
   && apt-get install -y \
   debhelper \
   libtinyxml-dev \
-  ros-noetic-desktop \
-  python3-rosdep \
+  ros-${ROS_VERSION}-desktop \
+  python${PYTHON}-rosdep \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Astrobee----------------------------------------------------------------
@@ -54,14 +58,14 @@ RUN /setup/astrobee/install_desktop_packages.sh \
 #Add new sudo user
 ENV USERNAME astrobee
 RUN useradd -m $USERNAME && \
-        echo "$USERNAME:$USERNAME" | chpasswd && \
-        usermod --shell /bin/bash $USERNAME && \
-        usermod -aG sudo $USERNAME && \
-        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
-        chmod 0440 /etc/sudoers.d/$USERNAME && \
-        # Replace 1000 with your user/group id
-        usermod  --uid 1000 $USERNAME && \
-        groupmod --gid 1000 $USERNAME
+  echo "$USERNAME:$USERNAME" | chpasswd && \
+  usermod --shell /bin/bash $USERNAME && \
+  usermod -aG sudo $USERNAME && \
+  echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
+  chmod 0440 /etc/sudoers.d/$USERNAME && \
+  # Replace 1000 with your user/group id
+  usermod  --uid 1000 $USERNAME && \
+  groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
 RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/noetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \

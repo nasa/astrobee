@@ -43,7 +43,7 @@ The planner has adjustable parameters which can affect the optimizer's performan
 
 * `sample_rate` - The optimization uses a continuous trajectory representation which is sub-sampled at this rate before being sent to the choreographer.
 
-* `robot_radius` - How large the robot's center must stay away from obstacles, increase this to create a trajectory further away from walls
+* `planner_distance` - Additional distance that the planner should stay away from occupied areas. The occupied areas are defined by the zones and obstacles inflated using the robot radius plus the collision distance. The minimum planner distance is set to the map resolution because otherwise interpolation and upsampling of the trajectory points bordering the occupied areas will generate points inside the occupied areas. Increase this to create a trajectory further away from walls.
 
 * `two_d` - Force the z coordinate of the goal to be the same as the start.  (Mainly for use on the granite table)
 

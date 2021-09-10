@@ -10,9 +10,9 @@ on a host machine, and make sure that you can checkout and build code.
 *Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
 
-*Note: Preferably install Ubuntu 16.04. At this time we do not officially support
-any other operating system or Ubuntu version. Experimental instructions steps for 
-Ubuntu 18 installation are included*
+*Note: Preferably install Ubuntu 16.04. These instructions are also valid for
+Ubuntu 18.04 and 20.04, however at this time we do not officially support
+any other operating system or Ubuntu version.*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
 support running Astrobee Robot Software on 32-bit systems.*

@@ -23,7 +23,7 @@
 namespace mapper {
 
 // Update resolution of the map
-bool MapperNodelet::UpdateResolution(ff_msgs::SetFloat::Request &req,
+bool MapperNodelet::SetResolution(ff_msgs::SetFloat::Request &req,
                                      ff_msgs::SetFloat::Response &res) {
   mutexes_.octomap.lock();
   globals_.octomap.SetResolution(req.data);
@@ -31,22 +31,42 @@ bool MapperNodelet::UpdateResolution(ff_msgs::SetFloat::Request &req,
   res.success = true;
   return true;
 }
-
-// Update map memory time
-bool MapperNodelet::UpdateMemoryTime(ff_msgs::SetFloat::Request &req,
-                                     ff_msgs::SetFloat::Response &res) {
-  mutexes_.octomap.lock();
-  globals_.octomap.SetMemory(req.data);
-  mutexes_.octomap.unlock();
+// Update resolution of the map
+bool MapperNodelet::GetResolution(ff_msgs::GetFloat::Request &req,
+                                     ff_msgs::GetFloat::Response &res) {
+  res.data = globals_.octomap.GetResolution();
   res.success = true;
   return true;
 }
 
-bool MapperNodelet::MapInflation(ff_msgs::SetFloat::Request &req,
+// Update map memory time
+bool MapperNodelet::SetMemoryTime(ff_msgs::SetFloat::Request &req,
+                                     ff_msgs::SetFloat::Response &res) {
+  mutexes_.octomap.lock();
+  globals_.octomap.SetMemoryTime(req.data);
+  mutexes_.octomap.unlock();
+  res.success = true;
+  return true;
+}
+// Update map memory time
+bool MapperNodelet::GetMemoryTime(ff_msgs::GetFloat::Request &req,
+                                     ff_msgs::GetFloat::Response &res) {
+  res.data = globals_.octomap.GetMemoryTime();
+  res.success = true;
+  return true;
+}
+
+bool MapperNodelet::SetCollisionDistance(ff_msgs::SetFloat::Request &req,
                                  ff_msgs::SetFloat::Response &res) {
   mutexes_.octomap.lock();
-  globals_.octomap.SetMapInflation(req.data);
+  globals_.octomap.SetMapInflation(req.data + cfg_.Get<double>("robot_radius"));
   mutexes_.octomap.unlock();
+  res.success = true;
+  return true;
+}
+bool MapperNodelet::GetMapInflation(ff_msgs::GetFloat::Request &req,
+                                 ff_msgs::GetFloat::Response &res) {
+  res.data = globals_.octomap.GetMapInflation();
   res.success = true;
   return true;
 }

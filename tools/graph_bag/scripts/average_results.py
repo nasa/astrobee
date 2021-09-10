@@ -18,42 +18,48 @@
 # under the License.
 
 import argparse
-import pandas as pd
 import os
 
+import pandas as pd
 import utilities
 
 
 def combined_results(csv_files):
-  dataframes = [pd.read_csv(file) for file in csv_files]
-  if not dataframes:
-    print('Failed to create dataframes')
-    exit()
-  names = dataframes[0].iloc[:, 0]
-  combined_dataframes = pd.DataFrame(None, None, names)
-  for dataframe in dataframes:
-    trimmed_dataframe = pd.DataFrame(dataframe.transpose().values[1:2], columns=names)
-    combined_dataframes = combined_dataframes.append(trimmed_dataframe, ignore_index=True)
-  return combined_dataframes
+    dataframes = [pd.read_csv(file) for file in csv_files]
+    if not dataframes:
+        print("Failed to create dataframes")
+        exit()
+    names = dataframes[0].iloc[:, 0]
+    combined_dataframes = pd.DataFrame(None, None, names)
+    for dataframe in dataframes:
+        trimmed_dataframe = pd.DataFrame(
+            dataframe.transpose().values[1:2], columns=names
+        )
+        combined_dataframes = combined_dataframes.append(
+            trimmed_dataframe, ignore_index=True
+        )
+    return combined_dataframes
 
 
 def average_results(directory, csv_files):
-  combined_dataframes = combined_results(csv_files)
-  names = combined_dataframes.columns
-  mean_dataframe = pd.DataFrame()
-  for name in names:
-    mean_dataframe[name] = [combined_dataframes[name].mean()]
-  averaged_results_file = os.path.join(directory, 'averaged_results.csv')
-  mean_dataframe.to_csv(averaged_results_file, index=False)
+    combined_dataframes = combined_results(csv_files)
+    names = combined_dataframes.columns
+    mean_dataframe = pd.DataFrame()
+    for name in names:
+        mean_dataframe[name] = [combined_dataframes[name].mean()]
+    averaged_results_file = os.path.join(directory, "averaged_results.csv")
+    mean_dataframe.to_csv(averaged_results_file, index=False)
 
 
 # Averages results from all *stats.csv files in a directory (including subdirectories).
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('directory', help='Full path to directory where results files are.')
-  args = parser.parse_args()
-  results_csv_files = utilities.get_files(args.directory, '*stats.csv')
-  if not results_csv_files:
-    print('Failed to find stats.csv files')
-    exit()
-  average_results(args.directory, results_csv_files)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "directory", help="Full path to directory where results files are."
+    )
+    args = parser.parse_args()
+    results_csv_files = utilities.get_files(args.directory, "*stats.csv")
+    if not results_csv_files:
+        print("Failed to find stats.csv files")
+        exit()
+    average_results(args.directory, results_csv_files)

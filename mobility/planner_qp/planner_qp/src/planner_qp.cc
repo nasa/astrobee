@@ -27,6 +27,7 @@
 #include <pluginlib/class_list_macros.h>
 
 // For the planner implementation API
+#include <decomp_util/ellipse_decomp.h>
 #include <choreographer/planner.h>
 
 // Keepout zones for the planner
@@ -36,9 +37,6 @@
 #include <traj_opt_basic/types.h>
 #include <traj_opt_pro/nonlinear_trajectory.h>
 #include <traj_opt_ros/ros_bridge.h>
-
-#include <decomp_util/ellipse_decomp.h>
-#include <jps3d/planner/jps_3d_util.h>
 
 #include <mapper/point_cloud.h>
 #include <pcl/point_types.h>
@@ -866,8 +864,8 @@ class Planner : public planner::PlannerImplementation {
     }
   }
   bool load_map() {
-    // get points from mapper
-    float resf;
+    // Get obstacle map
+    float resf = 0.08;
     pcl::PointCloud<pcl::PointXYZ> points;
     if (!GetObstacleMap(&points, &resf)) {
       ROS_ERROR_STREAM("PlannerQP: Failed to get points from mapper service");
@@ -879,131 +877,44 @@ class Planner : public planner::PlannerImplementation {
     for (auto &p : points) {
       mapper_points_.push_back(Vec3f(p.x, p.y, p.z));
     }
+    // Declare keepout points
+    vec_Vec3f keepout_points_mapper = mapper_points_;
 
-    map_res_ = static_cast<double>(resf);
-
-    // get zones
-    std::vector<ff_msgs::Zone> zones;
-    bool got = GetZones(zones);
-    if (!got) return false;
-
-    Vec3f min, max, zmin, zmax;
-    min << 1000.0, 1000.0, 1000.0;
-    max << -1000.0, -1000.0, -1000.0;
-    uint num_keepin = 0;
-    for (auto &zone : zones) {
-      if (zone.type == ff_msgs::Zone::KEEPIN) {
-        zmin << zone.min.x, zone.min.y, zone.min.z;
-        zmax << zone.max.x, zone.max.y, zone.max.z;
-        for (int i = 0; i < 3; i++) {
-          min(i) = std::min(min(i), zmin(i));
-          min(i) = std::min(min(i), zmax(i));
-          max(i) = std::max(max(i), zmin(i));
-          max(i) = std::max(max(i), zmax(i));
-        }
-        num_keepin++;
-      }
-    }
-    if (num_keepin == 0) {
-      ROS_ERROR("Zero keepin zones!! Plan failed");
+    // Get zones map
+    std::vector<signed char> map;
+    Vec3f origin;
+    Vec3i dim;
+    if (!GetZonesMap(map, origin, dim, map_res_)) {
+      ROS_ERROR_STREAM("PlannerQP: Failed to get points from zones service");
       return false;
     }
-    min -= Vec3f::Ones() * map_res_ * 2.0;
-    max += Vec3f::Ones() * map_res_ * 2.0;
-
-    Vec3f origin = min;
-    Vec3f dimf = (max - min) / map_res_;
-    Vec3i dim(std::ceil(dimf(0)), std::ceil(dimf(1)), std::ceil(dimf(2)));
-    int num_cell = dim(0) * dim(1) * dim(2);
-
-    std::vector<signed char> map(num_cell, 0);
 
     jps_map_util_.reset(new JPS::VoxelMapUtil());
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
-    vec_Vec3f keepout_points_mapper = mapper_points_;
-    vec_Vec3f keepout_points_zones;
-
-    // add contour
-    for (auto &zone : zones) {
-      zmin << std::min(zone.min.x, zone.max.x),
-          std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-      zmax << std::max(zone.min.x, zone.max.x),
-          std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-      Vec3f tmp = Vec3f::Zero();
-      for (int i = 0; i < 3; i++) {
-        int j = (i + 1) % 3;
-        int k = (i + 2) % 3;
-        if (zone.type == ff_msgs::Zone::KEEPIN) {
-          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
-            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-              tmp(j) = zx;
-              tmp(k) = zy;
-              tmp(i) = zmin(i) - map_res_ * 1.001;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  100;
-              tmp(i) = zmax(i) + map_res_ * 1.001;
-              map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                  100;
-            }
-          }
-        }
-      }
-    }
-
-    for (auto &zone : zones) {
-      zmin << std::min(zone.min.x, zone.max.x),
-          std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-      zmax << std::max(zone.min.x, zone.max.x),
-          std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
-      // add points on surface
-      Vec3f tmp = Vec3f::Zero();
-      for (int i = 0; i < 3; i++) {
-        int j = (i + 1) % 3;
-        int k = (i + 2) % 3;
-        for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_)
-          for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-            if (zone.type == ff_msgs::Zone::KEEPOUT) {
-              tmp(j) = zx;
-              tmp(k) = zy;
-              tmp(i) = zmin(i);
-              keepout_points_zones.push_back(tmp);
-              tmp(i) = zmax(i);
-              keepout_points_zones.push_back(tmp);
-            } else {
-              for (auto zz = zmin(i); zz <= zmax(i); zz += map_res_) {
-                tmp(j) = zx;
-                tmp(k) = zy;
-                tmp(i) = zz;
-                map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                    0;
-              }
-            }
-          }
-      }
-      OUTPUT_DEBUG("PlannerQP: Keepout: " << zmin.transpose() << " to "
-                                          << zmax.transpose());
-    }
-    // reset map
-    jps_map_util_->setMap(origin, dim, map, map_res_);
-    // for(auto &p:keepout_points)
-    // OUTPUT_DEBUG("PlannerQP: Keepout point: " << p.transpose());
-    OUTPUT_DEBUG("PlannerQP: add3DPoints zones: " << keepout_points_zones.size()
-                                    << " mapper: " << keepout_points_mapper.size());
-    // dialate
-    double radius;
-    if (!cfg_.Get<double>("robot_radius", radius)) radius = 0.16;
-
+    // Set all remaining space as free
     jps_map_util_->freeUnKnown();
-    jps_map_util_->dilate(radius, radius);
-    OUTPUT_DEBUG("PlannerQP: Dilating");
-    jps_map_util_->dilating();
-    // keepout add point includes dilating
-    jps_map_util_->add3DPoints(keepout_points_zones);
-    jps_map_util_->add3DPoints(keepout_points_mapper);
+
+    // Add obstacle map points
+    jps_map_util_->dilate(map_res_ / 2, map_res_ / 2);    // sets dilating radius
+    jps_map_util_->add3DPoints(keepout_points_mapper);    // add keepout points from mapper
+
     OUTPUT_DEBUG("PlannerQP: Map origin " << origin.transpose() << " dim "
                                           << dim.transpose() << " resolution "
                                           << map_res_);
+
+    // inflate map for planning further from walls, the minimum inflation is the map resolution,
+    // this parameter is adjusted to generate trajectories further from the walls
+    double planner_distance = map_res_;
+    if (!cfg_.Get<double>("planner_distance", planner_distance)) {
+      ROS_ERROR_STREAM("planner_distance not defined");
+    }
+    if (planner_distance < map_res_)
+      planner_distance = map_res_;
+
+    jps_map_util_->dilate(planner_distance, planner_distance);    // sets dilating radius
+    jps_map_util_->dilating();                                    // dillate entire map
+
 
     jps_planner_.reset(new JPS::JPS3DUtil(false));
     jps_planner_->setMapUtil(jps_map_util_.get());

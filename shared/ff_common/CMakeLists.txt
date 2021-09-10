@@ -19,8 +19,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ff_common)
 
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
@@ -29,6 +29,8 @@ find_package(catkin2 REQUIRED COMPONENTS
   std_msgs
   nodelet
 )
+
+find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -45,6 +47,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 # Declare C++ libraries

@@ -98,7 +98,7 @@ add_message_files(
   Segment.msg
   SignalState.msg
   Status.msg
-  TimeDiffStamped.msg
+  TimeSyncStamped.msg
   VisualeyezCalibration.msg
   VisualeyezData.msg
   VisualeyezDataArray.msg
@@ -115,7 +115,9 @@ add_service_files(
   ConfigureCamera.srv
   EnableCamera.srv
   EnableRecording.srv
+  GetFloat.srv
   GetMap.srv
+  GetOccupancyMap.srv
   GetPipelines.srv
   GetZones.srv
   RegisterPlanner.srv

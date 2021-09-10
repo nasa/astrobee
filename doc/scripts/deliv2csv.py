@@ -1,11 +1,12 @@
-import ruamel.yaml as yaml
 from sys import stdout
 
-stream = file('deliverables.yaml', 'r')
+import ruamel.yaml as yaml
+
+stream = file("deliverables.yaml", "r")
 
 deliverables = yaml.round_trip_load(stream)
 
-ref_keys = deliverables[0].values()[0].keys()
+ref_keys = list(list(deliverables[0].values())[0].keys())
 
 stdout.write("devliverable")
 for k in ref_keys:
@@ -13,13 +14,13 @@ for k in ref_keys:
 stdout.write("\n")
 
 for d in deliverables:
-    stdout.write(d.keys()[0])
+    stdout.write(list(d.keys())[0])
     for k in ref_keys:
         s = ""
         try:
-            v = d.values()[0][k]
-            s = str(d.values()[0][k])
+            v = list(d.values())[0][k]
+            s = str(list(d.values())[0][k])
         except:
             pass
-        stdout.write("\t"+s)
+        stdout.write("\t" + s)
     stdout.write("\n")

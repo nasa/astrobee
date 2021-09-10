@@ -19,6 +19,7 @@
 #
 # Install the dependencies needed for the debians. Build and install flight
 # software debians.
+set -e
 
 DEBIAN_LOC=$(dirname "$(readlink -f "$0")")
 
