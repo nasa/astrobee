@@ -14,7 +14,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+if (USE_DDS)
 cmake_minimum_required(VERSION 2.8.3)
 project(smart_dock)
 
@@ -114,3 +114,5 @@ install(CODE "execute_process(
   OUTPUT_QUIET
   ERROR_QUIET
   )")
+
+endif (USE_DDS)

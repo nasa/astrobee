@@ -49,7 +49,6 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
 # Specify additional locations of header files
 include_directories(
   ${catkin_INCLUDE_DIRS}

@@ -22,40 +22,38 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declara
 # Qt Stuff, assume Qt5
 set(CMAKE_AUTOMOC ON)
 
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../../cmake")
+set(LIBRARIES traj_ros_bridge)
 
 # build rviz plugin if not cross compiling
 if(NOT USE_CTC)
-  message("bbbb")
   set(CMAKE_AUTOMOC ON)
-  find_package(catkin COMPONENTS rviz QUIET)
+  find_package(catkin2 COMPONENTS rviz QUIET)
   if(rviz_QT_VERSION)
     message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
     find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
     set(QT_LIBRARIES Qt5::Widgets)
+    set(LIBRARIES ${LIBRARIES} traj_opt_ros)
+    set(INCLUDES ${INCLUDES} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
   endif()
 endif()
 
 ## Find catkin macros and libraries
-SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   traj_opt_basic
   traj_opt_msgs
 )
 
-message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
-find_package(Qt5 REQUIRED Core Widgets)
-set(QT_LIBRARIES Qt5::Widgets)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-    traj_ros_bridge
-    # ${PROJECT_NAME}
+    ${LIBRARIES}
   CATKIN_DEPENDS
     roscpp
-  	traj_opt_basic
-  	traj_opt_msgs
+    traj_opt_basic
+    traj_opt_msgs
 )
 
 ###########
@@ -65,21 +63,20 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${QT_QTCORE_INCLUDE_DIR}
-  ${QT_QTGUI_INCLUDE_DIR}
+  ${INCLUDES}
 )
 
 add_library(traj_ros_bridge
-	src/ros_bridge.cpp)
+  src/ros_bridge.cpp)
 target_link_libraries(traj_ros_bridge ${catkin_LIBRARIES})
 
 if (NOT USE_CTC)
   if(rviz_QT_VERSION)
-  add_library(${PROJECT_NAME}
-  	src/trajectory_visual.cpp
-  	src/trajectory_display.cpp
-  	${MOC_FILES})
-  target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES} ${rviz_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
+    add_library(${PROJECT_NAME}
+      src/trajectory_visual.cpp
+      src/trajectory_display.cpp
+      ${MOC_FILES})
+    target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES} ${rviz_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
   endif()
 endif (NOT USE_CTC)
 
