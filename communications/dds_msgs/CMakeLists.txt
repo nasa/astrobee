@@ -14,13 +14,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-if (USE_DDS)
+
 cmake_minimum_required(VERSION 2.8.3)
 project(dds_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
+if (USE_DDS)
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
 )
@@ -107,5 +108,7 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   FILES_MATCHING PATTERN "dds_msgs/*.h"
   PATTERN ".svn" EXCLUDE
 )
-
+else (USE_DDS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
 endif (USE_DDS)

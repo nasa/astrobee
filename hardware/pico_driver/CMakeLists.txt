@@ -14,7 +14,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-if (ENABLE_PICOFLEXX)
 
 cmake_minimum_required(VERSION 2.8.3)
 project(pico_driver)
@@ -22,6 +21,7 @@ project(pico_driver)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
+if (ENABLE_PICOFLEXX)
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
@@ -93,4 +93,7 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
 
+else (ENABLE_PICOFLEXX)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
 endif (ENABLE_PICOFLEXX)

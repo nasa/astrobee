@@ -68,4 +68,7 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
   target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${QT_LIBRARIES})
 
+else (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
 endif (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
