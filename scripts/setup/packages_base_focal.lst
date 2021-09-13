@@ -73,6 +73,7 @@ ros-noetic-xmlrpcpp
 ros-noetic-mavlink
 ros-noetic-xacro
 ros-noetic-octomap
+ros-noetic-catkin
 libalvar2
 libdbow21
 libgtsam

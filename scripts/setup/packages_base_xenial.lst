@@ -73,6 +73,7 @@ ros-kinetic-opencv3
 ros-kinetic-mavlink
 ros-kinetic-xacro
 ros-kinetic-octomap
+ros-kinetic-catkin
 libalvar2
 libdbow21
 libgtsam
@@ -121,4 +122,3 @@ libsoracore-dev
 libmiro-dev
 libdecomputil-dev
 libjps3d-dev
-python-catkin-tools

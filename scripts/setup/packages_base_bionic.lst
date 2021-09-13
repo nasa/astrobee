@@ -75,6 +75,7 @@ ros-melodic-xmlrpcpp
 ros-melodic-mavlink
 ros-melodic-xacro
 ros-melodic-octomap
+ros-melodic-catkin
 libalvar2
 libdbow21
 libgtsam
