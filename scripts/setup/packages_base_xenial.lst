@@ -121,3 +121,4 @@ libsoracore-dev
 libmiro-dev
 libdecomputil-dev
 libjps3d-dev
+python-catkin-tools

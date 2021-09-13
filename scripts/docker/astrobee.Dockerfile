@@ -5,10 +5,15 @@
 ARG UBUNTU_VERSION=16.04
 FROM astrobee/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
 
+ARG ROS_VERSION=kinetic
+
 ENV USERNAME astrobee
 
-COPY . /src/astrobee
-RUN /src/astrobee/scripts/configure.sh -l -F -D -T -p /opt/astrobee -b /build/astrobee
-RUN cd /build/astrobee && make -j`nproc`
+COPY . /src/astrobee/src/
+RUN . /opt/ros/${ROS_VERSION}/setup.sh && \
+	cd /src/astrobee && \
+	catkin init && \
+	catkin config --cmake-args -DUSE_ROS=on && \
+	catkin build
 
 COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources

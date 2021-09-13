@@ -5,4 +5,4 @@ ARG UBUNTU_VERSION=16.04
 FROM astrobee/astrobee:latest-ubuntu${UBUNTU_VERSION}
 
 # Run tests
-RUN cd /build/astrobee && make -j`nproc` tests && make -j`nproc` test
+RUN cd /src/astrobee && catkin build --summarize --catkin-make-args run_tests
