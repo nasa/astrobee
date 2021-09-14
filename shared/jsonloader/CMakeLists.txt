@@ -16,7 +16,8 @@
 # under the License.
 
 cmake_minimum_required(VERSION 2.8.3)
-project(config_reader)
+project(jsonloader)
+
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -25,18 +26,18 @@ add_compile_options(-std=c++14)
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
+  std_msgs
   nodelet
-  ff_common
 )
 
-## System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(Luajit20 REQUIRED)
+find_package(JsonCpp REQUIRED)
 
 catkin_package(
-  INCLUDE_DIRS include ${LUAJIT_INCLUDE_DIR}
-  LIBRARIES config_reader ${LUAJIT_LIBRARY} ${LUAJIT_MATH_LIBRARY}
-  CATKIN_DEPENDS   roscpp nodelet ff_common
+  INCLUDE_DIRS include
+  LIBRARIES ff_common
+  CATKIN_DEPENDS roscpp std_msgs nodelet
 )
 
 ###########
@@ -48,16 +49,68 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${LUAJIT_INCLUDE_DIR}
+  ${EIGEN3_INCLUDE_DIR}
+  ${JSONCPP_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(config_reader
-  src/config_reader.cc
-  src/watch_files.cc
+add_library(jsonloader
+  src/command.cc
+  src/command_repo.cc
+  src/keepout.cc
+  src/keepoutio.cc
+  src/plan.cc
+  src/planio.cc
+  src/validation.cc
 )
-add_dependencies(config_reader ${catkin_EXPORTED_TARGETS})
-target_link_libraries(config_reader gflags glog ${catkin_LIBRARIES})
+add_dependencies(jsonloader ${catkin_EXPORTED_TARGETS})
+target_link_libraries(jsonloader gflags glog ${JSONCPP_LIBRARIES} ${catkin_LIBRARIES} )
+
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(test_command
+    test/test_command.test
+    test/test_command.cxx
+  )
+  target_link_libraries(test_command
+    jsonloader
+  )
+
+  add_rostest_gtest(test_keepout
+    test/test_keepout.test
+    test/test_keepout.cxx
+  )
+  target_link_libraries(test_keepout
+    jsonloader
+  )
+
+  add_rostest_gtest(test_keepoutio
+    test/test_keepoutio.test
+    test/test_keepoutio.cxx
+  )
+  target_link_libraries(test_keepoutio
+    jsonloader
+  )
+
+  add_rostest_gtest(test_plan
+    test/test_plan.test
+    test/test_plan.cxx
+  )
+  target_link_libraries(test_plan
+    jsonloader
+  )
+
+  add_rostest_gtest(test_validation
+    test/test_validation.test
+    test/test_validation.cxx
+  )
+  target_link_libraries(test_validation
+    jsonloader
+  )
+
+endif()
 
 #############
 ## Install ##
