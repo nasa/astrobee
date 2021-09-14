@@ -38,9 +38,8 @@ add_service_files(
 )
 
 generate_messages(
-  DEPENDENCIES sensor_msgs
+  DEPENDENCIES std_msgs sensor_msgs
 )
-
 
 catkin_package(
   LIBRARIES eps_sim
