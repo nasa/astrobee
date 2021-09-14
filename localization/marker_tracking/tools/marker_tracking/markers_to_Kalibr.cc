@@ -17,7 +17,7 @@
  */
 
 #include <config_reader/config_reader.h>
-#include <alvar/Marker.h>
+#include <marker_tracking/marker_detector.h>
 #include <yaml-cpp/yaml.h>
 
 #include <cstdio>

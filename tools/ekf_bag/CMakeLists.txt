@@ -30,25 +30,10 @@ find_package(catkin REQUIRED COMPONENTS
   localization_node
 )
 
-# Find OpenCV and fix a 3.3.1 bug
-find_package(OpenCV 3 REQUIRED)
-if (${OpenCV_VERSION} MATCHES "3.3.1")
-  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
-    set (__original_cvcomponent ${__cvcomponent})
-    if(NOT __cvcomponent MATCHES "^opencv_")
-      set(__cvcomponent opencv_${__cvcomponent})
-    endif()
-    if (TARGET ${__cvcomponent})
-      set_target_properties(${__cvcomponent} PROPERTIES
-          MAP_IMPORTED_CONFIG_DEBUG ""
-          MAP_IMPORTED_CONFIG_RELEASE ""
-          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
-          MAP_IMPORTED_CONFIG_MINSIZEREL ""
-      )
-    endif()
-  endforeach(__cvcomponent)
-endif()
-set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include

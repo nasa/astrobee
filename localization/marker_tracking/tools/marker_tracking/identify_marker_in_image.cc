@@ -47,7 +47,12 @@ int main(int argc, char** argv) {
   IplImage ipl_image;
   for (int i = 1; i < argc; i++) {
     std::string image_filename(argv[i]);
-    image = cv::imread(image_filename, CV_LOAD_IMAGE_GRAYSCALE);
+
+    #if (CV_VERSION_MAJOR >= 4)
+        image = cv::imread(image_filename, cv::IMREAD_GRAYSCALE);
+    #else
+        image = cv::imread(image_filename, CV_LOAD_IMAGE_GRAYSCALE);
+    #endif
     ipl_image = image;
     detector.Detect(&ipl_image, 0.08, 0.2);
     LOG(INFO) << image_filename << " : Detected " << detector.NumMarkers() << " markers.";

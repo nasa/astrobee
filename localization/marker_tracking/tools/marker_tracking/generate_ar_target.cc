@@ -16,7 +16,8 @@
  * under the License.
  */
 
-#include <alvar/Marker.h>
+#include <marker_tracking/marker_detector.h>
+
 #include <opencv2/core.hpp>
 
 #include <cstdio>

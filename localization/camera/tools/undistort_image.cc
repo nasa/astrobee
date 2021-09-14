@@ -256,7 +256,11 @@ int main(int argc, char ** argv) {
     cv::Mat bgr_image;
     if (FLAGS_save_bgr && undist_image.channels() == 1) {
       // Convert from grayscale to color if needed
-      cvtColor(undist_image, bgr_image, CV_GRAY2BGR);
+      #if (CV_VERSION_MAJOR >= 4)
+        cvtColor(undist_image, bgr_image, cv::COLOR_GRAY2BGR);
+      #else
+        cvtColor(undist_image, bgr_image, CV_GRAY2BGR);
+      #endif
       undist_image = bgr_image;
     }
     cv::imwrite(undist_file, undist_image);
