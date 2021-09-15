@@ -60,7 +60,7 @@ include_directories(
 add_library(eps_sim
   src/eps_sim.cc
 )
-add_dependencies(eps_sim ${catkin_EXPORTED_TARGETS})
+add_dependencies(eps_sim ${catkin_EXPORTED_TARGETS} eps_sim_generate_messages_cpp)
 target_link_libraries(eps_sim glog ${catkin_LIBRARIES})
 
 #############
