@@ -89,7 +89,7 @@ add_library(dds_ros_bridge
 )
 target_compile_definitions(dds_ros_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(dds_ros_bridge rapidIo ${catkin_LIBRARIES})
+target_link_libraries(dds_ros_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 
 
 add_library(astrobee_astrobee_bridge
@@ -97,7 +97,7 @@ add_library(astrobee_astrobee_bridge
 )
 target_compile_definitions(astrobee_astrobee_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(astrobee_astrobee_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(astrobee_astrobee_bridge Qt4::QtXml rapidIo ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${catkin_LIBRARIES})
+target_link_libraries(astrobee_astrobee_bridge Qt4::QtXml rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 
 
 #############
