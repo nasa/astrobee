@@ -5,4 +5,7 @@ ARG UBUNTU_VERSION=16.04
 FROM astrobee/astrobee:latest-ubuntu${UBUNTU_VERSION}
 
 # Run tests
-RUN cd /src/astrobee && catkin build --make-args tests && catkin build --make-args test && source devel/setup.bash && catkin_test_results build
+RUN cd /src/astrobee && catkin build --make-args tests \
+	&& catkin build --make-args test \
+	&& { . devel/setup.sh || true; } \
+	&& catkin_test_results build
