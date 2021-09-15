@@ -17,5 +17,5 @@
 
 <launch>
   <env name="DATA_DIR" value="$(find jsonloader)/test/data/" />
-  <test pkg="jsonloader" type="test_build_db" test-name="test_build_db" />
+  <test pkg="jsonloader" type="test_validation" test-name="test_validation" />
 </launch>

@@ -55,7 +55,11 @@ TEST(MarkerDetector, TestDetection) {
   IplImage ipl_image;
   std::vector<std::pair<int, int> >::iterator expected_it = expected_corner_loc.begin();
   for (std::string const& image_filename : image_filenames) {
-    image = cv::imread(data_dir + image_filename, CV_LOAD_IMAGE_GRAYSCALE);
+    #if (CV_VERSION_MAJOR >= 4)
+        image = cv::imread(data_dir + image_filename, cv::IMREAD_GRAYSCALE);
+    #else
+        image = cv::imread(data_dir + image_filename, CV_LOAD_IMAGE_GRAYSCALE);
+    #endif
     ipl_image = image;
     detector.Detect(&ipl_image, 0.08, 0.2);
     EXPECT_EQ(1u, detector.NumMarkers());
