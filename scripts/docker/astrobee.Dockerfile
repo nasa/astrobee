@@ -12,8 +12,7 @@ ENV USERNAME astrobee
 COPY . /src/astrobee/src/
 RUN . /opt/ros/${ROS_VERSION}/setup.sh && \
 	cd /src/astrobee && \
-	catkin init && \
-	catkin config --cmake-args -DUSE_ROS=on && \
+	./src/scripts/configure.sh -l -F -D -T \
 	catkin build
 
 COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources

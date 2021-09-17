@@ -25,7 +25,8 @@ if (USE_ROS)
 
 
   ## Find catkin macros and libraries
-  find_package(catkin REQUIRED COMPONENTS
+SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(catkin2 REQUIRED COMPONENTS
     roscpp
     nodelet
     ff_msgs
@@ -71,4 +72,7 @@ if (USE_ROS)
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
     PATTERN ".svn" EXCLUDE)
 
+else (USE_ROS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
 endif (USE_ROS)

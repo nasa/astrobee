@@ -18,6 +18,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(astrobee_gazebo)
 
+if (ENABLE_GAZEBO)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
@@ -351,3 +352,8 @@ install(DIRECTORY launch/
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper scripts/start_server scripts/common
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+else (ENABLE_GAZEBO)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
+endif (ENABLE_GAZEBO)

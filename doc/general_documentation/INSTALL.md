@@ -22,28 +22,21 @@ support running Astrobee Robot Software on 32-bit systems.*
 ### Checkout the project source code
 
 At this point you need to decide where you'd like to put the source code
-(`SOURCE_PATH`) on your machine:
+(`ASTROBEE_WS`) on your machine:
 
-    export SOURCE_PATH=$HOME/astrobee
+    export ASTROBEE_WS=$HOME/astrobee
 
 First, clone the flight software repository and media:
 
-    git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
-    pushd $SOURCE_PATH
+    git clone https://github.com/nasa/astrobee.git $ASTROBEE_WS/src
+    pushd $ASTROBEE_WS/src
     git submodule update --init --depth 1 description/media
     popd
 
 If you are planning to work with guest science code, you will also need the
-`astrobee_android` repository. You should checkout the repository in the same
-directory you checked out the source code in:
+`astrobee_android` repository. You should checkout the repository as a submodule:
 
-    export ANDROID_PATH="${SOURCE_PATH}_android"
-
-
-Clone the android repository:
-
-    git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
-
+    git submodule update --init --depth 1 submodules/android
 
 ### Dependencies
 
@@ -54,8 +47,8 @@ Next, install all required dependencies:
 *Note: Before running this please ensure that your system is completely updated
 by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
-    pushd $SOURCE_PATH
-    cd scripts/setup
+    pushd $ASTROBEE_WS
+    cd src/scripts/setup
     ./add_ros_repository.sh
     sudo apt-get update
     cd debians
@@ -100,14 +93,14 @@ that `configure.sh` is simply a wrapper around CMake that provides an easy way
 of turning on and off options. To see which options are supported, simply run
 `configure.sh -h`.
 
-    pushd $SOURCE_PATH
-    ./scripts/configure.sh -l -F -D
+    pushd $ASTROBEE_WS
+    ./src/scripts/configure.sh -l -F -D
     popd
 
 If you want to explicitly specify the build and install directories, use
 instead:
 
-    ./scripts/configure.sh -l -F -D -p $INSTALL_PATH -b $BUILD_PATH
+    ./src/scripts/configure.sh -l -F -D -p $INSTALL_PATH -b $BUILD_PATH
 
 *Note: Make sure you use the -F and -D flags. If these flags are not used, the
 code will not compile. The -F flag is used to turn off building the Picoflex.
@@ -123,8 +116,8 @@ machine, this might take in the order of tens of minutes to complete the first
 time round. Future builds will be faster, as only changes to the code are
 rebuilt, and not the entire code base.
 
-    pushd $BUILD_PATH
-    make -j2
+    pushd $ASTROBEE_WS
+    catkin build
     popd
 
 If you configured your virtual machine with more than the baseline resources,

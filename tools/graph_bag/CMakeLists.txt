@@ -24,7 +24,8 @@ if (USE_ROS)
   add_compile_options(-std=c++14)
 
   ## Find catkin macros and libraries
-  find_package(catkin REQUIRED COMPONENTS
+  SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
+  find_package(catkin2 REQUIRED COMPONENTS
     roscpp
     rosbag
     ff_util

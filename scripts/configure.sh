@@ -40,20 +40,30 @@ gcc_major=`gcc -dumpversion | cut -f-2 -d .`
 archname="${cpu_type}_${os_kernel}_gcc${gcc_major}"
 
 # prefix for installation path
-prefix=""
-
-# build name (if used, build under astrobee/build/$buildname)
-buildname=""
+install_path=""
 
 # configure nothing by default
 native_build=0
 armhf_build=0
 
-# by default DDS is activated
-dds_opt="-DUSE_DDS=on"
-
-# No extra options by default
-extra_opts=""
+# Define our options
+use_ccache=" -DUSE_CCACHE=on"                                  # Use ccache to speed up compiling, at the cost of optimization
+use_ctc=" -DUSE_CTC=off"                                       # Use cross compile toolchain for making ARM binaries
+use_ros=" -DUSE_ROS=on"                                        # Build the ROS-dependent functionality.
+use_dds=" -DUSE_DDS=on"                                        # Build the DDS-dependent functionality.
+use_static_libs=""                                             # Build using static libraries. Will use lots of drive space.
+test_coverage=""                                               # Build the code with code coverage options. Not compatible with USE_CTC.
+use_drivers=" -DUSE_DRIVERS=on"                                # Build the tools in the drivers directory.
+is_bamboo_build=""                                             # The code is being built under the bamboo CI system"
+enable_gprof=""                                                # Enable compling with support for profiling wih gprof (the GNU Profiler)."
+enable_google_prof=""                                          # Enable support for profiling wih pprof (the Google Profiler).
+enable_qp=" -DENABLE_QP=on"                                    # Enable support for the QP planner.
+enable_picoflexx=" -DENABLE_PICOFLEXX=on"                      # Enable support for building the PicoFlexx driver
+enable_gazebo=""                                               # Enable support for building the Gazebo simulator
+enable_vive=" -DENABLE_VIVE=on"                                # Enable support for building the Vive drivers
+enable_vive_solver=" -DENABLE_VIVE_SOLVER=on"                  # Enable support for building the Vive offline solver
+enable_integration_testing=" -DENABLE_INTEGRATION_TESTING=on"  # Build the integration tests if tests are active.
+build_loc_rviz_plugins=" -DBUILD_LOC_RVIZ_PLUGINS=on"          # Build the localization rviz plugins.
 
 # Force cache cleaning by default
 clean_cache=1
@@ -132,57 +142,57 @@ parse_args()
 {
     while getopts $optstring opt $@
     do
-	case $opt in
-	    "h") print_help
-		 exit 0
-		 ;;
-	    "?") print_usage
-		 exit 1
-		 ;;
-	    "l") native_build=1
-		 ;;
-	    "a") armhf_build=1
-		 ;;
-	    "p") prefix=$OPTARG
-		 ;;
-	    "b") build_path=$OPTARG
-		 ;;
-	    "B") build_type=$OPTARG
-		 ;;
-	    "c") clean_cache=1
-		 ;;
-	    "C") clean_cache=0
-		 ;;
-	    "d") dds_opt="-DUSE_DDS=on"
-		 ;;
-	    "D") dds_opt="-DUSE_DDS=off"
-		 ;;
-	    "r") extra_opts+=" -DENABLE_QP=on"
-		 ;;
-	    "R") extra_opts+=" -DENABLE_QP=off"
-		 ;;
-	    "f") extra_opts+=" -DENABLE_PICOFLEXX=on"
-		 ;;
-	    "F") extra_opts+=" -DENABLE_PICOFLEXX=off"
-		 ;;
-	    "k") extra_opts+=" -DUSE_CCACHE=on"
-		 ;;
-	    "K") extra_opts+=" -DUSE_CCACHE=off"
-		 ;;
-	    "v") extra_opts+=" -DENABLE_VIVE=on"
-		 ;;
-	    "V") extra_opts+=" -DENABLE_VIVE=off"
-		 ;;
-	    "t") extra_opts+=" -DENABLE_INTEGRATION_TESTING=on"
-		 ;;
-	    "T") extra_opts+=" -DENABLE_INTEGRATION_TESTING=off"
-		 ;;
-	    "g") debug_mode=1
-		 ;;
-	    *) print_usage
-	       exit 1
-	       ;;
-	esac
+    case $opt in
+        "h") print_help
+         exit 0
+         ;;
+        "?") print_usage
+         exit 1
+         ;;
+        "l") native_build=1
+         ;;
+        "a") armhf_build=1
+         ;;
+        "p") install_path=$OPTARG
+         ;;
+        "b") build_path=$OPTARG
+         ;;
+        "B") build_type=$OPTARG
+         ;;
+        "c") clean_cache=1
+         ;;
+        "C") clean_cache=0
+         ;;
+        "d") use_dds="-DUSE_DDS=on"
+         ;;
+        "D") use_dds="-DUSE_DDS=off"
+         ;;
+        "r") enable_qp=" -DENABLE_QP=on"
+         ;;
+        "R") enable_qp=" -DENABLE_QP=off"
+         ;;
+        "f") enable_picoflexx=" -DENABLE_PICOFLEXX=on"
+         ;;
+        "F") enable_picoflexx=" -DENABLE_PICOFLEXX=off"
+         ;;
+        "k") use_ccache=" -DUSE_CCACHE=on"
+         ;;
+        "K") use_ccache=" -DUSE_CCACHE=off"
+         ;;
+        "v") enable_vive=" -DENABLE_VIVE=on"
+         ;;
+        "V") enable_vive=" -DENABLE_VIVE=off"
+         ;;
+        "t") enable_int_testing=" -DENABLE_INTEGRATION_TESTING=on"
+         ;;
+        "T") enable_int_testing=" -DENABLE_INTEGRATION_TESTING=off"
+         ;;
+        "g") debug_mode=1
+         ;;
+        *) print_usage
+           exit 1
+           ;;
+    esac
     done
 }
 
@@ -197,104 +207,51 @@ canonicalize()
     freepath=$1
     os_name=`uname -s`
     case $os_name in
-	Linux)
-	    # just use readlink :-)
-	    canonical_path=`readlink -f $freepath`
-	    readl_ret=$?
-	    echo $canonical_path
-	    if [ $readl_ret == 1 ] ; then
-		return 1
-	    else
-		return 0
-	    fi
-	    ;;
-	Darwin | SunOS)
-	    # BSD systems do not support readlink :-(
-	    if [ -d $freepath ] ; then
-		# the argument is a directory
-		canonical_path=`cd $freepath && pwd -P`
-	    else
-		if [ -f $freepath ] ; then
-		    # the argument is a file
-		    freedir=`dirname $freepath`
-		    freefile=`basename $freepath`
-		    if [ -L $freepath ] ; then
-			canfile=`cd $freedir && stat -f "%Y" $freefile`
-		    else
-			canfile=$freefile
-		    fi
-		    candir=`cd $freedir && pwd -P`
-		    canonical_path="${candir}/${canfile}"
-		else
-		    # given path does not exsit
-		    # since readlink does not return any string for this
-		    # scenario, just lets do the same and return an error
-		    canonical_path=""
-		    return 1
-		fi
-	    fi
-	    echo $canonical_path
-	    return 0
-	    ;;
-	*)
-	    # echo platform not supported yet
-	    echo "/${os_name}/is/not/yet/supported/by/canonicalize"
-	    return 1
-	    ;;
-    esac
-}
-
-# function to use the cmake configure with the right arguments
-# arguments:
-#   1: build_path
-#   2: build_type
-#   3: install_path
-#   4: freeflyer_path
-#   5: clean_cache
-#   6-*: other options
-configure()
-{
-    local build_path=$1
-    shift
-    local build_type=$1
-    shift
-    local install_path=$1
-    shift
-    local ff_path=$1
-    shift
-    local clean_cache=$1
-    shift
-    local cmake_opts=$@
-
-    if [ $debug_mode == 1 ]; then
-	echo "build type: ${build_type}"
-	echo "build path: ${build_path}"
-	echo "install directory: ${install_path}"
-	echo
-    else
-	if [ "$install_path" != "none" ] ; then
-            if [ ! -d ${install_path} ] ; then
-		echo "Creating install directory: ${install_path}"
-		mkdir -p $install_path
+    Linux)
+        # just use readlink :-)
+        canonical_path=`readlink -f $freepath`
+        readl_ret=$?
+        echo $canonical_path
+        if [ $readl_ret == 1 ] ; then
+        return 1
+        else
+        return 0
+        fi
+        ;;
+    Darwin | SunOS)
+        # BSD systems do not support readlink :-(
+        if [ -d $freepath ] ; then
+        # the argument is a directory
+        canonical_path=`cd $freepath && pwd -P`
+        else
+        if [ -f $freepath ] ; then
+            # the argument is a file
+            freedir=`dirname $freepath`
+            freefile=`basename $freepath`
+            if [ -L $freepath ] ; then
+            canfile=`cd $freedir && stat -f "%Y" $freefile`
+            else
+            canfile=$freefile
             fi
-            full_install_path=`canonicalize $install_path`
-            install_opt="-DCMAKE_INSTALL_PREFIX=${full_install_path}"
-	fi
-
-	if [ ! -d ${build_path} ] ; then
-	    echo "Creating build directory: ${build_path}"
-            mkdir -p ${build_path}
-	fi
-	cd ${build_path}
-
-	if [ ${clean_cache} -eq 1 ] ; then
-            echo "Remove the CMake Cache for ${build_path}"
-            rm -f CMakeCache.txt
-	fi
-	cmd="cmake -DCMAKE_BUILD_TYPE=${build_type} ${install_opt} ${cmake_opts} ${ff_path}"
-        echo $cmd # to se what we are geting
-        $cmd 
-    fi
+            candir=`cd $freedir && pwd -P`
+            canonical_path="${candir}/${canfile}"
+        else
+            # given path does not exsit
+            # since readlink does not return any string for this
+            # scenario, just lets do the same and return an error
+            canonical_path=""
+            return 1
+        fi
+        fi
+        echo $canonical_path
+        return 0
+        ;;
+    *)
+        # echo platform not supported yet
+        echo "/${os_name}/is/not/yet/supported/by/canonicalize"
+        return 1
+        ;;
+    esac
 }
 
 # Start the real work here...
@@ -316,6 +273,11 @@ if [ $debug_mode == 1 ]; then
     echo
 fi
 
+extra_opts+=${use_ccache}${use_ros}${use_dds}${use_static_libs}${test_coverage}${use_drivers}
+extra_opts+=${is_bamboo_build}${enable_gprof}${enable_google_prof}${enable_qp}${enable_picoflexx}
+extra_opts+=${enable_vive}${enable_vive_solver}${enable_integration_testing}
+
+
 if [[ $native_build == 0 && $armhf_build == 0 ]] ; then
     echo "Nothing to configure (use -l or -a)..."
     echo "Use $scriptname -h for the full list of options"
@@ -325,29 +287,31 @@ fi
 if [[ $native_build == 1 && $armhf_build == 1 ]] ; then
     echo -n "Linux and ArmHF invoked simultanously:"
     echo " dropping any option -p and -b!"
-    prefix=""
+    install_path=""
     build_path=""
 fi
 
 if [ $native_build == 1 ] ; then
     echo "configuring for native linux..."
-    # Performance of the shared disk system is horrendous on Vagrant.
-    # So by default we build in the home directory that is Vagrant native.
-    # In addition, we do not create an install directory by default.
-    # Update: we are currently forced to provide an install prefix!
-    native_build_path=${build_path:-${HOME}/astrobee_build/native}
-    native_install_path=${prefix:-${HOME}/astrobee_install/native}
-    configure ${native_build_path} ${build_type:-RelWithDebInfo} \
-	      ${native_install_path} ${ff_path} ${clean_cache} \
-              ${dds_opt} ${extra_opts}
+    enable_gazebo=" -DENABLE_GAZEBO=on"
+    catkin profile add native
+    catkin profile set native
+    catkin config --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts}
 fi
 
 if [ $armhf_build == 1 ] ; then
     echo "configuring for armhf..."
-    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake -DUSE_CTC=true"
-    armhf_build_path=${build_path:-${HOME}/astrobee_build/armhf}
-    armhf_install_path=${prefix:-${HOME}/astrobee_install/armhf}
-    configure ${armhf_build_path} ${build_type:-Release} \
-	      ${armhf_install_path} ${ff_path} ${clean_cache} \
-              ${dds_opt} ${armhf_opts} ${extra_opts}
+    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake"
+    use_ctc=" -DUSE_CTC=on"
+    enable_gazebo=""
+    build_loc_rviz_plugins=""
+    catkin profile add armhf
+    catkin profile set armhf
+    catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
+        --build-space ${build_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/build} \
+        --install-space ${install_path:-$ARMHF_CHROOT_DIR/opt/astrobee} \
+        --devel-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/devel \
+        --log-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/logs \
+        --install \
+        --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts}
 fi
