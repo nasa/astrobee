@@ -48,7 +48,7 @@ class IntrinsicsCalibrator {
     // w^2 = 1 - (x^2 + y^2 + z^2)
     const T w_squared = 1.0 - compact_quaternion.squaredNorm();
     // Catch invalid quaternion
-    if (w_squared < 0.0) {
+    if (w_squared <= 0.0) {
       rotation = Eigen::Matrix<T, 3, 3>::Identity();
     } else {
       const Eigen::Quaternion<T> quaternion(ceres::sqrt(w_squared), compact_quaternion[0], compact_quaternion[1],
