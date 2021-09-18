@@ -50,10 +50,12 @@ depth_odometry::ImageCorrespondences LoadMatches(const std::string& match_file) 
   return depth_odometry::ImageCorrespondences(image_points, points_3d);
 }
 
-std::vector<depth_odometry::ImageCorrespondences> LoadAllMatches(const std::string& corners_directory) {
+std::vector<depth_odometry::ImageCorrespondences> LoadAllMatches(const std::string& corners_directory,
+                                                                 const int max_num_match_sets) {
   std::vector<std::string> corners_files;
   std::vector<depth_odometry::ImageCorrespondences> all_matches;
   ff_common::ListFiles(corners_directory, "txt", &corners_files);
+  int i = 0;
   for (const auto& corners_file : corners_files) {
     const auto& matches = LoadMatches(corners_file);
     if (matches.image_points.size() < 4) {
@@ -61,6 +63,7 @@ std::vector<depth_odometry::ImageCorrespondences> LoadAllMatches(const std::stri
       continue;
     }
     all_matches.emplace_back(matches);
+    if (++i > max_num_match_sets) break;
   }
   return all_matches;
 }
@@ -132,7 +135,7 @@ int main(int argc, char** argv) {
   depth_odometry::CalibratorParams params;
   LoadCalibratorParams(config, params);
 
-  const auto depth_matches = LoadAllMatches(corners_directory);
+  const auto depth_matches = LoadAllMatches(corners_directory, params.max_num_match_sets);
   LogError("num depth match sets: " << depth_matches.size());
   depth_odometry::IntrinsicsCalibrator calibrator(params);
   const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
