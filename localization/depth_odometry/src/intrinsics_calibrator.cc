@@ -103,6 +103,8 @@ void IntrinsicsCalibrator::Calibrate(const std::vector<ImageCorrespondences>& ma
     if (!camera_T_target) {
       LogError("Failed to get camera_T_target.");
       continue;
+    } else {
+      LogError("Got camera_T_target, adding parameter block and cost functions.");
     }
     camera_T_targets.emplace_back(VectorFromIsometry3d(*camera_T_target));
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);

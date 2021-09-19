@@ -163,9 +163,13 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   LogError("landmarks: " << target_landmarks.size() << ", observations: " << source_observations.size());
   std::vector<Eigen::Vector3d> inlier_target_landmarks;
   std::vector<Eigen::Vector2d> inlier_source_observations;
-  sparse_mapping::RansacEstimateCameraWithDistortion(target_landmarks, source_observations,
-                                                     params_.num_ransac_iterations, params_.max_inlier_tolerance, &cam_,
-                                                     &inlier_target_landmarks, &inlier_source_observations);
+  if (!sparse_mapping::RansacEstimateCameraWithDistortion(
+        target_landmarks, source_observations, params_.num_ransac_iterations, params_.max_inlier_tolerance, &cam_,
+        &inlier_target_landmarks, &inlier_source_observations)) {
+    LogError("ComputeRelativeTransform: Failed to get relative transform.");
+    return boost::none;
+  }
+
   LogError("num inliear obs: " << inlier_source_observations.size());
   if (static_cast<int>(inlier_source_observations.size()) < params_.min_num_inliers) {
     LogError("ComputeRelativeTransform: Too few inlier matches, num matches: "
@@ -242,8 +246,11 @@ void DepthImageAligner::CorrectLandmarks(const std::vector<Eigen::Vector2d>& obs
                                          std::vector<Eigen::Vector3d>& landmarks) {
   if (landmarks.size() < 4) return;
   std::vector<Eigen::Vector3d> inlier_landmarks;
-  sparse_mapping::RansacEstimateCameraWithDistortion(landmarks, observations, params_.num_ransac_iterations,
-                                                     params_.max_inlier_tolerance, &cam_, &inlier_landmarks);
+  if (!sparse_mapping::RansacEstimateCameraWithDistortion(landmarks, observations, params_.num_ransac_iterations,
+                                                          params_.max_inlier_tolerance, &cam_, &inlier_landmarks)) {
+    LogError("CorrectLandmarks: Failed to get relative transform.");
+    return;
+  }
   if (static_cast<int>(inlier_landmarks.size()) < params_.min_num_inliers) {
     LogError("CorrectLandmarks: Too few inlier matches, num matches: "
              << inlier_landmarks.size() << ", min num matches: " << params_.min_num_inliers << ".");

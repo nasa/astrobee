@@ -340,7 +340,7 @@ bool P3PWithDistortion(const std::vector<cv::Point3d> & landmarks, const std::ve
     distortion.at<double>(i, 0) = distortion_params[i];
   }
 
-  for (int i = 0; i < landmarks.size(); ++i){
+  /*for (int i = 0; i < landmarks.size(); ++i){
   cv::Mat zero_r(cv::Mat::eye(3, 3, cv::DataType<double>::type));
   cv::Mat zero_t(cv::Mat::zeros(3, 1, cv::DataType<double>::type));
   std::vector<cv::Point2d> projected_points;
@@ -348,16 +348,17 @@ bool P3PWithDistortion(const std::vector<cv::Point3d> & landmarks, const std::ve
   const auto& point_3d = landmarks[i];
   object_points.emplace_back(point_3d);
   cv::projectPoints(object_points, zero_r, zero_t, camera_matrix, distortion, projected_points);
-  // std::cout << "obs: " << observations[i] << std::endl;
-  // std::cout << "pro: " << projected_points[0] << std::endl;
+  std::cout << "obs: " << observations[i] << std::endl;
+  std::cout << "pro: " << projected_points[0] << std::endl;
   }
 
-  //std::cout << "intrinsics: " << camera_matrix << std::endl;
-  //std::cout << "distortion: " << distortion << std::endl;
+  std::cout << "intrinsics: " << camera_matrix << std::endl;
+  std::cout << "distortion: " << distortion << std::endl;*/
 
     bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, cv::SOLVEPNP_P3P);
-    if (!result)
+    if (!result) {
       return false;
+    }
   /* result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);
     if (!result)
       return false;*/
@@ -379,8 +380,8 @@ bool P3PIterWithDistortion(const std::vector<cv::Point3d> & landmarks, const std
     distortion.at<double>(i, 0) = distortion_params[i];
   }
 
-  std::cout << "intrinsics: " << camera_matrix << std::endl;
-  std::cout << "distortion: " << distortion << std::endl;
+  //std::cout << "intrinsics: " << camera_matrix << std::endl;
+  //std::cout << "distortion: " << distortion << std::endl;
 
    const bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);
     if (!result)
@@ -390,8 +391,6 @@ bool P3PIterWithDistortion(const std::vector<cv::Point3d> & landmarks, const std
     camera::RodriguesToRotation(Eigen::Vector3d(rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2)), rotation);
     return true;
 }
-
-
 
 size_t CountInliers(const std::vector<Eigen::Vector3d> & landmarks, const std::vector<Eigen::Vector2d> & observations,
                  const camera::CameraModel & camera, int tolerance, std::vector<size_t>* inliers) {
@@ -546,7 +545,7 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
   return 0;
 }
 
-int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & landmarks,
+bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & landmarks,
                          const std::vector<Eigen::Vector2d> & observations,
                          int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
                          std::vector<Eigen::Vector3d> * inlier_landmarks_out,
@@ -556,8 +555,9 @@ int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & land
   camera::CameraParameters params = camera_estimate->GetParameters();
 
   // Need the minimum number of observations
-  if (observations.size() < 4)
-    return 1;
+  if (observations.size() < 4) {
+    return false;
+  }
 
   // RANSAC to find the best camera with P3P
   std::vector<cv::Point3d> subset_landmarks;
@@ -598,8 +598,9 @@ int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & land
               << best_inliers << " inliers\n";
 
   // TODO(bcoltin): Return some sort of confidence?
-  if (best_inliers < FLAGS_num_min_localization_inliers)
-    return 2;
+  if (best_inliers < FLAGS_num_min_localization_inliers) {
+    return false;
+  }
 
   std::vector<size_t> inliers;
   CountInliersWithDistortion(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
@@ -618,16 +619,16 @@ int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & land
   }
 
 
- {
+ /*{
     bool result = P3PIterWithDistortion(cv_inlier_landmarks, cv_inlier_observations, params, best_rvec, best_tvec, &best_pos, &best_rotation);
-    if (!result) return 2;
+    if (!result) return false;
     Eigen::Affine3d cam_t_global;
     cam_t_global.setIdentity();
     cam_t_global.translate(best_pos);
     cam_t_global.rotate(best_rotation);
     camera::CameraModel guess(cam_t_global, camera_estimate->GetParameters());
     *camera_estimate = guess;
-  }
+  }*/
   /*ceres::Solver::Options options;
   options.linear_solver_type = ceres::ITERATIVE_SCHUR;
   options.num_threads = 1;  // it is no slower with only one thread
@@ -644,8 +645,9 @@ int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & land
   if (verbose)
     std::cout << "Number of inliers with refined camera: " << best_inliers << "\n";
 
-  if (best_inliers < FLAGS_num_min_localization_inliers)
-    return 2;
+  if (best_inliers < FLAGS_num_min_localization_inliers) {
+    return false;
+  }
 
   inlier_landmarks.clear();
   inlier_observations.clear();
@@ -676,8 +678,7 @@ int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & land
         std::cout << "result large norm inlier!!" << std::endl;
       }
   }
-
-  return 0;
+  return true;
 }
 
 // Given two sets of 3D points, find the rotation + translation + scale

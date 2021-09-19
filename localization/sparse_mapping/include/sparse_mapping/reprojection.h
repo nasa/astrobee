@@ -138,7 +138,7 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
                          std::vector<Eigen::Vector2d> * inlier_observations_out = NULL,
                          bool verbose = false);
 
-int RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & landmarks,
+bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & landmarks,
                          const std::vector<Eigen::Vector2d> & observations,
                          int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
                          std::vector<Eigen::Vector3d> * inlier_landmarks_out = NULL,
