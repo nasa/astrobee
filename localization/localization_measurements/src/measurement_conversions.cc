@@ -198,7 +198,7 @@ boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
       depth_cloud_with_intensities->points[index].x = image_t_point.x();
       depth_cloud_with_intensities->points[index].y = image_t_point.y();
       depth_cloud_with_intensities->points[index].z = image_t_point.z();
-      depth_cloud_with_intensities->points[index].intensity = static_cast<float>(intensities.at<ushort>(row, col));
+      depth_cloud_with_intensities->points[index].intensity = static_cast<float>(intensities.at<uint8_t>(row, col));
       ++index;
     }
   }
