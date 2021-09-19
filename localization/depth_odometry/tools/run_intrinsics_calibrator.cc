@@ -20,12 +20,16 @@
 #include <depth_odometry/image_correspondences.h>
 #include <ff_common/init.h>
 #include <ff_common/utils.h>
+#include <ff_msgs/DepthCorrespondences.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
 
 namespace po = boost::program_options;
 namespace lc = localization_common;
@@ -48,6 +52,37 @@ depth_odometry::ImageCorrespondences LoadMatches(const std::string& match_file) 
   }
 
   return depth_odometry::ImageCorrespondences(image_points, points_3d);
+}
+
+// TODO(rsoussan): unify with graph_bag, put this in common location
+bool string_ends_with(const std::string& str, const std::string& ending) {
+  if (str.length() >= ending.length()) {
+    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
+  } else {
+    return false;
+  }
+}
+
+std::vector<depth_odometry::ImageCorrespondences> LoadAllMatches(const rosbag::Bag& bag, const int max_num_match_sets) {
+  std::vector<std::string> topics;
+  topics.push_back(TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES);
+  topics.push_back(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES);
+  rosbag::View view(bag, rosbag::TopicQuery(topics));
+  std::vector<depth_odometry::ImageCorrespondences> all_matches;
+  for (const rosbag::MessageInstance msg : view) {
+    if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES)) {
+      const ff_msgs::DepthCorrespondencesConstPtr& correspondences_msg =
+        msg.instantiate<ff_msgs::DepthCorrespondences>();
+      std::vector<Eigen::Vector2d> image_points;
+      std::vector<Eigen::Vector3d> points_3d;
+      for (const auto& correspondence : correspondences_msg->correspondences) {
+        image_points.emplace_back(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point));
+        points_3d.emplace_back(mc::VectorFromMsg<Eigen::Vector3d>(correspondence.source_3d_point));
+      }
+      all_matches.emplace_back(depth_odometry::ImageCorrespondences(image_points, points_3d));
+    }
+  }
+  return all_matches;
 }
 
 std::vector<depth_odometry::ImageCorrespondences> LoadAllMatches(const std::string& corners_directory,
@@ -89,14 +124,16 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, depth_odometry::C
 int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
+  std::string bagfile;
+  std::string corners_directory;
   po::options_description desc("Calibrates depth camera parameters using correspondences from a bagfile.");
-  desc.add_options()("help", "produce help message")("corners-directory", po::value<std::string>()->required(),
-                                                     "Corners Directory")(
-    "config-path,c", po::value<std::string>()->required(), "Config path")(
+  desc.add_options()("help", "produce help message")("config-path,c", po::value<std::string>()->required(),
+                                                     "Config path")(
+    "corners-directory", po::value<std::string>(&corners_directory)->default_value(""), "Corners Directory")(
+    "bagfile", po::value<std::string>(&bagfile)->default_value(""), "Bagfile")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
-  p.add("corners-directory", 1);
   p.add("config-path", 1);
   po::variables_map vm;
   try {
@@ -112,17 +149,16 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  const std::string corners_directory = vm["corners-directory"].as<std::string>();
   const std::string config_path = vm["config-path"].as<std::string>();
+
+  if (bagfile.empty() && corners_directory.empty()) LogFatal("Need bagfile or corners directory.");
+  if (!bagfile.empty() && !corners_directory.empty())
+    LogFatal("Provided both bagfile and corners directory, can only use one.");
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
-
-  if (!boost::filesystem::is_directory(corners_directory)) {
-    LogFatal("Corners directory " << corners_directory << " not found.");
-  }
 
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
@@ -135,7 +171,20 @@ int main(int argc, char** argv) {
   depth_odometry::CalibratorParams params;
   LoadCalibratorParams(config, params);
 
-  const auto depth_matches = LoadAllMatches(corners_directory, params.max_num_match_sets);
+  std::vector<depth_odometry::ImageCorrespondences> depth_matches;
+  if (!corners_directory.empty()) {
+    if (!boost::filesystem::is_directory(corners_directory)) {
+      LogFatal("Corners directory " << corners_directory << " not found.");
+    }
+    depth_matches = LoadAllMatches(corners_directory, params.max_num_match_sets);
+  } else if (!bagfile.empty()) {
+    if (!boost::filesystem::exists(bagfile)) {
+      LogFatal("Bagfile " << bagfile << " not found.");
+    }
+
+    const rosbag::Bag bag(bagfile, rosbag::bagmode::Read);
+    depth_matches = LoadAllMatches(bag, params.max_num_match_sets);
+  }
   LogError("num depth match sets: " << depth_matches.size());
   depth_odometry::IntrinsicsCalibrator calibrator(params);
   const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
