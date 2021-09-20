@@ -17,7 +17,7 @@ export EXTRA_CMAKE_OPTS
 export LIB_SEARCH_OPTIONS
 
 ifeq ($(DEB_HOST_ARCH),armhf)
-  export EXTRA_CMAKE_OPTS=-DCMAKE_TOOLCHAIN_FILE=../scripts/build/ubuntu_cross.cmake -DUSE_CTC=true
+#   export EXTRA_CMAKE_OPTS=-DCMAKE_TOOLCHAIN_FILE=../scripts/build/ubuntu_cross.cmake -DUSE_CTC=true
 	# stripping doesn't work with the cross compile
   #export DEB_BUILD_OPTIONS += nostrip
 	export LIB_SEARCH_OPTIONS = -l$(ARMHF_CHROOT_DIR)/opt/rti/ndds/lib/armv6vfphLinux3.xgcc4.7.2:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib:$(ARMHF_CHROOT_DIR)/usr/lib:$(ARMHF_CHROOT_DIR)/usr/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib/arm-linux-gnueabihf -- --ignore-missing-info --admindir=$(ARMHF_CHROOT_DIR)/var/lib/dpkg 
@@ -36,12 +36,35 @@ build-indep: ;
 
 # we always need release, otherwise it is too slow
 override_dh_auto_configure:
-	mkdir -p build
-	cd build && cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX:PATH=/opt/astrobee -DCMAKE_BUILD_TYPE=Release $(EXTRA_CMAKE_OPTS) && cd ..
+	# configure the build
+	cd .. && \
+	catkin init && \
+	catkin config \
+		--install \
+		--extend $(ARMHF_CHROOT_DIR)/opt/ros/kinetic \
+		--build-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/build \
+		--devel-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/devel \
+		--log-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/logs \
+		--install-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/opt/astrobee \
+		--cmake-args \
+			-DCMAKE_TOOLCHAIN_FILE=$(CMAKE_TOOLCHAIN_FILE) \
+			-DARMHF_CHROOT_DIR=$(ARMHF_CHROOT_DIR) \
+			-DARMHF_TOOLCHAIN=$(ARMHF_TOOLCHAIN) \
+			-DUSE_CTC=on \
+			-DUSE_ROS=on \
+			-DUSE_DDS=on \
+			-DUSE_DRIVERS=on \
+			-DENABLE_QP=on \
+			-DENABLE_PICOFLEXX=on \
+			-DENABLE_VIVE=on \
+			-DENABLE_VIVE_SOLVER=on
+override_dh_auto_build: ;
 
-override_dh_install:
-	dh_movefiles
-	dh_install
+# the install command is already invoked in the build
+override_dh_auto_install:
+	cd .. && \
+	catkin build && \
+	rsync -azh $(ARMHF_CHROOT_DIR)/home/debian/tmp src/debian
 
 override_dh_auto_test: ;
 
