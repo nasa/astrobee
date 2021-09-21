@@ -21,36 +21,37 @@ files=$(git diff --cached --name-only | grep '\.py$')
 
 # If files is empty exit success
 if [ -z "${files}" ]; then
-	echo "=================================================="
-	echo "  No Python files changed, no checks needed."
-	exit 0
+  echo "=================================================="
+  echo "  No Python files changed, no checks needed."
+  exit 0
 fi
 
 failed_lint=false
+os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+if [ "$os" = "focal" ]; then
+  echo "=================================================="
+  echo "  Analysing with black"
+  # This check the files but they will not be commited
+  if `black . --include ${files} --check --quiet`; then
+    echo "Linter black checks passed"
+  else
+    echo "Errors detected, fixing ..."
+    black . --include ${files}
+    failed_lint=true
+  fi
 
-echo "=================================================="
-echo "  Analysing with black"
-# This check the files but they will not be commited
-if `black . --include ${files} --check --quiet`; then
-	echo "Linter black checks passed"
-else
-	echo "Errors detected, fixing ..."	
-	black . --include ${files}
-	failed_lint=true
+  echo "=================================================="
+  echo "  Analysing with isort"
+  if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
+    echo "Linter isort checks passed"
+  else
+    echo "Errors detected, fixing ..."
+    isort ${files} --extend-skip cmake --profile black >/dev/null
+    failed_lint=true
+  fi
 fi
-
-echo "=================================================="
-echo "  Analysing with isort"
-if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
-	echo "Linter isort checks passed"
-else
-	echo "Errors detected, fixing ..."	
-	isort ${files} --extend-skip cmake --profile black >/dev/null
-	failed_lint=true
-fi
-
 # Cancel commit if linter failed
 # The user should add manually the corrected files
 if ${failed_lint}; then
-	exit 1
+  exit 1
 fi
