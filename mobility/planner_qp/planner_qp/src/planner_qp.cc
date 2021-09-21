@@ -28,6 +28,7 @@
 
 // For the planner implementation API
 #include <decomp_util/ellipse_decomp.h>
+#include <jps3d/planner/jps_3d_util.h>
 #include <choreographer/planner.h>
 
 // Keepout zones for the planner
