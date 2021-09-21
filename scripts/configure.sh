@@ -296,7 +296,7 @@ if [ $native_build == 1 ] ; then
     enable_gazebo=" -DENABLE_GAZEBO=on"
     catkin profile add native
     catkin profile set native
-    catkin config --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts}
+    catkin config --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=Release
 fi
 
 if [ $armhf_build == 1 ] ; then
@@ -313,5 +313,5 @@ if [ $armhf_build == 1 ] ; then
         --devel-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/devel \
         --log-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/logs \
         --install \
-        --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts}
+        --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=Release
 fi
