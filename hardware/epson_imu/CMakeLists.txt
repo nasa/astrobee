@@ -26,6 +26,7 @@ SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   rospy
+  nodelet
   sensor_msgs
   ff_util
 )
@@ -35,7 +36,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result")
 
 catkin_package(
   LIBRARIES epson_imu
-  CATKIN_DEPENDS roscpp rospy sensor_msgs ff_util
+  CATKIN_DEPENDS roscpp rospy nodelet sensor_msgs ff_util
 )
 
 ###########
