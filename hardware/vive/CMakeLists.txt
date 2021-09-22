@@ -71,15 +71,6 @@ add_library(vive_driver
 add_dependencies(vive_driver ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vive_driver json-c usb-1.0 z ${catkin_LIBRARIES})
 
-## Declare a C++ executable: vive_tool
-add_executable(vive_tool tools/vive_tool/vive_tool.c)
-add_dependencies(vive_tool ${catkin_EXPORTED_TARGETS})
-target_link_libraries(vive_tool
-  vive_driver argtable2 ${catkin_LIBRARIES})
-
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
-
 # Declare C++ libraries
 add_library(vive_nodelet
   src/vive_nodelet/vive_nodelet.cc
@@ -87,9 +78,27 @@ add_library(vive_nodelet
 add_dependencies(vive_nodelet ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vive_nodelet vive_driver ${catkin_LIBRARIES})
 
+## Declare a C++ executable: vive_tool
+add_executable(vive_tool tools/vive_tool/vive_tool.c)
+add_dependencies(vive_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(vive_tool
+  vive_driver argtable2 ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}_driver
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+install(TARGETS ${PROJECT_NAME}_nodelet
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

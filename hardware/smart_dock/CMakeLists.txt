@@ -108,6 +108,13 @@ get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 ## Install ##
 #############
 
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
 install(CODE "execute_process(
   COMMAND mkdir -p share/${MODULE_NAME}
   COMMAND ln -s ../../bin/dds_ros_bridge share/${MODULE_NAME}

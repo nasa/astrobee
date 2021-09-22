@@ -72,11 +72,11 @@ add_dependencies(signal_lights ${catkin_EXPORTED_TARGETS})
 target_link_libraries(signal_lights custom_i2c ${catkin_LIBRARIES})
 
 # Declare C++ libraries
-add_library(signal_lights_node
+add_library(signal_lights_nodelet
   src/signal_lights_node/signal_lights_nodelet.cc
 )
-add_dependencies(signal_lights_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(signal_lights_node signal_lights ${catkin_LIBRARIES})
+add_dependencies(signal_lights_nodelet ${catkin_EXPORTED_TARGETS})
+target_link_libraries(signal_lights_nodelet signal_lights ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: inspection_tool
 add_executable(signal_lights_tool tools/signal_lights_tool.cc)
@@ -87,6 +87,23 @@ target_link_libraries(signal_lights_tool
 #############
 ## Install ##
 #############
+
+# Mark libraries for installation
+install(TARGETS custom_i2c
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+install(TARGETS signal_lights
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+install(TARGETS signal_lights_nodelet
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark launch files for installation
 install(DIRECTORY launch/

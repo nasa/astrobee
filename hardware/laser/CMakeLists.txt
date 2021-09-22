@@ -81,31 +81,21 @@ add_dependencies(laser_test ${catkin_EXPORTED_TARGETS})
 target_link_libraries(laser_test
   laser gflags glog ${catkin_LIBRARIES})
 
-
-# # Core library
-# create_library(TARGET laser
-#   INC ${GLOG_INCLUDE_DIRS}
-#   LIBS ${GLOG_LIBRARIES} i2c
-#   DEPS i2c)
-
-# # Standalone test programs
-# create_tool_targets(DIR tools
-#   INC ${GFLAGS_INCLUDE_DIRS}
-#   LIBS ${GFLAGS_LIBRARIES} laser ff_common
-#   DEPS laser)
-
-
-# create_library(TARGET laser_nodelet
-#   DIR src/ros
-#   LIBS ${catkin_LIBRARIES} laser config_reader ff_nodelet
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS ff_hw_msgs
-# )
-
 #############
 ## Install ##
 #############
 
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+install(TARGETS ${PROJECT_NAME}_nodelet
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

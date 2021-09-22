@@ -61,10 +61,12 @@ target_link_libraries(epson_imu ${catkin_LIBRARIES})
 ## Install ##
 #############
 
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -73,10 +75,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
 )
 
-
-# create_library(TARGET epson_imu
-#   LIBS ${catkin_LIBRARIES} ff_nodelet config_reader
-#   INC ${catkin_INCLUDE_DIRS}
-# )
-
-# install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
