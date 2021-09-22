@@ -57,7 +57,8 @@ override_dh_auto_configure:
 			-DENABLE_QP=on \
 			-DENABLE_PICOFLEXX=on \
 			-DENABLE_VIVE=on \
-			-DENABLE_VIVE_SOLVER=on
+			-DENABLE_VIVE_SOLVER=on &&\
+	catkin clean -y --force
 override_dh_auto_build: ;
 
 # the install command is already invoked in the build
