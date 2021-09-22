@@ -61,6 +61,15 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
     if (!config_params.GetTable("perching_arm", &devices))
       NODELET_FATAL("Could get perching_arm item in config file");
 
+    // Reconnect to the arm service
+    if (!initialized_) {
+      srv_a_ =
+          nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_ENABLE,
+                               &PerchingArmNode::EnableArmCallback,
+                               this);
+          initialized_ = true;
+    }
+
     // Iterate over all devices
     for (int i = 0; i < devices.GetSize(); i++) {
       config_reader::ConfigReader::Table device_info;
@@ -137,12 +146,6 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
         // Call back with joint state goals from the high-level driver
         sub_ = nh->subscribe(TOPIC_JOINT_GOALS, 1,
                              &PerchingArmNode::GoalCallback, this);
-
-        // Enable the arm
-        srv_a_ =
-            nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_ENABLE,
-                                 &PerchingArmNode::EnableArmCallback,
-                                 this);
 
         // Set the distal velocity
         srv_p_ =
@@ -440,6 +443,7 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
 
  private:
   ros::NodeHandle nh_;
+  bool initialized_ = false;
   bool arm_connected_ = false;
   PerchingArm arm_;              // Arm interface library
   ros::Subscriber sub_;          // Joint state subscriber
