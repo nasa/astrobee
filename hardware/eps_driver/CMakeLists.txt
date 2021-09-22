@@ -67,7 +67,7 @@ add_library(eps_driver_node
   src/eps_driver_node/eps_driver_node.cc
 )
 add_dependencies(eps_driver_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(eps_driver_node ${catkin_LIBRARIES})
+target_link_libraries(eps_driver_node eps_driver ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: eps_driver_tool
 add_executable(eps_driver_tool tools/eps_driver_tool/eps_driver_tool.cc)

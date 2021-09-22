@@ -65,7 +65,7 @@ add_library(light_flow_nodelet
   src/light_flow_nodelet/light_flow_nodelet.cc
 )
 add_dependencies(light_flow_nodelet ${catkin_EXPORTED_TARGETS})
-target_link_libraries(light_flow light_flow_nodelet ${catkin_LIBRARIES})
+target_link_libraries(light_flow_nodelet light_flow ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: inspection_tool
 add_executable(light_flow_tool tools/light_flow_tool.cc)

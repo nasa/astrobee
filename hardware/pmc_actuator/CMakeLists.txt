@@ -81,7 +81,7 @@ add_library(pmc_actuator_nodelet
   src/pmc_actuator_nodelet/pmc_actuator_nodelet.cc
 )
 add_dependencies(pmc_actuator_nodelet ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pmc_actuator_nodelet ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+target_link_libraries(pmc_actuator_nodelet pmc_actuator ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
 
 ## Declare a C++ executable: pmc_actuator_cmd_test
 add_executable(pmc_actuator_cmd_test tools/pmc_actuator_cmd_test.cc)

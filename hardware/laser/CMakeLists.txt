@@ -73,7 +73,7 @@ add_library(laser_nodelet
   src/ros/laser_nodelet.cc
 )
 add_dependencies(laser_nodelet ${catkin_EXPORTED_TARGETS})
-target_link_libraries(laser_nodelet ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+target_link_libraries(laser_nodelet laser ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
 
 ## Declare a C++ executable: bag_to_csv
 add_executable(laser_test tools/laser_test.cc)
