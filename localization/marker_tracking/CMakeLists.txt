@@ -165,6 +165,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
 )
 
+# Install C++ executables
+install(TARGETS overhead_tracking_node DESTINATION bin)
+install(TARGETS overhead_tracking_node DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

@@ -60,6 +60,12 @@ target_link_libraries(fam_cmd_i2c_node
 ## Install ##
 #############
 
+# Install C++ executables
+install(TARGETS fam_cmd_gen DESTINATION bin)
+install(TARGETS fam_cmd_gen DESTINATION share/${PROJECT_NAME})
+install(TARGETS fam_cmd_i2c_node DESTINATION bin)
+install(TARGETS fam_cmd_i2c_node DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

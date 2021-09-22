@@ -101,6 +101,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
 )
 
+# Install C++ executables
+install(TARGETS flashlight_test DESTINATION bin)
+install(TARGETS flashlight_test DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

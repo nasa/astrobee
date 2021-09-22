@@ -86,6 +86,12 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS landmark_msg_cnv DESTINATION bin)
+install(TARGETS landmark_msg_cnv DESTINATION share/${PROJECT_NAME})
+install(TARGETS pose_stamped_msg_cnv DESTINATION bin)
+install(TARGETS pose_stamped_msg_cnv DESTINATION share/${PROJECT_NAME})
+
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

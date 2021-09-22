@@ -114,6 +114,10 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS undistort_image DESTINATION bin)
+install(TARGETS undistort_image DESTINATION share/${PROJECT_NAME})
+
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

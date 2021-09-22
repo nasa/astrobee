@@ -87,6 +87,12 @@ add_dependencies(executive ${catkin_EXPORTED_TARGETS})
 target_link_libraries(executive sequencer ${Boost_SYSTEM_LIBRARY} ${catkin_LIBRARIES})
 
 
+## Declare a C++ executable: data_to_disk_pub
+add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
+add_dependencies(data_to_disk_pub ${catkin_EXPORTED_TARGETS})
+target_link_libraries(data_to_disk_pub
+  executive gflags ${catkin_LIBRARIES})
+
 ## Declare a C++ executable: ekf_switch_mux
 add_executable(ekf_switch_mux tools/ekf_switch_mux.cc)
 add_dependencies(ekf_switch_mux ${catkin_EXPORTED_TARGETS})
@@ -145,6 +151,20 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS data_to_disk_pub DESTINATION bin)
+install(TARGETS data_to_disk_pub DESTINATION share/${PROJECT_NAME})
+install(TARGETS ekf_switch_mux DESTINATION bin)
+install(TARGETS ekf_switch_mux DESTINATION share/${PROJECT_NAME})
+install(TARGETS plan_pub DESTINATION bin)
+install(TARGETS plan_pub DESTINATION share/${PROJECT_NAME})
+install(TARGETS simple_move DESTINATION bin)
+install(TARGETS simple_move DESTINATION share/${PROJECT_NAME})
+install(TARGETS teleop_tool DESTINATION bin)
+install(TARGETS teleop_tool DESTINATION share/${PROJECT_NAME})
+install(TARGETS zones_pub DESTINATION bin)
+install(TARGETS zones_pub DESTINATION share/${PROJECT_NAME})
 
 # Mark launch files for installation
 install(DIRECTORY launch/

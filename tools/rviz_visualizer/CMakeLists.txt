@@ -59,3 +59,13 @@ target_link_libraries(visualization_node
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
+
+#############
+## Install ##
+#############
+
+# Install C++ executables
+install(TARGETS overhead_info DESTINATION bin)
+install(TARGETS overhead_info DESTINATION share/${PROJECT_NAME})
+install(TARGETS visualization_node DESTINATION bin)
+install(TARGETS visualization_node DESTINATION share/${PROJECT_NAME})

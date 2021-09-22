@@ -63,7 +63,7 @@ add_library(arm
 add_dependencies(arm ${catkin_EXPORTED_TARGETS})
 target_link_libraries(arm ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: arm_tool
 add_executable(arm_tool tools/arm_tool.cc)
 add_dependencies(arm_tool ${catkin_EXPORTED_TARGETS})
 target_link_libraries(arm_tool

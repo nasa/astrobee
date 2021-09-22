@@ -107,4 +107,14 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS run_bag_imu_filterer DESTINATION bin)
+install(TARGETS run_bag_imu_filterer DESTINATION share/${PROJECT_NAME})
+install(TARGETS run_graph_bag DESTINATION bin)
+install(TARGETS run_graph_bag DESTINATION share/${PROJECT_NAME})
+install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
+install(TARGETS run_imu_bias_tester_adder DESTINATION share/${PROJECT_NAME})
+install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
+install(TARGETS run_sparse_mapping_pose_adder DESTINATION share/${PROJECT_NAME})
+
 endif (USE_ROS)

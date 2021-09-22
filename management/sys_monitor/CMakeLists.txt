@@ -91,6 +91,10 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS fault_tester DESTINATION bin)
+install(TARGETS fault_tester DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

@@ -89,6 +89,10 @@ install(TARGETS ${PROJECT_NAME}_nodelet
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS light_flow_tool DESTINATION bin)
+install(TARGETS light_flow_tool DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

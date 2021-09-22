@@ -83,19 +83,19 @@ add_library(pmc_actuator_nodelet
 add_dependencies(pmc_actuator_nodelet ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pmc_actuator_nodelet ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
 
-## Declare a C++ executable: bag_to_csv
+## Declare a C++ executable: pmc_actuator_cmd_test
 add_executable(pmc_actuator_cmd_test tools/pmc_actuator_cmd_test.cc)
 add_dependencies(pmc_actuator_cmd_test ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pmc_actuator_cmd_test
   pmc_actuator gflags glog ${catkin_LIBRARIES})
 
-## Declare a C++ executable: bag_to_csv
+## Declare a C++ executable: pmc_actuator_feeder
 add_executable(pmc_actuator_feeder tools/pmc_actuator_feeder.cc)
 add_dependencies(pmc_actuator_feeder ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pmc_actuator_feeder
   pmc_actuator gflags glog ${catkin_LIBRARIES})
 
-## Declare a C++ executable: bag_to_csv
+## Declare a C++ executable: pmc_autotrim_node
 add_executable(pmc_autotrim_node tools/pmc_autotrim_node.cc)
 add_dependencies(pmc_autotrim_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pmc_autotrim_node
@@ -116,6 +116,16 @@ install(TARGETS ${PROJECT_NAME}_nodelet
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS pmc_actuator_tool DESTINATION bin)
+install(TARGETS pmc_actuator_tool DESTINATION share/${PROJECT_NAME})
+install(TARGETS pmc_actuator_cmd_test DESTINATION bin)
+install(TARGETS pmc_actuator_cmd_test DESTINATION share/${PROJECT_NAME})
+install(TARGETS pmc_actuator_feeder DESTINATION bin)
+install(TARGETS pmc_actuator_feeder DESTINATION share/${PROJECT_NAME})
+install(TARGETS pmc_autotrim_node DESTINATION bin)
+install(TARGETS pmc_autotrim_node DESTINATION share/${PROJECT_NAME})
 
 # Mark launch files for installation
 install(DIRECTORY launch/

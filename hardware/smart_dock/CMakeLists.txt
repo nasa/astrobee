@@ -89,13 +89,13 @@ target_compile_definitions(smart_dock PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(smart_dock ${catkin_EXPORTED_TARGETS})
 target_link_libraries(smart_dock rapidIo ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: smart_dock_service
 add_executable(smart_dock_service tools/smart_dock_service.cc)
 add_dependencies(smart_dock_service ${catkin_EXPORTED_TARGETS})
 target_link_libraries(smart_dock_service
   smart_dock gflags ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: smart_dock_tool
 add_executable(smart_dock_tool tools/smart_dock_tool.cc)
 add_dependencies(smart_dock_tool ${catkin_EXPORTED_TARGETS})
 target_link_libraries(smart_dock_tool
@@ -114,6 +114,12 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS smart_dock_service DESTINATION bin)
+install(TARGETS smart_dock_service DESTINATION share/${PROJECT_NAME})
+install(TARGETS smart_dock_tool DESTINATION bin)
+install(TARGETS smart_dock_tool DESTINATION share/${PROJECT_NAME})
 
 install(CODE "execute_process(
   COMMAND mkdir -p share/${MODULE_NAME}

@@ -90,3 +90,9 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Install C++ executables
+install(TARGETS bag_to_csv DESTINATION bin)
+install(TARGETS bag_to_csv DESTINATION share/${PROJECT_NAME})
+install(TARGETS sparse_map_bag DESTINATION bin)
+install(TARGETS sparse_map_bag DESTINATION share/${PROJECT_NAME})

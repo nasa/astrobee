@@ -69,11 +69,17 @@ add_library(eps_driver_node
 add_dependencies(eps_driver_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(eps_driver_node ${catkin_LIBRARIES})
 
-# ## Declare a C++ executable: eps_driver_tool
-# add_executable(eps_driver_tool tools/eps_driver_tool/eps_driver_tool.cc)
-# add_dependencies(eps_driver_tool ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(eps_driver_tool
-#   eps_driver gflags ${catkin_LIBRARIES})
+## Declare a C++ executable: eps_driver_tool
+add_executable(eps_driver_tool tools/eps_driver_tool/eps_driver_tool.cc)
+add_dependencies(eps_driver_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(eps_driver_tool
+  eps_driver gflags ${catkin_LIBRARIES})
+
+## Declare a C++ executable: eps_simulator
+add_executable(eps_simulator tools/eps_simulator/eps_simulator.cc)
+add_dependencies(eps_simulator ${catkin_EXPORTED_TARGETS})
+target_link_libraries(eps_simulator
+  eps_driver gflags ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -97,6 +103,13 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Install C++ executables
+install(TARGETS eps_driver_tool DESTINATION bin)
+install(TARGETS eps_driver_tool DESTINATION share/${PROJECT_NAME})
+install(TARGETS eps_simulator DESTINATION bin)
+install(TARGETS eps_simulator DESTINATION share/${PROJECT_NAME})
+
 
 # Mark launch files for installation
 install(DIRECTORY launch/

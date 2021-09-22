@@ -89,6 +89,12 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS sim_node DESTINATION bin)
+install(TARGETS sim_node DESTINATION share/${PROJECT_NAME})
+install(TARGETS test_sim DESTINATION bin)
+install(TARGETS test_sim DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

@@ -96,6 +96,11 @@ install(TARGETS ${PROJECT_NAME}_nodelet
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS laser_test DESTINATION bin)
+install(TARGETS laser_test DESTINATION share/${PROJECT_NAME})
+
 # Mark launch files for installation
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch

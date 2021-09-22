@@ -47,3 +47,11 @@ add_executable(log_tool tools/log_tool.cc)
 add_dependencies(log_tool ${catkin_EXPORTED_TARGETS})
 target_link_libraries(log_tool
   gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Install C++ executables
+install(TARGETS log_tool DESTINATION bin)
+install(TARGETS log_tool DESTINATION share/${PROJECT_NAME})

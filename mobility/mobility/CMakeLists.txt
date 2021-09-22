@@ -62,3 +62,13 @@ add_executable(teleop tools/teleop.cc)
 add_dependencies(teleop ${catkin_EXPORTED_TARGETS})
 target_link_libraries(teleop
   gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Install C++ executables
+install(TARGETS plangen DESTINATION bin)
+install(TARGETS plangen DESTINATION share/${PROJECT_NAME})
+install(TARGETS teleop DESTINATION bin)
+install(TARGETS teleop DESTINATION share/${PROJECT_NAME})

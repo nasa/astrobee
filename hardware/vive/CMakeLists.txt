@@ -100,6 +100,10 @@ install(TARGETS ${PROJECT_NAME}_nodelet
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Install C++ executables
+install(TARGETS vive_tool DESTINATION bin)
+install(TARGETS vive_tool DESTINATION share/${PROJECT_NAME})
+
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

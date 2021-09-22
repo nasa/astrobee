@@ -81,6 +81,12 @@ add_library(planner_qp
 add_dependencies(planner_qp ${catkin_EXPORTED_TARGETS})
 target_link_libraries(planner_qp ${JPS3D_LIBRARIES} ${DECOMP_UTIL_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES})
 
+## Declare a C++ executable: sfc_server
+add_executable(sfc_server test/sfc_server.cc)
+add_dependencies(sfc_server ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sfc_server
+  planner_qp gflags ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
@@ -91,6 +97,10 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS sfc_server DESTINATION bin)
+install(TARGETS sfc_server DESTINATION share/${PROJECT_NAME})
 
 # Mark launch files for installation
 install(DIRECTORY launch/

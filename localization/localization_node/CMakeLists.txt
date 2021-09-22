@@ -83,17 +83,22 @@ target_link_libraries(localization_node
   ${OPENMVG_LIBRARIES}
 )
 
-
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: extract_image_bag
 add_executable(extract_image_bag tools/extract_image_bag.cc)
 add_dependencies(extract_image_bag ${catkin_EXPORTED_TARGETS})
 target_link_libraries(extract_image_bag
   localization_node gflags glog ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: interest_points_test_bag
 add_executable(interest_points_test_bag tools/interest_points_test_bag.cc)
 add_dependencies(interest_points_test_bag ${catkin_EXPORTED_TARGETS})
 target_link_libraries(interest_points_test_bag
+  localization_node gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: merge_bags
+add_executable(merge_bags tools/merge_bags.cc)
+add_dependencies(merge_bags ${catkin_EXPORTED_TARGETS})
+target_link_libraries(merge_bags
   localization_node gflags glog ${catkin_LIBRARIES})
 
 #############
@@ -113,6 +118,15 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Install C++ executables
+install(TARGETS extract_image_bag DESTINATION bin)
+install(TARGETS extract_image_bag DESTINATION share/${PROJECT_NAME})
+install(TARGETS interest_points_test_bag DESTINATION bin)
+install(TARGETS interest_points_test_bag DESTINATION share/${PROJECT_NAME})
+install(TARGETS merge_bags DESTINATION bin)
+install(TARGETS merge_bags DESTINATION share/${PROJECT_NAME})
+
 
 # Mark launch files for installation
 install(DIRECTORY launch/

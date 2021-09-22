@@ -38,6 +38,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 
 # Find OpenCV3
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV 3 REQUIRED)
 
 # Non-linear optimizer
@@ -79,6 +80,12 @@ add_library(vive_localization
 add_dependencies(vive_localization ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vive_localization json-c usb-1.0 z ${catkin_LIBRARIES})
 
+## Declare a C++ executable: vive_offline
+add_executable(vive_offline src/tool/vive_offline.cc)
+add_dependencies(vive_offline ${catkin_EXPORTED_TARGETS})
+target_link_libraries(vive_offline
+  vive_localization gflags ${OpenCV_LIBRARIES} ${CERES_LIBRARIES} ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
@@ -89,6 +96,10 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS vive_offline DESTINATION bin)
+install(TARGETS vive_offline DESTINATION share/${PROJECT_NAME})
 
 # Mark launch files for installation
 install(DIRECTORY launch/
