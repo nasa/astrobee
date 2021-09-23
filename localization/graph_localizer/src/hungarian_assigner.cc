@@ -48,7 +48,8 @@ HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params)
     config_reader::ConfigReader::Table pos(&object, "pos");
     config_reader::ConfigReader::Table rot(&object, "rot");
 
-    std::shared_ptr<Eigen::Isometry3d> pose(new Eigen::Isometry3d());
+    Eigen::aligned_allocator<Eigen::Isometry3d> alloc;
+    std::shared_ptr<Eigen::Isometry3d> pose = std::allocate_shared<Eigen::Isometry3d>(alloc);
     *pose = Eigen::Isometry3d::Identity();
     pos.GetReal(1, &(pose->translation().x()));
     pos.GetReal(2, &(pose->translation().y()));
