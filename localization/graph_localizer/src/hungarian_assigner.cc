@@ -43,7 +43,7 @@ HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params)
     if (object_poses_.count(obj_cls) == 0) {
       object_poses_[obj_cls] = std::vector<std::shared_ptr<Eigen::Isometry3d>>();
     }
-    if (obj_cls == 2) continue; // ignore handrail
+    //if (obj_cls == 2 || obj_cls == 0) continue; // ignore handrail
 
     config_reader::ConfigReader::Table pos(&object, "pos");
     config_reader::ConfigReader::Table rot(&object, "rot");
