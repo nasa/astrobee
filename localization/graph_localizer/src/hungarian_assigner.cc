@@ -264,12 +264,13 @@ HungarianAssigner::AssignmentSet HungarianAssigner::assign(const Eigen::Isometry
       if (params_.scale_matching_distance_with_bbox) {
         diff /= det_locs_px.block(2,0,2,det_locs_px.cols())/2;
       }
-      cost_matrix.col(ind++) = (diff.row(0).pow(2) + diff.row(1).pow(2)).sqrt();
+      cost_matrix.col(ind) = (diff.row(0).pow(2) + diff.row(1).pow(2)).sqrt();
       for (int row=0; row<cost_matrix.rows(); row++) {
         if (cost_matrix(row, ind) > params_.matching_distance_thresh) {
           cost_matrix(row, ind) = params_.matching_distance_thresh;
         }
       }
+      ind++;
     }
 
     bool transposed = false;
