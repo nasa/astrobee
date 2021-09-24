@@ -1,36 +1,39 @@
-import time, sys, os
-from ros import rosbag
+import os
+import sys
+import time
+
 import roslib
 import rospy
-roslib.load_manifest('sensor_msgs')
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+from ros import rosbag
 
-from PIL import ImageFile
-
+roslib.load_manifest("sensor_msgs")
 import cv2
+from cv_bridge import CvBridge
+from PIL import ImageFile
+from sensor_msgs.msg import Image
+
 
 def GetFilesFromDir(dir):
-    '''Generates a list of files from the directory'''
-    print( "Searching directory %s" % dir )
+    """Generates a list of files from the directory"""
+    print("Searching directory %s" % dir)
     all = []
     left_files = []
     right_files = []
     if os.path.exists(dir):
         for path, names, files in os.walk(dir):
             for f in sorted(files):
-                if os.path.splitext(f)[1] in ['.bmp', '.png', '.jpg', '.ppm']:
-                    if 'left' in f or 'left' in path:
-                        left_files.append( os.path.join( path, f ) )
-                    elif 'right' in f or 'right' in path:
-                        right_files.append( os.path.join( path, f ) )
-                    all.append( os.path.join( path, f ) )
+                if os.path.splitext(f)[1] in [".bmp", ".png", ".jpg", ".ppm"]:
+                    if "left" in f or "left" in path:
+                        left_files.append(os.path.join(path, f))
+                    elif "right" in f or "right" in path:
+                        right_files.append(os.path.join(path, f))
+                    all.append(os.path.join(path, f))
     return all, left_files, right_files
 
 
 def CreateMonoBag(imgs, bagname):
-    '''Creates a bag file with camera images'''
-    bag =rosbag.Bag(bagname, 'w')
+    """Creates a bag file with camera images"""
+    bag = rosbag.Bag(bagname, "w")
 
     try:
         for i in range(len(imgs)):
@@ -45,13 +48,13 @@ def CreateMonoBag(imgs, bagname):
             img_msg.header.stamp = Stamp
             img_msg.header.frame_id = "camera"
 
-            bag.write('mgt/img_sampler/nav_cam/image_record', img_msg, Stamp)
+            bag.write("mgt/img_sampler/nav_cam/image_record", img_msg, Stamp)
     finally:
         bag.close()
 
 
 def CreateBag(args):
-    '''Creates the actual bag file by successively adding images'''
+    """Creates the actual bag file by successively adding images"""
     all_imgs, left_imgs, right_imgs = GetFilesFromDir(args[0])
     if len(all_imgs) <= 0:
         print("No images found in %s" % args[0])
@@ -60,8 +63,9 @@ def CreateBag(args):
     # create bagfile with mono camera image stream
     CreateMonoBag(all_imgs, args[1])
 
+
 if __name__ == "__main__":
-    if len( sys.argv ) == 3:
-        CreateBag( sys.argv[1:])
+    if len(sys.argv) == 3:
+        CreateBag(sys.argv[1:])
     else:
-        print( "Usage: img2bag imagedir bagfilename")
+        print("Usage: img2bag imagedir bagfilename")
