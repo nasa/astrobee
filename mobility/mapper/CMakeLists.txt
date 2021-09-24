@@ -21,6 +21,10 @@ project(mapper)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
+## This fixes the Eigen aligment issue
+## http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D EIGEN_MAX_STATIC_ALIGN_BYTES=0")
+
 ## Find catkin macros and libraries
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
