@@ -64,6 +64,19 @@ void LoadCameraDistMap(GraphBagParams& params) {
   }
 }
 
+void LoadClassNames(config_reader::ConfigReader& config, GraphBagParams& params) {
+  config_reader::ConfigReader::Table classes(&config, "classes");
+  int N = classes.GetSize();
+  int cls_id;
+  std::string cls_name;
+  for (int i=1; i<=N; i++) {
+    config_reader::ConfigReader::Table cls(&classes, i);
+    cls.GetInt("id", &cls_id);
+    cls.GetStr("name", &cls_name);
+    params.class_names.insert({cls_id, cls_name});
+  }
+}
+
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
   params.optimization_time = mc::LoadDouble(config, "optimization_time");
 }
@@ -78,5 +91,6 @@ void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& par
   params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "loc_adder_min_num_matches");
   params.ar_min_num_landmarks = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
   LoadCameraDistMap(params);
+  LoadClassNames(config, params);
 }
 }  // namespace graph_bag

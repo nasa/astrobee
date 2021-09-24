@@ -32,6 +32,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params);
 void LoadCameraDistMap(GraphBagParams& params);
+void LoadClassNames(config_reader::ConfigReader& config, GraphBagParams& params);
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params);
 void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params);
 }  // namespace graph_bag

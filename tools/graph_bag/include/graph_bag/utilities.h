@@ -22,6 +22,7 @@
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_localizer.h>
 #include <localization_common/utilities.h>
+#include <graph_bag/graph_bag_params.h>
 
 #include <opencv2/core/mat.hpp>
 
@@ -44,7 +45,7 @@ void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
                            const int max_num_factors, cv::Mat& feature_track_image);
 boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
                                                                   const std::vector<graph_localizer::SemanticLocFactorAdder::SemanticMatch>& sem_matches,
-                                                                  const cv::Mat& map_x, const cv::Mat& map_y, bool show_img = false);
+                                                                  const GraphBagParams& params, bool show_img = false);
 boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(
   const sensor_msgs::ImageConstPtr& image_msg, const graph_localizer::FeatureTrackIdMap& feature_tracks,
   const camera::CameraParameters& camera_params, const std::vector<const SmartFactor*>& smart_factors = {});
