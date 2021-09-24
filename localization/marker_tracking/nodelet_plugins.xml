@@ -1,4 +1,4 @@
-<library path="lib/librosmarkertracking">
+<library path="lib/libmarker_tracking_node">
   <class name="marker_tracking_node/MarkerTrackingNodelet"
 	 type="marker_tracking_node::MarkerTrackingNodelet"
 	 base_class_type="nodelet::Nodelet">

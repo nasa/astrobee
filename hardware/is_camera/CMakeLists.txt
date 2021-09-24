@@ -70,7 +70,7 @@ add_library(is_camera
   src/camera.cc
 )
 add_dependencies(is_camera ${catkin_EXPORTED_TARGETS})
-target_link_libraries(is_camera ${catkin_LIBRARIES})
+target_link_libraries(is_camera ${V4L2_LIBRARY} ${catkin_LIBRARIES})
 
 #############
 ## Install ##

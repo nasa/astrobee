@@ -53,24 +53,29 @@ include_directories(
 )
 
 # Declare C++ libraries
-add_library(data_bagger
-  src/data_bagger.cc
-)
-add_dependencies(data_bagger ${catkin_EXPORTED_TARGETS})
-target_link_libraries(data_bagger ${catkin_LIBRARIES})
-
-# Declare C++ libraries
 add_library(astrobee_recorder
   src/astrobee_recorder.cc
 )
 add_dependencies(astrobee_recorder ${catkin_EXPORTED_TARGETS})
 target_link_libraries(astrobee_recorder ${catkin_LIBRARIES})
 
+# Declare C++ libraries
+add_library(data_bagger
+  src/data_bagger.cc
+)
+add_dependencies(data_bagger ${catkin_EXPORTED_TARGETS})
+target_link_libraries(data_bagger astrobee_recorder ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
 
 # Mark libraries for installation
+install(TARGETS astrobee_recorder
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
