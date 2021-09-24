@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
+cmake_minimum_required(VERSION 3.0)
 project(disk_monitor)
 
 ## Compile as C++11, supported in ROS Kinetic and newer

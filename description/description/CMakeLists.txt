@@ -19,7 +19,7 @@
 # dont do this if we are cross-compiling, as there is no need for it. We must
 # also make sure the media is copied in a native install to a simulator.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0)
 project(description)
 
 find_package(catkin REQUIRED COMPONENTS

@@ -15,7 +15,7 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0)
 project(localization_rviz_plugins)
 
 if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
