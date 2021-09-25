@@ -358,7 +358,8 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
     }
   }
 
-  // Enable arm
+  // This service re-initializes the perching arm if the arm was
+  // not powered on during startup
   bool EnableArmCallback(ff_hw_msgs::SetEnabled::Request &req,
                          ff_hw_msgs::SetEnabled::Response &res) {
     if (req.enabled && !arm_connected_) {
