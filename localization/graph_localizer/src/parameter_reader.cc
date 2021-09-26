@@ -52,6 +52,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
 
 void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, SemanticLocFactorAdderParams& params) {
   params.enabled = mc::LoadBool(config, "semantic_loc_adder_enabled");
+  params.semantic_map_filename = mc::LoadString(config, "world_vision_semantic_map_filename");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_num_matches = mc::LoadInt(config, "semantic_loc_adder_min_num_matches");
   params.max_num_factors = mc::LoadInt(config, "semantic_loc_adder_max_num_factors");

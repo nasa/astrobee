@@ -28,6 +28,7 @@
 namespace graph_localizer {
 struct SemanticLocFactorAdderParams : public graph_optimizer::FactorAdderParams{
   bool enabled;
+  std::string semantic_map_filename;
   int max_num_factors;
   int min_num_matches;
   bool scale_projection_noise_with_num_landmarks;

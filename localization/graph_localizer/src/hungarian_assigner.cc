@@ -28,7 +28,7 @@ namespace lc = localization_common;
 HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params) :
     params_(params) {
   config_reader::ConfigReader object_loc_config;
-  object_loc_config.AddFile("semantic_objects.config");
+  object_loc_config.AddFile(params.semantic_map_filename.c_str());
   if (!object_loc_config.ReadFiles()) {
     LogError("Failed to load semantic object locations.");
   }

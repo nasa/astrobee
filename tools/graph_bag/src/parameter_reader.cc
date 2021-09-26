@@ -65,7 +65,13 @@ void LoadCameraDistMap(GraphBagParams& params) {
 }
 
 void LoadClassNames(config_reader::ConfigReader& config, GraphBagParams& params) {
-  config_reader::ConfigReader::Table classes(&config, "classes");
+  const std::string semantic_map_filename = 
+    mc::LoadString(config, "world_vision_semantic_map_filename");
+  config_reader::ConfigReader sem_config;
+  sem_config.AddFile(semantic_map_filename.c_str());
+  sem_config.ReadFiles();
+
+  config_reader::ConfigReader::Table classes(&sem_config, "classes");
   int N = classes.GetSize();
   int cls_id;
   std::string cls_name;

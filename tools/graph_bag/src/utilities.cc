@@ -120,7 +120,9 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
 
     if (match.have_map_point) {
       cv::circle(viz, map_pt, 5/resize_scale, cv::Scalar(0,255,0), cv::FILLED);
-      cv::putText(viz, params.class_names.at(match.cls), map_pt+(cv::Point(6,6)/resize_scale), cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
+      if (params.class_names.count(match.cls) > 0) {
+        cv::putText(viz, params.class_names.at(match.cls), map_pt+(cv::Point(6,6)/resize_scale), cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
+      }
     }
   }
 
