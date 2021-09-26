@@ -48,7 +48,7 @@ class Poses(object):
   def position_vector(self, index):
     return [self.positions.xs[index], self.positions.ys[index], self.positions.zs[index]]
 
-  def compute_error(self, poses_b, abs_tol=0, rel_start_time=0, rel_end_time=-1):
+  def compute_error(self, poses_b, abs_tol=0.1, rel_start_time=0, rel_end_time=-1):
     trimmed_poses_a, trimmed_poses_b = get_same_timestamp_poses(self, poses_b, True, abs_tol,
                                                                 rel_start_time, rel_end_time)
     assert len(trimmed_poses_a.times) == len(trimmed_poses_b.times), 'Length mismatch of poses'

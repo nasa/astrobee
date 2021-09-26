@@ -81,7 +81,7 @@ void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
 
 boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
                                                                   const std::vector<graph_localizer::SemanticLocFactorAdder::SemanticMatch>& sem_matches,
-                                                                  const cv::Mat& map_x, const cv::Mat& map_y, bool show_img) {
+                                                                  const GraphBagParams& params, bool show_img) {
   float resize_scale = 0.5;
   cv_bridge::CvImagePtr semantic_match_image;
   try {
@@ -92,7 +92,7 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
   }
 
   cv::Mat undist_viz;
-  cv::remap(semantic_match_image->image, undist_viz, map_x, map_y, cv::INTER_LINEAR);
+  cv::remap(semantic_match_image->image, undist_viz, params.undist_map_x, params.undist_map_y, cv::INTER_LINEAR);
   cv::Size original_size = semantic_match_image->image.size();
   cv::Point top_left = (undist_viz.size() - original_size)/2;
 
@@ -100,7 +100,6 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
   viz = undist_viz(cv::Rect(top_left.x, top_left.y, original_size.width, original_size.height));
 
   // This is rather ugly to hardcode
-  const std::vector<std::string> class_names = {"laptop", "camera", "handrail", "light", "window", "hatch", "express", "vent"};
   for (const auto& match : sem_matches) {
     cv::Point size_half(viz.size().width/2., viz.size().height/2.);
     cv::Point map_pt;
@@ -121,7 +120,7 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
 
     if (match.have_map_point) {
       cv::circle(viz, map_pt, 5/resize_scale, cv::Scalar(0,255,0), cv::FILLED);
-      cv::putText(viz, class_names[match.cls], map_pt+(cv::Point(6,6)/resize_scale), cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
+      cv::putText(viz, params.class_names.at(match.cls), map_pt+(cv::Point(6,6)/resize_scale), cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
     }
   }
 

@@ -43,12 +43,12 @@ HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params)
     if (object_poses_.count(obj_cls) == 0) {
       object_poses_[obj_cls] = std::vector<std::shared_ptr<Eigen::Isometry3d>>();
     }
-    if (obj_cls == 2) continue; // ignore handrail
 
     config_reader::ConfigReader::Table pos(&object, "pos");
     config_reader::ConfigReader::Table rot(&object, "rot");
 
-    std::shared_ptr<Eigen::Isometry3d> pose(new Eigen::Isometry3d());
+    Eigen::aligned_allocator<Eigen::Isometry3d> alloc;
+    std::shared_ptr<Eigen::Isometry3d> pose = std::allocate_shared<Eigen::Isometry3d>(alloc);
     *pose = Eigen::Isometry3d::Identity();
     pos.GetReal(1, &(pose->translation().x()));
     pos.GetReal(2, &(pose->translation().y()));
@@ -263,12 +263,15 @@ HungarianAssigner::AssignmentSet HungarianAssigner::assign(const Eigen::Isometry
       if (params_.scale_matching_distance_with_bbox) {
         diff /= det_locs_px.block(2,0,2,det_locs_px.cols())/2;
       }
-      cost_matrix.col(ind++) = (diff.row(0).pow(2) + diff.row(1).pow(2)).sqrt();
+      // L2 norm of distance
+      cost_matrix.col(ind) = (diff.row(0).pow(2) + diff.row(1).pow(2)).sqrt();
+      // Threshold all values in the cost matrix
       for (int row=0; row<cost_matrix.rows(); row++) {
         if (cost_matrix(row, ind) > params_.matching_distance_thresh) {
           cost_matrix(row, ind) = params_.matching_distance_thresh;
         }
       }
+      ind++;
     }
 
     bool transposed = false;

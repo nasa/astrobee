@@ -24,6 +24,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include <memory>
+#include <map>
 
 namespace graph_bag {
 struct GraphBagParams {
@@ -38,6 +39,8 @@ struct GraphBagParams {
 
   cv::Mat undist_map_x;
   cv::Mat undist_map_y;
+
+  std::map<int, std::string> class_names;
 };
 }  // namespace graph_bag
 
