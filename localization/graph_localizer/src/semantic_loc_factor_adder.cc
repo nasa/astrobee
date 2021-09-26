@@ -101,6 +101,11 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   lm::MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.timestamp = semantic_dets.timestamp;
+  // only for visualizing unmatched detections
+  for (const auto& det : semantic_dets.semantic_dets) {
+    last_matches_.push_back(SemanticMatch(det.class_id, det.image_point, det.bounding_box));
+  }
+
   LogDebug("SemanticLoc: adding sem loc factors");
 
   const auto assignments = assigner_->assign(world_T_body, semantic_dets.semantic_dets);
@@ -119,10 +124,6 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
                                           best_det->image_point, best_det->bounding_box));
   }
 
-  // only for visualizing unmatched detections
-  for (const auto& det : semantic_dets.semantic_dets) {
-    last_matches_.push_back(SemanticMatch(det.class_id, det.image_point, det.bounding_box));
-  }
 
   std::vector<go::FactorsToAdd> factors_to_add;
   ComputeFactorsToAdd(factors_to_add, matched_projections_measurement);

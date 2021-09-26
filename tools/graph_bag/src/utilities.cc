@@ -104,11 +104,8 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
   for (const auto& match : sem_matches) {
     cv::Point size_half(viz.size().width/2., viz.size().height/2.);
     cv::Point map_pt;
-
     if (match.have_map_point) {
       map_pt = cv::Point(match.map_point_px[0], match.map_point_px[1]) + size_half;
-      cv::circle(viz, map_pt, 5/resize_scale, cv::Scalar(0,255,0), cv::FILLED);
-      cv::putText(viz, class_names[match.cls], map_pt, cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
     }
 
     if (match.have_matched_det) {
@@ -116,10 +113,15 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
       cv::Point size = cv::Point(match.det_bbox_size_px[0], match.det_bbox_size_px[1]);
       if (match.have_map_point) {
         cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 2/resize_scale);
-        cv::line(viz, center, map_pt, cv::Scalar(0,0,255), 2/resize_scale, cv::LINE_AA);
+        cv::line(viz, center, map_pt, cv::Scalar(100,100,255), 2/resize_scale, cv::LINE_AA);
       } else {
         cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 1/resize_scale);
       }
+    }
+
+    if (match.have_map_point) {
+      cv::circle(viz, map_pt, 5/resize_scale, cv::Scalar(0,255,0), cv::FILLED);
+      cv::putText(viz, class_names[match.cls], map_pt+(cv::Point(6,6)/resize_scale), cv::FONT_HERSHEY_SIMPLEX, 0.5/resize_scale, cv::Scalar(0,255,0), 2/resize_scale);
     }
   }
 
