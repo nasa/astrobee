@@ -75,16 +75,16 @@ by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
 ### Note for the build setup
 By default, the configure script uses the following paths:
-  - native build path: `$HOME/astrobee_build/native`
-  - native install path: `$HOME/astrobee_install/native`
+  - native build path: `$ASTROBEE_WS/build`
+  - native install path: `$ASTROBEE_WS/install`
 
 If you are satisfied with these paths, you can invoke the `configure.sh` without
 the `-p` and `-b` options. For the simplicity of the instructions below,
 we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
 build and install path. For example:
 
-    export BUILD_PATH=$HOME/astrobee_build/native
-    export INSTALL_PATH=$HOME/astrobee_install/native
+    export BUILD_PATH=$ASTROBEE_WS/build
+    export INSTALL_PATH=$ASTROBEE_WS/install
 
 ### Native build
 

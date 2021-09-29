@@ -163,9 +163,9 @@ parse_args()
          ;;
         "C") clean_cache=0
          ;;
-        "d") use_dds="-DUSE_DDS=on"
+        "d") use_dds=" -DUSE_DDS=on"
          ;;
-        "D") use_dds="-DUSE_DDS=off"
+        "D") use_dds=" -DUSE_DDS=off"
          ;;
         "r") enable_qp=" -DENABLE_QP=on"
          ;;
@@ -183,9 +183,9 @@ parse_args()
          ;;
         "V") enable_vive=" -DENABLE_VIVE=off"
          ;;
-        "t") enable_int_testing=" -DENABLE_INTEGRATION_TESTING=on"
+        "t") enable_integration_testing=" -DENABLE_INTEGRATION_TESTING=on"
          ;;
-        "T") enable_int_testing=" -DENABLE_INTEGRATION_TESTING=off"
+        "T") enable_integration_testing=" -DENABLE_INTEGRATION_TESTING=off"
          ;;
         "g") debug_mode=1
          ;;
@@ -260,6 +260,15 @@ parse_args $@
 # Define the paths to use
 ff_path=`canonicalize ${rootpath}`
 
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+if [ "$DIST" = "xenial" ]; then
+    ros_version=kinetic
+elif [ "$DIST" = "bionic" ]; then
+    ros_version=melodic
+elif [ "$DIST" = "focal" ]; then
+    ros_version=noetic
+fi
+
 if [ $debug_mode == 1 ]; then
     echo "script is called from: $workdir"
     echo "script dir is: $confdir"
@@ -296,7 +305,13 @@ if [ $native_build == 1 ] ; then
     enable_gazebo=" -DENABLE_GAZEBO=on"
     catkin profile add native
     catkin profile set native
-    catkin config --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=Release
+    catkin config --extend /opt/ros/${ros_version} \
+        --build-space ${build_path:-build} \
+        --install-space ${install_path:-install} \
+        --default-devel-space \
+        --default-log-space \
+        --no-install \
+        --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
 fi
 
 if [ $armhf_build == 1 ] ; then
@@ -309,7 +324,7 @@ if [ $armhf_build == 1 ] ; then
     catkin profile set armhf
     catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
         --build-space ${build_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/build} \
-        --install-space ${install_path:-$ARMHF_CHROOT_DIR/opt/astrobee} \
+        --install-space ${install_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/install} \
         --devel-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/devel \
         --log-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/logs \
         --install \

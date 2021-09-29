@@ -147,10 +147,10 @@ the code on the robot itself). Please skip to the relevant subsection.
 
 By default, the configure script uses the following paths:
 
-  - native build path (BUILD_PATH):     `$HOME/astrobee_build/native`
-  - native install path (INSTALL_PATH): `$HOME/astrobee_install/native`
-  - armhf build path (BUILD_PATH):      `$HOME/astrobee_build/armhf`
-  - armhf install path (INSTALL_PATH):  `$HOME/astrobee_install/armhf`
+  - native build path (BUILD_PATH):     `$ASTROBEE_WS/build`
+  - native install path (INSTALL_PATH): `$ASTROBEE_WS/install`
+  - armhf build path (BUILD_PATH):      `$ARMHF_CHROOT_DIR/home/astrobee/astrobee/build`
+  - armhf install path (INSTALL_PATH):  `$ARMHF_CHROOT_DIR/home/astrobee/astrobee/install`
 
 You should set these values in your shell. 
 
