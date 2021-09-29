@@ -183,7 +183,7 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
   // Now, check each setpoint in the segment against the zones
   ff_util::Segment::const_iterator it;
   Vec3f tmp = Vec3f::Zero();
-  for (it = seg.begin(); it != seg.end(); it++) {
+  for (it = seg.end(); it != seg.begin(); it--) {
     tmp << it->pose.position.x, it->pose.position.y, it->pose.position.z;
     if (jps_map_util_->isOccupied(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_OUT;
