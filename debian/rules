@@ -39,7 +39,7 @@ override_dh_auto_configure:
 	# configure the build
 	cd .. && \
 	catkin init && \
-	catkin profile add debian && \
+	catkin profile add debian --force && \
 	catkin profile set debian && \
 	catkin config \
 		--install \
