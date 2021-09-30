@@ -17,45 +17,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from os import path as osPath
-from sys import path as sysPath
-from time import sleep
+from data_support import PmcCommand, PoseStamped, EkfState, FamCommand, ControlState, Quaternion, Vector3, Log
 
-from data_support import (
-    ControlState,
-    EkfState,
-    FamCommand,
-    Log,
-    PmcCommand,
-    PoseStamped,
-    Quaternion,
-    Vector3,
-)
-from pkg_resources import get_distribution, parse_version
+from sys import path as sysPath
+from os import path as osPath
+from time import sleep
+from pkg_resources import parse_version, get_distribution
 
 try:
     import rticonnextdds_connector as rti
 except Exception as e:
-    raise ImportError(
-        "\nYou haven't installed a needed RTI DDS library. \n\nFirst, ensure you have"
-        + " pip installed:\n\n\tsudo apt-get install python-pip\n\n"
-        + "Then install the library:\n\n\tpip install rticonnextdds-connector\n"
-    )
+    raise ImportError("\nYou haven't installed a needed RTI DDS library. \n\nFirst, ensure you have" +
+            " pip installed:\n\n\tsudo apt-get install python-pip\n\n" +
+            "Then install the library:\n\n\tpip install rticonnextdds-connector\n")
 
-import math
 import threading
+import math
 
 filepath = osPath.dirname(osPath.realpath(__file__))
-connector = rti.Connector(
-    "MyParticipantLibrary::Zero", filepath + "/dds_types/CurrentDDSProfile.xml"
-)
+connector = rti.Connector("MyParticipantLibrary::Zero", filepath + "/dds_types/CurrentDDSProfile.xml")
 rti_version = get_distribution("rticonnextdds-connector").version
-is_old_version = parse_version(rti_version) < parse_version("0.4.1")
-
+is_old_version = parse_version(rti_version) < parse_version('0.4.1')
 
 def is_shutdown():
     return False
-
 
 class DdsSubscriberManager:
     subscribers = dict()
@@ -71,6 +56,7 @@ class DdsSubscriberManager:
             self.subscribers[key].start_sync(self.sem)
         else:
             self.subscribers[key].sem = self.sem
+
 
     def get_subscriber(self, key):
         return self.subscribers.get(key, None)
@@ -88,13 +74,12 @@ class DdsSubscriberManager:
                 return False
 
     def stop_all(self):
-        for key, value in list(self.subscribers.items()):
+        for key, value in self.subscribers.iteritems():
             value.stop()
 
     def start_all(self):
         for key, value in self.subscribers.itemitems():
             value.start_sync(self.sem)
-
 
 class DdsSubscriber(threading.Thread):
 
@@ -120,11 +105,8 @@ class DdsSubscriber(threading.Thread):
             self.sem.acquire(True)
             connector.wait(self.timeout)
             self.inputDDS.take()
-            numOfSamples = (
-                self.inputDDS.samples.getLength()
-                if not is_old_version
-                else self.inputDDS.samples.getLength() + 1
-            )
+            numOfSamples = (self.inputDDS.samples.getLength() if not is_old_version
+                else self.inputDDS.samples.getLength() + 1)
 
             for j in range(self.start_index, numOfSamples):
                 if self.inputDDS.infos.isValid(j):
@@ -140,28 +122,27 @@ class DdsSubscriber(threading.Thread):
             self.start()
 
     def stop(self):
-        self.stopper.set()
-
+	self.stopper.set()
 
 class Dict2RosMsgTranslator:
 
     supported_ros_types = {
-        PoseStamped: lambda self, data: self.__dictionary_to_pose_stamped_msg(data),
-        EkfState: lambda self, data: self.__dictionary_to_ekf_msg(data),
-        FamCommand: lambda self, data: self.__dictionary_to_fam_msg(data),
-        ControlState: lambda self, data: self.__dictionary_to_control_msg(data),
-        PmcCommand: lambda self, data: self.__dictionary_to_pmc_msg(data),
-        Log: lambda self, data: self.__dictionary_to_log_msg(data),
+	   PoseStamped:	lambda self, data: self.__dictionary_to_pose_stamped_msg(data),
+	   EkfState:	lambda self, data: self.__dictionary_to_ekf_msg(data),
+	   FamCommand:	lambda self, data: self.__dictionary_to_fam_msg(data),
+	   ControlState:	lambda self, data: self.__dictionary_to_control_msg(data),
+       PmcCommand:     lambda self, data: self.__dictionary_to_pmc_msg(data),
+       Log:            lambda self, data: self.__dictionary_to_log_msg(data)
     }
 
     ros_type = None
 
     def __init__(self, ros_type):
-        self.ros_type = ros_type
+	self.ros_type = ros_type
 
     def translate(self, dictionary):
-        ros_msg = self.supported_ros_types[self.ros_type](self, dictionary)
-        return ros_msg
+	ros_msg = self.supported_ros_types[self.ros_type](self, dictionary)
+	return ros_msg
 
     def __array_to_vector3d(self, vector_array):
         vector3d = Vector3()
@@ -183,119 +164,114 @@ class Dict2RosMsgTranslator:
     def __dictionary_to_control_msg(self, dic):
         msg = ControlState()
 
-        msg.when = dic["hdr"]["timeStamp"] * 1000
+        msg.when = dic['hdr']['timeStamp'] * 1000
 
-        msg.pose.position = self.__array_to_vector3d(dic["pose"]["xyz"])
-        msg.pose.orientation = self.__array_to_quaternion(dic["pose"]["rot"])
+        msg.pose.position = self.__array_to_vector3d(dic['pose']['xyz'])
+        msg.pose.orientation = self.__array_to_quaternion(dic['pose']['rot'])
 
-        msg.twist.linear = self.__array_to_vector3d(dic["twist"]["linear"])
-        msg.twist.angular = self.__array_to_vector3d(dic["twist"]["angular"])
+        msg.twist.linear = self.__array_to_vector3d(dic['twist']['linear'])
+        msg.twist.angular = self.__array_to_vector3d(dic['twist']['angular'])
 
-        msg.accel.linear = self.__array_to_vector3d(dic["accel"]["linear"])
-        msg.accel.angular = self.__array_to_vector3d(dic["accel"]["angular"])
+        msg.accel.linear = self.__array_to_vector3d(dic['accel']['linear'])
+        msg.accel.angular = self.__array_to_vector3d(dic['accel']['angular'])
 
         return msg
 
     def __dictionary_to_fam_msg(self, dic):
         msg = FamCommand()
 
-        msg.header.stamp = dic["hdr"]["timeStamp"]
-        msg.wrench.force = self.__array_to_vector3d(dic["wrench"]["force"])
-        msg.wrench.torque = self.__array_to_vector3d(dic["wrench"]["torque"])
-        msg.accel = self.__array_to_vector3d(dic["accel"])
-        msg.alpha = self.__array_to_vector3d(dic["alpha"])
-        msg.status = dic["status"]
-        msg.position_error = self.__array_to_vector3d(dic["position_error"])
-        msg.position_error_integrated = self.__array_to_vector3d(
-            dic["position_error_integrated"]
-        )
-        msg.attitude_error = self.__array_to_vector3d(dic["attitude_error"])
-        msg.attitude_error_integrated = self.__array_to_vector3d(
-            dic["attitude_error_integrated"]
-        )
-        msg.attitude_error_mag = dic["attitude_error_mag"]
-        msg.control_mode = dic["control_mode"]
+        msg.header.stamp = dic['hdr']['timeStamp']
+        msg.wrench.force = self.__array_to_vector3d(dic['wrench']['force'])
+        msg.wrench.torque = self.__array_to_vector3d(dic['wrench']['torque'])
+        msg.accel = self.__array_to_vector3d(dic['accel'])
+        msg.alpha = self.__array_to_vector3d(dic['alpha'])
+        msg.status = dic['status']
+        msg.position_error = self.__array_to_vector3d(dic['position_error'])
+        msg.position_error_integrated = self.__array_to_vector3d(dic['position_error_integrated'])
+        msg.attitude_error = self.__array_to_vector3d(dic['attitude_error'])
+        msg.attitude_error_integrated = self.__array_to_vector3d(dic['attitude_error_integrated'])
+        msg.attitude_error_mag = dic['attitude_error_mag']
+        msg.control_mode = dic['control_mode']
 
-        # print msg.asDict()
+        #print msg.asDict()
         return msg
+
 
     def __dictionary_to_pose_stamped_msg(self, dic):
         msg = PoseStamped()
-        msg.header.stamp = dic["hdr"]["timeStamp"]
-        msg.pose.position = self.__array_to_vector3d(dic["pose"]["xyz"])
-        msg.pose.orientation = self.__array_to_quaternion(dic["pose"]["rot"])
+        msg.header.stamp = dic['hdr']['timeStamp']
+        msg.pose.position = self.__array_to_vector3d(dic['pose']['xyz'])
+        msg.pose.orientation = self.__array_to_quaternion(dic['pose']['rot'])
         return msg
 
+
     def __dictionary_to_ekf_msg(self, dic):
-        # print dic
+        #print dic
         msg = EkfState()
 
-        msg.header.stamp = dic["hdr"]["timeStamp"]
+        msg.header.stamp = dic['hdr']['timeStamp']
 
-        msg.pose.position = self.__array_to_vector3d(dic["pose"]["xyz"])
+        msg.pose.position = self.__array_to_vector3d(dic['pose']['xyz'])
 
-        msg.pose.orientation = self.__array_to_quaternion(dic["pose"]["rot"])
+        msg.pose.orientation = self.__array_to_quaternion(dic['pose']['rot'])
 
-        msg.velocity = self.__array_to_vector3d(dic["velocity"])
-        msg.omega = self.__array_to_vector3d(dic["omega"])
-        msg.gyro_bias = self.__array_to_vector3d(dic["gyro_bias"])
-        msg.accel = self.__array_to_vector3d(dic["accel"])
-        msg.accel_bias = self.__array_to_vector3d(dic["accel_bias"])
+        msg.velocity = self.__array_to_vector3d(dic['velocity'])
+        msg.omega = self.__array_to_vector3d(dic['omega'])
+        msg.gyro_bias = self.__array_to_vector3d(dic['gyro_bias'])
+        msg.accel = self.__array_to_vector3d(dic['accel'])
+        msg.accel_bias = self.__array_to_vector3d(dic['accel_bias'])
 
-        for i in range(0, len(dic["cov_diag"])):
-            msg.cov_diag[i] = dic["cov_diag"][i]
+        for i in range(0, len(dic['cov_diag'])):
+	   msg.cov_diag[i] = dic['cov_diag'][i]
 
-        msg.confidence = dic["confidence"]
-        msg.status = dic["status"]
-        msg.of_count = dic["of_count"]
-        msg.ml_count = dic["ml_count"]
+        msg.confidence = dic['confidence']
+        msg.status = dic['status']
+        msg.of_count = dic['of_count']
+        msg.ml_count = dic['ml_count']
 
-        msg.hr_global_pose.position = self.__array_to_vector3d(
-            dic["hr_global_pose"]["xyz"]
-        )
+        msg.hr_global_pose.position = self.__array_to_vector3d(dic['hr_global_pose']['xyz'])
 
-        msg.hr_global_pose.orientation = self.__array_to_quaternion(
-            dic["hr_global_pose"]["rot"]
-        )
+        msg.hr_global_pose.orientation = self.__array_to_quaternion(dic['hr_global_pose']['rot'])
 
-        for i in range(0, len(dic["ml_mahal_dists"])):
-            msg.ml_mahal_dists[i] = dic["ml_mahal_dists"][i]
+        for i in range(0, len(dic['ml_mahal_dists'])):
+    	    msg.ml_mahal_dists[i] = dic['ml_mahal_dists'][i]
 
-        # print msg.asDict()
+        #print msg.asDict()
         return msg
 
     def __dictionary_to_pmc_msg(self, dic):
         msg = PmcCommand()
-        msg.header.stamp = dic["hdr"]["timeStamp"]
+        msg.header.stamp = dic['hdr']['timeStamp']
 
-        for i in range(0, len(dic["goals"])):
-            goal = PmcCommand.PmcGoal(dic["goals"][i]["motorSpeed"])
-            for j in range(0, len(dic["goals"][i]["nozzlePositions"])):
-                goal.nozzle_positions.append(chr(dic["goals"][i]["nozzlePositions"][j]))
+        for i in range(0, len(dic['goals'])):
+            goal = PmcCommand.PmcGoal(dic['goals'][i]['motorSpeed'])
+            for j in range(0, len(dic['goals'][i]['nozzlePositions'])):
+                goal.nozzle_positions.append(chr(dic['goals'][i]['nozzlePositions'][j]))
             msg.goals.append(goal)
 
-        # print msg.asDict()
+        #print msg.asDict()
         return msg
 
     def __dictionary_to_log_msg(self, dic):
         msg = Log()
-        msg.header.stamp = dic["hdr"]["timeStamp"]
-        msg.level = math.pow(2, dic["level"])
-        msg.name = dic["name"]
-        msg.msg = dic["msg"]
-        # print msg.asDict()
+        msg.header.stamp = dic['hdr']['timeStamp']
+        msg.level = math.pow(2, dic['level'])
+        msg.name = dic['name']
+        msg.msg = dic['msg']
+        #print msg.asDict()
         return msg
 
-
 class DdsCommandExecutor:
+
     def __init__(self):
         pass
 
     def reset_ekf(self):
-        print("reset_ekf function is not yet implemented on dds")
+        print "reset_ekf function is not yet implemented on dds"
+
 
     def initialize_bias(self):
-        print("initialize_bias function is not yet implemented on dds")
+        print "initialize_bias function is not yet implemented on dds"
 
     def toggle_pmc(self):
-        print("toggle_pmc function is not yet implemented on dds")
+        print "toggle_pmc function is not yet implemented on dds"
