@@ -245,18 +245,18 @@ class Dict2RosMsgTranslator:
         for i in range(0, len(dic["cov_diag"])):
             msg.cov_diag[i] = dic["cov_diag"][i]
 
-            msg.confidence = dic["confidence"]
-            msg.status = dic["status"]
-            msg.of_count = dic["of_count"]
-            msg.ml_count = dic["ml_count"]
+        msg.confidence = dic["confidence"]
+        msg.status = dic["status"]
+        msg.of_count = dic["of_count"]
+        msg.ml_count = dic["ml_count"]
 
-            msg.hr_global_pose.position = self.__array_to_vector3d(
-                dic["hr_global_pose"]["xyz"]
-            )
+        msg.hr_global_pose.position = self.__array_to_vector3d(
+            dic["hr_global_pose"]["xyz"]
+        )
 
-            msg.hr_global_pose.orientation = self.__array_to_quaternion(
-                dic["hr_global_pose"]["rot"]
-            )
+        msg.hr_global_pose.orientation = self.__array_to_quaternion(
+            dic["hr_global_pose"]["rot"]
+        )
 
         for i in range(0, len(dic["ml_mahal_dists"])):
             msg.ml_mahal_dists[i] = dic["ml_mahal_dists"][i]
