@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+files=$(git diff --cached --name-only | grep '\.py$')
+
+# If files is empty exit success
+if [ -z "${files}" ]; then
+  echo "=================================================="
+  echo "  No Python files changed, no checks needed."
+  exit 0
+fi
+
+failed_lint=false
+
+if ! command -v black &> /dev/null
+then
+    echo "Black was not found, to install check https://github.com/psf/black"
+    echo "Unfortunately black requires Python 3.6.2+ to run"
+    exit 0
+fi
+
+if ! command -v isort &> /dev/null
+then
+    echo "isort was not found, to install check https://github.com/PyCQA/isort"
+    exit 0
+fi
+
+echo "=================================================="
+echo "  Analysing with black"
+# This check the files but they will not be commited
+if `black . --include ${files} --check --quiet`; then
+  echo "Linter black checks passed"
+else
+  echo "Errors detected, fixing ..."
+  black . --include ${files}
+  failed_lint=true
+fi
+
+echo "=================================================="
+echo "  Analysing with isort"
+if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
+  echo "Linter isort checks passed"
+else
+  echo "Errors detected, fixing ..."
+  isort ${files} --extend-skip cmake --profile black >/dev/null
+  failed_lint=true
+fi
+
+# Cancel commit if linter failed
+# The user should add manually the corrected files
+if ${failed_lint}; then
+  exit 1
+fi

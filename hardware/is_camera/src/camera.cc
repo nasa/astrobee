@@ -162,7 +162,12 @@ namespace is_camera {
   };
 
   CameraNodelet::CameraNodelet() : ff_util::FreeFlyerNodelet(),
-    img_msg_buffer_idx_(0), thread_running_(false), camera_topic_(""), calibration_mode_(false)
+    img_msg_buffer_idx_(0),
+    bayer_img_msg_buffer_idx_(0),
+    thread_running_(false),
+    camera_topic_(""),
+    calibration_mode_(false),
+    bayer_throttle_ratio_counter_(0)
     {}
 
   CameraNodelet::~CameraNodelet() {
@@ -196,6 +201,10 @@ namespace is_camera {
       config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));}, false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
+    if (bayer_enable_) {
+      bayer_camera_topic_ = camera_topic_ + "_bayer";
+      bayer_pub_ = nh->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
+    }
 
     // Allocate space for our output msg buffer
     for (size_t i = 0; i < kImageMsgBuffer; i++) {
@@ -207,9 +216,35 @@ namespace is_camera {
       img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
     }
 
+    if (bayer_enable_) {
+      // Allocate space for our Bayer output msg buffer
+      for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
+        bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
+        bayer_img_msg_buffer_[i]->width = kImageWidth;
+        bayer_img_msg_buffer_[i]->height = kImageHeight;
+
+        // The OpenCV specification of the IS camera Bayer encoding
+        // appears to be "BayerGR" if our previous cvtColor() call
+        // is correct. That corresponds to a ROS specification of
+        // enc::BAYER_GBRG8 [1].
+        // [1] https://github.com/ros-perception/image_pipeline/blob/71d537a50bf4e7769af513f4a3d3df0d188cfa05/image_proc/src/nodelets/debayer.cpp#L223
+        bayer_img_msg_buffer_[i]->encoding = "bayer_gbrg8";
+        bayer_img_msg_buffer_[i]->step = kImageWidth;
+        bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
+      }
+    }
+
     v4l_.reset(new V4LStruct(camera_device_, camera_gain_, camera_exposure_));
     thread_running_ = true;
     thread_ = std::thread(&CameraNodelet::PublishLoop, this);
+  }
+
+  size_t CameraNodelet::getNumBayerSubscribers(void) {
+    if (bayer_enable_) {
+      return bayer_pub_.getNumSubscribers();
+    } else {
+      return 0;
+    }
   }
 
   void CameraNodelet::ReadParams(void) {
@@ -251,6 +286,18 @@ namespace is_camera {
       }
     }
 
+    if (!camera.GetBool("bayer_enable", &bayer_enable_)) {
+      FF_FATAL("Bayer enable not specified.");
+      exit(EXIT_FAILURE);
+    }
+
+    if (bayer_enable_) {
+      if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
+        FF_FATAL("Bayer throttle ratio not specified.");
+        exit(EXIT_FAILURE);
+      }
+    }
+
     if (thread_running_) {
       v4l_->SetParameters(camera_gain_, camera_exposure_);
     }
@@ -261,7 +308,7 @@ namespace is_camera {
 
     while (thread_running_) {
       if (!camera_running) {
-        while ((pub_.getNumSubscribers() == 0) && thread_running_)
+        while ((pub_.getNumSubscribers() + getNumBayerSubscribers() == 0) && thread_running_)
           usleep(100000);
         if (!thread_running_)
           break;
@@ -299,34 +346,63 @@ namespace is_camera {
       int last_buf = v4l_->buf.index;
 
       v4l_->buf.index = (last_buf + 1) % v4l_->req.count;
-      if (pub_.getNumSubscribers() != 0)
+      if (pub_.getNumSubscribers() + getNumBayerSubscribers() > 0)
         xioctl(v4l_->fd, VIDIOC_QBUF, &v4l_->buf);
       else
         camera_running = false;
       ros::Time timestamp = ros::Time::now();
 
-      // Select our output msg buffer
-      img_msg_buffer_idx_ = (img_msg_buffer_idx_ + 1) % kImageMsgBuffer;
-
       if (!failed) {
-        // Wrap the buffer with cv::Mat so we can manipulate it.
-        cv::Mat wrapped(v4l_->fmt.fmt.pix.height,
-            v4l_->fmt.fmt.pix.width,
-            cv::DataType<uint8_t>::type,
-            v4l_->buffers[last_buf].start,
-            v4l_->fmt.fmt.pix.width);  // does not copy
-        cv::Mat owrapped(kImageHeight, kImageWidth,
-            cv::DataType<uint8_t>::type,
-            &(img_msg_buffer_[img_msg_buffer_idx_]->data[0]),
-            kImageWidth);
-        cv::cvtColor(wrapped, owrapped,
-            CV_BayerGR2GRAY);
+        if (pub_.getNumSubscribers() > 0) {
+          sensor_msgs::ImagePtr& out_image = img_msg_buffer_[img_msg_buffer_idx_];
 
-        // Attach the time
-        img_msg_buffer_[img_msg_buffer_idx_]->header = std_msgs::Header();
-        img_msg_buffer_[img_msg_buffer_idx_]->header.stamp = timestamp;
+          // Use OpenCV to convert raw Bayer format to grayscale (writing the result
+          // into the pre-allocated slot in the image message ring buffer).
+          cv::Mat wrapped(v4l_->fmt.fmt.pix.height,
+                          v4l_->fmt.fmt.pix.width,
+                          cv::DataType<uint8_t>::type,
+                          v4l_->buffers[last_buf].start,
+                          v4l_->fmt.fmt.pix.width);  // does not copy
+          cv::Mat owrapped(kImageHeight, kImageWidth,
+                           cv::DataType<uint8_t>::type,
+                           &(out_image->data[0]),
+                           kImageWidth);
+          cv::cvtColor(wrapped, owrapped,
+                       CV_BayerGR2GRAY);
 
-        pub_.publish(img_msg_buffer_[img_msg_buffer_idx_]);
+          // Attach the time
+          out_image->header = std_msgs::Header();
+          out_image->header.stamp = timestamp;
+
+          pub_.publish(out_image);
+
+          // Increment index in ring buffer
+          img_msg_buffer_idx_ = (img_msg_buffer_idx_ + 1) % kImageMsgBuffer;
+        }
+
+        if (getNumBayerSubscribers() > 0) {
+          bayer_throttle_ratio_counter_ = (bayer_throttle_ratio_counter_ + 1)
+            % bayer_throttle_ratio_;
+
+          if (bayer_throttle_ratio_counter_ == 0) {
+            sensor_msgs::ImagePtr& out_image = bayer_img_msg_buffer_[bayer_img_msg_buffer_idx_];
+
+            // Copy the raw Bayer format data into the pre-allocated
+            // slot in the image message ring buffer.
+            memcpy(&(out_image->data[0]),
+                   v4l_->buffers[last_buf].start,
+                   kImageWidth * kImageHeight);
+
+            // Attach the time
+            out_image->header = std_msgs::Header();
+            out_image->header.stamp = timestamp;
+
+            bayer_pub_.publish(out_image);
+
+            // Increment index in ring buffer
+            bayer_img_msg_buffer_idx_ = (bayer_img_msg_buffer_idx_ + 1) % kBayerImageMsgBufferLength;
+          }
+        }
       }
 
       ros::spinOnce();

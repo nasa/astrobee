@@ -201,7 +201,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // [11] - If we successfully stopped, we switch to perch localization (future work)
     fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_PERCH);
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::PERCHING_SWITCHING_TO_PL_LOC;
       });
     // [12] - With all steps done, we conclude we are perched.
@@ -825,7 +825,6 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       // Move to the approach pose.
       case APPROACH_POSE:
         msg.header.frame_id = platform_name_ + "handrail/approach";
-        ROS_ERROR_STREAM("transform " << msg.header.frame_id);
         goal.states.push_back(msg);
         break;
       // Move to the recovery pose. This option is currently used to move to the

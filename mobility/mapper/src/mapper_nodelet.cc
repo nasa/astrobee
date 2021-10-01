@@ -57,7 +57,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
       &MapperNodelet::DiagnosticsCallback, this, false, true);
 
   // load parameters
-  double map_resolution, memory_time, max_range, min_range, inflate_radius;
+  double map_resolution, memory_time, max_range, min_range, collision_distance, robot_radius;
   double cam_fov, aspect_ratio;
   double occupancy_threshold, probability_hit, probability_miss;
   double clamping_threshold_max, clamping_threshold_min;
@@ -67,7 +67,8 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   max_range = cfg_.Get<double>("max_range");
   min_range = cfg_.Get<double>("min_range");
   memory_time = cfg_.Get<double>("memory_time");
-  inflate_radius = cfg_.Get<double>("inflate_radius");
+  collision_distance = cfg_.Get<double>("collision_distance");
+  robot_radius = cfg_.Get<double>("robot_radius");
   cam_fov = cfg_.Get<double>("cam_fov");
   aspect_ratio = cfg_.Get<double>("cam_aspect_ratio");
   occupancy_threshold = cfg_.Get<double>("occupancy_threshold");
@@ -86,8 +87,8 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   globals_.octomap.SetResolution(map_resolution);
   globals_.octomap.SetMaxRange(max_range);
   globals_.octomap.SetMinRange(min_range);
-  globals_.octomap.SetMemory(memory_time);
-  globals_.octomap.SetMapInflation(inflate_radius);
+  globals_.octomap.SetMemoryTime(memory_time);
+  globals_.octomap.SetMapInflation(collision_distance + robot_radius);
   globals_.octomap.SetCamFrustum(cam_fov, aspect_ratio);
   globals_.octomap.SetOccupancyThreshold(occupancy_threshold);
   globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
@@ -160,12 +161,18 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     &MapperNodelet::ResetCallback, this);
 
   // Services
-  resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MAP_RESOLUTION,
-    &MapperNodelet::UpdateResolution, this);
-  memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MEMORY_TIME,
-    &MapperNodelet::UpdateMemoryTime, this);
-  map_inflation_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_INFLATION,
-    &MapperNodelet::MapInflation, this);
+  set_resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_MAP_RESOLUTION,
+    &MapperNodelet::SetResolution, this);
+  set_memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_MEMORY_TIME,
+    &MapperNodelet::SetMemoryTime, this);
+  set_collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_COLLISION_DISTANCE,
+    &MapperNodelet::SetCollisionDistance, this);
+  get_resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MAP_RESOLUTION,
+    &MapperNodelet::GetResolution, this);
+  get_memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MEMORY_TIME,
+    &MapperNodelet::GetMemoryTime, this);
+  get_collision_distance_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_MAP_INFLATION,
+    &MapperNodelet::GetMapInflation, this);
   reset_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_RESET_MAP,
     &MapperNodelet::ResetMap, this);
   get_free_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_FREE_MAP,

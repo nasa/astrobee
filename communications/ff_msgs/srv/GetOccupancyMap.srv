@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 # 
@@ -16,32 +14,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# This message allows the MOBILITY::MAPPER zones to be retrieved
 
-import os
-import sys
-import time
+---
+time timestamp                          # When these zones were updated
 
-import environment
-
-
-def run_sparse_map_bag(astrobee_map, astrobee_bag):
-  os.system('rosrun ekf_bag sparse_map_bag %s %s' % (astrobee_map, astrobee_bag))
-
-astrobee_map = None
-astrobee_bag = None
-
-if len(sys.argv) < 3:
-  print("Usage: " + sys.argv[0] + " mybag.bag mymap.map")
-  sys.exit(1)
-  
-astrobee_bag = sys.argv[1]
-astrobee_map = sys.argv[2]
-
-(astrobee_map, astrobee_bag, astrobee_robot) = environment.initialize_environment(astrobee_map, astrobee_bag, None)
-name_prefix = astrobee_bag[:astrobee_bag.rfind('.')]
-
-start = time.time()
-run_sparse_map_bag(astrobee_map, astrobee_bag)
-run_time = time.time() - start
-print 'Run time: %g' % (run_time)
-
+int8[] map                              # Occupancy map
+geometry_msgs/Vector3 origin            # Map origin
+geometry_msgs/Vector3 dim	              # Map dimentions
+float32 resolution                      # Map resolution

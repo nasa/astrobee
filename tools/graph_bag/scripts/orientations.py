@@ -20,22 +20,23 @@ import scipy.spatial.transform
 
 
 class Orientations:
+    def __init__(self):
+        self.yaws = []
+        self.pitches = []
+        self.rolls = []
 
-  def __init__(self):
-    self.yaws = []
-    self.pitches = []
-    self.rolls = []
+    def get_euler(self, index):
+        return [self.yaws[index], self.pitches[index], self.rolls[index]]
 
-  def get_euler(self, index):
-    return [self.yaws[index], self.pitches[index], self.rolls[index]]
+    def get_rotation(self, index):
+        return scipy.spatial.transform.Rotation.from_euler(
+            "ZYX", self.get_euler(index), degrees=True
+        )
 
-  def get_rotation(self, index):
-    return scipy.spatial.transform.Rotation.from_euler('ZYX', self.get_euler(index), degrees=True)
+    def add_euler(self, euler_angles):
+        self.add(euler_angles[0], euler_angles[1], euler_angles[2])
 
-  def add_euler(self, euler_angles):
-    self.add(euler_angles[0], euler_angles[1], euler_angles[2])
-
-  def add(self, yaw, pitch, roll):
-    self.yaws.append(yaw)
-    self.pitches.append(pitch)
-    self.rolls.append(roll)
+    def add(self, yaw, pitch, roll):
+        self.yaws.append(yaw)
+        self.pitches.append(pitch)
+        self.rolls.append(roll)

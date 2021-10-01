@@ -90,8 +90,8 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   GazeboModelPluginEps() : FreeFlyerModelPlugin("eps_driver", "", true),
     fsm_(UNKNOWN, std::bind(&GazeboModelPluginEps::StateCallback,
       this, std::placeholders::_1, std::placeholders::_2)),
-    rate_(10.0), distance_(0.05), delay_(5.0), lock_(false),
-    battery_capacity_(3.4), battery_charge_(3.0),
+    rate_(10.0), distance_near_(0.05), distance_far_(0.05), delay_(5.0),
+    lock_(false), battery_capacity_(3.4), battery_charge_(3.0),
     battery_discharge_rate_(0.005) {
       // In an unknown state, if we are sensed to be near or far from a berth
       // then update to either a docked or undocked state.
@@ -116,7 +116,6 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
           // Setup a timer to expire after a givent delay
           timer_delay_.stop();
           timer_delay_.start();
-          ros::Duration(1.0).sleep();
           // Create a virtual link
           Lock(true);
           // We are now in the process of docking
@@ -196,8 +195,10 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // Get parameters
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
-    if (sdf->HasElement("distance"))
-      distance_ = sdf->Get<double>("distance");
+    if (sdf->HasElement("distance_near"))
+      distance_near_ = sdf->Get<double>("distance_near");
+    if (sdf->HasElement("distance_far"))
+      distance_far_ = sdf->Get<double>("distance_far");
     if (sdf->HasElement("delay"))
       delay_ = sdf->Get<double>("delay");
     // Setup telemetry publishers
@@ -445,24 +446,32 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // There are smarter ways to do this sort of search (kNN) but this we are
     // only expecting fewer than 6 berths, it seems like needless optimization.
     bool near = false;
+    bool far = true;
     for (nearest_ = berths_.begin(); nearest_ != berths_.end(); nearest_++) {
       #if GAZEBO_MAJOR_VERSION > 7
-      if (GetModel()->WorldPose().Pos().Distance(
-          nearest_->second.Pos()) > distance_) continue;
+      double distance = GetModel()->WorldPose().Pos().Distance(
+        nearest_->second.Pos());
       #else
-      if (GetModel()->GetWorldPose().Ign().Pos().Distance(
-        nearest_->second.Pos()) > distance_) continue;
+      double distance = GetModel()->GetWorldPose().Ign().Pos().Distance(
+        nearest_->second.Pos());
       #endif
-      // Now, send an event to the FSM to signal that we are close!
-      fsm_.Update(SENSE_NEAR);
+
       // There should always only be one dock that we are close to
-      near = true;
-      break;
+      if (distance < distance_near_) {
+        near = true;
+        break;
+      }
+      if (distance < distance_far_)
+        far = false;
+    }
+    // Send an NEAR event if we are close to a berth
+    if (near) {
+      fsm_.Update(SENSE_NEAR);
+    // Send an FAR event if we aren't close to any berth
+    } else if (far) {
+      fsm_.Update(SENSE_FAR);
     }
 
-    // Send an FAR event if we aren't close to any berth
-    if (!near)
-      fsm_.Update(SENSE_FAR);
     // Whatever the result, publish the dock state to be used by other entites
     // in the system, and in particular the dock procedure.
     ff_hw_msgs::EpsDockStateStamped msg;
@@ -668,7 +677,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
 
  private:
   ff_util::FSM fsm_;
-  double rate_, distance_, delay_;
+  double rate_, distance_near_, distance_far_ , delay_;
   bool lock_;
   double battery_capacity_, battery_charge_, battery_discharge_rate_;
   event::ConnectionPtr update_;

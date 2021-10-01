@@ -12,13 +12,18 @@ The docker image for the astrobee FSW is divided throughout 2 docker files.
 
 Available docker files:
 
-    astrobee_base_xenial - Contains installation of all astrobee dependencies the Ubuntu 16.04 + ROS kinetic setup.
-    astrobee_base_bionic - Contains installation of all astrobee dependencies the Ubuntu 18.04 + ROS melodic setup.
-    astrobee_base_focal - Contains installation of all astrobee dependencies the Ubuntu 20.04 + ROS noetic setup.
+- `astrobee_base.Dockerfile` - Contains installation of all astrobee dependencies the Ubuntu + ROS setup.
+- `astrobee.Dockerfile` - Builds the astrobee FSW code on top of astrobee_base.
 
-    astrobee_xenial - Builds the astrobee FSW code on top of astrobee_base_xenial.
-    astrobee_bionic - Builds the astrobee FSW code on top of astrobee_base_bionic.
-    astrobee_focal - Builds the astrobee FSW code on top of astrobee_base_focal.
+The Docker files accept the following version args (note that they must match up):
+
+- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04", "18.04", and "20.04".
+- `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic".
+- `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3".
+
+If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
+If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
+If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
 
 
 ## Building the docker images
@@ -26,14 +31,17 @@ Available docker files:
 To build the docker images, run:
     
     ./build.sh
-The option --bionic is used for ubuntu 18 docker images, and --focal is used for ubuntu 20 docker images.
+The build script will automatically detect the current Ubuntu OS version and define the docker files variables
+`UBUNTU_VERSION`, `ROS_VERSION`, and `PYTHON`. If a specific version is desired, the option --xenial, --bionic,
+and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
 
 ## Run the container
 
 To run the docker container:
 
     ./run.sh
-The option --bionic is used for ubuntu 18 docker images, and --focal is used for ubuntu 20 docker images.
+It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
+--xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
 
 To open another terminal inside the docker container:
 

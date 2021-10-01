@@ -16,33 +16,36 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import merge_bags
-
 import argparse
 import os
 import re
 import string
 import sys
 
+import merge_bags
 import rosbag
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--merged-bag', default='')
-  parser.add_argument('--only-loc-topics', dest='only_loc_topics', action='store_true')
-  args = parser.parse_args()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--merged-bag", default="")
+    parser.add_argument(
+        "--only-loc-topics", dest="only_loc_topics", action="store_true"
+    )
+    args = parser.parse_args()
 
-  # Find bagfiles with bag prefix in current directory, fail if none found
-  bag_names = [(os.path.splitext(bag)[0]).rstrip(string.digits)
-               for bag in os.listdir('.')
-               if os.path.isfile(bag) and bag.endswith('.bag')]
-  # Remove duplicates
-  bag_names = sorted(set(bag_names))
-  if (len(bag_names) == 0):
-    print('No bag files found')
-    sys.exit()
-  else:
-    print('Found ' + str(len(bag_names)) + ' bag file prefixes.')
+    # Find bagfiles with bag prefix in current directory, fail if none found
+    bag_names = [
+        (os.path.splitext(bag)[0]).rstrip(string.digits)
+        for bag in os.listdir(".")
+        if os.path.isfile(bag) and bag.endswith(".bag")
+    ]
+    # Remove duplicates
+    bag_names = sorted(set(bag_names))
+    if len(bag_names) == 0:
+        print("No bag files found")
+        sys.exit()
+    else:
+        print(("Found " + str(len(bag_names)) + " bag file prefixes."))
 
-  for bag_name in bag_names:
-    merge_bags.merge_bag(bag_name, args.merged_bag, args.only_loc_topics)
+    for bag_name in bag_names:
+        merge_bags.merge_bag(bag_name, args.merged_bag, args.only_loc_topics)
