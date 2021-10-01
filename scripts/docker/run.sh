@@ -18,17 +18,20 @@
 # under the License.
 
 # short help
-usage_string="$scriptname [-h] [-n <use ubuntu 18 installation>]"
+usage_string="$scriptname [-h] [-x <use ubuntu 16.04 image>]\
+ [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]"
 #[-t make_target]
 
 usage()
 {
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
-os="xenial"
+os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
 while [ "$1" != "" ]; do
     case $1 in
+        -x | --xenial )                 os="xenial"
+                                        ;;
         -b | --bionic )                 os="bionic"
                                         ;;
         -f | --focal )                  os="focal"
@@ -59,7 +62,7 @@ docker run -it --rm --name astrobee \
         --env="DISPLAY" \
         --user="astrobee" \
         --gpus all \
-      astrobee/astrobee:latest-xenial \
+      astrobee/astrobee:latest-ubuntu16.04 \
     /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
 elif [ "$os" = "bionic" ]; then
 docker run -it --rm --name astrobee \
@@ -68,7 +71,7 @@ docker run -it --rm --name astrobee \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
         --user="astrobee" \
-      astrobee/astrobee:latest-bionic \
+      astrobee/astrobee:latest-ubuntu18.04 \
     /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
 elif [ "$os" = "focal" ]; then
 docker run -it --rm --name astrobee \
@@ -77,6 +80,6 @@ docker run -it --rm --name astrobee \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
         --user="astrobee" \
-      astrobee/astrobee:latest-focal \
+      astrobee/astrobee:latest-ubuntu20.04 \
     /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
 fi

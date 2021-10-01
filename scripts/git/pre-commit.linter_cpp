@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+
+import datetime
+import importlib.machinery
+import os
+import subprocess
+from itertools import groupby
+from operator import itemgetter
+
+
+def get_cpplint_path():
+    pwd = os.path.realpath(os.path.curdir)
+    root = -1
+    if "FreeFlyerMLP" in pwd:
+        root = pwd.split("/").index("FreeFlyerMLP")
+        return "/".join(pwd.split("/")[: root + 1] + ["scripts", "git", "cpplint.py"])
+    else:
+        return get_repo_path().decode() + "/scripts/git/cpplint.py"
+    return ""
+
+
+def get_repo_path():
+    pwd = os.path.realpath(os.path.curdir)
+    root = -1
+    if "FreeFlyerMLP" in pwd:
+        root = pwd.split("/").index("FreeFlyerMLP")
+        return "/".join(pwd.split("/")[: root + 1])
+    else:
+        try:
+            return (
+                subprocess.Popen(
+                    ["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE
+                )
+                .communicate()[0]
+                .rstrip()
+            )
+        except:
+            print("Can't find repo path")
+            exit(1)
+    return ""
+
+
+def run_cpplint(filename, cpplint_path):
+    cpplint = importlib.machinery.SourceFileLoader(
+        "cpplint", cpplint_path
+    ).load_module()
+    cpplint._cpplint_state.ResetErrorCounts()
+    cpplint.print_stdout = False
+    cpplint._line_length = 120
+    cpplint.output = []
+    try:
+        index = filename.split("/").index("include")
+        cpplint._root = "/".join(filename.split("/")[: index + 1])
+    except ValueError:
+        pass
+    cpplint.ProcessFile(filename, cpplint._cpplint_state.verbose_level)
+    return cpplint.output
+
+
+def print_objection():
+    print("   ____  __      _           __  _             __")
+    print("  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /")
+    print(" / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / ")
+    print("/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  ")
+    print("\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   ")
+    print("          /___/                                  ")
+
+
+def main():
+    num_errors = 0
+
+    cpplint_path = get_cpplint_path()
+    repo_path = get_repo_path()
+
+    os.chdir(repo_path)
+    cmd = ["git", "diff", "--cached", "--name-only"]
+    p = subprocess.Popen(
+        cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    output, err = p.communicate()
+    if p.returncode:
+        print("Failed to run git ls-files")
+        exit(1)
+    cpp_files_to_lint = []
+    for filename in output.split():
+        # Needed for python3
+        filename = filename.decode('ascii')
+        if str(filename).endswith(
+            (
+                ".cpp",
+                ".cc",
+                ".h",
+                ".hpp",
+                ".cc.in",
+                ".c",
+                ".c.in",
+                ".h.in",
+                ".hpp.in",
+                ".cxx",
+                ".hxx",
+            )
+        ):
+            if (
+                not "external/" in filename
+                and not "Software/" in filename
+                and not "gnc/matlab/" in filename
+                and not "agast_score" in filename
+                and not "brisk" in filename
+                and not "debian" in filename
+                and not "build" in filename
+            ):
+                cpp_files_to_lint.append(filename)
+
+    for filename in cpp_files_to_lint:
+        output = run_cpplint(filename, cpplint_path)
+
+        # Print an objection at first sight of errors
+        if num_errors == 0 and len(output) > 0:
+            print_objection()
+
+        num_errors += len(output)
+        if len(output) > 0:
+            lines = []
+            for error in output:
+                print("%s:%s: %s" % (filename, str(error[0]), error[1]))
+                lines.append(error[0])
+            # Run the clang-format if there are errors in the identified ranges
+            if len(output) > 0:
+                command = "clang-format-8 -style=file -i " + filename
+                ranges = []
+                for k, g in groupby(enumerate(lines), lambda i_x: i_x[0] - i_x[1]):
+                    group = list(map(itemgetter(1), g))
+                    ranges.append((group[0], group[-1]))
+                for clang_range in ranges:
+                    command = (
+                        command
+                        + " --lines="
+                        + str(clang_range[0])
+                        + ":"
+                        + str(clang_range[1])
+                    )
+                # print command
+                retcode = subprocess.Popen(command, shell=True)
+
+    print("=" * 50)
+    if num_errors > 0:
+        print("  You have %d lint errors, commit failed" % num_errors)
+        print("  The errors were automatically piped through clang-format-8")
+    elif num_errors == 0:
+        print("  Code adheres to style guide lines, committing ...")
+
+    exit(num_errors)
+
+
+if __name__ == "__main__":
+    main()

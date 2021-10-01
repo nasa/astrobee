@@ -21,16 +21,15 @@ import vector3ds
 
 
 class Velocities(object):
+    def __init__(self, velocity_type, topic):
+        self.velocities = vector3ds.Vector3ds()
+        self.times = []
+        self.velocity_type = velocity_type
+        self.topic = topic
 
-  def __init__(self, velocity_type, topic):
-    self.velocities = vector3ds.Vector3ds()
-    self.times = []
-    self.velocity_type = velocity_type
-    self.topic = topic
+    def add_velocity(self, velocity_msg, timestamp, bag_start_time=0):
+        self.velocities.add(velocity_msg.x, velocity_msg.y, velocity_msg.z)
+        self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time)
 
-  def add_velocity(self, velocity_msg, timestamp, bag_start_time=0):
-    self.velocities.add(velocity_msg.x, velocity_msg.y, velocity_msg.z)
-    self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time)
-
-  def add_msg(self, msg, timestamp, bag_start_time=0):
-    self.add_velocity(msg.vector, timestamp, bag_start_time)
+    def add_msg(self, msg, timestamp, bag_start_time=0):
+        self.add_velocity(msg.vector, timestamp, bag_start_time)

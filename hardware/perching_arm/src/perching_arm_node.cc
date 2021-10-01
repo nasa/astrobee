@@ -50,6 +50,7 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
   // Called on flight software stack initialization - every NODELET_FATAIL
   // call below should be converted to an initialization fault...
   void Initialize(ros::NodeHandle *nh) {
+     nh_ = *nh;
     // Read the configuration
     config_reader::ConfigReader config_params;
     config_params.AddFile("hw/perching_arm.config");
@@ -59,6 +60,15 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
     config_reader::ConfigReader::Table devices;
     if (!config_params.GetTable("perching_arm", &devices))
       NODELET_FATAL("Could get perching_arm item in config file");
+
+    // Reconnect to the arm service
+    if (!initialized_) {
+      srv_a_ =
+          nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_ENABLE,
+                               &PerchingArmNode::EnableArmCallback,
+                               this);
+          initialized_ = true;
+    }
 
     // Iterate over all devices
     for (int i = 0; i < devices.GetSize(); i++) {
@@ -99,6 +109,7 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
           NODELET_WARN("Could not initialize the arm. It is attached?");
           return;
         }
+        arm_connected_ = true;
 
         // Grab config parameters for the matched device
         config_reader::ConfigReader::Table config_list;
@@ -347,6 +358,23 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
     }
   }
 
+  // This service re-initializes the perching arm if the arm was
+  // not powered on during startup
+  bool EnableArmCallback(ff_hw_msgs::SetEnabled::Request &req,
+                         ff_hw_msgs::SetEnabled::Response &res) {
+    if (req.enabled && !arm_connected_) {
+      Initialize(&nh_);
+      res.success = arm_connected_;
+    } else if (!req.enabled && arm_connected_) {
+      res.success = false;
+      NODELET_WARN("It is not possible to disable the arm");
+    } else {
+      res.success = true;
+      NODELET_WARN("Already satisfies request");
+    }
+    return true;
+  }
+
   // Set the distal velocity
   bool SetDistVelCallback(ff_hw_msgs::SetJointMaxVelocity::Request &req,
                           ff_hw_msgs::SetJointMaxVelocity::Response &res) {
@@ -415,11 +443,15 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
   }
 
  private:
+  ros::NodeHandle nh_;
+  bool initialized_ = false;
+  bool arm_connected_ = false;
   PerchingArm arm_;              // Arm interface library
   ros::Subscriber sub_;          // Joint state subscriber
   ros::Publisher pub_;           // Joint state publisher
+  ros::ServiceServer srv_a_;     // Enable the arm
   ros::ServiceServer srv_p_;     // Set max pan velocity
-  ros::ServiceServer srv_t_;     // Set max tilt velcoity
+  ros::ServiceServer srv_t_;     // Set max tilt velocity
   ros::ServiceServer srv_ps_;    // Enable/Disable the proximal joint servo
   ros::ServiceServer srv_ds_;    // Enable/Disable the distal   joint servo
   ros::ServiceServer srv_gs_;    // Enable/Disable the gripper  joint servo

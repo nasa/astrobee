@@ -122,7 +122,10 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         return this;
       }
 
-      if (!exec_->ConfigureMobility(cmd->cmd_id)) {
+      if (!exec_->ConfigureMobility(false, err_msg)) {
+        AckCmd(cmd->cmd_id,
+               ff_msgs::AckCompletedStatus::EXEC_FAILED,
+               err_msg);
         return this;
       }
 

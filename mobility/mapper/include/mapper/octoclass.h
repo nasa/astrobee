@@ -46,13 +46,16 @@ class OctoClass{
   OctoClass();
 
   // Mapping methods
-  void SetMemory(const double memory);  // Fading memory time
+  void SetMemoryTime(const double memory);  // Fading memory time
+  double GetMemoryTime();                   // Returns fading memory time
   void SetMaxRange(const double max_range);  // Max range for mapping
   void SetMinRange(const double min_range);  // Min range for mapping
   inline double GetResolution() const {return resolution_;}  // Returns resolution
-  void SetResolution(const double resolution_in);  // Resolution of the octomap
-  void ResetMap();  // Reset the octomap structure
+  void SetResolution(const double resolution_in);     // Resolution of the octomap
+  double GetResolution();                             // Returns resolution of the octomap
+  void ResetMap();                                    // Reset the octomap structure
   void SetMapInflation(const double inflate_radius);  // Set the inflation radius
+  double GetMapInflation();                           // Returns the inflation radius
   void SetCamFrustum(const double fov,
                      const double aspect_ratio);
   void SetOccupancyThreshold(const double occupancy_threshold);

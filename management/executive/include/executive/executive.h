@@ -52,6 +52,7 @@
 #include <ff_msgs/PerchAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
 #include <ff_msgs/SetDataToDisk.h>
+#include <ff_msgs/SetFloat.h>
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
 #include <ff_msgs/SetZones.h>
@@ -181,9 +182,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool CheckStoppedOrDrifting(std::string const& cmd_id,
                               std::string const& cmd_name);
   bool ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv);
-  bool ConfigureMobility(std::string const& cmd_id);
-  bool ConfigureMobility(bool move_to_start,
-                         std::string& err_msg);
+  bool ConfigureMobility(bool move_to_start, std::string& err_msg);
   bool FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd);
   bool LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   ros::Time MsToSec(std::string timestamp);
@@ -310,6 +309,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient set_data_client_, enable_recording_client_;
   ros::ServiceClient eps_terminate_client_;
   ros::ServiceClient unload_load_nodelet_client_;
+  ros::ServiceClient set_collision_distance_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
