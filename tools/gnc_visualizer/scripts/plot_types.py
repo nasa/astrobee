@@ -420,7 +420,7 @@ class FeatureCountPlot(GraphPlot):
                 break
         new_ml = 0
         if len(self.features) == 0:
-            new_ml = len([x for x in data[0]["ml_time"] if x > 1e-2])
+            new_ml = len(filter(lambda x: x > 1e-2, data[0]["ml_time"]))
         else:
             for r in data[0]["ml_time"]:
                 if r > self.features[-1].x() + 1e-5 and r > 1e-2:
@@ -429,7 +429,7 @@ class FeatureCountPlot(GraphPlot):
                     break
         new_of = 0
         if len(self.features) == 0:
-            new_of = len([x for x in data[0]["of_time"] if x > 1e-2])
+            new_of = len(filter(lambda x: x > 1e-2, data[0]["of_time"]))
         else:
             for r in data[0]["of_time"]:
                 if r > self.features[-1].x() + 1e-5 and r > 1e-2:
@@ -764,7 +764,7 @@ plot_display_names = dict()
 
 
 def __generate_display_names(plot_types, base_name):
-    for n in list(plot_types.keys()):
+    for n in plot_types.keys():
         v = plot_types[n]
         name = base_name + " " + n
         if type(v) == dict:

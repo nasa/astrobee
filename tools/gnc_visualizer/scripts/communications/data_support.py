@@ -27,7 +27,7 @@ def todict(obj):
         return dict(
             [
                 (key, todict(value))
-                for key, value in list(obj.__dict__.items())
+                for key, value in obj.__dict__.iteritems()
                 if not callable(value) and not key.startswith("_")
             ]
         )
