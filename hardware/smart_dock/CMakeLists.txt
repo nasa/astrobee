@@ -23,6 +23,7 @@ add_compile_options(-std=c++14)
 
 if (USE_DDS)
 ## Find catkin macros and libraries
+find_package(catkin REQUIRED)  # defines catkin_DIR
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp

@@ -30,7 +30,9 @@ find_package(JPS3D REQUIRED)
 find_package(DecompUtil REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 
+
 ## Find catkin macros and libraries
+find_package(catkin REQUIRED)  # defines catkin_DIR
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp

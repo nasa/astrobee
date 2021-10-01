@@ -26,6 +26,7 @@ add_compile_options(-std=c++14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D EIGEN_MAX_STATIC_ALIGN_BYTES=0")
 
 ## Find catkin macros and libraries
+find_package(catkin REQUIRED)  # defines catkin_DIR
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp

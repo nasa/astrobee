@@ -22,6 +22,8 @@ if (ENABLE_GAZEBO)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+## Find catkin macros and libraries
+find_package(catkin REQUIRED)  # defines catkin_DIR
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
   visualization_msgs

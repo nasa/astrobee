@@ -324,7 +324,7 @@ if [ $armhf_build == 1 ] ; then
     catkin profile set armhf
     catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
         --build-space ${build_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/build} \
-        --install-space ${install_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/install} \
+        --install-space ${install_path:-$ARMHF_CHROOT_DIR/opt/astrobee} \
         --devel-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/devel \
         --log-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/logs \
         --install \
