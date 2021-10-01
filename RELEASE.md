@@ -1,5 +1,13 @@
 # Releases
 
+## Release 0.15.2
+
+  * added python linters black and isort in the CI pipeline
+  * added perching arm reconnect service
+  * added nav and dock cam bayer image output option
+  * added code to report time for llp, mlp, hlp
+  * added end of motion check 
+
 ## Release 0.15.1
 
   * Separated config files for DDS communications to avoid conflict
