@@ -20,9 +20,9 @@ jobs:
 
     - name: Push Docker image
       run: |
-        docker pull astrobee/astrobee:latest-ubuntu16.04
-        docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
+        docker pull astrobee/astrobee:base-latest-ubuntu16.04
+        docker tag astrobee/astrobee:base-latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu16.04
+        docker push ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu16.04
 
   # build-bionic:
 
