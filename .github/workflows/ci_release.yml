@@ -12,8 +12,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        path: repo/
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
@@ -42,7 +40,7 @@ jobs:
 
     - name: Push Docker image
       run: |
-        export VERSION=`grep -w -m 1 "Release" repo/RELEASE.md | awk '{print $3}'`
+        export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
         docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu16.04
         docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu16.04
         docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu16.04
@@ -54,8 +52,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        path: repo/
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
@@ -84,7 +80,7 @@ jobs:
 
     - name: Push Docker image
       run: |
-        export VERSION=`grep -w -m 1 "Release" repo/RELEASE.md | awk '{print $3}'`
+        export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
         docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu18.04
         docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu18.04
         docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu18.04
@@ -96,8 +92,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        path: repo/
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
@@ -126,7 +120,7 @@ jobs:
 
     - name: Push Docker image
       run: |
-        export VERSION=`grep -w -m 1 "Release" repo/RELEASE.md | awk '{print $3}'`
+        export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
         docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu20.04
         docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu20.04
         docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu20.04
