@@ -27,7 +27,7 @@ jobs:
         docker push ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu18.04
         docker pull astrobee/astrobee:base-latest-ubuntu20.04
         docker tag astrobee/astrobee:base-latest-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu20.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu20.04
+        docker push ghcr.io/${{ github.actor }}/astrobee_base:latest-ubuntu20.04
 
   # build-bionic:
 
