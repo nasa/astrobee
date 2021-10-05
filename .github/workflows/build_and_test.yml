@@ -38,8 +38,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push Docker image
-      run: docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
-      run: docker push ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
+      run: |
+        docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
+        docker push ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
 
   build-bionic:
 
