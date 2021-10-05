@@ -8,27 +8,27 @@ on:
 
 jobs:
 
-  build-xenial:
+  # build-xenial:
 
-    runs-on: ubuntu-18.04
+  #   runs-on: ubuntu-18.04
 
-    steps:
-    - uses: actions/checkout@v2
+  #   steps:
+  #   - uses: actions/checkout@v2
 
-    - name: Checkout submodule
-      run: git submodule update --init --depth 1 description/media
+  #   - name: Checkout submodule
+  #     run: git submodule update --init --depth 1 description/media
 
-    - name: Build code for Ubuntu 16
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=16.04
-                          --build-arg ROS_VERSION=kinetic
-                          --build-arg PYTHON=''
-                          -t astrobee/astrobee:latest-ubuntu16.04
+  #   - name: Build code for Ubuntu 16
+  #     run: docker build . -f ./scripts/docker/astrobee.Dockerfile
+  #                         --build-arg UBUNTU_VERSION=16.04
+  #                         --build-arg ROS_VERSION=kinetic
+  #                         --build-arg PYTHON=''
+  #                         -t astrobee/astrobee:latest-ubuntu16.04
 
-    - name: Test code
-      run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=16.04
-                          -t astrobee/astrobee:test-ubuntu16.04
+  #   - name: Test code
+  #     run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
+  #                         --build-arg UBUNTU_VERSION=16.04
+  #                         -t astrobee/astrobee:test-ubuntu16.04
 
   build-bionic:
 
@@ -80,6 +80,27 @@ on:
 
 jobs:
   push-docker-latest:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Build code for Ubuntu 16
+      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
+                          --build-arg UBUNTU_VERSION=16.04
+                          --build-arg ROS_VERSION=kinetic
+                          --build-arg PYTHON=''
+                          -t astrobee/astrobee:latest-ubuntu16.04
+
+    - name: Test code
+      run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
+                          --build-arg UBUNTU_VERSION=16.04
+                          -t astrobee/astrobee:test-ubuntu16.04
+
     - name: Log in to the Container registry
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
       with:
