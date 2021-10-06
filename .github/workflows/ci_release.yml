@@ -41,8 +41,8 @@ jobs:
     - name: Push Docker image
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu16.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu16.04
+        docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu16.04
+        docker push ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu16.04
         docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu16.04
         docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu16.04
 
@@ -56,7 +56,7 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build code for Ubuntu 18
+    - name: Build base for Ubuntu 18
       run: docker build . -f ./scripts/docker/astrobee_base.Dockerfile
                           --build-arg UBUNTU_VERSION=18.04
                           --build-arg ROS_VERSION=melodic
@@ -81,8 +81,8 @@ jobs:
     - name: Push Docker image
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu18.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu18.04
+        docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu18.04
+        docker push ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu18.04
         docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu18.04
         docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu18.04
 
@@ -96,19 +96,19 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build code for Ubuntu 20
+    - name: Build base for Ubuntu 20
       run: docker build . -f ./scripts/docker/astrobee_base.Dockerfile
                           --build-arg UBUNTU_VERSION=20.04
                           --build-arg ROS_VERSION=noetic
                           --build-arg PYTHON=3
-                          -t astrobee/astrobee:latest-ubuntu20.04
+                          -t astrobee/astrobee:latest-base-ubuntu20.04
 
     - name: Build code for Ubuntu 20
       run: docker build . -f ./scripts/docker/astrobee.Dockerfile
                           --build-arg UBUNTU_VERSION=20.04
                           --build-arg ROS_VERSION=noetic
                           --build-arg PYTHON=3
-                          -t astrobee/astrobee:latest-base-ubuntu20.04
+                          -t astrobee/astrobee:latest-ubuntu20.04
 
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
@@ -121,7 +121,7 @@ jobs:
     - name: Push Docker image
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu20.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-base-ubuntu20.04
+        docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu20.04
+        docker push ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu20.04
         docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu20.04
         docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu20.04
