@@ -1,7 +1,7 @@
 name: Build, test and push packages CI
 
 on:
-  push:
+  pull_request:
     branches: [ 'master', 'develop' ]
 
 jobs:
