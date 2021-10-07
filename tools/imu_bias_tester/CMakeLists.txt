@@ -71,6 +71,11 @@ if (USE_ROS)
     RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
   )
 
+  # Mark nodelet_plugin for installation
+  install(FILES nodelet_plugins.xml
+          DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  )
+
   # Mark cpp header files for installation
   install(DIRECTORY include/${PROJECT_NAME}/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

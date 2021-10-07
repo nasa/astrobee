@@ -98,6 +98,11 @@ install(TARGETS ${PROJECT_NAME}_nodelet
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 # Install C++ executables
 install(TARGETS laser_test DESTINATION bin)
 install(TARGETS laser_test DESTINATION share/${PROJECT_NAME})

@@ -90,6 +90,11 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 # Install C++ executables
 install(TARGETS sim_node DESTINATION bin)
 install(TARGETS sim_node DESTINATION share/${PROJECT_NAME})

@@ -101,6 +101,11 @@ install(TARGETS ${PROJECT_NAME}_nodelet
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 # Install C++ executables
 install(TARGETS vive_tool DESTINATION bin)
 install(TARGETS vive_tool DESTINATION share/${PROJECT_NAME})
@@ -111,3 +116,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

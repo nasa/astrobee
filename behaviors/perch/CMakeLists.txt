@@ -85,6 +85,11 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 # Install C++ executables
 install(TARGETS perch_tool DESTINATION bin)
 install(TARGETS perch_tool DESTINATION share/${PROJECT_NAME})
