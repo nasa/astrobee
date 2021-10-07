@@ -95,6 +95,9 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 # Install C++ executables
 install(TARGETS bag_to_csv DESTINATION bin)
-install(TARGETS bag_to_csv DESTINATION share/${PROJECT_NAME})
 install(TARGETS sparse_map_bag DESTINATION bin)
-install(TARGETS sparse_map_bag DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/bag_to_csv share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/sparse_map_bag share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")

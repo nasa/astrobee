@@ -56,4 +56,7 @@ target_link_libraries(log_tool
 
 # Install C++ executables
 install(TARGETS log_tool DESTINATION bin)
-install(TARGETS log_tool DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/log_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")

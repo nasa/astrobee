@@ -86,9 +86,12 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install C++ executables
 install(TARGETS landmark_msg_cnv DESTINATION bin)
-install(TARGETS landmark_msg_cnv DESTINATION share/${PROJECT_NAME})
 install(TARGETS pose_stamped_msg_cnv DESTINATION bin)
-install(TARGETS pose_stamped_msg_cnv DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/landmark_msg_cnv share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/pose_stamped_msg_cnv share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

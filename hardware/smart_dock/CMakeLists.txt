@@ -118,16 +118,11 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install C++ executables
 install(TARGETS smart_dock_service DESTINATION bin)
-install(TARGETS smart_dock_service DESTINATION share/${PROJECT_NAME})
 install(TARGETS smart_dock_tool DESTINATION bin)
-install(TARGETS smart_dock_tool DESTINATION share/${PROJECT_NAME})
-
 install(CODE "execute_process(
-  COMMAND mkdir -p share/${MODULE_NAME}
-  COMMAND ln -s ../../bin/dds_ros_bridge share/${MODULE_NAME}
+  COMMAND ln -s ../../bin/smart_dock_service share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/smart_dock_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-  OUTPUT_QUIET
-  ERROR_QUIET
   )")
 
 else (USE_DDS)

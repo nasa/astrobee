@@ -125,13 +125,16 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS pmc_actuator_tool DESTINATION bin)
-install(TARGETS pmc_actuator_tool DESTINATION share/${PROJECT_NAME})
 install(TARGETS pmc_actuator_cmd_test DESTINATION bin)
-install(TARGETS pmc_actuator_cmd_test DESTINATION share/${PROJECT_NAME})
 install(TARGETS pmc_actuator_feeder DESTINATION bin)
-install(TARGETS pmc_actuator_feeder DESTINATION share/${PROJECT_NAME})
 install(TARGETS pmc_autotrim_node DESTINATION bin)
-install(TARGETS pmc_autotrim_node DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/pmc_actuator_tool share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/pmc_actuator_cmd_test share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/pmc_actuator_feeder share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/pmc_autotrim_node share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

@@ -109,7 +109,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 # Install C++ executables
 install(TARGETS flashlight_test DESTINATION bin)
-install(TARGETS flashlight_test DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/flashlight_test share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

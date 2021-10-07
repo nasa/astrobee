@@ -82,7 +82,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS global_transforms DESTINATION bin)
-install(TARGETS global_transforms DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/global_transforms share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

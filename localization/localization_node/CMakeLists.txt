@@ -127,11 +127,14 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 # Install C++ executables
 install(TARGETS extract_image_bag DESTINATION bin)
-install(TARGETS extract_image_bag DESTINATION share/${PROJECT_NAME})
 install(TARGETS interest_points_test_bag DESTINATION bin)
-install(TARGETS interest_points_test_bag DESTINATION share/${PROJECT_NAME})
 install(TARGETS merge_bags DESTINATION bin)
-install(TARGETS merge_bags DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/extract_image_bag share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/interest_points_test_bag share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/merge_bags share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 
 # Mark launch files for installation

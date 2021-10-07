@@ -64,9 +64,12 @@ target_link_libraries(fam_cmd_i2c_node
 
 # Install C++ executables
 install(TARGETS fam_cmd_gen DESTINATION bin)
-install(TARGETS fam_cmd_gen DESTINATION share/${PROJECT_NAME})
 install(TARGETS fam_cmd_i2c_node DESTINATION bin)
-install(TARGETS fam_cmd_i2c_node DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/fam_cmd_gen share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/fam_cmd_i2c_node share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

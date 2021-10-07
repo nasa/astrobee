@@ -104,9 +104,12 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS pico_proxy DESTINATION bin)
-install(TARGETS pico_proxy DESTINATION share/${PROJECT_NAME})
 install(TARGETS pico_tool DESTINATION bin)
-install(TARGETS pico_tool DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/pico_proxy share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/pico_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

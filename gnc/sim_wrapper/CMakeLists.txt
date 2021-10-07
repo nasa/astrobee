@@ -97,9 +97,12 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS sim_node DESTINATION bin)
-install(TARGETS sim_node DESTINATION share/${PROJECT_NAME})
 install(TARGETS test_sim DESTINATION bin)
-install(TARGETS test_sim DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/sim_node share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/test_sim share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

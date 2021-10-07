@@ -110,12 +110,15 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install C++ executables
 install(TARGETS run_bag_imu_filterer DESTINATION bin)
-install(TARGETS run_bag_imu_filterer DESTINATION share/${PROJECT_NAME})
 install(TARGETS run_graph_bag DESTINATION bin)
-install(TARGETS run_graph_bag DESTINATION share/${PROJECT_NAME})
 install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
-install(TARGETS run_imu_bias_tester_adder DESTINATION share/${PROJECT_NAME})
 install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
-install(TARGETS run_sparse_mapping_pose_adder DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/run_bag_imu_filterer share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_graph_bag share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_imu_bias_tester_adder share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 endif (USE_ROS)

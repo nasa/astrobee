@@ -112,9 +112,12 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 # Install C++ executables
 install(TARGETS eps_driver_tool DESTINATION bin)
-install(TARGETS eps_driver_tool DESTINATION share/${PROJECT_NAME})
 install(TARGETS eps_simulator DESTINATION bin)
-install(TARGETS eps_simulator DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/eps_driver_tool share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/eps_simulator share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 
 # Mark launch files for installation

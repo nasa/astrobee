@@ -88,7 +88,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS arm_tool DESTINATION bin)
-install(TARGETS arm_tool DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/arm_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

@@ -105,7 +105,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS vive_offline DESTINATION bin)
-install(TARGETS vive_offline DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/vive_offline share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

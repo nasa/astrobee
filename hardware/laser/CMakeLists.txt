@@ -105,7 +105,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS laser_test DESTINATION bin)
-install(TARGETS laser_test DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/laser_test share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

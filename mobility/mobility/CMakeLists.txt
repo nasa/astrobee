@@ -70,6 +70,9 @@ target_link_libraries(teleop
 
 # Install C++ executables
 install(TARGETS plangen DESTINATION bin)
-install(TARGETS plangen DESTINATION share/${PROJECT_NAME})
 install(TARGETS teleop DESTINATION bin)
-install(TARGETS teleop DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/plangen share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/teleop share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")

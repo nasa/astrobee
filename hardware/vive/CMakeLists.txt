@@ -108,7 +108,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS vive_tool DESTINATION bin)
-install(TARGETS vive_tool DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/vive_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

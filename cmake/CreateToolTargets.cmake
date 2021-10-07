@@ -66,7 +66,10 @@ function(create_tool_targets)
     if (tool_DEPS)
       add_dependencies(${execname} ${tool_DEPS})
     endif (tool_DEPS)
-    install(TARGETS ${execname} DESTINATION share/${PROJECT_NAME})
     install(TARGETS ${execname} DESTINATION bin)
+    install(CODE "execute_process(
+      COMMAND ln -s ../../bin/${execname} share/${PROJECT_NAME}
+      WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+      )")
   endforeach()
 endfunction()

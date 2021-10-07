@@ -67,6 +67,9 @@ install(DIRECTORY launch/
 
 # Install C++ executables
 install(TARGETS overhead_info DESTINATION bin)
-install(TARGETS overhead_info DESTINATION share/${PROJECT_NAME})
 install(TARGETS visualization_node DESTINATION bin)
-install(TARGETS visualization_node DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/overhead_info share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/visualization_node share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")

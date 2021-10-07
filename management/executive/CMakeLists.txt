@@ -160,17 +160,20 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS data_to_disk_pub DESTINATION bin)
-install(TARGETS data_to_disk_pub DESTINATION share/${PROJECT_NAME})
 install(TARGETS ekf_switch_mux DESTINATION bin)
-install(TARGETS ekf_switch_mux DESTINATION share/${PROJECT_NAME})
 install(TARGETS plan_pub DESTINATION bin)
-install(TARGETS plan_pub DESTINATION share/${PROJECT_NAME})
 install(TARGETS simple_move DESTINATION bin)
-install(TARGETS simple_move DESTINATION share/${PROJECT_NAME})
 install(TARGETS teleop_tool DESTINATION bin)
-install(TARGETS teleop_tool DESTINATION share/${PROJECT_NAME})
 install(TARGETS zones_pub DESTINATION bin)
-install(TARGETS zones_pub DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/data_to_disk_pub share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/ekf_switch_mux share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/plan_pub share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/simple_move share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/teleop_tool share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/zones_pub share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

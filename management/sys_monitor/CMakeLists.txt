@@ -100,7 +100,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS fault_tester DESTINATION bin)
-install(TARGETS fault_tester DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/fault_tester share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

@@ -117,7 +117,10 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install C++ executables
 install(TARGETS undistort_image DESTINATION bin)
-install(TARGETS undistort_image DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/undistort_image share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

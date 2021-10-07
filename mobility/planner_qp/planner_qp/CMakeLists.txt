@@ -107,7 +107,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS sfc_server DESTINATION bin)
-install(TARGETS sfc_server DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/sfc_server share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/

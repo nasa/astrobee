@@ -90,7 +90,10 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS dock_tool DESTINATION bin)
-install(TARGETS dock_tool DESTINATION share/${PROJECT_NAME})
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/dock_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/
