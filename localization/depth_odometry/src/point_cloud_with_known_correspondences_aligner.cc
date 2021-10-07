@@ -43,12 +43,18 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   options.function_tolerance = params_.function_tolerance;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
-  std::cout << summary.FullReport() << "\n";
+  // std::cout << summary.FullReport() << "\n";
   return Isometry3(relative_transform.data());
 }
 
 lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const {
+  if (params_.use_single_iteration_umeyama) {
+    const Eigen::Isometry3d relative_transform = ComputeRelativeTransformUmeyama(source_points, target_points);
+    return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
+  }
+
+  // Optimize if not using single iteration Umeyama
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
                                             ? ComputeRelativeTransformUmeyama(source_points, target_points)
                                             : Eigen::Isometry3d::Identity();
