@@ -49,8 +49,9 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
 
 lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const {
-  Eigen::Isometry3d initial_guess = Eigen::Isometry3d::Identity();
-  // TODO(rsoussan): add option to use umeyama as initial guess
+  const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
+                                            ? ComputeRelativeTransformUmeyama(source_points, target_points)
+                                            : Eigen::Isometry3d::Identity();
   const Eigen::Isometry3d relative_transform = Align(source_points, target_points, initial_guess);
   return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
 }
