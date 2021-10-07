@@ -21,6 +21,7 @@
 #include <camera/camera_params.h>
 #include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <depth_odometry/point_cloud_with_known_correspondences_aligner_params.h>
 #include <depth_odometry/surf_feature_detector_and_matcher_params.h>
 
 #include <memory>
@@ -44,6 +45,7 @@ struct DepthImageAlignerParams {
   double min_y_distance_to_border;
   int min_num_inliers;
   std::shared_ptr<camera::CameraParameters> camera_params;
+  PointCloudWithKnownCorrespondencesAlignerParams point_cloud_with_known_correspondences_aligner;
 };
 }  // namespace depth_odometry
 

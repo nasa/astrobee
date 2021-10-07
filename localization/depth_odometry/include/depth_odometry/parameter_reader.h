@@ -38,5 +38,7 @@ void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config
                                              SurfFeatureDetectorAndMatcherParams& params);
 void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params);
+void LoadPointCloudWithKnownCorrespondencesAlignerParams(config_reader::ConfigReader& config,
+                                                         PointCloudWithKnownCorrespondencesAlignerParams& params);
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_PARAMETER_READER_H_
