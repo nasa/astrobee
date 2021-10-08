@@ -27,7 +27,4 @@
   <run_depend>ff_msgs</run_depend>
   <run_depend>ff_hw_msgs</run_depend>
   <run_depend>dds_msgs</run_depend>
-  <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
-  </export>
 </package>
