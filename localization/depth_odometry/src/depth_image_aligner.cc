@@ -36,7 +36,13 @@
 #include <Eigen/SVD>
 
 #include <opencv2/opencv.hpp>
-//#include <Eigen/Array>
+
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/impl/normal_3d.hpp>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/search/impl/search.hpp>
+#include <pcl/search/impl/organized.hpp>
+#include <pcl/search/impl/kdtree.hpp>
 
 namespace depth_odometry {
 namespace lc = localization_common;
@@ -79,8 +85,10 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
 
   std::vector<Eigen::Vector3d> source_landmarks;
   std::vector<Eigen::Vector3d> target_landmarks;
+  boost::shared_ptr<std::vector<int>> indices(new std::vector<int>());
   // Get 3D points for image features
-  for (const auto& match : matches) {
+  for (int i = 0; i < matches.size(); ++i) {
+    const auto& match = matches[i];
     const auto& source_image_point = match.source_point;
     const auto& target_image_point = match.target_point;
     if (!ValidImagePoint(source_image_point) || !ValidImagePoint(target_image_point)) continue;
@@ -91,6 +99,7 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     if (!Valid3dPoint(source_point_3d) || !Valid3dPoint(target_point_3d)) continue;
     source_landmarks.emplace_back(Eigen::Vector3d(source_point_3d->x, source_point_3d->y, source_point_3d->z));
     target_landmarks.emplace_back(Eigen::Vector3d(target_point_3d->x, target_point_3d->y, target_point_3d->z));
+    indices->emplace_back(i);
     // TODO: save to matches_!!!!
   }
 
@@ -99,8 +108,44 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
+  // TODO: make this a member var!
   PointCloudWithKnownCorrespondencesAligner point_cloud_aligner(params_.point_cloud_with_known_correspondences_aligner);
+  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
+    // TODO: add fcn to estimate normals for target cloud!!
+    pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> ne;
+    ne.setInputCloud(latest_feature_depth_image_->point_cloud);
+    pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>());
+    ne.setSearchMethod(tree);
+    ne.setRadiusSearch(0.03);
+    ne.setIndices(indices);
+    // pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+    pcl::PointCloud<pcl::Normal> cloud_normals;
+    ne.compute(cloud_normals);
+    std::vector<Eigen::Vector3d> target_normals;
+    auto source_landmarks_it = source_landmarks.begin();
+    auto target_landmarks_it = target_landmarks.begin();
+    for (const auto& point : cloud_normals.points) {
+      // Remove correspondences with invalid target normal
+      if (!ValidNormal(point)) {
+        source_landmarks_it = source_landmarks.erase(source_landmarks_it);
+        target_landmarks_it = target_landmarks.erase(target_landmarks_it);
+        continue;
+      } else {
+        Eigen::Vector3d target_normal(point.normal_x, point.normal_y, point.normal_z);
+        // Ensure normal is normalized
+        target_normal.normalize();
+        target_normals.emplace_back(target_normal);
+        ++source_landmarks_it;
+        ++target_landmarks_it;
+      }
+    }
+    point_cloud_aligner.SetTargetNormals(target_normals);
+  }
+
+  static lc::Timer pc_timer("pc_aligner");
+  pc_timer.Start();
   const auto relative_transform = point_cloud_aligner.ComputeRelativeTransform(source_landmarks, target_landmarks);
+  pc_timer.StopAndLog();
   // TODO: get cov!!
   LogError("rel trafo trans: " << relative_transform.pose.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.pose.translation().norm());

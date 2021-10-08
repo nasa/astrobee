@@ -48,7 +48,9 @@ class DepthImageAligner {
 
  private:
   bool ValidImagePoint(const Eigen::Vector2d& image_point) const;
-  void CorrectLandmarks(const std::vector<Eigen::Vector2d>& observations, std::vector<Eigen::Vector3d>& landmarks);
+  bool Valid3dPoint(const boost::optional<pcl::PointXYZI>& point) const;
+  Eigen::Isometry3d ComputeRelativeTransform(const std::vector<Eigen::Vector3d>& source_landmarks,
+                                             const std::vector<Eigen::Vector3d>& target_landmarks) const;
 
   DepthImageAlignerParams params_;
   std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;

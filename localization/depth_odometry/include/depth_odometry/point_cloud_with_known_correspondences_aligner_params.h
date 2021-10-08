@@ -25,6 +25,7 @@ struct PointCloudWithKnownCorrespondencesAlignerParams {
   int max_num_matches;
   bool use_umeyama_initial_guess;
   bool use_single_iteration_umeyama;
+  bool use_point_to_plane_cost;
 };
 }  // namespace depth_odometry
 

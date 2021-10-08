@@ -33,8 +33,16 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   Eigen::Matrix<double, 6, 1> relative_transform = VectorFromIsometry3d(initial_guess);
   ceres::Problem problem;
   problem.AddParameterBlock(relative_transform.data(), 6);
-  for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-    AddCostFunction(source_points[i], target_points[i], relative_transform, problem);
+  if (params_.use_point_to_plane_cost) {
+    if (!target_normals_) LogFatal("Align: Attempting to use point to plane cost without having set target normals.");
+    for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
+      AddPointToPlaneCostFunction(source_points[i], target_points[i], (*target_normals_)[i], relative_transform,
+                                  problem);
+    }
+  } else {
+    for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
+      AddPointToPointCostFunction(source_points[i], target_points[i], relative_transform, problem);
+    }
   }
 
   ceres::Solver::Options options;
@@ -82,5 +90,10 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTran
 
   const Eigen::Matrix<double, 4, 4> relative_transform = Eigen::umeyama(cloud_src, cloud_tgt, false);
   return Eigen::Isometry3d(relative_transform.matrix());
+}
+
+void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(const std::vector<Eigen::Vector3d>& target_normals) {
+  // TODO(rsoussan): Use std::move here?
+  target_normals_ = target_normals;
 }
 }  // namespace depth_odometry

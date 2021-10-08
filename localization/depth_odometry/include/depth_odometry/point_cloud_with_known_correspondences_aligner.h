@@ -23,6 +23,9 @@
 
 #include <Eigen/Core>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <ceres/problem.h>
 #include <ceres/jet.h>
 #include <ceres/ceres.h>
@@ -30,6 +33,8 @@
 #include <ceres/cost_function.h>
 #include <ceres/loss_function.h>
 #include <ceres/autodiff_cost_function.h>
+
+#include <boost/optional.hpp>
 
 namespace depth_odometry {
 // Assumes compact quaternion parameterization for rotations
@@ -78,6 +83,28 @@ class PointToPointError {
   Eigen::Vector3d target_point_;
 };
 
+class PointToPlaneError {
+ public:
+  PointToPlaneError(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
+                    const Eigen::Vector3d& target_normal)
+      : source_point_(source_point), target_point_(target_point), target_normal_(target_normal) {}
+
+  template <typename T>
+  bool operator()(const T* relative_transform_data, T* point_to_plane_error) const {
+    const auto relative_transform = Isometry3<T>(relative_transform_data);
+    // Compute error
+    const Eigen::Matrix<T, 3, 1> transformed_source_point = relative_transform * source_point_.cast<T>();
+    const Eigen::Matrix<T, 3, 1> point_to_target_point = transformed_source_point - target_point_.cast<T>();
+    point_to_plane_error[0] = point_to_target_point.dot(target_normal_.cast<T>());
+    return true;
+  }
+
+ private:
+  Eigen::Vector3d source_point_;
+  Eigen::Vector3d target_point_;
+  Eigen::Vector3d target_normal_;
+};
+
 class PointCloudWithKnownCorrespondencesAligner {
  public:
   PointCloudWithKnownCorrespondencesAligner(const PointCloudWithKnownCorrespondencesAlignerParams& params);
@@ -92,18 +119,31 @@ class PointCloudWithKnownCorrespondencesAligner {
   Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
                                                     const std::vector<Eigen::Vector3d>& target_points) const;
 
+  void SetTargetNormals(const std::vector<Eigen::Vector3d>& target_normals);
+
  private:
   PointCloudWithKnownCorrespondencesAlignerParams params_;
+  boost::optional<std::vector<Eigen::Vector3d>> target_normals_;
 
   // TODO(rsoussan): Add these functions to common place to share with intrinsics calibrator
 
-  void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
-                       Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) const {
+  void AddPointToPointCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
+                                   Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) const {
     // TODO: pass this? delete at end?
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* point_to_point_cost_function =
       new ceres::AutoDiffCostFunction<PointToPointError, 3, 6>(new PointToPointError(source_point, target_point));
     problem.AddResidualBlock(point_to_point_cost_function, huber_loss, relative_transform.data());
+  }
+
+  void AddPointToPlaneCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
+                                   const Eigen::Vector3d& target_normal,
+                                   Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) const {
+    // TODO: pass this? delete at end?
+    ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
+    ceres::CostFunction* point_to_plane_cost_function = new ceres::AutoDiffCostFunction<PointToPlaneError, 1, 6>(
+      new PointToPlaneError(source_point, target_point, target_normal));
+    problem.AddResidualBlock(point_to_plane_cost_function, huber_loss, relative_transform.data());
   }
 
   static Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d) {
