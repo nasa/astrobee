@@ -38,28 +38,7 @@ build-indep: ;
 override_dh_auto_configure:
 	# configure the build
 	cd .. && \
-	catkin init && \
-	catkin profile add debian --force && \
-	catkin profile set debian && \
-	catkin config \
-		--install \
-		--extend $(ARMHF_CHROOT_DIR)/opt/ros/kinetic \
-		--build-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/build \
-		--devel-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/devel \
-		--log-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/logs \
-		--install-space $(ARMHF_CHROOT_DIR)/home/debian/tmp/opt/astrobee \
-		--cmake-args \
-			-DCMAKE_TOOLCHAIN_FILE=$(CMAKE_TOOLCHAIN_FILE) \
-			-DARMHF_CHROOT_DIR=$(ARMHF_CHROOT_DIR) \
-			-DARMHF_TOOLCHAIN=$(ARMHF_TOOLCHAIN) \
-			-DUSE_CTC=on \
-			-DUSE_ROS=on \
-			-DUSE_DDS=on \
-			-DUSE_DRIVERS=on \
-			-DENABLE_QP=on \
-			-DENABLE_PICOFLEXX=on \
-			-DENABLE_VIVE=on \
-			-DENABLE_VIVE_SOLVER=on &&\
+	./src/scripts/configure.sh -a -w $(ARMHF_CHROOT_DIR)/home/debian/tmp && \
 	catkin clean -y --force
 override_dh_auto_build: ;
 

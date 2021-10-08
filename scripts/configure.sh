@@ -76,7 +76,7 @@ target="install"
 
 # short help
 usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
- [-p install_path] [-b build_path] [-B build_type] [-c <force clean cache>]\
+ [-p install_path] [-w workspace_path] [-B build_type] [-c <force clean cache>]\
  [-C <don't clean cache>] [-d <with DDS>] [-D <without DDS>]\
  [-r <with QP planner>] [-R <without QP planner>]\
  [-f <with PicoFlexx driver>] [-F <without PicoFlexx driver>]\
@@ -87,7 +87,7 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
 #[-t make_target]
 
 # options to parse
-optstring="hlap:b:B:cCdDrRfFkKvVtTg"
+optstring="hlap:w:B:cCdDrRfFkKvVtTg"
 
 # Print the script usage
 print_usage()
@@ -104,8 +104,8 @@ print_help()
     echo -e "\t-a Generate a cross-compiled ARM build"
     echo -e "\t-p install_path specify the installation directory"
     echo -e "\t   default=${HOME}/cmake_install_platform"
-    echo -e "\t-b build_path   specify the build directory to use"
-    echo -e "\t   default=${HOME}/cmake_build_platform"
+    echo -e "\t-w workspace_path specify the workspace directory"
+    echo -e "\t   default=${ASTROBEE_WS}"
     echo -e "\t-B build_type   specify build type (Debug|Release|RelWithDebInfo)"
     echo -e "\t-c delete the cmake cache before for every modules: default on"
     echo -e "\t   (necessary when re-running buildall with diffent options)"
@@ -155,7 +155,7 @@ parse_args()
          ;;
         "p") install_path=$OPTARG
          ;;
-        "b") build_path=$OPTARG
+        "w") workspace_path=$OPTARG/
          ;;
         "B") build_type=$OPTARG
          ;;
@@ -296,8 +296,8 @@ fi
 if [[ $native_build == 1 && $armhf_build == 1 ]] ; then
     echo -n "Linux and ArmHF invoked simultanously:"
     echo " dropping any option -p and -b!"
+    workspace_path=""
     install_path=""
-    build_path=""
 fi
 
 if [ $native_build == 1 ] ; then
@@ -306,10 +306,10 @@ if [ $native_build == 1 ] ; then
     catkin profile add native
     catkin profile set native
     catkin config --extend /opt/ros/${ros_version} \
-        --build-space ${build_path:-build} \
-        --install-space ${install_path:-install} \
-        --default-devel-space \
-        --default-log-space \
+        --build-space ${workspace_path}build \
+        --install-space ${install_path:-${workspace_path}install} \
+        --devel-space ${workspace_path}devel \
+        --log-space ${workspace_path}log \
         --no-install \
         --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
 fi
@@ -323,10 +323,11 @@ if [ $armhf_build == 1 ] ; then
     catkin profile add armhf
     catkin profile set armhf
     catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
-        --build-space ${build_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/build} \
-        --install-space ${install_path:-$ARMHF_CHROOT_DIR/opt/astrobee} \
-        --devel-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/devel \
-        --log-space $ARMHF_CHROOT_DIR/home/astrobee/astrobee/logs \
+        --build-space ${workspace_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/}build \
+        --install-space ${install_path:-${workspace_path:-$ARMHF_CHROOT_DIR/}opt/astrobee} \
+        --devel-space ${workspace_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/}devel \
+        --log-space ${workspace_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/}logs \
         --install \
+        --blacklist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite astrobee_dock astrobee_freeflyer astrobee_gazebo localization_rviz_plugins \
         --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=Release
 fi
