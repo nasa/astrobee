@@ -19,6 +19,7 @@ jobs:
       run: |
         docker pull astrobee/astrobee:base-latest-ubuntu16.04
         docker tag astrobee/astrobee:base-latest-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu16.04
+        docker images
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu16.04
         docker pull astrobee/astrobee:base-latest-ubuntu18.04
         docker tag astrobee/astrobee:base-latest-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu18.04
