@@ -21,6 +21,7 @@ project(wdock)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
+if (USE_DDS)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED)  # defines catkin_DIR
 SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../cmake")
@@ -109,3 +110,7 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/wdock_main share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
   )")
+else (USE_DDS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
+endif (USE_DDS)
