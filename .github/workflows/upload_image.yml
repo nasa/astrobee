@@ -13,16 +13,16 @@ jobs:
     steps:
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
         docker pull astrobee/astrobee:base-latest-ubuntu16.04
         docker tag astrobee/astrobee:base-latest-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu16.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu16.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu16.04
         docker pull astrobee/astrobee:base-latest-ubuntu18.04
         docker tag astrobee/astrobee:base-latest-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu18.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu18.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu18.04
         docker pull astrobee/astrobee:base-latest-ubuntu20.04
         docker tag astrobee/astrobee:base-latest-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:base-latest-ubuntu20.04
-        docker push ghcr.io/${{ github.actor }}/astrobee_base:latest-ubuntu20.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee_base:latest-ubuntu20.04
