@@ -1,8 +1,8 @@
 name: Docker Image Upload
 
 on:
-  push:
-    branches: [ 'master', 'develop', 'release' ]
+  pull_request:
+    branches: [develop']
 
 jobs:
 
@@ -26,63 +26,3 @@ jobs:
         docker pull astrobee/astrobee:base-latest-ubuntu20.04
         docker tag astrobee/astrobee:base-latest-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:base-latest-ubuntu20.04
         docker push ghcr.io/${{ github.actor }}/astrobee_base:latest-ubuntu20.04
-
-  # build-bionic:
-
-  #   runs-on: ubuntu-18.04
-
-  #   steps:
-  #   - uses: actions/checkout@v2
-
-  #   - name: Checkout submodule
-  #     run: git submodule update --init --depth 1 description/media
-
-  #   - name: Build code for Ubuntu 18
-  #     run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-  #                         --build-arg UBUNTU_VERSION=18.04
-  #                         --build-arg ROS_VERSION=melodic
-  #                         --build-arg PYTHON=3
-  #                         -t astrobee/astrobee:latest-ubuntu18.04
-
-  #   - name: Test code
-  #     run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-  #                         --build-arg UBUNTU_VERSION=18.04
-  #                         -t astrobee/astrobee:test-ubuntu18.04
-
-  # build-focal:
-
-  #   runs-on: ubuntu-20.04
-
-  #   steps:
-  #   - uses: actions/checkout@v2
-
-  #   - name: Checkout submodule
-  #     run: git submodule update --init --depth 1 description/media
-
-  #   - name: Build code for Ubuntu 20
-  #     run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-  #                         --build-arg UBUNTU_VERSION=20.04
-  #                         --build-arg ROS_VERSION=noetic
-  #                         --build-arg PYTHON=3
-  #                         -t astrobee/astrobee:latest-ubuntu20.04
-
-  #   - name: Test code
-  #     run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-  #                         --build-arg UBUNTU_VERSION=20.04
-  #                         -t astrobee/astrobee:test-ubuntu20.04
-
-# on:
-#   push:
-#     branches: [ 'release' ]
-
-# jobs:
-#   push-docker-release:
-#     - name: Log in to the Container registry
-#       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-#       with:
-#         registry: ${{ env.REGISTRY }}
-#         username: ${{ github.actor }}
-#         password: ${{ secrets.GITHUB_TOKEN }}
-
-#     - name: Push Docker image
-#       run: docker push ghcr.io/marinagmoreira/astrobee:latest-ubuntu16.04
