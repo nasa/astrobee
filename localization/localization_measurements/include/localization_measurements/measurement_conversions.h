@@ -80,7 +80,7 @@ sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<PointType>& clo
   sensor_msgs::PointCloud2 cloud_msg;
   pcl::toROSMsg(cloud, cloud_msg);
   localization_common::TimeToHeader(timestamp, cloud_msg.header);
-  cloud_msg.header.frame_id = "haz_cam";
+  cloud_msg.header.frame_id = frame;
   return cloud_msg;
 }
 }  // namespace localization_measurements

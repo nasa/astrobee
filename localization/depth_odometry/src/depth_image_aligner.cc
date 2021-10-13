@@ -78,6 +78,89 @@ bool DepthImageAligner::Valid3dPoint(const boost::optional<pcl::PointXYZI>& poin
   return point && ValidPoint(*point) && point->z >= 0;
 }
 
+boost::optional<Eigen::Vector3d> DepthImageAligner::GetNormal(const Eigen::Vector3d& point,
+                                                              const pcl::PointCloud<pcl::PointXYZI>& cloud,
+                                                              const pcl::search::KdTree<pcl::PointXYZI>& kdtree) const {
+  // TODO(rsoussan: Make function for this
+  pcl::PointXYZI pcl_point;
+  pcl_point.x = point.x();
+  pcl_point.y = point.y();
+  pcl_point.z = point.z();
+
+  std::vector<int> nn_indices;
+  std::vector<float> distances;
+  // TODO(rsoussan): make this a param
+  constexpr double search_radius = 0.03;
+  // if (this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
+  if (kdtree.radiusSearch(pcl_point, search_radius, nn_indices, distances, 0) < 3) {
+    LogError("GetNormal: Failed to get enough neighboring points for query point.");
+    std::cout << "indices size: " << nn_indices.size() << std::endl;
+    LogError("point: " << std::endl << point.matrix());
+    return boost::none;
+  }
+
+  float normal_x;
+  float normal_y;
+  float normal_z;
+  float curvature;
+  if (!computePointNormal(cloud, nn_indices, normal_x, normal_y, normal_z, curvature)) {
+    LogError("GetNormal: Failed to compute point normal.");
+    return boost::none;
+  }
+
+  // TODO: get vpx/y/z
+  const double vpx_ = cloud.sensor_origin_.coeff(0);
+  const double vpy_ = cloud.sensor_origin_.coeff(1);
+  const double vpz_ = cloud.sensor_origin_.coeff(2);
+  // TODO(rsoussan): is this call necessary??
+  flipNormalTowardsViewpoint(pcl_point, vpx_, vpy_, vpz_, normal_x, normal_y, normal_z);
+  return Eigen::Vector3d(normal_x, normal_y, normal_z);
+}
+
+bool DepthImageAligner::computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud,
+                                           const std::vector<int>& indices, float& normal_x, float& normal_y,
+                                           float& normal_z, float& curvature) const {
+  // from pcl::common::centroid.h
+  // TODO: make these member vars! is eigen align16 necessary?
+  /** \brief Placeholder for the 3x3 covariance matrix at each surface patch. */
+  static EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix_;
+
+  /** \brief 16-bytes aligned placeholder for the XYZ centroid of a surface patch. */
+  static Eigen::Vector4f xyz_centroid_;
+  if (indices.size() < 3 ||
+      pcl::computeMeanAndCovarianceMatrix(cloud, indices, covariance_matrix_, xyz_centroid_) == 0) {
+    std::cout << "bad normal a!!" << std::endl;
+    if (indices.size() < 3)
+      std::cout << "too few points!!" << std::endl;
+    else
+      std::cout << "failed to compute mean and cov matrix!!" << std::endl;
+    return false;
+  }
+
+  // Get the plane normal and surface curvature
+  // from pcl::features.h
+  pcl::solvePlaneParameters(covariance_matrix_, normal_x, normal_y, normal_z, curvature);
+  return true;
+}
+
+void DepthImageAligner::flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z,
+                                                   float& nx, float& ny, float& nz) const {
+  // See if we need to flip any plane normals
+  vp_x -= point.x;
+  vp_y -= point.y;
+  vp_z -= point.z;
+
+  // Dot product between the (viewpoint - point) and the plane normal
+  float cos_theta = (vp_x * nx + vp_y * ny + vp_z * nz);
+
+  // Flip the plane normal
+  if (cos_theta < 0) {
+    nx *= -1;
+    ny *= -1;
+    nz *= -1;
+  }
+}
+
 boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   const auto& matches =
@@ -85,7 +168,18 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
 
   std::vector<Eigen::Vector3d> source_landmarks;
   std::vector<Eigen::Vector3d> target_landmarks;
-  boost::shared_ptr<std::vector<int>> indices(new std::vector<int>());
+  // TODO: make this optional?
+  std::vector<Eigen::Vector3d> target_normals;
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr kdtree;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_point_cloud;
+  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
+    kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
+    filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(
+      new pcl::PointCloud<pcl::PointXYZI>(*(latest_feature_depth_image_->point_cloud)));
+    RemoveNansAndZerosFromPoints(*filtered_point_cloud);
+    kdtree->setInputCloud(filtered_point_cloud);
+  }
+
   // Get 3D points for image features
   for (int i = 0; i < matches.size(); ++i) {
     const auto& match = matches[i];
@@ -97,9 +191,15 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     const auto target_point_3d =
       latest_feature_depth_image_->InterpolatePoint3D(target_image_point.x(), target_image_point.y());
     if (!Valid3dPoint(source_point_3d) || !Valid3dPoint(target_point_3d)) continue;
+    const Eigen::Vector3d target_landmark(target_point_3d->x, target_point_3d->y, target_point_3d->z);
+    if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
+      const auto target_normal = GetNormal(target_landmark, *filtered_point_cloud, *kdtree);
+      if (!target_normal) continue;
+      target_normals.emplace_back(*target_normal);
+    }
     source_landmarks.emplace_back(Eigen::Vector3d(source_point_3d->x, source_point_3d->y, source_point_3d->z));
-    target_landmarks.emplace_back(Eigen::Vector3d(target_point_3d->x, target_point_3d->y, target_point_3d->z));
-    indices->emplace_back(i);
+    target_landmarks.emplace_back(target_landmark);
+
     // TODO: save to matches_!!!!
   }
 
@@ -110,11 +210,14 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
 
   // TODO: make this a member var!
   PointCloudWithKnownCorrespondencesAligner point_cloud_aligner(params_.point_cloud_with_known_correspondences_aligner);
-  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
+  point_cloud_aligner.SetTargetNormals(target_normals);
+  /*if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
     // TODO: add fcn to estimate normals for target cloud!!
     pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> ne;
     ne.setInputCloud(latest_feature_depth_image_->point_cloud);
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>());
+    pcl::search::KdTree<pcl::PointXYZI>::Ptr test_tree(new pcl::search::KdTree<pcl::PointXYZI>());
+    test_tree->setInputCloud(latest_feature_depth_image_->point_cloud);
     ne.setSearchMethod(tree);
     ne.setRadiusSearch(0.03);
     ne.setIndices(indices);
@@ -124,9 +227,23 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     std::vector<Eigen::Vector3d> target_normals;
     auto source_landmarks_it = source_landmarks.begin();
     auto target_landmarks_it = target_landmarks.begin();
+    const int num_landmarks_pre = source_landmarks.size();
     for (const auto& point : cloud_normals.points) {
       // Remove correspondences with invalid target normal
+      LogError("target point: " << target_landmarks_it->matrix());
       if (!ValidNormal(point)) {
+        LogError("bad normal: " << point);
+        pcl::PointXYZI pcl_point;
+        pcl_point.x = target_landmarks_it->x();
+        pcl_point.y = target_landmarks_it->y();
+        pcl_point.z = target_landmarks_it->z();
+
+        std::vector<int> nn_indices;
+        std::vector<float> distances;
+        test_tree->nearestKSearch(pcl_point, 5, nn_indices, distances);
+        for (const auto distance : distances) {
+          LogError("distance: " << std::sqrt(distance));
+        }
         source_landmarks_it = source_landmarks.erase(source_landmarks_it);
         target_landmarks_it = target_landmarks.erase(target_landmarks_it);
         continue;
@@ -134,13 +251,24 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
         Eigen::Vector3d target_normal(point.normal_x, point.normal_y, point.normal_z);
         // Ensure normal is normalized
         target_normal.normalize();
+        LogError("normal: " << std::endl << target_normal.matrix());
         target_normals.emplace_back(target_normal);
         ++source_landmarks_it;
         ++target_landmarks_it;
       }
     }
     point_cloud_aligner.SetTargetNormals(target_normals);
+    LogError("num landmarks pre: " << num_landmarks_pre << ", num normals: " << target_normals.size());
+  }*/
+
+  static lc::Averager avg("valid_landmarks");
+  if (target_landmarks.size() < 4) {
+    LogError("ComputeRelativeTransform: Not enough points with valid normals, need 4 but given "
+             << target_landmarks.size() << ".");
+    avg.UpdateAndLog(0);
+    return boost::none;
   }
+  avg.UpdateAndLog(1);
 
   static lc::Timer pc_timer("pc_aligner");
   pc_timer.Start();

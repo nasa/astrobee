@@ -33,6 +33,8 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include <pcl/search/impl/kdtree.hpp>
+
 #include <Eigen/Geometry>
 
 #include <memory>
@@ -51,6 +53,12 @@ class DepthImageAligner {
   bool Valid3dPoint(const boost::optional<pcl::PointXYZI>& point) const;
   Eigen::Isometry3d ComputeRelativeTransform(const std::vector<Eigen::Vector3d>& source_landmarks,
                                              const std::vector<Eigen::Vector3d>& target_landmarks) const;
+  void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z, float& nx, float& ny,
+                                  float& nz) const;
+  bool computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<int>& indices, float& nx,
+                          float& ny, float& nz, float& curvature) const;
+  boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
+                                             const pcl::search::KdTree<pcl::PointXYZI>& kdtree) const;
 
   DepthImageAlignerParams params_;
   std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
