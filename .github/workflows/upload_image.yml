@@ -1,8 +1,8 @@
 name: Docker Image Upload
 
 on:
-  pull_request:
-    branches: ['develop']
+  push:
+    branches: ['upload_docker_packages']
 
 jobs:
 
