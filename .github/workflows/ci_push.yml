@@ -21,21 +21,21 @@ jobs:
                           --build-arg UBUNTU_VERSION=16.04
                           --build-arg ROS_VERSION=kinetic
                           --build-arg PYTHON=''
-                          --build-arg REMOTE=ghcr.io/${{ github.actor }}
-                          -t ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
+                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
+                          -t ghcr.io/${{ github.repository_owner }}/astrobee:latest-ubuntu16.04
 
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
                           --build-arg UBUNTU_VERSION=16.04
-                          --build-arg REMOTE=ghcr.io/${{ github.actor }}
+                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
                           -t astrobee:test-ubuntu16.04
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu16.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-ubuntu16.04
 
   build-bionic:
 
@@ -52,21 +52,21 @@ jobs:
                           --build-arg UBUNTU_VERSION=18.04
                           --build-arg ROS_VERSION=melodic
                           --build-arg PYTHON=3
-                          --build-arg REMOTE=ghcr.io/${{ github.actor }}
-                          -t ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu18.04
+                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
+                          -t ghcr.io/${{ github.repository_owner }}/astrobee:latest-ubuntu18.04
 
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
                           --build-arg UBUNTU_VERSION=18.04
-                          --build-arg REMOTE=ghcr.io/${{ github.actor }}
+                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
                           -t astrobee:test-ubuntu18.04
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu18.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-ubuntu18.04
 
   build-focal:
 
@@ -83,18 +83,18 @@ jobs:
                           --build-arg UBUNTU_VERSION=20.04
                           --build-arg ROS_VERSION=noetic
                           --build-arg PYTHON=3
-                          --build-arg REMOTE=ghcr.io/${{ github.actor }}
-                          -t ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu20.04
+                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
+                          -t ghcr.io/${{ github.repository_owner }}/astrobee:latest-ubuntu20.04
 
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
                           --build-arg UBUNTU_VERSION=20.04
-                          --build-arg REMOTE=ghcr.io/${{ github.actor }}
+                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
                           -t astrobee:test-ubuntu20.0
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-ubuntu20.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-ubuntu20.04
