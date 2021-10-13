@@ -36,15 +36,15 @@ jobs:
                           -t astrobee:test-ubuntu16.04
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu16.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu16.04
-        docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu16.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu16.04
+        docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu16.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu16.04
+        docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
 
   build-bionic:
 
@@ -76,15 +76,15 @@ jobs:
                           -t astrobee:test-ubuntu18.04
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu18.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu18.04
-        docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu18.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu18.04
+        docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu18.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu18.04
+        docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
 
   build-focal:
 
@@ -116,12 +116,12 @@ jobs:
                           -t astrobee:test-ubuntu20.04
 
     - name: Log in to registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Push Docker image
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu20.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:latest-base-ubuntu20.04
-        docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu20.04
-        docker push ghcr.io/${{ github.actor }}/astrobee:v${VERSION}-ubuntu20.04
+        docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu20.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu20.04
+        docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
+        docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
