@@ -4,22 +4,24 @@
     Modified from https://answers.ros.org/question/11537/creating-a-bag-file-out-of-a-image-sequence/.
 """
 
-import time, sys, os
-from ros import rosbag
+import os
+import sys
+import time
+
 import roslib
 import rospy
-roslib.load_manifest('sensor_msgs')
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+from ros import rosbag
 
-from PIL import ImageFile
-
+roslib.load_manifest("sensor_msgs")
 import cv2
+from cv_bridge import CvBridge
+from PIL import ImageFile
+from sensor_msgs.msg import Image
 
 
 def get_files_from_dir(dir):
     """Generates a list of files from the directory"""
-    print( "Searching directory %s" % dir )
+    print("Searching directory %s" % dir)
     all = []
     left_files = []
     right_files = []
@@ -37,7 +39,7 @@ def get_files_from_dir(dir):
 
 def create_mono_bag(imgs, bagname):
     """Creates a bag file with camera images"""
-    bag =rosbag.Bag(bagname, 'w')
+    bag = rosbag.Bag(bagname, "w")
 
     try:
         for i in range(len(imgs)):
@@ -70,7 +72,7 @@ def create_bag(args):
 
 
 if __name__ == "__main__":
-    if len( sys.argv ) == 3:
-        create_bag( sys.argv[1:])
+    if len(sys.argv) == 3:
+        create_bag(sys.argv[1:])
     else:
         print("Usage: img2bag imagedir bagfilename")
