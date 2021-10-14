@@ -5,9 +5,9 @@
 """
 
 import sys
-import rospy
-import numpy as np
 
+import numpy as np
+import rospy
 from ff_msgs.msg import VisualLandmarks
 from tf.transformations import *
 

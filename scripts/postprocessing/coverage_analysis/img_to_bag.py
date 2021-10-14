@@ -16,8 +16,9 @@ from PIL import ImageFile
 
 import cv2
 
+
 def get_files_from_dir(dir):
-    '''Generates a list of files from the directory'''
+    """Generates a list of files from the directory"""
     print( "Searching directory %s" % dir )
     all = []
     left_files = []
@@ -25,17 +26,17 @@ def get_files_from_dir(dir):
     if os.path.exists(dir):
         for path, names, files in os.walk(dir):
             for f in sorted(files):
-                if os.path.splitext(f)[1] in ['.bmp', '.png', '.jpg', '.ppm']:
-                    if 'left' in f or 'left' in path:
-                        left_files.append( os.path.join( path, f ) )
-                    elif 'right' in f or 'right' in path:
-                        right_files.append( os.path.join( path, f ) )
-                    all.append( os.path.join( path, f ) )
+                if os.path.splitext(f)[1] in [".bmp", ".png", ".jpg", ".ppm"]:
+                    if "left" in f or "left" in path:
+                        left_files.append(os.path.join(path, f))
+                    elif "right" in f or "right" in path:
+                        right_files.append(os.path.join(path, f))
+                    all.append(os.path.join(path, f))
     return all, left_files, right_files
 
 
 def create_mono_bag(imgs, bagname):
-    '''Creates a bag file with camera images'''
+    """Creates a bag file with camera images"""
     bag =rosbag.Bag(bagname, 'w')
 
     try:
@@ -51,14 +52,15 @@ def create_mono_bag(imgs, bagname):
             img_msg.header.stamp = Stamp
             img_msg.header.frame_id = "camera"
 
-            bag.write('mgt/img_sampler/nav_cam/image_record', img_msg, Stamp)
+            bag.write("mgt/img_sampler/nav_cam/image_record", img_msg, Stamp)
     finally:
         bag.close()
 
 
 def create_bag(args):
-    '''Creates the actual bag file by successively adding images'''
+    """Creates the actual bag file by successively adding images"""
     all_imgs, left_imgs, right_imgs = get_files_from_dir(args[0])
+
     if len(all_imgs) <= 0:
         print("No images found in %s" % args[0])
         exit()
@@ -66,8 +68,9 @@ def create_bag(args):
     # create bagfile with mono camera image stream
     create_mono_bag(all_imgs, args[1])
 
+
 if __name__ == "__main__":
     if len( sys.argv ) == 3:
         create_bag( sys.argv[1:])
     else:
-        print( "Usage: img2bag imagedir bagfilename")
+        print("Usage: img2bag imagedir bagfilename")

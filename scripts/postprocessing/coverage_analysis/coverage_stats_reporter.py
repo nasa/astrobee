@@ -226,17 +226,18 @@ if __name__ == "__main__":
 
     try:
         if len(sys.argv) < 2:
-           print("Usage: " + sys.argv[0] + ' <activity_coverage_database_file>')
-           print("       <activity_coverage_database_file>: 'dir/to/activity-coverage-database-file.csv' ")
-           sys.exit(1)
+            print("Usage: " + sys.argv[0] + " <activity_coverage_database_file>")
+            print(
+                "       <activity_coverage_database_file>: 'dir/to/activity-coverage-database-file.csv' "
+            )
+            sys.exit(1)
 
-        fileIn  = sys.argv[1]
+        fileIn = sys.argv[1]
 
         obj = Coverage_StatsReporter()
 
         obj.generate_coverage_stats(fileIn)
         obj.print_pdf_report(fileIn)
-
 
     except KeyboardInterrupt:
         print("\n <-CTRL-C EXIT: USER manually exited!->")
