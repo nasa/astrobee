@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
+""" Create a file summarizing the coverage percentage across the different
+    walls of the JEM at the ISS
+"""
+
 import sys, re
 import math
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-"""
-Create a file summarizing the coverage percentage across the different
-walls of the JEM at the ISS
-"""
 
 class Coverage_StatsReporter:
 
@@ -39,7 +38,7 @@ class Coverage_StatsReporter:
  # Categorize the number of cubes in each category
  # 0, 25, 50, 75, 100 percent of map coverage defined as
  # number of registered ML features per cube.
- def analize_wall_coverage(self, num_features_per_cube):
+ def analyze_wall_coverage(self, num_features_per_cube):
      """ # Normalized visualization desired (x' = (x -xmin)/ (xmax-xmin))
      """
 
@@ -64,10 +63,6 @@ class Coverage_StatsReporter:
      self.coverage_per_wall[5] = (self.fifth_bin)* 100.0 / self.total_distribution
 
      self.coverage_per_wall[6] = self.coverage_per_wall[6] + num_features_per_cube
-     #self.max_num_features = self.max_num_features + self.coverage_per_wall[5]
-     #print("Total Num reg ML: {:.2f}".format(self.max_num_features))
-
-     #self.coverage_per_wall[7] = self.max_num_features #(self.coverage_per_wall[5])*100.0 / self.max_num_features
 
  # Generate a report file containing the wall, percentage in a five-bin
  # distribution and the total number of registered ML features in a given
@@ -87,7 +82,6 @@ class Coverage_StatsReporter:
 
               # Check if comments has string "Wall"
               if re.match("^\s*\#", line):
-                 #print("Found a comment\n")
 
                  vals = []
                  for v in re.split("\s+", line):
@@ -96,7 +90,6 @@ class Coverage_StatsReporter:
                      vals.append(v)
 
                  if (vals[1] == "Wall"):
-                    #print("Found a Wall\n")
                     if (wall_counter == -1):
                        self.coverage_per_wall[0] = vals[2]  # Save the name of the wall
                        wall_counter += 1
@@ -120,10 +113,9 @@ class Coverage_StatsReporter:
                        vals.append(v)
 
                    if (len(vals) == 4):
-                      self.analize_wall_coverage(int(vals[0]))
+                      self.analyze_wall_coverage(int(vals[0]))
 
      # EOF so write the last values
-     #print("Writing report\n")
      self.final_stats.insert(wall_counter, self.coverage_per_wall)
      self.write_report(fileIn)
 
@@ -132,7 +124,6 @@ class Coverage_StatsReporter:
      max_num_features = 0.0
 
      last_column = len(self.final_stats[0]) - 1
-     #print("last_col: {:d}".format(last_column))
 
      f_stats_index = fileIn.find(".csv")
      stats_filename = fileIn[:f_stats_index] + "_stats.csv"
@@ -141,23 +132,15 @@ class Coverage_StatsReporter:
      with open(stats_filename, 'w') as f_stats:
           f_stats.write("# Coverage Distribution along the different walls of the JEM\n")
           f_stats.write("# Columns represent percentage of registered ML Features per wall (0, 1-10, 11-20, 21-40, 40+)\n")
-          #f_stats.write("# Map corresponding to: {:s}\n".format(stats_filename[:stats_filename.find("_coverage")]))
           f_stats.write("# Analyisis corresponding to: {:s}\n".format(fileIn))
           f_stats.write("JEM Wall, 0ML, 1-10ML, 11-20ML, 21-40ML, 40+ML, Total Reg. ML Features per wall, Percentage of Total Num ML Features Analyzed\n")
 
           for i in range(len(self.final_stats)):
               max_num_features = max_num_features + self.final_stats[i][last_column]
-          #a = []
-          #for i in range(len(self.final_stats)):
-          #    a.insert(i, [self.final_stats[i][last_column] * 100.0 / max_num_features])
-          #print(a)
 
           for i in range(len(self.final_stats)):
-              #self.final_stats[i].extend(a[i])
               self.final_stats[i].extend([self.final_stats[i][last_column] * 100.0 / max_num_features])
           for i in range(len(self.final_stats)):
-              #for j in range(len(self.final_stats[i])):
-                   #print(self.final_stats[i][j])
               f_stats.write("{:s}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n".format(
               self.final_stats[i][0],    #JEM Wall
               self.final_stats[i][1],    #0ML     percentage
@@ -213,7 +196,6 @@ class Coverage_StatsReporter:
           plt.xlabel(" ", fontsize=5)
           plt.ylabel("Coverage %", fontsize=8)
           plt.tight_layout() #adjusts the bottom margin of the plot so that the labels don't go off the bottom edge.
-          #plt.legend(loc='best')
 
           pdf.savefig()  # saves the current figure into a pdf page
           plt.close()
@@ -230,16 +212,10 @@ class Coverage_StatsReporter:
 
           plt.xticks(x_data, x_ticks, fontsize=4, rotation=45, ha='right')
           plt.yticks(fontsize=8)
-          #plt.xlabel("Analyzed Locations", fontsize=5)
           plt.xlabel(" ", fontsize=5)
           plt.ylabel("Coverage %", fontsize=8)
           plt.tight_layout(rect=[0,0,0.95,1.0]) #adjusts the bottom margin of the plot so that the labels don't go off the bottom edge.
-          #plt.tight_layout() #adjusts the bottom margin of the plot so that the labels don't go off the bottom edge.
-          #plt.legend(loc='best')
-          #plt.legend(fontsize=5, bbox_to_anchor=(0.0, 0.0, 1., .2), loc='lower left', ncol=5, mode="expand", borderaxespad=0., bbox_transform=plt.transFigure)
           plt.legend(fontsize=5, bbox_to_anchor=(0.5, -0.1), loc='upper center', ncol=5) #, mode="expand", borderaxespad=0.0)
-          #plt.legend(fontsize=5, bbox_to_anchor=(1.02, 0.5), loc='center left', borderaxespad=0.0)
-          #plt.show()
 
           pdf.savefig()  # saves the current figure into a pdf page
           plt.close()

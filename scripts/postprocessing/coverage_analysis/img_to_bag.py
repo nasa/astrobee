@@ -1,3 +1,9 @@
+#!/usr/bin/python
+
+""" Generates an image bag containing only the images in a given folder.
+    Modified from https://answers.ros.org/question/11537/creating-a-bag-file-out-of-a-image-sequence/.
+"""
+
 import time, sys, os
 from ros import rosbag
 import roslib
@@ -10,7 +16,7 @@ from PIL import ImageFile
 
 import cv2
 
-def GetFilesFromDir(dir):
+def get_files_from_dir(dir):
     '''Generates a list of files from the directory'''
     print( "Searching directory %s" % dir )
     all = []
@@ -28,7 +34,7 @@ def GetFilesFromDir(dir):
     return all, left_files, right_files
 
 
-def CreateMonoBag(imgs, bagname):
+def create_mono_bag(imgs, bagname):
     '''Creates a bag file with camera images'''
     bag =rosbag.Bag(bagname, 'w')
 
@@ -50,18 +56,18 @@ def CreateMonoBag(imgs, bagname):
         bag.close()
 
 
-def CreateBag(args):
+def create_bag(args):
     '''Creates the actual bag file by successively adding images'''
-    all_imgs, left_imgs, right_imgs = GetFilesFromDir(args[0])
+    all_imgs, left_imgs, right_imgs = get_files_from_dir(args[0])
     if len(all_imgs) <= 0:
         print("No images found in %s" % args[0])
         exit()
 
     # create bagfile with mono camera image stream
-    CreateMonoBag(all_imgs, args[1])
+    create_mono_bag(all_imgs, args[1])
 
 if __name__ == "__main__":
     if len( sys.argv ) == 3:
-        CreateBag( sys.argv[1:])
+        create_bag( sys.argv[1:])
     else:
         print( "Usage: img2bag imagedir bagfilename")

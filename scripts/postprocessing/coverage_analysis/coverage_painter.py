@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+""" Show spheres/markers representing where nav_cam was when it registered spheres
+    representing Map Landmarks.
+"""
+
 import sys, os, re, subprocess
 import math
 
@@ -11,10 +15,6 @@ from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 import rospy
 
-"""
-Show spheres/markers representing where nav_cam was when it registered spheres
-representing Map Landmarks.
-"""
 
 class Coverage_Painter:
 
@@ -28,55 +28,8 @@ class Coverage_Painter:
        self.fifth_bin = 0
 
        self.counter = 0
-       self.cube_size = 0.30 #0.15 #0.30  #Meters
+       self.cube_size = 0.30 #Meters
        self.markerArray = MarkerArray()
-
-
-
-    def gen_marker(self, marker_id, marker_type, Point, Rot, Color, scale, text):
-       """Place a marker of a given type and color at a given location"""
-       marker = """  -
-       header:
-         seq: 1482
-         stamp:
-           secs: 1556650754
-           nsecs: 179000000
-         frame_id: "world"
-       ns: "thick_traj"
-       id: %d
-       type: %d
-       action: 0
-       pose:
-         position:
-           x: %g
-           y: %g
-           z: %g
-         orientation:
-           x: %g
-           y: %g
-           z: %g
-           w: %g
-       scale:
-         x: %g
-         y: %g
-         z: %g
-       color:
-         r: %g
-         g: %g
-         b: %g
-         a: 1.0
-       lifetime:
-         secs: 0
-         nsecs:         0
-       frame_locked: False
-       text: "%s"
-       mesh_resource: ''
-       mesh_use_embedded_materials: False
-""" % \
-        (marker_id, marker_type, Point[0], Point[1], Point[2], Rot[0], Rot[1], Rot[2], Rot[3],
-         scale[0], scale[1], scale[2], Color[0], Color[1], Color[2], text);
-
-       return marker;
 
     def is_robot_far_from_last_pose(self, last_pose, current_pose, min_dist):
 
@@ -113,18 +66,15 @@ class Coverage_Painter:
 
     #Use Astrobee body frame database
     #Write the file to visualize each of the robot's pose coverage
-    def write_robot_coverage_file(self, fileIn, fileOut):
+    def write_robot_coverage(self, fileIn):
 
         last_pose = [0.0, 0.0, 0.0]
-        min_dist = 0.0 # Minimum number of cm away from each other to be painted
+        min_dist = 0.0 # Minimum number of cm away from each other to be painted (e.g. 0.1 m)
 
         print("Reading: " + fileIn)
         with open(fileIn) as f_in:
 
             rospy.init_node('register')
-            print("Writing: " + fileOut)
-            f_out = open(fileOut, 'w')
-            f_out.write("markers: \n")
 
             #print("Pose x y z has ML features")
             marker_id = 1
@@ -150,38 +100,12 @@ class Coverage_Painter:
                    if (self.is_robot_far_from_last_pose(last_pose, robot_pose, min_dist)):
                       color_code = self.get_color_name( int(vals[0]) )
                       robot_rot = [float(vals[4]), float(vals[5]), float(vals[6]), float(vals[7])]
-                      q = self.transform_body_to_gazebo(robot_pose[0], robot_pose[1], robot_pose[2], 
+                      q = self.transform_body_to_gazebo(robot_pose[0], robot_pose[1], robot_pose[2],
                                                         robot_rot[0], robot_rot[1], robot_rot[2], robot_rot[3])
 
                       robot_rot = [q[3], q[4], q[5], q[6]]
-                      """
-                      # Plot a cube
-                      marker_id += 1
-                      marker_type = 1 # plot a cube(1), sphere(2)
-                      marker_scale = [self.cube_size, self.cube_size, self.cube_size] #original 0.01
-                      marker_color = color_code #self.color_converter(robot_pose_color) #[1.0, 0.0, 0.0] # red
-                      #print("marker_color: [{:.2f}, {:.2f}, {:.2f}]".format(
-                      #marker_color[0], marker_color[1], marker_color[2]))
-                      marker = self.gen_marker(marker_id, marker_type, robot_pose, robot_rot, marker_color,
-                                    marker_scale, marker_text)
-                      f_out.write(marker)
-                      
-                      marker_id += 1
-                      marker_type = 0 # plot a arrow(0), cube(1), sphere(2)
-                      marker_scale = [self.cube_size/1.8, self.cube_size/2.0, 0.1] #original 0.01
-                      marker_color = color_code #self.color_converter(robot_pose_color) #[1.0, 0.0, 0.0] # red
-                      #print("marker_color: [{:.2f}, {:.2f}, {:.2f}]".format(
-                      #marker_color[0], marker_color[1], marker_color[2]))
-                      marker = self.gen_marker(marker_id, marker_type, robot_pose, robot_rot, marker_color,
-                                    marker_scale, marker_text)
-                      f_out.write(marker)
-                      last_pose = robot_pose
-                      """
-                      # https://answers.ros.org/question/11135/plotting-a-markerarray-of-spheres-with-rviz/
+
                       marker = Marker()
-                      #marker.header.seq = 1482
-                      #marker.header.stamp.secs = 1556650754
-                      #marker.header.stamp.nsecs = 179000000
                       marker.header.frame_id = "world"
                       marker.ns = "thick_traj"
                       marker.id = marker_id + 1
@@ -204,7 +128,6 @@ class Coverage_Painter:
 
                       self.animate_markers(marker)
                       last_pose = robot_pose
-                      #time.sleep(0.25)
 
 
                 else:
@@ -212,18 +135,13 @@ class Coverage_Painter:
                    continue
 
     #Use Astrobee body frame database
-    def write_map_coverage_file(self, fileIn, fileOut):
+    def write_map_coverage(self, fileIn):
+
+        rospy.init_node('register')
+        marker = Marker()
 
         print("Reading: " + fileIn)
         with open(fileIn) as f_in:
-
-            f_out = open(fileOut, 'w')
-            print("Writing: " + fileOut)
-            #lines = f.readlines()
-
-            f_out.write("markers: \n")
-
-            #print("Pose x y z has ML features")
 
             marker_id = 1
             for line in f_in: #lines:
@@ -235,7 +153,6 @@ class Coverage_Painter:
 
                 # Check if comments has string "Wall"
                 if re.match("^\s*\#", line):
-                   #print("Found a comment\n")
                    vals = []
                    for v in re.split("\s+", line):
                        if (v == ""):
@@ -243,8 +160,8 @@ class Coverage_Painter:
                        vals.append(v)
 
                    if (vals[1] == "Wall"):
-                      #print("Found a Wall\n")
                       marker_scale = [float(vals[3]), float(vals[3]), float(vals[3])] #Grab the grid_size for this wall
+
                 else:
                    # Extract all the values separated by spaces
                    vals = []
@@ -253,35 +170,43 @@ class Coverage_Painter:
                            continue
                        vals.append(v)
 
-                   marker_text = ""
-
                    if (len(vals) == 4):
                       color_code = self.get_color_name( int(vals[0]) )
                       robot_pose = [float(vals[1]), float(vals[2]), float(vals[3])]
-                      robot_rot = [0.0, 0.0, 0.0, 1.0] #[float(vals[4]), float(vals[5]), float(vals[6]), float(vals[7])]
+                      robot_rot = [0.0, 0.0, 0.0, 1.0]
 
-                      # Plot a point as a sphere
-                      marker_id += 1
-                      marker_type = 1 # plot a cube(1), sphere(2)
-                      #marker_scale = self.cube_size #0.3 # meters
-                      marker_color = color_code
-                      marker = self.gen_marker(marker_id, marker_type, robot_pose, robot_rot, marker_color,
-                                       marker_scale, marker_text)
-                      f_out.write(marker)
+                      marker = Marker()
+                      marker.header.frame_id = "world"
+                      marker.ns = "cube_walls"
+                      marker.id = marker_id + 1
+                      marker.type = marker.CUBE
+                      marker.action = marker.ADD
+                      marker.scale.x = marker_scale[0]
+                      marker.scale.y = marker_scale[1]
+                      marker.scale.z = marker_scale[2]
+                      marker.color.a = 1.0
+                      marker.color.r = color_code[0]
+                      marker.color.g = color_code[1]
+                      marker.color.b = color_code[2]
+                      marker.pose.position.x = robot_pose[0]
+                      marker.pose.position.y = robot_pose[1]
+                      marker.pose.position.z = robot_pose[2]
+                      marker.pose.orientation.x = robot_rot[0]
+                      marker.pose.orientation.y = robot_rot[1]
+                      marker.pose.orientation.z = robot_rot[2]
+                      marker.pose.orientation.w = robot_rot[3]
+
+                      self.animate_markers(marker)
+
+
                    else:
                       #print("Skipping invalid line")
                       continue
 
-    def publish_markers(self, fileOut):
-        # Publish
-        cmd = 'rostopic pub --once /loc/registration visualization_msgs/MarkerArray -f ' + fileOut
-        print("Running: " + cmd)
-        subprocess.call(cmd.split(" "))
-
     def animate_markers(self, marker):
         # Publish
         topic = '/loc/registration'
-        publisher = rospy.Publisher(topic, MarkerArray, queue_size=10)
+        publisher = rospy.Publisher(topic, MarkerArray, queue_size=100)
 
         self.markerArray.markers.append(marker)
 
@@ -291,11 +216,10 @@ class Coverage_Painter:
             id += 1
 
         publisher.publish(self.markerArray)
-        rospy.sleep(0.20) # Wait these many seconds to publish the next marker
+        rospy.sleep(0.01) # Wait these many seconds to publish the next marker
 
-    def remove_tmp_file(self, fileOut):
-        print("Removing: " + fileOut)
-        os.remove(fileOut)
+    def print_stats(self):
+        print("Resulting Stats: ")
         # To get some stats
         total_entries = self.first_bin + self.second_bin + self.third_bin + self.fourth_bin + self.fifth_bin
         one =   (self.first_bin)* 100.0 / total_entries
@@ -342,9 +266,6 @@ class Coverage_Painter:
     # Get the color name based on how many features found in cube
     def get_color_name(self, num_features):
 
-        """ # If normalized visualization desired (x' = (x -xmin)/ (xmax-xmin))
-        percent_val = int(math.floor((float(num_features) / float(self.max_num_features))*100))"""
-
         # If ML number based visualization is desired
         if (num_features == 0):
              self.first_bin += 1
@@ -373,20 +294,18 @@ if __name__ == "__main__":
            sys.exit(1)
 
         fileIn  = sys.argv[1]
-        fileOut = fileIn + ".out"
 
         obj = Coverage_Painter()
 
         obj.coverage_max_num_features(fileIn)
 
         if (sys.argv[2] == 'map_coverage'):
-           obj.write_map_coverage_file(fileIn, fileOut)
-           obj.publish_markers(fileOut)
+           obj.write_map_coverage(fileIn)
 
         elif (sys.argv[2] == 'robot_coverage'):
-           obj.write_robot_coverage_file(fileIn, fileOut)
+           obj.write_robot_coverage(fileIn)
 
-        obj.remove_tmp_file(fileOut)
+        obj.print_stats()
 
     except KeyboardInterrupt:
         print("\n <-CTRL-C EXIT: USER manually exited!->")
