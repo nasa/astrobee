@@ -29,7 +29,7 @@ set(LIBS
   ${Boost_IOSTREAMS_LIBRARY}
   config_reader
   ff_nodelet
-  Qt4::QtXml
+  Qt5::Xml
   rapidIo
   rapidExtAstrobee
 )

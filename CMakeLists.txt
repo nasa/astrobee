@@ -342,7 +342,7 @@ if (USE_DDS)
 
   set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
-  find_package(QtXml REQUIRED)
+  find_package(Qt5Xml REQUIRED)
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
   find_package(Soracore REQUIRED)

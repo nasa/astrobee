@@ -22,7 +22,7 @@ set(DEPS
 )
 
 set(LIBS
-  Qt4::QtXml
+  Qt5::Xml
   rapidIo
   rapidExtAstrobee
   ff_common)
