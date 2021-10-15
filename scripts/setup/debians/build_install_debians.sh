@@ -123,18 +123,18 @@ echo Checking for $REQUIRED_PKG: $PKG_OK
 if [ "install ok installed" = "$PKG_OK" ]; then
   echo "$REQUIRED_PKG exists. Setting up miro and soracore."
 
-# miro
-cd ${DEBIAN_LOC}/miro
-sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-cd ${DEBIAN_LOC}
-./build_miro.sh || exit 1
-sudo dpkg -i libmiro*_amd64.deb || exit 1
+  # miro
+  cd ${DEBIAN_LOC}/miro
+  sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+  cd ${DEBIAN_LOC}
+  ./build_miro.sh || exit 1
+  sudo dpkg -i libmiro*_amd64.deb || exit 1
 
-# soracore
-cd ${DEBIAN_LOC}/soracore
-sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-cd ${DEBIAN_LOC}
-./build_soracore.sh || exit 1
-sudo dpkg -i libsoracore*_amd64.deb || exit 1
+  # soracore
+  cd ${DEBIAN_LOC}/soracore
+  sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+  cd ${DEBIAN_LOC}
+  ./build_soracore.sh || exit 1
+  sudo dpkg -i libsoracore*_amd64.deb || exit 1
 
 fi
