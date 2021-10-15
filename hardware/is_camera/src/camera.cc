@@ -202,7 +202,7 @@ namespace is_camera {
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
     if (bayer_enable_) {
-      bayer_camera_topic_ = camera_topic_ + "_bayer";
+      bayer_camera_topic_ = camera_topic_ + "_bayer/image_raw";
       bayer_pub_ = nh->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
     }
 
