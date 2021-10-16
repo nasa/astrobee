@@ -19,7 +19,6 @@ project(ff_hw_msgs)
 
 find_package(catkin2 REQUIRED COMPONENTS
   message_generation
-  roscpp
   std_msgs
   sensor_msgs
 )
