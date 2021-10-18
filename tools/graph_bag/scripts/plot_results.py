@@ -645,7 +645,7 @@ def create_plots(bagfile,
                          0.01,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
-   if has_imu_bias_tester_poses:
+    if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,
                            sparse_mapping_poses,
