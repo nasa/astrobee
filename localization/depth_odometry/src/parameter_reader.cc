@@ -38,11 +38,9 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
   params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
-  const bool sim = mc::LoadBool(config, "sim");
-  if (true) {  // sim) {
-    params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
-  } else {
-    Eigen::MatrixXd M(4, 4);
+  // TODO(rsoussan): remove this as option?
+  params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
+  /* Eigen::MatrixXd M(4, 4);
     config_reader::ConfigReader::Table mat(&config, "hazcam_depth_to_image_transform");
     int count = 0;
     for (int row = 0; row < M.rows(); row++) {
@@ -52,24 +50,7 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
           LogFatal("Failed to get val for hazcam_depth_to_image_trafo!");
         }
       }
-    }
-    Eigen::Affine3d a;
-    a.matrix() = M;
-    /*Eigen::Matrix3d rot;
-    Eigen::Matrix3d scale;
-    a.computeScalingRotation(&scale, &rot);
-    LogError("scale: " << scale.matrix());
-    LogError("rot: " << rot.eulerAngles(2, 1, 0).matrix());
-    params.haz_cam_A_haz_depth.matrix() = M;*/
-    const double scale_factor = mc::LoadDouble(config, "scale_factor");
-    // params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity() * Eigen::Scaling(scale_factor);
-    params.haz_cam_A_haz_depth.translation() = a.translation();
-    params.haz_cam_A_haz_depth.linear() = a.linear();
-    // params.haz_cam_A_haz_depth.linear()(0, 0) = 1.0;
-    // params.haz_cam_A_haz_depth.linear()(1, 1) = 1.0;
-    // params.haz_cam_A_haz_depth.linear()(2, 2) = 1.0;
-  }
-  LogError("hazcam_A_haz_depth: " << std::endl << params.haz_cam_A_haz_depth.matrix());
+    } */
 }
 
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
@@ -115,22 +96,7 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.max_inlier_tolerance = mc::LoadInt(config, "max_inlier_tolerance");
   params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");
   LoadPointCloudWithKnownCorrespondencesAlignerParams(config, params.point_cloud_with_known_correspondences_aligner);
-  const bool sim = mc::LoadBool(config, "sim");
-  if (sim) {
-    const Eigen::Vector2i image_size(171, 224);
-    const Eigen::Vector2d focal_length(186.40017522, 186.40017522);
-    const Eigen::Vector2d optical_center(111.5, 85);
-    params.camera_params.reset(new camera::CameraParameters(image_size, focal_length, optical_center));
-    // params.camera_params->SetUndistortedSize(Eigen::Vector2i(600, 500));
-    Eigen::VectorXd distortion(4);
-    distortion[0] = 0;  //-0.050689743;
-    distortion[1] = 0;  //-1.1461691;
-    distortion[2] = 0;  //-0.001373226;
-    distortion[3] = 0;  //-0.00056427513;
-    params.camera_params->SetDistortion(distortion);
-  } else {
-    params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
-  }
+  params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
 }
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
