@@ -68,6 +68,5 @@ if __name__ == '__main__':
   parser.add_argument('input_bag_prefix')
   parser.add_argument('--merged-bag', default='')
   parser.add_argument('--only-loc-topics', dest='only_loc_topics', action='store_true')
-  parser.add_argument('--merged-bag', default='')
   args = parser.parse_args()
   merge_bag(args.input_bag_prefix, args.merged_bag, args.only_loc_topics)

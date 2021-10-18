@@ -196,7 +196,7 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   // Get 3D points for image features
   std::vector<Eigen::Vector2d> source_image_points;
   std::vector<Eigen::Vector2d> target_image_points;
-  for (int i = 0; i < matches.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(matches.size()); ++i) {
     const auto& match = matches[i];
     const auto& source_image_point = match.source_point;
     const auto& target_image_point = match.target_point;
