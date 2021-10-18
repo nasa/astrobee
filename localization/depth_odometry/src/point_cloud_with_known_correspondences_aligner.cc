@@ -33,7 +33,15 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   Eigen::Matrix<double, 6, 1> relative_transform = VectorFromIsometry3d(initial_guess);
   ceres::Problem problem;
   problem.AddParameterBlock(relative_transform.data(), 6);
-  if (params_.use_point_to_plane_cost) {
+  if (params_.use_symmetric_point_to_plane_cost) {
+    if (!target_normals_ || !source_normals_)
+      LogFatal("Align: Attempting to use symmetric point to plane cost without having set source and target normals.");
+    LogError("tn size: " << target_normals_->size() << ", sn size: " << source_normals_->size());
+    for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
+      AddSymmetricPointToPlaneCostFunction(source_points[i], target_points[i], (*source_normals_)[i],
+                                           (*target_normals_)[i], relative_transform, problem);
+    }
+  } else if (params_.use_point_to_plane_cost) {
     if (!target_normals_) LogFatal("Align: Attempting to use point to plane cost without having set target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
       AddPointToPlaneCostFunction(source_points[i], target_points[i], (*target_normals_)[i], relative_transform,
@@ -69,18 +77,20 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
     eval_options_huber.num_threads = 1;
     eval_options_huber.apply_loss_function = true;
     problem.Evaluate(eval_options_huber, &total_cost_huber, &residuals_huber, NULL, NULL);
-    // size_t len = residuals.size()/2;
-    size_t len = residuals.size();
+    // TODO(rsoussan) : automate norm sizing somehow
+    size_t len = residuals.size() / 2;
+    // size_t len = residuals.size();
     double res = 0.0;
     double res_huber = 0.0;
     for (size_t it = 0; it < len; it++) {
-      // double norm = Eigen::Vector2d(residuals[2*it + 0], residuals[2*it + 1]).norm();
-      double norm = residuals[it] * residuals[it];
+      double norm = Eigen::Vector2d(residuals[2 * it + 0], residuals[2 * it + 1]).norm();
+      // double norm = residuals[it] * residuals[it];
       res += norm;
       err_norm.push_back(norm);
 
       averager.Update(norm);
-      double norm_huber = residuals_huber[it] * residuals_huber[it];
+      // double norm_huber = residuals_huber[it] * residuals_huber[it];
+      double norm_huber = Eigen::Vector2d(residuals_huber[2 * it + 0], residuals_huber[2 * it + 1]).norm();
       res_huber += norm_huber;
       err_norm_huber.push_back(norm_huber);
       if (norm_huber / norm < 0.99) {
@@ -132,6 +142,10 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTran
 
   const Eigen::Matrix<double, 4, 4> relative_transform = Eigen::umeyama(cloud_src, cloud_tgt, false);
   return Eigen::Isometry3d(relative_transform.matrix());
+}
+void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(const std::vector<Eigen::Vector3d>& source_normals) {
+  // TODO(rsoussan): Use std::move here?
+  source_normals_ = source_normals;
 }
 
 void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(const std::vector<Eigen::Vector3d>& target_normals) {
