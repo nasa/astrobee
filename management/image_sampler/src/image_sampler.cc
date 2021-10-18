@@ -39,8 +39,8 @@ void ImageSampler::Initialize(ros::NodeHandle *nh) {
   camera_states_[DOCK_CAM_ID].camera_name = "dock_cam";
   camera_states_[HAZ_CAM_ID].camera_name =  "haz_cam";
   camera_states_[PERCH_CAM_ID].camera_name = "perch_cam";
-  camera_states_[NAV_CAM_ID].camera_name =  "nav_cam_bayer";
-  camera_states_[DOCK_CAM_ID].camera_name = "dock_cam_bayer";
+  camera_states_[NAV_CAM_BAYER_ID].camera_name = "nav_cam_bayer";
+  camera_states_[DOCK_CAM_BAYER_ID].camera_name = "dock_cam_bayer";
 
   for (int i = 0; i < NUM_CAMERAS; i++) {
     record_last_publish_time_[i] = ros::Time::now();
@@ -76,10 +76,14 @@ void ImageSampler::Initialize(ros::NodeHandle *nh) {
   stream_image_pub_[HAZ_CAM_ID]   = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_HAZ_CAM_STREAM, 1);
   record_image_pub_[PERCH_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_RECORD, 1);
   stream_image_pub_[PERCH_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_STREAM, 1);
-  record_image_pub_[HAZ_CAM_ID]   = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_BAYER_RECORD, 1);
-  stream_image_pub_[HAZ_CAM_ID]   = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_BAYER_STREAM, 1);
-  record_image_pub_[PERCH_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_BAYER_RECORD, 1);
-  stream_image_pub_[PERCH_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_BAYER_STREAM, 1);
+  record_image_pub_[NAV_CAM_BAYER_ID] =
+    img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_BAYER_RECORD, 1);
+  stream_image_pub_[NAV_CAM_BAYER_ID] =
+    img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_BAYER_STREAM, 1);
+  record_image_pub_[DOCK_CAM_BAYER_ID] =
+    img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_BAYER_RECORD, 1);
+  stream_image_pub_[DOCK_CAM_BAYER_ID] =
+    img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_BAYER_STREAM, 1);
 
   configure_srv_[NAV_CAM_ID]  = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV,
                                                      &ImageSampler::ConfigureServiceNavCam,  this);
