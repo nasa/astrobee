@@ -596,6 +596,7 @@ def create_plots(bagfile,
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
   vec_of_poses = [ar_tag_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag, bag_start_time)
+  has_depth_odom = has_topic(bag, '/loc/depth/odom')
   depth_odom_relative_poses = poses.Poses('Depth Odom', '/loc/depth/odom')
   load_odometry_msgs([depth_odom_relative_poses], bag, bag_start_time)
   groundtruth_vec_of_poses = [sparse_mapping_poses]
@@ -636,7 +637,7 @@ def create_plots(bagfile,
                          0.01,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
-    if depth_odom_relative_poses:
+    if has_depth_odom:
       depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
       plot_poses(pdf,
                  depth_odom_poses,
