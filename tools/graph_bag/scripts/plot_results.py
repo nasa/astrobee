@@ -623,6 +623,14 @@ def create_plots(bagfile,
                           ar_tag_poses)
     else:
       add_other_loc_plots(pdf, graph_localization_states, graph_localization_states)
+    if has_depth_odom:
+      depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
+      plot_poses(pdf,
+                 depth_odom_poses,
+                 sparse_mapping_poses,
+                 ar_tag_poses)
+      plot_covariances(pdf, depth_odom_relative_poses.times, depth_odom_relative_poses.covariances.position, 'Depth Odometry Position')
+      plot_covariances(pdf, depth_odom_relative_poses.times, depth_odom_relative_poses.covariances.orientation, 'Depth Odometry Orientation')
     plot_loc_state_stats(pdf,
                          graph_localization_states,
                          sparse_mapping_poses,
@@ -637,15 +645,7 @@ def create_plots(bagfile,
                          0.01,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
-    if has_depth_odom:
-      depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
-      plot_poses(pdf,
-                 depth_odom_poses,
-                 sparse_mapping_poses,
-                 ar_tag_poses)
-      plot_covariances(pdf, depth_odom_relative_poses.times, depth_odom_relative_poses.covariances.position, 'Depth Odometry Position')
-      plot_covariances(pdf, depth_odom_relative_poses.times, depth_odom_relative_poses.covariances.orientation, 'Depth Odometry Orientation')
-    if has_imu_bias_tester_poses:
+   if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,
                            sparse_mapping_poses,
