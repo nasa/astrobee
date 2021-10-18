@@ -16,11 +16,13 @@
 
 #include <string>
 
-#define NUM_CAMERAS 4
-#define NAV_CAM_ID  0
-#define DOCK_CAM_ID 1
-#define HAZ_CAM_ID  2
-#define PERCH_CAM_ID 3
+#define NUM_CAMERAS       6
+#define NAV_CAM_ID        0
+#define DOCK_CAM_ID       1
+#define HAZ_CAM_ID        2
+#define PERCH_CAM_ID      3
+#define NAV_CAM_BAYER_ID  4
+#define DOCK_CAM_BAYER_ID 5
 
 namespace image_sampler {
 
@@ -36,16 +38,22 @@ class ImageSampler : public ff_util::FreeFlyerNodelet {
   bool ConfigureServiceDockCam(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
   bool ConfigureServiceHazCam(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
   bool ConfigureServicePerchCam(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
+  bool ConfigureServiceNavCamBayer(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
+  bool ConfigureServiceDockCamBayer(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
   bool EnableService(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res,  // NOLINT
         int camera, std::string topic, void (ImageSampler::*callback)(const sensor_msgs::ImageConstPtr &));
   bool EnableServiceNavCam(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
   bool EnableServiceDockCam(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
   bool EnableServiceHazCam(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
   bool EnableServicePerchCam(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
+  bool EnableServiceNavCamBayer(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
+  bool EnableServiceDockCamBayer(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
   void NavCamCallback(const sensor_msgs::ImageConstPtr & msg);
   void DockCamCallback(const sensor_msgs::ImageConstPtr & msg);
   void HazCamCallback(const sensor_msgs::ImageConstPtr & msg);
   void PerchCamCallback(const sensor_msgs::ImageConstPtr & msg);
+  void NavCamBayerCallback(const sensor_msgs::ImageConstPtr & msg);
+  void DockCamBayerCallback(const sensor_msgs::ImageConstPtr & msg);
   void ImageCallback(const sensor_msgs::ImageConstPtr & msg, int camera);
   void UpdateState(int camera, bool streaming, int width, int height, float rate);
 

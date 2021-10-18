@@ -346,7 +346,7 @@
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="image_proc/debayer" />
      <arg name="name" value="debayer_nav_cam" />
-     <arg name="manager" value="mlp_vision" />
+     <arg name="manager" value="/mlp_vision" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />
      <arg name="extra" value="$(arg extra)" />
@@ -390,7 +390,7 @@
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="image_proc/debayer" />
      <arg name="name" value="debayer_dock_cam" />
-     <arg name="manager" value="mlp_vision" />
+     <arg name="manager" value="/mlp_vision" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />
      <arg name="extra" value="$(arg extra)" />
