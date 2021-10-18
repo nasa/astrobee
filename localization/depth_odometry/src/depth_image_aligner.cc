@@ -170,17 +170,32 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   std::vector<Eigen::Vector3d> target_landmarks;
   // TODO: make this optional?
   std::vector<Eigen::Vector3d> target_normals;
-  pcl::search::KdTree<pcl::PointXYZI>::Ptr kdtree;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_point_cloud;
-  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
-    kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
-    filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr target_kdtree;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr target_filtered_point_cloud;
+  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
+      params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+    target_kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
+    target_filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(
       new pcl::PointCloud<pcl::PointXYZI>(*(latest_feature_depth_image_->point_cloud)));
-    RemoveNansAndZerosFromPoints(*filtered_point_cloud);
-    kdtree->setInputCloud(filtered_point_cloud);
+    RemoveNansAndZerosFromPoints(*target_filtered_point_cloud);
+    target_kdtree->setInputCloud(target_filtered_point_cloud);
+  }
+
+  // TODO(rsoussan): make kdtree on depth image measurement creation to avoid recreating if using symmetric cost
+  std::vector<Eigen::Vector3d> source_normals;
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr source_kdtree;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr source_filtered_point_cloud;
+  if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+    source_kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
+    source_filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(
+      new pcl::PointCloud<pcl::PointXYZI>(*(previous_feature_depth_image_->point_cloud)));
+    RemoveNansAndZerosFromPoints(*source_filtered_point_cloud);
+    source_kdtree->setInputCloud(source_filtered_point_cloud);
   }
 
   // Get 3D points for image features
+  std::vector<Eigen::Vector2d> source_image_points;
+  std::vector<Eigen::Vector2d> target_image_points;
   for (int i = 0; i < matches.size(); ++i) {
     const auto& match = matches[i];
     const auto& source_image_point = match.source_point;
@@ -191,16 +206,24 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     const auto target_point_3d =
       latest_feature_depth_image_->InterpolatePoint3D(target_image_point.x(), target_image_point.y());
     if (!Valid3dPoint(source_point_3d) || !Valid3dPoint(target_point_3d)) continue;
+    const Eigen::Vector3d source_landmark(source_point_3d->x, source_point_3d->y, source_point_3d->z);
     const Eigen::Vector3d target_landmark(target_point_3d->x, target_point_3d->y, target_point_3d->z);
-    if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
-      const auto target_normal = GetNormal(target_landmark, *filtered_point_cloud, *kdtree);
+    if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
+        params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+      const auto target_normal = GetNormal(target_landmark, *target_filtered_point_cloud, *target_kdtree);
       if (!target_normal) continue;
+      if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+        const auto source_normal = GetNormal(source_landmark, *source_filtered_point_cloud, *source_kdtree);
+        if (!source_normal) continue;
+        source_normals.emplace_back(*source_normal);
+      }
       target_normals.emplace_back(*target_normal);
     }
-    source_landmarks.emplace_back(Eigen::Vector3d(source_point_3d->x, source_point_3d->y, source_point_3d->z));
-    target_landmarks.emplace_back(target_landmark);
 
-    // TODO: save to matches_!!!!
+    source_image_points.emplace_back(source_image_point);
+    target_image_points.emplace_back(target_image_point);
+    source_landmarks.emplace_back(source_landmark);
+    target_landmarks.emplace_back(target_landmark);
   }
 
   if (target_landmarks.size() < 4) {
@@ -208,59 +231,15 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
+  // TODO: save image points!
+  matches_ = DepthMatches(source_image_points, target_image_points, source_landmarks, target_landmarks,
+                          previous_feature_depth_image_->timestamp, latest_feature_depth_image_->timestamp);
+
   // TODO: make this a member var!
   PointCloudWithKnownCorrespondencesAligner point_cloud_aligner(params_.point_cloud_with_known_correspondences_aligner);
+  // TODO(rsoussan): make these conditional on using point to plane/symmetric costs!!!
   point_cloud_aligner.SetTargetNormals(target_normals);
-  /*if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost) {
-    // TODO: add fcn to estimate normals for target cloud!!
-    pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> ne;
-    ne.setInputCloud(latest_feature_depth_image_->point_cloud);
-    pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>());
-    pcl::search::KdTree<pcl::PointXYZI>::Ptr test_tree(new pcl::search::KdTree<pcl::PointXYZI>());
-    test_tree->setInputCloud(latest_feature_depth_image_->point_cloud);
-    ne.setSearchMethod(tree);
-    ne.setRadiusSearch(0.03);
-    ne.setIndices(indices);
-    // pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-    pcl::PointCloud<pcl::Normal> cloud_normals;
-    ne.compute(cloud_normals);
-    std::vector<Eigen::Vector3d> target_normals;
-    auto source_landmarks_it = source_landmarks.begin();
-    auto target_landmarks_it = target_landmarks.begin();
-    const int num_landmarks_pre = source_landmarks.size();
-    for (const auto& point : cloud_normals.points) {
-      // Remove correspondences with invalid target normal
-      LogError("target point: " << target_landmarks_it->matrix());
-      if (!ValidNormal(point)) {
-        LogError("bad normal: " << point);
-        pcl::PointXYZI pcl_point;
-        pcl_point.x = target_landmarks_it->x();
-        pcl_point.y = target_landmarks_it->y();
-        pcl_point.z = target_landmarks_it->z();
-
-        std::vector<int> nn_indices;
-        std::vector<float> distances;
-        test_tree->nearestKSearch(pcl_point, 5, nn_indices, distances);
-        for (const auto distance : distances) {
-          LogError("distance: " << std::sqrt(distance));
-        }
-        source_landmarks_it = source_landmarks.erase(source_landmarks_it);
-        target_landmarks_it = target_landmarks.erase(target_landmarks_it);
-        continue;
-      } else {
-        Eigen::Vector3d target_normal(point.normal_x, point.normal_y, point.normal_z);
-        // Ensure normal is normalized
-        target_normal.normalize();
-        LogError("normal: " << std::endl << target_normal.matrix());
-        target_normals.emplace_back(target_normal);
-        ++source_landmarks_it;
-        ++target_landmarks_it;
-      }
-    }
-    point_cloud_aligner.SetTargetNormals(target_normals);
-    LogError("num landmarks pre: " << num_landmarks_pre << ", num normals: " << target_normals.size());
-  }*/
-
+  point_cloud_aligner.SetSourceNormals(source_normals);
   static lc::Averager avg("valid_landmarks");
   if (target_landmarks.size() < 4) {
     LogError("ComputeRelativeTransform: Not enough points with valid normals, need 4 but given "
