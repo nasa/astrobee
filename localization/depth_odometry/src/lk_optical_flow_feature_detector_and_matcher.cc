@@ -19,7 +19,6 @@
 #include <depth_odometry/good_features_to_track_detector.h>
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher.h>
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
-#include <localization_common/logger.h>
 
 #include <opencv2/video/tracking.hpp>
 
@@ -51,30 +50,17 @@ FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage&
 
   // Find matches between forward and backward passes
   FeatureMatches matches;
-  LogError("forward matches: " << matched_forward_features.size());
   for (int i = 0; i < static_cast<int>(matched_forward_features.size()); ++i) {
     const auto& source_point = source_image.feature_points()[i];
     const auto& forward_point = matched_forward_features[i];
     if (!(forward_status[i] && backward_status[i])) continue;
     const bool valid_forward_match = cv::norm(source_point - forward_point) <= params_.max_flow_distance;
-    if (cv::norm(source_point - forward_point) > 5) {
-      LogError("large forward d!");
-      LogError("forward d: " << cv::norm(source_point - forward_point));
-    }
     const double backward_match_distance = cv::norm(source_point - matched_backward_features[i]);
-    if (backward_match_distance > 0.5) {
-      LogError("large backward d!");
-      LogError("back d: " << backward_match_distance);
-    }
     const bool valid_backward_match = backward_match_distance <= params_.max_backward_match_distance;
     if (!(valid_forward_match && valid_backward_match)) continue;
     matches.emplace_back(Eigen::Vector2d(source_point.x, source_point.y),
                          Eigen::Vector2d(forward_point.x, forward_point.y), backward_match_distance);
-    LogError("match! a: " << source_point.x << ", " << source_point.y << ", f: " << forward_point.x << ", "
-                          << forward_point.y);
-    LogError("distance: " << cv::norm(source_point - forward_point));
   }
-  LogError("total matches: " << matches.size());
   return matches;
 }
 }  // namespace depth_odometry
