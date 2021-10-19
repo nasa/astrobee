@@ -103,6 +103,34 @@ class SymmetricPointToPlaneError {
   Eigen::Vector3d target_normal_;
 };
 
+class ReprojectionError {
+ public:
+  ReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& depth_cloud_F_point_3d)
+      : image_point_(image_point), depth_cloud_F_point_3d_(depth_cloud_F_point_3d) {}
+
+  template <typename T>
+  bool operator()(const T* depth_image_A_depth_cloud_data, const T* intrinsics_data, const T* distortion_data,
+                  T* reprojection_error) const {
+    // Handle type conversions
+    const auto intrinsics = Intrinsics<T>(intrinsics_data);
+    const auto depth_image_A_depth_cloud = Affine3<T>(depth_image_A_depth_cloud_data);
+
+    // Compute error
+    const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_.cast<T>();
+    const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * depth_image_F_point_3d).hnormalized();
+    const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
+      Distort(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
+
+    reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
+    reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];
+    return true;
+  }
+
+ private:
+  Eigen::Vector2d image_point_;
+  Eigen::Vector3d depth_cloud_F_point_3d_;
+};
+
 void AddPointToPointCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
                                  Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem);
 
@@ -113,6 +141,12 @@ void AddPointToPlaneCostFunction(const Eigen::Vector3d& source_point, const Eige
 void AddSymmetricPointToPlaneCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
                                           const Eigen::Vector3d& source_normal, const Eigen::Vector3d& target_normal,
                                           Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem);
+
+void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
+                                 Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
+                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector,
+                                 Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem);
+
 }  // namespace depth_odometry
 
 #endif  // DEPTH_ODOMETRY_OPTIMIZATION_RESIDUALS_H_
