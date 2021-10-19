@@ -16,30 +16,22 @@
  * under the License.
  */
 
-#include <camera/camera_params.h>
-#include <camera/camera_model.h>
 #include <depth_odometry/brisk_feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher.h>
-#include <depth_odometry/point_cloud_with_known_correspondences_aligner.h>
 #include <depth_odometry/point_cloud_utilities.h>
 #include <depth_odometry/surf_feature_detector_and_matcher.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
-#include <sparse_mapping/reprojection.h>
-
-#include <opencv2/imgproc.hpp>
-
-#include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <pcl/search/impl/search.hpp>
-#include <pcl/search/impl/kdtree.hpp>
 
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
-    : params_(params), cam_(*(params_.camera_params)) {
+    : params_(params),
+      point_cloud_aligner_(params_.point_cloud_with_known_correspondences_aligner),
+      cam_(*(params_.camera_params)) {
   if (params_.detector == "brisk") {
     feature_detector_and_matcher_.reset(new BriskFeatureDetectorAndMatcher(params_.brisk_feature_detector_and_matcher));
   } else if (params_.detector == "lk_optical_flow") {
@@ -161,15 +153,11 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
-  // TODO: save image points!
   matches_ = DepthMatches(source_image_points, target_image_points, source_landmarks, target_landmarks,
                           previous_feature_depth_image_->timestamp, latest_feature_depth_image_->timestamp);
 
-  // TODO: make this a member var!
-  PointCloudWithKnownCorrespondencesAligner point_cloud_aligner(params_.point_cloud_with_known_correspondences_aligner);
-  // TODO(rsoussan): make these conditional on using point to plane/symmetric costs!!!
-  point_cloud_aligner.SetTargetNormals(std::move(target_normals));
-  point_cloud_aligner.SetSourceNormals(std::move(source_normals));
+  point_cloud_aligner_.SetTargetNormals(std::move(target_normals));
+  point_cloud_aligner_.SetSourceNormals(std::move(source_normals));
   if (target_landmarks.size() < 4) {
     LogError("ComputeRelativeTransform: Not enough points with valid normals, need 4 but given "
              << target_landmarks.size() << ".");
@@ -178,12 +166,9 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
 
   // static lc::Timer pc_timer("pc_aligner");
   // pc_timer.Start();
-  const auto relative_transform = point_cloud_aligner.ComputeRelativeTransform(source_landmarks, target_landmarks);
+  const auto relative_transform = point_cloud_aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks);
   // pc_timer.StopAndLog();
-  // TODO: get cov!!
-  /*LogError("rel trafo trans: " << relative_transform.pose.translation().matrix());
-  LogError("rel trafo trans norm: " << relative_transform.pose.translation().norm());*/
-  // TODO(rsoussan): make this a param??
+  // TODO(rsoussan): make this a param?? is this already a param in depth odometry? (B)
   if (relative_transform.pose.translation().norm() > 10) {
     LogError("large norm!!!");
     return boost::none;

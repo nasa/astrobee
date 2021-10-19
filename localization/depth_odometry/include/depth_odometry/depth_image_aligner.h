@@ -19,26 +19,26 @@
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
 #include <camera/camera_model.h>
-#include <depth_odometry/feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_matches.h>
+#include <depth_odometry/feature_detector_and_matcher.h>
+#include <depth_odometry/point_cloud_with_known_correspondences_aligner.h>
 #include <localization_common/pose_with_covariance.h>
-#include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 #include <localization_measurements/feature_depth_image_measurement.h>
 
 #include <boost/optional.hpp>
 
-#include <opencv2/core.hpp>
-#include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/search/impl/search.hpp>
 #include <pcl/search/impl/kdtree.hpp>
 
 #include <Eigen/Geometry>
 
 #include <memory>
-#include <utility>
+#include <vector>
 
 namespace depth_odometry {
 class DepthImageAligner {
@@ -70,6 +70,7 @@ class DepthImageAligner {
                                              const std::vector<Eigen::Vector3d>& target_landmarks) const;
 
   DepthImageAlignerParams params_;
+  PointCloudWithKnownCorrespondencesAligner point_cloud_aligner_;
   std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> latest_feature_depth_image_;
   std::unique_ptr<FeatureDetectorAndMatcher> feature_detector_and_matcher_;
