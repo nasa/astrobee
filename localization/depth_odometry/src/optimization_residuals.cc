@@ -48,16 +48,17 @@ void AddSymmetricPointToPlaneCostFunction(const Eigen::Vector3d& source_point, c
   problem.AddResidualBlock(symmetric_point_to_plane_cost_function, huber_loss, relative_transform.data());
 }
 
-void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
-                                 Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
-                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector,
-                                 Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem) {
+void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
+                                       Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
+                                       Eigen::Matrix<double, 4, 1>& intrinsics_vector,
+                                       Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem) {
   // change intrinsics to be a parameter! set to constant initially!
   // toggle const vs non const to switch between intrinsics vs affine vs both calibration!!!
   // TODO: pass this? delete at end?
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
   ceres::CostFunction* reprojection_cost_function =
-    new ceres::AutoDiffCostFunction<ReprojectionError, 2, 7, 4, 4>(new ReprojectionError(image_point, point_3d));
+    new ceres::AutoDiffCostFunction<AffineReprojectionError, 2, 7, 4, 4>(
+      new AffineReprojectionError(image_point, point_3d));
   problem.AddResidualBlock(reprojection_cost_function, huber_loss, depth_image_A_depth_cloud_vector.data(),
                            intrinsics_vector.data(), distortion.data());
 }

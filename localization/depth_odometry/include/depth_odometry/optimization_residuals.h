@@ -103,9 +103,9 @@ class SymmetricPointToPlaneError {
   Eigen::Vector3d target_normal_;
 };
 
-class ReprojectionError {
+class AffineReprojectionError {
  public:
-  ReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& depth_cloud_F_point_3d)
+  AffineReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& depth_cloud_F_point_3d)
       : image_point_(image_point), depth_cloud_F_point_3d_(depth_cloud_F_point_3d) {}
 
   template <typename T>
@@ -142,10 +142,10 @@ void AddSymmetricPointToPlaneCostFunction(const Eigen::Vector3d& source_point, c
                                           const Eigen::Vector3d& source_normal, const Eigen::Vector3d& target_normal,
                                           Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem);
 
-void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
-                                 Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
-                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector,
-                                 Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem);
+void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
+                                       Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
+                                       Eigen::Matrix<double, 4, 1>& intrinsics_vector,
+                                       Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem);
 
 }  // namespace depth_odometry
 
