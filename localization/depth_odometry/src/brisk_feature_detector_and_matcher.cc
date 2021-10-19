@@ -21,6 +21,8 @@
 #include <localization_common/logger.h>
 
 namespace depth_odometry {
+namespace lm = localization_measurements;
+
 BriskFeatureDetectorAndMatcher::BriskFeatureDetectorAndMatcher(const BriskFeatureDetectorAndMatcherParams& params)
     : params_(params),
       flann_matcher_(cv::makePtr<cv::flann::LshIndexParams>(params_.flann_table_number, params_.flann_key_size,
@@ -28,8 +30,8 @@ BriskFeatureDetectorAndMatcher::BriskFeatureDetectorAndMatcher(const BriskFeatur
   detector_ = cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
 }
 
-FeatureMatches BriskFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
-                                                     const FeatureImage& target_image) {
+FeatureMatches BriskFeatureDetectorAndMatcher::Match(const lm::FeatureImage& source_image,
+                                                     const lm::FeatureImage& target_image) {
   std::vector<cv::DMatch> matches;
   flann_matcher_.match(source_image.descriptors(), target_image.descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());

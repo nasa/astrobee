@@ -19,13 +19,13 @@
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
 #include <camera/camera_model.h>
-#include <depth_odometry/feature_depth_image_measurement.h>
 #include <depth_odometry/feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_matches.h>
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
+#include <localization_measurements/feature_depth_image_measurement.h>
 
 #include <boost/optional.hpp>
 
@@ -61,8 +61,8 @@ class DepthImageAligner {
                                              const pcl::search::KdTree<pcl::PointXYZI>& kdtree) const;
 
   DepthImageAlignerParams params_;
-  std::unique_ptr<FeatureDepthImageMeasurement> previous_feature_depth_image_;
-  std::unique_ptr<FeatureDepthImageMeasurement> latest_feature_depth_image_;
+  std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> previous_feature_depth_image_;
+  std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> latest_feature_depth_image_;
   std::unique_ptr<FeatureDetectorAndMatcher> feature_detector_and_matcher_;
   boost::optional<DepthMatches> matches_;
   cv::Ptr<cv::CLAHE> clahe_;

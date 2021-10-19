@@ -23,12 +23,14 @@
 #include <opencv2/xfeatures2d.hpp>
 
 namespace depth_odometry {
+namespace lm = localization_measurements;
+
 SurfFeatureDetectorAndMatcher::SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params)
     : params_(params) {
   detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
 }
-FeatureMatches SurfFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
-                                                    const FeatureImage& target_image) {
+FeatureMatches SurfFeatureDetectorAndMatcher::Match(const lm::FeatureImage& source_image,
+                                                    const lm::FeatureImage& target_image) {
   std::vector<cv::DMatch> matches;
   flann_matcher_.match(source_image.descriptors(), target_image.descriptors(), matches);
   LogError("matches pre filtering: " << matches.size());

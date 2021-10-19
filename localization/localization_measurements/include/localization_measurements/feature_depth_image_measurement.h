@@ -15,22 +15,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
-#define DEPTH_ODOMETRY_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
+#define LOCALIZATION_MEASUREMENTS_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
 
-#include <depth_odometry/feature_image.h>
 #include <localization_measurements/depth_image_measurement.h>
+#include <localization_measurements/feature_image.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 
-namespace depth_odometry {
-class FeatureDepthImageMeasurement : public localization_measurements::DepthImageMeasurement, public FeatureImage {
+namespace localization_measurements {
+class FeatureDepthImageMeasurement : public DepthImageMeasurement, public FeatureImage {
  public:
-  FeatureDepthImageMeasurement(const localization_measurements::DepthImageMeasurement& depth_image_measurement,
+  FeatureDepthImageMeasurement(const DepthImageMeasurement& depth_image_measurement,
                                const cv::Ptr<cv::Feature2D> feature_detector)
       : DepthImageMeasurement(depth_image_measurement), FeatureImage(depth_image_measurement.image, feature_detector) {}
 };
-}  // namespace depth_odometry
+}  // namespace localization_measurements
 
-#endif  // DEPTH_ODOMETRY_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_
+#endif  // LOCALIZATION_MEASUREMENTS_FEATURE_DEPTH_IMAGE_MEASUREMENT_H_

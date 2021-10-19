@@ -23,14 +23,16 @@
 #include <opencv2/video/tracking.hpp>
 
 namespace depth_odometry {
+namespace lm = localization_measurements;
+
 LKOpticalFlowFeatureDetectorAndMatcher::LKOpticalFlowFeatureDetectorAndMatcher(
   const LKOpticalFlowFeatureDetectorAndMatcherParams& params)
     : params_(params) {
   detector_.reset(new cv::GoodFeaturesToTrackDetector());
 }
 
-FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
-                                                             const FeatureImage& target_image) {
+FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const lm::FeatureImage& source_image,
+                                                             const lm::FeatureImage& target_image) {
   const cv::TermCriteria termination_criteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, params_.max_iterations,
                                               params_.termination_epsilon);
   const cv::Size window_size(params_.window_width, params_.window_height);

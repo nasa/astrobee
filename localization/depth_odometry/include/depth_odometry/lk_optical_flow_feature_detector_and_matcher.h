@@ -19,14 +19,15 @@
 #define DEPTH_ODOMETRY_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_H_
 
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
-#include <depth_odometry/feature_image.h>
 #include <depth_odometry/feature_detector_and_matcher.h>
+#include <localization_measurements/feature_image.h>
 
 namespace depth_odometry {
 class LKOpticalFlowFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
   LKOpticalFlowFeatureDetectorAndMatcher(const LKOpticalFlowFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) final;
+  FeatureMatches Match(const localization_measurements::FeatureImage& source_image,
+                       const localization_measurements::FeatureImage& target_image) final;
 
  private:
   LKOpticalFlowFeatureDetectorAndMatcherParams params_;

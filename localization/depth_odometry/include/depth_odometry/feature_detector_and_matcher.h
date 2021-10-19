@@ -18,15 +18,16 @@
 #ifndef DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
 #define DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
 
-#include <depth_odometry/feature_image.h>
 #include <depth_odometry/feature_match.h>
+#include <localization_measurements/feature_image.h>
 
 #include <opencv2/features2d.hpp>
 
 namespace depth_odometry {
 class FeatureDetectorAndMatcher {
  public:
-  virtual FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) = 0;
+  virtual FeatureMatches Match(const localization_measurements::FeatureImage& source_image,
+                               const localization_measurements::FeatureImage& target_image) = 0;
   const cv::Ptr<cv::Feature2D>& detector() { return detector_; }
 
  protected:

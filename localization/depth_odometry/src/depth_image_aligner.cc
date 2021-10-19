@@ -270,9 +270,9 @@ void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& lat
     lm::DepthImageMeasurement clahe_depth_image = latest_depth_image;
     clahe_->apply(latest_depth_image.image, clahe_depth_image.image);
     latest_feature_depth_image_.reset(
-      new FeatureDepthImageMeasurement(clahe_depth_image, feature_detector_and_matcher_->detector()));
+      new lm::FeatureDepthImageMeasurement(clahe_depth_image, feature_detector_and_matcher_->detector()));
   } else
     latest_feature_depth_image_.reset(
-      new FeatureDepthImageMeasurement(latest_depth_image, feature_detector_and_matcher_->detector()));
+      new lm::FeatureDepthImageMeasurement(latest_depth_image, feature_detector_and_matcher_->detector()));
 }
 }  // namespace depth_odometry

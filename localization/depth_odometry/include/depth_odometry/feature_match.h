@@ -18,8 +18,6 @@
 #ifndef DEPTH_ODOMETRY_FEATURE_MATCH_H_
 #define DEPTH_ODOMETRY_FEATURE_MATCH_H_
 
-#include <depth_odometry/feature_image.h>
-
 #include <Eigen/Core>
 
 namespace depth_odometry {

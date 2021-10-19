@@ -15,16 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_FEATURE_IMAGE_H_
-#define DEPTH_ODOMETRY_FEATURE_IMAGE_H_
+#ifndef LOCALIZATION_MEASUREMENTS_FEATURE_IMAGE_H_
+#define LOCALIZATION_MEASUREMENTS_FEATURE_IMAGE_H_
 
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 
-namespace depth_odometry {
+namespace localization_measurements {
 class FeatureImage {
  public:
-  FeatureImage(const cv::Mat& image, const cv::Ptr<cv::Feature2D> feature_detector);
+  FeatureImage(const cv::Mat& image, const cv::Ptr<cv::Feature2D> feature_detector) : image_(image) {
+    feature_detector->detectAndCompute(image_, cv::Mat(), keypoints_, descriptors_);
+    cv::KeyPoint::convert(keypoints_, feature_points_);
+  }
   const cv::Mat& image() const { return image_; }
   const int rows() const { return image_.rows; }
   const int cols() const { return image_.cols; }
@@ -38,6 +41,6 @@ class FeatureImage {
   std::vector<cv::Point2f> feature_points_;
   cv::Mat descriptors_;
 };
-}  // namespace depth_odometry
+}  // namespace localization_measurements
 
-#endif  // DEPTH_ODOMETRY_FEATURE_IMAGE_H_
+#endif  // LOCALIZATION_MEASUREMENTS_FEATURE_IMAGE_H_

@@ -18,15 +18,16 @@
 #ifndef DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
 #define DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
 
-#include <depth_odometry/feature_image.h>
 #include <depth_odometry/feature_detector_and_matcher.h>
 #include <depth_odometry/surf_feature_detector_and_matcher_params.h>
+#include <localization_measurements/feature_image.h>
 
 namespace depth_odometry {
 class SurfFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
   SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) final;
+  FeatureMatches Match(const localization_measurements::FeatureImage& source_image,
+                       const localization_measurements::FeatureImage& target_image) final;
 
  private:
   SurfFeatureDetectorAndMatcherParams params_;
