@@ -40,35 +40,6 @@ void Calibrator::AddCostFunction(const Eigen::Vector2d& image_point, const Eigen
                            intrinsics_vector.data(), distortion.data());
 }
 
-// Organize as compact quaternion, translation, scale
-Eigen::Matrix<double, 7, 1> Calibrator::VectorFromAffine3d(const Eigen::Affine3d& affine_3d) {
-  Eigen::Matrix3d rotation;
-  Eigen::Matrix3d scale_matrix;
-  affine_3d.computeRotationScaling(&rotation, &scale_matrix);
-  // Assumes uniform scaling, which is (i*the case for Affine3d
-  const double scale = scale_matrix(0, 0);
-  Eigen::Quaterniond quaternion(rotation);
-  // Use normalized x,y,z components for compact quaternion
-  // TODO(rsoussan): Is this normalize call necessary?
-  quaternion.normalize();
-  Eigen::Vector3d compact_quaternion = quaternion.vec();
-  Eigen::Matrix<double, 7, 1> affine_3d_vector;
-  affine_3d_vector.head<3>() = compact_quaternion;
-  affine_3d_vector.block<3, 1>(3, 0) = affine_3d.translation();
-  affine_3d_vector(6, 0) = scale;
-  return affine_3d_vector;
-}
-
-// Stored as focal points then principal points
-Eigen::Matrix<double, 4, 1> Calibrator::VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics) {
-  Eigen::Matrix<double, 4, 1> intrinsics_vector;
-  intrinsics_vector(0, 0) = intrinsics(0, 0);
-  intrinsics_vector(1, 0) = intrinsics(1, 1);
-  intrinsics_vector(2, 0) = intrinsics(0, 2);
-  intrinsics_vector(3, 0) = intrinsics(1, 2);
-  return intrinsics_vector;
-}
-
 void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
                            const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
                            const Eigen::Matrix3d& initial_intrinsics,

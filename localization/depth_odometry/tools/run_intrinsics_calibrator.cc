@@ -65,12 +65,12 @@ bool string_ends_with(const std::string& str, const std::string& ending) {
 
 std::vector<depth_odometry::ImageCorrespondences> LoadAllMatches(const rosbag::Bag& bag, const int max_num_match_sets) {
   std::vector<std::string> topics;
-  topics.push_back(TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES);
-  topics.push_back(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES);
+  topics.push_back(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES);
+  topics.push_back(std::string("/") + TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES);
   rosbag::View view(bag, rosbag::TopicQuery(topics));
   std::vector<depth_odometry::ImageCorrespondences> all_matches;
   for (const rosbag::MessageInstance msg : view) {
-    if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES)) {
+    if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES)) {
       const ff_msgs::DepthCorrespondencesConstPtr& correspondences_msg =
         msg.instantiate<ff_msgs::DepthCorrespondences>();
       std::vector<Eigen::Vector2d> image_points;

@@ -69,10 +69,8 @@ boost::optional<lc::PoseWithCovariance> ICP::RunICP(const pcl::PointCloud<pcl::P
     pcl::copyPointCloud(*source_cloud, *source_cloud_with_normals);
   }
 
-  LogError("target pre remove size: " << target_cloud_with_normals->points.size());
   RemoveNansAndZerosFromPoints(*source_cloud_with_normals);
   RemoveNansAndZerosFromPoints(*target_cloud_with_normals);
-  LogError("target post remove size: " << target_cloud_with_normals->points.size());
 
   pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal> icp;
   if (params_.symmetric_objective) {
@@ -108,13 +106,11 @@ boost::optional<lc::PoseWithCovariance> ICP::RunICP(const pcl::PointCloud<pcl::P
   }
 
   const double fitness_score = icp.getFitnessScore();
-  LogError("fitness: " << fitness_score);
   if (fitness_score > params_.fitness_threshold) {
     LogError("Icp: Fitness score too large: " << fitness_score << ".");
     icp_timer.Stop();
     return boost::none;
   }
-  LogError("its: " << icp.nr_iterations_);
 
   // TODO(rsoussan): clean this up
   // TODO(rsoussan): don't take inverse??
@@ -143,14 +139,9 @@ boost::optional<lc::PoseWithCovariance> ICP::RunCoarseToFineICP(const pcl::Point
       const double leaf_size_ratio =
         static_cast<double>(params_.num_coarse_to_fine_levels) / static_cast<double>(i + 1.0);
       const double leaf_size = leaf_size_ratio * params_.coarse_to_fine_final_leaf_size;
-      LogError("i: " << i << ", leaf size ratio " << leaf_size_ratio << ", leaf size: " << leaf_size);
       // TODO(rsoussan): Why does template deduction fail without this?
       icp_source_cloud = DownsamplePointCloud<pcl::PointXYZI>(source_cloud, leaf_size);
       icp_target_cloud = DownsamplePointCloud<pcl::PointXYZI>(target_cloud, leaf_size);
-      LogError("source pre downsample size: " << source_cloud->points.size()
-                                              << ", post: " << icp_source_cloud->points.size());
-      LogError("target pre downsample size: " << target_cloud->points.size()
-                                              << ", post: " << icp_target_cloud->points.size());
     }
     latest_relative_transform = RunICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->pose);
     if (!latest_relative_transform) {
@@ -202,9 +193,6 @@ Eigen::Matrix<double, 6, 6> ICP::ComputeCovarianceMatrix(
   const auto& target_cloud = icp.target_;
   FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
   const int num_correspondences = correspondences_->size();
-  LogError("a size: " << source_cloud->size());
-  LogError("b size: " << target_cloud->size());
-  LogError("num correspondences: " << num_correspondences);
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   int index = 0;
   for (const auto correspondence : *correspondences_) {

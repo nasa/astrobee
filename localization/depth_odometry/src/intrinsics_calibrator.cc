@@ -40,29 +40,6 @@ void IntrinsicsCalibrator::AddCostFunction(const Eigen::Vector2d& image_point, c
                            distortion.data());
 }
 
-// Organize as compact quaternion, translation, scale
-Eigen::Matrix<double, 6, 1> IntrinsicsCalibrator::VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d) {
-  Eigen::Quaterniond quaternion(isometry_3d.linear());
-  // Use normalized x,y,z components for compact quaternion
-  // TODO(rsoussan): Is this normalize call necessary?
-  quaternion.normalize();
-  Eigen::Vector3d compact_quaternion = quaternion.vec();
-  Eigen::Matrix<double, 6, 1> isometry_3d_vector;
-  isometry_3d_vector.head<3>() = compact_quaternion;
-  isometry_3d_vector.block<3, 1>(3, 0) = isometry_3d.translation();
-  return isometry_3d_vector;
-}
-
-// Stored as focal points then principal points
-Eigen::Matrix<double, 4, 1> IntrinsicsCalibrator::VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics) {
-  Eigen::Matrix<double, 4, 1> intrinsics_vector;
-  intrinsics_vector(0, 0) = intrinsics(0, 0);
-  intrinsics_vector(1, 0) = intrinsics(1, 1);
-  intrinsics_vector(2, 0) = intrinsics(0, 2);
-  intrinsics_vector(3, 0) = intrinsics(1, 2);
-  return intrinsics_vector;
-}
-
 boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters& camera,
                                                  const depth_odometry::ImageCorrespondences& matches) {
   Eigen::Isometry3d camera_T_target(Eigen::Isometry3d::Identity());
