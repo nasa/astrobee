@@ -51,8 +51,16 @@ class DepthImageAligner {
  private:
   bool ValidImagePoint(const Eigen::Vector2d& image_point) const;
   bool Valid3dPoint(const boost::optional<pcl::PointXYZI>& point) const;
+  void InitializeKdTree(const pcl::PointCloud<pcl::PointXYZI>& point_cloud,
+                        pcl::search::KdTree<pcl::PointXYZI>::Ptr& kdtree,
+                        pcl::PointCloud<pcl::PointXYZI>::Ptr& filtered_point_cloud) const;
+  void InitializeRequiredKdTrees(pcl::search::KdTree<pcl::PointXYZI>::Ptr& source_kdtree,
+                                 pcl::PointCloud<pcl::PointXYZI>::Ptr& source_filtered_point_cloud,
+                                 pcl::search::KdTree<pcl::PointXYZI>::Ptr& target_kdtree,
+                                 pcl::PointCloud<pcl::PointXYZI>::Ptr& target_filtered_point_cloud) const;
   Eigen::Isometry3d ComputeRelativeTransform(const std::vector<Eigen::Vector3d>& source_landmarks,
                                              const std::vector<Eigen::Vector3d>& target_landmarks) const;
+
   DepthImageAlignerParams params_;
   std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> latest_feature_depth_image_;

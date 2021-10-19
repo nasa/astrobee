@@ -54,7 +54,6 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
 }
 
 bool DepthImageAligner::ValidImagePoint(const Eigen::Vector2d& image_point) const {
-  // TODO(rsoussan): Get these from somewhere else
   const int cols = latest_feature_depth_image_->cols();
   const int rows = latest_feature_depth_image_->rows();
   const double x_distance_to_border = std::min(image_point.x(), cols - image_point.x());
@@ -67,6 +66,31 @@ bool DepthImageAligner::Valid3dPoint(const boost::optional<pcl::PointXYZI>& poin
   return point && ValidPoint(*point) && point->z >= 0;
 }
 
+void DepthImageAligner::InitializeKdTree(const pcl::PointCloud<pcl::PointXYZI>& point_cloud,
+                                         pcl::search::KdTree<pcl::PointXYZI>::Ptr& kdtree,
+                                         pcl::PointCloud<pcl::PointXYZI>::Ptr& filtered_point_cloud) const {
+  kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
+  filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>(point_cloud));
+  RemoveNansAndZerosFromPoints(*filtered_point_cloud);
+  kdtree->setInputCloud(filtered_point_cloud);
+}
+
+void DepthImageAligner::InitializeRequiredKdTrees(
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr& source_kdtree,
+  pcl::PointCloud<pcl::PointXYZI>::Ptr& source_filtered_point_cloud,
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr& target_kdtree,
+  pcl::PointCloud<pcl::PointXYZI>::Ptr& target_filtered_point_cloud) const {
+  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
+      params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+    InitializeKdTree(*(latest_feature_depth_image_->point_cloud), target_kdtree, target_filtered_point_cloud);
+  }
+
+  // TODO(rsoussan): make kdtree on depth image measurement creation to avoid recreating if using symmetric cost
+  if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+    InitializeKdTree(*(previous_feature_depth_image_->point_cloud), source_kdtree, source_filtered_point_cloud);
+  }
+}
+
 boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   const auto& matches =
@@ -74,34 +98,18 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
 
   std::vector<Eigen::Vector3d> source_landmarks;
   std::vector<Eigen::Vector3d> target_landmarks;
-  // TODO: make this optional?
-  std::vector<Eigen::Vector3d> target_normals;
-  pcl::search::KdTree<pcl::PointXYZI>::Ptr target_kdtree;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr target_filtered_point_cloud;
-  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
-      params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-    target_kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
-    target_filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(
-      new pcl::PointCloud<pcl::PointXYZI>(*(latest_feature_depth_image_->point_cloud)));
-    RemoveNansAndZerosFromPoints(*target_filtered_point_cloud);
-    target_kdtree->setInputCloud(target_filtered_point_cloud);
-  }
 
-  // TODO(rsoussan): make kdtree on depth image measurement creation to avoid recreating if using symmetric cost
-  std::vector<Eigen::Vector3d> source_normals;
   pcl::search::KdTree<pcl::PointXYZI>::Ptr source_kdtree;
   pcl::PointCloud<pcl::PointXYZI>::Ptr source_filtered_point_cloud;
-  if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-    source_kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
-    source_filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(
-      new pcl::PointCloud<pcl::PointXYZI>(*(previous_feature_depth_image_->point_cloud)));
-    RemoveNansAndZerosFromPoints(*source_filtered_point_cloud);
-    source_kdtree->setInputCloud(source_filtered_point_cloud);
-  }
+  pcl::search::KdTree<pcl::PointXYZI>::Ptr target_kdtree;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr target_filtered_point_cloud;
+  InitializeRequiredKdTrees(source_kdtree, source_filtered_point_cloud, target_kdtree, target_filtered_point_cloud);
 
-  // Get 3D points for image features
+  // Store valid matches
   std::vector<Eigen::Vector2d> source_image_points;
   std::vector<Eigen::Vector2d> target_image_points;
+  std::vector<Eigen::Vector3d> source_normals;
+  std::vector<Eigen::Vector3d> target_normals;
   for (int i = 0; i < static_cast<int>(matches.size()); ++i) {
     const auto& match = matches[i];
     const auto& source_image_point = match.source_point;
