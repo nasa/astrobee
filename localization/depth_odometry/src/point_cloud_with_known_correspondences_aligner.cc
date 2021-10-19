@@ -82,7 +82,6 @@ lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativ
     return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
   }
 
-  // Optimize if not using single iteration Umeyama
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
                                             ? ComputeRelativeTransformUmeyama(source_points, target_points)
                                             : Eigen::Isometry3d::Identity();

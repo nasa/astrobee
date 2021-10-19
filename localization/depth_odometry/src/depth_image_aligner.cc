@@ -246,10 +246,10 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
-  static lc::Timer pc_timer("pc_aligner");
-  pc_timer.Start();
+  //static lc::Timer pc_timer("pc_aligner");
+  //pc_timer.Start();
   const auto relative_transform = point_cloud_aligner.ComputeRelativeTransform(source_landmarks, target_landmarks);
-  pc_timer.StopAndLog();
+  //pc_timer.StopAndLog();
   // TODO: get cov!!
   /*LogError("rel trafo trans: " << relative_transform.pose.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.pose.translation().norm());*/
