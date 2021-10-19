@@ -79,25 +79,6 @@ static Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
   affine_3.translation() = translation;
   // TODO(rsoussan): why doesnt't this work?
   // affine_3.fromPositionOrientationScale(translation, rotation, scale_matrix);
-  /*{
-    // Eigen::Map<const Eigen::Matrix<T, 7, 1>> vec(affine_data);
-    // Eigen::Map<const Eigen::Matrix<T, 3, 1>> vec(affine_data);
-    // LogError("affine data: " << vec.matrix());
-    std::cout << "affine data: ";
-    for (int i = 0; i < 7; ++i) {
-      std::cout << affine_data[i] << ", ";
-    }
-    std::cout << std::endl;
-    std::cout << "affine mat: ";
-    for (int row = 0; row < 4; ++row) {
-      std::cout << std::endl;
-      for (int col = 0; col < 4; ++col) {
-        int index = row + col * 4;
-        std::cout << affine_3.data()[index] << ", ";
-      }
-    }
-    std::cout << std::endl;
-  }*/
   return affine_3;
 }
 
@@ -109,22 +90,6 @@ static Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
   intrinsics(1, 1) = intrinsics_data[1];
   intrinsics(0, 2) = intrinsics_data[2];
   intrinsics(1, 2) = intrinsics_data[3];
-  /*{
-    std::cout << "intrinsics data: ";
-    for (int i = 0; i < 4; ++i) {
-      std::cout << intrinsics_data[i] << ", ";
-    }
-    std::cout << std::endl;
-    std::cout << "intrinsics mat: ";
-    for (int row = 0; row < 3; ++row) {
-      std::cout << std::endl;
-      for (int col = 0; col < 3; ++col) {
-        int index = row + col * 3;
-        std::cout << intrinsics.data()[index] << ", ";
-      }
-    }
-    std::cout << std::endl;
-  }*/
   return intrinsics;
 }
 
@@ -135,7 +100,7 @@ static Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
   const T& k2 = distortion[1];
   const T& p1 = distortion[2];
   const T& p2 = distortion[3];
-  // TODO(rsoussan): Support 5 distortion params?
+  // TODO(rsoussan): Support 5 distortion params
   const T k3(0.0);
 
   const T& f_x = intrinsics[0];
