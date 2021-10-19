@@ -113,7 +113,7 @@ Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vecto
 
 boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
                                            const pcl::search::KdTree<pcl::PointXYZI>& kdtree) {
-  // TODO(rsoussan: Make function for this
+  // Adapted from pcl code
   pcl::PointXYZI pcl_point;
   pcl_point.x = point.x();
   pcl_point.y = point.y();
@@ -123,11 +123,8 @@ boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const p
   std::vector<float> distances;
   // TODO(rsoussan): make this a param
   constexpr double search_radius = 0.03;
-  // if (this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
   if (kdtree.radiusSearch(pcl_point, search_radius, nn_indices, distances, 0) < 3) {
     LogError("GetNormal: Failed to get enough neighboring points for query point.");
-    std::cout << "indices size: " << nn_indices.size() << std::endl;
-    LogError("point: " << std::endl << point.matrix());
     return boost::none;
   }
 
@@ -140,42 +137,33 @@ boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const p
     return boost::none;
   }
 
-  // TODO: get vpx/y/z
-  const double vpx_ = cloud.sensor_origin_.coeff(0);
-  const double vpy_ = cloud.sensor_origin_.coeff(1);
-  const double vpz_ = cloud.sensor_origin_.coeff(2);
-  // TODO(rsoussan): is this call necessary??
-  flipNormalTowardsViewpoint(pcl_point, vpx_, vpy_, vpz_, normal_x, normal_y, normal_z);
+  const double vpx = cloud.sensor_origin_.coeff(0);
+  const double vpy = cloud.sensor_origin_.coeff(1);
+  const double vpz = cloud.sensor_origin_.coeff(2);
+  flipNormalTowardsViewpoint(pcl_point, vpx, vpy, vpz, normal_x, normal_y, normal_z);
   return Eigen::Vector3d(normal_x, normal_y, normal_z);
 }
 
 bool computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<int>& indices, float& normal_x,
                         float& normal_y, float& normal_z, float& curvature) {
-  // from pcl::common::centroid.h
-  // TODO: make these member vars! is eigen align16 necessary?
+  // Adapted from pcl::common::centroid.h
   /** \brief Placeholder for the 3x3 covariance matrix at each surface patch. */
   static EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix_;
-
   /** \brief 16-bytes aligned placeholder for the XYZ centroid of a surface patch. */
   static Eigen::Vector4f xyz_centroid_;
   if (indices.size() < 3 ||
       pcl::computeMeanAndCovarianceMatrix(cloud, indices, covariance_matrix_, xyz_centroid_) == 0) {
-    std::cout << "bad normal a!!" << std::endl;
-    if (indices.size() < 3)
-      std::cout << "too few points!!" << std::endl;
-    else
-      std::cout << "failed to compute mean and cov matrix!!" << std::endl;
     return false;
   }
 
   // Get the plane normal and surface curvature
-  // from pcl::features.h
   pcl::solvePlaneParameters(covariance_matrix_, normal_x, normal_y, normal_z, curvature);
   return true;
 }
 
 void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z, float& nx, float& ny,
                                 float& nz) {
+  // Adapted from pcl code
   // See if we need to flip any plane normals
   vp_x -= point.x;
   vp_y -= point.y;
