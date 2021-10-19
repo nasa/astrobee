@@ -17,6 +17,7 @@
  */
 
 #include <depth_odometry/point_cloud_with_known_correspondences_aligner.h>
+#include <depth_odometry/optimization_residuals.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 
