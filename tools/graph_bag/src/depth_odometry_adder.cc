@@ -72,8 +72,8 @@ void DepthOdometryAdder::AddDepthOdometry() {
           // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
           // expects depth image to arrive first
           correspondences_timestamp.sec += 1;
-          output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES,
-                            correspondences_timestamp, *correspondences_msg);
+          output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, correspondences_timestamp,
+                            *correspondences_msg);
         }
       }
     } else if (string_ends_with(msg.getTopic(), depth_image_topic)) {
@@ -90,8 +90,8 @@ void DepthOdometryAdder::AddDepthOdometry() {
           // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
           // expects depth image to arrive first
           correspondences_timestamp.sec += 1;
-          output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES,
-                            correspondences_timestamp, *correspondences_msg);
+          output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, correspondences_timestamp,
+                            *correspondences_msg);
         }
       }
     }
