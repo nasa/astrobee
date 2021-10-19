@@ -38,7 +38,6 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   if (params_.use_symmetric_point_to_plane_cost) {
     if (!target_normals_ || !source_normals_)
       LogFatal("Align: Attempting to use symmetric point to plane cost without having set source and target normals.");
-    LogError("tn size: " << target_normals_->size() << ", sn size: " << source_normals_->size());
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
       AddSymmetricPointToPlaneCostFunction(source_points[i], target_points[i], (*source_normals_)[i],
                                            (*target_normals_)[i], relative_transform, problem);

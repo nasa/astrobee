@@ -37,9 +37,6 @@ struct DepthImageAlignerParams {
   bool use_clahe;
   int clahe_grid_length;
   double clahe_clip_limit;
-  // RansacEstimateCamera params
-  int num_ransac_iterations;
-  int max_inlier_tolerance;
   // Other
   double min_x_distance_to_border;
   double min_y_distance_to_border;
