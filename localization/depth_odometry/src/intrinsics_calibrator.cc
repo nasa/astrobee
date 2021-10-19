@@ -18,28 +18,14 @@
 
 #include <camera/camera_model.h>
 #include <depth_odometry/intrinsics_calibrator.h>
+#include <depth_odometry/optimization_residuals.h>
 #include <localization_common/logger.h>
 #include <sparse_mapping/reprojection.h>
 
 #include <ceres/ceres.h>
 #include <ceres/solver.h>
-#include <ceres/cost_function.h>
-#include <ceres/loss_function.h>
-#include <ceres/autodiff_cost_function.h>
 
 namespace depth_odometry {
-void IntrinsicsCalibrator::AddCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
-                                           Eigen::Matrix<double, 6, 1>& camera_T_target,
-                                           Eigen::Matrix<double, 4, 1>& intrinsics_vector,
-                                           Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem) {
-  // TODO: pass this? delete at end?
-  ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
-  ceres::CostFunction* reprojection_cost_function =
-    new ceres::AutoDiffCostFunction<ReprojectionError, 2, 6, 4, 4>(new ReprojectionError(image_point, point_3d));
-  problem.AddResidualBlock(reprojection_cost_function, huber_loss, camera_T_target.data(), intrinsics_vector.data(),
-                           distortion.data());
-}
-
 boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters& camera,
                                                  const depth_odometry::ImageCorrespondences& matches) {
   Eigen::Isometry3d camera_T_target(Eigen::Isometry3d::Identity());
@@ -86,8 +72,8 @@ void IntrinsicsCalibrator::Calibrate(const std::vector<ImageCorrespondences>& ma
     camera_T_targets.emplace_back(VectorFromIsometry3d(*camera_T_target));
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
-      AddCostFunction(match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), intrinsics,
-                      distortion, problem);
+      AddReprojectionCostFunction(match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(),
+                                  intrinsics, distortion, problem);
     }
   }
 

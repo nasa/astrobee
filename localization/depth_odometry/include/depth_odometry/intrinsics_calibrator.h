@@ -21,14 +21,10 @@
 #include <camera/camera_params.h>
 #include <depth_odometry/calibrator_params.h>
 #include <depth_odometry/image_correspondences.h>
-#include <depth_odometry/optimization_utilities.h>
 #include <localization_common/logger.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-
-#include <ceres/problem.h>
-#include <ceres/jet.h>
 
 namespace depth_odometry {
 class IntrinsicsCalibrator {
@@ -41,38 +37,7 @@ class IntrinsicsCalibrator {
   const CalibratorParams& params() { return params_; }
 
  private:
-  void AddCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
-                       Eigen::Matrix<double, 6, 1>& camera_T_target, Eigen::Matrix<double, 4, 1>& intrinsics_vector,
-                       Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem);
-
   CalibratorParams params_;
-};
-
-class ReprojectionError {
- public:
-  ReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& target_t_point_3d)
-      : image_point_(image_point), target_t_point_3d_(target_t_point_3d) {}
-
-  template <typename T>
-  bool operator()(const T* camera_T_target_data, const T* intrinsics_data, const T* distortion_data,
-                  T* reprojection_error) const {
-    // Handle type conversions
-    const auto intrinsics = Intrinsics<T>(intrinsics_data);
-    const auto camera_T_target = Isometry3<T>(camera_T_target_data);
-    // Compute error
-    const Eigen::Matrix<T, 3, 1> camera_t_point_3d = camera_T_target * target_t_point_3d_.cast<T>();
-    const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * camera_t_point_3d).hnormalized();
-    const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
-      Distort(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
-
-    reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
-    reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];
-    return true;
-  }
-
- private:
-  Eigen::Vector2d image_point_;
-  Eigen::Vector3d target_t_point_3d_;
 };
 }  // namespace depth_odometry
 

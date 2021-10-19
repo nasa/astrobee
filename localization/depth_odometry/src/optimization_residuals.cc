@@ -62,4 +62,16 @@ void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const
   problem.AddResidualBlock(reprojection_cost_function, huber_loss, depth_image_A_depth_cloud_vector.data(),
                            intrinsics_vector.data(), distortion.data());
 }
+
+void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
+                                 Eigen::Matrix<double, 6, 1>& camera_T_target,
+                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector,
+                                 Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem) {
+  // TODO: pass this? delete at end?
+  ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
+  ceres::CostFunction* reprojection_cost_function =
+    new ceres::AutoDiffCostFunction<ReprojectionError, 2, 6, 4, 4>(new ReprojectionError(image_point, point_3d));
+  problem.AddResidualBlock(reprojection_cost_function, huber_loss, camera_T_target.data(), intrinsics_vector.data(),
+                           distortion.data());
+}
 }  // namespace depth_odometry
