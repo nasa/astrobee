@@ -28,20 +28,10 @@
 #include <localization_common/timer.h>
 #include <sparse_mapping/reprojection.h>
 
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/core/eigen.hpp>
+#include <opencv2/imgproc.hpp>
 
-#include <Eigen/Core>
-#include <Eigen/LU>
-#include <Eigen/SVD>
-
-#include <opencv2/opencv.hpp>
-
-#include <pcl/features/normal_3d.h>
-#include <pcl/features/impl/normal_3d.hpp>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/search/impl/search.hpp>
-#include <pcl/search/impl/organized.hpp>
 #include <pcl/search/impl/kdtree.hpp>
 
 namespace depth_odometry {
@@ -59,7 +49,6 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
     feature_detector_and_matcher_.reset(new SurfFeatureDetectorAndMatcher(params_.surf_feature_detector_and_matcher));
   } else {
     LogFatal("DepthImageAligner: Invalid feature detector and matcher.");
-    std::exit(1);
   }
   clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 }
@@ -76,89 +65,6 @@ bool DepthImageAligner::ValidImagePoint(const Eigen::Vector2d& image_point) cons
 
 bool DepthImageAligner::Valid3dPoint(const boost::optional<pcl::PointXYZI>& point) const {
   return point && ValidPoint(*point) && point->z >= 0;
-}
-
-boost::optional<Eigen::Vector3d> DepthImageAligner::GetNormal(const Eigen::Vector3d& point,
-                                                              const pcl::PointCloud<pcl::PointXYZI>& cloud,
-                                                              const pcl::search::KdTree<pcl::PointXYZI>& kdtree) const {
-  // TODO(rsoussan: Make function for this
-  pcl::PointXYZI pcl_point;
-  pcl_point.x = point.x();
-  pcl_point.y = point.y();
-  pcl_point.z = point.z();
-
-  std::vector<int> nn_indices;
-  std::vector<float> distances;
-  // TODO(rsoussan): make this a param
-  constexpr double search_radius = 0.03;
-  // if (this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
-  if (kdtree.radiusSearch(pcl_point, search_radius, nn_indices, distances, 0) < 3) {
-    LogError("GetNormal: Failed to get enough neighboring points for query point.");
-    std::cout << "indices size: " << nn_indices.size() << std::endl;
-    LogError("point: " << std::endl << point.matrix());
-    return boost::none;
-  }
-
-  float normal_x;
-  float normal_y;
-  float normal_z;
-  float curvature;
-  if (!computePointNormal(cloud, nn_indices, normal_x, normal_y, normal_z, curvature)) {
-    LogError("GetNormal: Failed to compute point normal.");
-    return boost::none;
-  }
-
-  // TODO: get vpx/y/z
-  const double vpx_ = cloud.sensor_origin_.coeff(0);
-  const double vpy_ = cloud.sensor_origin_.coeff(1);
-  const double vpz_ = cloud.sensor_origin_.coeff(2);
-  // TODO(rsoussan): is this call necessary??
-  flipNormalTowardsViewpoint(pcl_point, vpx_, vpy_, vpz_, normal_x, normal_y, normal_z);
-  return Eigen::Vector3d(normal_x, normal_y, normal_z);
-}
-
-bool DepthImageAligner::computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud,
-                                           const std::vector<int>& indices, float& normal_x, float& normal_y,
-                                           float& normal_z, float& curvature) const {
-  // from pcl::common::centroid.h
-  // TODO: make these member vars! is eigen align16 necessary?
-  /** \brief Placeholder for the 3x3 covariance matrix at each surface patch. */
-  static EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix_;
-
-  /** \brief 16-bytes aligned placeholder for the XYZ centroid of a surface patch. */
-  static Eigen::Vector4f xyz_centroid_;
-  if (indices.size() < 3 ||
-      pcl::computeMeanAndCovarianceMatrix(cloud, indices, covariance_matrix_, xyz_centroid_) == 0) {
-    std::cout << "bad normal a!!" << std::endl;
-    if (indices.size() < 3)
-      std::cout << "too few points!!" << std::endl;
-    else
-      std::cout << "failed to compute mean and cov matrix!!" << std::endl;
-    return false;
-  }
-
-  // Get the plane normal and surface curvature
-  // from pcl::features.h
-  pcl::solvePlaneParameters(covariance_matrix_, normal_x, normal_y, normal_z, curvature);
-  return true;
-}
-
-void DepthImageAligner::flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z,
-                                                   float& nx, float& ny, float& nz) const {
-  // See if we need to flip any plane normals
-  vp_x -= point.x;
-  vp_y -= point.y;
-  vp_z -= point.z;
-
-  // Dot product between the (viewpoint - point) and the plane normal
-  float cos_theta = (vp_x * nx + vp_y * ny + vp_z * nz);
-
-  // Flip the plane normal
-  if (cos_theta < 0) {
-    nx *= -1;
-    ny *= -1;
-    nz *= -1;
-  }
 }
 
 boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
@@ -246,10 +152,10 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     return boost::none;
   }
 
-  //static lc::Timer pc_timer("pc_aligner");
-  //pc_timer.Start();
+  // static lc::Timer pc_timer("pc_aligner");
+  // pc_timer.Start();
   const auto relative_transform = point_cloud_aligner.ComputeRelativeTransform(source_landmarks, target_landmarks);
-  //pc_timer.StopAndLog();
+  // pc_timer.StopAndLog();
   // TODO: get cov!!
   /*LogError("rel trafo trans: " << relative_transform.pose.translation().matrix());
   LogError("rel trafo trans norm: " << relative_transform.pose.translation().norm());*/

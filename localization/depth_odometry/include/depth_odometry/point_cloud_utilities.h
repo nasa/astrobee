@@ -40,6 +40,15 @@ Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Ve
 Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
                                                   const std::vector<Eigen::Vector3d>& target_points);
 
+boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
+                                           const pcl::search::KdTree<pcl::PointXYZI>& kdtree);
+
+bool computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<int>& indices, float& nx,
+                        float& ny, float& nz, float& curvature);
+
+void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z, float& nx, float& ny,
+                                float& nz);
+
 template <typename PointType>
 bool ValidPoint(const PointType& point) = delete;
 
