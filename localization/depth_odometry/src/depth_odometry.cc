@@ -65,7 +65,6 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
     LogWarning("PointCloudCallback: Out of order measurement received.");
     return boost::none;
   }
-  LogError("t: " << std::setprecision(15) << timestamp);
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = std::make_pair(depth_image_measurement.timestamp, filtered_cloud);
 
@@ -92,7 +91,7 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
   }*/
 
   // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
+  // if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
   latest_relative_transform_ = relative_transform->pose;
   return relative_transform;
 }
@@ -106,7 +105,6 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::ImageCallback(const lm::D
     LogWarning("ImageCallback: Out of order measurement received.");
     return boost::none;
   }
-  LogError("t: " << std::setprecision(15) << depth_image.timestamp);
   previous_depth_image_ = latest_depth_image_;
   latest_depth_image_ = depth_image;
   const double time_diff = latest_depth_image_->timestamp - previous_depth_image_->timestamp;
@@ -120,10 +118,7 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::ImageCallback(const lm::D
   if (!relative_transform) {
     LogError("ImageCallback: Failed to get relative transform.");
     return boost::none;
-  } else {
-    LogError("got trafo!: " << relative_transform->pose.translation().norm());
   }
-
   /*if (params_.frame_change_transform) {
     LogError("do bTh: " << std::endl << params_.body_T_haz_cam.matrix());
     LogError("do rel trafo pre change: " << std::endl << relative_transform->first.matrix());
@@ -131,8 +126,7 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::ImageCallback(const lm::D
   }*/
 
   // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
-  LogError("do trafo: " << std::endl << relative_transform->pose.matrix());
+  // if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
   // latest_relative_transform_ = relative_transform->first;
   return relative_transform;
 }
@@ -140,7 +134,7 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::ImageCallback(const lm::D
 bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
   const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
   const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
-  LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
+  // LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
   return (position_covariance_norm <= params_.position_covariance_threshold &&
           orientation_covariance_norm <= params_.orientation_covariance_threshold);
 }

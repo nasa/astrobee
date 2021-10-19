@@ -240,22 +240,20 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   // TODO(rsoussan): make these conditional on using point to plane/symmetric costs!!!
   point_cloud_aligner.SetTargetNormals(std::move(target_normals));
   point_cloud_aligner.SetSourceNormals(std::move(source_normals));
-  static lc::Averager avg("valid_landmarks");
   if (target_landmarks.size() < 4) {
     LogError("ComputeRelativeTransform: Not enough points with valid normals, need 4 but given "
              << target_landmarks.size() << ".");
-    avg.UpdateAndLog(0);
     return boost::none;
   }
-  avg.UpdateAndLog(1);
 
   static lc::Timer pc_timer("pc_aligner");
   pc_timer.Start();
   const auto relative_transform = point_cloud_aligner.ComputeRelativeTransform(source_landmarks, target_landmarks);
   pc_timer.StopAndLog();
   // TODO: get cov!!
-  LogError("rel trafo trans: " << relative_transform.pose.translation().matrix());
-  LogError("rel trafo trans norm: " << relative_transform.pose.translation().norm());
+  /*LogError("rel trafo trans: " << relative_transform.pose.translation().matrix());
+  LogError("rel trafo trans norm: " << relative_transform.pose.translation().norm());*/
+  // TODO(rsoussan): make this a param??
   if (relative_transform.pose.translation().norm() > 10) {
     LogError("large norm!!!");
     return boost::none;
