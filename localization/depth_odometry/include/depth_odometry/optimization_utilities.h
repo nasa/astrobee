@@ -167,6 +167,11 @@ static Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
   const Eigen::Matrix<T, 2, 1> distorted_point(distorted_relative_x * f_x + p_x, distorted_relative_y * f_y + p_y);
   return distorted_point;
 }
+
+double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
+
+// Assumes each residual is the same size
+void CheckResiduals(const int residual_size, ceres::Problem& problem, const double outlier_threshold = 0.99);
 }  // namespace depth_odometry
 
 #endif  // DEPTH_ODOMETRY_OPTIMIZATION_UTILITIES_H_

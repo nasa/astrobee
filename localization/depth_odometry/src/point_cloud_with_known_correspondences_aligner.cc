@@ -59,51 +59,10 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   options.function_tolerance = params_.function_tolerance;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
+  // TODO(rsoussan): add verbose optimization option
   std::cout << summary.FullReport() << "\n";
-  {
-    // TODO:(rsoussan) clean this up
-    static lc::Averager averager("err norm");
-    double total_cost = 0.0;
-    std::vector<double> err_norm;
-    std::vector<double> residuals;
-    ceres::Problem::EvaluateOptions eval_options;
-    eval_options.num_threads = 1;
-    eval_options.apply_loss_function = false;  // want raw residuals
-    problem.Evaluate(eval_options, &total_cost, &residuals, NULL, NULL);
-    double total_cost_huber = 0.0;
-    std::vector<double> err_norm_huber;
-    std::vector<double> residuals_huber;
-    ceres::Problem::EvaluateOptions eval_options_huber;
-    eval_options_huber.num_threads = 1;
-    eval_options_huber.apply_loss_function = true;
-    problem.Evaluate(eval_options_huber, &total_cost_huber, &residuals_huber, NULL, NULL);
-    // TODO(rsoussan) : automate norm sizing somehow
-    size_t len = residuals.size() / 2;
-    // size_t len = residuals.size();
-    double res = 0.0;
-    double res_huber = 0.0;
-    for (size_t it = 0; it < len; it++) {
-      double norm = Eigen::Vector2d(residuals[2 * it + 0], residuals[2 * it + 1]).norm();
-      // double norm = residuals[it] * residuals[it];
-      res += norm;
-      err_norm.push_back(norm);
-
-      averager.Update(norm);
-      // double norm_huber = residuals_huber[it] * residuals_huber[it];
-      double norm_huber = Eigen::Vector2d(residuals_huber[2 * it + 0], residuals_huber[2 * it + 1]).norm();
-      res_huber += norm_huber;
-      err_norm_huber.push_back(norm_huber);
-      if (norm_huber / norm < 0.99) {
-        LogError("Huber effect! norm: " << norm << ", hnorm: " << norm_huber);
-      }
-    }
-    res /= len;
-    std::sort(err_norm.begin(), err_norm.end());
-    averager.Log();
-    std::cout << "Initial min, mean, median and max error: " << err_norm[0] << ' ' << res << ' '
-              << err_norm[err_norm.size() / 2] << ' ' << err_norm.back() << std::endl;
-  }
-
+  // TODO(rsoussan): determine residual size based on params
+  CheckResiduals(2, problem);
   return Isometry3(relative_transform.data());
 }
 
