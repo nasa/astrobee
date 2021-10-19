@@ -58,6 +58,14 @@ class DepthImageAligner {
                                  pcl::PointCloud<pcl::PointXYZI>::Ptr& source_filtered_point_cloud,
                                  pcl::search::KdTree<pcl::PointXYZI>::Ptr& target_kdtree,
                                  pcl::PointCloud<pcl::PointXYZI>::Ptr& target_filtered_point_cloud) const;
+  bool GetRequiredNormals(const Eigen::Vector3d& source_landmark,
+                          const pcl::search::KdTree<pcl::PointXYZI>& source_kdtree,
+                          const pcl::PointCloud<pcl::PointXYZI>& source_filtered_point_cloud,
+                          const Eigen::Vector3d& target_landmark,
+                          const pcl::search::KdTree<pcl::PointXYZI>& target_kdtree,
+                          const pcl::PointCloud<pcl::PointXYZI>& target_filtered_point_cloud,
+                          std::vector<Eigen::Vector3d>& source_normals,
+                          std::vector<Eigen::Vector3d>& target_normals) const;
   Eigen::Isometry3d ComputeRelativeTransform(const std::vector<Eigen::Vector3d>& source_landmarks,
                                              const std::vector<Eigen::Vector3d>& target_landmarks) const;
 

@@ -91,6 +91,30 @@ void DepthImageAligner::InitializeRequiredKdTrees(
   }
 }
 
+bool DepthImageAligner::GetRequiredNormals(const Eigen::Vector3d& source_landmark,
+                                           const pcl::search::KdTree<pcl::PointXYZI>& source_kdtree,
+                                           const pcl::PointCloud<pcl::PointXYZI>& source_filtered_point_cloud,
+                                           const Eigen::Vector3d& target_landmark,
+                                           const pcl::search::KdTree<pcl::PointXYZI>& target_kdtree,
+                                           const pcl::PointCloud<pcl::PointXYZI>& target_filtered_point_cloud,
+                                           std::vector<Eigen::Vector3d>& source_normals,
+                                           std::vector<Eigen::Vector3d>& target_normals) const {
+  if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
+      params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+    const auto target_normal = GetNormal(target_landmark, target_filtered_point_cloud, target_kdtree,
+                                         params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
+    if (!target_normal) return false;
+    if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
+      const auto source_normal = GetNormal(source_landmark, source_filtered_point_cloud, source_kdtree,
+                                           params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
+      if (!source_normal) return false;
+      source_normals.emplace_back(*source_normal);
+    }
+    target_normals.emplace_back(*target_normal);
+  }
+  return true;
+}
+
 boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_feature_depth_image_ || !latest_feature_depth_image_) return boost::none;
   const auto& matches =
@@ -122,20 +146,9 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
     if (!Valid3dPoint(source_point_3d) || !Valid3dPoint(target_point_3d)) continue;
     const Eigen::Vector3d source_landmark(source_point_3d->x, source_point_3d->y, source_point_3d->z);
     const Eigen::Vector3d target_landmark(target_point_3d->x, target_point_3d->y, target_point_3d->z);
-    if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
-        params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-      const auto target_normal = GetNormal(target_landmark, *target_filtered_point_cloud, *target_kdtree,
-                                           params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
-      if (!target_normal) continue;
-      if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-        const auto source_normal =
-          GetNormal(source_landmark, *source_filtered_point_cloud, *source_kdtree,
-                    params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
-        if (!source_normal) continue;
-        source_normals.emplace_back(*source_normal);
-      }
-      target_normals.emplace_back(*target_normal);
-    }
+    if (!GetRequiredNormals(source_landmark, *source_kdtree, *source_filtered_point_cloud, target_landmark,
+                            *target_kdtree, *target_filtered_point_cloud, source_normals, target_normals))
+      continue;
 
     source_image_points.emplace_back(source_image_point);
     target_image_points.emplace_back(target_image_point);
