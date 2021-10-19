@@ -83,13 +83,11 @@ lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativ
   return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
 }
 
-void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(const std::vector<Eigen::Vector3d>& source_normals) {
-  // TODO(rsoussan): Use std::move here?
-  source_normals_ = source_normals;
+void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(std::vector<Eigen::Vector3d>&& source_normals) {
+  source_normals_ = std::move(source_normals);
 }
 
-void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(const std::vector<Eigen::Vector3d>& target_normals) {
-  // TODO(rsoussan): Use std::move here?
-  target_normals_ = target_normals;
+void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(std::vector<Eigen::Vector3d>&& target_normals) {
+  target_normals_ = std::move(target_normals);
 }
 }  // namespace depth_odometry

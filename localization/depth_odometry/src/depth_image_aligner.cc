@@ -238,8 +238,8 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   // TODO: make this a member var!
   PointCloudWithKnownCorrespondencesAligner point_cloud_aligner(params_.point_cloud_with_known_correspondences_aligner);
   // TODO(rsoussan): make these conditional on using point to plane/symmetric costs!!!
-  point_cloud_aligner.SetTargetNormals(target_normals);
-  point_cloud_aligner.SetSourceNormals(source_normals);
+  point_cloud_aligner.SetTargetNormals(std::move(target_normals));
+  point_cloud_aligner.SetSourceNormals(std::move(source_normals));
   static lc::Averager avg("valid_landmarks");
   if (target_landmarks.size() < 4) {
     LogError("ComputeRelativeTransform: Not enough points with valid normals, need 4 but given "
