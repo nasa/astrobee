@@ -41,7 +41,8 @@ Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vecto
                                                   const std::vector<Eigen::Vector3d>& target_points);
 
 boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
-                                           const pcl::search::KdTree<pcl::PointXYZI>& kdtree);
+                                           const pcl::search::KdTree<pcl::PointXYZI>& kdtree,
+                                           const double search_radius = 0.03);
 
 bool computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<int>& indices, float& nx,
                         float& ny, float& nz, float& curvature);

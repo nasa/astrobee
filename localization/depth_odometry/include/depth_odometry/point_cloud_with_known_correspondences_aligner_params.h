@@ -23,6 +23,7 @@ struct PointCloudWithKnownCorrespondencesAlignerParams {
   int max_num_iterations;
   double function_tolerance;
   int max_num_matches;
+  double normal_search_radius;
   bool use_umeyama_initial_guess;
   // TODO(rsoussan): these are exclusive, enforce this some how
   bool use_single_iteration_umeyama;

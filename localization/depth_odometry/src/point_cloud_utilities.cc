@@ -112,7 +112,8 @@ Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vecto
 }
 
 boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
-                                           const pcl::search::KdTree<pcl::PointXYZI>& kdtree) {
+                                           const pcl::search::KdTree<pcl::PointXYZI>& kdtree,
+                                           const double search_radius) {
   // Adapted from pcl code
   pcl::PointXYZI pcl_point;
   pcl_point.x = point.x();
@@ -121,8 +122,6 @@ boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const p
 
   std::vector<int> nn_indices;
   std::vector<float> distances;
-  // TODO(rsoussan): make this a param
-  constexpr double search_radius = 0.03;
   if (kdtree.radiusSearch(pcl_point, search_radius, nn_indices, distances, 0) < 3) {
     LogError("GetNormal: Failed to get enough neighboring points for query point.");
     return boost::none;
