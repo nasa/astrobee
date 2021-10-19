@@ -88,6 +88,28 @@ Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Ve
   return normal.transpose() * H1;
 }
 
+Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
+                                                  const std::vector<Eigen::Vector3d>& target_points) {
+  const int num_points = static_cast<int>(source_points.size());
+  Eigen::Matrix<double, 3, Eigen::Dynamic> source_cloud_matrix(3, num_points);
+  Eigen::Matrix<double, 3, Eigen::Dynamic> target_cloud_matrix(3, num_points);
+  for (int i = 0; i < num_points; ++i) {
+    const auto& source_point = source_points[i];
+    source_cloud_matrix(0, i) = source_point.x();
+    source_cloud_matrix(1, i) = source_point.y();
+    source_cloud_matrix(2, i) = source_point.z();
+
+    const auto& target_point = target_points[i];
+    target_cloud_matrix(0, i) = target_point.x();
+    target_cloud_matrix(1, i) = target_point.y();
+    target_cloud_matrix(2, i) = target_point.z();
+  }
+
+  const Eigen::Matrix<double, 4, 4> relative_transform =
+    Eigen::umeyama(source_cloud_matrix, target_cloud_matrix, false);
+  return Eigen::Isometry3d(relative_transform.matrix());
+}
+
 template <>
 bool ValidPoint<pcl::PointXYZ>(const pcl::PointXYZ& point) {
   return ValidPointXYZ(point);

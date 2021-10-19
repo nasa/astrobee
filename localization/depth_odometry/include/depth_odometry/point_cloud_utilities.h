@@ -31,11 +31,14 @@ void EstimateNormals(const pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const dou
                      pcl::PointCloud<pcl::PointXYZINormal>& cloud_with_normals);
 Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                          const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud);
-// TODO(rsoussan): Move these functions to utilities
+
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals);
 Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
                                      const gtsam::Pose3& relative_transform);
+
+Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
+                                                  const std::vector<Eigen::Vector3d>& target_points);
 
 template <typename PointType>
 bool ValidPoint(const PointType& point) = delete;

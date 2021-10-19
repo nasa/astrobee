@@ -19,13 +19,9 @@
 #define DEPTH_ODOMETRY_POINT_CLOUD_WITH_KNOWN_CORRESPONDENCES_ALIGNER_H_
 
 #include <depth_odometry/point_cloud_with_known_correspondences_aligner_params.h>
-#include <depth_odometry/optimization_utilities.h>
 #include <localization_common/pose_with_covariance.h>
 
 #include <Eigen/Core>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 
 #include <boost/optional.hpp>
 
@@ -40,9 +36,6 @@ class PointCloudWithKnownCorrespondencesAligner {
 
   localization_common::PoseWithCovariance ComputeRelativeTransform(
     const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const;
-
-  Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
-                                                    const std::vector<Eigen::Vector3d>& target_points) const;
 
   void SetSourceNormals(const std::vector<Eigen::Vector3d>& source_normals);
 
