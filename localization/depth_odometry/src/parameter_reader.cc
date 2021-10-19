@@ -121,5 +121,6 @@ void LoadPointCloudWithKnownCorrespondencesAlignerParams(config_reader::ConfigRe
   params.use_single_iteration_umeyama = mc::LoadBool(config, "pcwkca_use_single_iteration_umeyama");
   params.use_point_to_plane_cost = mc::LoadBool(config, "pcwkca_use_point_to_plane_cost");
   params.use_symmetric_point_to_plane_cost = mc::LoadBool(config, "pcwkca_use_symmetric_point_to_plane_cost");
+  params.verbose_optimization = mc::LoadBool(config, "pcwkca_verbose_optimization");
 }
 }  // namespace depth_odometry

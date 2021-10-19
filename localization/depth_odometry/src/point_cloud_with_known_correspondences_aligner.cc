@@ -60,10 +60,18 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   options.function_tolerance = params_.function_tolerance;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
-  // TODO(rsoussan): add verbose optimization option
-  std::cout << summary.FullReport() << "\n";
-  // TODO(rsoussan): determine residual size based on params
-  CheckResiduals(2, problem);
+  if (params_.verbose_optimization) {
+    std::cout << summary.FullReport() << "\n";
+    int residual_size;
+    if (params_.use_symmetric_point_to_plane_cost) {
+      residual_size = 2;
+    } else if (params_.use_point_to_plane_cost) {
+      residual_size = 1;
+    } else {
+      residual_size = 3;
+    }
+    CheckResiduals(residual_size, problem);
+  }
   return Isometry3(relative_transform.data());
 }
 
