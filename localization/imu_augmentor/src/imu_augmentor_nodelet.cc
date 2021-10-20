@@ -33,6 +33,7 @@ ImuAugmentorNodelet::ImuAugmentorNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
   last_time_ = ros::Time::now();
+  last_heartbeat_time_ = ros::Time::now();
 }
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
@@ -112,7 +113,9 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
 
 void ImuAugmentorNodelet::PublishHeartbeat() {
   heartbeat_.header.stamp = ros::Time::now();
+  if ((heartbeat_.header.stamp - last_heartbeat_time_).toSec() < 1.0) return;
   heartbeat_pub_.publish(heartbeat_);
+  last_heartbeat_time_ = heartbeat_.header.stamp;
 }
 
 void ImuAugmentorNodelet::Run() {

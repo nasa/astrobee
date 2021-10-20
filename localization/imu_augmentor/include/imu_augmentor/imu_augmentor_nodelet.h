@@ -68,6 +68,7 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
   ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::Time last_time_;
+  ros::Time last_heartbeat_time_;
 };
 }  // namespace imu_augmentor
 
