@@ -27,125 +27,29 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
 )
 
-
 # Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  AccessControlStateStamped.msg
-  AckCompletedStatus.msg
-  AckStamped.msg
-  AckStatus.msg
-  AgentStateStamped.msg
-  ArmGripperState.msg
-  ArmJointState.msg
-  ArmState.msg
-  ArmStateStamped.msg
-  AvailableRobots.msg
-  CameraRegistration.msg
-  CameraState.msg
-  CameraStatesStamped.msg
-  CommandArg.msg
-  CommandConstants.msg
-  CommandStamped.msg
-  CommStateStamped.msg
-  CompressedFile.msg
-  CompressedFileAck.msg
-  ControlCommand.msg
-  ControlState.msg
-  CpuState.msg
-  CpuStateStamped.msg
-  DataToDiskState.msg
-  DataTopicsList.msg
-  DepthLandmark.msg
-  DepthLandmarks.msg
-  DiskState.msg
-  DiskStateStamped.msg
-  DockState.msg
-  EkfState.msg
-  ExecState.msg
-  FamCommand.msg
-  Fault.msg
-  FaultConfig.msg
-  FaultData.msg
-  FaultInfo.msg
-  FaultState.msg
-  Feature2d.msg
-  Feature2dArray.msg
-  FlightMode.msg
-  GraphState.msg
-  GuestScienceApk.msg
-  GuestScienceCommand.msg
-  GuestScienceConfig.msg
-  GuestScienceData.msg
-  GuestScienceState.msg
-  Hazard.msg
-  Heartbeat.msg
-  JointSample.msg
-  JointSampleStamped.msg
-  LocalizationGraph.msg
-  LocalizationPipeline.msg
-  LocalizationState.msg
-  MemState.msg
-  MemStateStamped.msg
-  MobilityState.msg
-  MotionState.msg
-  OpState.msg
-  PerchState.msg
-  Performance.msg
-  PicoflexxIntermediateData.msg
-  PlanStatusStamped.msg
-  SaveSettings.msg
-  Segment.msg
-  SignalState.msg
-  Status.msg
-  TimeSyncStamped.msg
-  VisualeyezCalibration.msg
-  VisualeyezData.msg
-  VisualeyezDataArray.msg
-  VisualeyezFeedback.msg
-  VisualeyezFeedbackArray.msg
-  VisualLandmark.msg
-  VisualLandmarks.msg
-  Zone.msg
-)
+file(GLOB MSG_FILES msg/*.msg)
+foreach(SRC ${MSG_FILES})
+  get_filename_component(NAME ${SRC} NAME)
+  list(APPEND MSG_FILE_NAMES ${NAME})
+endforeach()
+add_message_files(FILES ${MSG_FILE_NAMES})
 
 # Generate services in the 'srv' folder
-add_service_files(
- FILES
-  ConfigureCamera.srv
-  EnableCamera.srv
-  EnableRecording.srv
-  GetFloat.srv
-  GetMap.srv
-  GetOccupancyMap.srv
-  GetPipelines.srv
-  GetZones.srv
-  RegisterPlanner.srv
-  SetBool.srv
-  SetDataToDisk.srv
-  SetEkfInput.srv
-  SetFloat.srv
-  SetInertia.srv
-  SetRate.srv
-  SetState.srv
-  SetStreamingLights.srv
-  SetZones.srv
-  Trigger.srv
-  UnloadLoadNodelet.srv
-  VisualeyezConfig.srv
-)
+file(GLOB SRV_FILES srv/*.srv)
+foreach(SRC ${SRV_FILES})
+  get_filename_component(NAME ${SRC} NAME)
+  list(APPEND SRV_FILE_NAMES ${NAME})
+endforeach()
+add_service_files(FILES ${SRV_FILE_NAMES})
 
 # Generate actions in the 'action' folder
-add_action_files(
-  FILES
-  Arm.action
-  Control.action
-  Dock.action
-  Localization.action
-  Motion.action
-  Perch.action
-  Plan.action
-)
+file(GLOB ACTION_FILES action/*.action)
+foreach(SRC ${ACTION_FILES})
+  get_filename_component(NAME ${SRC} NAME)
+  list(APPEND ACTION_FILE_NAMES ${NAME})
+endforeach()
+add_action_files(FILES ${ACTION_FILE_NAMES})
 
 generate_messages(
   DEPENDENCIES std_msgs geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs std_msgs

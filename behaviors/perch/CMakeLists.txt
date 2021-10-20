@@ -95,6 +95,8 @@ install(TARGETS perch_tool DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/perch_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark launch files for installation

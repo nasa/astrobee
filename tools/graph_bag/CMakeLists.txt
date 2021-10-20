@@ -119,6 +119,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/run_imu_bias_tester_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 endif (USE_ROS)

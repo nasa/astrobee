@@ -123,6 +123,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/smart_dock_service share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/smart_dock_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 else (USE_DDS)

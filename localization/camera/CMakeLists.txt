@@ -120,6 +120,8 @@ install(TARGETS undistort_image DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/undistort_image share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark cpp header files for installation

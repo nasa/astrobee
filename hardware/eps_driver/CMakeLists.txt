@@ -117,6 +117,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/eps_driver_tool share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/eps_simulator share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 

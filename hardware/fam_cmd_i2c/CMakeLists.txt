@@ -69,6 +69,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/fam_cmd_gen share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/fam_cmd_i2c_node share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark launch files for installation

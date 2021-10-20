@@ -100,4 +100,6 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/bag_to_csv share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/sparse_map_bag share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")

@@ -109,6 +109,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/pico_proxy share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/pico_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark launch files for installation

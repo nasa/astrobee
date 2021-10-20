@@ -72,4 +72,6 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/overhead_info share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/visualization_node share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")

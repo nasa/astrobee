@@ -134,6 +134,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/interest_points_test_bag share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/merge_bags share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 

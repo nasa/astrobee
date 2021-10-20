@@ -91,6 +91,8 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/landmark_msg_cnv share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/pose_stamped_msg_cnv share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark cpp header files for installation

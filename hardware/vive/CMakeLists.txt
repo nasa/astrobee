@@ -111,6 +111,8 @@ install(TARGETS vive_tool DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/vive_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark cpp header files for installation

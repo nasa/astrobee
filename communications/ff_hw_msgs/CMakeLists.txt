@@ -26,54 +26,20 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  ArmCommand.msg
-  ArmState.msg
-  ConfigureLED.msg
-  ConfigureLEDGroup.msg
-  EpsBatteryLocation.msg
-  EpsDockStateStamped.msg
-  EpsHousekeeping.msg
-  EpsHousekeepingValue.msg
-  EpsPowerState.msg
-  EpsPowerStateValue.msg
-  OpticalFlow.msg
-  PmcCommand.msg
-  PmcGoal.msg
-  PmcState.msg
-  PmcStatus.msg
-  PmcTelemetry.msg
-  ViveButton.msg
-  ViveLight.msg
-  ViveLighthouse.msg
-  ViveLighthouses.msg
-  ViveMotor.msg
-  VivePulse.msg
-  ViveSensor.msg
-  ViveTracker.msg
-  ViveTrackers.msg
-)
+file(GLOB MSG_FILES msg/*.msg)
+foreach(SRC ${MSG_FILES})
+  get_filename_component(NAME ${SRC} NAME)
+  list(APPEND MSG_FILE_NAMES ${NAME})
+endforeach()
+add_message_files(FILES ${MSG_FILE_NAMES})
 
 # Generate services in the 'srv' folder
-add_service_files(
- FILES
-  CalibrateGripper.srv
-  ClearTerminate.srv
-  ConfigureAdvancedPower.srv
-  ConfigurePayloadPower.srv
-  ConfigureSystemLeds.srv
-  GetBatteryStatus.srv
-  GetBoardInfo.srv
-  GetTemperatures.srv
-  Reset.srv
-  RingBuzzer.srv
-  SetEnabled.srv
-  SetFlashlight.srv
-  SetJointMaxVelocity.srv
-  SetLedMatrix.srv
-  Undock.srv
-)
+file(GLOB SRV_FILES srv/*.srv)
+foreach(SRC ${SRV_FILES})
+  get_filename_component(NAME ${SRC} NAME)
+  list(APPEND SRV_FILE_NAMES ${NAME})
+endforeach()
+add_service_files(FILES ${SRV_FILE_NAMES})
 
 generate_messages(
   DEPENDENCIES std_msgs geometry_msgs sensor_msgs

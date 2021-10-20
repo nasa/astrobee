@@ -110,6 +110,8 @@ install(TARGETS sfc_server DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/sfc_server share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
   )")
 
 # Mark launch files for installation
