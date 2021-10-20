@@ -18,6 +18,7 @@
 
 #include <depth_odometry/point_cloud_utilities.h>
 #include <localization_common/logger.h>
+#include <localization_common/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
@@ -32,6 +33,8 @@
 #include <pcl/search/impl/kdtree.hpp>
 
 namespace depth_odometry {
+namespace lc = localization_common;
+
 void EstimateNormals(const pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double search_radius,
                      pcl::PointCloud<pcl::PointXYZINormal>& cloud_with_normals) {
   pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> ne;
@@ -87,6 +90,13 @@ Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Ve
   gtsam::Matrix H1;
   relative_transform.transformFrom(point, H1);
   return normal.transpose() * H1;
+}
+
+Eigen::Matrix<double, 1, 6> PointToPointJacobian(const gtsam::Point3& source_point,
+                                                 const gtsam::Pose3& relative_transform) {
+  gtsam::Matrix H1;
+  relative_transform.transformFrom(source_point, H1);
+  return H1;
 }
 
 Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
@@ -177,6 +187,26 @@ void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float v
     ny *= -1;
     nz *= -1;
   }
+}
+
+bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector) {
+  if (std::isnan(vector(0, 0)) || std::isnan(vector(0, 1)) || std::isnan(vector(0, 2)) || std::isnan(vector(0, 3)) ||
+      std::isnan(vector(0, 4)) || std::isnan(vector(0, 5)))
+    return false;
+  return true;
+}
+
+Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
+                                                                const Eigen::Isometry3d& relative_transform) {
+  const int num_correspondences = static_cast<int>(source_points.size());
+  Eigen::MatrixXd full_jacobian(num_correspondences, 6);
+  for (int i = 0; i < num_correspondences; ++i) {
+    const Eigen::Matrix<double, 1, 6> jacobian = PointToPointJacobian(source_points[i], lc::GtPose(relative_transform));
+    if (!ValidVector6d(jacobian)) continue;
+    full_jacobian.block(i++, 0, 1, 6) = jacobian;
+  }
+  const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
+  return covariance;
 }
 
 template <>

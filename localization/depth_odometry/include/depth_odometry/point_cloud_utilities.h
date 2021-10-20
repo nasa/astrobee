@@ -34,8 +34,13 @@ Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source
 
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals);
+
+// TODO(rsoussan): rename to point to plane jacobian!
 Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
                                      const gtsam::Pose3& relative_transform);
+
+Eigen::Matrix<double, 1, 6> PointToPointJacobian(const gtsam::Point3& source_point,
+                                                 const gtsam::Pose3& relative_transform);
 
 Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
                                                   const std::vector<Eigen::Vector3d>& target_points);
@@ -49,6 +54,11 @@ bool computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std:
 
 void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z, float& nx, float& ny,
                                 float& nz);
+
+bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector);
+
+Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
+                                                                const Eigen::Isometry3d& relative_transform);
 
 template <typename PointType>
 bool ValidPoint(const PointType& point) = delete;
