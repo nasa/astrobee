@@ -52,7 +52,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-// Eigen incliudes
+// Eigen includes
 #include <Eigen/Geometry>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>

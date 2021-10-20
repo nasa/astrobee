@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(dds_msgs)
 
-## Compile as C++11, supported in ROS Kinetic and newer
+## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
 if (USE_DDS)

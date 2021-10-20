@@ -17,7 +17,7 @@
 
 cmake_minimum_required(VERSION 3.0)
 project(traj_opt_basic)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-deprecated-declarations  -Werror=return-type")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations  -Werror=return-type")
 
 find_package(catkin REQUIRED COMPONENTS
 )

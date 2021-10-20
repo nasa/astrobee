@@ -18,8 +18,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(flycapture)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
 # Need to think of a better way to get flycapture
 find_path(FLYCAPTURE_INCLUDE_DIR flycapture/FlyCapture2Defs.h
@@ -39,11 +39,7 @@ catkin_package(
 
 
 if (FLYCAPTURE_FOUND)
-  # create_tool_targets(DIR tools
-  #   LIBS ${FLYCAPTURE_LIBRARY} ${catkin_LIBRARIES} ff_nodelet
-  #   INC ${FLYCAPTURE_INCLUDE_DIR} ${catkin_INCLUDE_DIRS}
-  # )
-  ## Declare a C++ executable: inspection_tool
+  ## Declare a C++ executable: fly_node
   add_executable(fly_node tools/fly_node.cc)
   add_dependencies(fly_node ${catkin_EXPORTED_TARGETS})
   target_link_libraries(fly_node
