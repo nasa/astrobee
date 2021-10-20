@@ -91,7 +91,14 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
 
   if (standstill()) {
     LogDebugEveryN(100, "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.");
-    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_combined_nav_state_,
+    const auto latest_timestamp = imu_augmentor_->LatestTime();
+    if (!latest_timestamp) {
+      LogError("LatestImuAugmentedCombinedNavStateAndCovariances: Failed to get latest timestamp.");
+      return boost::none;
+    }
+    const lc::CombinedNavState latest_timestamp_combined_nav_state(
+      latest_combined_nav_state_->nav_state(), latest_combined_nav_state_->bias(), *latest_timestamp);
+    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{latest_timestamp_combined_nav_state,
                                                                             *latest_covariances_};
   }
 
