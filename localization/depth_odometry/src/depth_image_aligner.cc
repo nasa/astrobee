@@ -165,7 +165,6 @@ boost::optional<lc::PoseWithCovariance> DepthImageAligner::ComputeRelativeTransf
   }
 
   const auto relative_transform = point_cloud_aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks);
-  // TODO: compute covariance!!!!!!
   // TODO(rsoussan): make this a param?? is this already a param in depth odometry? (B)
   if (relative_transform.pose.translation().norm() > 10) {
     LogError("large norm!!!");

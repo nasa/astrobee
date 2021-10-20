@@ -22,11 +22,12 @@
 #include <Eigen/Geometry>
 
 namespace localization_common {
+using PoseCovariance = Eigen::Matrix<double, 6, 6>;
 struct PoseWithCovariance {
-  PoseWithCovariance(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance)
+  PoseWithCovariance(const Eigen::Isometry3d& pose, const PoseCovariance& covariance)
       : pose(pose), covariance(covariance) {}
   Eigen::Isometry3d pose;
-  Eigen::Matrix<double, 6, 6> covariance;
+  PoseCovariance covariance;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

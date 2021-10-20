@@ -79,14 +79,17 @@ lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativ
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const {
   if (params_.use_single_iteration_umeyama) {
     const Eigen::Isometry3d relative_transform = ComputeRelativeTransformUmeyama(source_points, target_points);
-    return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
+    const lc::PoseCovariance covariance = ComputePointToPointCovarianceMatrix(source_points, relative_transform);
+    return lc::PoseWithCovariance(relative_transform, covariance);
   }
 
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
                                             ? ComputeRelativeTransformUmeyama(source_points, target_points)
                                             : Eigen::Isometry3d::Identity();
   const Eigen::Isometry3d relative_transform = Align(source_points, target_points, initial_guess);
-  return lc::PoseWithCovariance(relative_transform, Eigen::Matrix<double, 6, 6>::Zero());
+  // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane
+  const lc::PoseCovariance covariance = ComputePointToPointCovarianceMatrix(source_points, relative_transform);
+  return lc::PoseWithCovariance(relative_transform, covariance);
 }
 
 void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(std::vector<Eigen::Vector3d>&& source_normals) {
