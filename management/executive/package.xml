@@ -21,12 +21,14 @@
   <build_depend>nodelet</build_depend>
   <build_depend>config_reader</build_depend>
   <build_depend>ff_util</build_depend>
+  <build_depend>jsonloader</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>ff_msgs</run_depend>
   <run_depend>ff_hw_msgs</run_depend>
   <run_depend>nodelet</run_depend>
   <run_depend>config_reader</run_depend>
   <run_depend>ff_util</run_depend>
+  <run_depend>jsonloader</run_depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>

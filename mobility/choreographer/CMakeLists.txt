@@ -32,6 +32,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_msgs
   ff_hw_msgs
   tf2_ros
+  jsonloader
 )
 
 catkin_package(
@@ -47,6 +48,7 @@ catkin_package(
     ff_util
     tf2
     tf2_ros
+    jsonloader
 )
 
 ###########

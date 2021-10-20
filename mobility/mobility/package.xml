@@ -21,10 +21,12 @@
   <build_depend>mapper</build_depend>
   <build_depend>planner_trapezoidal</build_depend>
   <build_depend>planner_qp</build_depend>
+  <build_depend>jsonloader</build_depend>
   <run_depend>ff_msgs</run_depend>
   <run_depend>ff_util</run_depend>
   <run_depend>choreographer</run_depend>
   <run_depend>mapper</run_depend>
   <run_depend>planner_trapezoidal</run_depend>
   <run_depend>planner_qp</run_depend>
+  <run_depend>jsonloader</run_depend>
 </package>

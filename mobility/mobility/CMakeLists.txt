@@ -31,6 +31,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   planner_qp
   ff_msgs
   ff_util
+  jsonloader
 )
 catkin_package(
   CATKIN_DEPENDS
@@ -40,6 +41,7 @@ catkin_package(
     planner_qp
     ff_msgs
     ff_util
+    jsonloader
 )
 
 ###########

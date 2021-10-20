@@ -37,7 +37,7 @@ find_package(JsonCpp REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ff_common
+  LIBRARIES jsonloader
   CATKIN_DEPENDS roscpp std_msgs nodelet
 )
 

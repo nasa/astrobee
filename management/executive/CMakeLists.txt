@@ -31,6 +31,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   nodelet
   config_reader
   ff_util
+  jsonloader
 )
 
 # System dependencies are found with CMake's conventions
@@ -49,8 +50,9 @@ catkin_package(
     roscpp
     ff_msgs
     ff_hw_msgs
-    ff_util
     nodelet
+    ff_util
+    jsonloader
 )
 
 ###########

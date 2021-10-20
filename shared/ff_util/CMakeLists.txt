@@ -35,14 +35,9 @@ find_package(catkin2 REQUIRED COMPONENTS
   msg_conversions
 )
 
-# Find jsoncpp
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
-find_package(JsonCpp REQUIRED)
-
-
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer jsonloader
+  LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer
   CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
 )
 
@@ -92,20 +87,6 @@ add_library(perf_timer
 )
 add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
 target_link_libraries(perf_timer ${catkin_LIBRARIES})
-
-# Declare C++ libraries
-add_library(jsonloader
-  src/jsonloader/command.cc
-  src/jsonloader/command_repo.cc
-  src/jsonloader/keepout.cc
-  src/jsonloader/keepoutio.cc
-  src/jsonloader/plan.cc
-  src/jsonloader/planio.cc
-  src/jsonloader/validation.cc
-)
-add_dependencies(jsonloader ${catkin_EXPORTED_TARGETS})
-target_link_libraries(jsonloader ${catkin_LIBRARIES} ${JSONCPP_LIBRARIES})
-
 
 ##########
 ## Test ##
@@ -167,7 +148,7 @@ endif()
 #############
 
 # Mark libraries for installation
-install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer jsonloader
+install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -176,13 +157,6 @@ install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer json
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
-
-# Mark cpp header files for installation
-install(DIRECTORY include/jsonloader/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/../jsonloader/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
