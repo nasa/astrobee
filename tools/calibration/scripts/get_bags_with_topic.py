@@ -48,17 +48,21 @@ def find_bags_in_directory(directory):
     return bag_names
 
 
+def find_bags_with_topic(directory, topic):
+  bag_names = find_bags_in_directory(directory)
+  return get_bags_with_topic(bag_names, topic)
+
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("--cam-topic", default="/hw/cam_nav")
   parser.add_argument("-d", "--directory", default="./")
   args = parser.parse_args()
-  bag_names = find_bags_in_directory(args.directory)
-  bag_names_with_topic = get_bags_with_topic(bag_names, args.cam_topic)
-  if len(bag_names) == 0:
+  bag_names_with_topic = find_bags_with_topic(args.directory, args.cam_topic)
+  if len(bag_names_with_topic) == 0:
     print("No bag files with topic " + args.cam_topic + " found.")
     sys.exit()
   else:
-    print(("Found " + str(len(bag_names)) + " bag files with " + args.cam_topic + " topic."))
+    print(("Found " + str(len(bag_names_with_topic)) + " bag files with " + args.cam_topic + " topic."))
     for bag_name in bag_names_with_topic:
       print(bag_name)
