@@ -30,13 +30,32 @@ import kalibr_common as kc
 import kalibr_camera_calibration as kcc
 
 
+def save_corners(observation, filename):
+  target_corners = observation.getCornersTargetFrame()
+  image_corners = observation.getCornersImageFrame()
+  ids = observation.getCornersIdx()
+  with open(filename, 'w') as corners_file:
+    for i in range(len(target_corners)):
+      corners_file.write('%0.17g %0.17g %0.17g %0.17g %0.17g\n' % (
+        ids[i],
+        target_corners[i][0],
+        target_corners[i][1],
+        image_corners[i][0],
+        image_corners[i][1],
+      ))
+
+
 def save_images_from_dataset_with_target_detections(dataset, detector, output_directory):
   for timestamp, image in dataset.readDataset():
     success, observation = detector.findTargetNoTransformation(timestamp, np.array(image))
     if success:
-      cv2.imshow('image', image)
-      cv2.waitKey(0)
-      #save_image(image, observation, output_directory) #TODO: make this function!!
+      filepath = output_directory + '/' + os.path.splitext(os.path.basename(dataset.bagfile))[0] + '_' + str(
+        timestamp.toSec())
+      image_name = filepath + '.jpg'
+      print("Saving " + filepath)
+      cv2.imwrite(image_name, image)
+      corners_name = filepath + '.txt'
+      save_corners(observation, corners_name)
 
 
 def save_images_from_bags_directory_with_target_detections(bags_directory, target_yaml, cam_topic, output_directory):
