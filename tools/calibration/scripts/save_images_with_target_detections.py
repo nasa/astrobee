@@ -61,8 +61,10 @@ class Corners:
                                        other_corners.id_corner_map[corner_id].image_corner)
       norm_sums += image_diff_norm
     mean_norm = norm_sums / float(len(self.id_corner_map.keys()))
-    print(mean_norm)
-    return mean_norm < threshold
+    if mean_norm < threshold:
+      print("Ignoring image, mean " + str(mean_norm) + " below threshold " + str(threshold))
+      return True
+    return False
 
 
 class AddedCorners:
@@ -102,6 +104,10 @@ def save_images_from_dataset_with_target_detections(dataset, detector, output_di
   for timestamp, image in dataset.readDataset():
     success, observation = detector.findTargetNoTransformation(timestamp, np.array(image))
     if success:
+      # TODO(rsoussan): Why do no corners show up as success sometimes?
+      if len(observation.getCornersIdx()) == 0:
+        print("No Corners!")
+        continue
       corners = Corners(observation)
       if added_corners.redundant(corners):
         continue
@@ -148,7 +154,7 @@ if __name__ == "__main__":
   parser.add_argument("-o", "--output-directory", default="./images_with_target_detections")
   parser.add_argument("--cam-topic", default="/hw/cam_nav")
   parser.add_argument("-t", "--target-yaml")
-  parser.add_argument("--threshold", default=10)
+  parser.add_argument("--threshold", type=float, default=10)
   args = parser.parse_args()
   save_images_from_bags_directory_with_target_detections(args.directory, args.target_yaml, args.cam_topic,
                                                          args.output_directory, args.threshold)
