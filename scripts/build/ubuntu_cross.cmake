@@ -51,8 +51,10 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 # If this is not done, the resulting rpath will not look for them in the chroot
 # environment.
 # Also, RTI DDS is included once for the libraries and once for the headers.
+execute_process(COMMAND catkin locate -i OUTPUT_VARIABLE CATKIN_INSTALL_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND catkin locate -d OUTPUT_VARIABLE CATKIN_DEVEL_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
 SET(CMAKE_FIND_ROOT_PATH
-  ${ARM_CHROOT_DIR})
+  ${ARM_CHROOT_DIR} ${CATKIN_INSTALL_PATH} ${CATKIN_DEVEL_PATH})
 
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
@@ -66,8 +68,6 @@ SET(ENV{PKG_CONFIG_LIBDIR} "${ARM_CHROOT_DIR}/usr/local/lib/arm-linux-gnueabihf/
 IF( DEFINED EXTRA_ROOT_PATH )
   SET(CMAKE_FIND_ROOT_PATH ${EXTRA_ROOT_PATH} ${CMAKE_FIND_ROOT_PATH})
 ENDIF( DEFINED EXTRA_ROOT_PATH )
-
-SET(catkin2_DIR ${CMAKE_SOURCE_DIR}/cmake)
 
 # needed for gflag to compile...
 SET( THREADS_PTHREAD_ARG 

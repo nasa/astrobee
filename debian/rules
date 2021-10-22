@@ -38,15 +38,14 @@ build-indep: ;
 override_dh_auto_configure:
 	# configure the build
 	cd .. && \
-	./src/scripts/configure.sh -a -w $(ARMHF_CHROOT_DIR)/home/debian/tmp && \
+	./src/scripts/configure.sh -a -w src/debian/tmp && \
 	catkin clean -y --force
 override_dh_auto_build: ;
 
 # the install command is already invoked in the build
 override_dh_auto_install:
 	cd .. && \
-	catkin build && \
-	cp -R $(ARMHF_CHROOT_DIR)/home/debian/tmp src/debian
+	catkin build
 
 override_dh_install:
 	dh_movefiles
