@@ -144,8 +144,10 @@ def save_images_from_bags_directory_with_target_detections(bags_directory, targe
   for bag_name in bag_names:
     dataset = kc.BagImageDatasetReader(bag_name, cam_topic)
     camera_geometry = kcc.CameraGeometry(camera_model, target_config, dataset)
+    print("Saving images from " + bag_name)
     save_images_from_dataset_with_target_detections(dataset, target_detector.detector, args.output_directory,
                                                     added_corners)
+    print("Finished savings images for " + bag_name)
 
 
 if __name__ == "__main__":
