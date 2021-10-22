@@ -56,10 +56,12 @@ class Corners:
 
     norm_sums = 0
     for corner_id in self.id_corner_map.keys():
-      image_diff_norm = (self.id_corner_map[corner_id].image_corner -
-                         other_corners.id_corner_map[corner_id].image_corner).norm()
+      a = (self.id_corner_map[corner_id].image_corner - other_corners.id_corner_map[corner_id].image_corner)
+      image_diff_norm = np.linalg.norm(self.id_corner_map[corner_id].image_corner -
+                                       other_corners.id_corner_map[corner_id].image_corner)
       norm_sums += image_diff_norm
     mean_norm = norm_sums / float(len(self.id_corner_map.keys()))
+    print(mean_norm)
     return mean_norm < threshold
 
 
