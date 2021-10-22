@@ -27,6 +27,7 @@
 # :outvar <comp>_INCLUDE_DIRS/_LIBRARY_DIRS/_LIBRARY:
 #    contains the include dirs / library dirs / libraries of the searched component <comp>.
 
+find_package(catkin REQUIRED)  # defines catkin_DIR
 if(CATKIN_TOPLEVEL_FIND_PACKAGE OR NOT CATKIN_TOPLEVEL)
   set(catkin_EXTRAS_DIR "${catkin_DIR}")
 
