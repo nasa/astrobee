@@ -34,8 +34,8 @@ class Corner:
 
   def __init__(self, corner_id, target_corner, image_corner):
     self.id = corner_id
-    self.target_corner = np.array(target_corner[0], target_corner[1])
-    self.image_corner = np.array(image_corner[0], image_corner[1])
+    self.target_corner = np.array([target_corner[0], target_corner[1]])
+    self.image_corner = np.array([image_corner[0], image_corner[1]])
 
 
 class Corners:
@@ -52,7 +52,7 @@ class Corners:
   def similar(self, other_corners, threshold):
     # Make sure keys are the same
     if not set(self.id_corner_map.keys()) == set(other_corners.id_corner_map.keys()):
-      return false
+      return False
 
     norm_sums = 0
     for corner_id in self.id_corner_map.keys():
@@ -74,11 +74,11 @@ class AddedCorners:
 
   def redundant(self, new_corners):
     if len(self.corners) == 0:
-      return false
+      return False
     for corners in self.corners:
       if corners.similar(new_corners, self.threshold):
-        return true
-    return false
+        return True
+    return False
 
 
 def save_corners(observation, filename):
