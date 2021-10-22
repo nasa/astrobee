@@ -30,6 +30,57 @@ import kalibr_common as kc
 import kalibr_camera_calibration as kcc
 
 
+class Corner:
+
+  def __init__(self, corner_id, target_corner, image_corner):
+    self.id = corner_id
+    self.target_corner = np.array(target_corner[0], target_corner[1])
+    self.image_corner = np.array(image_corner[0], image_corner[1])
+
+
+class Corners:
+
+  def __init__(self, observation):
+    self.id_corner_map = {}
+    target_corners = observation.getCornersTargetFrame()
+    image_corners = observation.getCornersImageFrame()
+    ids = observation.getCornersIdx()
+    for i in range(len(target_corners)):
+      corner = Corner(ids[i], target_corners[i], image_corners[i])
+      self.id_corner_map[corner.id] = corner
+
+  def similar(self, other_corners, threshold):
+    # Make sure keys are the same
+    if not set(self.id_corner_map.keys()) == set(other_corners.id_corner_map.keys()):
+      return false
+
+    norm_sums = 0
+    for corner_id in self.id_corner_map.keys():
+      image_diff_norm = (self.id_corner_map[corner_id].image_corner -
+                         other_corners.id_corner_map[corner_id].image_corner).norm()
+      norm_sums += image_diff_norm
+    mean_norm = norm_sums / float(len(self.id_corner_map.keys()))
+    return mean_norm < threshold
+
+
+class AddedCorners:
+
+  def __init__(self, threshold):
+    self.corners = []
+    self.threshold = threshold
+
+  def add_corners(self, corners):
+    self.corners.append(corners)
+
+  def redundant(self, new_corners):
+    if len(self.corners) == 0:
+      return false
+    for corners in self.corners:
+      if corners.similar(new_corners, self.threshold):
+        return true
+    return false
+
+
 def save_corners(observation, filename):
   target_corners = observation.getCornersTargetFrame()
   image_corners = observation.getCornersImageFrame()
@@ -45,10 +96,15 @@ def save_corners(observation, filename):
       ))
 
 
-def save_images_from_dataset_with_target_detections(dataset, detector, output_directory):
+def save_images_from_dataset_with_target_detections(dataset, detector, output_directory, added_corners):
   for timestamp, image in dataset.readDataset():
     success, observation = detector.findTargetNoTransformation(timestamp, np.array(image))
     if success:
+      corners = Corners(observation)
+      if added_corners.redundant(corners):
+        continue
+      else:
+        added_corners.add_corners(corners)
       filepath = output_directory + '/' + os.path.splitext(os.path.basename(dataset.bagfile))[0] + '_' + str(
         timestamp.toSec())
       image_name = filepath + '.jpg'
@@ -58,7 +114,8 @@ def save_images_from_dataset_with_target_detections(dataset, detector, output_di
       save_corners(observation, corners_name)
 
 
-def save_images_from_bags_directory_with_target_detections(bags_directory, target_yaml, cam_topic, output_directory):
+def save_images_from_bags_directory_with_target_detections(bags_directory, target_yaml, cam_topic, output_directory,
+                                                           threshold):
   bag_names = get_bags_with_topic.find_bags_with_topic(bags_directory, cam_topic)
   if len(bag_names) == 0:
     print("No bag files with topic " + cam_topic + " found.")
@@ -75,10 +132,12 @@ def save_images_from_bags_directory_with_target_detections(bags_directory, targe
   camera_model = acvb.DistortedPinhole
   target_config = kc.CalibrationTargetParameters(target_yaml)
   target_detector = kcc.TargetDetector(target_config, camera_model.geometry())
+  added_corners = AddedCorners(threshold)
   for bag_name in bag_names:
     dataset = kc.BagImageDatasetReader(bag_name, cam_topic)
     camera_geometry = kcc.CameraGeometry(camera_model, target_config, dataset)
-    save_images_from_dataset_with_target_detections(dataset, target_detector.detector, args.output_directory)
+    save_images_from_dataset_with_target_detections(dataset, target_detector.detector, args.output_directory,
+                                                    added_corners)
 
 
 if __name__ == "__main__":
@@ -87,6 +146,7 @@ if __name__ == "__main__":
   parser.add_argument("-o", "--output-directory", default="./images_with_target_detections")
   parser.add_argument("--cam-topic", default="/hw/cam_nav")
   parser.add_argument("-t", "--target-yaml")
+  parser.add_argument("--threshold", default=10)
   args = parser.parse_args()
   save_images_from_bags_directory_with_target_detections(args.directory, args.target_yaml, args.cam_topic,
-                                                         args.output_directory)
+                                                         args.output_directory, args.threshold)
