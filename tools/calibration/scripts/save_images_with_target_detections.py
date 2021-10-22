@@ -154,7 +154,7 @@ if __name__ == "__main__":
   parser.add_argument("-o", "--output-directory", default="./images_with_target_detections")
   parser.add_argument("--cam-topic", default="/hw/cam_nav")
   parser.add_argument("-t", "--target-yaml")
-  parser.add_argument("--threshold", type=float, default=10)
+  parser.add_argument("--threshold", type=float, default=100)
   args = parser.parse_args()
   save_images_from_bags_directory_with_target_detections(args.directory, args.target_yaml, args.cam_topic,
                                                          args.output_directory, args.threshold)
