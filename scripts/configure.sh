@@ -287,6 +287,7 @@ extra_opts+=${is_bamboo_build}${enable_gprof}${enable_google_prof}${enable_qp}${
 extra_opts+=${enable_vive}${enable_vive_solver}${enable_integration_testing}
 
 
+
 if [[ $native_build == 0 && $armhf_build == 0 ]] ; then
     echo "Nothing to configure (use -l or -a)..."
     echo "Use $scriptname -h for the full list of options"
@@ -303,15 +304,25 @@ fi
 if [ $native_build == 1 ] ; then
     echo "configuring for native linux..."
     enable_gazebo=" -DENABLE_GAZEBO=on"
+
+    # Add our cmake to paths and bashrc
+    grep -qF 'source /opt/ros/'$ros_version ~/.bashrc || echo source /opt/ros/'$ros_version' >> ~/.bashrc
+    cmake_astrobee_path=`catkin locate -s`/cmake
+    grep -qF ${cmake_astrobee_path} ~/.bashrc \
+      || echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
+    source ~/.bashrc
+
     catkin profile add native
     catkin profile set native
-    catkin config --extend /opt/ros/${ros_version} \
+    catkin config --no-extend \
         --build-space ${workspace_path}build \
         --install-space ${install_path:-${workspace_path}install} \
         --devel-space ${workspace_path}devel \
         --log-space ${workspace_path}log \
         --no-install \
         --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+
 fi
 
 if [ $armhf_build == 1 ] ; then
@@ -323,10 +334,10 @@ if [ $armhf_build == 1 ] ; then
     catkin profile add armhf
     catkin profile set armhf
     catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
-        --build-space ${workspace_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/}build \
-        --install-space ${install_path:-${workspace_path:-$ARMHF_CHROOT_DIR/}opt/astrobee} \
-        --devel-space ${workspace_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/}devel \
-        --log-space ${workspace_path:-$ARMHF_CHROOT_DIR/home/astrobee/astrobee/}logs \
+        --build-space ${workspace_path:-armhf/}build \
+        --install-space ${install_path:-armhf/}opt/astrobee} \
+        --devel-space ${workspace_path:-armhf/}devel \
+        --log-space ${workspace_path:-armhf/}logs \
         --install \
         --blacklist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
             astrobee_dock astrobee_freeflyer astrobee_gazebo localization_rviz_plugins \

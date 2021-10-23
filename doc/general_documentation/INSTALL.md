@@ -95,6 +95,7 @@ of turning on and off options. To see which options are supported, simply run
 
     pushd $ASTROBEE_WS
     ./src/scripts/configure.sh -l -F -D
+    source ~/.bashrc
     popd
 
 If you want to explicitly specify the build and install directories, use

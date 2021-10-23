@@ -22,7 +22,6 @@ project(localization_common)
 add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
-SET(catkin2_DIR "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(catkin2 REQUIRED COMPONENTS
 	camera
 	config_reader
