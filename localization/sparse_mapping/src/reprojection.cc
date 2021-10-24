@@ -328,12 +328,13 @@ bool P3P(const std::vector<cv::Point3d> & landmarks, const std::vector<cv::Point
     return true;
 }
 
-bool P3PWithDistortion(const std::vector<cv::Point3d> & landmarks, const std::vector<cv::Point2d> & observations,
-         const camera::CameraParameters & params, cv::Mat& rvec_result, cv::Mat& tvec_result, Eigen::Vector3d * pos, Eigen::Matrix3d * rotation) {
-    cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
-    cv::eigen2cv(params.GetIntrinsicMatrix<camera::DISTORTED>(), camera_matrix);
-    cv::Mat rvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-    cv::Mat tvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+bool P3PWithDistortion(const std::vector<cv::Point3d>& landmarks, const std::vector<cv::Point2d>& observations,
+                       const camera::CameraParameters& params, cv::Mat& rvec_result, cv::Mat& tvec_result,
+                       Eigen::Vector3d* pos, Eigen::Matrix3d* rotation) {
+  cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
+  cv::eigen2cv(params.GetIntrinsicMatrix<camera::DISTORTED>(), camera_matrix);
+  cv::Mat rvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+  cv::Mat tvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
   const auto distortion_params = params.GetDistortion();
     cv::Mat distortion = cv::Mat::zeros(4, 1, cv::DataType<double>::type);
   for (int i = 0; i < distortion_params.size(); ++i) {
@@ -370,26 +371,27 @@ bool P3PWithDistortion(const std::vector<cv::Point3d> & landmarks, const std::ve
     return true;
 }
 
-bool P3PIterWithDistortion(const std::vector<cv::Point3d> & landmarks, const std::vector<cv::Point2d> & observations,
-         const camera::CameraParameters & params, const cv::Mat& rvec, const cv::Mat& tvec, Eigen::Vector3d * pos, Eigen::Matrix3d * rotation) {
-    cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
-    cv::eigen2cv(params.GetIntrinsicMatrix<camera::DISTORTED>(), camera_matrix);
+bool P3PIterWithDistortion(const std::vector<cv::Point3d>& landmarks, const std::vector<cv::Point2d>& observations,
+                           const camera::CameraParameters& params, const cv::Mat& rvec, const cv::Mat& tvec,
+                           Eigen::Vector3d* pos, Eigen::Matrix3d* rotation) {
+  cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
+  cv::eigen2cv(params.GetIntrinsicMatrix<camera::DISTORTED>(), camera_matrix);
   const auto distortion_params = params.GetDistortion();
     cv::Mat distortion(cv::Mat::zeros(4, 1, cv::DataType<double>::type));
   for (int i = 0; i < distortion_params.size(); ++i) {
     distortion.at<double>(i, 0) = distortion_params[i];
   }
 
-  //std::cout << "intrinsics: " << camera_matrix << std::endl;
-  //std::cout << "distortion: " << distortion << std::endl;
+  // std::cout << "intrinsics: " << camera_matrix << std::endl;
+  // std::cout << "distortion: " << distortion << std::endl;
 
-   const bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);
-    if (!result)
-      return false;
+  const bool result =
+    cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);
+  if (!result) return false;
 
-    cv::cv2eigen(tvec, *pos);
-    camera::RodriguesToRotation(Eigen::Vector3d(rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2)), rotation);
-    return true;
+  cv::cv2eigen(tvec, *pos);
+  camera::RodriguesToRotation(Eigen::Vector3d(rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2)), rotation);
+  return true;
 }
 
 size_t CountInliers(const std::vector<Eigen::Vector3d> & landmarks, const std::vector<Eigen::Vector2d> & observations,
@@ -414,8 +416,9 @@ size_t CountInliers(const std::vector<Eigen::Vector3d> & landmarks, const std::v
   return num_inliers;
 }
 
-size_t CountInliersWithDistortion(const std::vector<Eigen::Vector3d> & landmarks, const std::vector<Eigen::Vector2d> & observations,
-                 const camera::CameraModel & camera, int tolerance, std::vector<size_t>* inliers) {
+size_t CountInliersWithDistortion(const std::vector<Eigen::Vector3d>& landmarks,
+                                  const std::vector<Eigen::Vector2d>& observations, const camera::CameraModel& camera,
+                                  int tolerance, std::vector<size_t>* inliers) {
   int num_inliers = 0;
   if (inliers) {
     // To save ourselves some allocation time. We'll prealloc for a 50% inlier
@@ -431,12 +434,12 @@ size_t CountInliersWithDistortion(const std::vector<Eigen::Vector3d> & landmarks
       /*std::cout << "pos: " << pos.x() << ", " << pos.y() << std::endl;
       std::cout << "obs: " << observations[i].x() << ", " << observations[i].y() << std::endl;*/
       const double norm = (observations[i] - pos).squaredNorm();
-      //std::cout << "norm: " << norm << std::endl;*/
+      // std::cout << "norm: " << norm << std::endl;*/
       if (norm > 9) {
         std::cout << "max norm: " << tolerance_sq << std::endl;
         std::cout << "repo large norm inlier!!" << std::endl;
       }
-      
+
       num_inliers++;
       if (inliers)
         inliers->push_back(i);
@@ -562,8 +565,8 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & lan
   // RANSAC to find the best camera with P3P
   std::vector<cv::Point3d> subset_landmarks;
   std::vector<cv::Point2d> subset_observations;
-   Eigen::Vector3d best_pos;
-    Eigen::Matrix3d best_rotation;
+  Eigen::Vector3d best_pos;
+  Eigen::Matrix3d best_rotation;
   cv::Mat best_rvec;
   cv::Mat best_tvec;
 
@@ -575,7 +578,8 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & lan
 
     Eigen::Vector3d pos;
     Eigen::Matrix3d rotation;
-    bool result = P3PWithDistortion(subset_landmarks, subset_observations, params, best_rvec, best_tvec, &pos, &rotation);
+    bool result =
+      P3PWithDistortion(subset_landmarks, subset_observations, params, best_rvec, best_tvec, &pos, &rotation);
     if (!result)
       continue;
     Eigen::Affine3d cam_t_global;
@@ -614,8 +618,8 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & lan
   for (size_t idx : inliers) {
     inlier_landmarks.push_back(landmarks[idx]);
     inlier_observations.push_back(observations[idx]);
-    cv_inlier_landmarks.push_back(cv::Point3d(landmarks[idx][0],landmarks[idx][1], landmarks[idx][2])); 
-    cv_inlier_observations.push_back(cv::Point2d(observations[idx][0],observations[idx][1]));
+    cv_inlier_landmarks.push_back(cv::Point3d(landmarks[idx][0], landmarks[idx][1], landmarks[idx][2]));
+    cv_inlier_observations.push_back(cv::Point2d(observations[idx][0], observations[idx][1]));
   }
 
 
@@ -668,12 +672,12 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & lan
         std::back_inserter(*inlier_observations_out));
   }
 
- for (size_t i = 0; i < inlier_landmarks.size(); i++) {
+  for (size_t i = 0; i < inlier_landmarks.size(); i++) {
     Eigen::Vector2d pos = camera_estimate->DistortedImageCoordinates(inlier_landmarks[i]);
       /*std::cout << "pos: " << pos.x() << ", " << pos.y() << std::endl;
       std::cout << "obs: " << observations[i].x() << ", " << observations[i].y() << std::endl;*/
       const double norm = (inlier_observations[i] - pos).squaredNorm();
-      //std::cout << "norm: " << norm << std::endl;*/
+      // std::cout << "norm: " << norm << std::endl;*/
       if (norm > 9) {
         std::cout << "result large norm inlier!!" << std::endl;
       }
