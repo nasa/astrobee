@@ -22,7 +22,7 @@ project(calibration)
 if (USE_ROS)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} camera localization_common msg_conversions optimization_common sparse_mapping 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} camera ff_nodelet localization_common msg_conversions optimization_common sparse_mapping 
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
   CATKIN_DEPENDS roscpp rosbag
   DEPENDS 
@@ -30,7 +30,7 @@ catkin_package(
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${CERES_LIBRARIES} camera localization_common optimization_common sparse_mapping 
+  LIBS ${catkin_LIBRARIES} ${CERES_LIBRARIES} camera ff_nodelet localization_common optimization_common sparse_mapping 
   INC ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} 
 )
 
