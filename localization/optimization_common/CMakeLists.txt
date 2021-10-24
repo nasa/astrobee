@@ -17,26 +17,18 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 
-project(calibration)
-
-if (USE_ROS)
+project(optimization_common)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} camera localization_common msg_conversions optimization_common sparse_mapping 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} localization_common
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
-  CATKIN_DEPENDS roscpp rosbag
+  CATKIN_DEPENDS 
   DEPENDS 
 )
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${CERES_LIBRARIES} camera localization_common optimization_common sparse_mapping 
+  LIBS ${catkin_LIBRARIES} ${CERES_LIBRARIES} localization_common 
   INC ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} 
+  DEPS
 )
-
-create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME}
-  INC ${catkin_INCLUDE_DIRS}
-)
-
-endif (USE_ROS)

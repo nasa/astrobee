@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+add_subdirectory(calibration)
 add_subdirectory(ekf_bag)
 add_subdirectory(graph_bag)
 add_subdirectory(imu_bias_tester)
