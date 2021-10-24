@@ -44,6 +44,7 @@ class CameraModel {
   // undistorted and relative to the center of the undistorted image.
   Eigen::Vector2d ImageCoordinates(const Eigen::Vector3d & p) const;
   Eigen::Vector2d ImageCoordinates(double x, double y, double z) const;
+  Eigen::Vector2d DistortedImageCoordinates(const Eigen::Vector3d& p) const;
 
   // outputs 3D coordinates in camera frame
   Eigen::Vector3d CameraCoordinates(const Eigen::Vector3d & p) const;
