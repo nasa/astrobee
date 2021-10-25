@@ -303,10 +303,11 @@ fi
 
 if [ $native_build == 1 ] ; then
     echo "configuring for native linux..."
+    catkin init
     enable_gazebo=" -DENABLE_GAZEBO=on"
 
     # Add our cmake to paths and bashrc
-    grep -qF 'source /opt/ros/'$ros_version ~/.bashrc || echo source /opt/ros/'$ros_version' >> ~/.bashrc
+    grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
     cmake_astrobee_path=`catkin locate -s`/cmake
     grep -qF ${cmake_astrobee_path} ~/.bashrc \
       || echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
@@ -327,6 +328,7 @@ fi
 
 if [ $armhf_build == 1 ] ; then
     echo "configuring for armhf..."
+    catkin init
     armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake"
     use_ctc=" -DUSE_CTC=on"
     enable_gazebo=""
