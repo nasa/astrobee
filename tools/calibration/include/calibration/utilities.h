@@ -61,7 +61,7 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
       // Add 1 to each value so background pixels stay white and we can map these back to white
       // after applying colormap
       const int error_color = std::round(std::min(error, MAX_ERROR) / MAX_ERROR * 254.0) + 1;
-      cv::circle(reprojection_image_grayscale, rounded_image_point, 2, cv::Scalar(error_color), -1);
+      cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(error_color), -1);
     }
   }
   // TODO(rsoussan): pass filepath!
