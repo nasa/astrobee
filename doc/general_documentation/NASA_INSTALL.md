@@ -52,20 +52,17 @@ reach `astrobee.ndc.nasa.gov`:
 
   1. Use VPN to act like if you were inside the ARC TI private network and 
      obtain the correct kerberos credentials inside the VM with the following
-     command (note the capitalization):
-```
-kinit $NDC_USERNAME@NDC.NASA.GOV`
-```
+     command (note the capitalization): `kinit $NDC_USERNAME@NDC.NASA.GOV`
   2. setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
   is available at: https://babelfish.arc.nasa.gov/trac/freeflyer/wiki/SSHSetup
 
 For either solution, please verify that you can SSH to `m.ndc.nasa.gov` without
 entering your password (`m` is used to tunnel to `astrobee.ndc.nasa.gov`):
 
-   ssh $NDC_USERNAME@m.ndc.nasa.gov
+   `ssh $NDC_USERNAME@m.ndc.nasa.gov`
    
 The command should succeed without entering your password. Once this is verified,
-exit this session on `m` with <ctrl>+D.
+exit this session on `m` with `<ctrl>+D`.
 
 - These notes apply to `install_desktop_16.04_packages.sh` and `make_xenial.sh`
 
