@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
   LogError("init intrinsics: " << std::endl << initial_intrinsics.matrix());
   LogError("init distortion: " << std::endl << initial_distortion.matrix());
   Eigen::Matrix3d calibrated_intrinsics;
-  Eigen::Matrix<double, 4, 1> calibrated_distortion;
+  Eigen::VectorXd calibrated_distortion;
   calibrator.Calibrate(target_matches, *(calibrator.params().camera_params), initial_intrinsics, initial_distortion,
                        calibrated_intrinsics, calibrated_distortion);
   LogError("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());

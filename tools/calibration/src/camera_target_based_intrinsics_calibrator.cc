@@ -51,7 +51,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
                                                       const Eigen::Matrix3d& initial_intrinsics,
                                                       const Eigen::VectorXd& initial_distortion,
                                                       Eigen::Matrix3d& calibrated_intrinsics,
-                                                      Eigen::Matrix<double, 4, 1>& calibrated_distortion) {
+                                                      Eigen::VectorXd& calibrated_distortion) {
   Eigen::Matrix<double, 4, 1> intrinsics = oc::VectorFromIntrinsicsMatrix(initial_intrinsics);
   Eigen::VectorXd distortion = initial_distortion;
   ceres::Problem problem;
