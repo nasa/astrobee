@@ -35,6 +35,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   // Other
   int max_num_match_sets;
   std::shared_ptr<camera::CameraParameters> camera_params;
+  std::string camera_name;
   // fov or radtan
   std::string distortion_type;
 };

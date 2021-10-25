@@ -91,8 +91,8 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.linear_solver = mc::LoadString(config, "linear_solver");
   params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
-  const std::string camera = mc::LoadString(config, "camera");
-  params.camera_params.reset(new camera::CameraParameters(&config, camera.c_str()));
+  params.camera_name = mc::LoadString(config, "camera");
+  params.camera_params.reset(new camera::CameraParameters(&config, params.camera_name.c_str()));
   params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
@@ -144,6 +144,7 @@ int main(int argc, char** argv) {
   if (!boost::filesystem::is_directory(corners_directory)) {
     LogFatal("Corners directory " << corners_directory << " not found.");
   }
+  LogInfo("Calibrating " << robot_config_file << ", camera: " << params.camera_name);
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
   LogInfo("num target match sets: " << target_matches.size());
   ca::CameraTargetBasedIntrinsicsCalibrator calibrator(params);
