@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <calibration/calibrator_params.h>
+#include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
 #include <ff_common/init.h>
 #include <ff_common/utils.h>
@@ -82,7 +82,8 @@ std::vector<lc::ImageCorrespondences> LoadAllTargetMatches(const std::string& co
   return all_matches;
 }
 
-void LoadCalibratorParams(config_reader::ConfigReader& config, ca::CalibratorParams& params) {
+void LoadCalibratorParams(config_reader::ConfigReader& config,
+                          ca::CameraTargetBasedIntrinsicsCalibratorParams& params) {
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
@@ -134,7 +135,7 @@ int main(int argc, char** argv) {
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  ca::CalibratorParams params;
+  ca::CameraTargetBasedIntrinsicsCalibratorParams params;
   LoadCalibratorParams(config, params);
 
   std::vector<lc::ImageCorrespondences> target_matches;

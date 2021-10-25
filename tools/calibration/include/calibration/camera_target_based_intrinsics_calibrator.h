@@ -19,7 +19,7 @@
 #define CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_H_
 
 #include <camera/camera_params.h>
-#include <calibration/calibrator_params.h>
+#include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <localization_common/image_correspondences.h>
 #include <localization_common/logger.h>
 
@@ -31,16 +31,17 @@
 namespace calibration {
 class CameraTargetBasedIntrinsicsCalibrator {
  public:
-  explicit CameraTargetBasedIntrinsicsCalibrator(const CalibratorParams& params) : params_(params) {}
+  explicit CameraTargetBasedIntrinsicsCalibrator(const CameraTargetBasedIntrinsicsCalibratorParams& params)
+      : params_(params) {}
   void Calibrate(const std::vector<localization_common::ImageCorrespondences>& match_sets,
                  const camera::CameraParameters& camera_params, const Eigen::Matrix3d& initial_intrinsics,
                  const Eigen::VectorXd& initial_distortion, Eigen::Matrix3d& calibrated_intrinsics,
                  Eigen::Matrix<double, 4, 1>& calibrated_distortion);
 
-  const CalibratorParams& params() { return params_; }
+  const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }
 
  private:
-  CalibratorParams params_;
+  CameraTargetBasedIntrinsicsCalibratorParams params_;
 };
 }  // namespace calibration
 

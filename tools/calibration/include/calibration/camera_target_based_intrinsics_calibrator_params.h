@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_CALIBRATOR_PARAMS_H_
-#define CALIBRATION_CALIBRATOR_PARAMS_H_
+#ifndef CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
+#define CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
 
 #include <camera/camera_params.h>
 
@@ -24,7 +24,7 @@
 #include <string>
 
 namespace calibration {
-struct CalibratorParams {
+struct CameraTargetBasedIntrinsicsCalibratorParams {
   bool calibrate_intrinsics;
   bool calibrate_distortion;
   // Optimization Options
@@ -38,4 +38,4 @@ struct CalibratorParams {
 };
 }  // namespace calibration
 
-#endif  // CALIBRATION_CALIBRATOR_PARAMS_H_
+#endif  // CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
