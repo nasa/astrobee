@@ -143,17 +143,21 @@ int main(int argc, char** argv) {
     LogFatal("Corners directory " << corners_directory << " not found.");
   }
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
-  LogError("num target match sets: " << target_matches.size());
+  LogInfo("num target match sets: " << target_matches.size());
   ca::CameraTargetBasedIntrinsicsCalibrator calibrator(params);
   const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
   const Eigen::VectorXd initial_distortion = calibrator.params().camera_params->GetDistortion();
-  LogError("init intrinsics: " << std::endl << initial_intrinsics.matrix());
-  LogError("init distortion: " << std::endl << initial_distortion.matrix());
   Eigen::Matrix3d calibrated_intrinsics;
   Eigen::VectorXd calibrated_distortion;
   calibrator.Calibrate(target_matches, *(calibrator.params().camera_params), initial_intrinsics, initial_distortion,
                        calibrated_intrinsics, calibrated_distortion);
-  LogError("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());
-  LogError("calibrated distortion: " << std::endl << calibrated_distortion.matrix());
+  if (params_.calibrate_intrinsics) {
+    LogInfo("initial intrinsics: " << std::endl << initial_intrinsics.matrix());
+    LogInfo("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());
+  }
+  if (params_.calibrate_distortion) {
+    LogInfo("initial distortion: " << std::endl << initial_distortion.matrix());
+    LogInfo("calibrated distortion: " << std::endl << calibrated_distortion.matrix());
+  }
   // TODO(rsoussan): write this to file! also write summary stats? time take? final total error? etc?*/
 }
