@@ -30,6 +30,7 @@
 
 #include <boost/optional.hpp>
 
+#include <algorithm>
 #include <vector>
 
 namespace calibration {
@@ -44,7 +45,7 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
   // TODO(rsoussan): get these from somewhere else
   constexpr int image_height = 960;
   constexpr int image_width = 1280;
-  cv::Mat reprojection_image(image_height, image_width, CV_8UC3, cv::Scalar(0, 0, 0));
+  cv::Mat reprojection_image_grayscale(image_height, image_width, CV_8UC1, cv::Scalar(0));
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
     const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
@@ -54,17 +55,23 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
       const Eigen::Vector2d projected_image_point = Project3dPointToImageSpaceWithDistortion<DISTORTION>(
         camera_t_target_point, calibrated_intrinsics, calibrated_distortion);
-      // std::cout << "image point: " << image_point.matrix() << std::endl << "projected point: " <<
-      // projected_image_point.matrix() << std::endl;
       const double error = (image_point - projected_image_point).norm();
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
-      // TODO(rsoussan): get color for image point using error!
-      cv::circle(reprojection_image, rounded_image_point, 1, cv::Scalar(0, 255, 0), -1);
-      std::cout << "error: " << error << std::endl;
+      constexpr double MAX_ERROR = 100.0;
+      // Add 1 to each value so background pixels stay white and we can map these back to white
+      // after applying colormap
+      const int error_color = std::round(std::min(error, MAX_ERROR) / MAX_ERROR * 254.0) + 1;
+      cv::circle(reprojection_image_grayscale, rounded_image_point, 2, cv::Scalar(error_color), -1);
     }
   }
   // TODO(rsoussan): pass filepath!
-  cv::imwrite("reprojection_image.jpg", reprojection_image);
+  cv::Mat reprojection_image_color;
+  cv::applyColorMap(reprojection_image_grayscale, reprojection_image_color, cv::COLORMAP_JET);
+  // Map white pixels back from lowest JET value (128, 0, 0) to white
+  cv::Mat base_mask;
+  cv::inRange(reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
+  reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
+  cv::imwrite("reprojection_image.jpg", reprojection_image_color);
 }
 }  // namespace calibration
 
