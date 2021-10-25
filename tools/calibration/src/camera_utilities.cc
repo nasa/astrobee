@@ -131,7 +131,6 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
 
   // Need the minimum number of observations
   if (observations.size() < 4) {
-    std::cout << "too few obs!!" << std::endl;
     return false;
   }
 
@@ -172,8 +171,6 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
 
   // TODO(bcoltin): Return some sort of confidence?
   if (best_inliers < min_num_inliers) {
-    std::cout << "too few inliers!!" << std::endl;
-    std::cout << " need " << min_num_inliers << " inliears, got " << best_inliers << std::endl;
     return false;
   }
 
@@ -217,7 +214,6 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
   if (verbose) std::cout << "Number of inliers with refined camera: " << best_inliers << "\n";
 
   if (best_inliers < min_num_inliers) {
-    std::cout << "too few inliears 2!" << std::endl;
     return false;
   }
 

@@ -72,7 +72,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
   for (const auto& match_set : match_sets) {
     const auto& camera_T_target = CameraTTarget(camera_params, match_set);
     if (!camera_T_target) {
-      LogError("Failed to get camera_T_target.");
+      LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
       continue;
     }
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
