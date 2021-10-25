@@ -16,9 +16,8 @@
  * under the License.
  */
 
-#include <camera/camera_model.h>
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
-#include <calibration/camera_utilities.h>
+#include <calibration/utilities.h>
 #include <localization_common/logger.h>
 #include <optimization_common/fov_distortion.h>
 #include <optimization_common/radtan_distortion.h>
@@ -31,20 +30,6 @@
 namespace calibration {
 namespace lc = localization_common;
 namespace oc = optimization_common;
-
-boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters& camera,
-                                                 const lc::ImageCorrespondences& matches) {
-  Eigen::Isometry3d camera_T_target(Eigen::Isometry3d::Identity());
-  constexpr int num_ransac_iterations = 100;
-  constexpr int ransac_inlier_tolerance = 3;
-  camera::CameraModel cam_model(camera_T_target, camera);
-  // TODO(rsoussan): add num inliers as param
-  constexpr int min_num_inliers = 4;
-  if (!RansacEstimateCameraWithDistortion(matches.points_3d, matches.image_points, num_ransac_iterations,
-                                          ransac_inlier_tolerance, min_num_inliers, &cam_model))
-    return boost::none;
-  return Eigen::Isometry3d(cam_model.GetTransform().matrix());
-}
 
 void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::ImageCorrespondences>& match_sets,
                                                       const camera::CameraParameters& camera_params,
