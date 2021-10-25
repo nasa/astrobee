@@ -271,4 +271,8 @@ int RandomInt(int min, int max) {
   std::uniform_int_distribution<int> random_item(min, max - 1);
   return random_item(generator);
 }
+
+Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics) {
+  return (intrinsics * cam_t_point).hnormalized();
+}
 }  // namespace calibration

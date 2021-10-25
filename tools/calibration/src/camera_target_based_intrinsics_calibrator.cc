@@ -53,6 +53,8 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
     problem.SetParameterBlockConstant(distortion.data());
 
   std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
+  // TODO(rsoussan): More efficient way to do this
+  std::vector<lc::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {
     const auto& camera_T_target = CameraTTarget(camera_params, match_set);
@@ -61,6 +63,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
       continue;
     }
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
+    valid_match_sets.emplace_back(match_set);
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       if (params_.distortion_type == "fov") {
@@ -97,5 +100,14 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
   std::cout << summary.FullReport() << "\n";
   calibrated_intrinsics = oc::Intrinsics<double>(intrinsics.data());
   calibrated_distortion = distortion;
+  if (params_.distortion_type == "fov") {
+    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
+                                              calibrated_distortion);
+  } else if (params_.distortion_type == "radtan") {
+    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
+                                                 calibrated_distortion);
+  } else {
+    LogFatal("Invalid distortion type provided.");
+  }
 }
 }  // namespace calibration

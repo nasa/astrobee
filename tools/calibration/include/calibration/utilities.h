@@ -19,15 +19,51 @@
 #define CALIBRATION_UTILITIES_H_
 
 #include <camera/camera_params.h>
+#include <calibration/camera_utilities.h>
 #include <localization_common/image_correspondences.h>
+#include <optimization_common/utilities.h>
 
 #include <Eigen/Geometry>
 
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+
 #include <boost/optional.hpp>
+
+#include <vector>
 
 namespace calibration {
 boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters& camera,
                                                  const localization_common::ImageCorrespondences& matches);
+
+template <typename DISTORTION>
+void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
+                            const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
+                            const Eigen::Matrix3d& calibrated_intrinsics,
+                            const Eigen::VectorXd& calibrated_distortion) {
+  // TODO(rsoussan): get these from somewhere else
+  constexpr int image_height = 960;
+  constexpr int image_width = 1280;
+  cv::Mat reprojection_image(image_height, image_width, CV_8UC3, cv::Scalar(0, 0, 0));
+  for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
+    const auto& match_set = valid_match_sets[i];
+    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
+    for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
+      const auto& image_point = match_set.image_points[i];
+      const auto& target_point = match_set.points_3d[i];
+      const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
+      const Eigen::Vector2d projected_image_point = Project3dPointToImageSpaceWithDistortion<DISTORTION>(
+        camera_t_target_point, calibrated_intrinsics, calibrated_distortion);
+      const double error = (image_point - projected_image_point).norm();
+      const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
+      // TODO(rsoussan): get color for image point using error!
+      cv::circle(reprojection_image, rounded_image_point, 1, cv::Scalar(0, 255, 0), -1);
+      std::cout << "error: " << error << std::endl;
+    }
+  }
+  // TODO(rsoussan): pass filepath!
+  cv::imwrite("reprojection_image.jpg", reprojection_image);
+}
 }  // namespace calibration
 
 #endif  // CALIBRATION_UTILITIES_H_

@@ -47,5 +47,16 @@ void SelectRandomObservations(const std::vector<Eigen::Vector3d>& all_landmarks,
                               std::vector<cv::Point3d>* landmarks, std::vector<cv::Point2d>* observations);
 // Random integer between min (inclusive) and max (exclusive)
 int RandomInt(int min, int max);
+
+Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics);
+
+template <typename DISTORTION>
+Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
+                                                         const Eigen::Matrix3d& intrinsics,
+                                                         const Eigen::VectorXd& distortion_params) {
+  const Eigen::Vector2d undistorted_image_point = Project3dPointToImageSpace(cam_t_point, intrinsics);
+  const DISTORTION distortion;
+  return distortion.Distort(distortion_params, intrinsics, undistorted_image_point);
+}
 }  // namespace calibration
 #endif  // CALIBRATION_CAMERA_UTILITIES_H_
