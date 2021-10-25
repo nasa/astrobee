@@ -90,7 +90,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, ca::CalibratorPar
   params.calibrate_depth_image_A_depth_haz = mc::LoadBool(config, "calibrate_depth_image_A_depth_haz");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
   const std::string camera = mc::LoadString(config, "camera");
-  params.camera_params.reset(new camera::CameraParameters(&config, camera));
+  params.camera_params.reset(new camera::CameraParameters(&config, camera.c_str()));
   params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
