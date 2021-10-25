@@ -89,7 +89,8 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, ca::CalibratorPar
   params.calibrate_intrinsics = mc::LoadBool(config, "calibrate_intrinsics");
   params.calibrate_depth_image_A_depth_haz = mc::LoadBool(config, "calibrate_depth_image_A_depth_haz");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
-  params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
+  const std::string camera = mc::LoadString(config, "camera");
+  params.camera_params.reset(new camera::CameraParameters(&config, camera));
   params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
@@ -98,9 +99,9 @@ int main(int argc, char** argv) {
   std::string world;
   std::string corners_directory;
   po::options_description desc("Calibrates camera intrinsics using target detections.");
-  desc.add_options()("help", "produce help message")("config-path,c", po::value<std::string>()->required(),
-                                                     "Config path")(
+  desc.add_options()("help", "produce help message")(
     "corners-directory", po::value<std::string>(&corners_directory)->required(), "Corners Directory")(
+    "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
