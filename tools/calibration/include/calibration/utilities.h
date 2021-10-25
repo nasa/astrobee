@@ -31,6 +31,8 @@
 #include <boost/optional.hpp>
 
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 #include <vector>
 
 namespace calibration {
@@ -46,6 +48,8 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
   constexpr int image_height = 960;
   constexpr int image_width = 1280;
   cv::Mat reprojection_image_grayscale(image_height, image_width, CV_8UC1, cv::Scalar(0));
+  std::ofstream errors_file;
+  errors_file.open("errors_file.txt");
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
     const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
@@ -55,12 +59,14 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
       const Eigen::Vector2d projected_image_point = Project3dPointToImageSpaceWithDistortion<DISTORTION>(
         camera_t_target_point, calibrated_intrinsics, calibrated_distortion);
-      const double error = (image_point - projected_image_point).norm();
+      const Eigen::Vector2d error = (image_point - projected_image_point);
+      const double error_norm = error.norm();
+      errors_file << error.x() << " " << error.y() << std::endl;
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
       constexpr double MAX_ERROR = 100.0;
       // Add 1 to each value so background pixels stay white and we can map these back to white
       // after applying colormap
-      const int error_color = std::round(std::min(error, MAX_ERROR) / MAX_ERROR * 254.0) + 1;
+      const int error_color = std::round(std::min(error_norm, MAX_ERROR) / MAX_ERROR * 254.0) + 1;
       cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(error_color), -1);
     }
   }
@@ -72,6 +78,7 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
   cv::inRange(reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
   reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
   cv::imwrite("reprojection_image.jpg", reprojection_image_color);
+  errors_file.close();
 }
 }  // namespace calibration
 
