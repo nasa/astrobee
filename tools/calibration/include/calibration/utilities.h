@@ -49,11 +49,13 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
     const auto& match_set = valid_match_sets[i];
     const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
     for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
-      const auto& image_point = match_set.image_points[i];
-      const auto& target_point = match_set.points_3d[i];
+      const auto& image_point = match_set.image_points[j];
+      const auto& target_point = match_set.points_3d[j];
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
       const Eigen::Vector2d projected_image_point = Project3dPointToImageSpaceWithDistortion<DISTORTION>(
         camera_t_target_point, calibrated_intrinsics, calibrated_distortion);
+      // std::cout << "image point: " << image_point.matrix() << std::endl << "projected point: " <<
+      // projected_image_point.matrix() << std::endl;
       const double error = (image_point - projected_image_point).norm();
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
       // TODO(rsoussan): get color for image point using error!
