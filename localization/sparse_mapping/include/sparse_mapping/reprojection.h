@@ -104,11 +104,6 @@ size_t CountInliers(const std::vector<Eigen::Vector3d> & landmarks,
     const camera::CameraModel & camera, int tolerance,
     std::vector<size_t>* inliers);
 
-size_t CountInliersWithDistortion(const std::vector<Eigen::Vector3d> & landmarks,
-    const std::vector<Eigen::Vector2d> & observations,
-    const camera::CameraModel & camera, int tolerance,
-    std::vector<size_t>* inliers);
-
 /**
  * Estimate the camera matrix, with translation and rotation, that maps the points in landmarks
  * to the image coordinates observed in observations. This uses a least squares solver
@@ -132,13 +127,6 @@ void EstimateCamera(camera::CameraModel * camera_estimate, std::vector<Eigen::Ve
  * Returns zero on success, nonzero on failure.
  **/
 int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
-                         const std::vector<Eigen::Vector2d> & observations,
-                         int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
-                         std::vector<Eigen::Vector3d> * inlier_landmarks_out = NULL,
-                         std::vector<Eigen::Vector2d> * inlier_observations_out = NULL,
-                         bool verbose = false);
-
-bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d> & landmarks,
                          const std::vector<Eigen::Vector2d> & observations,
                          int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
                          std::vector<Eigen::Vector3d> * inlier_landmarks_out = NULL,

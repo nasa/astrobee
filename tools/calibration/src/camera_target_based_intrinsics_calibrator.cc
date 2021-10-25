@@ -18,12 +18,12 @@
 
 #include <camera/camera_model.h>
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
+#include <calibration/camera_utilities.h>
 #include <localization_common/logger.h>
 #include <optimization_common/fov_distortion.h>
 #include <optimization_common/radtan_distortion.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
-#include <sparse_mapping/reprojection.h>
 
 #include <ceres/ceres.h>
 #include <ceres/solver.h>
@@ -38,8 +38,11 @@ boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters&
   constexpr int num_ransac_iterations = 100;
   constexpr int ransac_inlier_tolerance = 3;
   camera::CameraModel cam_model(camera_T_target, camera);
-  if (!sparse_mapping::RansacEstimateCameraWithDistortion(matches.points_3d, matches.image_points,
-                                                          num_ransac_iterations, ransac_inlier_tolerance, &cam_model))
+  LogError("num matches: " << matches.image_points.size());
+  // TODO(rsoussan): add num inliers as param
+  constexpr int min_num_inliers = 4;
+  if (!RansacEstimateCameraWithDistortion(matches.points_3d, matches.image_points, num_ransac_iterations,
+                                          ransac_inlier_tolerance, min_num_inliers, &cam_model))
     return boost::none;
   return Eigen::Isometry3d(cam_model.GetTransform().matrix());
 }
