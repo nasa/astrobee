@@ -26,7 +26,6 @@
 namespace calibration {
 struct CalibratorParams {
   bool calibrate_intrinsics;
-  bool calibrate_depth_image_A_depth_haz;
   bool calibrate_distortion;
   // Optimization Options
   int max_num_iterations;

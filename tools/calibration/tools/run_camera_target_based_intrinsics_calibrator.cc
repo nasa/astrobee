@@ -87,7 +87,6 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, ca::CalibratorPar
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
   params.calibrate_intrinsics = mc::LoadBool(config, "calibrate_intrinsics");
-  params.calibrate_depth_image_A_depth_haz = mc::LoadBool(config, "calibrate_depth_image_A_depth_haz");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
   const std::string camera = mc::LoadString(config, "camera");
   params.camera_params.reset(new camera::CameraParameters(&config, camera.c_str()));
