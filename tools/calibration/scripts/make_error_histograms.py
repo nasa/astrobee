@@ -21,7 +21,10 @@ import csv
 import os
 import sys
 
+import matplotlib
+matplotlib.use("pdf")
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def make_histograms(errors_file):
@@ -38,23 +41,24 @@ def make_histograms(errors_file):
       y_errors.append(y_error)
       error_norms.append(error_norm)
 
-  plt.hist(x_errors, bins=100)
-  plt.ylabel('Count')
-  plt.xlabel('X Errors')
-  plt.savefig('x_errors_histogram.png')
-  plt.clf()
+  with PdfPages('errors_histograms.pdf') as pdf:
+    plt.hist(x_errors, bins=100)
+    plt.ylabel('Count')
+    plt.xlabel('X Errors')
+    pdf.savefig()
+    plt.close()
 
-  plt.hist(y_errors, bins=100)
-  plt.ylabel('Count')
-  plt.xlabel('Y Errors')
-  plt.savefig('y_errors_histogram.png')
-  plt.clf()
+    plt.hist(y_errors, bins=100)
+    plt.ylabel('Count')
+    plt.xlabel('Y Errors')
+    pdf.savefig()
+    plt.close()
 
-  plt.hist(error_norms, bins=100)
-  plt.ylabel('Count')
-  plt.xlabel('Error Norms')
-  plt.savefig('error_norms_histogram.png')
-  plt.clf()
+    plt.hist(error_norms, bins=100)
+    plt.ylabel('Count')
+    plt.xlabel('Error Norms')
+    pdf.savefig()
+    plt.close()
 
 
 if __name__ == "__main__":
