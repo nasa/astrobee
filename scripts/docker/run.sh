@@ -63,7 +63,7 @@ docker run -it --rm --name astrobee \
         --user="astrobee" \
         --gpus all \
       astrobee/astrobee:latest-ubuntu16.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false robot:=sim_pub
 elif [ "$os" = "bionic" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
@@ -72,7 +72,7 @@ docker run -it --rm --name astrobee \
         --env="DISPLAY" \
         --user="astrobee" \
       astrobee/astrobee:latest-ubuntu18.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false robot:=sim_pub
 elif [ "$os" = "focal" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
@@ -81,5 +81,5 @@ docker run -it --rm --name astrobee \
         --env="DISPLAY" \
         --user="astrobee" \
       astrobee/astrobee:latest-ubuntu20.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false robot:=sim_pub
 fi
