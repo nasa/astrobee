@@ -119,7 +119,7 @@ class AffineReprojectionError {
     const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_.cast<T>();
     const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * depth_image_F_point_3d).hnormalized();
     const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
-      Distort(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
+      DistortRadTan(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
 
     reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
     reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];
@@ -146,7 +146,7 @@ class ReprojectionError {
     const Eigen::Matrix<T, 3, 1> camera_t_point_3d = camera_T_target * target_t_point_3d_.cast<T>();
     const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * camera_t_point_3d).hnormalized();
     const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
-      Distort(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
+      DistortRadTan(distortion_data, intrinsics_data, undistorted_reprojected_point_3d);
 
     reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
     reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];

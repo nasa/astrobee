@@ -58,7 +58,7 @@ Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {
 // Assumes compact quaternion parameterization for rotations
 // TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
 template <typename T>
-static Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
+Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
   Eigen::Map<const Eigen::Matrix<T, 3, 1>> compact_quaternion(affine_data);
   Eigen::Matrix<T, 3, 3> rotation;
   // For a quaternion, sqrt(x^2+y^2+z^2+w^2) = 1
@@ -86,7 +86,7 @@ static Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
 
 // Assumes storage as focal lengths followed by principal points
 template <typename T>
-static Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
+Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
   Eigen::Matrix<T, 3, 3> intrinsics(Eigen::Matrix<T, 3, 3>::Identity());
   intrinsics(0, 0) = intrinsics_data[0];
   intrinsics(1, 1) = intrinsics_data[1];
@@ -96,8 +96,31 @@ static Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
 }
 
 template <typename T>
-static Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
-                                      const Eigen::Matrix<T, 2, 1>& undistorted_point) {
+Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolute_point, const T* const intrinsics) {
+  const T& f_x = intrinsics[0];
+  const T& f_y = intrinsics[1];
+  const T& p_x = intrinsics[2];
+  const T& p_y = intrinsics[3];
+
+  const T& x = absolute_point[0];
+  const T& y = absolute_point[1];
+  const T relative_x = (x - p_x) / f_x;
+  const T relative_y = (y - p_y) / f_y;
+  return Eigen::Matrix<T, 2, 1>(relative_x, relative_y);
+}
+
+template <typename T>
+Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point, const T* const intrinsics) {
+  const T& f_x = intrinsics[0];
+  const T& f_y = intrinsics[1];
+  const T& p_x = intrinsics[2];
+  const T& p_y = intrinsics[3];
+  return Eigen::Matrix<T, 2, 1>(relative_point[0] * f_x + p_x, relative_point[1] * f_y + p_y);
+}
+
+template <typename T>
+Eigen::Matrix<T, 2, 1> DistortRadTan(const T* distortion, const T* intrinsics,
+                                     const Eigen::Matrix<T, 2, 1>& undistorted_point) {
   const T& k1 = distortion[0];
   const T& k2 = distortion[1];
   const T& p1 = distortion[2];
@@ -105,17 +128,9 @@ static Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
   // TODO(rsoussan): Support 5 distortion params
   const T k3(0.0);
 
-  const T& f_x = intrinsics[0];
-  const T& f_y = intrinsics[1];
-  const T& p_x = intrinsics[2];
-  const T& p_y = intrinsics[3];
-
-  // Distortion model expects image coordinates to be in relative coordinates
-  const T& x = undistorted_point[0];
-  const T& y = undistorted_point[1];
-  const T relative_x = (x - p_x) / f_x;
-  const T relative_y = (y - p_y) / f_y;
-
+  const Eigen::Matrix<T, 2, 1> relative_coordinates = RelativeCoordinates(undistorted_point, intrinsics);
+  const T& relative_x = relative_coordinates[0];
+  const T& relative_y = relative_coordinates[1];
   // Squared norm
   const T r2 = relative_x * relative_x + relative_y * relative_y;
 
@@ -130,9 +145,31 @@ static Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
   distorted_relative_y =
     distorted_relative_y + (p1 * (r2 + 2.0 * relative_y * relative_y) + 2.0 * p2 * relative_x * relative_y);
 
-  // Convert back to absolute coordinates
-  const Eigen::Matrix<T, 2, 1> distorted_point(distorted_relative_x * f_x + p_x, distorted_relative_y * f_y + p_y);
-  return distorted_point;
+  return AbsoluteCoordinates(Eigen::Matrix<T, 2, 1>(distorted_relative_x, distorted_relative_y), intrinsics);
+}
+
+template <typename T>
+Eigen::Matrix<T, 2, 1> DistortFOV(const T* distortion, const T* intrinsics,
+                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) {
+  // Distortion model expects image coordinates to be in relative coordinates
+  const Eigen::Matrix<T, 2, 1> relative_coordinates = RelativeCoordinates(undistorted_point, intrinsics);
+  const T& relative_x = relative_coordinates[0];
+  const T& relative_y = relative_coordinates[1];
+
+  // Squared norm
+  const T r2 = relative_x * relative_x + relative_y * relative_y;
+  const T& w = distortion[0];
+  T warping;
+  if (r2 > 1e-5) {
+    const T a = 2 * ceres::tan(w / 2.0);
+    const T b = ceres::atan(r2 * a) / w;
+    warping = b / r2;
+  } else {
+    warping = 1;
+  }
+  const T distorted_relative_x = warping * relative_x;
+  const T distorted_relative_y = warping * relative_y;
+  return AbsoluteCoordinates(Eigen::Matrix<T, 2, 1>(distorted_relative_x, distorted_relative_y), intrinsics);
 }
 
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
