@@ -38,7 +38,6 @@ boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters&
   constexpr int num_ransac_iterations = 100;
   constexpr int ransac_inlier_tolerance = 3;
   camera::CameraModel cam_model(camera_T_target, camera);
-  LogError("num matches: " << matches.image_points.size());
   // TODO(rsoussan): add num inliers as param
   constexpr int min_num_inliers = 4;
   if (!RansacEstimateCameraWithDistortion(matches.points_3d, matches.image_points, num_ransac_iterations,
@@ -75,8 +74,6 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
     if (!camera_T_target) {
       LogError("Failed to get camera_T_target.");
       continue;
-    } else {
-      LogError("Got camera_T_target, adding parameter block and cost functions.");
     }
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
