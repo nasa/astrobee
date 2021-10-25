@@ -151,11 +151,11 @@ int main(int argc, char** argv) {
   Eigen::VectorXd calibrated_distortion;
   calibrator.Calibrate(target_matches, *(calibrator.params().camera_params), initial_intrinsics, initial_distortion,
                        calibrated_intrinsics, calibrated_distortion);
-  if (params_.calibrate_intrinsics) {
+  if (params.calibrate_intrinsics) {
     LogInfo("initial intrinsics: " << std::endl << initial_intrinsics.matrix());
     LogInfo("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());
   }
-  if (params_.calibrate_distortion) {
+  if (params.calibrate_distortion) {
     LogInfo("initial distortion: " << std::endl << initial_distortion.matrix());
     LogInfo("calibrated distortion: " << std::endl << calibrated_distortion.matrix());
   }
