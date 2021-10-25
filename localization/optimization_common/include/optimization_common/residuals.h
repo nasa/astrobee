@@ -176,8 +176,8 @@ void AddSymmetricPointToPlaneCostFunction(const Eigen::Vector3d& source_point, c
 template <typename DISTORTION>
 void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                                        Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
-                                       Eigen::Matrix<double, 4, 1>& intrinsics_vector,
-                                       Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem) {
+                                       Eigen::Matrix<double, 4, 1>& intrinsics_vector, Eigen::VectorXd& distortion,
+                                       ceres::Problem& problem) {
   // change intrinsics to be a parameter! set to constant initially!
   // toggle const vs non const to switch between intrinsics vs affine vs both calibration!!!
   // TODO(rsoussan): pass this? delete at end?
@@ -192,8 +192,8 @@ void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const
 template <typename DISTORTION>
 void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                                  Eigen::Matrix<double, 6, 1>& camera_T_target,
-                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector,
-                                 Eigen::Matrix<double, 4, 1>& distortion, ceres::Problem& problem) {
+                                 Eigen::Matrix<double, 4, 1>& intrinsics_vector, Eigen::VectorXd& distortion,
+                                 ceres::Problem& problem) {
   // TODO(rsoussan): pass this? delete at end?
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
   ceres::CostFunction* reprojection_cost_function =

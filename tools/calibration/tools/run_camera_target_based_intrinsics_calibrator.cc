@@ -146,9 +146,7 @@ int main(int argc, char** argv) {
   LogError("num target match sets: " << target_matches.size());
   ca::CameraTargetBasedIntrinsicsCalibrator calibrator(params);
   const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
-  const Eigen::VectorXd distortion = calibrator.params().camera_params->GetDistortion();
-  const Eigen::Matrix<double, 4, 1> initial_distortion =
-    distortion.size() == 4 ? distortion : Eigen::Matrix<double, 4, 1>::Zero();
+  const Eigen::VectorXd initial_distortion = calibrator.params().camera_params->GetDistortion();
   LogError("init intrinsics: " << std::endl << initial_intrinsics.matrix());
   LogError("init distortion: " << std::endl << initial_distortion.matrix());
   Eigen::Matrix3d calibrated_intrinsics;

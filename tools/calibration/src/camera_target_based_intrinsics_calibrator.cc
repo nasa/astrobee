@@ -47,14 +47,14 @@ boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters&
 void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::ImageCorrespondences>& match_sets,
                                                       const camera::CameraParameters& camera_params,
                                                       const Eigen::Matrix3d& initial_intrinsics,
-                                                      const Eigen::Matrix<double, 4, 1>& initial_distortion,
+                                                      const Eigen::VectorXd& initial_distortion,
                                                       Eigen::Matrix3d& calibrated_intrinsics,
                                                       Eigen::Matrix<double, 4, 1>& calibrated_distortion) {
   Eigen::Matrix<double, 4, 1> intrinsics = oc::VectorFromIntrinsicsMatrix(initial_intrinsics);
-  Eigen::Matrix<double, 4, 1> distortion = initial_distortion;
+  Eigen::VectorXd distortion = initial_distortion;
   ceres::Problem problem;
   problem.AddParameterBlock(intrinsics.data(), 4);
-  problem.AddParameterBlock(distortion.data(), 4);
+  problem.AddParameterBlock(distortion.data(), distortion.size());
 
   if (params_.calibrate_intrinsics)
     LogError("Calibrating intrinsics.");
