@@ -91,7 +91,20 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
   }
 
   ceres::Solver::Options options;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  if (params_.linear_solver == "dense_qr") {
+    options.linear_solver_type = ceres::DENSE_QR;
+  } else if (params_.linear_solver == "dense_schur") {
+    options.linear_solver_type = ceres::DENSE_SCHUR;
+  } else if (params_.linear_solver == "sparse_normal_cholesky") {
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  } else if (params_.linear_solver == "sparse_schur") {
+    options.linear_solver_type = ceres::SPARSE_SCHUR;
+  } else if (params_.linear_solver == "iterative_schur") {
+    options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  } else {
+    LogFatal("Invalid linear solver provided.");
+  }
+  options.use_explicit_schur_complement = params_.use_explicit_schur_complement;
   options.max_num_iterations = params_.max_num_iterations;
   options.function_tolerance = params_.function_tolerance;
   ceres::Solver::Summary summary;

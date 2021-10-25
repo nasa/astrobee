@@ -84,11 +84,13 @@ std::vector<lc::ImageCorrespondences> LoadAllTargetMatches(const std::string& co
 
 void LoadCalibratorParams(config_reader::ConfigReader& config,
                           ca::CameraTargetBasedIntrinsicsCalibratorParams& params) {
-  params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
-  params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
-  params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
   params.calibrate_intrinsics = mc::LoadBool(config, "calibrate_intrinsics");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
+  params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
+  params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
+  params.linear_solver = mc::LoadString(config, "linear_solver");
+  params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
+  params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   const std::string camera = mc::LoadString(config, "camera");
   params.camera_params.reset(new camera::CameraParameters(&config, camera.c_str()));
   params.distortion_type = mc::LoadString(config, "distortion_type");
