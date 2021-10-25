@@ -90,6 +90,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, ca::CalibratorPar
   params.calibrate_depth_image_A_depth_haz = mc::LoadBool(config, "calibrate_depth_image_A_depth_haz");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
   params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
+  params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
 int main(int argc, char** argv) {

@@ -78,9 +78,15 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
-      // TODO(rsoussan): Add option for distortion type!!
-      oc::AddReprojectionCostFunction<oc::FovDistortion>(match_set.image_points[i], match_set.points_3d[i],
-                                                         camera_T_targets.back(), intrinsics, distortion, problem);
+      if (params_.distortion_type == "fov") {
+        oc::AddReprojectionCostFunction<oc::FovDistortion>(match_set.image_points[i], match_set.points_3d[i],
+                                                           camera_T_targets.back(), intrinsics, distortion, problem);
+      } else if (params_.distortion_type == "radtan") {
+        oc::AddReprojectionCostFunction<oc::RadTanDistortion>(match_set.image_points[i], match_set.points_3d[i],
+                                                              camera_T_targets.back(), intrinsics, distortion, problem);
+      } else {
+        LogFatal("Invalid distortion type provided.");
+      }
     }
   }
 

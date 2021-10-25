@@ -21,6 +21,7 @@
 #include <camera/camera_params.h>
 
 #include <memory>
+#include <string>
 
 namespace calibration {
 struct CalibratorParams {
@@ -33,6 +34,8 @@ struct CalibratorParams {
   // Other
   int max_num_match_sets;
   std::shared_ptr<camera::CameraParameters> camera_params;
+  // fov or radtan
+  std::string distortion_type;
 };
 }  // namespace calibration
 
