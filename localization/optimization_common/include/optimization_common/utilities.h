@@ -118,60 +118,6 @@ Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relativ
   return Eigen::Matrix<T, 2, 1>(relative_point[0] * f_x + p_x, relative_point[1] * f_y + p_y);
 }
 
-template <typename T>
-Eigen::Matrix<T, 2, 1> DistortRadTan(const T* distortion, const T* intrinsics,
-                                     const Eigen::Matrix<T, 2, 1>& undistorted_point) {
-  const T& k1 = distortion[0];
-  const T& k2 = distortion[1];
-  const T& p1 = distortion[2];
-  const T& p2 = distortion[3];
-  // TODO(rsoussan): Support 5 distortion params
-  const T k3(0.0);
-
-  const Eigen::Matrix<T, 2, 1> relative_coordinates = RelativeCoordinates(undistorted_point, intrinsics);
-  const T& relative_x = relative_coordinates[0];
-  const T& relative_y = relative_coordinates[1];
-  // Squared norm
-  const T r2 = relative_x * relative_x + relative_y * relative_y;
-
-  // Apply radial distortion
-  const T radial_distortion_coeff = 1.0 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2;
-  T distorted_relative_x = relative_x * radial_distortion_coeff;
-  T distorted_relative_y = relative_y * radial_distortion_coeff;
-
-  // Apply tangential distortion
-  distorted_relative_x =
-    distorted_relative_x + (2.0 * p1 * relative_x * relative_y + p2 * (r2 + 2.0 * relative_x * relative_x));
-  distorted_relative_y =
-    distorted_relative_y + (p1 * (r2 + 2.0 * relative_y * relative_y) + 2.0 * p2 * relative_x * relative_y);
-
-  return AbsoluteCoordinates(Eigen::Matrix<T, 2, 1>(distorted_relative_x, distorted_relative_y), intrinsics);
-}
-
-template <typename T>
-Eigen::Matrix<T, 2, 1> DistortFOV(const T* distortion, const T* intrinsics,
-                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) {
-  // Distortion model expects image coordinates to be in relative coordinates
-  const Eigen::Matrix<T, 2, 1> relative_coordinates = RelativeCoordinates(undistorted_point, intrinsics);
-  const T& relative_x = relative_coordinates[0];
-  const T& relative_y = relative_coordinates[1];
-
-  // Squared norm
-  const T r2 = relative_x * relative_x + relative_y * relative_y;
-  const T& w = distortion[0];
-  T warping;
-  if (r2 > 1e-5) {
-    const T a = 2 * ceres::tan(w / 2.0);
-    const T b = ceres::atan(r2 * a) / w;
-    warping = b / r2;
-  } else {
-    warping = 1;
-  }
-  const T distorted_relative_x = warping * relative_x;
-  const T distorted_relative_y = warping * relative_y;
-  return AbsoluteCoordinates(Eigen::Matrix<T, 2, 1>(distorted_relative_x, distorted_relative_y), intrinsics);
-}
-
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
 
 // Assumes each residual is the same size
