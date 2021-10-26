@@ -56,6 +56,49 @@ class FovDistortion {
     return AbsoluteCoordinates(Eigen::Matrix<T, 2, 1>(distorted_relative_x, distorted_relative_y), intrinsics);
   }
 
+  cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
+                    const Eigen::VectorXd& distortion) {
+    cv::Mat undistorted_image(distorted_image.size(), CV_8UC1, 0);
+    for (int i = 0; i < undistorted_image.rows; ++i) {
+      for (int j = 0; j < undistorted_image.cols; ++j) {
+        const std::uint8_t pixel_val = distorted_image.at<std::uint8_t>(i, j);
+        const auto undistorted_point = Undistort(Eigen::Vector2d(i, j), distortion);
+        if (!undistorted_point) continue;
+        if (undistorted_point->x() >= undistorted_image.cols || undistorted_point->x() < 0) continue;
+        if (undistorted_point->y() >= undistorted_image.rows || undistorted_point->y() < 0) continue;
+        undistorted_image.at<std::uint8_t>(i, j) = pixel_val;
+      }
+    }
+    return undistorted_image;
+  }
+
+  boost::optional<Eigen::Vector2i> Undistort(const Eigen::Vector2d& distorted_point,
+                                             const Eigen::VectorXd& distortion) {
+    const double w = distortion[0];
+    // TODO(rsoussan): Clean this up
+    // Adapted from Kalibr
+    // TODO(rsoussan): Merge with camera params implementation?
+    const double mul2tanwby2 = std::tan(w / 2.0) * 2.0;
+    // Calculate distance from point to center.
+    double r_d = distorted_point.norm();
+    if (mul2tanwby2 == 0 || r_d == 0) {
+      return boost::none;
+    }
+
+    // Calculate undistorted radius of point.
+    double r_u;
+    static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
+    if (std::fabs(r_d * w) <= kMaxValidAngle) {
+      r_u = std::tan(r_d * w) / (r_d * mul2tanwby2);
+    } else {
+      return boost::none;
+    }
+
+    const Eigen::Vector2d undistorted_point = distorted_point * r_u;
+    const Eigen::Vector2i undistorted_rounded_point(std::round(undistorted_point[0]), std::round(undistorted_point[1]));
+    return undistorted_rounded_point;
+  }
+
   static constexpr int NUM_PARAMS = 1;
 };
 }  // namespace optimization_common

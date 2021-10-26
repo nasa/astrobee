@@ -22,6 +22,8 @@
 
 #include <Eigen/Core>
 
+#include <opencv2/core/eigen.hpp>
+
 #include <ceres/ceres.h>
 
 namespace optimization_common {
@@ -61,6 +63,17 @@ class RadTanDistortion {
       distorted_relative_y + (p1 * (r2 + 2.0 * relative_y * relative_y) + 2.0 * p2 * relative_x * relative_y);
 
     return AbsoluteCoordinates(Eigen::Matrix<T, 2, 1>(distorted_relative_x, distorted_relative_y), intrinsics);
+  }
+
+  cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
+                    const Eigen::VectorXd& distortion) {
+    cv::Mat undistorted_image;
+    cv::Mat intrinsics_mat;
+    cv::eigen2cv(intrinsics, intrinsics_mat);
+    cv::Mat distortion_vector;
+    cv::eigen2cv(distortion, distortion_vector);
+    cv::undistort(distorted_image, undistorted_image, intrinsics_mat, distortion_vector);
+    return undistorted_image;
   }
 
   static constexpr int NUM_PARAMS = 1;
