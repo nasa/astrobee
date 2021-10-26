@@ -25,7 +25,8 @@
 
 namespace calibration {
 struct CameraTargetBasedIntrinsicsCalibratorParams {
-  bool calibrate_intrinsics;
+  bool calibrate_focal_lengths;
+  bool calibrate_principal_points;
   bool calibrate_distortion;
   // Optimization Options
   int max_num_iterations;

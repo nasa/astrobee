@@ -31,22 +31,27 @@ namespace calibration {
 namespace lc = localization_common;
 namespace oc = optimization_common;
 
-void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::ImageCorrespondences>& match_sets,
-                                                      const camera::CameraParameters& camera_params,
-                                                      const Eigen::Matrix3d& initial_intrinsics,
-                                                      const Eigen::VectorXd& initial_distortion,
-                                                      Eigen::Matrix3d& calibrated_intrinsics,
-                                                      Eigen::VectorXd& calibrated_distortion) {
-  Eigen::Matrix<double, 4, 1> intrinsics = oc::VectorFromIntrinsicsMatrix(initial_intrinsics);
+void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
+  const std::vector<lc::ImageCorrespondences>& match_sets, const camera::CameraParameters& camera_params,
+  const Eigen::Vector2d& initial_focal_lengths, const Eigen::Vector2d& initial_principal_points,
+  const Eigen::VectorXd& initial_distortion, Eigen::Vector2d& calibrated_focal_lengths,
+  Eigen::Vector2d& calibrated_principal_points, Eigen::VectorXd& calibrated_distortion) {
+  Eigen::Vector2d focal_lengths = initial_focal_lengths;
+  Eigen::Vector2d principal_points = initial_principal_points;
   Eigen::VectorXd distortion = initial_distortion;
-  ceres::Problem problem;
-  problem.AddParameterBlock(intrinsics.data(), 4);
-  problem.AddParameterBlock(distortion.data(), distortion.size());
 
-  if (params_.calibrate_intrinsics)
-    LogError("Calibrating intrinsics.");
+  ceres::Problem problem;
+  problem.AddParameterBlock(focal_lengths.data(), 2);
+  problem.AddParameterBlock(principal_points.data(), 2);
+  problem.AddParameterBlock(distortion.data(), distortion.size());
+  if (params_.calibrate_focal_lengths)
+    LogError("Calibrating focal lengths.");
   else
-    problem.SetParameterBlockConstant(intrinsics.data());
+    problem.SetParameterBlockConstant(focal_lengths.data());
+  if (params_.calibrate_principal_points)
+    LogError("Calibrating principal points.");
+  else
+    problem.SetParameterBlockConstant(principal_points.data());
   if (params_.calibrate_distortion)
     LogError("Calibrating distortion.");
   else
@@ -68,10 +73,12 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       if (params_.distortion_type == "fov") {
         oc::AddReprojectionCostFunction<oc::FovDistortion>(match_set.image_points[i], match_set.points_3d[i],
-                                                           camera_T_targets.back(), intrinsics, distortion, problem);
+                                                           camera_T_targets.back(), focal_lengths, principal_points,
+                                                           distortion, problem);
       } else if (params_.distortion_type == "radtan") {
         oc::AddReprojectionCostFunction<oc::RadTanDistortion>(match_set.image_points[i], match_set.points_3d[i],
-                                                              camera_T_targets.back(), intrinsics, distortion, problem);
+                                                              camera_T_targets.back(), focal_lengths, principal_points,
+                                                              distortion, problem);
       } else {
         LogFatal("Invalid distortion type provided.");
       }
@@ -98,14 +105,11 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(const std::vector<lc::Imag
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
-  calibrated_intrinsics = oc::Intrinsics<double>(intrinsics.data());
-  calibrated_distortion = distortion;
+  const Eigen::Matrix3d intrinsics = oc::Intrinsics(focal_lengths, principal_points);
   if (params_.distortion_type == "fov") {
-    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
-                                              calibrated_distortion);
+    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, intrinsics, distortion);
   } else if (params_.distortion_type == "radtan") {
-    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
-                                                 calibrated_distortion);
+    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, intrinsics, distortion);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

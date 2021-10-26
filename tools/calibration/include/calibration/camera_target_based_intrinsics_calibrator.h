@@ -34,8 +34,9 @@ class CameraTargetBasedIntrinsicsCalibrator {
   explicit CameraTargetBasedIntrinsicsCalibrator(const CameraTargetBasedIntrinsicsCalibratorParams& params)
       : params_(params) {}
   void Calibrate(const std::vector<localization_common::ImageCorrespondences>& match_sets,
-                 const camera::CameraParameters& camera_params, const Eigen::Matrix3d& initial_intrinsics,
-                 const Eigen::VectorXd& initial_distortion, Eigen::Matrix3d& calibrated_intrinsics,
+                 const camera::CameraParameters& camera_params, const Eigen::Vector2d& initial_focal_lengths,
+                 const Eigen::Vector2d& initial_principal_points, const Eigen::VectorXd& initial_distortion,
+                 Eigen::Vector2d& calibrated_focal_lengths, Eigen::Vector2d& calibrated_principal_points,
                  Eigen::VectorXd& calibrated_distortion);
 
   const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }

@@ -50,14 +50,12 @@ Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d)
   return affine_3d_vector;
 }
 
-// Stored as focal points then principal points
-Eigen::Matrix<double, 4, 1> VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics) {
-  Eigen::Matrix<double, 4, 1> intrinsics_vector;
-  intrinsics_vector(0, 0) = intrinsics(0, 0);
-  intrinsics_vector(1, 0) = intrinsics(1, 1);
-  intrinsics_vector(2, 0) = intrinsics(0, 2);
-  intrinsics_vector(3, 0) = intrinsics(1, 2);
-  return intrinsics_vector;
+Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points) {
+  Eigen::Matrix3d intrinsics(Eigen::Matrix3d::Identity());
+  intrinsics(0, 0) = focal_lengths(0);
+  intrinsics(1, 1) = focal_lengths(1);
+  intrinsics(0, 2) = principal_points(0);
+  intrinsics(1, 2) = principal_points(1);
 }
 
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size) {

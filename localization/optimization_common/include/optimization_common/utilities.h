@@ -26,9 +26,8 @@
 
 namespace optimization_common {
 Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d);
-Eigen::Matrix<double, 4, 1> VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics);
 Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
-Eigen::Matrix<double, 4, 1> VectorFromIntrinsicsMatrix(const Eigen::Matrix3d& intrinsics);
+Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points);
 
 // Assumes compact quaternion parameterization for rotations
 // TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
@@ -96,11 +95,22 @@ Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
 }
 
 template <typename T>
-Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolute_point, const T* const intrinsics) {
-  const T& f_x = intrinsics[0];
-  const T& f_y = intrinsics[1];
-  const T& p_x = intrinsics[2];
-  const T& p_y = intrinsics[3];
+Eigen::Matrix<T, 3, 3> Intrinsics(const T* focal_lengths, const T* principal_points) {
+  Eigen::Matrix<T, 3, 3> intrinsics(Eigen::Matrix<T, 3, 3>::Identity());
+  intrinsics(0, 0) = focal_lengths[0];
+  intrinsics(1, 1) = focal_lengths[1];
+  intrinsics(0, 2) = principal_points[2];
+  intrinsics(1, 2) = principal_points[3];
+  return intrinsics;
+}
+
+template <typename T>
+Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolute_point,
+                                           const Eigen::Matrix<T, 3, 3>& intrinsics) {
+  const T& f_x = intrinsics(0, 0);
+  const T& f_y = intrinsics(1, 1);
+  const T& p_x = intrinsics(0, 2);
+  const T& p_y = intrinsics(1, 2);
 
   const T& x = absolute_point[0];
   const T& y = absolute_point[1];
@@ -110,11 +120,12 @@ Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolut
 }
 
 template <typename T>
-Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point, const T* const intrinsics) {
-  const T& f_x = intrinsics[0];
-  const T& f_y = intrinsics[1];
-  const T& p_x = intrinsics[2];
-  const T& p_y = intrinsics[3];
+Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
+                                           const Eigen::Matrix<T, 3, 3>& intrinsics) {
+  const T& f_x = intrinsics(0, 0);
+  const T& f_y = intrinsics(1, 1);
+  const T& p_x = intrinsics(0, 2);
+  const T& p_y = intrinsics(1, 2);
   return Eigen::Matrix<T, 2, 1>(relative_point[0] * f_x + p_x, relative_point[1] * f_y + p_y);
 }
 

@@ -30,13 +30,11 @@ class RadTanDistortion {
   // TODO(rsoussan): unify this with fov distortion?
   Eigen::Vector2d Distort(const Eigen::VectorXd& distortion, const Eigen::Matrix3d& intrinsics,
                           const Eigen::Vector2d& undistorted_point) const {
-    // TODO(rsoussan): Avoid conversion to pointers?
-    const Eigen::Matrix<double, 4, 1> intrinsics_vector = VectorFromIntrinsicsMatrix(intrinsics);
-    return Distort(distortion.data(), intrinsics_vector.data(), undistorted_point);
+    return Distort(distortion.data(), intrinsics, undistorted_point);
   }
 
   template <typename T>
-  Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const T* intrinsics,
+  Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) const {
     const T& k1 = distortion[0];
     const T& k2 = distortion[1];

@@ -84,7 +84,8 @@ std::vector<lc::ImageCorrespondences> LoadAllTargetMatches(const std::string& co
 
 void LoadCalibratorParams(config_reader::ConfigReader& config,
                           ca::CameraTargetBasedIntrinsicsCalibratorParams& params) {
-  params.calibrate_intrinsics = mc::LoadBool(config, "calibrate_intrinsics");
+  params.calibrate_focal_lengths = mc::LoadBool(config, "calibrate_focal_lengths");
+  params.calibrate_principal_points = mc::LoadBool(config, "calibrate_principal_points");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
@@ -148,15 +149,22 @@ int main(int argc, char** argv) {
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
   LogInfo("num target match sets: " << target_matches.size());
   ca::CameraTargetBasedIntrinsicsCalibrator calibrator(params);
-  const Eigen::Matrix3d initial_intrinsics = calibrator.params().camera_params->GetIntrinsicMatrix<camera::DISTORTED>();
+  const Eigen::Vector2d initial_focal_lengths = calibrator.params().camera_params->GetFocalVector();
+  const Eigen::Vector2d initial_principal_points = calibrator.params().camera_params->GetOpticalOffset();
   const Eigen::VectorXd initial_distortion = calibrator.params().camera_params->GetDistortion();
-  Eigen::Matrix3d calibrated_intrinsics;
+  Eigen::Vector2d calibrated_focal_lengths;
+  Eigen::Vector2d calibrated_principal_points;
   Eigen::VectorXd calibrated_distortion;
-  calibrator.Calibrate(target_matches, *(calibrator.params().camera_params), initial_intrinsics, initial_distortion,
-                       calibrated_intrinsics, calibrated_distortion);
-  if (params.calibrate_intrinsics) {
-    LogInfo("initial intrinsics: " << std::endl << initial_intrinsics.matrix());
-    LogInfo("calibrated intrinsics: " << std::endl << calibrated_intrinsics.matrix());
+  calibrator.Calibrate(target_matches, *(calibrator.params().camera_params), initial_focal_lengths,
+                       initial_principal_points, initial_distortion, calibrated_focal_lengths,
+                       calibrated_principal_points, calibrated_distortion);
+  if (params.calibrate_focal_lengths) {
+    LogInfo("initial focal lengths: " << std::endl << initial_focal_lengths.matrix());
+    LogInfo("calibrated focal lengths: " << std::endl << calibrated_focal_lengths.matrix());
+  }
+  if (params.calibrate_principal_points) {
+    LogInfo("initial principal points: " << std::endl << initial_principal_points.matrix());
+    LogInfo("calibrated principal points: " << std::endl << calibrated_principal_points.matrix());
   }
   if (params.calibrate_distortion) {
     LogInfo("initial distortion: " << std::endl << initial_distortion.matrix());
