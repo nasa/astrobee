@@ -105,11 +105,15 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
-  const Eigen::Matrix3d intrinsics = oc::Intrinsics(focal_lengths, principal_points);
+
+  calibrated_focal_lengths = focal_lengths;
+  calibrated_principal_points = principal_points;
+  calibrated_distortion = distortion;
+  const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
-    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, intrinsics, distortion);
+    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion);
   } else if (params_.distortion_type == "radtan") {
-    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, intrinsics, distortion);
+    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

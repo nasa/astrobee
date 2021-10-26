@@ -56,6 +56,7 @@ Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Ve
   intrinsics(1, 1) = focal_lengths(1);
   intrinsics(0, 2) = principal_points(0);
   intrinsics(1, 2) = principal_points(1);
+  return intrinsics;
 }
 
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size) {

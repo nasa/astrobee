@@ -99,8 +99,8 @@ Eigen::Matrix<T, 3, 3> Intrinsics(const T* focal_lengths, const T* principal_poi
   Eigen::Matrix<T, 3, 3> intrinsics(Eigen::Matrix<T, 3, 3>::Identity());
   intrinsics(0, 0) = focal_lengths[0];
   intrinsics(1, 1) = focal_lengths[1];
-  intrinsics(0, 2) = principal_points[2];
-  intrinsics(1, 2) = principal_points[3];
+  intrinsics(0, 2) = principal_points[0];
+  intrinsics(1, 2) = principal_points[1];
   return intrinsics;
 }
 
