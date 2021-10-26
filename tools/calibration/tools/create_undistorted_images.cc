@@ -37,28 +37,26 @@ namespace po = boost::program_options;
 int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
-  std::string distorted_images_directory;
   std::string output_undistorted_images_directory;
-  std::string distortion_type;
-  std::string camera_name;
   po::options_description desc("Creates undistorted images using intrinsics and distortion params for camera.");
-  desc.add_options()("help", "produce help message")("distorted-images-directory",
-                                                     po::value<std::string>(&distorted_images_directory)->required(),
+  desc.add_options()("help", "produce help message")("distorted-images-directory", po::value<std::string>()->required(),
                                                      "Distorted images directory")(
-    "distorted-type", po::value<std::string>(&distortion_type)->required(), "Distorted type")(
-    "camera-name", po::value<std::string>(&camera_name)->required(), "Camera name")(
-    "config-path,c", po::value<std::string>()->required(), "Config path")(
+    "distortion-type", po::value<std::string>()->required(), "distortion type")(
+    "camera-name", po::value<std::string>()->required(), "Camera name")(
+    "config-path", po::value<std::string>()->required(), "Config path")(
     "output-directory,o",
     po::value<std::string>(&output_undistorted_images_directory)->default_value("undistorted_images"),
     "Output undistorted images directory")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
+  p.add("distorted-images-directory", 1);
+  p.add("distortion-type", 1);
+  p.add("camera-name", 1);
   p.add("config-path", 1);
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-    po::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
     return 1;
@@ -69,6 +67,16 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  try {
+    po::notify(vm);
+  } catch (std::exception& e) {
+    std::cerr << "Error: " << e.what() << "\n";
+    return 1;
+  }
+
+  const std::string distorted_images_directory = vm["distorted-images-directory"].as<std::string>();
+  const std::string distortion_type = vm["distortion-type"].as<std::string>();
+  const std::string camera_name = vm["camera-name"].as<std::string>();
   const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
@@ -95,7 +103,7 @@ int main(int argc, char** argv) {
 
   const camera::CameraParameters camera_params(&config, camera_name.c_str());
   std::vector<cv::String> image_file_names;
-  cv::glob(distorted_images_directory + "/*.png", image_file_names, false);
+  cv::glob(distorted_images_directory + "/*.jpg", image_file_names, false);
   const Eigen::Matrix3d intrinsics = camera_params.GetIntrinsicMatrix<camera::DISTORTED>();
   const Eigen::VectorXd distortion_params = camera_params.GetDistortion();
   for (const auto& image_file_name : image_file_names) {
