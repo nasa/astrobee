@@ -87,6 +87,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.calibrate_focal_lengths = mc::LoadBool(config, "calibrate_focal_lengths");
   params.calibrate_principal_points = mc::LoadBool(config, "calibrate_principal_points");
   params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
+  params.calibrate_target_poses = mc::LoadBool(config, "calibrate_target_poses");
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
   params.linear_solver = mc::LoadString(config, "linear_solver");

@@ -56,6 +56,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     LogError("Calibrating distortion.");
   else
     problem.SetParameterBlockConstant(distortion.data());
+  if (params_.calibrate_target_poses) LogError("Calibrating target poses.");
 
   std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
   // TODO(rsoussan): More efficient way to do this
@@ -70,6 +71,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
     valid_match_sets.emplace_back(match_set);
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
+    if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       if (params_.distortion_type == "fov") {
         oc::AddReprojectionCostFunction<oc::FovDistortion>(match_set.image_points[i], match_set.points_3d[i],

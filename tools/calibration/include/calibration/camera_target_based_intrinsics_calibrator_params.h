@@ -28,6 +28,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   bool calibrate_focal_lengths;
   bool calibrate_principal_points;
   bool calibrate_distortion;
+  bool calibrate_target_poses;
   // Optimization Options
   int max_num_iterations;
   double function_tolerance;
