@@ -24,13 +24,11 @@ namespace calibration {
 namespace lc = localization_common;
 
 boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters& camera,
-                                                 const lc::ImageCorrespondences& matches) {
+                                                 const lc::ImageCorrespondences& matches, const int min_num_inliers) {
   Eigen::Isometry3d camera_T_target(Eigen::Isometry3d::Identity());
   constexpr int num_ransac_iterations = 100;
   constexpr int ransac_inlier_tolerance = 3;
   camera::CameraModel cam_model(camera_T_target, camera);
-  // TODO(rsoussan): add num inliers as param
-  constexpr int min_num_inliers = 4;
   if (!RansacEstimateCameraWithDistortion(matches.points_3d, matches.image_points, num_ransac_iterations,
                                           ransac_inlier_tolerance, min_num_inliers, &cam_model))
     return boost::none;

@@ -63,7 +63,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   std::vector<lc::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {
-    const auto& camera_T_target = CameraTTarget(camera_params, match_set);
+    const auto& camera_T_target = CameraTTarget(camera_params, match_set, params_.min_num_target_inliers);
     if (!camera_T_target) {
       LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
       continue;

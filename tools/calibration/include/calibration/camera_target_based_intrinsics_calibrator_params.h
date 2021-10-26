@@ -36,6 +36,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   bool use_explicit_schur_complement;
   // Other
   int max_num_match_sets;
+  int min_num_target_inliers;
   std::shared_ptr<camera::CameraParameters> camera_params;
   std::string camera_name;
   // fov or radtan
