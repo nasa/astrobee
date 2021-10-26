@@ -28,9 +28,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-
 namespace ca = calibration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
@@ -53,15 +50,6 @@ lc::ImageCorrespondences LoadTargetMatches(const std::string& match_file) {
   }
 
   return lc::ImageCorrespondences(image_points, points_3d);
-}
-
-// TODO(rsoussan): unify with graph_bag, put this in common location
-bool string_ends_with(const std::string& str, const std::string& ending) {
-  if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
-  } else {
-    return false;
-  }
 }
 
 std::vector<lc::ImageCorrespondences> LoadAllTargetMatches(const std::string& corners_directory,

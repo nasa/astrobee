@@ -22,6 +22,8 @@
 
 #include <Eigen/Core>
 
+#include <opencv2/opencv.hpp>
+
 #include <ceres/ceres.h>
 
 namespace optimization_common {
