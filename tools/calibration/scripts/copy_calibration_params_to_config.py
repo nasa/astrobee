@@ -53,7 +53,7 @@ def make_calibration_params_string(calibration_filename):
   else:
     params_string += distortion[0] + ','
   params_string += '\n'
-  params_string += '    intrinsics_matrix = {\n'
+  params_string += '    intrinsic_matrix = {\n'
   params_string += '      ' + str(fx) + ', ' + '0.0' + ', ' + str(px) + ',\n'
   params_string += '      ' + '0.0' + ', ' + str(fy) + ', ' + str(py) + ',\n'
   params_string += '      ' + '0.0, 0.0, 1.0\n'
