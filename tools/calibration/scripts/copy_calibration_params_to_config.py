@@ -57,20 +57,20 @@ def make_calibration_params_string(calibration_filename):
   params_string += '      ' + str(fx) + ', ' + '0.0' + ', ' + str(px) + ',\n'
   params_string += '      ' + '0.0' + ', ' + str(fy) + ', ' + str(py) + ',\n'
   params_string += '      ' + '0.0, 0.0, 1.0\n'
-  params_string += '    },\n'
+  params_string += '    },'
   return params_string
 
 
 def copy_calibration_params_to_config(config, camera_name, calibration_file):
   camera_name_line = camera_name + ' = {'
   new_calibration_string = make_calibration_params_string(calibration_file)
-  print(new_calibration_string)
-  sys.exit()
   config_file = fileinput.input(config, inplace=1)
+  for line in config_file:
+    print line,
+    if line.strip() == camera_name_line:
+      print(new_calibration_string)
+      [config_file.next() for x in range(6)]
 
-
-#   for line in config_file:
-#     if line.strip() == camera_name_line:
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
