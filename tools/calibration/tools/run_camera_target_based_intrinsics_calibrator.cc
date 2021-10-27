@@ -100,9 +100,11 @@ void WriteCalibrationResultsToFile(const Eigen::Vector2d& focal_lengths, const E
   output_file.open(output_filename);
   output_file << focal_lengths[0] << " " << focal_lengths[1] << std::endl;
   output_file << principal_points[0] << " " << principal_points[1] << std::endl;
-  for (int i = 0; i < distortion.size(); ++i) {
+  int i = 0;
+  for (; i < distortion.size() - 1; ++i) {
     output_file << distortion[i] << " ";
   }
+  output_file << distortion[i];
   output_file.close();
 }
 
