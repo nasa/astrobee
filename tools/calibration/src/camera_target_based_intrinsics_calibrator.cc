@@ -129,6 +129,6 @@ double CameraTargetBasedIntrinsicsCalibrator::RadialScaleFactor(const Eigen::Vec
   if (!params_.scale_loss_radially) return 1.0;
   const Eigen::Vector2d centered_image_point = image_point - image_size.cast<double>() / 2.0;
   const double radius = centered_image_point.norm();
-  return params_.radial_scale_factor * radius;
+  return std::pow(radius, params_.radial_scale_power);
 }
 }  // namespace calibration

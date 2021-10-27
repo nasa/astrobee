@@ -36,7 +36,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   double function_tolerance;
   double huber_loss;
   bool scale_loss_radially;
-  double radial_scale_factor;
+  double radial_scale_power;
   std::string linear_solver;
   bool use_explicit_schur_complement;
   // Other

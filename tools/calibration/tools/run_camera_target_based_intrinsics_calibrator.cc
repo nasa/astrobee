@@ -80,7 +80,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
   params.huber_loss = mc::LoadDouble(config, "huber_loss");
   params.scale_loss_radially = mc::LoadBool(config, "scale_loss_radially");
-  params.radial_scale_factor = mc::LoadDouble(config, "radial_scale_factor");
+  params.radial_scale_power = mc::LoadDouble(config, "radial_scale_power");
   params.linear_solver = mc::LoadString(config, "linear_solver");
   params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
