@@ -120,8 +120,8 @@ int main(int argc, char** argv) {
       LogFatal("Invalid distortion type provided.");
     }
     const boost::filesystem::path image_filepath(image_file_name);
-    const std::string distorted_image_filename =
+    const std::string undistorted_image_filename =
       output_undistorted_images_directory + "/" + image_filepath.filename().string();
-    cv::imwrite(distorted_image_filename, distorted_image);
+    cv::imwrite(undistorted_image_filename, undistorted_image);
   }
 }
