@@ -115,10 +115,10 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
     SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                              params_.image_size);
+                                              params_.image_size, params_.max_visualization_error_norm);
   } else if (params_.distortion_type == "radtan") {
     SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                                 params_.image_size);
+                                                 params_.image_size, params_.max_visualization_error_norm);
   } else {
     LogFatal("Invalid distortion type provided.");
   }
