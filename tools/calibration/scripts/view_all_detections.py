@@ -27,14 +27,14 @@ import numpy as np
 
 def view_detections(directory):
   detection_files = [
-    directory + filename
+    os.path.join(directory, filename)
     for filename in os.listdir(directory)
-    if os.path.isfile(directory + filename) and filename.endswith(".txt")
+    if os.path.isfile(os.path.join(directory, filename)) and filename.endswith(".txt")
   ]
   image_files = [
-    directory + filename
+    os.path.join(directory, filename)
     for filename in os.listdir(directory)
-    if os.path.isfile(directory + filename) and filename.endswith(".jpg")
+    if os.path.isfile(os.path.join(directory, filename)) and filename.endswith(".jpg")
   ]
   if len(detection_files) == 0 or len(image_files) == 0:
     print("No detection files or no images found in directory.")
