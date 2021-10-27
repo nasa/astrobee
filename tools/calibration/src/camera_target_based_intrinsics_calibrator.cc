@@ -76,11 +76,11 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
       if (params_.distortion_type == "fov") {
         oc::AddReprojectionCostFunction<oc::FovDistortion>(match_set.image_points[i], match_set.points_3d[i],
                                                            camera_T_targets.back(), focal_lengths, principal_points,
-                                                           distortion, problem);
+                                                           distortion, problem, params_.huber_loss);
       } else if (params_.distortion_type == "radtan") {
         oc::AddReprojectionCostFunction<oc::RadTanDistortion>(match_set.image_points[i], match_set.points_3d[i],
                                                               camera_T_targets.back(), focal_lengths, principal_points,
-                                                              distortion, problem);
+                                                              distortion, problem, params_.huber_loss);
       } else {
         LogFatal("Invalid distortion type provided.");
       }

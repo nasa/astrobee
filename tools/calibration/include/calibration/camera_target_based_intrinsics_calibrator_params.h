@@ -32,6 +32,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   // Optimization Options
   int max_num_iterations;
   double function_tolerance;
+  double huber_loss;
   std::string linear_solver;
   bool use_explicit_schur_complement;
   // Other

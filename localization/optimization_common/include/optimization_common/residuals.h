@@ -193,9 +193,9 @@ template <typename DISTORTION>
 void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                                  Eigen::Matrix<double, 6, 1>& camera_T_target, Eigen::Vector2d& focal_lengths,
                                  Eigen::Vector2d& principal_points, Eigen::VectorXd& distortion,
-                                 ceres::Problem& problem) {
-  // TODO(rsoussan): pass this? delete at end?
-  ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
+                                 ceres::Problem& problem, const double huber_threshold = 1.345) {
+  // TODO(rsoussan): delete at end?
+  ceres::LossFunction* huber_loss = new ceres::HuberLoss(huber_threshold);
   ceres::CostFunction* reprojection_cost_function =
     new ceres::AutoDiffCostFunction<ReprojectionError<DISTORTION>, 2, 6, 2, 2, DISTORTION::NUM_PARAMS>(
       new ReprojectionError<DISTORTION>(image_point, point_3d));

@@ -78,6 +78,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.calibrate_target_poses = mc::LoadBool(config, "calibrate_target_poses");
   params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
   params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
+  params.huber_loss = mc::LoadDouble(config, "huber_loss");
   params.linear_solver = mc::LoadString(config, "linear_solver");
   params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
