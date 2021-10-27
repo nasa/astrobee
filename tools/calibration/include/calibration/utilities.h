@@ -44,7 +44,7 @@ template <typename DISTORTION>
 void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
                             const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                            const Eigen::Vector2i& image_size) {
+                            const Eigen::Vector2i& image_size, const double max_error_norm = 100) {
   cv::Mat reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
   std::ofstream errors_file;
   errors_file.open("errors_file.txt");
@@ -61,10 +61,9 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
       const double error_norm = error.norm();
       errors_file << error.x() << " " << error.y() << std::endl;
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
-      constexpr double MAX_ERROR = 100.0;
       // Add 1 to each value so background pixels stay white and we can map these back to white
       // after applying colormap
-      const int error_color = std::round(std::min(error_norm, MAX_ERROR) / MAX_ERROR * 254.0) + 1;
+      const int error_color = std::round(std::min(error_norm, max_error_norm) / max_error_norm * 254.0) + 1;
       cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(error_color), -1);
     }
   }

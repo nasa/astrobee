@@ -42,6 +42,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   // Other
   int max_num_match_sets;
   int min_num_target_inliers;
+  int max_visualization_error_norm;
   Eigen::Vector2i image_size;
   std::shared_ptr<camera::CameraParameters> camera_params;
   std::string camera_name;
