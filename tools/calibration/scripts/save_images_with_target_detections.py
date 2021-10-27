@@ -113,8 +113,8 @@ def save_images_from_dataset_with_target_detections(dataset, detector, output_di
         continue
       else:
         added_corners.add_corners(corners)
-      filepath = output_directory + '/' + os.path.splitext(os.path.basename(dataset.bagfile))[0] + '_' + str(
-        timestamp.toSec())
+      filepath = os.path.join(output_directory,
+                              os.path.splitext(os.path.basename(dataset.bagfile))[0] + '_' + str(timestamp.toSec()))
       image_name = filepath + '.jpg'
       print("Saving " + filepath)
       cv2.imwrite(image_name, image)

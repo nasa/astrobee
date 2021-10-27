@@ -35,6 +35,7 @@ def get_bags_with_topic(bag_names, topic):
 #TODO(rsoussan): combine this with same fcn in graph_bag/merge_bags.py
 def find_bags_in_directory(directory):
   # Find bagfiles with bag prefix in current directory, fail if none found
+  # TODO(rsoussan): make function for getting filenames in a dir with extenstion, use for view_all_detections.py as well
   bag_names = [
     os.path.join(directory, bag)
     for bag in os.listdir(directory)
