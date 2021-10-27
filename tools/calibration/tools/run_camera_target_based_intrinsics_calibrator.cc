@@ -94,16 +94,30 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
+void WriteCalibrationResultsToFile(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points,
+                                   const Eigen::VectorXd& distortion, const std::string& output_filename) {
+  std::ofstream output_file;
+  output_file.open(output_filename);
+  output_file << focal_lengths[0] << " " << focal_lengths[1] << std::endl;
+  output_file << principal_points[0] << " " << principal_points[1] << std::endl;
+  for (int i = 0; i < distortion.size(); ++i) {
+    output_file << distortion[i] << " ";
+  }
+  output_file.close();
+}
+
 int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   std::string corners_directory;
+  std::string output_file;
   po::options_description desc("Calibrates camera intrinsics using target detections.");
   desc.add_options()("help", "produce help message")(
     "corners-directory", po::value<std::string>(&corners_directory)->required(), "Corners Directory")(
     "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
+    "output-file,o", po::value<std::string>(&output_file)->default_value("calibrated_params.txt"), "Output file");
   po::positional_options_description p;
   p.add("config-path", 1);
   po::variables_map vm;
@@ -167,5 +181,6 @@ int main(int argc, char** argv) {
     LogInfo("initial distortion: " << std::endl << initial_distortion.matrix());
     LogInfo("calibrated distortion: " << std::endl << calibrated_distortion.matrix());
   }
-  // TODO(rsoussan): write this to file! also write summary stats? time take? final total error? etc?*/
+  WriteCalibrationResultsToFile(calibrated_focal_lengths, calibrated_principal_points, calibrated_distortion,
+                                output_file);
 }
