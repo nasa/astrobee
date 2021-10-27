@@ -193,13 +193,15 @@ template <typename DISTORTION>
 void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                                  Eigen::Matrix<double, 6, 1>& camera_T_target, Eigen::Vector2d& focal_lengths,
                                  Eigen::Vector2d& principal_points, Eigen::VectorXd& distortion,
-                                 ceres::Problem& problem, const double huber_threshold = 1.345) {
-  // TODO(rsoussan): delete at end?
+                                 ceres::Problem& problem, const double scale_factor = 1,
+                                 const double huber_threshold = 1.345) {
+  // TODO(rsoussan): use single implementation of huber/scaled loss functions?
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(huber_threshold);
+  ceres::LossFunction* scaled_huber_loss = new ceres::ScaledLoss(huber_loss, scale_factor, ceres::TAKE_OWNERSHIP);
   ceres::CostFunction* reprojection_cost_function =
     new ceres::AutoDiffCostFunction<ReprojectionError<DISTORTION>, 2, 6, 2, 2, DISTORTION::NUM_PARAMS>(
       new ReprojectionError<DISTORTION>(image_point, point_3d));
-  problem.AddResidualBlock(reprojection_cost_function, huber_loss, camera_T_target.data(), focal_lengths.data(),
+  problem.AddResidualBlock(reprojection_cost_function, scaled_huber_loss, camera_T_target.data(), focal_lengths.data(),
                            principal_points.data(), distortion.data());
 }
 }  // namespace optimization_common

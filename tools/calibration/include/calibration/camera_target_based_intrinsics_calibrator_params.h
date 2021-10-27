@@ -20,6 +20,8 @@
 
 #include <camera/camera_params.h>
 
+#include <Eigen/Core>
+
 #include <memory>
 #include <string>
 
@@ -40,6 +42,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   // Other
   int max_num_match_sets;
   int min_num_target_inliers;
+  Eigen::Vector2i image_size;
   std::shared_ptr<camera::CameraParameters> camera_params;
   std::string camera_name;
   // fov or radtan

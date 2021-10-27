@@ -73,14 +73,15 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
+      const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
       if (params_.distortion_type == "fov") {
-        oc::AddReprojectionCostFunction<oc::FovDistortion>(match_set.image_points[i], match_set.points_3d[i],
-                                                           camera_T_targets.back(), focal_lengths, principal_points,
-                                                           distortion, problem, params_.huber_loss);
+        oc::AddReprojectionCostFunction<oc::FovDistortion>(
+          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
+          distortion, problem, radial_scale_factor, params_.huber_loss);
       } else if (params_.distortion_type == "radtan") {
-        oc::AddReprojectionCostFunction<oc::RadTanDistortion>(match_set.image_points[i], match_set.points_3d[i],
-                                                              camera_T_targets.back(), focal_lengths, principal_points,
-                                                              distortion, problem, params_.huber_loss);
+        oc::AddReprojectionCostFunction<oc::RadTanDistortion>(
+          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
+          distortion, problem, radial_scale_factor, params_.huber_loss);
       } else {
         LogFatal("Invalid distortion type provided.");
       }
@@ -113,11 +114,21 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   calibrated_distortion = distortion;
   const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
-    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion);
+    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                              params_.image_size);
   } else if (params_.distortion_type == "radtan") {
-    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion);
+    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                                 params_.image_size);
   } else {
     LogFatal("Invalid distortion type provided.");
   }
+}
+
+double CameraTargetBasedIntrinsicsCalibrator::RadialScaleFactor(const Eigen::Vector2d& image_point,
+                                                                const Eigen::Vector2i& image_size) const {
+  if (!params_.scale_loss_radially) return 1.0;
+  const Eigen::Vector2d centered_image_point = image_point - image_size.cast<double>() / 2.0;
+  const double radius = centered_image_point.norm();
+  return params_.radial_scale_factor * radius;
 }
 }  // namespace calibration

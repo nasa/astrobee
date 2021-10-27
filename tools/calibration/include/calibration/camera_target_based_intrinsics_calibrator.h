@@ -42,6 +42,8 @@ class CameraTargetBasedIntrinsicsCalibrator {
   const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }
 
  private:
+  double RadialScaleFactor(const Eigen::Vector2d& image_point, const Eigen::Vector2i& image_size) const;
+
   CameraTargetBasedIntrinsicsCalibratorParams params_;
 };
 }  // namespace calibration

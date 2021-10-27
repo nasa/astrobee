@@ -85,6 +85,9 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.min_num_target_inliers = mc::LoadInt(config, "min_num_target_inliers");
+  const int image_width = mc::LoadInt(config, "image_width");
+  const int image_height = mc::LoadInt(config, "image_height");
+  params.image_size = Eigen::Vector2i(image_width, image_height);
   params.camera_name = mc::LoadString(config, "camera");
   params.camera_params.reset(new camera::CameraParameters(&config, params.camera_name.c_str()));
   params.distortion_type = mc::LoadString(config, "distortion_type");

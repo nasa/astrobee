@@ -43,11 +43,9 @@ boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters&
 template <typename DISTORTION>
 void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
                             const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
-                            const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
-  // TODO(rsoussan): get these from somewhere else
-  constexpr int image_height = 960;
-  constexpr int image_width = 1280;
-  cv::Mat reprojection_image_grayscale(image_height, image_width, CV_8UC1, cv::Scalar(0));
+                            const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
+                            const Eigen::Vector2i& image_size) {
+  cv::Mat reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
   std::ofstream errors_file;
   errors_file.open("errors_file.txt");
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
