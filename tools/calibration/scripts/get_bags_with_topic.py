@@ -36,7 +36,9 @@ def get_bags_with_topic(bag_names, topic):
 def find_bags_in_directory(directory):
   # Find bagfiles with bag prefix in current directory, fail if none found
   bag_names = [
-    directory + bag for bag in os.listdir(directory) if os.path.isfile(directory + bag) and bag.endswith(".bag")
+    os.path.join(directory, bag)
+    for bag in os.listdir(directory)
+    if os.path.isfile(os.path.join(directory, bag)) and bag.endswith(".bag")
   ]
   if len(bag_names) == 0:
     print("No bag files found")
