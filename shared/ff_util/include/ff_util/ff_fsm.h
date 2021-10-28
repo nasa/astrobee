@@ -19,7 +19,7 @@
 #ifndef FF_UTIL_FF_FSM_H_
 #define FF_UTIL_FF_FSM_H_
 
-// C++11 includes
+// C++ includes
 #include <functional>
 #include <utility>
 #include <vector>

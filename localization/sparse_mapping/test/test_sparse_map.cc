@@ -301,3 +301,9 @@ const Parameters test_parameters[] = {
 INSTANTIATE_TEST_CASE_P(SparseMapTest, SparseMapTest,
     ::testing::ValuesIn(test_parameters));
 
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

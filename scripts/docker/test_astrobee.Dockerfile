@@ -6,4 +6,7 @@ ARG REMOTE=astrobee
 FROM ${REMOTE}/astrobee:latest-ubuntu${UBUNTU_VERSION}
 
 # Run tests
-RUN cd /build/astrobee && make -j`nproc` tests && make -j`nproc` test
+RUN cd /src/astrobee && catkin build --make-args tests \
+	&& catkin build --make-args test \
+	&& { . devel/setup.sh || true; } \
+	&& catkin_test_results build

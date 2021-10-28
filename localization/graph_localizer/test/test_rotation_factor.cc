@@ -51,3 +51,9 @@ TEST(RotationFactorTester, Jacobian) {
     world_T_body_1, world_T_perturbed_body_2, 1e-5);
   ASSERT_TRUE(numerical_H2.isApprox(factor_H2.matrix(), 1e-6));
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

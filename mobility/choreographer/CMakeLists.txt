@@ -15,7 +15,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(choreographer)
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  ff_util
+  mapper
+  ff_msgs
+  ff_hw_msgs
+  tf2_ros
+  jsonloader
+)
 
 catkin_package(
   INCLUDE_DIRS
@@ -30,16 +46,26 @@ catkin_package(
     ff_util
     tf2
     tf2_ros
-    nav_msgs
-    geometry_msgs
-    visualization_msgs
+    jsonloader
 )
 
-create_library(TARGET choreographer
-  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet ff_flight config_server mapper
-  INC  ${catkin_INCLUDE_DIRS}
-  DEPS ff_common nav_msgs geometry_msgs ff_msgs ff_util mapper
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+# Declare C++ libraries
+add_library(choreographer
+  src/choreographer_nodelet.cc
+  src/validator.cc
+)
+add_dependencies(choreographer ${catkin_EXPORTED_TARGETS})
+target_link_libraries(choreographer ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -49,7 +75,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_init_choreographer.cc
   )
   target_link_libraries(test_init_choreographer
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
   if(ENABLE_INTEGRATION_TESTING)
     # Choreographer test obstacles
@@ -59,7 +85,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_obstacle
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
 
     # Choreographer test zones keepin
@@ -69,7 +95,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_zones_keepin
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
 
     # Choreographer test zones keepout
@@ -79,7 +105,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_zones_keepout
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
 
     # Choreographer test zones nominal
@@ -89,9 +115,35 @@ if(CATKIN_ENABLE_TESTING)
     )
 
     target_link_libraries(test_zones_nominal
-      ${catkin_LIBRARIES} config_client ff_nodelet
+      ${catkin_LIBRARIES}
     )
   endif()
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
