@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
   }
   LogInfo("Calibrating " << robot_config_file << ", camera: " << params.camera_name);
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
-  LogInfo("num target match sets: " << target_matches.size());
+  LogInfo("Number of target match sets: " << target_matches.size());
   ca::CameraTargetBasedIntrinsicsCalibrator calibrator(params);
   const Eigen::Vector2d initial_focal_lengths = calibrator.params().camera_params->GetFocalVector();
   const Eigen::Vector2d initial_principal_points = calibrator.params().camera_params->GetOpticalOffset();
