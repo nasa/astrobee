@@ -49,7 +49,7 @@ def make_calibration_params_string(calibration_filename):
       params_string += distortion[i]
       if i < (len(distortion) - 1):
         params_string += ', '
-    params_string += '}'
+    params_string += '},'
   else:
     params_string += distortion[0] + ','
   params_string += '\n'
