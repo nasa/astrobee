@@ -18,7 +18,6 @@
 #ifndef CALIBRATION_UTILITIES_H_
 #define CALIBRATION_UTILITIES_H_
 
-#include <camera/camera_params.h>
 #include <calibration/camera_utilities.h>
 #include <localization_common/image_correspondences.h>
 #include <optimization_common/utilities.h>
@@ -36,10 +35,6 @@
 #include <vector>
 
 namespace calibration {
-boost::optional<Eigen::Isometry3d> CameraTTarget(const camera::CameraParameters& camera,
-                                                 const localization_common::ImageCorrespondences& matches,
-                                                 const int min_num_inliers);
-
 template <typename DISTORTION>
 void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
                             const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,

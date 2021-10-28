@@ -46,6 +46,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   problem.AddParameterBlock(principal_points.data(), 2);
   // Rad distortion is stored internally as RadTan with 4 parameters but only 2 are optimized
   const int num_distortion_params = params_.distortion_type == "rad" ? 2 : distortion.size();
+  // TODO(rsoussan): make function for this! (add param block, set const if necessary, print output)
   problem.AddParameterBlock(distortion.data(), num_distortion_params);
   if (params_.calibrate_focal_lengths)
     LogError("Calibrating focal lengths.");
@@ -66,7 +67,21 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   std::vector<lc::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {
-    const auto& camera_T_target = CameraTTarget(camera_params, match_set, params_.min_num_target_inliers);
+    // TODO(rsoussan): Remove once class is templated
+    boost::optional<Eigen::Isometry3d> camera_T_target;
+    if (params_.distortion_type == "fov") {
+      camera_T_target = ReprojectionPoseEstimate<oc::FovDistortion>(match_set.image_points, match_set.points_3d,
+                                                                    focal_lengths, principal_points, distortion);
+    } else if (params_.distortion_type == "rad") {
+      camera_T_target = ReprojectionPoseEstimate<oc::RadDistortion>(match_set.image_points, match_set.points_3d,
+                                                                    focal_lengths, principal_points, distortion);
+    } else if (params_.distortion_type == "radtan") {
+      camera_T_target = ReprojectionPoseEstimate<oc::RadTanDistortion>(match_set.image_points, match_set.points_3d,
+                                                                       focal_lengths, principal_points, distortion);
+    } else {
+      LogFatal("Invalid distortion type provided.");
+    }
+
     if (!camera_T_target) {
       LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
       continue;
