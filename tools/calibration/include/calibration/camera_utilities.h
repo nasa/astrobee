@@ -43,6 +43,8 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
                                                             const Eigen::Vector2d& principal_points,
                                                             const Eigen::VectorXd& distortion,
                                                             const int max_num_iterations = 100) {
+  if (image_points.size() < 4) return boost::none;
+
   ceres::Problem problem;
   // TODO(rsoussan): Avoid all of these const casts?
   problem.AddParameterBlock(const_cast<double*>(focal_lengths.data()), 2);
