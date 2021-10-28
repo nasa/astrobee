@@ -23,6 +23,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <optimization_common/fov_distortion.h>
+#include <optimization_common/rad_distortion.h>
 #include <optimization_common/radtan_distortion.h>
 
 #include <boost/filesystem.hpp>
@@ -114,6 +115,9 @@ int main(int argc, char** argv) {
     // TODO(rsoussan): Avoid checking distortion param value/recreating distortion object each time
     if (distortion_type == "fov") {
       oc::FovDistortion distortion;
+      undistorted_image = distortion.Undistort(distorted_image, intrinsics, distortion_params);
+    } else if (distortion_type == "rad") {
+      oc::RadDistortion distortion;
       undistorted_image = distortion.Undistort(distorted_image, intrinsics, distortion_params);
     } else if (distortion_type == "radtan") {
       oc::RadTanDistortion distortion;

@@ -38,13 +38,16 @@ class RadDistortion : public Distortion<2, RadDistortion> {
     radtan_distortion[1] = distortion[1];
     radtan_distortion[2] = T(0.0);
     radtan_distortion[3] = T(0.0);
-
-    return radtan_distortion_.Distort(radtain_distortion, intrinsics, undistorted_point);
+    return radtan_distortion_.Distort(radtan_distortion, intrinsics, undistorted_point);
   }
 
   cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
                     const Eigen::VectorXd& distortion) const final {
-    Eigen::VectorXd radtan_distortion{distortion[0], distortion[1], 0.0, 0.0};
+    Eigen::VectorXd radtan_distortion(4);
+    radtan_distortion[0] = distortion[0];
+    radtan_distortion[1] = distortion[1];
+    radtan_distortion[2] = 0;
+    radtan_distortion[3] = 0;
     return radtan_distortion_.Undistort(distorted_image, intrinsics, radtan_distortion);
   }
 

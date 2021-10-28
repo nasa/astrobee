@@ -46,7 +46,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   Eigen::Vector2i image_size;
   std::shared_ptr<camera::CameraParameters> camera_params;
   std::string camera_name;
-  // fov or radtan
+  // fov, rad, or radtan
   std::string distortion_type;
 };
 }  // namespace calibration

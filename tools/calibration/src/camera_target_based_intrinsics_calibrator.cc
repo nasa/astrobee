@@ -20,6 +20,7 @@
 #include <calibration/utilities.h>
 #include <localization_common/logger.h>
 #include <optimization_common/fov_distortion.h>
+#include <optimization_common/rad_distortion.h>
 #include <optimization_common/radtan_distortion.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
@@ -78,6 +79,10 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
         oc::AddReprojectionCostFunction<oc::FovDistortion>(
           match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
           distortion, problem, radial_scale_factor, params_.huber_loss);
+      } else if (params_.distortion_type == "rad") {
+        oc::AddReprojectionCostFunction<oc::RadDistortion>(
+          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
+          distortion, problem, radial_scale_factor, params_.huber_loss);
       } else if (params_.distortion_type == "radtan") {
         oc::AddReprojectionCostFunction<oc::RadTanDistortion>(
           match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
@@ -115,6 +120,9 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
     SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                              params_.image_size, params_.max_visualization_error_norm);
+  } else if (params_.distortion_type == "rad") {
+    SaveReprojectionErrors<oc::RadDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
                                               params_.image_size, params_.max_visualization_error_norm);
   } else if (params_.distortion_type == "radtan") {
     SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
