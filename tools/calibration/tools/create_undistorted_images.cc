@@ -33,6 +33,7 @@
 namespace lc = localization_common;
 namespace oc = optimization_common;
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 
 int main(int argc, char** argv) {
   std::string robot_config_file;
@@ -93,17 +94,18 @@ int main(int argc, char** argv) {
     LogFatal("Failed to read config files.");
   }
 
-  if (!boost::filesystem::is_directory(distorted_images_directory)) {
+  if (!fs::is_directory(distorted_images_directory)) {
     LogFatal("Distorted images directory " << distorted_images_directory << " not found.");
   }
-  if (boost::filesystem::is_directory(output_undistorted_images_directory)) {
+  if (fs::is_directory(output_undistorted_images_directory)) {
     LogFatal("Output undistorted images directory " << output_undistorted_images_directory << " already exists.");
   }
-  boost::filesystem::create_directory(output_undistorted_images_directory);
+  fs::create_directory(output_undistorted_images_directory);
 
   const camera::CameraParameters camera_params(&config, camera_name.c_str());
   std::vector<cv::String> image_file_names;
-  cv::glob(distorted_images_directory + "/*.jpg", image_file_names, false);
+  const std::string images_file_path = (fs::path(distorted_images_directory) / fs::path("*.jpg")).string();
+  cv::glob(images_file_path, image_file_names, false);
   const Eigen::Matrix3d intrinsics = camera_params.GetIntrinsicMatrix<camera::DISTORTED>();
   const Eigen::VectorXd distortion_params = camera_params.GetDistortion();
   for (const auto& image_file_name : image_file_names) {
@@ -119,9 +121,9 @@ int main(int argc, char** argv) {
     } else {
       LogFatal("Invalid distortion type provided.");
     }
-    const boost::filesystem::path image_filepath(image_file_name);
+    const fs::path image_filepath(image_file_name);
     const std::string undistorted_image_filename =
-      output_undistorted_images_directory + "/" + image_filepath.filename().string();
+      (fs::path(output_undistorted_images_directory) / image_filepath.filename()).string();
     cv::imwrite(undistorted_image_filename, undistorted_image);
   }
 }
