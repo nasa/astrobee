@@ -79,9 +79,9 @@ if __name__ == "__main__":
   parser.add_argument("-c", "--calibration_file", default="calibrated_params.txt")
   args = parser.parse_args()
   if not os.path.isfile(args.config):
-    print("Config file" + args.config + " does not exist.")
+    print("Config file " + args.config + " does not exist.")
     sys.exit()
   if not os.path.isfile(args.calibration_file):
-    print("Calibration file" + args.calibration_file + " does not exist.")
+    print("Calibration file " + args.calibration_file + " does not exist.")
     sys.exit()
   copy_calibration_params_to_config(args.config, args.camera_name, args.calibration_file)
