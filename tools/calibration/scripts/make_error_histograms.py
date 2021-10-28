@@ -63,7 +63,7 @@ def make_histograms(errors_file):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument("errors_file")
+  parser.add_argument('-e', '--errors-file', default='errors_file.txt')
   args = parser.parse_args()
   if not os.path.isfile(args.errors_file):
     print('Errors file not found.')

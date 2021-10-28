@@ -29,6 +29,7 @@ if __name__ == '__main__':
   parser.add_argument('-w', '--world', default='iss')
   parser.add_argument('-o', '--output-directory', default='intrinsics_calibration_output')
   parser.add_argument('-u', '--undistort-images', action='store_true')
+  parser.add_argument('-p', '--plot-histogram-errors', action='store_true')
   parser.add_argument(
     '-i',
     '--image-directory-to-undistort',
@@ -61,6 +62,10 @@ if __name__ == '__main__':
   calibration_command = 'rosrun calibration run_camera_target_based_intrinsics_calibrator --corners-dir ' + corners_directory + ' -c ' + args.config_path + ' -r ' + args.robot_config_file + ' -w ' + args.world
   with open('calibration_output.txt', 'w') as output_file:
     subprocess.call(calibration_command, shell=True, stdout=output_file, stderr=output_file)
+
+  if args.plot_histogram_errors:
+    histogram_plotter_command = 'rosrun calibration make_error_histograms.py'
+    os.system(histogram_plotter_command)
 
   if not args.undistort_images:
     sys.exit()
