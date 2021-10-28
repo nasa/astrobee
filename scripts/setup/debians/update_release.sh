@@ -12,7 +12,7 @@ cd $DIR/../../..
 
 dch -c debian/changelog -v $1
 
-sed -i -e "s/set(ASTROBEE_VERSION .*)/set(ASTROBEE_VERSION $1)/g" CMakeLists.txt
+sed -i -e "s/set(ASTROBEE_VERSION .*)/set(ASTROBEE_VERSION $1)/g" astrobee/CMakeLists.txt
 
 sed -i -e "s/\# Astrobee Robot Software v1/\# Astrobee Robot Software v1\n\n\#\# Release $1\n\nINSERT DESCRIPTION HERE/g" RELEASE.md
 

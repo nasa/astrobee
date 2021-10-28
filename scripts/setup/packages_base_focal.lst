@@ -73,6 +73,7 @@ ros-noetic-xmlrpcpp
 ros-noetic-mavlink
 ros-noetic-xacro
 ros-noetic-octomap
+ros-noetic-catkin
 libalvar2
 libdbow21
 libgtsam
@@ -122,3 +123,4 @@ libdecomputil-dev
 libjps3d-dev
 libopencv3.3.1
 libopencv-dev3.3.1
+python3-catkin-tools

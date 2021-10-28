@@ -1,7 +1,5 @@
 \page release Creating a Flight Release
 
-# Creating a Flight Release
-
 This page describes the steps required to complete a flight release. It assumes
 that your environment is configured to cross-compile the fsw for the `armhf`
 architecture.

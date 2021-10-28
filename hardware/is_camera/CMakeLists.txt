@@ -15,7 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(is_camera)
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  image_transport
+  nodelet
+  ff_util
+  config_reader
+)
 
 # Need to find libv4l2
 find_path(V4L2_INCLUDE_DIR libv4l2.h linux/videodev2.h
@@ -25,22 +38,56 @@ find_library(V4L2_LIBRARY NAMES libv4l2 v4l2
 find_package_handle_standard_args(V4L2 DEFAULT_MSG
   V4L2_INCLUDE_DIR V4L2_LIBRARY)
 
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
+
 catkin_package(
   LIBRARIES is_camera
-  CATKIN_DEPENDS roscpp image_transport nodelet
+  CATKIN_DEPENDS
+    roscpp
+    image_transport
+    nodelet
+    ff_util
+    config_reader
   )
 
-create_library(TARGET is_camera
-  LIBS ${catkin_LIBRARIES} ${V4L2_LIBRARY} config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS} ${V4L2_INCLUDE_DIR}
-  DEPS ff_msgs)
+###########
+## Build ##
+###########
 
-create_tool_targets(DIR tools
-  LIBS is_camera
-  )
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
 
-# I'm not sure who installed package.xml for us, but we should do the same for
-# nodelet_plugins.xml
-install(FILES nodelet_plugins.xml DESTINATION share/is_camera)
+# Declare C++ libraries
+add_library(is_camera
+  src/camera.cc
+)
+add_dependencies(is_camera ${catkin_EXPORTED_TARGETS})
+target_link_libraries(is_camera ${V4L2_LIBRARY} ${catkin_LIBRARIES})
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

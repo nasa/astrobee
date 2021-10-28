@@ -88,7 +88,7 @@ class DdsSubscriberManager:
                 return False
 
     def stop_all(self):
-        for key, value in list(self.subscribers.items()):
+        for key, value in self.subscribers.iteritems():
             value.stop()
 
     def start_all(self):

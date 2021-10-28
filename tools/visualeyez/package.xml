@@ -23,6 +23,8 @@
   <build_depend>std_srvs</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
+  <build_depend>ff_util</build_depend>
+  <build_depend>config_reader</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>nodelet</run_depend>
   <run_depend>pluginlib</run_depend>
@@ -31,6 +33,8 @@
   <run_depend>std_srvs</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>tf2_ros</run_depend>
+  <run_depend>ff_util</run_depend>
+  <run_depend>config_reader</run_depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>

@@ -34,9 +34,9 @@
 
 #include "ros/ros.h"
 
-#include "AstrobeeConstants.h"
-#include "TelemetryConfigSupport.h"
-#include "TelemetryStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/TelemetryConfigSupport.h"
+#include "dds_msgs/TelemetryStateSupport.h"
 
 namespace ff {
 

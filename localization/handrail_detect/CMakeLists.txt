@@ -15,30 +15,66 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(handrail_detect)
 
-if (USE_ROS)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  tf2
+  nodelet
+  visualization_msgs
+  ff_msgs
+  ff_util
+)
+
+# Find OpenCV3
+find_package(OpenCV 3 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS tf2 visualization_msgs roscpp ff_msgs nodelet
-  DEPENDS ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp tf2 nodelet visualization_msgs ff_msgs ff_util
 )
 
-set(CMAKE_CXX_FLAGS_HACKY "${CMAKE_CXX_FLAGS} -Wno-return-type")
+###########
+## Build ##
+###########
 
-create_library(TARGET ${PROJECT_NAME}
-  LIBS ${catkin_LIBRARIES} ${OROCOS_KDL_LIBRARIES} ff_common config_reader msg_conversions ff_nodelet
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs
+# Specify additional locations of header files
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_HACKY})
+# Declare C++ libraries
+add_library(handrail_detect
+  src/handrail_detect.cc
+)
+add_dependencies(handrail_detect ${catkin_EXPORTED_TARGETS})
+target_link_libraries(handrail_detect ${catkin_LIBRARIES})
 
-create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME}
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-install_launch_files()
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
-endif (USE_ROS)
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY config/ DESTINATION config)

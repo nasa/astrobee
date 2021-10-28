@@ -37,7 +37,7 @@
 
 namespace fs = boost::filesystem;
 
-const std::string kDataDir = std::string(TEST_DIR) + "/data/";
+const std::string kDataDir = std::string(std::getenv("DATA_DIR"));
 
 std::string SlurpFile(std::string const& f_name) {
   std::ifstream file(f_name, std::ios::in | std::ios::binary);
@@ -314,4 +314,10 @@ TEST(PlanIO, PlanEvolution) {
     jsonloader::OperatingLimits ol = plan.operating_limits();
     LOG(INFO) << "Operating Limits: " << ol.valid();
   }
+}
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

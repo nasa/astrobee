@@ -132,7 +132,7 @@ ekf_callbacks = VisualizerCallback("ekf_time", ekf_data)
 
 
 def mahal_filter(dists):
-    f = [t for t in dists if not isnan(t)]
+    f = filter(lambda t: not isnan(t), dists)
     if len(f) == 0:
         return [-1]
     return f
@@ -317,7 +317,7 @@ class Visualizer(QtGui.QMainWindow):
         self.data_sizes = dict()
         for d in callbacks_list:
             self.data_sizes[d.time_key] = 0
-            for k in list(d.callbacks.keys()):
+            for k in d.callbacks.keys():
                 self.data[k] = np.full(ARRAY_SIZE, 1e-10)
 
         self.columns = [
@@ -797,7 +797,7 @@ def main():
         if args.com_method in (com.DDS_COM, com.ROS_COM):
             com_method = args.com_method
         else:
-            print("Invalid communication method. Must be dds or ros", file=sys.stderr)
+            print >>sys.stderr, "Invalid communication method. Must be dds or ros"
             return
 
     launch_command = None
@@ -806,14 +806,11 @@ def main():
     if com_method == com.DDS_COM and (
         args.launch_command != None or args.disable_pmcs or args.plan != None
     ):
-        print(
-            (
-                "\n###\n"
-                + "\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) "
-                + 'will not be processed when using DDS mode. You may use "--comm ros" or do not include this '
-                + "argument at all in order to use additional arguments.\n\n###\n"
-            ),
-            file=sys.stderr,
+        print >>sys.stderr, (
+            "\n###\n"
+            + "\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) "
+            + 'will not be processed when using DDS mode. You may use "--comm ros" or do not include this '
+            + "argument at all in order to use additional arguments.\n\n###\n"
         )
         return
     # Exclude DDS commands when using ROS communication
@@ -823,21 +820,18 @@ def main():
         or args.public_ip != None
         or args.domain != None
     ):
-        print(
-            (
-                "\n###\n"
-                + "\nAdditional arguments (--use_ip --robot_name --public_ip) "
-                + 'will not be processed when using ROS mode. You may include "--comm dds" '
-                + "argument in order to use these additional arguments.\n\n###\n"
-            ),
-            file=sys.stderr,
+        print >>sys.stderr, (
+            "\n###\n"
+            + "\nAdditional arguments (--use_ip --robot_name --public_ip) "
+            + 'will not be processed when using ROS mode. You may include "--comm dds" '
+            + "argument in order to use these additional arguments.\n\n###\n"
         )
         return
     else:
         if args.launch_command == None:
             args.launch_command = []
         if len(args.launch_command) > 1:
-            print("Can only specify one launch command.", file=sys.stderr)
+            print >>sys.stderr, "Can only specify one launch command."
             return
         if len(args.launch_command) == 1:
             launch_command = args.launch_command[0]

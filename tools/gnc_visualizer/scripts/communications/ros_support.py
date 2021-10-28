@@ -85,7 +85,7 @@ class RosCommandExecutor:
             reset = rospy.ServiceProxy("gnc/ekf/reset", Empty)
             reset()
         except rospy.ServiceException as e:
-            print(("Service call failed: %s" % e))
+            print("Service call failed: %s" % e)
 
     def initialize_bias(self):
         try:

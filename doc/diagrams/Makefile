@@ -31,7 +31,7 @@ dot_src = $(wildcard *.dot)
 dot_svg = $(dot_src:%.dot=$(svg_dir)/%.svg)
 dot_png = $(dot_src:%.dot=$(png_dir)/%.png)
 
-plantuml_ver = 1.2019.1
+plantuml_ver = 1.2019.5
 plantuml_zip = plantuml-jar-asl-$(plantuml_ver).zip
 plantuml_url = https://sourceforge.net/projects/plantuml/files/$(plantuml_ver)/
 
