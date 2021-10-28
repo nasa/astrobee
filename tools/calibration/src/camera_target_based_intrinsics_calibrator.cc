@@ -44,7 +44,9 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   ceres::Problem problem;
   problem.AddParameterBlock(focal_lengths.data(), 2);
   problem.AddParameterBlock(principal_points.data(), 2);
-  problem.AddParameterBlock(distortion.data(), distortion.size());
+  // Rad distortion is stored internally as RadTan with 4 parameters but only 2 are optimized
+  const int num_distortion_params = params_.distortion_type == "rad" ? 2 : distortion.size();
+  problem.AddParameterBlock(distortion.data(), num_distortion_params);
   if (params_.calibrate_focal_lengths)
     LogError("Calibrating focal lengths.");
   else
