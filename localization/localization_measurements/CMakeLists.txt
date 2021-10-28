@@ -15,20 +15,56 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(localization_measurements)
 
-catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} ff_common localization_common
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS 
-  DEPENDS gtsam ff_msgs 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  ff_msgs
+  config_reader
+  localization_common
+  msg_conversions
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
-  INC ${catkin_INCLUDE_DIRS} 
-  DEPS ff_msgs
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
+
+catkin_package(
+  LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions
 )
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+)
+
+# create_library(TARGET ${PROJECT_NAME} 
+#   LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
+#   INC ${catkin_INCLUDE_DIRS} 
+#   DEPS ff_msgs
+# )
+
+
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  src/measurement_conversions.cc
+)
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -49,3 +85,21 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif()
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

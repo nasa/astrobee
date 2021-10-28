@@ -662,7 +662,7 @@ bool Localize(cv::Mat const& test_descriptors,
   }
 
   // To turn on verbose localization for debugging
-  // FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("verbose_localization", "true");
+  // google::SetCommandLineOption("verbose_localization", "true");
 
   // Find matches to each image in map. Do this in two passes. First,
   // find matches to all map images, then keep only num_similar

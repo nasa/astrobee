@@ -15,17 +15,71 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(ekf)
 
-catkin_package(
- LIBRARIES ekf
- CATKIN_DEPENDS roscpp sensor_msgs nav_msgs
- DEPENDS ff_msgs ff_hw_msgs ff_common
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  ff_msgs
+  ff_util
+  config_reader
+  gnc_autocode
+  camera
 )
 
-create_library(TARGET ekf
-  LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions camera ff_common config_reader ff_nodelet ff_flight
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs ff_hw_msgs)
+catkin_package(
+ INCLUDE_DIRS include
+ LIBRARIES ekf
+ CATKIN_DEPENDS roscpp ff_msgs ff_util config_reader gnc_autocode camera
+)
 
-install_launch_files()
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(ekf
+  src/ekf.cc
+  src/ekf_nodelet.cc
+  src/ekf_wrapper.cc
+)
+add_dependencies(ekf ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ekf ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

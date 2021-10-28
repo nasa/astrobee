@@ -47,3 +47,9 @@ TEST(PointToPlaneFactorTester, Jacobian) {
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

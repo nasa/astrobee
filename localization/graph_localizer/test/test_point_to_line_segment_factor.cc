@@ -311,3 +311,9 @@ TEST(PointToLineSegmentFactorTester, IncreaseErrorWithIncreasedYDistanceWithSilu
   }
   EXPECT_LT(error_1_norm, error_2_norm);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

@@ -24,7 +24,7 @@
 #include <cerrno>
 #include <cstring>
 
-// C++11 STL includes
+// C++ STL includes
 #include <algorithm>
 #include <chrono>
 #include <fstream>

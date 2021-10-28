@@ -17,13 +17,26 @@
   <build_depend>eigen_conversions</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rosbag</build_depend>
-  <build_depend>graph_localizer</build_depend>
   <build_depend>ff_util</build_depend>
-  <build_depend>tf</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_common</build_depend>
+  <build_depend>graph_localizer</build_depend>
+  <build_depend>camera</build_depend>
+  <build_depend>lk_optical_flow</build_depend>
+  <build_depend>imu_bias_tester</build_depend>
+  <build_depend>localization_node</build_depend>
+  <build_depend>imu_augmentor</build_depend>
   <run_depend>eigen_conversions</run_depend>
   <run_depend>graph_localizer</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rosbag</run_depend>
   <run_depend>ff_util</run_depend>
-  <run_depend>tf</run_depend>
+  <run_depend>ff_msgs</run_depend>
+  <run_depend>ff_common</run_depend>
+  <run_depend>graph_localizer</run_depend>
+  <run_depend>camera</run_depend>
+  <run_depend>lk_optical_flow</run_depend>
+  <run_depend>imu_bias_tester</run_depend>
+  <run_depend>localization_node</run_depend>
+  <run_depend>imu_augmentor</run_depend>
 </package>

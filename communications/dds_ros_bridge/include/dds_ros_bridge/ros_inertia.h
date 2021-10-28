@@ -30,8 +30,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "InertialPropertiesSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/InertialPropertiesSupport.h"
 
 namespace ff {
 
