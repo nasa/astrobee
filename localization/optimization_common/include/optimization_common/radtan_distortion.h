@@ -18,6 +18,7 @@
 #ifndef OPTIMIZATION_COMMON_RADTAN_DISTORTION_H_
 #define OPTIMIZATION_COMMON_RADTAN_DISTORTION_H_
 
+#include <optimization_common/distortion.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -27,14 +28,9 @@
 #include <ceres/ceres.h>
 
 namespace optimization_common {
-class RadTanDistortion {
+class RadTanDistortion : public Distortion<4, RadTanDistortion> {
  public:
-  // TODO(rsoussan): unify this with fov distortion?
-  Eigen::Vector2d Distort(const Eigen::VectorXd& distortion, const Eigen::Matrix3d& intrinsics,
-                          const Eigen::Vector2d& undistorted_point) const {
-    return Distort(distortion.data(), intrinsics, undistorted_point);
-  }
-
+  using Distortion<4, RadTanDistortion>::Distort;
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) const {
@@ -66,7 +62,7 @@ class RadTanDistortion {
   }
 
   cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
-                    const Eigen::VectorXd& distortion) {
+                    const Eigen::VectorXd& distortion) const final {
     cv::Mat undistorted_image;
     cv::Mat intrinsics_mat;
     cv::eigen2cv(intrinsics, intrinsics_mat);
@@ -75,8 +71,6 @@ class RadTanDistortion {
     cv::undistort(distorted_image, undistorted_image, intrinsics_mat, distortion_vector);
     return undistorted_image;
   }
-
-  static constexpr int NUM_PARAMS = 1;
 };
 }  // namespace optimization_common
 

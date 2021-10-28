@@ -18,6 +18,7 @@
 #ifndef OPTIMIZATION_COMMON_FOV_DISTORTION_H_
 #define OPTIMIZATION_COMMON_FOV_DISTORTION_H_
 
+#include <optimization_common/distortion.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -27,12 +28,9 @@
 #include <ceres/ceres.h>
 
 namespace optimization_common {
-class FovDistortion {
+class FovDistortion : public Distortion<1, FovDistortion> {
  public:
-  Eigen::Vector2d Distort(const Eigen::VectorXd& distortion, const Eigen::Matrix3d& intrinsics,
-                          const Eigen::Vector2d& undistorted_point) const {
-    return Distort(distortion.data(), intrinsics, undistorted_point);
-  }
+  using Distortion<1, FovDistortion>::Distort;
 
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
@@ -59,7 +57,7 @@ class FovDistortion {
   }
 
   cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
-                    const Eigen::VectorXd& distortion) {
+                    const Eigen::VectorXd& distortion) const final {
     cv::Mat gray_distorted_image;
     cv::cvtColor(distorted_image, gray_distorted_image, CV_BGR2GRAY);
     cv::Mat undistorted_image(distorted_image.size(), CV_8UC1, cv::Scalar(0));
@@ -76,7 +74,7 @@ class FovDistortion {
   }
 
   Eigen::Vector2i Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
-                            const Eigen::VectorXd& distortion) {
+                            const Eigen::VectorXd& distortion) const {
     const Eigen::Vector2d relative_distorted_point = RelativeCoordinates(distorted_point, intrinsics);
     const double rd = relative_distorted_point.norm();
     const double a = 2.0 * std::tan(distortion[0] / 2.0);
@@ -87,8 +85,6 @@ class FovDistortion {
     const Eigen::Vector2i undistorted_rounded_point(std::round(undistorted_point[0]), std::round(undistorted_point[1]));
     return undistorted_rounded_point;
   }
-
-  static constexpr int NUM_PARAMS = 1;
 };
 }  // namespace optimization_common
 
