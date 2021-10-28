@@ -66,9 +66,9 @@ if __name__ == '__main__':
     sys.exit()
 
   robot_config_file_full_path = os.path.join(args.config_path, args.robot_config_file)
-  copy_calibration_params_command = 'rosrun copy_calibration_params_to_config.py --config ' + robot_config_file_full_path + ' --camera-name ' + args.camera_name
+  copy_calibration_params_command = 'rosrun calibration copy_calibration_params_to_config.py --config ' + robot_config_file_full_path + ' --camera-name ' + args.camera_name
   os.system(copy_calibration_params_command)
 
-  undistort_directory = images_to_undistort_directory if images_to_undistort_directory else corners_directory
-  undistort_images_command = 'rosrun calibration create_undistorted_images ' + undistort_directory + ' ' + args.distortion + ' ' + args.camera_name + ' ' + args.config_path + ' --robot-config-file ' + args.robot_config_file + ' -w ' + args.world
+  undistort_directory = images_directory_to_undistort if images_directory_to_undistort else corners_directory
+  undistort_images_command = 'rosrun calibration create_undistorted_images ' + undistort_directory + ' ' + args.distortion_type + ' ' + args.camera_name + ' ' + args.config_path + ' --robot-config-file ' + args.robot_config_file + ' -w ' + args.world
   os.system(undistort_images_command)
