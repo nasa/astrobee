@@ -62,8 +62,10 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
       errors_file << error.x() << " " << error.y() << std::endl;
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
       // Add 1 to each value so background pixels stay white and we can map these back to white
-      // after applying colormap
-      const int error_color = std::round(std::min(error_norm, max_error_norm) / max_error_norm * 254.0) + 1;
+      // after applying colormap.
+      // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
+      // darker blues from 0 to 20 or so.
+      const int error_color = std::round(std::min(error_norm, max_error_norm) / max_error_norm * 235.0) + 1;
       cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(error_color), -1);
     }
   }
