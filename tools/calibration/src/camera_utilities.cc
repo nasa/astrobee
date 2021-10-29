@@ -28,4 +28,17 @@ namespace calibration {
 Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics) {
   return (intrinsics * cam_t_point).hnormalized();
 }
+
+Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv) {
+  Eigen::Vector3d translation;
+  cv::cv2eigen(translation_cv, translation);
+  Eigen::Matrix3d rotation;
+  cv::Mat rotation_cv;
+  cv::Rodrigues(rodrigues_rotation_cv, rotation_cv);
+  cv::cv2eigen(rotation_cv, rotation);
+  Eigen::Isometry3d pose;
+  pose.translation() = translation;
+  pose.linear() = rotation;
+  return pose;
+}
 }  // namespace calibration
