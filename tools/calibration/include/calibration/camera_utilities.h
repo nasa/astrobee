@@ -98,14 +98,17 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
-  const auto initial_estimate = RansacPnP<DISTORTER>(image_points, points_3d, intrinsics, distortion);
-  Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(initial_estimate.first);
+  const auto initial_estimate_and_inliers = RansacPnP<DISTORTER>(image_points, points_3d, intrinsics, distortion);
+  Eigen::Matrix<double, 6, 1> pose_estimate_vector =
+    optimization_common::VectorFromIsometry3d(initial_estimate_and_inliers.first);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
-  const int num_matches = static_cast<int>(image_points.size());
-  for (int i = 0; i < num_matches; ++i) {
+  const int num_inliers = initial_estimate_and_inliers.second.size();
+  for (int i = 0; i < num_inliers; ++i) {
+    const int inlier_index = initial_estimate_and_inliers.second[i];
     optimization_common::AddReprojectionCostFunction<DISTORTER>(
-      image_points[i], points_3d[i], pose_estimate_vector, const_cast<Eigen::Vector2d&>(focal_lengths),
-      const_cast<Eigen::Vector2d&>(principal_points), const_cast<Eigen::VectorXd&>(distortion), problem);
+      image_points[inlier_index], points_3d[inlier_index], pose_estimate_vector,
+      const_cast<Eigen::Vector2d&>(focal_lengths), const_cast<Eigen::Vector2d&>(principal_points),
+      const_cast<Eigen::VectorXd&>(distortion), problem);
   }
 
   ceres::Solver::Options options;
