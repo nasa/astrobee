@@ -33,6 +33,7 @@
 
 #include <boost/optional.hpp>
 
+#include <utility>
 #include <vector>
 
 namespace calibration {
@@ -41,10 +42,12 @@ Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, c
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
 template <typename DISTORTER>
-Eigen::Isometry3d RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
-                            const std::vector<Eigen::Vector3d>& points_3d, const Eigen::Matrix3d& intrinsics,
-                            const Eigen::VectorXd& distortion, const double min_inlier_threshold = 8.0,
-                            const int max_num_iterations = 100) {
+std::pair<Eigen::Isometry3d, Eigen::Vector2i> RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
+                                                        const std::vector<Eigen::Vector3d>& points_3d,
+                                                        const Eigen::Matrix3d& intrinsics,
+                                                        const Eigen::VectorXd& distortion,
+                                                        const double min_inlier_threshold = 8.0,
+                                                        const int max_num_iterations = 100) {
   // TODO(rsoussan): pass distorter as arg! same with project 3d point?
   const DISTORTER distorter;
   const std::vector<Eigen::Vector2d> undistorted_points = distorter.Undistort(image_points, intrinsics, distortion);
@@ -63,10 +66,14 @@ Eigen::Isometry3d RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
   cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
   cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
   cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
-  cv::Mat inliers;
+  cv::Mat inliers_cv;
   cv::solvePnPRansac(points_3d_cv, undistorted_points_cv, intrinsics_cv, zero_distortion, rodrigues_rotation_cv,
-                     translation_cv, false, max_num_iterations, min_inlier_threshold, 0.99, inliers, cv::SOLVEPNP_EPNP);
-  return Isometry3d(rodrigues_rotation_cv, translation_cv);
+                     translation_cv, false, max_num_iterations, min_inlier_threshold, 0.99, inliers_cv,
+                     cv::SOLVEPNP_EPNP);
+  Eigen::Vector2i inliers;
+  cv::cv2eigen(inliers_cv, inliers);
+  const Eigen::Isometry3d pose_estimate = Isometry3d(rodrigues_rotation_cv, translation_cv);
+  return std::make_pair(pose_estimate, inliers);
 }
 
 template <typename DISTORTER>
@@ -91,8 +98,8 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
-  const Eigen::Isometry3d initial_estimate = RansacPnP<DISTORTER>(image_points, points_3d, intrinsics, distortion);
-  Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(initial_estimate);
+  const auto initial_estimate = RansacPnP<DISTORTER>(image_points, points_3d, intrinsics, distortion);
+  Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(initial_estimate.first);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_matches = static_cast<int>(image_points.size());
   for (int i = 0; i < num_matches; ++i) {
