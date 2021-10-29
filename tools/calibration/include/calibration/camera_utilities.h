@@ -19,6 +19,7 @@
 #define CALIBRATION_CAMERA_UTILITIES_H_
 
 #include <camera/camera_model.h>
+#include <localization_common/logger.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 
@@ -108,7 +109,10 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   // std::cout << summary.FullReport() << "\n";
-  if (!summary.IsSolutionUsable()) return boost::none;
+  if (!summary.IsSolutionUsable()) {
+    LogError("ReprojectionPoseEstimate: Failed to find solution.");
+    return boost::none;
+  }
   return optimization_common::Isometry3(pose_estimate_vector.data());
 }
 

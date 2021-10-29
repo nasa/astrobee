@@ -36,7 +36,7 @@ Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat
   cv::Mat rotation_cv;
   cv::Rodrigues(rodrigues_rotation_cv, rotation_cv);
   cv::cv2eigen(rotation_cv, rotation);
-  Eigen::Isometry3d pose;
+  Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
   pose.translation() = translation;
   pose.linear() = rotation;
   return pose;

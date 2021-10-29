@@ -48,7 +48,7 @@ Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {
     rotation = Eigen::Matrix<T, 3, 3>(quaternion);
   }
   Eigen::Map<const Eigen::Matrix<T, 3, 1>> translation(&isometry_data[3]);
-  Eigen::Transform<T, 3, Eigen::Isometry> isometry_3;
+  Eigen::Transform<T, 3, Eigen::Isometry> isometry_3(Eigen::Transform<T, 3, Eigen::Isometry>::Identity());
   isometry_3.linear() = rotation;
   isometry_3.translation() = translation;
   return isometry_3;
