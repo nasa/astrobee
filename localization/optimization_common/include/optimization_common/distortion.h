@@ -22,6 +22,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <vector>
+
 namespace optimization_common {
 template <int NUM_PARAMS, typename DISTORTION>
 class Distortion {
@@ -33,6 +35,18 @@ class Distortion {
 
   virtual Eigen::Vector2d Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
                                     const Eigen::VectorXd& distortion) const = 0;
+
+  std::vector<Eigen::Vector2d> Undistort(const std::vector<Eigen::Vector2d>& distorted_points,
+                                         const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
+    // TODO(rsoussan): This is going to convert eigen to cv types for intrinsics and distortion for each
+    // Undistort call.  Make more efficient by making this function pure virtual and implementing in each
+    // child class with only one conversion at beginning of function.
+    std::vector<Eigen::Vector2d> undistorted_points;
+    for (const auto& distorted_point : distorted_points) {
+      undistorted_points.emplace_back(Undistort(distorted_point, intrinsics, distortion));
+    }
+    return undistorted_points;
+  }
 
   virtual cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
                             const Eigen::VectorXd& distortion) const = 0;
