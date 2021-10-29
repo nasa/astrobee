@@ -31,6 +31,9 @@ class Distortion {
     return static_cast<DISTORTION const*>(this)->Distort(distortion.data(), intrinsics, undistorted_point);
   }
 
+  virtual Eigen::Vector2d Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
+                                    const Eigen::VectorXd& distortion) const = 0;
+
   virtual cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
                             const Eigen::VectorXd& distortion) const = 0;
 

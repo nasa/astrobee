@@ -64,17 +64,19 @@ class FovDistortion : public Distortion<1, FovDistortion> {
     for (int y = 0; y < undistorted_image.rows; ++y) {
       for (int x = 0; x < undistorted_image.cols; ++x) {
         const uchar pixel_val = gray_distorted_image.at<uchar>(y, x);
-        const auto undistorted_point = Undistort(Eigen::Vector2d(x, y), intrinsics, distortion);
-        if (undistorted_point.x() >= undistorted_image.cols || undistorted_point.x() < 0) continue;
-        if (undistorted_point.y() >= undistorted_image.rows || undistorted_point.y() < 0) continue;
-        undistorted_image.at<uchar>(undistorted_point.y(), undistorted_point.x()) = pixel_val;
+        const Eigen::Vector2d undistorted_point = Undistort(Eigen::Vector2d(x, y), intrinsics, distortion);
+        const Eigen::Vector2i undistorted_rounded_point(std::round(undistorted_point[0]),
+                                                        std::round(undistorted_point[1]));
+        if (undistorted_rounded_point.x() >= undistorted_image.cols || undistorted_rounded_point.x() < 0) continue;
+        if (undistorted_rounded_point.y() >= undistorted_image.rows || undistorted_rounded_point.y() < 0) continue;
+        undistorted_image.at<uchar>(undistorted_rounded_point.y(), undistorted_rounded_point.x()) = pixel_val;
       }
     }
     return undistorted_image;
   }
 
-  Eigen::Vector2i Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
-                            const Eigen::VectorXd& distortion) const {
+  Eigen::Vector2d Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
+                            const Eigen::VectorXd& distortion) const final {
     const Eigen::Vector2d relative_distorted_point = RelativeCoordinates(distorted_point, intrinsics);
     const double rd = relative_distorted_point.norm();
     const double a = 2.0 * std::tan(distortion[0] / 2.0);
@@ -82,8 +84,7 @@ class FovDistortion : public Distortion<1, FovDistortion> {
     const double unwarping = rd > 1e-5 ? ru / rd : 1.0;
     const Eigen::Vector2d relative_undistorted_point = unwarping * relative_distorted_point;
     const Eigen::Vector2d undistorted_point = AbsoluteCoordinates(relative_undistorted_point, intrinsics);
-    const Eigen::Vector2i undistorted_rounded_point(std::round(undistorted_point[0]), std::round(undistorted_point[1]));
-    return undistorted_rounded_point;
+    return undistorted_point;
   }
 };
 }  // namespace optimization_common

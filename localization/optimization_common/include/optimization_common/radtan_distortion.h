@@ -71,6 +71,21 @@ class RadTanDistortion : public Distortion<4, RadTanDistortion> {
     cv::undistort(distorted_image, undistorted_image, intrinsics_mat, distortion_vector);
     return undistorted_image;
   }
+
+  Eigen::Vector2d Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
+                            const Eigen::VectorXd& distortion) const final {
+    cv::Mat intrinsics_mat;
+    cv::eigen2cv(intrinsics, intrinsics_mat);
+    cv::Mat distortion_vector;
+    cv::eigen2cv(distortion, distortion_vector);
+    cv::Mat distorted_point_vector;
+    cv::eigen2cv(distorted_point, distorted_point_vector);
+    cv::Mat undistorted_point_vector;
+    cv::undistort(distorted_point_vector, undistorted_point_vector, intrinsics_mat, distortion_vector);
+    Eigen::Vector2d undistorted_point;
+    cv::cv2eigen(undistorted_point_vector, undistorted_point);
+    return undistorted_point;
+  }
 };
 }  // namespace optimization_common
 
