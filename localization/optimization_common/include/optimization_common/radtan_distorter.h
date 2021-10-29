@@ -15,10 +15,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_RADTAN_DISTORTION_H_
-#define OPTIMIZATION_COMMON_RADTAN_DISTORTION_H_
+#ifndef OPTIMIZATION_COMMON_RADTAN_DISTORTER_H_
+#define OPTIMIZATION_COMMON_RADTAN_DISTORTER_H_
 
-#include <optimization_common/distortion.h>
+#include <optimization_common/distorter.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -28,9 +28,9 @@
 #include <ceres/ceres.h>
 
 namespace optimization_common {
-class RadTanDistortion : public Distortion<4, RadTanDistortion> {
+class RadTanDistorter : public Distorter<4, RadTanDistorter> {
  public:
-  using Distortion<4, RadTanDistortion>::Distort;
+  using Distorter<4, RadTanDistorter>::Distort;
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) const {
@@ -89,4 +89,4 @@ class RadTanDistortion : public Distortion<4, RadTanDistortion> {
 };
 }  // namespace optimization_common
 
-#endif  // OPTIMIZATION_COMMON_RADTAN_DISTORTION_H_
+#endif  // OPTIMIZATION_COMMON_RADTAN_DISTORTER_H_

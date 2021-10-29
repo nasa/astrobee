@@ -15,11 +15,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_RAD_DISTORTION_H_
-#define OPTIMIZATION_COMMON_RAD_DISTORTION_H_
+#ifndef OPTIMIZATION_COMMON_RAD_DISTORTER_H_
+#define OPTIMIZATION_COMMON_RAD_DISTORTER_H_
 
-#include <optimization_common/distortion.h>
-#include <optimization_common/radtan_distortion.h>
+#include <optimization_common/distorter.h>
+#include <optimization_common/radtan_distorter.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -27,9 +27,9 @@
 #include <opencv2/core/eigen.hpp>
 
 namespace optimization_common {
-class RadDistortion : public Distortion<2, RadDistortion> {
+class RadDistorter : public Distorter<2, RadDistorter> {
  public:
-  using Distortion<2, RadDistortion>::Distort;
+  using Distorter<2, RadDistorter>::Distort;
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) const {
@@ -38,19 +38,19 @@ class RadDistortion : public Distortion<2, RadDistortion> {
     radtan_distortion[1] = distortion[1];
     radtan_distortion[2] = T(0.0);
     radtan_distortion[3] = T(0.0);
-    return radtan_distortion_.Distort(radtan_distortion, intrinsics, undistorted_point);
+    return radtan_distorter_.Distort(radtan_distortion, intrinsics, undistorted_point);
   }
 
   cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
                     const Eigen::VectorXd& distortion) const final {
     const Eigen::VectorXd radtan_distortion = RadTanDistortionVector(distortion);
-    return radtan_distortion_.Undistort(distorted_image, intrinsics, radtan_distortion);
+    return radtan_distorter_.Undistort(distorted_image, intrinsics, radtan_distortion);
   }
 
   Eigen::Vector2d Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
                             const Eigen::VectorXd& distortion) const final {
     const Eigen::VectorXd radtan_distortion = RadTanDistortionVector(distortion);
-    return radtan_distortion_.Undistort(distorted_point, intrinsics, radtan_distortion);
+    return radtan_distorter_.Undistort(distorted_point, intrinsics, radtan_distortion);
   }
 
  private:
@@ -63,8 +63,8 @@ class RadDistortion : public Distortion<2, RadDistortion> {
     return radtan_distortion;
   }
 
-  RadTanDistortion radtan_distortion_;
+  RadTanDistorter radtan_distorter_;
 };
 }  // namespace optimization_common
 
-#endif  // OPTIMIZATION_COMMON_RAD_DISTORTION_H_
+#endif  // OPTIMIZATION_COMMON_RAD_DISTORTER_H_

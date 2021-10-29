@@ -19,9 +19,9 @@
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
 #include <calibration/utilities.h>
 #include <localization_common/logger.h>
-#include <optimization_common/fov_distortion.h>
-#include <optimization_common/rad_distortion.h>
-#include <optimization_common/radtan_distortion.h>
+#include <optimization_common/fov_distorter.h>
+#include <optimization_common/rad_distorter.h>
+#include <optimization_common/radtan_distorter.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 
@@ -70,14 +70,14 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     // TODO(rsoussan): Remove once class is templated
     boost::optional<Eigen::Isometry3d> camera_T_target;
     if (params_.distortion_type == "fov") {
-      camera_T_target = ReprojectionPoseEstimate<oc::FovDistortion>(match_set.image_points, match_set.points_3d,
-                                                                    focal_lengths, principal_points, distortion);
+      camera_T_target = ReprojectionPoseEstimate<oc::FovDistorter>(match_set.image_points, match_set.points_3d,
+                                                                   focal_lengths, principal_points, distortion);
     } else if (params_.distortion_type == "rad") {
-      camera_T_target = ReprojectionPoseEstimate<oc::RadDistortion>(match_set.image_points, match_set.points_3d,
-                                                                    focal_lengths, principal_points, distortion);
+      camera_T_target = ReprojectionPoseEstimate<oc::RadDistorter>(match_set.image_points, match_set.points_3d,
+                                                                   focal_lengths, principal_points, distortion);
     } else if (params_.distortion_type == "radtan") {
-      camera_T_target = ReprojectionPoseEstimate<oc::RadTanDistortion>(match_set.image_points, match_set.points_3d,
-                                                                       focal_lengths, principal_points, distortion);
+      camera_T_target = ReprojectionPoseEstimate<oc::RadTanDistorter>(match_set.image_points, match_set.points_3d,
+                                                                      focal_lengths, principal_points, distortion);
     } else {
       LogFatal("Invalid distortion type provided.");
     }
@@ -93,15 +93,15 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
       if (params_.distortion_type == "fov") {
-        oc::AddReprojectionCostFunction<oc::FovDistortion>(
-          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-          distortion, problem, radial_scale_factor, params_.huber_loss);
+        oc::AddReprojectionCostFunction<oc::FovDistorter>(match_set.image_points[i], match_set.points_3d[i],
+                                                          camera_T_targets.back(), focal_lengths, principal_points,
+                                                          distortion, problem, radial_scale_factor, params_.huber_loss);
       } else if (params_.distortion_type == "rad") {
-        oc::AddReprojectionCostFunction<oc::RadDistortion>(
-          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-          distortion, problem, radial_scale_factor, params_.huber_loss);
+        oc::AddReprojectionCostFunction<oc::RadDistorter>(match_set.image_points[i], match_set.points_3d[i],
+                                                          camera_T_targets.back(), focal_lengths, principal_points,
+                                                          distortion, problem, radial_scale_factor, params_.huber_loss);
       } else if (params_.distortion_type == "radtan") {
-        oc::AddReprojectionCostFunction<oc::RadTanDistortion>(
+        oc::AddReprojectionCostFunction<oc::RadTanDistorter>(
           match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
           distortion, problem, radial_scale_factor, params_.huber_loss);
       } else {
@@ -136,14 +136,14 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   calibrated_distortion = distortion;
   const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
-    SaveReprojectionErrors<oc::FovDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                              params_.image_size, params_.max_visualization_error_norm);
+    SaveReprojectionErrors<oc::FovDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                             params_.image_size, params_.max_visualization_error_norm);
   } else if (params_.distortion_type == "rad") {
-    SaveReprojectionErrors<oc::RadDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                              params_.image_size, params_.max_visualization_error_norm);
+    SaveReprojectionErrors<oc::RadDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                             params_.image_size, params_.max_visualization_error_norm);
   } else if (params_.distortion_type == "radtan") {
-    SaveReprojectionErrors<oc::RadTanDistortion>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                                 params_.image_size, params_.max_visualization_error_norm);
+    SaveReprojectionErrors<oc::RadTanDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                                params_.image_size, params_.max_visualization_error_norm);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

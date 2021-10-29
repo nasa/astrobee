@@ -103,7 +103,7 @@ class SymmetricPointToPlaneError {
   Eigen::Vector3d target_normal_;
 };
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 class AffineReprojectionError {
  public:
   AffineReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& depth_cloud_F_point_3d)
@@ -120,7 +120,7 @@ class AffineReprojectionError {
     const Eigen::Matrix<T, 3, 1> depth_image_F_point_3d = depth_image_A_depth_cloud * depth_cloud_F_point_3d_.cast<T>();
     const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * depth_image_F_point_3d).hnormalized();
     const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
-      distortion_.Distort(distortion_data, intrinsics, undistorted_reprojected_point_3d);
+      distorter_.Distort(distortion_data, intrinsics, undistorted_reprojected_point_3d);
 
     reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
     reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];
@@ -130,10 +130,10 @@ class AffineReprojectionError {
  private:
   Eigen::Vector2d image_point_;
   Eigen::Vector3d depth_cloud_F_point_3d_;
-  DISTORTION distortion_;
+  DISTORTER distorter_;
 };
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 class ReprojectionError {
  public:
   ReprojectionError(const Eigen::Vector2d& image_point, const Eigen::Vector3d& target_t_point_3d)
@@ -149,7 +149,7 @@ class ReprojectionError {
     const Eigen::Matrix<T, 3, 1> camera_t_point_3d = camera_T_target * target_t_point_3d_.cast<T>();
     const Eigen::Matrix<T, 2, 1> undistorted_reprojected_point_3d = (intrinsics * camera_t_point_3d).hnormalized();
     const Eigen::Matrix<T, 2, 1> distorted_reprojected_point_3d =
-      distortion_.Distort(distortion_data, intrinsics, undistorted_reprojected_point_3d);
+      distorter_.Distort(distortion_data, intrinsics, undistorted_reprojected_point_3d);
 
     reprojection_error[0] = image_point_[0] - distorted_reprojected_point_3d[0];
     reprojection_error[1] = image_point_[1] - distorted_reprojected_point_3d[1];
@@ -159,7 +159,7 @@ class ReprojectionError {
  private:
   Eigen::Vector2d image_point_;
   Eigen::Vector3d target_t_point_3d_;
-  DISTORTION distortion_;
+  DISTORTER distorter_;
 };
 
 void AddPointToPointCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
@@ -173,7 +173,7 @@ void AddSymmetricPointToPlaneCostFunction(const Eigen::Vector3d& source_point, c
                                           const Eigen::Vector3d& source_normal, const Eigen::Vector3d& target_normal,
                                           Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem);
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                                        Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
                                        Eigen::Matrix<double, 4, 1>& intrinsics_vector, Eigen::VectorXd& distortion,
@@ -183,13 +183,13 @@ void AddAffineReprojectionCostFunction(const Eigen::Vector2d& image_point, const
   // TODO(rsoussan): pass this? delete at end?
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
   ceres::CostFunction* reprojection_cost_function =
-    new ceres::AutoDiffCostFunction<AffineReprojectionError<DISTORTION>, 2, 7, 4, DISTORTION::kNumParams>(
-      new AffineReprojectionError<DISTORTION>(image_point, point_3d));
+    new ceres::AutoDiffCostFunction<AffineReprojectionError<DISTORTER>, 2, 7, 4, DISTORTER::kNumParams>(
+      new AffineReprojectionError<DISTORTER>(image_point, point_3d));
   problem.AddResidualBlock(reprojection_cost_function, huber_loss, depth_image_A_depth_cloud_vector.data(),
                            intrinsics_vector.data(), distortion.data());
 }
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d,
                                  Eigen::Matrix<double, 6, 1>& camera_T_target, Eigen::Vector2d& focal_lengths,
                                  Eigen::Vector2d& principal_points, Eigen::VectorXd& distortion,
@@ -199,8 +199,8 @@ void AddReprojectionCostFunction(const Eigen::Vector2d& image_point, const Eigen
   ceres::LossFunction* huber_loss = new ceres::HuberLoss(huber_threshold);
   ceres::LossFunction* scaled_huber_loss = new ceres::ScaledLoss(huber_loss, scale_factor, ceres::TAKE_OWNERSHIP);
   ceres::CostFunction* reprojection_cost_function =
-    new ceres::AutoDiffCostFunction<ReprojectionError<DISTORTION>, 2, 6, 2, 2, DISTORTION::kNumParams>(
-      new ReprojectionError<DISTORTION>(image_point, point_3d));
+    new ceres::AutoDiffCostFunction<ReprojectionError<DISTORTER>, 2, 6, 2, 2, DISTORTER::kNumParams>(
+      new ReprojectionError<DISTORTER>(image_point, point_3d));
   problem.AddResidualBlock(reprojection_cost_function, scaled_huber_loss, camera_T_target.data(), focal_lengths.data(),
                            principal_points.data(), distortion.data());
 }

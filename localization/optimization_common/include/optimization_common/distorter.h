@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_DISTORTION_H_
-#define OPTIMIZATION_COMMON_DISTORTION_H_
+#ifndef OPTIMIZATION_COMMON_DISTORTER_H_
+#define OPTIMIZATION_COMMON_DISTORTER_H_
 
 #include <Eigen/Core>
 
@@ -25,12 +25,12 @@
 #include <vector>
 
 namespace optimization_common {
-template <int NUM_PARAMS, typename DISTORTION>
-class Distortion {
+template <int NUM_PARAMS, typename DISTORTER>
+class Distorter {
  public:
   Eigen::Vector2d Distort(const Eigen::VectorXd& distortion, const Eigen::Matrix3d& intrinsics,
                           const Eigen::Vector2d& undistorted_point) const {
-    return static_cast<DISTORTION const*>(this)->Distort(distortion.data(), intrinsics, undistorted_point);
+    return static_cast<DISTORTER const*>(this)->Distort(distortion.data(), intrinsics, undistorted_point);
   }
 
   virtual Eigen::Vector2d Undistort(const Eigen::Vector2d& distorted_point, const Eigen::Matrix3d& intrinsics,
@@ -55,4 +55,4 @@ class Distortion {
 };
 }  // namespace optimization_common
 
-#endif  // OPTIMIZATION_COMMON_DISTORTION_H_
+#endif  // OPTIMIZATION_COMMON_DISTORTER_H_

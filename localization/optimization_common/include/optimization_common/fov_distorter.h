@@ -15,10 +15,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_FOV_DISTORTION_H_
-#define OPTIMIZATION_COMMON_FOV_DISTORTION_H_
+#ifndef OPTIMIZATION_COMMON_FOV_DISTORTER_H_
+#define OPTIMIZATION_COMMON_FOV_DISTORTER_H_
 
-#include <optimization_common/distortion.h>
+#include <optimization_common/distorter.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -28,9 +28,9 @@
 #include <ceres/ceres.h>
 
 namespace optimization_common {
-class FovDistortion : public Distortion<1, FovDistortion> {
+class FovDistorter : public Distorter<1, FovDistorter> {
  public:
-  using Distortion<1, FovDistortion>::Distort;
+  using Distorter<1, FovDistorter>::Distort;
 
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
@@ -89,4 +89,4 @@ class FovDistortion : public Distortion<1, FovDistortion> {
 };
 }  // namespace optimization_common
 
-#endif  // OPTIMIZATION_COMMON_FOV_DISTORTION_H_
+#endif  // OPTIMIZATION_COMMON_FOV_DISTORTER_H_

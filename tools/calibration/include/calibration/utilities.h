@@ -35,7 +35,7 @@
 #include <vector>
 
 namespace calibration {
-template <typename DISTORTION>
+template <typename DISTORTER>
 void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
                             const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
@@ -51,7 +51,7 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
       const auto& target_point = match_set.points_3d[j];
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
       const Eigen::Vector2d projected_image_point =
-        Project3dPointToImageSpaceWithDistortion<DISTORTION>(camera_t_target_point, intrinsics, distortion);
+        Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
       const Eigen::Vector2d error = (image_point - projected_image_point);
       const double error_norm = error.norm();
       errors_file << error.x() << " " << error.y() << std::endl;

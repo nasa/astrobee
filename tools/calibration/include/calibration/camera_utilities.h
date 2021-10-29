@@ -39,13 +39,13 @@ Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, c
 
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 Eigen::Isometry3d RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
                             const std::vector<Eigen::Vector3d>& points_3d, const Eigen::Matrix3d& intrinsics,
                             const Eigen::VectorXd& distortion, const double min_inlier_threshold = 8.0,
                             const int max_num_iterations = 100) {
-  // TODO(rsoussan): Make distortion methods static to avoid this???
-  const DISTORTION distorter;
+  // TODO(rsoussan): pass distorter as arg! same with project 3d point?
+  const DISTORTER distorter;
   const std::vector<Eigen::Vector2d> undistorted_points = distorter.Undistort(image_points, intrinsics, distortion);
   // TODO(rsoussan): Avoid these looped conversions?
   std::vector<cv::Point2d> undistorted_points_cv;
@@ -68,7 +68,7 @@ Eigen::Isometry3d RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
   return Isometry3d(rodrigues_rotation_cv, translation_cv);
 }
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
                                                             const std::vector<Eigen::Vector3d>& points_3d,
                                                             const Eigen::Vector2d& focal_lengths,
@@ -83,7 +83,7 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   problem.SetParameterBlockConstant(const_cast<double*>(focal_lengths.data()));
   problem.AddParameterBlock(const_cast<double*>(principal_points.data()), 2);
   problem.SetParameterBlockConstant(const_cast<double*>(principal_points.data()));
-  problem.AddParameterBlock(const_cast<double*>(distortion.data()), DISTORTION::kNumParams);
+  problem.AddParameterBlock(const_cast<double*>(distortion.data()), DISTORTER::kNumParams);
   problem.SetParameterBlockConstant(const_cast<double*>(distortion.data()));
 
   Eigen::Isometry3d pose_estimate(Eigen::Isometry3d::Identity());
@@ -91,7 +91,7 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_matches = static_cast<int>(image_points.size());
   for (int i = 0; i < num_matches; ++i) {
-    optimization_common::AddReprojectionCostFunction<DISTORTION>(
+    optimization_common::AddReprojectionCostFunction<DISTORTER>(
       image_points[i], points_3d[i], pose_estimate_vector, const_cast<Eigen::Vector2d&>(focal_lengths),
       const_cast<Eigen::Vector2d&>(principal_points), const_cast<Eigen::VectorXd&>(distortion), problem);
   }
@@ -108,7 +108,7 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   return optimization_common::Isometry3(pose_estimate_vector.data());
 }
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
                                                             const std::vector<Eigen::Vector3d>& points_3d,
                                                             const Eigen::Matrix3d& intrinsics,
@@ -116,17 +116,17 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
                                                             const int max_num_iterations = 100) {
   const Eigen::Vector2d focal_lengths(intrinsics(0, 0), intrinsics(1, 1));
   const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
-  return ReprojectionPoseEstimate<DISTORTION>(image_points, points_3d, focal_lengths, principal_points, distortion,
-                                              max_num_iterations);
+  return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
+                                             max_num_iterations);
 }
 
-template <typename DISTORTION>
+template <typename DISTORTER>
 Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
                                                          const Eigen::Matrix3d& intrinsics,
                                                          const Eigen::VectorXd& distortion_params) {
   const Eigen::Vector2d undistorted_image_point = Project3dPointToImageSpace(cam_t_point, intrinsics);
-  const DISTORTION distortion;
-  return distortion.Distort(distortion_params, intrinsics, undistorted_image_point);
+  const DISTORTER distorter;
+  return distorter.Distort(distortion_params, intrinsics, undistorted_image_point);
 }
 }  // namespace calibration
 #endif  // CALIBRATION_CAMERA_UTILITIES_H_

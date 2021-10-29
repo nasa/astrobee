@@ -22,9 +22,9 @@
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-#include <optimization_common/fov_distortion.h>
-#include <optimization_common/rad_distortion.h>
-#include <optimization_common/radtan_distortion.h>
+#include <optimization_common/fov_distorter.h>
+#include <optimization_common/rad_distorter.h>
+#include <optimization_common/radtan_distorter.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -114,14 +114,14 @@ int main(int argc, char** argv) {
     cv::Mat undistorted_image;
     // TODO(rsoussan): Avoid checking distortion param value/recreating distortion object each time
     if (distortion_type == "fov") {
-      oc::FovDistortion distortion;
-      undistorted_image = distortion.Undistort(distorted_image, intrinsics, distortion_params);
+      oc::FovDistorter distorter;
+      undistorted_image = distorter.Undistort(distorted_image, intrinsics, distortion_params);
     } else if (distortion_type == "rad") {
-      oc::RadDistortion distortion;
-      undistorted_image = distortion.Undistort(distorted_image, intrinsics, distortion_params);
+      oc::RadDistorter distorter;
+      undistorted_image = distorter.Undistort(distorted_image, intrinsics, distortion_params);
     } else if (distortion_type == "radtan") {
-      oc::RadTanDistortion distortion;
-      undistorted_image = distortion.Undistort(distorted_image, intrinsics, distortion_params);
+      oc::RadTanDistorter distorter;
+      undistorted_image = distorter.Undistort(distorted_image, intrinsics, distortion_params);
     } else {
       LogFatal("Invalid distortion type provided.");
     }
