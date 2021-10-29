@@ -77,12 +77,10 @@ std::pair<Eigen::Isometry3d, Eigen::Vector2i> RansacPnP(const std::vector<Eigen:
 }
 
 template <typename DISTORTER>
-boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
-                                                            const std::vector<Eigen::Vector3d>& points_3d,
-                                                            const Eigen::Vector2d& focal_lengths,
-                                                            const Eigen::Vector2d& principal_points,
-                                                            const Eigen::VectorXd& distortion,
-                                                            const int max_num_iterations = 100) {
+boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
+  const int min_num_inliers = 4, const int max_num_iterations = 100) {
   if (image_points.size() < 4) return boost::none;
 
   ceres::Problem problem;
@@ -103,6 +101,12 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
     optimization_common::VectorFromIsometry3d(initial_estimate_and_inliers.first);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_inliers = initial_estimate_and_inliers.second.size();
+  if (num_inliers < min_num_inliers) {
+    LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << min_num_inliers << ", got " << num_inliers
+                                                                      << ".");
+    return boost::none;
+  }
+
   for (int i = 0; i < num_inliers; ++i) {
     const int inlier_index = initial_estimate_and_inliers.second[i];
     optimization_common::AddReprojectionCostFunction<DISTORTER>(
