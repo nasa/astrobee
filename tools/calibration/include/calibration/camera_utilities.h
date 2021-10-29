@@ -28,6 +28,7 @@
 #include <ceres/solver.h>
 
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
 
 #include <boost/optional.hpp>
 
@@ -35,6 +36,45 @@
 
 namespace calibration {
 Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics);
+
+template <typename DISTORTION>
+Eigen::Isometry3d RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
+                            const std::vector<Eigen::Vector3d>& points_3d, const Eigen::Matrix3d& intrinsics,
+                            const Eigen::VectorXd& distortion, const double min_inlier_threshold = 8.0,
+                            const int max_num_iterations = 100) {
+  // TODO(rsoussan): Make distortion methods static to avoid this???
+  const DISTORTION distorter;
+  const std::vector<Eigen::Vector2d> undistorted_points = distorter.Undistort(image_points, intrinsics, distortion);
+  // TODO(rsoussan): Avoid these looped conversions?
+  std::vector<cv::Point2d> undistorted_points_cv;
+  for (const auto& undistorted_point : undistorted_points) {
+    undistorted_points_cv.emplace_back(cv::Point2d(undistorted_point.x(), undistorted_point.y()));
+  }
+  std::vector<cv::Point3d> points_3d_cv;
+  for (const auto& point_3d : points_3d) {
+    points_3d_cv.emplace_back(point_3d.x(), point_3d.y(), point_3d.z());
+  }
+
+  cv::Mat intrinsics_cv;
+  cv::eigen2cv(intrinsics, intrinsics_cv);
+  cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+  cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+  cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
+  cv::Mat inliers;
+  cv::solvePnPRansac(points_3d_cv, undistorted_points_cv, intrinsics_cv, zero_distortion, rodrigues_rotation_cv,
+                     translation_cv, false, max_num_iterations, min_inlier_threshold, 0.99, inliers, cv::SOLVEPNP_EPNP);
+  // TODO(rsoussan): Make function for this!!!!
+  Eigen::Vector3d translation;
+  cv::cv2eigen(translation_cv, translation);
+  Eigen::Matrix3d rotation;
+  cv::Mat rotation_cv;
+  cv::Rodrigues(rodrigues_rotation_cv, rotation_cv);
+  cv::cv2eigen(rotation_cv, rotation);
+  Eigen::Isometry3d pose_estimate;
+  pose_estimate.translation() = translation;
+  pose_estimate.linear() = rotation;
+  return pose_estimate;
+}
 
 template <typename DISTORTION>
 boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
