@@ -37,7 +37,7 @@ class Distorter {
                                     const Eigen::VectorXd& distortion) const = 0;
 
   std::vector<Eigen::Vector2d> Undistort(const std::vector<Eigen::Vector2d>& distorted_points,
-                                         const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
+                                         const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) const {
     // TODO(rsoussan): This is going to convert eigen to cv types for intrinsics and distortion for each
     // Undistort call.  Make more efficient by making this function pure virtual and implementing in each
     // child class with only one conversion at beginning of function.

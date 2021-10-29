@@ -31,6 +31,7 @@ namespace optimization_common {
 class FovDistorter : public Distorter<1, FovDistorter> {
  public:
   using Distorter<1, FovDistorter>::Distort;
+  using Distorter<1, FovDistorter>::Undistort;
 
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,

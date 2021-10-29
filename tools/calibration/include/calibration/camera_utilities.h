@@ -86,8 +86,12 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   problem.AddParameterBlock(const_cast<double*>(distortion.data()), DISTORTER::kNumParams);
   problem.SetParameterBlockConstant(const_cast<double*>(distortion.data()));
 
-  Eigen::Isometry3d pose_estimate(Eigen::Isometry3d::Identity());
-  Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(pose_estimate);
+  // TODO(rsoussan): pass max its and min thresh args!
+  const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
+  // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
+  // if any points_3d z values are 0.
+  const Eigen::Isometry3d initial_estimate = RansacPnP<DISTORTER>(image_points, points_3d, intrinsics, distortion);
+  Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(initial_estimate);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_matches = static_cast<int>(image_points.size());
   for (int i = 0; i < num_matches; ++i) {

@@ -30,6 +30,8 @@ namespace optimization_common {
 class RadDistorter : public Distorter<2, RadDistorter> {
  public:
   using Distorter<2, RadDistorter>::Distort;
+  using Distorter<2, RadDistorter>::Undistort;
+
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
                                  const Eigen::Matrix<T, 2, 1>& undistorted_point) const {
