@@ -26,6 +26,7 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <boost/optional.hpp>
 
@@ -74,6 +75,7 @@ void SaveReprojectionErrors(const std::vector<Eigen::Matrix<double, 6, 1>>& came
   cv::imwrite("reprojection_image.jpg", reprojection_image_color);
   errors_file.close();
 }
+
 }  // namespace calibration
 
 #endif  // CALIBRATION_UTILITIES_H_

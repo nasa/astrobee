@@ -69,6 +69,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   for (const auto& match_set : match_sets) {
     // TODO(rsoussan): Remove once class is templated
     boost::optional<Eigen::Isometry3d> camera_T_target;
+    LogError("og img points size: " << match_set.image_points.size());
     if (params_.distortion_type == "fov") {
       camera_T_target = ReprojectionPoseEstimate<oc::FovDistorter>(match_set.image_points, match_set.points_3d,
                                                                    focal_lengths, principal_points, distortion);
