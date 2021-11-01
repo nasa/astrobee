@@ -168,10 +168,13 @@ of turning on and off options. To see which options are supported, simply run
     source ~/.bashrc
     popd
 
-If you want to explicitly specify the build and install directories, use
+If you want to explicitly specify the workspace and install directories, use
 instead:
 
-    ./scripts/configure.sh -l -p $INSTALL_PATH -b $BUILD_PATH
+    ./scripts/configure.sh -l -p $INSTALL_PATH -w $WORKSPACE_PATH
+
+*Note: If a workspace is specified but not an explicit install distectory,
+install location will be $WORKSPACE_PATH/install.*
 
 ### Cross-compile build
 

@@ -98,10 +98,13 @@ of turning on and off options. To see which options are supported, simply run
     source ~/.bashrc
     popd
 
-If you want to explicitly specify the build and install directories, use
+If you want to explicitly specify the workspace and install directories, use
 instead:
 
-    ./src/scripts/configure.sh -l -F -D -p $INSTALL_PATH -b $BUILD_PATH
+    ./src/scripts/configure.sh -l -F -D -p $INSTALL_PATH -w $WORKSPACE_PATH
+
+*Note: If a workspace is specified but not an explicit install distectory,
+install location will be $WORKSPACE_PATH/install.*
 
 *Note: Make sure you use the -F and -D flags. If these flags are not used, the
 code will not compile. The -F flag is used to turn off building the Picoflex.
