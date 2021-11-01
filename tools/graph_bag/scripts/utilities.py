@@ -18,6 +18,7 @@
 import datetime
 import glob
 import os
+import subprocess
 
 import numpy as np
 import pandas as pd
@@ -74,7 +75,11 @@ def load_dataframe(files):
     dataframe = pd.concat(dataframes)
     return dataframe
 
+def run_command_and_save_output(command, output_filename):
+      with open(output_filename, 'w') as output_file:
+              subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
 
+# TODO(rsoussan): Move these to different utilities file
 def get_topic_rates(
     bag_name,
     topic,

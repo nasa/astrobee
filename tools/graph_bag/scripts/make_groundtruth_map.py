@@ -21,22 +21,18 @@ import argparse
 import shutil
 
 import os
-import subprocess
 import sys
 
-#TODO(rsoussan): Put this somewhere common -> utils?
-def run_command_and_save_output(command, output_filename):
-  with open(output_filename, 'w') as output_file:
-    subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
+import utilities
 
 def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name):
   os.mkdir("gt_images")
   gt_images = os.path.abspath('gt_images')
   extract_images_command = "rosrun localization_node extract_image_bag " + bagfile + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory gt_images"
-  run_command_and_save_output(extract_images_command, 'extract_images.txt')
+  utilities.run_command_and_save_output(extract_images_command, 'extract_images.txt')
 
   select_images_command = "rosrun sparse_mapping select_images -density_factor 1.4 gt_images/*.jpg"
-  run_command_and_save_output(select_images_command, 'select_images.txt')
+  utilities.run_command_and_save_output(select_images_command, 'select_images.txt')
 
   # Set environment variables
   home = os.path.expanduser('~')
@@ -49,11 +45,11 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
 
   # Build groundtruth
   build_map_command = 'rosrun sparse_mapping build_map gt_images/*jpg -output_map groundtruth.map -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100'
-  run_command_and_save_output(build_map_command, 'build_map.txt')
+  utilities.run_command_and_save_output(build_map_command, 'build_map.txt')
 
   # Merge with base map
   merge_map_command = 'rosrun sparse_mapping merge_maps ' + base_surf_map + ' groundtruth.map -output_map groundtruth.surf.map -num_image_overlaps_at_endpoints 100000000 -skip_bundle_adjustment'
-  run_command_and_save_output(merge_map_command, 'merge_map.txt')
+  utilities.run_command_and_save_output(merge_map_command, 'merge_map.txt')
 
   # Link maps directory since conversion to BRISK map needs
   # image files to appear to be in correct relative path
@@ -69,14 +65,14 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
   gt_path = os.getcwd()
   os.chdir('maps')
   rebuild_map_command = 'rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map ' + groundtruth_brisk_map
-  run_command_and_save_output(rebuild_map_command, rebuild_output_file)
+  utilities.run_command_and_save_output(rebuild_map_command, rebuild_output_file)
   # Use gt_path since relative commands would now be wrt maps directory simlink
   os.chdir(gt_path)
 
   # Create vocabdb
   shutil.copyfile("groundtruth.brisk.map", "groundtruth.brisk.vocabdb.map")
   add_vocabdb_command = 'rosrun sparse_mapping build_map -vocab_db -output_map groundtruth.brisk.vocabdb.map'
-  run_command_and_save_output(add_vocabdb_command, 'build_vocabdb.txt')
+  utilities.run_command_and_save_output(add_vocabdb_command, 'build_vocabdb.txt')
 
   # Remove simlinks
   os.unlink('maps/gt_images')
