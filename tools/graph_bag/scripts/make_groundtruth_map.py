@@ -30,11 +30,12 @@ def run_command_and_save_output(command, output_filename):
     subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
 
 def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name):
-  os.mkdir("images")
-  extract_images_command = "rosrun localization_node extract_image_bag " + bagfile + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory images"
+  os.mkdir("gt_images")
+  gt_images = os.path.abspath('gt_images')
+  extract_images_command = "rosrun localization_node extract_image_bag " + bagfile + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory gt_images"
   run_command_and_save_output(extract_images_command, 'extract_images.txt')
 
-  select_images_command = "rosrun sparse_mapping select_images -density_factor 1.4 images/*.jpg"
+  select_images_command = "rosrun sparse_mapping select_images -density_factor 1.4 gt_images/*.jpg"
   run_command_and_save_output(select_images_command, 'select_images.txt')
 
   # Set environment variables
@@ -47,7 +48,7 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
   os.environ['ASTROBEE_WORLD'] = world
 
   # Build groundtruth
-  build_map_command = 'rosrun sparse_mapping build_map images/*jpg -output_map groundtruth.map -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100'
+  build_map_command = 'rosrun sparse_mapping build_map gt_images/*jpg -output_map groundtruth.map -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100'
   run_command_and_save_output(build_map_command, 'build_map.txt')
 
   # Merge with base map
@@ -56,8 +57,8 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
 
   # Link maps directory since conversion to BRISK map needs
   # image files to appear to be in correct relative path
-  link_command= 'ln -s ' + maps_directory + ' maps'
-  os.system(link_command)
+  os.symlink(maps_directory, 'maps')
+  os.symlink(gt_images, 'maps/gt_images')
 
   # Convert SURF to BRISK map
   # Get full path to output file to avoid permission errors when running 
@@ -70,7 +71,14 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
   run_command_and_save_output(rebuild_map_command, rebuild_output_file)
   os.chdir('..')
 
-  # TODO: build vocab!
+  # Create vocabdb
+  shutil.copyfile("groundtruth.brisk.map", "groundtruth.brisk.vocabdb.map")
+  add_vocabdb_command = 'rosrun sparse_mapping build_map -vocab_db -output_map groundtruth.brisk.vocabdb.map'
+  run_command_and_save_output(add_vocabdb_command, 'build_vocabdb.txt')
+
+  # Remove simlinks
+  os.unlink('maps/gt_images')
+  os.unlink('maps')
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
