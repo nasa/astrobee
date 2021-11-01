@@ -29,7 +29,7 @@ def run_command_and_save_output(command, output_filename):
   with open(output_filename, 'w') as output_file:
     subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
 
-def create_groundtruth(bagfile, base_surf_map, world, robot_name):
+def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name):
   os.mkdir("images")
   extract_images_command = "rosrun localization_node extract_image_bag " + bagfile + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory images"
   run_command_and_save_output(extract_images_command, 'extract_images.txt')
@@ -37,8 +37,6 @@ def create_groundtruth(bagfile, base_surf_map, world, robot_name):
   select_images_command = "rosrun sparse_mapping select_images -density_factor 1.4 images/*.jpg"
   run_command_and_save_output(select_images_command, 'select_images.txt')
 
-
-  return
   # Set environment variables
   home = os.path.expanduser('~')
   robot_config_file = os.path.join('config/robots', robot_name + '.config')
@@ -56,10 +54,21 @@ def create_groundtruth(bagfile, base_surf_map, world, robot_name):
   merge_map_command = 'rosrun sparse_mapping merge_maps ' + base_surf_map + ' groundtruth.map -output_map groundtruth.surf.map -num_image_overlaps_at_endpoints 100000000 -skip_bundle_adjustment'
   run_command_and_save_output(merge_map_command, 'merge_map.txt')
 
-  ## Convert SURF to BRISK map
+  # Link maps directory since conversion to BRISK map needs
+  # image files to appear to be in correct relative path
+  link_command= 'ln -s ' + maps_directory + ' maps'
+  os.system(link_command)
+
+  # Convert SURF to BRISK map
+  # Get full path to output file to avoid permission errors when running 
+  # command in maps directory
+  rebuild_output_file = os.path.join(os.getcwd(), 'rebuild_map_as_brisk_map.txt')
   shutil.copyfile("groundtruth.surf.map", "groundtruth.brisk.map")
-  rebuild_map_command = 'rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map groundtruth.brisk.map'
-  run_command_and_save_output(rebuild_map_command, 'rebuild_map_as_brisk_map.txt')
+  groundtruth_brisk_map = os.path.abspath('groundtruth.brisk.map')
+  os.chdir('maps')
+  rebuild_map_command = 'rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map ' + groundtruth_brisk_map
+  run_command_and_save_output(rebuild_map_command, rebuild_output_file)
+  os.chdir('..')
 
   # TODO: build vocab!
 
@@ -67,6 +76,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
   parser.add_argument('base_surf_map')
+  parser.add_argument('maps_directory')
   parser.add_argument('-o', '--output-directory', default='groundtruth_creation_output')
   parser.add_argument('-w', '--world', default='iss')
   parser.add_argument('-r', '--robot-name', default='bumble')
@@ -78,14 +88,18 @@ if __name__ == '__main__':
   if not os.path.isfile(args.base_surf_map):
     print('Base surf map ' + args.base_surf_map + ' does not exist.')
     sys.exit()
+  if not os.path.isdir(args.maps_directory):
+    print('Maps directory ' + args.maps_directory + ' does not exist.')
+    sys.exit()
   if os.path.isdir(args.output_directory):
     print('Output directory ' + args.output_directory + ' already exists.')
     sys.exit()
 
   bagfile = os.path.abspath(args.bagfile)
   base_surf_map = os.path.abspath(args.base_surf_map)
+  maps_directory = os.path.abspath(args.maps_directory)
 
   os.mkdir(args.output_directory)
   os.chdir(args.output_directory)
 
-  create_groundtruth(bagfile, base_surf_map, args.world, args.robot_name)
+  create_groundtruth(bagfile, base_surf_map, maps_directory, args.world, args.robot_name)
