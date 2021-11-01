@@ -21,6 +21,7 @@ import argparse
 import shutil
 
 import os
+import subprocess
 import sys
 
 #TODO(rsoussan): Put this somewhere common -> utils?
@@ -66,6 +67,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
   parser.add_argument('base_surf_map')
+  parser.add_argument('-o', '--output-directory', default='groundtruth_creation_output')
   parser.add_argument('-w', '--world', default='iss')
   parser.add_argument('-r', '--robot-name', default='bumble')
 
@@ -76,5 +78,14 @@ if __name__ == '__main__':
   if not os.path.isfile(args.base_surf_map):
     print('Base surf map ' + args.base_surf_map + ' does not exist.')
     sys.exit()
+  if os.path.isdir(args.output_directory):
+    print('Output directory ' + args.output_directory + ' already exists.')
+    sys.exit()
 
-  create_groundtruth(args.bagfile, args.base_surf_map, args.world, args.robot_name)
+  bagfile = os.path.abspath(args.bagfile)
+  base_surf_map = os.path.abspath(args.base_surf_map)
+
+  os.mkdir(args.output_directory)
+  os.chdir(args.output_directory)
+
+  create_groundtruth(bagfile, base_surf_map, args.world, args.robot_name)
