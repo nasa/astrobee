@@ -64,10 +64,9 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, 
   rebuild_output_file = os.path.join(os.getcwd(), 'rebuild_map_as_brisk_map.txt')
   groundtruth_brisk_map = map_name + '.brisk.map'
   shutil.copyfile(groundtruth_surf_map, groundtruth_brisk_map)
-  groundtruth_brist_map = os.path.abspath(groundtruth_brisk_map)
-  gt_path = os.getcwd()
+  groundtruth_brisk_map_full_path = os.path.abspath(groundtruth_brisk_map)
   os.chdir('maps')
-  rebuild_map_command = 'rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map ' + groundtruth_brisk_map
+  rebuild_map_command = 'rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map ' + groundtruth_brisk_map_full_path
   utilities.run_command_and_save_output(rebuild_map_command, rebuild_output_file)
   # Use gt_path since relative commands would now be wrt maps directory simlink
   os.chdir(gt_path)
