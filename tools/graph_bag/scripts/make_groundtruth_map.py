@@ -49,7 +49,7 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, 
   utilities.run_command_and_save_output(build_map_command, 'build_map.txt')
 
   # Merge with base map
-  groundtruth_surf_map = map_name + 'surf.map'
+  groundtruth_surf_map = map_name + '.surf.map'
   merge_map_command = 'rosrun sparse_mapping merge_maps ' + base_surf_map + ' ' + groundtruth_map + ' -output_map ' + groundtruth_surf_map + ' -num_image_overlaps_at_endpoints 100000000 -skip_bundle_adjustment'
   utilities.run_command_and_save_output(merge_map_command, 'merge_map.txt')
 
@@ -73,7 +73,7 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, 
   os.chdir(gt_path)
 
   # Create vocabdb
-  groundtruth_brisk_vocabdb_map = map_name + 'brisk.vocabdb.map'
+  groundtruth_brisk_vocabdb_map = map_name + '.brisk.vocabdb.map'
   shutil.copyfile(groundtruth_brisk_map, groundtruth_brisk_vocabdb_map)
   add_vocabdb_command = 'rosrun sparse_mapping build_map -vocab_db -output_map ' + groundtruth_brisk_vocabdb_map
   utilities.run_command_and_save_output(add_vocabdb_command, 'build_vocabdb.txt')
