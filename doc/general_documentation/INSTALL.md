@@ -74,16 +74,20 @@ by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 ## Configuring the build
 
 ### Note for the build setup
-By default, the configure script uses the following paths:
+
+When compiling, the `$WORKSPACE_PATH` defines where the `devel`, `build`, `logs` and
+`install` directories are created. If you want to customize the `install` path then the
+`$INSTALL_PATH` can be defined. By default, the configure script uses the following paths:
+
   - native build path: `$ASTROBEE_WS/build`
   - native install path: `$ASTROBEE_WS/install`
 
 If you are satisfied with these paths, you can invoke the `configure.sh` without
-the `-p` and `-b` options. For the simplicity of the instructions below,
-we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
+the `-p` and `-w` options. For the simplicity of the instructions below,
+we assume that `$WORKSPACE_PATH` and `$INSTALL_PATH` contain the location of the
 build and install path. For example:
 
-    export BUILD_PATH=$ASTROBEE_WS/build
+    export WORKSPACE_PATH=$ASTROBEE_WS
     export INSTALL_PATH=$ASTROBEE_WS/install
 
 ### Native build
@@ -115,7 +119,7 @@ simulator.*
 
 ## Building the code
 
-To build, run `make` in the `$BUILD_PATH`. Note that depending on your host
+To build, run `catkin build` in the `$WORKSPACE_PATH`. Note that depending on your host
 machine, this might take in the order of tens of minutes to complete the first
 time round. Future builds will be faster, as only changes to the code are
 rebuilt, and not the entire code base.
