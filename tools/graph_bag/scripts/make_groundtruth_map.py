@@ -25,7 +25,7 @@ import sys
 
 import utilities
 
-def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name):
+def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, robot_name):
   os.mkdir("gt_images")
   gt_images = os.path.abspath('gt_images')
   extract_images_command = "rosrun localization_node extract_image_bag " + bagfile + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory gt_images"
@@ -44,11 +44,13 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
   os.environ['ASTROBEE_WORLD'] = world
 
   # Build groundtruth
-  build_map_command = 'rosrun sparse_mapping build_map gt_images/*jpg -output_map groundtruth.map -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100'
+  groundtruth_map = map_name + '.map'
+  build_map_command = 'rosrun sparse_mapping build_map gt_images/*jpg -output_map ' + groundtruth_map + ' -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100'
   utilities.run_command_and_save_output(build_map_command, 'build_map.txt')
 
   # Merge with base map
-  merge_map_command = 'rosrun sparse_mapping merge_maps ' + base_surf_map + ' groundtruth.map -output_map groundtruth.surf.map -num_image_overlaps_at_endpoints 100000000 -skip_bundle_adjustment'
+  groundtruth_surf_map = map_name + 'surf.map'
+  merge_map_command = 'rosrun sparse_mapping merge_maps ' + base_surf_map + ' ' + groundtruth_map + ' -output_map ' + groundtruth_surf_map + ' -num_image_overlaps_at_endpoints 100000000 -skip_bundle_adjustment'
   utilities.run_command_and_save_output(merge_map_command, 'merge_map.txt')
 
   # Link maps directory since conversion to BRISK map needs
@@ -60,8 +62,9 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
   # Get full path to output file to avoid permission errors when running 
   # command in maps directory
   rebuild_output_file = os.path.join(os.getcwd(), 'rebuild_map_as_brisk_map.txt')
-  shutil.copyfile("groundtruth.surf.map", "groundtruth.brisk.map")
-  groundtruth_brisk_map = os.path.abspath('groundtruth.brisk.map')
+  groundtruth_brisk_map = map_name + '.brisk.map'
+  shutil.copyfile(groundtruth_surf_map, groundtruth_brisk_map)
+  groundtruth_brist_map = os.path.abspath(groundtruth_brisk_map)
   gt_path = os.getcwd()
   os.chdir('maps')
   rebuild_map_command = 'rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map ' + groundtruth_brisk_map
@@ -70,8 +73,9 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, world, robot_name
   os.chdir(gt_path)
 
   # Create vocabdb
-  shutil.copyfile("groundtruth.brisk.map", "groundtruth.brisk.vocabdb.map")
-  add_vocabdb_command = 'rosrun sparse_mapping build_map -vocab_db -output_map groundtruth.brisk.vocabdb.map'
+  groundtruth_brisk_vocabdb_map = map_name + 'brisk.vocabdb.map'
+  shutil.copyfile(groundtruth_brisk_map, groundtruth_brisk_vocabdb_map)
+  add_vocabdb_command = 'rosrun sparse_mapping build_map -vocab_db -output_map ' + groundtruth_brisk_vocabdb_map
   utilities.run_command_and_save_output(add_vocabdb_command, 'build_vocabdb.txt')
 
   # Remove simlinks
@@ -86,6 +90,7 @@ if __name__ == '__main__':
   parser.add_argument('-o', '--output-directory', default='groundtruth_creation_output')
   parser.add_argument('-w', '--world', default='iss')
   parser.add_argument('-r', '--robot-name', default='bumble')
+  parser.add_argument('-m', '--map-name', default='groundtruth')
 
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
@@ -108,4 +113,4 @@ if __name__ == '__main__':
   os.mkdir(args.output_directory)
   os.chdir(args.output_directory)
 
-  create_groundtruth(bagfile, base_surf_map, maps_directory, args.world, args.robot_name)
+  create_groundtruth(bagfile, base_surf_map, maps_directory, args.map_name, args.world, args.robot_name)
