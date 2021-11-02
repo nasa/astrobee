@@ -17,7 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Generates groundtruth for bagfiles in parallel using provided config script.
+Generates groundtruth for bagfiles in parallel using a provided config script.
+See make_groundtruth.py for more details on the groundtruth map, bagfile, and
+pdfs created in this process.
 """
 
 import argparse

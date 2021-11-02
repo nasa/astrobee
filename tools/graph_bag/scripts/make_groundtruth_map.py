@@ -17,7 +17,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Generates groundtruth map for a given input bagfile.
+Generates a groundtruth map for a given input bagfile. The groundtruth map
+creation process merges images from the input bagfile with an existing map.  
+This is the first step for groundtruth creation, where once a groundtruth map 
+is created for a bagfile the bagfile can then be localized using the groundtruth
+map to generate groundtruth poses.
 """
 
 import argparse

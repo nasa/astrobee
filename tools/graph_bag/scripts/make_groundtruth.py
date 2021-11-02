@@ -17,9 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Generates groundtruth map and bagfile for a given input bagfile.
-Also tests bagfile against provided localization map and plots results
-versus newly created groundtruth.
+Generates the groundtruth map and groundtruth bagfile containing groundtruth 
+localization estimates for a given input bagfile.
+Also tests the input bagfile against a provided localization map and plots the 
+results compared with the newly created groundtruth.
 """
 
 import argparse
