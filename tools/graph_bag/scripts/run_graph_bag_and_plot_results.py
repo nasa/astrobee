@@ -19,6 +19,7 @@
 
 import argparse
 import os
+import sys
 
 import utilities
 
@@ -27,10 +28,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("map_file", help="Map file.")
-    parser.add_argument("image_topic", help="Image topic.")
     parser.add_argument("config_path", help="Full path to config path.")
-    parser.add_argument("robot_config", help="Relative path to robot config.")
-    parser.add_argument("world", help="World being used.")
+    parser.add_argument("-r", "--robot-config", default='config/robots/bumble.config', help="Relative path to robot config.")
+    parser.add_argument("-i", "--image-topic", default='/mgt/img_sampler/nav_cam/image_record', help="Image topic.")
+    parser.add_argument("-o", "--output-bagfile", default='results.bag', help="Output bagfile.")
+    parser.add_argument('-w', '--world', default='iss')
     parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     map_file = os.path.abspath(args.map_file)
 
     # Run localizer
-    run_graph_bag_command = 'rosrun graph_bag run_graph_bag ' + bagfile + ' ' + map_file + ' ' + args.config_path + ' -r ' + args.robot_config + ' -w ' + args.world + ' --use-image-features ' + str(args.use_image_features)
+    run_graph_bag_command = 'rosrun graph_bag run_graph_bag ' + bagfile + ' ' + map_file + ' ' + args.config_path + ' -r ' + args.robot_config + ' -w ' + args.world + ' --use-image-features ' + str(args.use_image_features) + ' -o ' + args.output_bagfile  
     utilities.run_command_and_save_output(run_graph_bag_command, 'run_graph_bag_command.txt')
 
     # Plot results
