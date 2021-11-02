@@ -35,7 +35,7 @@ if (USE_DDS)
   set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
-  find_package(Qt4 4.6.0 REQUIRED QtXml)
+  find_package(Qt5Xml REQUIRED)
 
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
