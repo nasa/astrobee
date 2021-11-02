@@ -27,10 +27,8 @@ node "Processor (LLP,MLP,HLP)" {
 
 folder "Interfaces (Messages, Services, Actions) Legend" as l2 {
 
-  gnc_node(EKF)
   gnc_node(CTL)
   message(EkfState, ff_msgs::EkfState, /gnc/ekf)
-  EKF --> EkfState
   EkfState --> CTL
 
   action(DockAction, ff_msgs::DockAction, /proc/dock)
