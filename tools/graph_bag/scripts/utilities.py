@@ -60,7 +60,9 @@ def get_files_recursive(directory, file_string):
 
 def create_directory(directory=None):
     if directory == None:
-        directory = os.path.join(os.getcwd(), datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        directory = os.path.join(
+            os.getcwd(), datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        )
     if os.path.exists(directory):
         print((directory + " already exists!"))
         exit()
@@ -75,7 +77,7 @@ def load_dataframe(files):
 
 
 def run_command_and_save_output(command, output_filename):
-    with open(output_filename, 'w') as output_file:
+    with open(output_filename, "w") as output_file:
         subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
 
 
@@ -97,13 +99,25 @@ def get_topic_rates(
         gaps = 0
         time_diffs = []
         for _, msg, t in bag.read_messages([topic]):
-            time = (msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9 if use_header_time else t.secs +
-                    t.nsecs * 1.0e-9)
+            time = (
+                msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9
+                if use_header_time
+                else t.secs + t.nsecs * 1.0e-9
+            )
             time_diff = time - last_time
             if last_time != 0 and time_diff >= min_time_diff_for_gap:
                 if verbose:
-                    print((topic + " Gap: time: " + str(time) + ", last_time: " + str(last_time) + ", diff: " +
-                           str(time_diff)))
+                    print(
+                        (
+                            topic
+                            + " Gap: time: "
+                            + str(time)
+                            + ", last_time: "
+                            + str(last_time)
+                            + ", diff: "
+                            + str(time_diff)
+                        )
+                    )
                 gaps += 1
             if last_time != 0 and (time_diff != 0 or not ignore_zero_time_diffs):
                 time_diffs.append(time_diff)
@@ -118,7 +132,15 @@ def get_topic_rates(
                 print("Using Header time.")
             else:
                 print("Using Receive time.")
-            print(("Found " + str(gaps) + " time diffs >= " + str(min_time_diff_for_gap) + " secs."))
+            print(
+                (
+                    "Found "
+                    + str(gaps)
+                    + " time diffs >= "
+                    + str(min_time_diff_for_gap)
+                    + " secs."
+                )
+            )
             print(("Mean time diff: " + str(mean_time_diff)))
             print(("Min time diff: " + str(min_time_diff)))
             print(("Max time diff: " + str(max_time_diff)))
@@ -126,25 +148,37 @@ def get_topic_rates(
 
 
 def integrate_velocities(localization_states):
-    delta_times = [j - i for i, j in zip(localization_states.times[:-1], localization_states.times[1:])]
+    delta_times = [
+        j - i
+        for i, j in zip(localization_states.times[:-1], localization_states.times[1:])
+    ]
     # Make sure times are same length as velocities, ignore last velocity
     delta_times.append(0)
     integrated_positions = poses.Poses("Integrated Graph Velocities", "")
     # TODO(rsoussan): Integrate angular velocities?
     # TODO(rsoussan): central difference instead?
-    x_increments = [velocity * delta_t for velocity, delta_t in zip(localization_states.velocities.xs, delta_times)]
+    x_increments = [
+        velocity * delta_t
+        for velocity, delta_t in zip(localization_states.velocities.xs, delta_times)
+    ]
     cumulative_x_increments = np.cumsum(x_increments)
     integrated_positions.positions.xs = [
         localization_states.positions.xs[0] + cumulative_x_increment
         for cumulative_x_increment in cumulative_x_increments
     ]
-    y_increments = [velocity * delta_t for velocity, delta_t in zip(localization_states.velocities.ys, delta_times)]
+    y_increments = [
+        velocity * delta_t
+        for velocity, delta_t in zip(localization_states.velocities.ys, delta_times)
+    ]
     cumulative_y_increments = np.cumsum(y_increments)
     integrated_positions.positions.ys = [
         localization_states.positions.ys[0] + cumulative_y_increment
         for cumulative_y_increment in cumulative_y_increments
     ]
-    z_increments = [velocity * delta_t for velocity, delta_t in zip(localization_states.velocities.zs, delta_times)]
+    z_increments = [
+        velocity * delta_t
+        for velocity, delta_t in zip(localization_states.velocities.zs, delta_times)
+    ]
     cumulative_z_increments = np.cumsum(z_increments)
     integrated_positions.positions.zs = [
         localization_states.positions.zs[0] + cumulative_z_increment

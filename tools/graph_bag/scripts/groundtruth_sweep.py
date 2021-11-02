@@ -24,12 +24,10 @@ import os
 import sys
 
 import multiprocessing_helpers
-
 import utilities
 
 
 class GroundtruthParams(object):
-
     def __init__(
         self,
         bagfile,
@@ -69,7 +67,8 @@ def load_params(param_file):
                     row[6],
                     row[7],
                     row[8],
-                ))
+                )
+            )
 
     return groundtruth_params_list
 
@@ -95,15 +94,31 @@ def check_params(groundtruth_params_list):
 # library call
 @multiprocessing_helpers.full_traceback
 def run_groundtruth(params):
-    output_directory = utilities.basename(params.bagfile) + '_groundtruth'
-    groundtruth_command = ("rosrun graph_bag make_groundtruth.py " + params.bagfile + " " + params.base_surf_map + " " +
-                           params.maps_directory + " " + params.loc_map + " " + params.config_path + " -o " +
-                           output_directory + " -w " + params.world + " -i " + params.image_topic + " -r " +
-                           params.robot_name)
+    output_directory = utilities.basename(params.bagfile) + "_groundtruth"
+    groundtruth_command = (
+        "rosrun graph_bag make_groundtruth.py "
+        + params.bagfile
+        + " "
+        + params.base_surf_map
+        + " "
+        + params.maps_directory
+        + " "
+        + params.loc_map
+        + " "
+        + params.config_path
+        + " -o "
+        + output_directory
+        + " -w "
+        + params.world
+        + " -i "
+        + params.image_topic
+        + " -r "
+        + params.robot_name
+    )
     if not bool(params.use_image_features):
-        groundtruth_command += ' --generate-image-features'
+        groundtruth_command += " --generate-image-features"
 
-    output_file = utilities.basename(params.bagfile) + '_groundtruth.txt'
+    output_file = utilities.basename(params.bagfile) + "_groundtruth.txt"
     utilities.run_command_and_save_output(groundtruth_command, output_file)
 
 
@@ -117,8 +132,8 @@ def groundtruth_sweep(config_file, num_processes):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file")
-    parser.add_argument('-o', '--output-directory', default='groundtruth_sweep')
-    parser.add_argument('-p', '--num-processes', type=int, default=10)
+    parser.add_argument("-o", "--output-directory", default="groundtruth_sweep")
+    parser.add_argument("-p", "--num-processes", type=int, default=10)
     args = parser.parse_args()
     if not os.path.isfile(args.config_file):
         print(("Config file " + args.config_file + " does not exist."))
