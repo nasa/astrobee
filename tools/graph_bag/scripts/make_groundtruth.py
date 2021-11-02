@@ -75,19 +75,17 @@ if __name__ == '__main__':
   make_groundtruth_map.create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, args.world, args.robot_name)
 
   robot_config = 'config/robots/' + args.robot_name + '.config'
-  groundtruth_bag = map_name + '_groundtruth.bag'
+  groundtruth_bag = map_name + '.bag'
   groundtruth_map_file = map_name + '.brisk.vocabdb.map'
   groundtruth_pdf = 'groundtruth.pdf'
   groundtruth_csv = 'groundtruth.csv'
-  make_groundtruth_command = 'rosrun graph_bag run_graph_bag_and_plot_results.py ' + bagfile + ' ' + groundtruth_map_file + ' ' + args.config_path + ' -i ' + args.image_topic + ' -r ' + robot_config + ' -w ' + args.world + ' -o ' + groundtruth_bag + ' --output-file ' + groundtruth_pdf + ' --output-csv-file ' + groundtruth_csv 
-  if not args.use_image_features:
-    make_groundtruth_command += ' --generate-image-features'
+  make_groundtruth_command = 'rosrun graph_bag run_graph_bag_and_plot_results.py ' + bagfile + ' ' + groundtruth_map_file + ' ' + args.config_path + ' -i ' + args.image_topic + ' -r ' + robot_config + ' -w ' + args.world + ' -o ' + groundtruth_bag + ' --output-file ' + groundtruth_pdf + ' --output-csv-file ' + groundtruth_csv + ' --generate-image-features' 
   utilities.run_command_and_save_output(make_groundtruth_command, 'make_groundtruth.txt')
 
   loc_results_bag = bag_prefix + '_results.bag'
   loc_pdf = 'loc_results.pdf'
   loc_csv = 'loc_results.csv'
-  get_loc_results_command = 'rosrun graph_bag run_graph_bag_and_plot_results.py ' + bagfile + ' ' + args.loc_map + ' ' + args.config_path + ' -i ' + args.image_topic + ' -r ' + robot_config + ' -w ' + args.world + ' -o ' + loc_results_bag + ' --output-file ' + loc_pdf + ' --output-csv-file ' + loc_csv
+  get_loc_results_command = 'rosrun graph_bag run_graph_bag_and_plot_results.py ' + bagfile + ' ' + args.loc_map + ' ' + args.config_path + ' -i ' + args.image_topic + ' -r ' + robot_config + ' -w ' + args.world + ' -o ' + loc_results_bag + ' --output-file ' + loc_pdf + ' --output-csv-file ' + loc_csv + ' -g ' + groundtruth_bag
   if not args.use_image_features:
     make_groundtruth_command += ' --generate-image-features'
   utilities.run_command_and_save_output(get_loc_results_command, 'get_loc_results.txt')
