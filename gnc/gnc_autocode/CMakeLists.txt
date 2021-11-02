@@ -129,12 +129,10 @@ include_directories(
 add_library(gnc_autocode
   src/autocode.cc
   src/constants.cc
-  src/ekf.cc
   src/fam.cc
   src/sim_csv.cc
   src/blowers.cc
   src/ctl.cc
-  src/ekf_csv.cc
   src/sim.cc
   ${GNC_SOURCES}
 )
