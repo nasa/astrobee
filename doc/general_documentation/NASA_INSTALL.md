@@ -142,18 +142,20 @@ the code on the robot itself). Please skip to the relevant subsection.
 
 ### Note for both builds setup
 
-By default, the configure script uses the following paths:
+When compiling, the `$WORKSPACE_PATH` defines where the `devel`, `build`, `logs` and
+`install` directories are created. If you want to customize the `install` path then the
+`$INSTALL_PATH` can be defined. By default, the configure script uses the following paths:
 
-  - native build path (BUILD_PATH):     `$ASTROBEE_WS/build`
+  - native build path (WORKSPACE_PATH): `$ASTROBEE_WS`
   - native install path (INSTALL_PATH): `$ASTROBEE_WS/install`
-  - armhf build path (BUILD_PATH):      `$ARMHF_CHROOT_DIR/home/astrobee/astrobee/build`
-  - armhf install path (INSTALL_PATH):  `$ARMHF_CHROOT_DIR/home/astrobee/astrobee/install`
+  - armhf build path (WORKSPACE_PATH):  `$ASTROBEE_WS/armhf`
+  - armhf install path (INSTALL_PATH):  `$ASTROBEE_WS/armhf/install`
 
 You should set these values in your shell. 
 
 If you are satisfied with these paths, you can invoke the `configure.sh` without
-the `-p` and `-b` options. For the simplicity of the instructions below,
-we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
+the `-p` and `-w` options. For the simplicity of the instructions below,
+we assume that `$WORKSPACE_PATH` and `$INSTALL_PATH` contain the location of the
 build and install path for either `native` or `armhf` platforms.
 
 ### Native build
@@ -168,10 +170,13 @@ of turning on and off options. To see which options are supported, simply run
     source ~/.bashrc
     popd
 
-If you want to explicitly specify the build and install directories, use
+If you want to explicitly specify the workspace and/or install directories, use
 instead:
 
-    ./scripts/configure.sh -l -p $INSTALL_PATH -b $BUILD_PATH
+    ./scripts/configure.sh -l -p $INSTALL_PATH -w $WORKSPACE_PATH
+
+*Note: If a workspace is specified but not an explicit install distectory,
+install location will be $WORKSPACE_PATH/install.*
 
 ### Cross-compile build
 
@@ -184,15 +189,15 @@ script takes a `-a` flag instead of `-l`.
 
 Or with explicit build and install paths:
 
-    ./scripts/configure.sh -a -p $INSTALL_PATH -b $BUILD_PATH
+    ./scripts/configure.sh -a -p $INSTALL_PATH -w $WORKSPACE_PATH
 
-*Warning: `$INSTALL_PATH` and `$BUILD_PATH` used for cross compiling HAVE to be
+*Warning: `$INSTALL_PATH` and `$WORKSPACE_PATH` used for cross compiling HAVE to be
 different than the paths for native build! See above for the default values 
 for these.*
 
 ## Building the code
 
-To build, run `make` in the `$BUILD_PATH`. Note that depending on your host
+To build, run `catkin build` in the `$WORKSPACE_PATH`. Note that depending on your host
 machine, this might take in the order of tens of minutes to complete the first
 time round. Future builds will be faster, as only changes to the code are
 rebuilt, and not the entire code base.
@@ -201,8 +206,12 @@ rebuilt, and not the entire code base.
     catkin build
     popd
 
-*Note: `$BUILD_PATH` above is either the path for native build or armhf build,
-whatever you currently are doing.*
+## Switching build profiles
+
+To alternate between native and armhf profiles:
+
+    catkin profile set native
+    catkin profile set armhf
 
 ## Running a simulation
 
