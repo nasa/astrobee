@@ -67,7 +67,7 @@ if __name__ == '__main__':
   maps_directory = os.path.abspath(args.maps_directory)
 
   map_name = args.map_name
-  bag_prefix = os.path.splitext(os.path.basename(bagfile))[0]
+  bag_prefix = utilities.basename(bagfile)
   if not args.map_name:
     map_name = bag_prefix + '_groundtruth'
 
