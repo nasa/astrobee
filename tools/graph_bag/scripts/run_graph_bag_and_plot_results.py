@@ -52,9 +52,6 @@ if __name__ == "__main__":
     if not os.path.isfile(args.map_file):
       print('Map file ' + args.map_file + ' does not exist.')
       sys.exit()
-    if os.path.isdir(args.output_directory):
-      print('Output directory ' + args.output_directory + ' already exists.')
-      sys.exit()
     if os.path.isfile(args.output_file):
       print('Output file ' + args.output_file + ' already exist.')
       sys.exit()
@@ -69,11 +66,11 @@ if __name__ == "__main__":
     map_file = os.path.abspath(args.map_file)
 
     # Run localizer
-    run_graph_bag_command = 'rosrun graph_bag run_graph_bag ' + bagfile + ' ' + map_file + ' ' + args.config_path + ' -r ' + args.robot_config_file + ' -w ' + args.world + ' --use-image-features ' + args.use_image_fetaures 
+    run_graph_bag_command = 'rosrun graph_bag run_graph_bag ' + bagfile + ' ' + map_file + ' ' + args.config_path + ' -r ' + args.robot_config + ' -w ' + args.world + ' --use-image-features ' + str(args.use_image_features)
     utilities.run_command_and_save_output(run_graph_bag_command, 'run_graph_bag_command.txt')
 
     # Plot results
-    plot_results_command = 'rosrun graph_bag plot_results_main ' + bagfile + ' --output-file ' + args.output_file + ' --output-csv-file ' + args.output_csv_file 
+    plot_results_command = 'rosrun graph_bag plot_results_main.py ' + bagfile + ' --output-file ' + args.output_file + ' --output-csv-file ' + args.output_csv_file 
     if args.groundtruth_bagfile:
-      plot_results_command += ' -g ' args.groundtruth_bagfile
+      plot_results_command += ' -g ' + args.groundtruth_bagfile
     utilities.run_command_and_save_output(plot_results_command, 'plot_results_command.txt')
