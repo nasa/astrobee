@@ -139,15 +139,18 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
   // RANSAC to find the best camera with P3P
   std::vector<cv::Point3d> subset_landmarks;
   std::vector<cv::Point2d> subset_observations;
+  std::vector<cv::Point3d> best_subset_landmarks;
+  std::vector<cv::Point2d> best_subset_observations;
+
   Eigen::Vector3d best_pos;
   Eigen::Matrix3d best_rotation;
   cv::Mat best_rvec;
   cv::Mat best_tvec;
-
+  std::unordered_map<int, int> used_indices;
   for (int i = 0; i < num_tries; i++) {
     subset_landmarks.clear();
     subset_observations.clear();
-    SelectRandomObservations(landmarks, observations, 4, &subset_landmarks, &subset_observations);
+    const auto indices = SelectRandomObservations(landmarks, observations, 4, &subset_landmarks, &subset_observations);
 
     Eigen::Vector3d pos;
     Eigen::Matrix3d rotation;
@@ -166,6 +169,9 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
       *camera_estimate = guess;
       best_pos = pos;
       best_rotation = rotation;
+      used_indices = indices;
+      best_subset_landmarks = subset_landmarks;
+      best_subset_observations = subset_observations;
     }
   }
 
@@ -175,6 +181,104 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
   // TODO(bcoltin): Return some sort of confidence?
   if (best_inliers < min_num_inliers) {
     return false;
+  }
+
+  std::cout << "Old indices used: ";
+  for (const auto& index : used_indices) {
+    std::cout << index.first << " ";
+  }
+  std::cout << std::endl;
+
+  {
+    Eigen::Affine3d test_cam_t_global;
+    test_cam_t_global.setIdentity();
+    test_cam_t_global.translate(best_pos);
+    test_cam_t_global.rotate(best_rotation);
+    LogError("Old Affine3d result: " << std::endl << test_cam_t_global.matrix());
+
+    const Eigen::Isometry3d old_cam_estimate = Eigen::Isometry3d(camera_estimate->GetTransform().matrix());
+    LogError("Old Cam result: " << std::endl << old_cam_estimate.matrix());
+  }
+
+  {
+    LogError("Test P3P distort in function.");
+    cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+    cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+    cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
+    std::vector<cv::Point2d> image_points;
+    std::vector<cv::Point3d> points_3d;
+    const Eigen::Matrix3d intrinsics = camera_estimate->GetParameters().GetIntrinsicMatrix<camera::DISTORTED>();
+    cv::Mat intrinsics_cv;
+    cv::eigen2cv(intrinsics, intrinsics_cv);
+    std::cout << "old best indices: ";
+    for (const auto& used_index : used_indices) {
+      const int index = used_index.first;
+      std::cout << index << " ";
+      const auto& image_point = observations[index];
+      const auto& point_3d = landmarks[index];
+      image_points.emplace_back(cv::Point2d(image_point.x(), image_point.y()));
+      points_3d.emplace_back(cv::Point3d(point_3d.x(), point_3d.y(), point_3d.z()));
+    }
+    std::cout << std::endl;
+
+    {
+      for (int i = 0; i < image_points.size(); ++i) {
+        std::cout << "old obs: " << best_subset_observations[i] << std::endl;
+        std::cout << "old obs2: " << image_points[i] << std::endl;
+        std::cout << "old land: " << best_subset_landmarks[i] << std::endl;
+        std::cout << "old land2: " << points_3d[i] << std::endl;
+      }
+    }
+    // TODO(rsoussan): convert landmarks and image points based on indices!
+    // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
+    cv::solvePnP(points_3d, image_points, intrinsics_cv, zero_distortion, rodrigues_rotation_cv, translation_cv, false,
+                 cv::SOLVEPNP_P3P);
+    const Eigen::Isometry3d zero_distortion_pnp = Isometry3d(rodrigues_rotation_cv, translation_cv);
+    LogError("Zero distortion result: " << std::endl << zero_distortion_pnp.matrix());
+
+    {
+      // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
+      cv::Mat null_distortion;
+      cv::solvePnP(points_3d, image_points, intrinsics_cv, null_distortion, rodrigues_rotation_cv, translation_cv,
+                   false, cv::SOLVEPNP_P3P);
+      const Eigen::Isometry3d null_distortion_pnp = Isometry3d(rodrigues_rotation_cv, translation_cv);
+      LogError("Null distortion result: " << std::endl << null_distortion_pnp.matrix());
+    }
+
+    {
+      // TODO(rsoussan): convert landmarks and image points based on indices!
+      // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
+      cv::solvePnP(best_subset_landmarks, best_subset_observations, intrinsics_cv, zero_distortion,
+                   rodrigues_rotation_cv, translation_cv, false, cv::SOLVEPNP_P3P);
+      const Eigen::Isometry3d zero_distortion_pnp = Isometry3d(rodrigues_rotation_cv, translation_cv);
+      LogError("Zero distortion with old subset land result: " << std::endl << zero_distortion_pnp.matrix());
+    }
+
+    {
+      Eigen::Vector3d pos;
+      Eigen::Matrix3d rotation;
+      cv::Mat rvec;
+      cv::Mat tvec;
+      camera::CameraParameters test_params = camera_estimate->GetParameters();
+      P3PWithDistortion(points_3d, image_points, test_params, rvec, tvec, &pos, &rotation);
+      Eigen::Isometry3d repeat_pnp = Eigen::Isometry3d::Identity();
+      repeat_pnp.translation() = pos;
+      repeat_pnp.linear() = rotation;
+      LogError("Repeat Old pnp: " << std::endl << repeat_pnp.matrix());
+    }
+
+    {
+      Eigen::Vector3d pos;
+      Eigen::Matrix3d rotation;
+      cv::Mat rvec;
+      cv::Mat tvec;
+      camera::CameraParameters test_params = camera_estimate->GetParameters();
+      P3PWithDistortion(best_subset_landmarks, best_subset_observations, test_params, rvec, tvec, &pos, &rotation);
+      Eigen::Isometry3d repeat_pnp = Eigen::Isometry3d::Identity();
+      repeat_pnp.translation() = pos;
+      repeat_pnp.linear() = rotation;
+      LogError("Repeat Old pnp with Subset land: " << std::endl << repeat_pnp.matrix());
+    }
   }
 
   std::vector<size_t> inliers;
