@@ -115,14 +115,18 @@ def create_groundtruth(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("bagfile", help="Input bagfile to generate groundtruth for.")
-    parser.add_argument("base_surf_map", help=
-        "Existing map to use as basis for groundtruth.  Should largely overlap area covered in input bagfile."
-)
-    parser.add_argument("maps_directory", help=
-        "Location of images used for each bagfile use to generate base_surf_map.")
+    parser.add_argument(
+        "base_surf_map",
+        help="Existing map to use as basis for groundtruth.  Should largely overlap area covered in input bagfile.",
+    )
+    parser.add_argument(
+        "maps_directory",
+        help="Location of images used for each bagfile use to generate base_surf_map.",
+    )
     parser.add_argument(
         "-o", "--output-directory", default="groundtruth_creation_output"
     )
