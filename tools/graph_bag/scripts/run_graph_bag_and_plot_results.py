@@ -32,9 +32,9 @@ if __name__ == "__main__":
     parser.add_argument("robot_config", help="Relative path to robot config.")
     parser.add_argument("world", help="World being used.")
     parser.add_argument(
-        "-f", "--use-image-features",
+        "--generate-image-features",
         dest="use_image_features",
-        action="store_true",
+        action="store_false",
         help="Use image features msgs from bagfile or generate features from images.",
     )
     parser.add_argument("--output-file", default="output.pdf")
