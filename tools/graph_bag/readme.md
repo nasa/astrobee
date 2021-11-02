@@ -31,3 +31,23 @@ The imu analyzer tool plots imu data and also filtered imu data.  It can use pyt
 
 ## merge\_bags
 Merge bags looks for bag files in the current directory with a provided name prefix and merges these into a single bag file.  Bags are assumed to be numbered and are merged in numerical order.
+
+## run\_graph\_bag\_and\_plot\_results
+Generates localization results for a provided bagfile.
+See 'rosrun graph\_bag run\_graph\_bag\_and\_plot\_results.py -h'
+for further details and usage instructions.
+
+## make\_groundtruth.py
+Generates groundtruth map and bagfile for a given bagfile.
+See 'rosrun graph\_bag make\_groundtruth.py -h'
+for further details and usage instructions.
+
+## make\_groundtruth\_map.py
+Generates groundtruth map for a given bagfile.
+See 'rosrun graph\_bag make\_groundtruth.py -h'
+for further details and usage instructions.
+
+## groundtruth\_sweep.py
+Creates groundtruth in parallel for a set of bagfiles.
+See 'rosrun graph\_bag groundtruth\_sweep.py -h'
+for further details and usage instructions.
