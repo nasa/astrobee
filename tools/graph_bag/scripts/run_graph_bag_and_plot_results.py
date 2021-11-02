@@ -16,6 +16,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Runs localization for a bagfile using the provided map.
+Saves results to an output bagfile and generates a pdf
+file with detailed results.
+"""
 
 import argparse
 import os
@@ -24,7 +29,8 @@ import sys
 import utilities
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("map_file", help="Map file.")
     parser.add_argument("config_path", help="Full path to config path.")

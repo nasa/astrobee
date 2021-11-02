@@ -16,6 +16,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Generates groundtruth map for a given input bagfile.
+"""
 
 import argparse
 import os
@@ -112,10 +115,14 @@ def create_groundtruth(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("bagfile")
-    parser.add_argument("base_surf_map")
-    parser.add_argument("maps_directory")
+    parser = argparse.ArgumentParser(description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("bagfile", help="Input bagfile to generate groundtruth for.")
+    parser.add_argument("base_surf_map", help=
+        "Existing map to use as basis for groundtruth.  Should largely overlap area covered in input bagfile."
+)
+    parser.add_argument("maps_directory", help=
+        "Location of images used for each bagfile use to generate base_surf_map.")
     parser.add_argument(
         "-o", "--output-directory", default="groundtruth_creation_output"
     )
