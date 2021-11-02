@@ -26,7 +26,6 @@ import sys
 import make_groundtruth_map
 import utilities
 
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
@@ -40,10 +39,10 @@ if __name__ == '__main__':
   parser.add_argument('-r', '--robot-name', default='bumble')
   parser.add_argument('-m', '--map-name', default=None)
   parser.add_argument(
-      "--generate-image-features",
-      dest="use_image_features",
-      action="store_false",
-      help="Use image features msgs from bagfile or generate features from images.",
+    "--generate-image-features",
+    dest="use_image_features",
+    action="store_false",
+    help="Use image features msgs from bagfile or generate features from images.",
   )
 
   args = parser.parse_args()
@@ -68,7 +67,7 @@ if __name__ == '__main__':
   maps_directory = os.path.abspath(args.maps_directory)
 
   map_name = args.map_name
-  bag_prefix = os.path.splitext(os.path.basename(bagfile))[0] 
+  bag_prefix = os.path.splitext(os.path.basename(bagfile))[0]
   if not args.map_name:
     map_name = bag_prefix + '_groundtruth'
 
@@ -79,7 +78,7 @@ if __name__ == '__main__':
   groundtruth_map_file = map_name + '.brisk.vocabdb.map'
   groundtruth_pdf = 'groundtruth.pdf'
   groundtruth_csv = 'groundtruth.csv'
-  make_groundtruth_command = 'rosrun graph_bag run_graph_bag_and_plot_results.py ' + bagfile + ' ' + groundtruth_map_file + ' ' + args.config_path + ' -i ' + args.image_topic + ' -r ' + robot_config + ' -w ' + args.world + ' -o ' + groundtruth_bag + ' --output-file ' + groundtruth_pdf + ' --output-csv-file ' + groundtruth_csv + ' --generate-image-features' 
+  make_groundtruth_command = 'rosrun graph_bag run_graph_bag_and_plot_results.py ' + bagfile + ' ' + groundtruth_map_file + ' ' + args.config_path + ' -i ' + args.image_topic + ' -r ' + robot_config + ' -w ' + args.world + ' -o ' + groundtruth_bag + ' --output-file ' + groundtruth_pdf + ' --output-csv-file ' + groundtruth_csv + ' --generate-image-features'
   utilities.run_command_and_save_output(make_groundtruth_command, 'make_groundtruth.txt')
 
   loc_results_bag = bag_prefix + '_results.bag'
@@ -89,5 +88,3 @@ if __name__ == '__main__':
   if not args.use_image_features:
     make_groundtruth_command += ' --generate-image-features'
   utilities.run_command_and_save_output(get_loc_results_command, 'get_loc_results.txt')
-
-

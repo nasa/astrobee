@@ -25,6 +25,7 @@ import sys
 
 import utilities
 
+
 def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, robot_name):
   os.mkdir("gt_images")
   gt_images = os.path.abspath('gt_images')
@@ -59,7 +60,7 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, 
   os.symlink(gt_images, 'maps/gt_images')
 
   # Convert SURF to BRISK map
-  # Get full path to output file to avoid permission errors when running 
+  # Get full path to output file to avoid permission errors when running
   # command in maps directory
   rebuild_output_file = os.path.join(os.getcwd(), 'rebuild_map_as_brisk_map.txt')
   groundtruth_brisk_map = map_name + '.brisk.map'
@@ -81,6 +82,7 @@ def create_groundtruth(bagfile, base_surf_map, maps_directory, map_name, world, 
   # Remove simlinks
   os.unlink('maps/gt_images')
   os.unlink('maps')
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
