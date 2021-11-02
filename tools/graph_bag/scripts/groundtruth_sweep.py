@@ -134,11 +134,21 @@ def groundtruth_sweep(config_file, num_processes):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("config_file", help="Config file containing arguments for each job to run.  Should be formatted with one job per line and using a single space between each argument.  Arguments for a job in order are: bagfile base_surf_map maps_directory loc_map config_path world image_topic robot_name use_image_features.  See make_groundtruth.py description for more details on each argument.")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "config_file",
+        help="Config file containing arguments for each job to run.  Should be formatted with one job per line and using a single space between each argument.  Arguments for a job in order are: bagfile base_surf_map maps_directory loc_map config_path world image_topic robot_name use_image_features.  See make_groundtruth.py description for more details on each argument.",
+    )
     parser.add_argument("-o", "--output-directory", default="groundtruth_sweep")
-    parser.add_argument("-p", "--num-processes", type=int, default=10, help="Number of concurrent processes to run, where each groundtruth creation job is assigned to one process.")
+    parser.add_argument(
+        "-p",
+        "--num-processes",
+        type=int,
+        default=10,
+        help="Number of concurrent processes to run, where each groundtruth creation job is assigned to one process.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.config_file):
         print(("Config file " + args.config_file + " does not exist."))

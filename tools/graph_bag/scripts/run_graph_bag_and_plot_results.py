@@ -29,8 +29,9 @@ import sys
 import utilities
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("map_file", help="Map file.")
     parser.add_argument("config_path", help="Full path to config path.")

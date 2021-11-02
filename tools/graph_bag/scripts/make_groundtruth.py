@@ -32,27 +32,24 @@ import utilities
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("bagfile",
-                        help="Input bagfile to generate groundtruth for.")
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("bagfile", help="Input bagfile to generate groundtruth for.")
     parser.add_argument(
         "base_surf_map",
-        help=
-        "Existing map to use as basis for groundtruth.  Should largely overlap area covered in input bagfile."
+        help="Existing map to use as basis for groundtruth.  Should largely overlap area covered in input bagfile.",
     )
     parser.add_argument(
         "maps_directory",
-        help=
-        "Location of images used for each bagfile use to generate base_surf_map."
+        help="Location of images used for each bagfile use to generate base_surf_map.",
     )
     parser.add_argument(
-        "loc_map",
-        help="Localization map for bagfile to test localization performance.")
+        "loc_map", help="Localization map for bagfile to test localization performance."
+    )
     parser.add_argument("config_path", help="Full path to config path.")
-    parser.add_argument("-o",
-                        "--output-directory",
-                        default="groundtruth_creation_output")
+    parser.add_argument(
+        "-o", "--output-directory", default="groundtruth_creation_output"
+    )
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument(
         "-i",
@@ -65,13 +62,13 @@ if __name__ == "__main__":
         "-m",
         "--map-name",
         default=None,
-        help="Prefix for generated map names. Defaults to bagfile name.")
+        help="Prefix for generated map names. Defaults to bagfile name.",
+    )
     parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",
         action="store_false",
-        help=
-        "Use image features msgs from bagfile or generate features from images.",
+        help="Use image features msgs from bagfile or generate features from images.",
     )
 
     args = parser.parse_args()
@@ -100,9 +97,9 @@ if __name__ == "__main__":
     if not args.map_name:
         map_name = bag_prefix + "_groundtruth"
 
-    make_groundtruth_map.create_groundtruth(bagfile, base_surf_map,
-                                            maps_directory, map_name,
-                                            args.world, args.robot_name)
+    make_groundtruth_map.create_groundtruth(
+        bagfile, base_surf_map, maps_directory, map_name, args.world, args.robot_name
+    )
 
     robot_config = "config/robots/" + args.robot_name + ".config"
     groundtruth_bag = map_name + ".bag"
@@ -110,24 +107,57 @@ if __name__ == "__main__":
     groundtruth_pdf = "groundtruth.pdf"
     groundtruth_csv = "groundtruth.csv"
     make_groundtruth_command = (
-        "rosrun graph_bag run_graph_bag_and_plot_results.py " + bagfile + " " +
-        groundtruth_map_file + " " + args.config_path + " -i " +
-        args.image_topic + " -r " + robot_config + " -w " + args.world +
-        " -o " + groundtruth_bag + " --output-file " + groundtruth_pdf +
-        " --output-csv-file " + groundtruth_csv + " --generate-image-features")
-    utilities.run_command_and_save_output(make_groundtruth_command,
-                                          "make_groundtruth.txt")
+        "rosrun graph_bag run_graph_bag_and_plot_results.py "
+        + bagfile
+        + " "
+        + groundtruth_map_file
+        + " "
+        + args.config_path
+        + " -i "
+        + args.image_topic
+        + " -r "
+        + robot_config
+        + " -w "
+        + args.world
+        + " -o "
+        + groundtruth_bag
+        + " --output-file "
+        + groundtruth_pdf
+        + " --output-csv-file "
+        + groundtruth_csv
+        + " --generate-image-features"
+    )
+    utilities.run_command_and_save_output(
+        make_groundtruth_command, "make_groundtruth.txt"
+    )
 
     loc_results_bag = bag_prefix + "_results.bag"
     loc_pdf = "loc_results.pdf"
     loc_csv = "loc_results.csv"
     get_loc_results_command = (
-        "rosrun graph_bag run_graph_bag_and_plot_results.py " + bagfile + " " +
-        args.loc_map + " " + args.config_path + " -i " + args.image_topic +
-        " -r " + robot_config + " -w " + args.world + " -o " +
-        loc_results_bag + " --output-file " + loc_pdf + " --output-csv-file " +
-        loc_csv + " -g " + groundtruth_bag)
+        "rosrun graph_bag run_graph_bag_and_plot_results.py "
+        + bagfile
+        + " "
+        + args.loc_map
+        + " "
+        + args.config_path
+        + " -i "
+        + args.image_topic
+        + " -r "
+        + robot_config
+        + " -w "
+        + args.world
+        + " -o "
+        + loc_results_bag
+        + " --output-file "
+        + loc_pdf
+        + " --output-csv-file "
+        + loc_csv
+        + " -g "
+        + groundtruth_bag
+    )
     if not args.use_image_features:
         make_groundtruth_command += " --generate-image-features"
-    utilities.run_command_and_save_output(get_loc_results_command,
-                                          "get_loc_results.txt")
+    utilities.run_command_and_save_output(
+        get_loc_results_command, "get_loc_results.txt"
+    )
