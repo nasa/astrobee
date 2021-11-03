@@ -85,6 +85,9 @@ void LoadCalibratorParams(config_reader::ConfigReader& config,
   params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.min_num_target_inliers = mc::LoadInt(config, "min_num_target_inliers");
+  params.ransac_max_inlier_threshold = mc::LoadDouble(config, "ransac_max_inlier_threshold");
+  params.ransac_num_iterations = mc::LoadInt(config, "ransac_num_iterations");
+  params.ransac_min_num_inliers = mc::LoadInt(config, "ransac_min_num_inliers");
   params.max_visualization_error_norm = mc::LoadDouble(config, "max_visualization_error_norm");
   const int image_width = mc::LoadInt(config, "image_width");
   const int image_height = mc::LoadInt(config, "image_height");

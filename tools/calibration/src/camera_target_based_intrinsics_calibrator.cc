@@ -71,14 +71,20 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     boost::optional<Eigen::Isometry3d> camera_T_target;
     LogError("og img points size: " << match_set.image_points.size());
     if (params_.distortion_type == "fov") {
-      camera_T_target = ReprojectionPoseEstimate<oc::FovDistorter>(match_set.image_points, match_set.points_3d,
-                                                                   focal_lengths, principal_points, distortion);
+      camera_T_target = ReprojectionPoseEstimate<oc::FovDistorter>(
+        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
+        params_.max_num_iterations, params_.ransac_min_num_inliers, params_.ransac_num_iterations,
+        params_.ransac_max_inlier_threshold);
     } else if (params_.distortion_type == "rad") {
-      camera_T_target = ReprojectionPoseEstimate<oc::RadDistorter>(match_set.image_points, match_set.points_3d,
-                                                                   focal_lengths, principal_points, distortion);
+      camera_T_target = ReprojectionPoseEstimate<oc::RadDistorter>(
+        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
+        params_.max_num_iterations, params_.ransac_min_num_inliers, params_.ransac_num_iterations,
+        params_.ransac_max_inlier_threshold);
     } else if (params_.distortion_type == "radtan") {
-      camera_T_target = ReprojectionPoseEstimate<oc::RadTanDistorter>(match_set.image_points, match_set.points_3d,
-                                                                      focal_lengths, principal_points, distortion);
+      camera_T_target = ReprojectionPoseEstimate<oc::RadTanDistorter>(
+        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
+        params_.max_num_iterations, params_.ransac_min_num_inliers, params_.ransac_num_iterations,
+        params_.ransac_max_inlier_threshold);
     } else {
       LogFatal("Invalid distortion type provided.");
     }

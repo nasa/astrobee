@@ -237,15 +237,6 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
     LogError("Zero distortion result: " << std::endl << zero_distortion_pnp.matrix());
 
     {
-      // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
-      cv::Mat null_distortion;
-      cv::solvePnP(points_3d, image_points, intrinsics_cv, null_distortion, rodrigues_rotation_cv, translation_cv,
-                   false, cv::SOLVEPNP_P3P);
-      const Eigen::Isometry3d null_distortion_pnp = Isometry3d(rodrigues_rotation_cv, translation_cv);
-      LogError("Null distortion result: " << std::endl << null_distortion_pnp.matrix());
-    }
-
-    {
       // TODO(rsoussan): convert landmarks and image points based on indices!
       // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
       cv::solvePnP(best_subset_landmarks, best_subset_observations, intrinsics_cv, zero_distortion,
@@ -264,7 +255,7 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
       Eigen::Isometry3d repeat_pnp = Eigen::Isometry3d::Identity();
       repeat_pnp.translation() = pos;
       repeat_pnp.linear() = rotation;
-      LogError("Repeat Old pnp: " << std::endl << repeat_pnp.matrix());
+      LogError("Repeat Old pnp with backwards indices: " << std::endl << repeat_pnp.matrix());
     }
 
     {
@@ -277,7 +268,7 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
       Eigen::Isometry3d repeat_pnp = Eigen::Isometry3d::Identity();
       repeat_pnp.translation() = pos;
       repeat_pnp.linear() = rotation;
-      LogError("Repeat Old pnp with Subset land: " << std::endl << repeat_pnp.matrix());
+      LogError("Repeat Old pnp with same best indices: " << std::endl << repeat_pnp.matrix());
     }
   }
 

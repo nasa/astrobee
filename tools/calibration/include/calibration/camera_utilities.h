@@ -70,13 +70,7 @@ void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
     const Eigen::Vector2d projected_image_point =
       Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
     const Eigen::Vector2d error = (image_point - projected_image_point);
-    LogError("intrinsics: " << std::endl << intrinsics.matrix());
-    LogError("distortion: " << std::endl << distortion.matrix());
-    LogError("pose: " << std::endl << pose.matrix());
-    LogError("projected pt: " << projected_image_point.x() << ", " << projected_image_point.y());
-    LogError("image pt: " << image_point.x() << ", " << image_point.y());
     const double error_norm = error.norm();
-    LogError("error norm: " << error_norm);
     const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
     // Add 1 to each value so background pixels stay white and we can map these back to white
     // after applying colormap.
@@ -101,134 +95,11 @@ void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
 template <typename DISTORTER>
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::VectorXi>> RansacPnP(
-  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
-  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double min_inlier_threshold = 3.0,
-  const int max_num_iterations = 100) {
-  LogError("image pts size at top of ransac pnp: " << image_points.size());
-  // TODO(rsoussan): pass distorter as arg! same with project 3d point?
-  const DISTORTER distorter;
-  const std::vector<Eigen::Vector2d> undistorted_points = distorter.Undistort(image_points, intrinsics, distortion);
-  // TODO(rsoussan): Avoid these looped conversions?
-  std::vector<cv::Point2d> undistorted_points_cv;
-  for (const auto& undistorted_point : undistorted_points) {
-    undistorted_points_cv.emplace_back(cv::Point2d(undistorted_point.x(), undistorted_point.y()));
-  }
-  std::vector<cv::Point3d> points_3d_cv;
-  for (const auto& point_3d : points_3d) {
-    points_3d_cv.emplace_back(point_3d.x(), point_3d.y(), point_3d.z());
-  }
-
-  // P3p
-  {
-    cv::Mat intrinsics_cv;
-    cv::eigen2cv(intrinsics, intrinsics_cv);
-    cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-    cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-    cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
-    cv::Mat inliers_cv;
-    const double inlier_test_threshold = 0.1;
-    cv::solvePnPRansac(points_3d_cv, undistorted_points_cv, intrinsics_cv, zero_distortion, rodrigues_rotation_cv,
-                       translation_cv, false, max_num_iterations, inlier_test_threshold, 0.99, inliers_cv,
-                       cv::SOLVEPNP_P3P);
-    if (inliers_cv.empty()) {
-      LogError("P3P: No inliers.");
-    } else {
-      Eigen::VectorXi inliers;
-      cv::cv2eigen(inliers_cv, inliers);
-      const Eigen::Isometry3d pose_estimate = Isometry3d(rodrigues_rotation_cv, translation_cv);
-      LogError("image pts size: " << image_points.size());
-      LogError("inliers size: " << inliers.size());
-
-      static double max_norm = 0;
-      for (int i = 0; i < inliers.size(); ++i) {
-        const int index = inliers[i];
-        const Eigen::Vector2d& image_point = image_points[index];
-        const Eigen::Vector3d& point_3d = points_3d[index];
-        /*const Eigen::Vector3d camera_t_target_point = pose_estimate * point_3d;
-        const Eigen::Vector2d projected_image_point =
-          //Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
-          Project3dPointToImageSpace(camera_t_target_point, intrinsics);*/
-        std::vector<cv::Point3f> cv_points;
-        cv_points.emplace_back(cv::Point3f(point_3d.x(), point_3d.y(), point_3d.z()));
-        std::vector<cv::Point2f> cv_image_points;
-        cv::projectPoints(cv_points, rodrigues_rotation_cv, translation_cv, intrinsics_cv, zero_distortion,
-                          cv_image_points);
-        Eigen::Vector2d projected_image_point(cv_image_points[0].x, cv_image_points[0].y);
-
-        const Eigen::Vector2d error = (image_point - projected_image_point);
-        LogError("projected pt: " << projected_image_point.x() << ", " << projected_image_point.y());
-        LogError("image pt: " << image_point.x() << ", " << image_point.y());
-        const double error_norm = error.norm();
-        if (error_norm > min_inlier_threshold) LogError("large error norm!!");
-        LogError("error norm: " << error_norm);
-        if (error_norm > max_norm) max_norm = error_norm;
-      }
-      LogError("max norm: " << max_norm);
-
-      LogError("New P3P Estimate: " << std::endl << pose_estimate.matrix());
-    }
-  }
-
-  /*  // Distorted P3p
-    {
-      cv::Mat intrinsics_cv;
-      cv::eigen2cv(intrinsics, intrinsics_cv);
-      cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-      cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-      cv::Mat distortion_cv(4, 1, cv::DataType<double>::type, cv::Scalar(0));
-      for (int i = 0; i < 2; ++i) {
-        distortion_cv.at<double>(i, 0) = distortion[i];
-      }
-      std::vector<cv::Point2d> distorted_points_cv;
-      for (const auto& image_point : image_points) {
-        distorted_points_cv.emplace_back(cv::Point2d(image_point.x(), image_point.y()));
-      }
-
-      cv::Mat inliers_cv;
-      cv::solvePnPRansac(points_3d_cv, distorted_points_cv, intrinsics_cv, distortion_cv, rodrigues_rotation_cv,
-                         translation_cv, false, max_num_iterations, min_inlier_threshold, 0.99, inliers_cv,
-                         cv::SOLVEPNP_P3P);
-      if (inliers_cv.empty()) {
-        LogError("Distorted P3P: No inliers.");
-      } else {
-        Eigen::VectorXi inliers;
-        cv::cv2eigen(inliers_cv, inliers);
-        const Eigen::Isometry3d pose_estimate = Isometry3d(rodrigues_rotation_cv, translation_cv);
-        LogError("New Distorted P3P Estimate: " << std::endl << pose_estimate.matrix());
-        LogError("New Distorted P3P inliers: " << std::endl << inliers.matrix());
-        LogError("New Distorted P3P num inliers: " << std::endl << inliers.size());
-        LogError("New Distorted P3P params: min_inlier_thresh: " << min_inlier_threshold
-                                                                 << ", max its: " << max_num_iterations << std::endl);
-      }
-    }*/
-
-  cv::Mat intrinsics_cv;
-  cv::eigen2cv(intrinsics, intrinsics_cv);
-  cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-  cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-  // cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
-  std::vector<double> zero_distortion;  // 4, 1, cv::DataType<double>::type, cv::Scalar(0));
-  cv::Mat inliers_cv;
-  cv::solvePnPRansac(points_3d_cv, undistorted_points_cv, intrinsics_cv, zero_distortion, rodrigues_rotation_cv,
-                     translation_cv, false, max_num_iterations, min_inlier_threshold, 0.99, inliers_cv,
-                     cv::SOLVEPNP_EPNP);
-  if (inliers_cv.empty()) {
-    LogError("RansacPnP: No inliers.");
-    return boost::none;
-  }
-  Eigen::VectorXi inliers;
-  cv::cv2eigen(inliers_cv, inliers);
-  const Eigen::Isometry3d pose_estimate = Isometry3d(rodrigues_rotation_cv, translation_cv);
-  // LogError("New RansacPnP Estimate: " << std::endl << pose_estimate.matrix());
-  return std::make_pair(pose_estimate, inliers);
-}
-
-template <typename DISTORTER>
 boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
-  const int min_num_inliers = 4, const int max_num_iterations = 100) {
+  const int max_num_iterations = 100, const int ransac_min_num_inliers = 4, const int ransac_num_iterations = 100,
+  const double ransac_max_inlier_threshold = 3.0) {
   if (image_points.size() < 4) {
     LogError("ReprojectionPoseEstimate: Too few matched points given.");
     return boost::none;
@@ -239,13 +110,11 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
   {
     LogError("Getting estimates!");
     Eigen::Isometry3d camera_T_target(Eigen::Isometry3d::Identity());
-    constexpr int num_ransac_iterations = 100;
-    constexpr int ransac_inlier_tolerance = 3;
     // tODO: right order for image size????
     camera::CameraParameters camera(Eigen::Vector2i(1280, 960), focal_lengths, principal_points, distortion);
     camera::CameraModel cam_model(camera_T_target, camera);
-    if (!RansacEstimateCameraWithDistortion(points_3d, image_points, num_ransac_iterations, ransac_inlier_tolerance,
-                                            min_num_inliers, &cam_model)) {
+    if (!RansacEstimateCameraWithDistortion(points_3d, image_points, ransac_num_iterations, ransac_max_inlier_threshold,
+                                            ransac_min_num_inliers, &cam_model)) {
       LogError("Old RansacEstimteCamera failed to get pose!");
     } else {
       old_estimate = Eigen::Isometry3d(cam_model.GetTransform().matrix());
@@ -267,7 +136,9 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
-  const auto initial_estimate_and_inliers = RansacPnP2<DISTORTER>(image_points, points_3d, intrinsics, distortion);
+  const auto initial_estimate_and_inliers =
+    RansacPnP2<DISTORTER>(image_points, points_3d, intrinsics, distortion, ransac_max_inlier_threshold,
+                          ransac_num_iterations, ransac_min_num_inliers);
   if (!initial_estimate_and_inliers) {
     LogError("ReprojectionPoseEstimate: Failed to get initial estimate.");
     return boost::none;
@@ -279,9 +150,9 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
     optimization_common::VectorFromIsometry3d(*old_estimate);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_inliers = initial_estimate_and_inliers->second.size();
-  if (num_inliers < min_num_inliers) {
-    LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << min_num_inliers << ", got " << num_inliers
-                                                                      << ".");
+  if (num_inliers < ransac_min_num_inliers) {
+    LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << ransac_min_num_inliers << ", got "
+                                                                      << num_inliers << ".");
     return boost::none;
   }
 
@@ -323,11 +194,11 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
                                                             const Eigen::Matrix3d& intrinsics,
                                                             const Eigen::VectorXd& distortion,
                                                             const double min_inlier_threshold = 4.0,
-                                                            const int max_num_iterations = 100) {
+                                                            const int ransac_num_iterations = 100) {
   const Eigen::Vector2d focal_lengths(intrinsics(0, 0), intrinsics(1, 1));
   const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
   return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
-                                             max_num_iterations);
+                                             ransac_num_iterations);
 }
 
 }  // namespace calibration

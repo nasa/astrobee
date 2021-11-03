@@ -89,7 +89,7 @@ template <typename DISTORTER>
 boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double max_inlier_threshold = 3.0,
-  const int num_iterations = 100) {
+  const int num_iterations = 100, const int min_num_inliers = 4) {
   if (image_points.size() < 4) {
     LogError("RansacPnP2: Too few matched points given.");
     return boost::none;
@@ -138,7 +138,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
     }
   }
 
-  if (max_num_inliers < 4) {
+  if (max_num_inliers < min_num_inliers) {
     LogError("RansacPnP: Failed to find pose with enough inliers.");
     return boost::none;
   }

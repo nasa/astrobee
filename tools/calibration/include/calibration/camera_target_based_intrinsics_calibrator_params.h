@@ -39,6 +39,10 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   double radial_scale_power;
   std::string linear_solver;
   bool use_explicit_schur_complement;
+  // RansacPnP Options
+  double ransac_max_inlier_threshold;
+  int ransac_num_iterations;
+  int ransac_min_num_inliers;
   // Other
   int max_num_match_sets;
   int min_num_target_inliers;
