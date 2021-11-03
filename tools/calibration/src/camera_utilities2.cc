@@ -53,40 +53,15 @@ bool P3PWithDistortion(const std::vector<cv::Point3d>& landmarks, const std::vec
   std::cout << "intrinsics: " << camera_matrix << std::endl;
   std::cout << "distortion: " << distortion << std::endl;*/
 
-  bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, cv::SOLVEPNP_P3P);
+  bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, cv::SOLVEPNP_EPNP);
   if (!result) {
     return false;
   }
-  /* result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, true,
-    cv::SOLVEPNP_ITERATIVE); if (!result) return false;*/
 
   cv::cv2eigen(tvec, *pos);
   camera::RodriguesToRotation(Eigen::Vector3d(rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2)), rotation);
   rvec_result = rvec.clone();
   tvec_result = tvec.clone();
-  return true;
-}
-
-bool P3PIterWithDistortion(const std::vector<cv::Point3d>& landmarks, const std::vector<cv::Point2d>& observations,
-                           const camera::CameraParameters& params, const cv::Mat& rvec, const cv::Mat& tvec,
-                           Eigen::Vector3d* pos, Eigen::Matrix3d* rotation) {
-  cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
-  cv::eigen2cv(params.GetIntrinsicMatrix<camera::DISTORTED>(), camera_matrix);
-  const auto distortion_params = params.GetDistortion();
-  cv::Mat distortion(cv::Mat::zeros(4, 1, cv::DataType<double>::type));
-  for (int i = 0; i < distortion_params.size(); ++i) {
-    distortion.at<double>(i, 0) = distortion_params[i];
-  }
-
-  // std::cout << "intrinsics: " << camera_matrix << std::endl;
-  // std::cout << "distortion: " << distortion << std::endl;
-
-  const bool result =
-    cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);
-  if (!result) return false;
-
-  cv::cv2eigen(tvec, *pos);
-  camera::RodriguesToRotation(Eigen::Vector3d(rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2)), rotation);
   return true;
 }
 
@@ -232,7 +207,7 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
     // TODO(rsoussan): convert landmarks and image points based on indices!
     // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
     cv::solvePnP(points_3d, image_points, intrinsics_cv, zero_distortion, rodrigues_rotation_cv, translation_cv, false,
-                 cv::SOLVEPNP_P3P);
+                 cv::SOLVEPNP_EPNP);
     const Eigen::Isometry3d zero_distortion_pnp = Isometry3d(rodrigues_rotation_cv, translation_cv);
     LogError("Zero distortion result: " << std::endl << zero_distortion_pnp.matrix());
 
@@ -240,7 +215,7 @@ bool RansacEstimateCameraWithDistortion(const std::vector<Eigen::Vector3d>& land
       // TODO(rsoussan): convert landmarks and image points based on indices!
       // TODO(rsoussan): test with applying undistortion first vs. using 0 0 0 0 vector vs using null vector!
       cv::solvePnP(best_subset_landmarks, best_subset_observations, intrinsics_cv, zero_distortion,
-                   rodrigues_rotation_cv, translation_cv, false, cv::SOLVEPNP_P3P);
+                   rodrigues_rotation_cv, translation_cv, false, cv::SOLVEPNP_EPNP);
       const Eigen::Isometry3d zero_distortion_pnp = Isometry3d(rodrigues_rotation_cv, translation_cv);
       LogError("Zero distortion with old subset land result: " << std::endl << zero_distortion_pnp.matrix());
     }

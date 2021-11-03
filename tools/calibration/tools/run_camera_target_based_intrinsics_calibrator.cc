@@ -18,6 +18,7 @@
 
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
+#include <calibration/parameter_reader.h>
 #include <ff_common/init.h>
 #include <ff_common/utils.h>
 #include <ff_util/ff_names.h>
@@ -30,7 +31,6 @@
 
 namespace ca = calibration;
 namespace lc = localization_common;
-namespace mc = msg_conversions;
 namespace po = boost::program_options;
 
 lc::ImageCorrespondences LoadTargetMatches(const std::string& match_file) {
@@ -68,33 +68,6 @@ std::vector<lc::ImageCorrespondences> LoadAllTargetMatches(const std::string& co
     if (++i > max_num_match_sets) break;
   }
   return all_matches;
-}
-
-void LoadCalibratorParams(config_reader::ConfigReader& config,
-                          ca::CameraTargetBasedIntrinsicsCalibratorParams& params) {
-  params.calibrate_focal_lengths = mc::LoadBool(config, "calibrate_focal_lengths");
-  params.calibrate_principal_points = mc::LoadBool(config, "calibrate_principal_points");
-  params.calibrate_distortion = mc::LoadBool(config, "calibrate_distortion");
-  params.calibrate_target_poses = mc::LoadBool(config, "calibrate_target_poses");
-  params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
-  params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
-  params.huber_loss = mc::LoadDouble(config, "huber_loss");
-  params.scale_loss_radially = mc::LoadBool(config, "scale_loss_radially");
-  params.radial_scale_power = mc::LoadDouble(config, "radial_scale_power");
-  params.linear_solver = mc::LoadString(config, "linear_solver");
-  params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
-  params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
-  params.min_num_target_inliers = mc::LoadInt(config, "min_num_target_inliers");
-  params.ransac_max_inlier_threshold = mc::LoadDouble(config, "ransac_max_inlier_threshold");
-  params.ransac_num_iterations = mc::LoadInt(config, "ransac_num_iterations");
-  params.ransac_min_num_inliers = mc::LoadInt(config, "ransac_min_num_inliers");
-  params.max_visualization_error_norm = mc::LoadDouble(config, "max_visualization_error_norm");
-  const int image_width = mc::LoadInt(config, "image_width");
-  const int image_height = mc::LoadInt(config, "image_height");
-  params.image_size = Eigen::Vector2i(image_width, image_height);
-  params.camera_name = mc::LoadString(config, "camera");
-  params.camera_params.reset(new camera::CameraParameters(&config, params.camera_name.c_str()));
-  params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
 void WriteCalibrationResultsToFile(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points,

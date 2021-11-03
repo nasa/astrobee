@@ -18,6 +18,8 @@
 #ifndef CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
 #define CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
 
+#include <calibration/optimization_params.h>
+#include <calibration/reprojection_pose_estimate_params.h>
 #include <camera/camera_params.h>
 
 #include <Eigen/Core>
@@ -27,22 +29,15 @@
 
 namespace calibration {
 struct CameraTargetBasedIntrinsicsCalibratorParams {
+  OptimizationParams optimization;
+  ReprojectionPoseEstimateParams reprojection_pose_estimate;
   bool calibrate_focal_lengths;
   bool calibrate_principal_points;
   bool calibrate_distortion;
   bool calibrate_target_poses;
   // Optimization Options
-  int max_num_iterations;
-  double function_tolerance;
-  double huber_loss;
   bool scale_loss_radially;
   double radial_scale_power;
-  std::string linear_solver;
-  bool use_explicit_schur_complement;
-  // RansacPnP Options
-  double ransac_max_inlier_threshold;
-  int ransac_num_iterations;
-  int ransac_min_num_inliers;
   // Other
   int max_num_match_sets;
   int min_num_target_inliers;
