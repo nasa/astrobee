@@ -164,16 +164,11 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
     optimization_common::AddReprojectionCostFunction<DISTORTER>(
       image_points[inlier_index], points_3d[inlier_index], pose_estimate_vector,
       const_cast<Eigen::Vector2d&>(focal_lengths), const_cast<Eigen::Vector2d&>(principal_points),
-      const_cast<Eigen::VectorXd&>(distortion), problem);
+      const_cast<Eigen::VectorXd&>(distortion), problem, 1, params.optimization.huber_loss);
   }
 
-  ceres::Solver::Options options;
-  options.linear_solver_type = ceres::DENSE_QR;
-  // options.use_explicit_schur_complement = params.optimization.use_explicit_schur_complement;
-  options.max_num_iterations = params.optimization.max_num_iterations;
-  // options.function_tolerance = params.optimization.function_tolerance;
   ceres::Solver::Summary summary;
-  ceres::Solve(options, &problem, &summary);
+  ceres::Solve(params.optimization.solver_options, &problem, &summary);
   // std::cout << summary.FullReport() << "\n";
   if (!summary.IsSolutionUsable()) {
     LogError("ReprojectionPoseEstimate: Failed to find solution.");

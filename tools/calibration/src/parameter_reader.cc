@@ -17,13 +17,14 @@
  */
 
 #include <calibration/parameter_reader.h>
+#include <localization_common/logger.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace calibration {
 namespace mc = msg_conversions;
 
 void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBasedIntrinsicsCalibratorParams& params) {
-  LoadOptimizationParams(config, params.optimization);
+  LoadOptimizationParams(config, params.optimization, "calibrator_");
   LoadReprojectionPoseEstimateParams(config, params.reprojection_pose_estimate);
   params.calibrate_focal_lengths = mc::LoadBool(config, "calibrate_focal_lengths");
   params.calibrate_principal_points = mc::LoadBool(config, "calibrate_principal_points");
@@ -43,16 +44,35 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBased
 }
 
 void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params) {
-  LoadOptimizationParams(config, params.optimization);
+  LoadOptimizationParams(config, params.optimization, "reprojection_");
   LoadRansacPnPParams(config, params.ransac_pnp);
 }
 
-void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params) {
-  params.max_num_iterations = mc::LoadInt(config, "max_num_iterations");
-  params.function_tolerance = mc::LoadDouble(config, "function_tolerance");
-  params.huber_loss = mc::LoadDouble(config, "huber_loss");
-  params.linear_solver = mc::LoadString(config, "linear_solver");
-  params.use_explicit_schur_complement = mc::LoadBool(config, "use_explicit_schur_complement");
+void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,
+                       const std::string& prefix) {
+  const std::string linear_solver = mc::LoadString(config, prefix + "linear_solver");
+  if (linear_solver == "dense_qr") {
+    solver_options.linear_solver_type = ceres::DENSE_QR;
+  } else if (linear_solver == "dense_schur") {
+    solver_options.linear_solver_type = ceres::DENSE_SCHUR;
+  } else if (linear_solver == "sparse_normal_cholesky") {
+    solver_options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  } else if (linear_solver == "sparse_schur") {
+    solver_options.linear_solver_type = ceres::SPARSE_SCHUR;
+  } else if (linear_solver == "iterative_schur") {
+    solver_options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  } else {
+    LogFatal("Invalid linear solver provided.");
+  }
+  solver_options.use_explicit_schur_complement = mc::LoadBool(config, prefix + "use_explicit_schur_complement");
+  solver_options.max_num_iterations = mc::LoadInt(config, prefix + "max_num_iterations");
+  solver_options.function_tolerance = mc::LoadDouble(config, prefix + "function_tolerance");
+}
+
+void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params,
+                            const std::string& prefix) {
+  LoadSolverOptions(config, params.solver_options, prefix);
+  params.huber_loss = mc::LoadDouble(config, prefix + "huber_loss");
 }
 
 void LoadRansacPnPParams(config_reader::ConfigReader& config, RansacPnPParams& params) {

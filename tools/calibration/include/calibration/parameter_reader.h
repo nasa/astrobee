@@ -23,12 +23,20 @@
 #include <calibration/reprojection_pose_estimate_params.h>
 #include <calibration/ransac_pnp_params.h>
 
+#include <ceres/solver.h>
+
+#include <string>
+
 namespace calibration {
 void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBasedIntrinsicsCalibratorParams& params);
 
 void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params);
 
-void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params);
+void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params,
+                            const std::string& prefix = "");
+
+void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,
+                       const std::string& prefix = "");
 
 void LoadRansacPnPParams(config_reader::ConfigReader& config, RansacPnPParams& params);
 }  // namespace calibration

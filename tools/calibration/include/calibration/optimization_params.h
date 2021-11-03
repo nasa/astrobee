@@ -18,16 +18,12 @@
 #ifndef CALIBRATION_OPTIMIZATION_PARAMS_H_
 #define CALIBRATION_OPTIMIZATION_PARAMS_H_
 
-#include <string>
+#include <ceres/solver.h>
 
 namespace calibration {
 struct OptimizationParams {
-  int max_num_iterations;
-  double function_tolerance;
+  ceres::Solver::Options solver_options;
   double huber_loss;
-  // dense_qr, dense_schur, sparse_normal_cholesky, sparse_schur, iterative_schur
-  std::string linear_solver;
-  bool use_explicit_schur_complement;
 };
 }  // namespace calibration
 

@@ -114,26 +114,8 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     }
   }
 
-  ceres::Solver::Options options;
-  // TODO(rsoussan): do this in better way! -> store ceres::solver::options in params!
-  if (params_.optimization.linear_solver == "dense_qr") {
-    options.linear_solver_type = ceres::DENSE_QR;
-  } else if (params_.optimization.linear_solver == "dense_schur") {
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-  } else if (params_.optimization.linear_solver == "sparse_normal_cholesky") {
-    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  } else if (params_.optimization.linear_solver == "sparse_schur") {
-    options.linear_solver_type = ceres::SPARSE_SCHUR;
-  } else if (params_.optimization.linear_solver == "iterative_schur") {
-    options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  } else {
-    LogFatal("Invalid linear solver provided.");
-  }
-  options.use_explicit_schur_complement = params_.optimization.use_explicit_schur_complement;
-  options.max_num_iterations = params_.optimization.max_num_iterations;
-  options.function_tolerance = params_.optimization.function_tolerance;
   ceres::Solver::Summary summary;
-  ceres::Solve(options, &problem, &summary);
+  ceres::Solve(params_.optimization.solver_options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
 
   calibrated_focal_lengths = focal_lengths;
