@@ -350,7 +350,9 @@ install(DIRECTORY launch/
 
 # Also install some other resources
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper scripts/start_server scripts/common
+install(PROGRAMS scripts/perf_wrapper scripts/start_server scripts/common
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS scripts/spawn_model 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 else (ENABLE_GAZEBO)
