@@ -20,6 +20,8 @@
 #include <localization_common/logger.h>
 #include <msg_conversions/msg_conversions.h>
 
+#include <opencv2/calib3d/calib3d.hpp>
+
 namespace calibration {
 namespace mc = msg_conversions;
 
@@ -62,7 +64,7 @@ void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Optio
   } else if (linear_solver == "iterative_schur") {
     solver_options.linear_solver_type = ceres::ITERATIVE_SCHUR;
   } else {
-    LogFatal("Invalid linear solver provided.");
+    LogFatal("LoadSolverOptions: Invalid linear solver provided.");
   }
   solver_options.use_explicit_schur_complement = mc::LoadBool(config, prefix + "use_explicit_schur_complement");
   solver_options.max_num_iterations = mc::LoadInt(config, prefix + "max_num_iterations");
@@ -79,5 +81,18 @@ void LoadRansacPnPParams(config_reader::ConfigReader& config, RansacPnPParams& p
   params.max_inlier_threshold = mc::LoadDouble(config, "ransac_max_inlier_threshold");
   params.num_iterations = mc::LoadInt(config, "ransac_num_iterations");
   params.min_num_inliers = mc::LoadInt(config, "ransac_min_num_inliers");
+  const std::string pnp_method = mc::LoadString(config, "ransac_pnp_method");
+  // TODO(rsoussan): Add ippe once opencv version is updated
+  if (pnp_method == "p3p") {
+    params.pnp_method = cv::SOLVEPNP_P3P;
+  } else if (pnp_method == "epnp") {
+    params.pnp_method = cv::SOLVEPNP_EPNP;
+  } else if (pnp_method == "ap3p") {
+    params.pnp_method = cv::SOLVEPNP_AP3P;
+  } else if (pnp_method == "it") {
+    params.pnp_method = cv::SOLVEPNP_ITERATIVE;
+  } else {
+    LogFatal("LoadRansacPnPParams: Invalid pnp type provided.");
+  }
 }
 }  // namespace calibration

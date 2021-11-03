@@ -25,9 +25,8 @@ struct RansacPnPParams {
   double max_inlier_threshold;
   int num_iterations;
   int min_num_inliers;
-  // p3p, epnp, iterative, ap3p
-  // TODO(rsoussan): Add ippe once opencv version is updated
-  std::string pnp_solver;
+  // TODO(rsoussan): Change this to cv::SolvePnPMethod when opencv version updated
+  int pnp_method;
 };
 }  // namespace calibration
 
