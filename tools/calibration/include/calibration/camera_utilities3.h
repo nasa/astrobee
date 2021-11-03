@@ -18,6 +18,7 @@
 #ifndef CALIBRATION_CAMERA_UTILITIES3_H_
 #define CALIBRATION_CAMERA_UTILITIES3_H_
 
+#include <calibration/ransac_pnp_params.h>
 #include <localization_common/logger.h>
 
 #include <Eigen/Core>
@@ -88,8 +89,7 @@ std::vector<T> SampledValues(const std::vector<T>& values, const std::vector<int
 template <typename DISTORTER>
 boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
-  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double max_inlier_threshold = 3.0,
-  const int num_iterations = 100, const int min_num_inliers = 4) {
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const RansacPnPParams& params) {
   if (image_points.size() < 4) {
     LogError("RansacPnP2: Too few matched points given.");
     return boost::none;
@@ -121,7 +121,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
   std::vector<int> best_indices;
   // Use 4 values for P3P
   constexpr int kNumSampledValues = 4;
-  for (int i = 0; i < num_iterations; ++i) {
+  for (int i = 0; i < params.num_iterations; ++i) {
     const auto sampled_indices = RandomNIndices(image_points.size(), kNumSampledValues);
     const auto sampled_undistorted_image_points = SampledValues(undistorted_image_points_cv, sampled_indices);
     const auto sampled_points_3d = SampledValues(points_3d_cv, sampled_indices);
@@ -129,7 +129,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
                    translation_cv);
     const Eigen::Isometry3d pose_estimate = Isometry3d2(rodrigues_rotation_cv, translation_cv);
     const int num_inliers =
-      Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, pose_estimate, max_inlier_threshold);
+      Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, pose_estimate, params.max_inlier_threshold);
     if (num_inliers > max_num_inliers) {
       best_pose_estimate = pose_estimate;
       max_num_inliers = num_inliers;
@@ -138,7 +138,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
     }
   }
 
-  if (max_num_inliers < min_num_inliers) {
+  if (max_num_inliers < params.min_num_inliers) {
     LogError("RansacPnP: Failed to find pose with enough inliers.");
     return boost::none;
   }
@@ -150,7 +150,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
   std::cout << std::endl;
 
   std::vector<int> inliers;
-  Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, best_pose_estimate, max_inlier_threshold,
+  Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, best_pose_estimate, params.max_inlier_threshold,
                      inliers);
   LogError("New RansacPnP num inliers: " << inliers.size());
   for (int i = 0; i < static_cast<int>(inliers.size()); ++i) {

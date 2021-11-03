@@ -140,8 +140,7 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
   const auto initial_estimate_and_inliers =
-    RansacPnP2<DISTORTER>(image_points, points_3d, intrinsics, distortion, params.ransac_pnp.max_inlier_threshold,
-                          params.ransac_pnp.num_iterations, params.ransac_pnp.min_num_inliers);
+    RansacPnP2<DISTORTER>(image_points, points_3d, intrinsics, distortion, params.ransac_pnp);
   if (!initial_estimate_and_inliers) {
     LogError("ReprojectionPoseEstimate: Failed to get initial estimate.");
     return boost::none;
