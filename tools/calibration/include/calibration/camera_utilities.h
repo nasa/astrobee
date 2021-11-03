@@ -22,6 +22,7 @@
 #include <localization_common/logger.h>
 #include <calibration/camera_utilities2.h>
 #include <calibration/camera_utilities3.h>
+#include <calibration/reprojection_pose_estimate_params.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 
@@ -95,11 +96,12 @@ void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
 template <typename DISTORTER>
-boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
-  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
-  const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
-  const int max_num_iterations = 100, const int ransac_min_num_inliers = 4, const int ransac_num_iterations = 100,
-  const double ransac_max_inlier_threshold = 3.0) {
+boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
+                                                            const std::vector<Eigen::Vector3d>& points_3d,
+                                                            const Eigen::Vector2d& focal_lengths,
+                                                            const Eigen::Vector2d& principal_points,
+                                                            const Eigen::VectorXd& distortion,
+                                                            const ReprojectionPoseEstimateParams& params) {
   if (image_points.size() < 4) {
     LogError("ReprojectionPoseEstimate: Too few matched points given.");
     return boost::none;
@@ -113,8 +115,9 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
     // tODO: right order for image size????
     camera::CameraParameters camera(Eigen::Vector2i(1280, 960), focal_lengths, principal_points, distortion);
     camera::CameraModel cam_model(camera_T_target, camera);
-    if (!RansacEstimateCameraWithDistortion(points_3d, image_points, ransac_num_iterations, ransac_max_inlier_threshold,
-                                            ransac_min_num_inliers, &cam_model)) {
+    if (!RansacEstimateCameraWithDistortion(points_3d, image_points, params.ransac_pnp.num_iterations,
+                                            params.ransac_pnp.max_inlier_threshold, params.ransac_pnp.min_num_inliers,
+                                            &cam_model)) {
       LogError("Old RansacEstimteCamera failed to get pose!");
     } else {
       old_estimate = Eigen::Isometry3d(cam_model.GetTransform().matrix());
@@ -137,8 +140,8 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
   const auto initial_estimate_and_inliers =
-    RansacPnP2<DISTORTER>(image_points, points_3d, intrinsics, distortion, ransac_max_inlier_threshold,
-                          ransac_num_iterations, ransac_min_num_inliers);
+    RansacPnP2<DISTORTER>(image_points, points_3d, intrinsics, distortion, params.ransac_pnp.max_inlier_threshold,
+                          params.ransac_pnp.num_iterations, params.ransac_pnp.min_num_inliers);
   if (!initial_estimate_and_inliers) {
     LogError("ReprojectionPoseEstimate: Failed to get initial estimate.");
     return boost::none;
@@ -150,8 +153,8 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
     optimization_common::VectorFromIsometry3d(*old_estimate);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_inliers = initial_estimate_and_inliers->second.size();
-  if (num_inliers < ransac_min_num_inliers) {
-    LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << ransac_min_num_inliers << ", got "
+  if (num_inliers < params.ransac_pnp.min_num_inliers) {
+    LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << params.ransac_pnp.min_num_inliers << ", got "
                                                                       << num_inliers << ".");
     return boost::none;
   }
@@ -166,9 +169,9 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(
 
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_QR;
-  // options.use_explicit_schur_complement = true;
-  options.max_num_iterations = max_num_iterations;
-  // options.function_tolerance = params_.function_tolerance;
+  // options.use_explicit_schur_complement = params.optimization.use_explicit_schur_complement;
+  options.max_num_iterations = params.optimization.max_num_iterations;
+  // options.function_tolerance = params.optimization.function_tolerance;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   // std::cout << summary.FullReport() << "\n";

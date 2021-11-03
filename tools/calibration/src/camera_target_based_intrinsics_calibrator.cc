@@ -71,20 +71,17 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     boost::optional<Eigen::Isometry3d> camera_T_target;
     LogError("og img points size: " << match_set.image_points.size());
     if (params_.distortion_type == "fov") {
-      camera_T_target = ReprojectionPoseEstimate<oc::FovDistorter>(
-        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
-        params_.max_num_iterations, params_.ransac_min_num_inliers, params_.ransac_num_iterations,
-        params_.ransac_max_inlier_threshold);
+      camera_T_target =
+        ReprojectionPoseEstimate<oc::FovDistorter>(match_set.image_points, match_set.points_3d, focal_lengths,
+                                                   principal_points, distortion, params_.reprojection_pose_estimate);
     } else if (params_.distortion_type == "rad") {
-      camera_T_target = ReprojectionPoseEstimate<oc::RadDistorter>(
-        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
-        params_.max_num_iterations, params_.ransac_min_num_inliers, params_.ransac_num_iterations,
-        params_.ransac_max_inlier_threshold);
+      camera_T_target =
+        ReprojectionPoseEstimate<oc::RadDistorter>(match_set.image_points, match_set.points_3d, focal_lengths,
+                                                   principal_points, distortion, params_.reprojection_pose_estimate);
     } else if (params_.distortion_type == "radtan") {
-      camera_T_target = ReprojectionPoseEstimate<oc::RadTanDistorter>(
-        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
-        params_.max_num_iterations, params_.ransac_min_num_inliers, params_.ransac_num_iterations,
-        params_.ransac_max_inlier_threshold);
+      camera_T_target =
+        ReprojectionPoseEstimate<oc::RadTanDistorter>(match_set.image_points, match_set.points_3d, focal_lengths,
+                                                      principal_points, distortion, params_.reprojection_pose_estimate);
     } else {
       LogFatal("Invalid distortion type provided.");
     }
@@ -100,17 +97,17 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
       if (params_.distortion_type == "fov") {
-        oc::AddReprojectionCostFunction<oc::FovDistorter>(match_set.image_points[i], match_set.points_3d[i],
-                                                          camera_T_targets.back(), focal_lengths, principal_points,
-                                                          distortion, problem, radial_scale_factor, params_.huber_loss);
+        oc::AddReprojectionCostFunction<oc::FovDistorter>(
+          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
+          distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
       } else if (params_.distortion_type == "rad") {
-        oc::AddReprojectionCostFunction<oc::RadDistorter>(match_set.image_points[i], match_set.points_3d[i],
-                                                          camera_T_targets.back(), focal_lengths, principal_points,
-                                                          distortion, problem, radial_scale_factor, params_.huber_loss);
+        oc::AddReprojectionCostFunction<oc::RadDistorter>(
+          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
+          distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
       } else if (params_.distortion_type == "radtan") {
         oc::AddReprojectionCostFunction<oc::RadTanDistorter>(
           match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-          distortion, problem, radial_scale_factor, params_.huber_loss);
+          distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
       } else {
         LogFatal("Invalid distortion type provided.");
       }
@@ -118,22 +115,23 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   }
 
   ceres::Solver::Options options;
-  if (params_.linear_solver == "dense_qr") {
+  // TODO(rsoussan): do this in better way! -> store ceres::solver::options in params!
+  if (params_.optimization.linear_solver == "dense_qr") {
     options.linear_solver_type = ceres::DENSE_QR;
-  } else if (params_.linear_solver == "dense_schur") {
+  } else if (params_.optimization.linear_solver == "dense_schur") {
     options.linear_solver_type = ceres::DENSE_SCHUR;
-  } else if (params_.linear_solver == "sparse_normal_cholesky") {
+  } else if (params_.optimization.linear_solver == "sparse_normal_cholesky") {
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  } else if (params_.linear_solver == "sparse_schur") {
+  } else if (params_.optimization.linear_solver == "sparse_schur") {
     options.linear_solver_type = ceres::SPARSE_SCHUR;
-  } else if (params_.linear_solver == "iterative_schur") {
+  } else if (params_.optimization.linear_solver == "iterative_schur") {
     options.linear_solver_type = ceres::ITERATIVE_SCHUR;
   } else {
     LogFatal("Invalid linear solver provided.");
   }
-  options.use_explicit_schur_complement = params_.use_explicit_schur_complement;
-  options.max_num_iterations = params_.max_num_iterations;
-  options.function_tolerance = params_.function_tolerance;
+  options.use_explicit_schur_complement = params_.optimization.use_explicit_schur_complement;
+  options.max_num_iterations = params_.optimization.max_num_iterations;
+  options.function_tolerance = params_.optimization.function_tolerance;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
