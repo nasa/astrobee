@@ -20,10 +20,10 @@
 
 namespace calibration {
 void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, const std::vector<cv::Point3d>& points_3d,
-                    const cv::Mat& intrinsics, cv::Mat& rotation, cv::Mat& translation) {
+                    const cv::Mat& intrinsics, const int pnp_method, cv::Mat& rotation, cv::Mat& translation) {
   cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
   cv::solvePnP(points_3d, undistorted_image_points, intrinsics, zero_distortion, rotation, translation, false,
-               cv::SOLVEPNP_EPNP);
+               pnp_method);
 }
 
 std::vector<int> RandomNIndices(const int num_possible_indices, const int num_sampled_indices) {

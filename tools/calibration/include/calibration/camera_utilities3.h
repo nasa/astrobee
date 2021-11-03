@@ -35,7 +35,7 @@
 
 namespace calibration {
 void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, const std::vector<cv::Point3d>& points_3d,
-                    const cv::Mat& intrinsics, cv::Mat& rotation, cv::Mat& translation);
+                    const cv::Mat& intrinsics, const int pnp_method, cv::Mat& rotation, cv::Mat& translation);
 
 std::vector<int> RandomNIndices(const int num_possible_indices, const int num_sampled_indices);
 
@@ -125,8 +125,8 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP2(
     const auto sampled_indices = RandomNIndices(image_points.size(), kNumSampledValues);
     const auto sampled_undistorted_image_points = SampledValues(undistorted_image_points_cv, sampled_indices);
     const auto sampled_points_3d = SampledValues(points_3d_cv, sampled_indices);
-    UndistortedPnP(sampled_undistorted_image_points, sampled_points_3d, intrinsics_cv, rodrigues_rotation_cv,
-                   translation_cv);
+    UndistortedPnP(sampled_undistorted_image_points, sampled_points_3d, intrinsics_cv, params.pnp_method,
+                   rodrigues_rotation_cv, translation_cv);
     const Eigen::Isometry3d pose_estimate = Isometry3d2(rodrigues_rotation_cv, translation_cv);
     const int num_inliers =
       Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, pose_estimate, params.max_inlier_threshold);
