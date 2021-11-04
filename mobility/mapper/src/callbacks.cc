@@ -50,7 +50,7 @@ void MapperNodelet::PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg) {
   mutexes_.point_cloud.unlock();
 
   // signal octomap thread to process new pcl data
-  semaphores_.pcl.notify_one();
+  CollisionCheckTask();
 }
 
 
