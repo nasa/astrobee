@@ -174,8 +174,6 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
  private:
   // Declare global variables (structures defined in structs.h)
   GlobalVariables globals_;
-  MutexStruct mutexes_;
-  SemaphoreStruct semaphores_;
 
   // Timer variables
   ros::Timer timer_o_;  // Octomapping Task

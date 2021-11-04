@@ -35,19 +35,15 @@ void MapperNodelet::PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg) {
 
   // Get transform from camera to world
   const std::string pcl_frame = cloud.header.frame_id;
-  mutexes_.tf.lock();
   if (!pcl_frame.compare("haz_cam"))
     new_pcl.tf_cam2world = globals_.tf_cam2world;
   else if (!pcl_frame.compare("perch_cam"))
     new_pcl.tf_cam2world = globals_.tf_perch2world;
-  mutexes_.tf.unlock();
 
   // save into global variables
-  mutexes_.point_cloud.lock();
   globals_.pcl_queue.push(new_pcl);
   if (globals_.pcl_queue.size() > max_queue_size)
     globals_.pcl_queue.pop();
-  mutexes_.point_cloud.unlock();
 
   // signal octomap thread to process new pcl data
   CollisionCheckTask();
@@ -73,7 +69,6 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
   double ts = 0.1;
   sampled_traj::SampledTrajectory3D sampled_traj(ts, poly_trajectories);
 
-  mutexes_.sampled_traj.lock();
   globals_.sampled_traj.pos_ = sampled_traj.pos_;
   globals_.sampled_traj.time_ = sampled_traj.time_;
   globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
@@ -94,10 +89,9 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
 
   // populate kdtree for finding nearest neighbor w.r.t. collisions
   globals_.sampled_traj.CreateKdTree();
-  mutexes_.sampled_traj.unlock();
 
   // Notify the collision checker to check for collision
-  semaphores_.collision_check.notify_one();
+  CollisionCheckTask();
 
   ros::Duration solver_time = ros::Time::now() - t0;
   ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
@@ -117,9 +111,7 @@ bool MapperNodelet::ReconfigureCallback(dynamic_reconfigure::Config &config) {
 }
 
 void MapperNodelet::ResetCallback(std_msgs::EmptyConstPtr const& msg) {
-  mutexes_.octomap.lock();
   globals_.octomap.ResetMap();
-  mutexes_.octomap.unlock();
 }
 
 

@@ -25,40 +25,32 @@ namespace mapper {
 
 // Thread for fading memory of the octomap
 void MapperNodelet::FadeTask(ros::TimerEvent const& event) {
-  mutexes_.octomap.lock();
   if (globals_.octomap.memory_time_ > 0)
       globals_.octomap.FadeMemory(fading_memory_update_rate_);
-  mutexes_.octomap.unlock();
 }
 
 // Thread for constantly updating the tfTree values
 void MapperNodelet::HazTfTask(ros::TimerEvent const& event) {
-  mutexes_.tf.lock();
   try {
     globals_.tf_cam2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
       GetTransform(FRAME_NAME_HAZ_CAM), ros::Time(0));
   } catch (tf2::TransformException &ex) {}
-  mutexes_.tf.unlock();
 }
 
 // Thread for constantly updating the tfTree values
 void MapperNodelet::PerchTfTask(ros::TimerEvent const& event) {
-  mutexes_.tf.lock();
   try {
     globals_.tf_perch2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
       GetTransform(FRAME_NAME_PERCH_CAM), ros::Time(0));
   } catch (tf2::TransformException &ex) {}
-  mutexes_.tf.unlock();
 }
 
 // Thread for updating the tfTree values
 void MapperNodelet::BodyTfTask(ros::TimerEvent const& event) {
-  mutexes_.tf.lock();
   try {
     globals_.tf_body2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
       GetTransform(FRAME_NAME_BODY), ros::Time(0));
   } catch (tf2::TransformException &ex) {}
-  mutexes_.tf.unlock();
 }
 
 // Sentinel
@@ -69,9 +61,6 @@ void MapperNodelet::CollisionCheckTask() {
 
   // pcl variables
   int cloudsize;
-
-  std::mutex mtx;
-  std::unique_lock<std::mutex> lck(mtx);
 
   // Get time for when this task started
   ros::Time time_now = ros::Time::now();
@@ -84,7 +73,6 @@ void MapperNodelet::CollisionCheckTask() {
   samples_markers.markers.clear();
   compressed_samples_markers.markers.clear();
 
-  mutexes_.sampled_traj.lock();
   point_cloud_traj = globals_.sampled_traj.point_cloud_traj_;
   std::vector<double> time = globals_.sampled_traj.time_;
 
@@ -95,7 +83,6 @@ void MapperNodelet::CollisionCheckTask() {
   path_marker_pub_.publish(traj_markers);
   path_marker_pub_.publish(samples_markers);
   path_marker_pub_.publish(compressed_samples_markers);
-  mutexes_.sampled_traj.unlock();
 
   // Stop execution if there are no points in the trajectory structure
   cloudsize = point_cloud_traj.size();
@@ -108,10 +95,8 @@ void MapperNodelet::CollisionCheckTask() {
 
   // Stop execution if the current time is beyond the final time of the trajectory
   if (time_now.toSec() > time.back()) {
-    mutexes_.sampled_traj.lock();
-        globals_.sampled_traj.ClearObject();
-        globals_.sampled_traj.TrajVisMarkers(&traj_markers);
-    mutexes_.sampled_traj.unlock();
+    globals_.sampled_traj.ClearObject();
+    globals_.sampled_traj.TrajVisMarkers(&traj_markers);
     visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
     path_marker_pub_.publish(traj_markers);
     path_marker_pub_.publish(collision_markers);
@@ -119,17 +104,13 @@ void MapperNodelet::CollisionCheckTask() {
   }
 
   // Check if trajectory collides with points in the point-cloud
-  mutexes_.octomap.lock();
   double res = globals_.octomap.tree_inflated_.getResolution();
   globals_.octomap.FindCollidingNodesInflated(point_cloud_traj, &colliding_nodes);
-  mutexes_.octomap.unlock();
 
   if (colliding_nodes.size() > 0) {
     // Sort collision time (use kdtree for nearest neighbor)
     std::vector<geometry_msgs::PointStamped> sorted_collisions;
-    mutexes_.sampled_traj.lock();
     globals_.sampled_traj.SortCollisions(colliding_nodes, &sorted_collisions);
-    mutexes_.sampled_traj.unlock();
 
     double collision_time = (sorted_collisions[0].header.stamp - ros::Time::now()).toSec();
     // uint lastCollisionIdx = sorted_collisions.back().header.seq;
@@ -143,9 +124,7 @@ void MapperNodelet::CollisionCheckTask() {
       info.hazard = sorted_collisions[0];
       hazard_pub_.publish(info);
       // Unlock resources
-      mutexes_.sampled_traj.lock();
       globals_.sampled_traj.ClearObject();
-      mutexes_.sampled_traj.unlock();
     }
   }
 
@@ -159,14 +138,9 @@ void MapperNodelet::CollisionCheckTask() {
 void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
   pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
-  std::mutex mtx;
-  std::unique_lock<std::mutex> lck(mtx);
-  // Take care of the special case where the notify_one was sent during the
-  // processing of the previous point cloud. The signal that this happened
-  // is a non-empty point cloud queue. In this case we pass straight through.
+  // If there are no pcl point clounds
   if (globals_.pcl_queue.empty())
-    semaphores_.pcl.wait(lck);
-  mutexes_.point_cloud.lock();
+    return;
 
   // Get time for when this task started
   const ros::Time t0 = ros::Time::now();
@@ -179,7 +153,6 @@ void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
 
   // Remove data from queue
   globals_.pcl_queue.pop();
-  mutexes_.point_cloud.unlock();
 
   // Check if a tf message has been received already. If not, return
   if (tf_cam2world.header.stamp.toSec() == 0)
@@ -199,13 +172,11 @@ void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
 
   // Save into octomap
   algebra_3d::FrustumPlanes world_frustum;
-  mutexes_.octomap.lock();
   globals_.octomap.cam_frustum_.TransformFrustum(transform, &world_frustum);
   globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
   globals_.octomap.tree_.prune();   // prune the tree before visualizing
   globals_.octomap.tree_inflated_.prune();
   // globals_.octomap.tree.writeBinary("simple_tree.bt");
-  mutexes_.octomap.unlock();
 
   // Publish visualization markers iff at least one node is subscribed to it
   bool pub_obstacles, pub_free, pub_obstacles_inflated, pub_free_inflated;
@@ -219,10 +190,8 @@ void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
   if (pub_obstacles || pub_free) {
     visualization_msgs::MarkerArray obstacle_markers, free_markers;
     sensor_msgs::PointCloud2 obstacle_cloud, free_cloud;
-    mutexes_.octomap.lock();
     globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers,
                                     &obstacle_cloud,   &free_cloud);
-    mutexes_.octomap.unlock();
     if (pub_obstacles) {
       obstacle_marker_pub_.publish(obstacle_markers);
       obstacle_cloud_pub_.publish(obstacle_cloud);
@@ -236,10 +205,8 @@ void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
   if (pub_obstacles_inflated || pub_free_inflated) {
     visualization_msgs::MarkerArray inflated_obstacle_markers, inflated_free_markers;
     sensor_msgs::PointCloud2 inflated_obstacle_cloud, inflated_free_cloud;
-    mutexes_.octomap.lock();
     globals_.octomap.InflatedVisMarkers(&inflated_obstacle_markers, &inflated_free_markers,
                                         &inflated_obstacle_cloud,   &inflated_free_cloud);
-    mutexes_.octomap.unlock();
     if (pub_obstacles_inflated) {
       inflated_obstacle_marker_pub_.publish(inflated_obstacle_markers);
       inflated_obstacle_cloud_pub_.publish(inflated_obstacle_cloud);
@@ -252,9 +219,7 @@ void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
 
   if (cam_frustum_pub_.getNumSubscribers() > 0) {
     visualization_msgs::Marker frustum_markers;
-    mutexes_.octomap.lock();
     globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
-    mutexes_.octomap.unlock();
     cam_frustum_pub_.publish(frustum_markers);
   }
 
