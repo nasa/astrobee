@@ -44,11 +44,11 @@ To run the docker container:
 
 It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
 --xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
-To add arguments to the launch file besides `dds:=false robot:=sim_pub` you can do instead:
+To add arguments to the launch file in addition to `dds:=false robot:=sim_pub` you can do instead:
 
     ./run.sh --args "rviz:=true sviz:=true"
 
-*Note: You might have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
+*Note: You have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
 
 To open another terminal inside the docker container:
 
