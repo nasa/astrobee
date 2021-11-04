@@ -31,6 +31,7 @@ If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` 
 To build the docker images, run:
     
     ./build.sh
+
 The build script will automatically detect the current Ubuntu OS version and define the docker files variables
 `UBUNTU_VERSION`, `ROS_VERSION`, and `PYTHON`. If a specific version is desired, the option --xenial, --bionic,
 and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
@@ -40,8 +41,14 @@ and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respective
 To run the docker container:
 
     ./run.sh
+
 It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
 --xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
+To add arguments to the launch file in addition to `dds:=false robot:=sim_pub` you can do instead:
+
+    ./run.sh --args "rviz:=true sviz:=true"
+
+*Note: You have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
 
 To open another terminal inside the docker container:
 
