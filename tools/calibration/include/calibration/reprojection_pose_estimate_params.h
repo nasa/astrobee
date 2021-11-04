@@ -25,6 +25,7 @@ namespace calibration {
 struct ReprojectionPoseEstimateParams {
   OptimizationParams optimization;
   RansacPnPParams ransac_pnp;
+  bool optimize_estimate;
 };
 }  // namespace calibration
 

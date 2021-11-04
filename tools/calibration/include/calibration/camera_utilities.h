@@ -223,15 +223,18 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
     return boost::none;
   }
 
-  Eigen::Matrix<double, 6, 1> pose_estimate_vector =
-    optimization_common::VectorFromIsometry3d(initial_estimate_and_inliers->first);
-  problem.AddParameterBlock(pose_estimate_vector.data(), 6);
   const int num_inliers = initial_estimate_and_inliers->second.size();
   if (num_inliers < params.ransac_pnp.min_num_inliers) {
     LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << params.ransac_pnp.min_num_inliers << ", got "
                                                                       << num_inliers << ".");
     return boost::none;
   }
+
+  if (!params.optimize_estimate) return initial_estimate_and_inliers->first;
+
+  Eigen::Matrix<double, 6, 1> pose_estimate_vector =
+    optimization_common::VectorFromIsometry3d(initial_estimate_and_inliers->first);
+  problem.AddParameterBlock(pose_estimate_vector.data(), 6);
 
   for (int i = 0; i < num_inliers; ++i) {
     const int inlier_index = initial_estimate_and_inliers->second[i];

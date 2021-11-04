@@ -48,6 +48,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBased
 void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params) {
   LoadOptimizationParams(config, params.optimization, "reprojection_");
   LoadRansacPnPParams(config, params.ransac_pnp);
+  params.optimize_estimate = mc::LoadBool(config, "reprojection_optimize_estimate");
 }
 
 void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,
