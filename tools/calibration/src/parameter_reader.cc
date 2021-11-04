@@ -75,6 +75,7 @@ void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Optio
 void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params,
                             const std::string& prefix) {
   LoadSolverOptions(config, params.solver_options, prefix);
+  params.verbose = mc::LoadBool(config, prefix + "verbose_optimization");
   params.huber_loss = mc::LoadDouble(config, prefix + "huber_loss");
 }
 

@@ -243,7 +243,15 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
 
   ceres::Solver::Summary summary;
   ceres::Solve(params.optimization.solver_options, &problem, &summary);
-  // std::cout << summary.FullReport() << "\n";
+  const Eigen::Isometry3d optimized_estimate = optimization_common::Isometry3(pose_estimate_vector.data());
+  if (params.optimization.verbose) {
+    LogError("ReprojectionPoseEstimate: Initial estimate: " << std::endl
+                                                            << initial_estimate_and_inliers->first.matrix() << std::endl
+                                                            << "Optimized estimate: " << std::endl
+                                                            << optimized_estimate.matrix() << std::endl
+                                                            << "Summary: " << std::endl
+                                                            << summary.FullReport());
+  }
   if (!summary.IsSolutionUsable()) {
     LogError("ReprojectionPoseEstimate: Failed to find solution.");
     return boost::none;
@@ -251,7 +259,7 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
 
   // CreateReprojectionImage<DISTORTER>(image_points, points_3d, initial_estimate_and_inliers->second, intrinsics,
   //                                 distortion, initial_estimate_and_inliers->first, "new_reprojposeestimate");
-  return optimization_common::Isometry3(pose_estimate_vector.data());
+  return optimized_estimate;
 }
 
 template <typename DISTORTER>

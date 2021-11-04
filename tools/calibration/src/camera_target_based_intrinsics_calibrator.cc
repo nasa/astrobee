@@ -118,7 +118,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
 
   ceres::Solver::Summary summary;
   ceres::Solve(params_.optimization.solver_options, &problem, &summary);
-  std::cout << summary.FullReport() << "\n";
+  if (params_.optimization.verbose) std::cout << summary.FullReport() << std::endl;
 
   calibrated_focal_lengths = focal_lengths;
   calibrated_principal_points = principal_points;

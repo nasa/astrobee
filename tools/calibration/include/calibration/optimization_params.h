@@ -23,6 +23,7 @@
 namespace calibration {
 struct OptimizationParams {
   ceres::Solver::Options solver_options;
+  bool verbose;
   double huber_loss;
 };
 }  // namespace calibration
