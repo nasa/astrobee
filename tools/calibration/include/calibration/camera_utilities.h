@@ -66,7 +66,7 @@ std::vector<int> RandomNIndices(const int num_possible_indices, const int num_sa
 
 template <typename DISTORTER>
 void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
-                             const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indicies,
+                             const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,
                              const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
                              const Eigen::Isometry3d& pose, const double max_error_norm, const std::string& name);
 
@@ -255,14 +255,14 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
 // TODO(rsoussan) combine this code with other image creator!
 template <typename DISTORTER>
 void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
-                             const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indicies,
+                             const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,
                              const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
                              const Eigen::Isometry3d& pose, const double max_error_norm, const std::string& name) {
   cv::Mat reprojection_image_grayscale(960, 1280, CV_8UC1, cv::Scalar(0));
-  for (int i = 0; i < static_cast<int>(indicies.size()); ++i) {
-    const int index = indicies[i];
-    const Eigen::Vector2d& image_point = image_points[index];
-    const Eigen::Vector3d& point_3d = points_3d[index];
+  std::unordered_set<int> inlier_indices(indices.begin(), indices.end());
+  for (int i = 0; i < static_cast<int>(image_points.size()); ++i) {
+    const Eigen::Vector2d& image_point = image_points[i];
+    const Eigen::Vector3d& point_3d = points_3d[i];
     const Eigen::Vector3d camera_t_target_point = pose * point_3d;
     const Eigen::Vector2d projected_image_point =
       Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
@@ -274,10 +274,18 @@ void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
     // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
     // darker blues from 0 to 20 or so.
     const int error_color = std::round(std::min(error_norm, max_error_norm) / max_error_norm * 235.0) + 1;
-    cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(235), -1);
-    cv::circle(reprojection_image_grayscale,
-               cv::Point2i(std::round(projected_image_point.x()), std::round(projected_image_point.y())), 4,
-               cv::Scalar(error_color), -1);
+    if (inlier_indices.count(i) > 0) {
+      cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(235), -1);
+      cv::circle(reprojection_image_grayscale,
+                 cv::Point2i(std::round(projected_image_point.x()), std::round(projected_image_point.y())), 4,
+                 cv::Scalar(error_color), -1);
+    } else {  // Draw outlier with a triangle
+      cv::drawMarker(reprojection_image_grayscale, rounded_image_point, cv::Scalar(235), cv::MARKER_TRIANGLE_DOWN, 6,
+                     2);
+      cv::drawMarker(reprojection_image_grayscale,
+                     cv::Point2i(std::round(projected_image_point.x()), std::round(projected_image_point.y())),
+                     cv::Scalar(error_color), cv::MARKER_TRIANGLE_DOWN, 6, 2);
+    }
   }
   cv::Mat reprojection_image_color;
   cv::applyColorMap(reprojection_image_grayscale, reprojection_image_color, cv::COLORMAP_JET);
