@@ -159,7 +159,13 @@ double CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::RadialScaleFactor(const
 template <typename DISTORTER>
 localization_common::ImageCorrespondences CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::InlierMatches(
   const localization_common::ImageCorrespondences& match_set, const std::vector<int>& inliers) const {
-  return match_set;
+  std::vector<Eigen::Vector2d> inlier_image_points;
+  std::vector<Eigen::Vector3d> inlier_points_3d;
+  for (const int inlier_index : inliers) {
+    inlier_image_points.emplace_back(match_set.image_points[inlier_index]);
+    inlier_points_3d.emplace_back(match_set.points_3d[inlier_index]);
+  }
+  return localization_common::ImageCorrespondences(inlier_image_points, inlier_points_3d);
 }
 }  // namespace calibration
 
