@@ -18,10 +18,11 @@
 #ifndef CALIBRATION_CAMERA_UTILITIES_H_
 #define CALIBRATION_CAMERA_UTILITIES_H_
 
-#include <camera/camera_model.h>
-#include <localization_common/logger.h>
 #include <calibration/ransac_pnp_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>
+#include <camera/camera_model.h>
+#include <ff_common/eigen_vectors.h>
+#include <localization_common/logger.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 

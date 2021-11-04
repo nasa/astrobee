@@ -18,6 +18,7 @@
 
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
 #include <calibration/utilities.h>
+#include <ff_common/eigen_vectors.h>
 #include <localization_common/logger.h>
 #include <optimization_common/fov_distorter.h>
 #include <optimization_common/rad_distorter.h>
@@ -63,6 +64,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   if (params_.calibrate_target_poses) LogError("Calibrating target poses.");
 
   std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
+  std::vector<Eigen::Isometry3d> initial_camera_T_targets;
   // TODO(rsoussan): More efficient way to do this
   std::vector<lc::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
@@ -90,6 +92,7 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
       continue;
     }
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
+    initial_camera_T_targets.emplace_back(*camera_T_target);
     valid_match_sets.emplace_back(match_set);
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
@@ -120,6 +123,9 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
   calibrated_focal_lengths = focal_lengths;
   calibrated_principal_points = principal_points;
   calibrated_distortion = distortion;
+
+  if (params_.calibrate_target_poses) PrintCameraTTargetsStats(initial_camera_T_targets, camera_T_targets);
+
   const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
     SaveReprojectionErrors<oc::FovDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
