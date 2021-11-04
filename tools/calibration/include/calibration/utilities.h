@@ -45,22 +45,27 @@ template <typename DISTORTER>
 void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
                            const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,
                            const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                           const Eigen::Isometry3d& pose, const double max_error_norm, const std::string& name);
+                           const Eigen::Isometry3d& pose, const double max_visualization_error_norm,
+                           const std::string& name);
 
 template <typename DISTORTER>
 void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
                                          const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                                          const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                                         const Eigen::Vector2i& image_size, const double max_error_norm = 100);
+                                         const Eigen::Vector2i& image_size,
+                                         const double max_visualization_error_norm = 100);
 
-int AbsoluteErrorColor(const double error, const double max_error, const double max_color_value);
+int ErrorColor(const double error, const double max_error, const double max_color_value);
+
+cv::Mat MapImageColors(const cv::Mat& gray_image);
 
 // TODO(rsoussan) combine this code with other image creator!
 template <typename DISTORTER>
 void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
                            const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,
                            const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                           const Eigen::Isometry3d& pose, const double max_error_norm, const std::string& name) {
+                           const Eigen::Isometry3d& pose, const double max_visualization_error_norm,
+                           const std::string& name) {
   cv::Mat reprojection_image_grayscale(960, 1280, CV_8UC1, cv::Scalar(0));
   std::unordered_set<int> inlier_indices(indices.begin(), indices.end());
   for (int i = 0; i < static_cast<int>(image_points.size()); ++i) {
@@ -77,7 +82,7 @@ void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
     // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
     // darker blues from 0 to 20 or so.
     constexpr double max_color_value = 235.0;
-    const int error_color = AbsoluteErrorColor(error_norm, max_error_norm, max_color_value) + 1;
+    const int error_color = ErrorColor(error_norm, max_visualization_error_norm, max_color_value) + 1;
     if (inlier_indices.count(i) > 0) {
       cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(235), -1);
       cv::circle(reprojection_image_grayscale,
@@ -91,12 +96,8 @@ void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
                      cv::Scalar(error_color), cv::MARKER_TRIANGLE_DOWN, 6, 2);
     }
   }
-  cv::Mat reprojection_image_color;
-  cv::applyColorMap(reprojection_image_grayscale, reprojection_image_color, cv::COLORMAP_JET);
-  // Map white pixels back from lowest JET value (128, 0, 0) to white
-  cv::Mat base_mask;
-  cv::inRange(reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
-  reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
+
+  const cv::Mat reprojection_image_color = MapImageColors(reprojection_image_grayscale);
   cv::imwrite(name, reprojection_image_color);
 }
 
@@ -104,9 +105,10 @@ template <typename DISTORTER>
 void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
                                          const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                                          const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                                         const Eigen::Vector2i& image_size, const double max_error_norm) {
+                                         const Eigen::Vector2i& image_size, const double max_visualization_error_norm) {
+  double max_error_norm = 0;
+  // Absolute Image
   cv::Mat absolute_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
-  cv::Mat relative_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
   std::ofstream errors_file;
   errors_file.open("errors_file.txt");
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
@@ -120,6 +122,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
         Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
       const Eigen::Vector2d error = (image_point - projected_image_point);
       const double error_norm = error.norm();
+      if (error_norm > max_error_norm) max_error_norm = error_norm;
       errors_file << error.x() << " " << error.y() << std::endl;
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
       // Add 1 to each value so background pixels stay white and we can map these back to white
@@ -127,19 +130,39 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
       // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
       // darker blues from 0 to 20 or so.
       constexpr double max_color_value = 235.0;
-      const int absolute_error_color = AbsoluteErrorColor(error_norm, max_error_norm, max_color_value) + 1;
+      const int absolute_error_color = ErrorColor(error_norm, max_visualization_error_norm, max_color_value) + 1;
       cv::circle(absolute_reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(absolute_error_color), -1);
     }
   }
-  // TODO(rsoussan): pass filepath!
-  cv::Mat absolute_reprojection_image_color;
-  cv::applyColorMap(absolute_reprojection_image_grayscale, absolute_reprojection_image_color, cv::COLORMAP_JET);
-  // Map white pixels back from lowest JET value (128, 0, 0) to white
-  cv::Mat base_mask;
-  cv::inRange(absolute_reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
-  absolute_reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
+  const cv::Mat absolute_reprojection_image_color = MapImageColors(absolute_reprojection_image_grayscale);
   cv::imwrite("calibrated_reprojection_from_all_targets_absolute_image.png", absolute_reprojection_image_color);
   errors_file.close();
+
+  // Relative Image
+  cv::Mat relative_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
+  for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
+    const auto& match_set = valid_match_sets[i];
+    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
+    for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
+      const auto& image_point = match_set.image_points[j];
+      const auto& target_point = match_set.points_3d[j];
+      const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
+      const Eigen::Vector2d projected_image_point =
+        Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
+      const Eigen::Vector2d error = (image_point - projected_image_point);
+      const double error_norm = error.norm();
+      const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
+      // Add 1 to each value so background pixels stay white and we can map these back to white
+      // after applying colormap.
+      // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
+      // darker blues from 0 to 20 or so.
+      constexpr double max_color_value = 235.0;
+      const int relative_error_color = ErrorColor(error_norm, max_error_norm, max_color_value) + 1;
+      cv::circle(relative_reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(relative_error_color), -1);
+    }
+  }
+  const cv::Mat relative_reprojection_image_color = MapImageColors(relative_reprojection_image_grayscale);
+  cv::imwrite("calibrated_reprojection_from_all_targets_relative_image.png", relative_reprojection_image_color);
 }
 }  // namespace calibration
 

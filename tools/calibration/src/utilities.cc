@@ -46,7 +46,17 @@ void PrintCameraTTargetsStats(const std::vector<Eigen::Isometry3d>& initial_came
   rotation_diff_averager.Log();
 }
 
-int AbsoluteErrorColor(const double error, const double max_error, const double max_color_value) {
+int ErrorColor(const double error, const double max_error, const double max_color_value) {
   return std::round(std::min(error, max_error) / max_error * max_color_value);
+}
+
+cv::Mat MapImageColors(const cv::Mat& gray_image) {
+  cv::Mat color_image;
+  cv::applyColorMap(gray_image, color_image, cv::COLORMAP_JET);
+  // Map white pixels back from lowest JET value (128, 0, 0) to white
+  cv::Mat base_mask;
+  cv::inRange(color_image, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
+  color_image.setTo(cv::Scalar(255, 255, 255), base_mask);
+  return color_image;
 }
 }  // namespace calibration
