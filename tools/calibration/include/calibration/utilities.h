@@ -137,7 +137,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
   cv::Mat base_mask;
   cv::inRange(reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
   reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
-  cv::imwrite("reprojection_image.jpg", reprojection_image_color);
+  cv::imwrite("calibrated_reprojection_from_all_targets_absolute_image.png", reprojection_image_color);
   errors_file.close();
 }
 }  // namespace calibration
