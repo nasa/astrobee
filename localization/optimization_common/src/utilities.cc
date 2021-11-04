@@ -20,31 +20,20 @@
 
 namespace optimization_common {
 Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d) {
-  Eigen::Quaterniond quaternion(isometry_3d.linear());
-  // Use normalized x,y,z components for compact quaternion
-  // TODO(rsoussan): Is this normalize call necessary?
-  quaternion.normalize();
-  Eigen::Vector3d compact_quaternion = quaternion.vec();
   Eigen::Matrix<double, 6, 1> isometry_3d_vector;
-  isometry_3d_vector.head<3>() = compact_quaternion;
+  ceres::RotationMatrixToAngleAxis(isometry_3d.linear().data(), &(isometry_3d_vector.data()[0]));
   isometry_3d_vector.block<3, 1>(3, 0) = isometry_3d.translation();
   return isometry_3d_vector;
 }
 
-// Organize as compact quaternion, translation, scale
 Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d) {
   Eigen::Matrix3d rotation;
   Eigen::Matrix3d scale_matrix;
   affine_3d.computeRotationScaling(&rotation, &scale_matrix);
-  // Assumes uniform scaling, which is (i*the case for Affine3d
+  // Assumes uniform scaling, which is the case for Affine3d
   const double scale = scale_matrix(0, 0);
-  Eigen::Quaterniond quaternion(rotation);
-  // Use normalized x,y,z components for compact quaternion
-  // TODO(rsoussan): Is this normalize call necessary?
-  quaternion.normalize();
-  Eigen::Vector3d compact_quaternion = quaternion.vec();
   Eigen::Matrix<double, 7, 1> affine_3d_vector;
-  affine_3d_vector.head<3>() = compact_quaternion;
+  ceres::RotationMatrixToAngleAxis(rotation.data(), &(affine_3d_vector.data()[0]));
   affine_3d_vector.block<3, 1>(3, 0) = affine_3d.translation();
   affine_3d_vector(6, 0) = scale;
   return affine_3d_vector;

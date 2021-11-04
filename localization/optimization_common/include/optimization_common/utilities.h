@@ -21,32 +21,25 @@
 #include <Eigen/Core>
 
 #include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
 #include <vector>
 
 namespace optimization_common {
+// Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
+// First 3 values of isometry_data are the compact angle axis, next 3 are the translation
 Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d);
+// Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
+// First 3 values of isometry_data are the compact angle axis, next 3 are the translation, last is scale
 Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
 Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points);
 
-// Assumes compact quaternion parameterization for rotations
-// TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
+// Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
+// First 3 values of isometry_data are the compact angle axis, next 3 are the translation
 template <typename T>
 Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {
-  Eigen::Map<const Eigen::Matrix<T, 3, 1>> compact_quaternion(isometry_data);
   Eigen::Matrix<T, 3, 3> rotation;
-  // For a quaternion, sqrt(x^2+y^2+z^2+w^2) = 1
-  // Since a compact quaternion provides the x,y,z compenents, to recover w use:
-  // w^2 = 1 - (x^2 + y^2 + z^2)
-  const T w_squared = 1.0 - compact_quaternion.squaredNorm();
-  // Catch invalid quaternion
-  if (w_squared <= 0.0) {
-    rotation = Eigen::Matrix<T, 3, 3>::Identity();
-  } else {
-    const Eigen::Quaternion<T> quaternion(ceres::sqrt(w_squared), compact_quaternion[0], compact_quaternion[1],
-                                          compact_quaternion[2]);
-    rotation = Eigen::Matrix<T, 3, 3>(quaternion);
-  }
+  ceres::AngleAxisToRotationMatrix(isometry_data, rotation.data());
   Eigen::Map<const Eigen::Matrix<T, 3, 1>> translation(&isometry_data[3]);
   Eigen::Transform<T, 3, Eigen::Isometry> isometry_3(Eigen::Transform<T, 3, Eigen::Isometry>::Identity());
   isometry_3.linear() = rotation;
@@ -54,32 +47,16 @@ Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {
   return isometry_3;
 }
 
-// Assumes compact quaternion parameterization for rotations
-// TODO(rsoussan): Use exponential map with local parameterization and compact axis angle parameterization
+// Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
+// First 3 values of isometry_data are the compact angle axis, next 3 are the translation, last is scale
 template <typename T>
 Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
-  Eigen::Map<const Eigen::Matrix<T, 3, 1>> compact_quaternion(affine_data);
-  Eigen::Matrix<T, 3, 3> rotation;
-  // For a quaternion, sqrt(x^2+y^2+z^2+w^2) = 1
-  // Since a compact quaternion provides the x,y,z compenents, to recover w use:
-  // w^2 = 1 - (x^2 + y^2 + z^2)
-  const T w_squared = 1.0 - compact_quaternion.squaredNorm();
-  // Catch invalid quaternion
-  if (w_squared < 0.0) {
-    rotation = Eigen::Matrix<T, 3, 3>::Identity();
-  } else {
-    const Eigen::Quaternion<T> quaternion(ceres::sqrt(w_squared), compact_quaternion[0], compact_quaternion[1],
-                                          compact_quaternion[2]);
-    rotation = Eigen::Matrix<T, 3, 3>(quaternion);
-  }
-  Eigen::Map<const Eigen::Matrix<T, 3, 1>> translation(&affine_data[3]);
+  const Eigen::Transform<T, 3, Eigen::Isometry> isometry_3 = Isometry3(affine_data);
   const T scale = affine_data[6];
   const Eigen::Matrix<T, 3, 3> scale_matrix(Eigen::Matrix<T, 3, 3>::Identity() * scale);
   Eigen::Transform<T, 3, Eigen::Affine> affine_3;
-  affine_3.linear() = scale_matrix * rotation;
-  affine_3.translation() = translation;
-  // TODO(rsoussan): why doesnt't this work?
-  // affine_3.fromPositionOrientationScale(translation, rotation, scale_matrix);
+  affine_3.linear() = scale_matrix * isometry_3.linear();
+  affine_3.translation() = isometry_3.translation();
   return affine_3;
 }
 
