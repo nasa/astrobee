@@ -95,14 +95,14 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
     }
     camera_T_targets.emplace_back(oc::VectorFromIsometry3d(camera_T_target->first));
     initial_camera_T_targets.emplace_back(camera_T_target->first);
-    // if (params.save_individual_initial_target_reprojection_images) {
-    static int image_count = 0;
-    // TODO(rsoussan): use same template arg here!!
-    SaveReprojectionImage<oc::RadDistorter>(match_set.image_points, match_set.points_3d, camera_T_target->second,
-                                            initial_intrinsics, distortion, camera_T_target->first,
-                                            params_.reprojection_pose_estimate.max_visualization_error_norm,
-                                            "reprojection_image_" + std::to_string(image_count++) + ".png");
-    //}
+    if (params_.save_individual_initial_reprojection_images) {
+      static int image_count = 0;
+      // TODO(rsoussan): use same template arg here!!
+      SaveReprojectionImage<oc::RadDistorter>(match_set.image_points, match_set.points_3d, camera_T_target->second,
+                                              initial_intrinsics, distortion, camera_T_target->first,
+                                              params_.individual_max_visualization_error_norm,
+                                              "reprojection_image_" + std::to_string(image_count++) + ".png");
+    }
 
     valid_match_sets.emplace_back(match_set);
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);

@@ -37,6 +37,9 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBased
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.min_num_target_inliers = mc::LoadInt(config, "min_num_target_inliers");
   params.max_visualization_error_norm = mc::LoadDouble(config, "max_visualization_error_norm");
+  params.save_individual_initial_reprojection_images =
+    mc::LoadBool(config, "save_individual_initial_reprojection_images");
+  params.individual_max_visualization_error_norm = mc::LoadDouble(config, "individual_max_visualization_error_norm");
   const int image_width = mc::LoadInt(config, "image_width");
   const int image_height = mc::LoadInt(config, "image_height");
   params.image_size = Eigen::Vector2i(image_width, image_height);
@@ -49,8 +52,6 @@ void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, Rep
   LoadOptimizationParams(config, params.optimization, "reprojection_");
   LoadRansacPnPParams(config, params.ransac_pnp);
   params.optimize_estimate = mc::LoadBool(config, "reprojection_optimize_estimate");
-  params.save_image = mc::LoadBool(config, "reprojection_save_image");
-  params.max_visualization_error_norm = mc::LoadDouble(config, "reprojection_max_visualization_error_norm");
 }
 
 void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,

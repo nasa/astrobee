@@ -26,8 +26,6 @@ struct ReprojectionPoseEstimateParams {
   OptimizationParams optimization;
   RansacPnPParams ransac_pnp;
   bool optimize_estimate;
-  bool save_image;
-  double max_visualization_error_norm;
 };
 }  // namespace calibration
 
