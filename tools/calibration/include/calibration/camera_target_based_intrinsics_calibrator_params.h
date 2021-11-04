@@ -39,6 +39,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   bool scale_loss_radially;
   double radial_scale_power;
   // Other
+  bool only_use_inliers;
   int max_num_match_sets;
   int min_num_target_inliers;
   int max_visualization_error_norm;

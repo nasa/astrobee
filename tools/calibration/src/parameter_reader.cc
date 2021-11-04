@@ -36,6 +36,7 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBased
   params.radial_scale_power = mc::LoadDouble(config, "radial_scale_power");
   params.max_num_match_sets = mc::LoadInt(config, "max_num_match_sets");
   params.min_num_target_inliers = mc::LoadInt(config, "min_num_target_inliers");
+  params.only_use_inliers = mc::LoadBool(config, "only_use_inliers");
   params.max_visualization_error_norm = mc::LoadDouble(config, "max_visualization_error_norm");
   params.save_individual_initial_reprojection_images =
     mc::LoadBool(config, "save_individual_initial_reprojection_images");

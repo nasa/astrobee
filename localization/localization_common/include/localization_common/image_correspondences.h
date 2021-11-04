@@ -26,6 +26,8 @@ namespace localization_common {
 struct ImageCorrespondences {
   ImageCorrespondences(const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d)
       : image_points(image_points), points_3d(points_3d) {}
+  ImageCorrespondences() {}
+
   std::vector<Eigen::Vector2d> image_points;
   std::vector<Eigen::Vector3d> points_3d;
 };

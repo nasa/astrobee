@@ -52,6 +52,8 @@ class CameraTargetBasedIntrinsicsCalibrator {
 
  private:
   double RadialScaleFactor(const Eigen::Vector2d& image_point, const Eigen::Vector2i& image_size) const;
+  localization_common::ImageCorrespondences InlierMatches(const localization_common::ImageCorrespondences& match_set,
+                                                          const std::vector<int>& inliers) const;
 
   CameraTargetBasedIntrinsicsCalibratorParams params_;
 };
@@ -112,9 +114,15 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
                                        "reprojection_image_" + std::to_string(image_count++) + ".png");
     }
 
-    valid_match_sets.emplace_back(match_set);
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
+    localization_common::ImageCorrespondences valid_match_set;
+    if (params_.only_use_inliers) {
+      valid_match_set = InlierMatches(match_set, camera_T_target->second);
+    } else {
+      valid_match_set = match_set;
+    }
+    valid_match_sets.emplace_back(valid_match_set);
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
       optimization_common::AddReprojectionCostFunction<DISTORTER>(
@@ -146,6 +154,12 @@ double CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::RadialScaleFactor(const
   const Eigen::Vector2d centered_image_point = image_point - image_size.cast<double>() / 2.0;
   const double radius = centered_image_point.norm();
   return std::pow(radius, params_.radial_scale_power);
+}
+
+template <typename DISTORTER>
+localization_common::ImageCorrespondences CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::InlierMatches(
+  const localization_common::ImageCorrespondences& match_set, const std::vector<int>& inliers) const {
+  return match_set;
 }
 }  // namespace calibration
 
