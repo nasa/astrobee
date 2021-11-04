@@ -134,6 +134,9 @@ Next, download the cross toolchain and install the chroot:
     $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
     $ASTROBEE_WS/src/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
 
+*Note: If the package qemu-arm-static is required by the script, please install qemu-user-static.
+The package multistrap is also required for the last script above.*
+
 ## Configuring the build
 
 At this point you need to decide whether you'd like to compile natively
