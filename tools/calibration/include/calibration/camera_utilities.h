@@ -65,12 +65,6 @@ void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, co
 std::vector<int> RandomNIndices(const int num_possible_indices, const int num_sampled_indices);
 
 template <typename DISTORTER>
-void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
-                             const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,
-                             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                             const Eigen::Isometry3d& pose, const double max_error_norm, const std::string& name);
-
-template <typename DISTORTER>
 int Inliers(const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
             const Eigen::Isometry3d& pose_estimate, const double max_inlier_threshold,
@@ -162,12 +156,10 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP(
 }
 
 template <typename DISTORTER>
-boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
-                                                            const std::vector<Eigen::Vector3d>& points_3d,
-                                                            const Eigen::Vector2d& focal_lengths,
-                                                            const Eigen::Vector2d& principal_points,
-                                                            const Eigen::VectorXd& distortion,
-                                                            const ReprojectionPoseEstimateParams& params) {
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
+  const ReprojectionPoseEstimateParams& params) {
   if (image_points.size() < 4) {
     LogError("ReprojectionPoseEstimate: Too few matched points given.");
     return boost::none;
@@ -199,7 +191,7 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
     return boost::none;
   }
 
-  if (!params.optimize_estimate) return initial_estimate_and_inliers->first;
+  if (!params.optimize_estimate) return initial_estimate_and_inliers;
 
   Eigen::Matrix<double, 6, 1> pose_estimate_vector =
     optimization_common::VectorFromIsometry3d(initial_estimate_and_inliers->first);
@@ -229,71 +221,18 @@ boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Ei
     return boost::none;
   }
 
-  if (params.save_image) {
-    static int image_count = 0;
-    CreateReprojectionImage<DISTORTER>(image_points, points_3d, initial_estimate_and_inliers->second, intrinsics,
-                                       distortion, initial_estimate_and_inliers->first,
-                                       params.max_visualization_error_norm,
-                                       "reprojection_image_" + std::to_string(image_count++) + ".png");
-  }
-  return optimized_estimate;
+  return std::make_pair(optimized_estimate, initial_estimate_and_inliers->second);
 }
 
 template <typename DISTORTER>
-boost::optional<Eigen::Isometry3d> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
-                                                            const std::vector<Eigen::Vector3d>& points_3d,
-                                                            const Eigen::Matrix3d& intrinsics,
-                                                            const Eigen::VectorXd& distortion,
-                                                            const double min_inlier_threshold = 4.0,
-                                                            const int ransac_num_iterations = 100) {
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double min_inlier_threshold = 4.0,
+  const int ransac_num_iterations = 100) {
   const Eigen::Vector2d focal_lengths(intrinsics(0, 0), intrinsics(1, 1));
   const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
   return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
                                              ransac_num_iterations);
-}
-
-// TODO(rsoussan) combine this code with other image creator!
-template <typename DISTORTER>
-void CreateReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
-                             const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,
-                             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
-                             const Eigen::Isometry3d& pose, const double max_error_norm, const std::string& name) {
-  cv::Mat reprojection_image_grayscale(960, 1280, CV_8UC1, cv::Scalar(0));
-  std::unordered_set<int> inlier_indices(indices.begin(), indices.end());
-  for (int i = 0; i < static_cast<int>(image_points.size()); ++i) {
-    const Eigen::Vector2d& image_point = image_points[i];
-    const Eigen::Vector3d& point_3d = points_3d[i];
-    const Eigen::Vector3d camera_t_target_point = pose * point_3d;
-    const Eigen::Vector2d projected_image_point =
-      Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
-    const Eigen::Vector2d error = (image_point - projected_image_point);
-    const double error_norm = error.norm();
-    const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
-    // Add 1 to each value so background pixels stay white and we can map these back to white
-    // after applying colormap.
-    // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
-    // darker blues from 0 to 20 or so.
-    const int error_color = std::round(std::min(error_norm, max_error_norm) / max_error_norm * 235.0) + 1;
-    if (inlier_indices.count(i) > 0) {
-      cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(235), -1);
-      cv::circle(reprojection_image_grayscale,
-                 cv::Point2i(std::round(projected_image_point.x()), std::round(projected_image_point.y())), 4,
-                 cv::Scalar(error_color), -1);
-    } else {  // Draw outlier with a triangle
-      cv::drawMarker(reprojection_image_grayscale, rounded_image_point, cv::Scalar(235), cv::MARKER_TRIANGLE_DOWN, 6,
-                     2);
-      cv::drawMarker(reprojection_image_grayscale,
-                     cv::Point2i(std::round(projected_image_point.x()), std::round(projected_image_point.y())),
-                     cv::Scalar(error_color), cv::MARKER_TRIANGLE_DOWN, 6, 2);
-    }
-  }
-  cv::Mat reprojection_image_color;
-  cv::applyColorMap(reprojection_image_grayscale, reprojection_image_color, cv::COLORMAP_JET);
-  // Map white pixels back from lowest JET value (128, 0, 0) to white
-  cv::Mat base_mask;
-  cv::inRange(reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
-  reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
-  cv::imwrite(name, reprojection_image_color);
 }
 }  // namespace calibration
 #endif  // CALIBRATION_CAMERA_UTILITIES_H_

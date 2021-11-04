@@ -65,12 +65,14 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
 
   std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
   std::vector<Eigen::Isometry3d> initial_camera_T_targets;
+
+  const Eigen::Matrix3d initial_intrinsics = oc::Intrinsics(focal_lengths, principal_points);
   // TODO(rsoussan): More efficient way to do this
   std::vector<lc::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {
     // TODO(rsoussan): Remove once class is templated
-    boost::optional<Eigen::Isometry3d> camera_T_target;
+    boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> camera_T_target;
     if (params_.distortion_type == "fov") {
       camera_T_target =
         ReprojectionPoseEstimate<oc::FovDistorter>(match_set.image_points, match_set.points_3d, focal_lengths,
@@ -91,8 +93,17 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
       LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
       continue;
     }
-    camera_T_targets.emplace_back(oc::VectorFromIsometry3d(*camera_T_target));
-    initial_camera_T_targets.emplace_back(*camera_T_target);
+    camera_T_targets.emplace_back(oc::VectorFromIsometry3d(camera_T_target->first));
+    initial_camera_T_targets.emplace_back(camera_T_target->first);
+    // if (params.save_individual_initial_target_reprojection_images) {
+    static int image_count = 0;
+    // TODO(rsoussan): use same template arg here!!
+    SaveReprojectionImage<oc::RadDistorter>(match_set.image_points, match_set.points_3d, camera_T_target->second,
+                                            initial_intrinsics, distortion, camera_T_target->first,
+                                            params_.reprojection_pose_estimate.max_visualization_error_norm,
+                                            "reprojection_image_" + std::to_string(image_count++) + ".png");
+    //}
+
     valid_match_sets.emplace_back(match_set);
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
@@ -128,14 +139,17 @@ void CameraTargetBasedIntrinsicsCalibrator::Calibrate(
 
   const Eigen::Matrix3d calibrated_intrinsics = oc::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   if (params_.distortion_type == "fov") {
-    SaveReprojectionErrors<oc::FovDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                             params_.image_size, params_.max_visualization_error_norm);
+    SaveReprojectionFromAllTargetsImage<oc::FovDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
+                                                          distortion, params_.image_size,
+                                                          params_.max_visualization_error_norm);
   } else if (params_.distortion_type == "rad") {
-    SaveReprojectionErrors<oc::RadDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                             params_.image_size, params_.max_visualization_error_norm);
+    SaveReprojectionFromAllTargetsImage<oc::RadDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
+                                                          distortion, params_.image_size,
+                                                          params_.max_visualization_error_norm);
   } else if (params_.distortion_type == "radtan") {
-    SaveReprojectionErrors<oc::RadTanDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                                params_.image_size, params_.max_visualization_error_norm);
+    SaveReprojectionFromAllTargetsImage<oc::RadTanDistorter>(camera_T_targets, valid_match_sets, calibrated_intrinsics,
+                                                             distortion, params_.image_size,
+                                                             params_.max_visualization_error_norm);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

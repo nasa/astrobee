@@ -45,4 +45,8 @@ void PrintCameraTTargetsStats(const std::vector<Eigen::Isometry3d>& initial_came
   position_diff_norm_averager.Log();
   rotation_diff_averager.Log();
 }
+
+int AbsoluteErrorColor(const double error, const double max_error, const double max_color_value) {
+  return std::round(std::min(error, max_error) / max_error * max_color_value);
+}
 }  // namespace calibration
