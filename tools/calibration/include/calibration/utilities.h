@@ -105,7 +105,8 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
                                          const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                                          const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
                                          const Eigen::Vector2i& image_size, const double max_error_norm) {
-  cv::Mat reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
+  cv::Mat absolute_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
+  cv::Mat relative_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
   std::ofstream errors_file;
   errors_file.open("errors_file.txt");
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
@@ -126,18 +127,18 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
       // Only map up to 235 since darker reds that occur from 235-255 are hard to differentiate from
       // darker blues from 0 to 20 or so.
       constexpr double max_color_value = 235.0;
-      const int error_color = AbsoluteErrorColor(error_norm, max_error_norm, max_color_value) + 1;
-      cv::circle(reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(error_color), -1);
+      const int absolute_error_color = AbsoluteErrorColor(error_norm, max_error_norm, max_color_value) + 1;
+      cv::circle(absolute_reprojection_image_grayscale, rounded_image_point, 4, cv::Scalar(absolute_error_color), -1);
     }
   }
   // TODO(rsoussan): pass filepath!
-  cv::Mat reprojection_image_color;
-  cv::applyColorMap(reprojection_image_grayscale, reprojection_image_color, cv::COLORMAP_JET);
+  cv::Mat absolute_reprojection_image_color;
+  cv::applyColorMap(absolute_reprojection_image_grayscale, absolute_reprojection_image_color, cv::COLORMAP_JET);
   // Map white pixels back from lowest JET value (128, 0, 0) to white
   cv::Mat base_mask;
-  cv::inRange(reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
-  reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
-  cv::imwrite("calibrated_reprojection_from_all_targets_absolute_image.png", reprojection_image_color);
+  cv::inRange(absolute_reprojection_image_color, cv::Scalar(128, 0, 0), cv::Scalar(128, 0, 0), base_mask);
+  absolute_reprojection_image_color.setTo(cv::Scalar(255, 255, 255), base_mask);
+  cv::imwrite("calibrated_reprojection_from_all_targets_absolute_image.png", absolute_reprojection_image_color);
   errors_file.close();
 }
 }  // namespace calibration
