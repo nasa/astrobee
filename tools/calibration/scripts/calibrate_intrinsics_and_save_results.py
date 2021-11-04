@@ -59,7 +59,7 @@ if __name__ == '__main__':
   os.mkdir(args.output_directory)
   os.chdir(args.output_directory)
 
-  calibration_command = 'rosrun calibration run_camera_target_based_intrinsics_calibrator --corners-dir ' + corners_directory + ' -c ' + args.config_path + ' -r ' + args.robot_config_file + ' -w ' + args.world
+  calibration_command = 'rosrun calibration run_camera_target_based_intrinsics_calibrator ' + corners_directory + ' -c ' + args.config_path + ' -r ' + args.robot_config_file + ' -w ' + args.world
   with open('calibration_output.txt', 'w') as output_file:
     subprocess.call(calibration_command, shell=True, stdout=output_file, stderr=output_file)
 

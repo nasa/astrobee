@@ -87,16 +87,16 @@ void WriteCalibrationResultsToFile(const Eigen::Vector2d& focal_lengths, const E
 int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
-  std::string corners_directory;
   std::string output_file;
   po::options_description desc("Calibrates camera intrinsics using target detections.");
-  desc.add_options()("help", "produce help message")(
-    "corners-directory", po::value<std::string>(&corners_directory)->required(), "Corners Directory")(
+  desc.add_options()("help", "produce help message")("corners-directory", po::value<std::string>()->required(),
+                                                     "Corners Directory")(
     "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
     "output-file,o", po::value<std::string>(&output_file)->default_value("calibrated_params.txt"), "Output file");
   po::positional_options_description p;
+  p.add("corners-directory", 1);
   p.add("config-path", 1);
   po::variables_map vm;
   try {
@@ -112,6 +112,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  const std::string corners_directory = vm["corners-directory"].as<std::string>();
   const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
