@@ -167,5 +167,13 @@ int main(int argc, char** argv) {
   LogInfo("Calibrating " << robot_config_file << ", camera: " << params.camera_name);
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
   LogInfo("Number of target match sets: " << target_matches.size());
-  Calibrate<optimization_common::FovDistorter>(params, target_matches, output_file);
+  if (params_.distortion_type == "fov") {
+    Calibrate<optimization_common::FovDistorter>(params, target_matches, output_file);
+  } else if (params_.distortion_type == "rad") {
+    Calibrate<optimization_common::RadDistorter>(params, target_matches, output_file);
+  } else if (params_.distortion_type == "radtan") {
+    Calibrate<optimization_common::RadTanDistorter>(params, target_matches, output_file);
+  } else {
+    LogFatal("Invalid distortion type provided.");
+  }
 }
