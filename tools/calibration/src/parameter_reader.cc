@@ -69,6 +69,7 @@ void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Optio
   solver_options.use_explicit_schur_complement = mc::LoadBool(config, prefix + "use_explicit_schur_complement");
   solver_options.max_num_iterations = mc::LoadInt(config, prefix + "max_num_iterations");
   solver_options.function_tolerance = mc::LoadDouble(config, prefix + "function_tolerance");
+  solver_options.parameter_tolerance = mc::LoadDouble(config, prefix + "parameter_tolerance");
 }
 
 void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params,
