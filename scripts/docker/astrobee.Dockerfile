@@ -8,8 +8,6 @@ FROM ${REMOTE}/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
 
 ARG ROS_VERSION=kinetic
 
-ENV USERNAME astrobee
-
 COPY . /src/astrobee/src/
 RUN . /opt/ros/${ROS_VERSION}/setup.sh \
 	&& cd /src/astrobee \
