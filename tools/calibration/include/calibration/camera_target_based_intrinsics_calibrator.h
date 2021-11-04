@@ -24,9 +24,6 @@
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 #include <localization_common/logger.h>
-#include <optimization_common/fov_distorter.h>
-#include <optimization_common/rad_distorter.h>
-#include <optimization_common/radtan_distorter.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 
@@ -73,10 +70,8 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
   ceres::Problem problem;
   problem.AddParameterBlock(focal_lengths.data(), 2);
   problem.AddParameterBlock(principal_points.data(), 2);
-  // Rad distortion is stored internally as RadTan with 4 parameters but only 2 are optimized
-  const int num_distortion_params = params_.distortion_type == "rad" ? 2 : distortion.size();
   // TODO(rsoussan): make function for this! (add param block, set const if necessary, print output)
-  problem.AddParameterBlock(distortion.data(), num_distortion_params);
+  problem.AddParameterBlock(distortion.data(), DISTORTER::kNumParams);
   if (params_.calibrate_focal_lengths)
     LogError("Calibrating focal lengths.");
   else
@@ -99,23 +94,9 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
   std::vector<localization_common::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {
-    // TODO(rsoussan): Remove once class is templated
-    boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> camera_T_target;
-    if (params_.distortion_type == "fov") {
-      camera_T_target = ReprojectionPoseEstimate<optimization_common::FovDistorter>(
-        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
-        params_.reprojection_pose_estimate);
-    } else if (params_.distortion_type == "rad") {
-      camera_T_target = ReprojectionPoseEstimate<optimization_common::RadDistorter>(
-        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
-        params_.reprojection_pose_estimate);
-    } else if (params_.distortion_type == "radtan") {
-      camera_T_target = ReprojectionPoseEstimate<optimization_common::RadTanDistorter>(
-        match_set.image_points, match_set.points_3d, focal_lengths, principal_points, distortion,
-        params_.reprojection_pose_estimate);
-    } else {
-      LogFatal("Invalid distortion type provided.");
-    }
+    const auto camera_T_target =
+      ReprojectionPoseEstimate<DISTORTER>(match_set.image_points, match_set.points_3d, focal_lengths, principal_points,
+                                          distortion, params_.reprojection_pose_estimate);
 
     if (!camera_T_target) {
       LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
@@ -125,11 +106,10 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
     initial_camera_T_targets.emplace_back(camera_T_target->first);
     if (params_.save_individual_initial_reprojection_images) {
       static int image_count = 0;
-      // TODO(rsoussan): use same template arg here!!
-      SaveReprojectionImage<optimization_common::RadDistorter>(
-        match_set.image_points, match_set.points_3d, camera_T_target->second, initial_intrinsics, distortion,
-        camera_T_target->first, params_.individual_max_visualization_error_norm,
-        "reprojection_image_" + std::to_string(image_count++) + ".png");
+      SaveReprojectionImage<DISTORTER>(match_set.image_points, match_set.points_3d, camera_T_target->second,
+                                       initial_intrinsics, distortion, camera_T_target->first,
+                                       params_.individual_max_visualization_error_norm,
+                                       "reprojection_image_" + std::to_string(image_count++) + ".png");
     }
 
     valid_match_sets.emplace_back(match_set);
@@ -137,21 +117,9 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
-      if (params_.distortion_type == "fov") {
-        optimization_common::AddReprojectionCostFunction<optimization_common::FovDistorter>(
-          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-          distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
-      } else if (params_.distortion_type == "rad") {
-        optimization_common::AddReprojectionCostFunction<optimization_common::RadDistorter>(
-          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-          distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
-      } else if (params_.distortion_type == "radtan") {
-        optimization_common::AddReprojectionCostFunction<optimization_common::RadTanDistorter>(
-          match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-          distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
-      } else {
-        LogFatal("Invalid distortion type provided.");
-      }
+      optimization_common::AddReprojectionCostFunction<DISTORTER>(
+        match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
+        distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
     }
   }
 
@@ -167,21 +135,8 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
 
   const Eigen::Matrix3d calibrated_intrinsics =
     optimization_common::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
-  if (params_.distortion_type == "fov") {
-    SaveReprojectionFromAllTargetsImage<optimization_common::FovDistorter>(
-      camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion, params_.image_size,
-      params_.max_visualization_error_norm);
-  } else if (params_.distortion_type == "rad") {
-    SaveReprojectionFromAllTargetsImage<optimization_common::RadDistorter>(
-      camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion, params_.image_size,
-      params_.max_visualization_error_norm);
-  } else if (params_.distortion_type == "radtan") {
-    SaveReprojectionFromAllTargetsImage<optimization_common::RadTanDistorter>(
-      camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion, params_.image_size,
-      params_.max_visualization_error_norm);
-  } else {
-    LogFatal("Invalid distortion type provided.");
-  }
+  SaveReprojectionFromAllTargetsImage<DISTORTER>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
+                                                 params_.image_size, params_.max_visualization_error_norm);
 }
 
 template <typename DISTORTER>

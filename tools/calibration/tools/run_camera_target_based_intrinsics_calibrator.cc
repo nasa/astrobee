@@ -25,12 +25,16 @@
 #include <localization_common/image_correspondences.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <optimization_common/fov_distorter.h>
+#include <optimization_common/rad_distorter.h>
+#include <optimization_common/radtan_distorter.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 namespace ca = calibration;
 namespace lc = localization_common;
+namespace oc = optimization_common;
 namespace po = boost::program_options;
 
 lc::ImageCorrespondences LoadTargetMatches(const std::string& match_file) {
@@ -168,11 +172,11 @@ int main(int argc, char** argv) {
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
   LogInfo("Number of target match sets: " << target_matches.size());
   if (params.distortion_type == "fov") {
-    Calibrate<optimization_common::FovDistorter>(params, target_matches, output_file);
+    Calibrate<oc::FovDistorter>(params, target_matches, output_file);
   } else if (params.distortion_type == "rad") {
-    Calibrate<optimization_common::RadDistorter>(params, target_matches, output_file);
+    Calibrate<oc::RadDistorter>(params, target_matches, output_file);
   } else if (params.distortion_type == "radtan") {
-    Calibrate<optimization_common::RadTanDistorter>(params, target_matches, output_file);
+    Calibrate<oc::RadTanDistorter>(params, target_matches, output_file);
   } else {
     LogFatal("Invalid distortion type provided.");
   }
