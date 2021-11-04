@@ -41,4 +41,26 @@ Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat
   pose.linear() = rotation;
   return pose;
 }
+
+void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, const std::vector<cv::Point3d>& points_3d,
+                    const cv::Mat& intrinsics, const int pnp_method, cv::Mat& rotation, cv::Mat& translation) {
+  cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
+  cv::solvePnP(points_3d, undistorted_image_points, intrinsics, zero_distortion, rotation, translation, false,
+               pnp_method);
+}
+
+std::vector<int> RandomNIndices(const int num_possible_indices, const int num_sampled_indices) {
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distribution(0, num_possible_indices - 1);
+  std::unordered_set<int> sampled_indices_set;
+  std::vector<int> sampled_indices;
+  while (static_cast<int>(sampled_indices.size()) < num_sampled_indices) {
+    const int random_index = distribution(gen);
+    if (sampled_indices_set.count(random_index) > 0) continue;
+    sampled_indices_set.emplace(random_index);
+    sampled_indices.emplace_back(random_index);
+  }
+  return sampled_indices;
+}
 }  // namespace calibration
