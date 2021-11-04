@@ -49,6 +49,8 @@ void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, Rep
   LoadOptimizationParams(config, params.optimization, "reprojection_");
   LoadRansacPnPParams(config, params.ransac_pnp);
   params.optimize_estimate = mc::LoadBool(config, "reprojection_optimize_estimate");
+  params.save_image = mc::LoadBool(config, "reprojection_save_image");
+  params.max_visualization_error_norm = mc::LoadDouble(config, "reprojection_max_visualization_error_norm");
 }
 
 void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,
