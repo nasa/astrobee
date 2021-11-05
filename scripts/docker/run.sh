@@ -28,6 +28,7 @@ usage()
 }
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 args="dds:=false robot:=sim_pub"
+useremotetag=0
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -36,6 +37,8 @@ while [ "$1" != "" ]; do
         -b | --bionic )                 os="bionic"
                                         ;;
         -f | --focal )                  os="focal"
+                                        ;;
+        -r | --remote )                 useremotetag=1
                                         ;;
         --args )                        args+=" $2"
                                         shift
@@ -59,30 +62,32 @@ touch $XAUTH
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
 if [ "$os" = "xenial" ]; then
-docker run -it --rm --name astrobee \
-        --volume=$XSOCK:$XSOCK:rw \
-        --volume=$XAUTH:$XAUTH:rw \
-        --env="XAUTHORITY=${XAUTH}" \
-        --env="DISPLAY" \
-        --gpus all \
-      astrobee/astrobee:latest-ubuntu16.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch $args
+localtag=astrobee/astrobee:latest-ubuntu16.04
+remotetag=ghcr.io/nasa/astrobee:latest-ubuntu16.04
 elif [ "$os" = "bionic" ]; then
-docker run -it --rm --name astrobee \
-        --volume=$XSOCK:$XSOCK:rw \
-        --volume=$XAUTH:$XAUTH:rw \
-        --env="XAUTHORITY=${XAUTH}" \
-        --env="DISPLAY" \
-        --gpus all \
-      astrobee/astrobee:latest-ubuntu18.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch $args
+localtag=astrobee/astrobee:latest-ubuntu18.04
+remotetag=ghcr.io/nasa/astrobee:latest-ubuntu18.04
 elif [ "$os" = "focal" ]; then
+localtag=astrobee/astrobee:latest-ubuntu20.04
+remotetag=ghcr.io/nasa/astrobee:latest-ubuntu20.04
+fi
+
+# check if docker tag exists
+if [ $useremotetag -eq 1 ]; then
+  tag=$remotetag
+elif [[ "$(docker images -q $localtag 2> /dev/null)" == "" ]]; then
+  echo "No local tag found, either build astrobee locally or use the --remote flag."
+  usage
+  exit 1
+else
+  tag=$localtag
+fi
+
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
         --volume=$XAUTH:$XAUTH:rw \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
         --gpus all \
-      astrobee/astrobee:latest-ubuntu20.04 \
+      $tag \
     /astrobee_init.sh roslaunch astrobee sim.launch $args
-fi
