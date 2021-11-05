@@ -18,13 +18,16 @@
 # under the License.
 
 # short help
-usage_string="$scriptname [-h] [-x <use ubuntu 16.04 image>]\
- [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]"
+usage_string="$0 usage:  [-h] [-x <use ubuntu 16.04 image>]\
+ [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]\
+ [-r <download remote image>]"
 #[-t make_target]
+docs_url="https://nasa.github.io/astrobee/html/install-docker.html"
 
 usage()
 {
-    echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
+    echo "$usage_string"
+    echo "see: $docs_url"
 }
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 args="dds:=false robot:=sim_pub"
