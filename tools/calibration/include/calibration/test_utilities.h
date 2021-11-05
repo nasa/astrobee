@@ -29,13 +29,14 @@ class RegistrationCorrespondences {
 
   const localization_common::ImageCorrespondences& correspondences() const { return correspondences_; }
 
-  const Eigen::Isometry3d& pose() const { return pose_; }
+  const Eigen::Isometry3d& camera_T_target() const { return camera_T_target_; }
 
   static std::vector<Eigen::Vector3d> TargetPoints();
 
  private:
   localization_common::ImageCorrespondences correspondences_;
-  Eigen::Isometry3d pose_;
+  Eigen::Isometry3d camera_T_target_;
+  Eigen::Matrix3d intrinsics_;
 };
 }  // namespace calibration
 

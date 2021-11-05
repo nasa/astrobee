@@ -28,6 +28,11 @@ struct ImageCorrespondences {
       : image_points(image_points), points_3d(points_3d) {}
   ImageCorrespondences() {}
 
+  void AddCorrespondence(const Eigen::Vector2d& image_point, const Eigen::Vector3d& point_3d) {
+    image_points.emplace_back(image_point);
+    points_3d.emplace_back(point_3d);
+  }
+
   std::vector<Eigen::Vector2d> image_points;
   std::vector<Eigen::Vector3d> points_3d;
 };

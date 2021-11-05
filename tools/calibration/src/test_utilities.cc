@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <calibration/camera_utilities.h>
 #include <calibration/test_utilities.h>
 #include <localization_common/test_utilities.h>
 
@@ -23,23 +24,35 @@ namespace calibration {
 namespace lc = localization_common;
 
 RegistrationCorrespondences::RegistrationCorrespondences() {
-  pose_ = lc::RandomIsometry3d();
-  // generate random pose in front of camera!(how to do this???)
-  // add function to sample double within user defined bounds!!! (A)
-  // sample position in some bounds in front of camera (min 0.1 or someting, always positive z) (B)
-  // sample randon orientation
-  // throw out any points that don't project onto image, add todo to sample orientation better to prevent this
-  // make sure camera is oriented correctly!!!!
-  // sample 3d points (on target grid? how to define grid size?), save them
-  // project w/o distortion into image space, save image pts
-  // add identity distorter, use this!
+  static constexpr double x_min = 0.1;
+  static constexpr double x_max = 30;
+  static constexpr double y_min = -10.0;
+  static constexpr double y_max = 10.0;
+  static constexpr double z_min = -10.0;
+  static constexpr double z_max = 10.0;
+
+  // Sample points in front of camera
+  const double x = lc::RandomDouble(x_min, x_max);
+  const double y = lc::RandomDouble(y_min, y_max);
+  const double z = lc::RandomDouble(z_min, z_max);
+  // TODO(rsoussan): Sample orientation such that it is facing camera to some extent
+  camera_T_target_ = lc::RandomIsometry3d();
+  camera_T_target_.translation() = Eigen::Vector3d(x, y, z);
+  intrinsics_ = lc::RandomIntrinsics();
+  const std::vector<Eigen::Vector3d> target_t_target_points = TargetPoints();
+  for (const auto& target_t_target_point : target_t_target_points) {
+    const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
+    if (camera_t_target_point.z() <= 0) continue;
+    const Eigen::Vector2d image_point = Project3dPointToImageSpace(camera_t_target_point, intrinsics_);
+    correspondences_.AddCorrespondence(image_point, target_t_target_point);
+  }
 }
 
 std::vector<Eigen::Vector3d> RegistrationCorrespondences::TargetPoints() {
-  constexpr double kRowSpacing = 0.1;
-  constexpr double kColSpacing = 0.1;
-  constexpr int kNumPointsPerRow = 10;
-  constexpr int kNumPointsPerCol = 10;
+  static constexpr double kRowSpacing = 0.1;
+  static constexpr double kColSpacing = 0.1;
+  static constexpr int kNumPointsPerRow = 10;
+  static constexpr int kNumPointsPerCol = 10;
 
   std::vector<Eigen::Vector3d> target_points;
   for (int i = 0; i < kNumPointsPerCol; ++i) {

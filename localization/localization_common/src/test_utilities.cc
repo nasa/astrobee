@@ -22,16 +22,14 @@
 #include <random>
 
 namespace localization_common {
-double RandomDouble() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  return std::uniform_real_distribution<double>(-100, 100)(rng);
-}
+double RandomDouble() { return RandomDouble(-100, 100); }
 
-double RandomPositiveDouble() {
+double RandomPositiveDouble() { return RandomDouble(0, 100); }
+
+double RandomDouble(const double min, const double max) {
   std::random_device dev;
   std::mt19937 rng(dev());
-  return std::uniform_real_distribution<double>(0, 100)(rng);
+  return std::uniform_real_distribution<double>(min, max)(rng);
 }
 
 Eigen::Vector3d RandomVector() {
@@ -60,5 +58,19 @@ Eigen::Affine3d RandomAffine3d() {
   const Eigen::Matrix3d scale_matrix(Eigen::Matrix3d::Identity() * scale);
   random_affine3d.linear() = scale_matrix * random_pose.rotation();
   return random_affine3d;
+}
+
+Eigen::Matrix3d RandomIntrinsics() {
+  Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
+  const double f_x = RandomDouble(0.1, 1000);
+  const double f_y = RandomDouble(0.1, 1000);
+  const double p_x = RandomDouble(0.1, 1000);
+  const double p_y = RandomDouble(0.1, 1000);
+
+  intrinsics(0, 0) = f_x;
+  intrinsics(1, 1) = f_y;
+  intrinsics(0, 2) = p_x;
+  intrinsics(1, 2) = p_y;
+  return intrinsics;
 }
 }  // namespace localization_common

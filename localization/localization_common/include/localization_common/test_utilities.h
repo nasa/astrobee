@@ -28,6 +28,9 @@ double RandomDouble();
 // Selected from [0, 100]
 double RandomPositiveDouble();
 
+// Selected from [min, max]
+double RandomDouble(const double min, const double max);
+
 // Each index ranges from [-100, 100]
 Eigen::Vector3d RandomVector();
 
@@ -38,5 +41,8 @@ gtsam::Pose3 RandomPose();
 Eigen::Isometry3d RandomIsometry3d();
 
 Eigen::Affine3d RandomAffine3d();
+
+// Focal lengths and principal points selected from [0.1, 1000]
+Eigen::Matrix3d RandomIntrinsics();
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_
