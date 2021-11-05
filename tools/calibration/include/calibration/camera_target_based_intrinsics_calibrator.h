@@ -80,7 +80,6 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
   std::vector<Eigen::Isometry3d> initial_camera_T_targets;
 
   const Eigen::Matrix3d initial_intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
-  // TODO(rsoussan): More efficient way to do this
   std::vector<localization_common::ImageCorrespondences> valid_match_sets;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {

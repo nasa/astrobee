@@ -38,9 +38,6 @@ class Distorter {
 
   std::vector<Eigen::Vector2d> Undistort(const std::vector<Eigen::Vector2d>& distorted_points,
                                          const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) const {
-    // TODO(rsoussan): This is going to convert eigen to cv types for intrinsics and distortion for each
-    // Undistort call.  Make more efficient by making this function pure virtual and implementing in each
-    // child class with only one conversion at beginning of function.
     std::vector<Eigen::Vector2d> undistorted_points;
     for (const auto& distorted_point : distorted_points) {
       undistorted_points.emplace_back(Undistort(distorted_point, intrinsics, distortion));

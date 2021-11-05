@@ -49,7 +49,6 @@ class PointToPointError {
 
   static void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
                               Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) {
-    // TODO(rsoussan): pass this? delete at end?
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* point_to_point_cost_function =
       new ceres::AutoDiffCostFunction<PointToPointError, 3, 6>(new PointToPointError(source_point, target_point));
@@ -81,7 +80,6 @@ class PointToPlaneError {
   static void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
                               const Eigen::Vector3d& target_normal, Eigen::Matrix<double, 6, 1>& relative_transform,
                               ceres::Problem& problem) {
-    // TODO(rsoussan): pass this? delete at end?
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* point_to_plane_cost_function = new ceres::AutoDiffCostFunction<PointToPlaneError, 1, 6>(
       new PointToPlaneError(source_point, target_point, target_normal));
@@ -118,7 +116,6 @@ class SymmetricPointToPlaneError {
   static void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
                               const Eigen::Vector3d& source_normal, const Eigen::Vector3d& target_normal,
                               Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) {
-    // TODO(rsoussan): pass this? delete at end?
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* symmetric_point_to_plane_cost_function =
       new ceres::AutoDiffCostFunction<SymmetricPointToPlaneError, 2, 6>(
@@ -161,9 +158,6 @@ class AffineReprojectionError {
                               Eigen::Matrix<double, 7, 1>& depth_image_A_depth_cloud_vector,
                               Eigen::Matrix<double, 4, 1>& intrinsics_vector, Eigen::VectorXd& distortion,
                               ceres::Problem& problem) {
-    // change intrinsics to be a parameter! set to constant initially!
-    // toggle const vs non const to switch between intrinsics vs affine vs both calibration!!!
-    // TODO(rsoussan): pass this? delete at end?
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* reprojection_cost_function =
       new ceres::AutoDiffCostFunction<AffineReprojectionError<DISTORTER>, 2, 7, 4, DISTORTER::kNumParams>(
@@ -205,7 +199,6 @@ class ReprojectionError {
                               Eigen::Matrix<double, 6, 1>& camera_T_target, Eigen::Vector2d& focal_lengths,
                               Eigen::Vector2d& principal_points, Eigen::VectorXd& distortion, ceres::Problem& problem,
                               const double scale_factor = 1, const double huber_threshold = 1.345) {
-    // TODO(rsoussan): use single implementation of huber/scaled loss functions?
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(huber_threshold);
     ceres::LossFunction* scaled_huber_loss = new ceres::ScaledLoss(huber_loss, scale_factor, ceres::TAKE_OWNERSHIP);
     ceres::CostFunction* reprojection_cost_function =

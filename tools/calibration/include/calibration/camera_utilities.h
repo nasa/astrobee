@@ -134,13 +134,10 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP(
     return boost::none;
   }
 
-  // TODO(rsoussan): pass distorter as arg! same with project 3d point?
   const DISTORTER distorter;
   const std::vector<Eigen::Vector2d> undistorted_image_points =
     distorter.Undistort(image_points, intrinsics, distortion);
 
-  // TODO(rsoussan): make function to randomly populate these!!
-  // TODO(rsoussan): Avoid these looped conversions?
   std::vector<cv::Point2d> undistorted_image_points_cv;
   for (const auto& undistorted_image_point : undistorted_image_points) {
     undistorted_image_points_cv.emplace_back(cv::Point2d(undistorted_image_point.x(), undistorted_image_point.y()));
