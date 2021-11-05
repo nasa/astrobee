@@ -40,7 +40,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_utilities.cc
   )
   target_link_libraries(test_utilities
-    localization_common 
+    localization_common optimization_common 
   )
 endif()
 
