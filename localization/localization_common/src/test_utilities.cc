@@ -52,11 +52,10 @@ Eigen::Isometry3d RandomIsometry3d() {
 
 Eigen::Affine3d RandomAffine3d() {
   const Eigen::Isometry3d random_pose = RandomIsometry3d();
-  const double scale = RandomDouble();
+  const double scale = RandomPositiveDouble();
   Eigen::Affine3d random_affine3d = Eigen::Affine3d::Identity();
   random_affine3d.translation() = random_pose.translation();
-  const Eigen::Matrix3d scale_matrix(Eigen::Matrix3d::Identity() * scale);
-  random_affine3d.linear() = scale_matrix * random_pose.rotation();
+  random_affine3d.linear() = scale * random_pose.linear();
   return random_affine3d;
 }
 

@@ -35,7 +35,7 @@ TEST(UtilitiesTester, Isometry3dToVectorToIsometry3d) {
   params.max_inlier_threshold = 3;
   params.num_iterations = 100;
   params.min_num_inliers = 4;
-  int pnp_method = cv::SOLVEPNP_P3P;
+  params.pnp_method = cv::SOLVEPNP_P3P;
 
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = ca::RandomRegistrationCorrespondences();

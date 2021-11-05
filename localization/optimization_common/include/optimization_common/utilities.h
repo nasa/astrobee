@@ -87,9 +87,8 @@ template <typename T>
 Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
   const Eigen::Transform<T, 3, Eigen::Isometry> isometry_3 = Isometry3(affine_data);
   const T scale = affine_data[6];
-  const Eigen::Matrix<T, 3, 3> scale_matrix(Eigen::Matrix<T, 3, 3>::Identity() * scale);
   Eigen::Transform<T, 3, Eigen::Affine> affine_3;
-  affine_3.linear() = scale_matrix * isometry_3.linear();
+  affine_3.linear() = scale * isometry_3.linear();
   affine_3.translation() = isometry_3.translation();
   return affine_3;
 }
