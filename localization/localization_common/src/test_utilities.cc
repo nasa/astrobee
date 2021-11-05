@@ -16,16 +16,11 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_TEST_UTILITIES_H_  // NOLINT
-#define GRAPH_LOCALIZER_TEST_UTILITIES_H_  // NOLINT
-
-#include <localization_measurements/plane.h>
-
-#include <gtsam/geometry/Pose3.h>
+#include <localization_common/test_utilities.h>
 
 #include <random>
 
-namespace graph_localizer {
+namespace localization_common {
 double RandomDouble() {
   std::random_device dev;
   std::mt19937 rng(dev());
@@ -50,11 +45,4 @@ gtsam::Pose3 RandomPose() {
   gtsam::Point3 trans = RandomVector();
   return gtsam::Pose3(rot, trans);
 }
-
-localization_measurements::Plane RandomPlane() {
-  gtsam::Point3 point = RandomVector();
-  gtsam::Vector3 normal = RandomVector().normalized();
-  return localization_measurements::Plane(point, normal);
-}
-}  // namespace graph_localizer
-#endif  // GRAPH_LOCALIZER_TEST_UTILITIES_H_ // NOLINT
+}  // namespace localization_common
