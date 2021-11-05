@@ -196,13 +196,9 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
   }
 
   ceres::Problem problem;
-  // TODO(rsoussan): Avoid all of these const casts?
-  problem.AddParameterBlock(const_cast<double*>(focal_lengths.data()), 2);
-  problem.SetParameterBlockConstant(const_cast<double*>(focal_lengths.data()));
-  problem.AddParameterBlock(const_cast<double*>(principal_points.data()), 2);
-  problem.SetParameterBlockConstant(const_cast<double*>(principal_points.data()));
-  problem.AddParameterBlock(const_cast<double*>(distortion.data()), DISTORTER::kNumParams);
-  problem.SetParameterBlockConstant(const_cast<double*>(distortion.data()));
+  optimization_common::AddConstantParameterBlock(2, focal_lengths.data(), problem);
+  optimization_common::AddConstantParameterBlock(2, principal_points.data(), problem);
+  optimization_common::AddConstantParameterBlock(DISTORTER::kNumParams, distortion.data(), problem);
 
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues

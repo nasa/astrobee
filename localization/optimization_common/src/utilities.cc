@@ -62,6 +62,15 @@ void AddParameterBlock(const int num_parameters, double* const parameters, ceres
   if (set_constant) problem.SetParameterBlockConstant(parameters);
 }
 
+void AddConstantParameterBlock(const int num_parameters, double* const parameters, ceres::Problem& problem) {
+  AddParameterBlock(num_parameters, parameters, problem, true);
+}
+
+void AddConstantParameterBlock(const int num_parameters, double const* const parameters, ceres::Problem& problem) {
+  // Even though parameter doesn't change ceres requires a non const data type
+  AddConstantParameterBlock(num_parameters, const_cast<double*>(parameters), problem);
+}
+
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size) {
   double norm = 0;
   for (int i = 0; i < residual_size; ++i) {

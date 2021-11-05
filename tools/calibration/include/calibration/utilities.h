@@ -59,7 +59,6 @@ int ErrorColor(const double error, const double max_error, const double max_colo
 
 cv::Mat MapImageColors(const cv::Mat& gray_image);
 
-// TODO(rsoussan) combine this code with other image creator!
 template <typename DISTORTER>
 void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
                            const std::vector<Eigen::Vector3d>& points_3d, const std::vector<int>& indices,

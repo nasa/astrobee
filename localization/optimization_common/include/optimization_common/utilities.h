@@ -63,6 +63,10 @@ Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relativ
 void AddParameterBlock(const int num_parameters, double* const parameters, ceres::Problem& problem,
                        const bool set_constant = false);
 
+void AddConstantParameterBlock(const int num_parameters, double* const parameters, ceres::Problem& problem);
+
+void AddConstantParameterBlock(const int num_parameters, double const* const parameters, ceres::Problem& problem);
+
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
 
 // Assumes each residual is the same size
