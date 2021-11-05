@@ -15,9 +15,5 @@
   </maintainer>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>eigen_conversions</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rosbag</build_depend>
   <run_depend>eigen_conversions</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>rosbag</run_depend>
 </package>

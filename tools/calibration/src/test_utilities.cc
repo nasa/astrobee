@@ -23,7 +23,7 @@
 namespace calibration {
 namespace lc = localization_common;
 
-RegistrationCorrespondences::RegistrationCorrespondences() {
+RandomRegistrationCorrespondences::RandomRegistrationCorrespondences() {
   static constexpr double x_min = 0.1;
   static constexpr double x_max = 30;
   static constexpr double y_min = -10.0;
@@ -48,7 +48,7 @@ RegistrationCorrespondences::RegistrationCorrespondences() {
   }
 }
 
-std::vector<Eigen::Vector3d> RegistrationCorrespondences::TargetPoints() {
+std::vector<Eigen::Vector3d> RandomRegistrationCorrespondences::TargetPoints() {
   static constexpr double kRowSpacing = 0.1;
   static constexpr double kColSpacing = 0.1;
   static constexpr int kNumPointsPerRow = 10;

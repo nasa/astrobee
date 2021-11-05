@@ -19,12 +19,10 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(calibration)
 
-if (USE_ROS)
-
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} camera ff_nodelet localization_common msg_conversions optimization_common sparse_mapping 
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
-  CATKIN_DEPENDS roscpp rosbag
+  CATKIN_DEPENDS 
   DEPENDS 
 )
 
@@ -39,4 +37,13 @@ create_tool_targets(DIR tools
   INC ${catkin_INCLUDE_DIRS}
 )
 
-endif (USE_ROS)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_ransac_pnp
+    test/test_ransac_pnp.test
+    test/test_ransac_pnp.cc
+  )
+  target_link_libraries(test_ransac_pnp
+    calibration localization_common optimization_common 
+  )
+endif()

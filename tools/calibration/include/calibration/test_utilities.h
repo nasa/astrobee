@@ -24,12 +24,15 @@
 #include <vector>
 
 namespace calibration {
-class RegistrationCorrespondences {
-  RegistrationCorrespondences();
+class RandomRegistrationCorrespondences {
+ public:
+  RandomRegistrationCorrespondences();
 
   const localization_common::ImageCorrespondences& correspondences() const { return correspondences_; }
 
   const Eigen::Isometry3d& camera_T_target() const { return camera_T_target_; }
+
+  const Eigen::Matrix3d& intrinsics() const { return intrinsics_; }
 
   static std::vector<Eigen::Vector3d> TargetPoints();
 
