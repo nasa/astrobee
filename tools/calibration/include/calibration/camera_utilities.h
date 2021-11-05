@@ -20,7 +20,6 @@
 
 #include <calibration/ransac_pnp_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>
-#include <camera/camera_model.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/logger.h>
 #include <optimization_common/residuals.h>

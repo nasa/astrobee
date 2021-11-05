@@ -18,7 +18,6 @@
 #ifndef CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_H_
 #define CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_H_
 
-#include <camera/camera_params.h>
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/utilities.h>
 #include <ff_common/eigen_vectors.h>
@@ -43,10 +42,9 @@ class CameraTargetBasedIntrinsicsCalibrator {
   explicit CameraTargetBasedIntrinsicsCalibrator(const CameraTargetBasedIntrinsicsCalibratorParams& params)
       : params_(params) {}
   void Calibrate(const std::vector<localization_common::ImageCorrespondences>& match_sets,
-                 const camera::CameraParameters& camera_params, const Eigen::Vector2d& initial_focal_lengths,
-                 const Eigen::Vector2d& initial_principal_points, const Eigen::VectorXd& initial_distortion,
-                 Eigen::Vector2d& calibrated_focal_lengths, Eigen::Vector2d& calibrated_principal_points,
-                 Eigen::VectorXd& calibrated_distortion);
+                 const Eigen::Vector2d& initial_focal_lengths, const Eigen::Vector2d& initial_principal_points,
+                 const Eigen::VectorXd& initial_distortion, Eigen::Vector2d& calibrated_focal_lengths,
+                 Eigen::Vector2d& calibrated_principal_points, Eigen::VectorXd& calibrated_distortion);
 
   const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }
 
@@ -61,10 +59,9 @@ class CameraTargetBasedIntrinsicsCalibrator {
 template <typename DISTORTER>
 void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
   const std::vector<localization_common::ImageCorrespondences>& match_sets,
-  const camera::CameraParameters& camera_params, const Eigen::Vector2d& initial_focal_lengths,
-  const Eigen::Vector2d& initial_principal_points, const Eigen::VectorXd& initial_distortion,
-  Eigen::Vector2d& calibrated_focal_lengths, Eigen::Vector2d& calibrated_principal_points,
-  Eigen::VectorXd& calibrated_distortion) {
+  const Eigen::Vector2d& initial_focal_lengths, const Eigen::Vector2d& initial_principal_points,
+  const Eigen::VectorXd& initial_distortion, Eigen::Vector2d& calibrated_focal_lengths,
+  Eigen::Vector2d& calibrated_principal_points, Eigen::VectorXd& calibrated_distortion) {
   Eigen::Vector2d focal_lengths = initial_focal_lengths;
   Eigen::Vector2d principal_points = initial_principal_points;
   Eigen::VectorXd distortion = initial_distortion;
