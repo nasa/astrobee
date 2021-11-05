@@ -60,6 +60,9 @@ template <typename T>
 Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
                                            const Eigen::Matrix<T, 3, 3>& intrinsics);
 
+void AddParameterBlock(const int num_parameters, double* const parameters, ceres::Problem& problem,
+                       const bool set_constant = false);
+
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
 
 // Assumes each residual is the same size

@@ -56,6 +56,12 @@ Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Ve
   return intrinsics;
 }
 
+void AddParameterBlock(const int num_parameters, double* const parameters, ceres::Problem& problem,
+                       const bool set_constant) {
+  problem.AddParameterBlock(parameters, num_parameters);
+  if (set_constant) problem.SetParameterBlockConstant(parameters);
+}
+
 double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size) {
   double norm = 0;
   for (int i = 0; i < residual_size; ++i) {

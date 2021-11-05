@@ -67,23 +67,14 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
   Eigen::VectorXd distortion = initial_distortion;
 
   ceres::Problem problem;
-  problem.AddParameterBlock(focal_lengths.data(), 2);
-  problem.AddParameterBlock(principal_points.data(), 2);
-  // TODO(rsoussan): make function for this! (add param block, set const if necessary, print output)
-  problem.AddParameterBlock(distortion.data(), DISTORTER::kNumParams);
-  if (params_.calibrate_focal_lengths)
-    LogError("Calibrating focal lengths.");
-  else
-    problem.SetParameterBlockConstant(focal_lengths.data());
-  if (params_.calibrate_principal_points)
-    LogError("Calibrating principal points.");
-  else
-    problem.SetParameterBlockConstant(principal_points.data());
-  if (params_.calibrate_distortion)
-    LogError("Calibrating distortion.");
-  else
-    problem.SetParameterBlockConstant(distortion.data());
-  if (params_.calibrate_target_poses) LogError("Calibrating target poses.");
+  optimization_common::AddParameterBlock(2, focal_lengths.data(), problem, !params_.calibrate_focal_lengths);
+  optimization_common::AddParameterBlock(2, principal_points.data(), problem, !params_.calibrate_principal_points);
+  optimization_common::AddParameterBlock(DISTORTER::kNumParams, distortion.data(), problem,
+                                         !params_.calibrate_distortion);
+  if (params_.calibrate_focal_lengths) LogInfo("Calibrating focal lengths.");
+  if (params_.calibrate_principal_points) LogInfo("Calibrating principal points.");
+  if (params_.calibrate_distortion) LogInfo("Calibrating distortion.");
+  if (params_.calibrate_target_poses) LogInfo("Calibrating target poses.");
 
   std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
   std::vector<Eigen::Isometry3d> initial_camera_T_targets;
