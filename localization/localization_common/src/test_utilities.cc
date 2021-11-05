@@ -52,4 +52,13 @@ Eigen::Isometry3d RandomIsometry3d() {
   return EigenPose(random_pose);
 }
 
+Eigen::Affine3d RandomAffine3d() {
+  const gtsam::Pose3 random_pose = RandomPose();
+  const double scale = RandomDouble();
+  Eigen::Affine3d random_affine3d = Eigen::Affine3d::Identity();
+  random_affine3d.translation() = random_pose.translation();
+  const Eigen::Matrix3d scale_matrix(Eigen::Matrix3d::Identity() * scale);
+  random_affine3d.linear() = scale_matrix * random_pose.rotation();
+  return random_affine3d;
+}
 }  // namespace localization_common

@@ -36,5 +36,7 @@ Eigen::Vector3d RandomVector();
 gtsam::Pose3 RandomPose();
 
 Eigen::Isometry3d RandomIsometry3d();
+
+Eigen::Affine3d RandomAffine3d();
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_

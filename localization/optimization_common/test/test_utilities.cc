@@ -24,11 +24,20 @@
 
 namespace lc = localization_common;
 namespace oc = optimization_common;
-TEST(UtilitiesTester, VectorToIsometry3dToVector) {
+TEST(UtilitiesTester, Isometry3dToVectorToIsometry3d) {
   for (int i = 0; i < 500; ++i) {
     const Eigen::Isometry3d pose = lc::RandomIsometry3d();
     const Eigen::Matrix<double, 6, 1> pose_vector = oc::VectorFromIsometry3d(pose);
     const Eigen::Isometry3d pose_again = oc::Isometry3d(pose_vector);
     ASSERT_TRUE(pose_again.matrix().isApprox(pose.matrix(), 1e-6));
+  }
+}
+
+TEST(UtilitiesTester, VectorToAffine3dToVector) {
+  for (int i = 0; i < 500; ++i) {
+    const Eigen::Affine3d affine_3d = lc::RandomAffine3d();
+    const Eigen::Matrix<double, 7, 1> affine_3d_vector = oc::VectorFromAffine3d(affine_3d);
+    const Eigen::Affine3d affine_3d_again = oc::Affine3d(affine_3d_vector);
+    ASSERT_TRUE(affine_3d_again.matrix().isApprox(affine_3d.matrix(), 1e-6));
   }
 }

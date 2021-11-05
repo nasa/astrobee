@@ -44,6 +44,8 @@ Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data);
 
 Eigen::Isometry3d Isometry3d(const Eigen::Matrix<double, 6, 1>& isometry_vector);
 
+Eigen::Affine3d Affine3d(const Eigen::Matrix<double, 7, 1>& affine_vector);
+
 // Assumes storage as focal lengths followed by principal points
 template <typename T>
 Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data);
