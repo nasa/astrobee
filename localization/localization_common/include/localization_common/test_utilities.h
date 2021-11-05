@@ -29,10 +29,12 @@ double RandomDouble();
 double RandomPositiveDouble();
 
 // Each index ranges from [-100, 100]
-gtsam::Vector3 RandomVector();
+Eigen::Vector3d RandomVector();
 
 // Translation ranges from [-100, 100]
 // Rotation spans all possible rotations
 gtsam::Pose3 RandomPose();
+
+Eigen::Isometry3d RandomIsometry3d();
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_

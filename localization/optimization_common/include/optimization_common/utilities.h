@@ -32,10 +32,37 @@ Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isomet
 // Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
 // First 3 values of isometry_data are the compact angle axis, next 3 are the translation, last is scale
 Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d);
-Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points);
-
 // Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
 // First 3 values of isometry_data are the compact angle axis, next 3 are the translation
+template <typename T>
+Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data);
+Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points);
+// Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
+// First 3 values of isometry_data are the compact angle axis, next 3 are the translation, last is scale
+template <typename T>
+Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data);
+
+Eigen::Isometry3d Isometry3d(const Eigen::Matrix<double, 6, 1>& isometry_vector);
+
+// Assumes storage as focal lengths followed by principal points
+template <typename T>
+Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data);
+
+template <typename T>
+Eigen::Matrix<T, 3, 3> Intrinsics(const T* focal_lengths, const T* principal_points);
+
+template <typename T>
+Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolute_point,
+                                           const Eigen::Matrix<T, 3, 3>& intrinsics);
+template <typename T>
+Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
+                                           const Eigen::Matrix<T, 3, 3>& intrinsics);
+
+double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
+
+// Assumes each residual is the same size
+void CheckResiduals(const int residual_size, ceres::Problem& problem, const double outlier_threshold = 0.99);
+
 template <typename T>
 Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {
   Eigen::Matrix<T, 3, 3> rotation;
@@ -47,8 +74,6 @@ Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {
   return isometry_3;
 }
 
-// Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
-// First 3 values of isometry_data are the compact angle axis, next 3 are the translation, last is scale
 template <typename T>
 Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
   const Eigen::Transform<T, 3, Eigen::Isometry> isometry_3 = Isometry3(affine_data);
@@ -60,7 +85,6 @@ Eigen::Transform<T, 3, Eigen::Affine> Affine3(const T* affine_data) {
   return affine_3;
 }
 
-// Assumes storage as focal lengths followed by principal points
 template <typename T>
 Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data) {
   Eigen::Matrix<T, 3, 3> intrinsics(Eigen::Matrix<T, 3, 3>::Identity());
@@ -105,11 +129,6 @@ Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relativ
   const T& p_y = intrinsics(1, 2);
   return Eigen::Matrix<T, 2, 1>(relative_point[0] * f_x + p_x, relative_point[1] * f_y + p_y);
 }
-
-double ResidualNorm(const std::vector<double>& residual, const int index, const int residual_size);
-
-// Assumes each residual is the same size
-void CheckResiduals(const int residual_size, ceres::Problem& problem, const double outlier_threshold = 0.99);
 }  // namespace optimization_common
 
 #endif  // OPTIMIZATION_COMMON_UTILITIES_H_

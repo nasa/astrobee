@@ -41,6 +41,10 @@ Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d)
   return affine_3d_vector;
 }
 
+Eigen::Isometry3d Isometry3d(const Eigen::Matrix<double, 6, 1>& isometry_vector) {
+  return Isometry3(isometry_vector.data());
+}
+
 Eigen::Matrix3d Intrinsics(const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points) {
   Eigen::Matrix3d intrinsics(Eigen::Matrix3d::Identity());
   intrinsics(0, 0) = focal_lengths(0);

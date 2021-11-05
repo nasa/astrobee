@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <localization_common/utilities.h>
 #include <localization_common/test_utilities.h>
 
 #include <random>
@@ -33,7 +34,7 @@ double RandomPositiveDouble() {
   return std::uniform_real_distribution<double>(0, 100)(rng);
 }
 
-gtsam::Vector3 RandomVector() {
+Eigen::Vector3d RandomVector() {
   // Eigen::Vector3 is constrained to [-1, 1]
   return RandomDouble() * Eigen::Vector3d::Random();
 }
@@ -45,4 +46,10 @@ gtsam::Pose3 RandomPose() {
   gtsam::Point3 trans = RandomVector();
   return gtsam::Pose3(rot, trans);
 }
+
+Eigen::Isometry3d RandomIsometry3d() {
+  const gtsam::Pose3 random_pose = RandomPose();
+  return EigenPose(random_pose);
+}
+
 }  // namespace localization_common

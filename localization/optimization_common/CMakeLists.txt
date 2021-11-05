@@ -32,3 +32,16 @@ create_library(TARGET ${PROJECT_NAME}
   INC ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} 
   DEPS
 )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_utilities
+    test/test_utilities.test
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_utilities
+    localization_common 
+  )
+endif()
+
+#install_launch_files()
