@@ -50,11 +50,7 @@ Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, c
 template <typename DISTORTER>
 Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
                                                          const Eigen::Matrix3d& intrinsics,
-                                                         const Eigen::VectorXd& distortion_params) {
-  const Eigen::Vector2d undistorted_image_point = Project3dPointToImageSpace(cam_t_point, intrinsics);
-  const DISTORTER distorter;
-  return distorter.Distort(distortion_params, intrinsics, undistorted_image_point);
-}
+                                                         const Eigen::VectorXd& distortion_params);
 
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
@@ -67,7 +63,42 @@ template <typename DISTORTER>
 int Inliers(const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
             const Eigen::Isometry3d& pose_estimate, const double max_inlier_threshold,
-            boost::optional<std::vector<int>&> inliers = boost::none) {
+            boost::optional<std::vector<int>&> inliers = boost::none);
+
+template <typename T>
+std::vector<T> SampledValues(const std::vector<T>& values, const std::vector<int>& indices);
+
+template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const RansacPnPParams& params);
+
+template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
+  const ReprojectionPoseEstimateParams& params);
+
+template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double min_inlier_threshold = 4.0,
+  const int ransac_num_iterations = 100);
+
+template <typename DISTORTER>
+Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
+                                                         const Eigen::Matrix3d& intrinsics,
+                                                         const Eigen::VectorXd& distortion_params) {
+  const Eigen::Vector2d undistorted_image_point = Project3dPointToImageSpace(cam_t_point, intrinsics);
+  const DISTORTER distorter;
+  return distorter.Distort(distortion_params, intrinsics, undistorted_image_point);
+}
+
+template <typename DISTORTER>
+int Inliers(const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+            const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
+            const Eigen::Isometry3d& pose_estimate, const double max_inlier_threshold,
+            boost::optional<std::vector<int>&> inliers) {
   int num_inliers = 0;
   for (int i = 0; i < static_cast<int>(image_points.size()); ++i) {
     const Eigen::Vector2d& image_point = image_points[i];
@@ -226,8 +257,8 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
 template <typename DISTORTER>
 boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
-  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double min_inlier_threshold = 4.0,
-  const int ransac_num_iterations = 100) {
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const double min_inlier_threshold,
+  const int ransac_num_iterations) {
   const Eigen::Vector2d focal_lengths(intrinsics(0, 0), intrinsics(1, 1));
   const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
   return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
