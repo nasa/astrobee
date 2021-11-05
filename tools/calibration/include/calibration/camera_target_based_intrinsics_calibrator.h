@@ -104,6 +104,7 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
       LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
       continue;
     }
+
     camera_T_targets.emplace_back(optimization_common::VectorFromIsometry3d(camera_T_target->first));
     initial_camera_T_targets.emplace_back(camera_T_target->first);
     if (params_.save_individual_initial_reprojection_images) {
