@@ -114,7 +114,7 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
     valid_match_sets.emplace_back(valid_match_set);
     for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
       const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
-      optimization_common::AddReprojectionCostFunction<DISTORTER>(
+      optimization_common::ReprojectionError<DISTORTER>::AddCostFunction(
         match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
         distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
     }

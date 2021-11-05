@@ -229,7 +229,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
 
   for (int i = 0; i < num_inliers; ++i) {
     const int inlier_index = initial_estimate_and_inliers->second[i];
-    optimization_common::AddReprojectionCostFunction<DISTORTER>(
+    optimization_common::ReprojectionError<DISTORTER>::AddCostFunction(
       image_points[inlier_index], points_3d[inlier_index], pose_estimate_vector,
       const_cast<Eigen::Vector2d&>(focal_lengths), const_cast<Eigen::Vector2d&>(principal_points),
       const_cast<Eigen::VectorXd&>(distortion), problem, 1, params.optimization.huber_loss);
