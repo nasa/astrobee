@@ -53,7 +53,7 @@ Eigen::Isometry3d RandomIsometry3d() {
 }
 
 Eigen::Affine3d RandomAffine3d() {
-  const gtsam::Pose3 random_pose = RandomPose();
+  const Eigen::Isometry3d random_pose = RandomIsometry3d();
   const double scale = RandomDouble();
   Eigen::Affine3d random_affine3d = Eigen::Affine3d::Identity();
   random_affine3d.translation() = random_pose.translation();
