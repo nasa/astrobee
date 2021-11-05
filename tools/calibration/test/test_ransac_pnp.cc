@@ -23,6 +23,8 @@
 #include <optimization_common/identity_distorter.h>
 #include <optimization_common/utilities.h>
 
+#include <opencv2/calib3d/calib3d.hpp>
+
 #include <gtest/gtest.h>
 
 namespace ca = calibration;
@@ -30,7 +32,11 @@ namespace lc = localization_common;
 namespace oc = optimization_common;
 TEST(UtilitiesTester, Isometry3dToVectorToIsometry3d) {
   ca::RansacPnPParams params;
-  // TODO(rsoussan): set params!!!!!
+  params.max_inlier_threshold = 3;
+  params.num_iterations = 100;
+  params.min_num_inliers = 4;
+  int pnp_method = cv::SOLVEPNP_P3P;
+
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = ca::RandomRegistrationCorrespondences();
     const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
