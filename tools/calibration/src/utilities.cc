@@ -33,7 +33,7 @@ void PrintCameraTTargetsStats(const std::vector<Eigen::Isometry3d>& initial_came
   lc::Averager rotation_diff_averager("Initial vs. optimized camera_T_target rotation diff");
   for (int i = 0; i < static_cast<int>(initial_camera_T_targets.size()); ++i) {
     const auto& initial_camera_T_target = initial_camera_T_targets[i];
-    const Eigen::Isometry3d optimized_camera_T_target = oc::Isometry3(optimized_camera_T_targets[i].data());
+    const Eigen::Isometry3d optimized_camera_T_target = oc::Isometry3d(optimized_camera_T_targets[i]);
     const double position_diff_norm =
       (initial_camera_T_target.translation() - optimized_camera_T_target.translation()).norm();
     position_diff_norm_averager.Update(position_diff_norm);

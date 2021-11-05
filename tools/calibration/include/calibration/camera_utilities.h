@@ -237,7 +237,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
 
   ceres::Solver::Summary summary;
   ceres::Solve(params.optimization.solver_options, &problem, &summary);
-  const Eigen::Isometry3d optimized_estimate = optimization_common::Isometry3(pose_estimate_vector.data());
+  const Eigen::Isometry3d optimized_estimate = optimization_common::Isometry3d(pose_estimate_vector);
   if (params.optimization.verbose) {
     LogError("ReprojectionPoseEstimate: Initial estimate: " << std::endl
                                                             << initial_estimate_and_inliers->first.matrix() << std::endl

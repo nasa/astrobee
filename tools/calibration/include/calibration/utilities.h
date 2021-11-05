@@ -113,7 +113,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
   errors_file.open("errors_file.txt");
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
-    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
+    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3d(camera_T_targets[i]);
     for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
       const auto& image_point = match_set.image_points[j];
       const auto& target_point = match_set.points_3d[j];
@@ -142,7 +142,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
   cv::Mat relative_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
-    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3(camera_T_targets[i].data());
+    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3d(camera_T_targets[i]);
     for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
       const auto& image_point = match_set.image_points[j];
       const auto& target_point = match_set.points_3d[j];
