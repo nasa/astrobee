@@ -49,4 +49,4 @@ mlp_mid_level_processor_prep;
 %% FSW prep
 % ctl_controller_prep;              %All values moved to lua config file
 fam_force_allocation_module_prep;
-ase_augmented_state_estimator_prep;
+%ase_augmented_state_estimator_prep;

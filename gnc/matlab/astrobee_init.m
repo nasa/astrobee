@@ -41,7 +41,7 @@ end
 abp_astrobee_physical_properties_init;
 
 % Estimator init files
-ase_augmented_state_estimator_init;
+%ase_augmented_state_estimator_init;
 ctl_controller_init;
 fam_force_allocation_module_init;
 
@@ -75,7 +75,7 @@ if(ab_verbose)
     disp('...compiling cpp functions');
 end
 curr_dir = pwd;
-cxx_blocks_config(ASTROBEE_ROOT, ase_of_num_aug, ase_of_num_features, ab_verbose);
+%cxx_blocks_config(ASTROBEE_ROOT, ase_of_num_aug, ase_of_num_features, ab_verbose);
 cd(curr_dir);
 
 %%
