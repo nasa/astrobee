@@ -49,6 +49,7 @@ ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams() {
   params.optimization = DefaultOptimizationParams();
   params.ransac_pnp = DefaultRansacPnPParams();
   params.optimize_estimate = true;
+  return params;
 }
 
 RandomRegistrationCorrespondences::RandomRegistrationCorrespondences() {

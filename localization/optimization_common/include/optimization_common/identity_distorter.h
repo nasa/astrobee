@@ -21,10 +21,12 @@
 #include <optimization_common/distorter.h>
 
 namespace optimization_common {
-class IdentityDistorter : public Distorter<0, IdentityDistorter> {
+// TODO(rsoussan): This actually takes 0 params but ceres needs at least 1 to form
+// valid parameter blocks.  Change to 0 when this is avoided.
+class IdentityDistorter : public Distorter<1, IdentityDistorter> {
  public:
-  using Distorter<0, IdentityDistorter>::Distort;
-  using Distorter<0, IdentityDistorter>::Undistort;
+  using Distorter<1, IdentityDistorter>::Distort;
+  using Distorter<1, IdentityDistorter>::Undistort;
 
   template <typename T>
   Eigen::Matrix<T, 2, 1> Distort(const T* distortion, const Eigen::Matrix<T, 3, 3>& intrinsics,
