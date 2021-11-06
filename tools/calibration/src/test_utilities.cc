@@ -24,12 +24,12 @@ namespace calibration {
 namespace lc = localization_common;
 
 RandomRegistrationCorrespondences::RandomRegistrationCorrespondences() {
-  static constexpr double x_min = 0.1;
-  static constexpr double x_max = 30;
+  static constexpr double x_min = -10.0;
+  static constexpr double x_max = 10.0;
   static constexpr double y_min = -10.0;
   static constexpr double y_max = 10.0;
-  static constexpr double z_min = -10.0;
-  static constexpr double z_max = 10.0;
+  static constexpr double z_min = 0.1;
+  static constexpr double z_max = 30.0;
 
   // Sample points in front of camera
   const double x = lc::RandomDouble(x_min, x_max);
