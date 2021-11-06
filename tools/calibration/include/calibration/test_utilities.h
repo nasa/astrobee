@@ -18,12 +18,19 @@
 #ifndef CALIBRATION_TEST_UTILITIES_H_
 #define CALIBRATION_TEST_UTILITIES_H_
 
+#include <calibration/optimization_params.h>
+#include <calibration/ransac_pnp_params.h>
+#include <calibration/reprojection_pose_estimate_params.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 
 #include <vector>
 
 namespace calibration {
+OptimizationParams DefaultOptimizationParams();
+RansacPnPParams DefaultRansacPnPParams();
+ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams();
+
 class RandomRegistrationCorrespondences {
  public:
   RandomRegistrationCorrespondences();

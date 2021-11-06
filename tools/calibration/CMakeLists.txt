@@ -46,4 +46,12 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_ransac_pnp
     calibration localization_common optimization_common 
   )
+  add_rostest_gtest(test_reprojection_pose_estimate
+    test/test_reprojection_pose_estimate.test
+    test/test_reprojection_pose_estimate.cc
+  )
+  target_link_libraries(test_reprojection_pose_estimate
+    calibration localization_common optimization_common 
+  )
+
 endif()

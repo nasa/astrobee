@@ -31,18 +31,15 @@ namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
 TEST(UtilitiesTester, Isometry3dToVectorToIsometry3d) {
-  ca::RansacPnPParams params;
-  params.max_inlier_threshold = 3;
-  params.num_iterations = 100;
-  params.min_num_inliers = 4;
-  params.pnp_method = cv::SOLVEPNP_P3P;
-
+  const auto params = ca::DefaultRansacPnPParams();
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = ca::RandomRegistrationCorrespondences();
     const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
     ASSERT_TRUE(pose_estimate != boost::none);
+    LogError("true pose: " << std::endl << correspondences.camera_T_target().matrix());
+    LogError("pnp pose: " << std::endl << pose_estimate->first.matrix());
     ASSERT_TRUE(pose_estimate->first.matrix().isApprox(correspondences.camera_T_target().matrix(), 1e-6));
   }
 }
