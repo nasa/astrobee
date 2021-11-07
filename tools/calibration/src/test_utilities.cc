@@ -42,7 +42,7 @@ RansacPnPParams DefaultRansacPnPParams() {
   params.min_num_inliers = 4;
   // TODO(rsoussan): Change this to p3p when p3p bug or opencv version fixed
   // Currenty p3p leads to significant errors even with perfect data
-  params.pnp_method = cv::SOLVEPNP_EPNP;
+  params.pnp_method = cv::SOLVEPNP_ITERATIVE;
   return params;
 }
 
@@ -62,24 +62,21 @@ RandomRegistrationCorrespondences::RandomRegistrationCorrespondences() {
   static constexpr double z_min = 0.1;
   static constexpr double z_max = 30.0;
 
-  // Sample points in front of camera
-  const double x = lc::RandomDouble(x_min, x_max);
-  const double y = lc::RandomDouble(y_min, y_max);
-  const double z = lc::RandomDouble(z_min, z_max);
-  // TODO(rsoussan): Sample orientation such that it is facing camera to some extent
-  camera_T_target_ = Eigen::Isometry3d::Identity();           // lc::RandomIsometry3d();
-  camera_T_target_.translation() = Eigen::Vector3d(0, 0, 3);  // Eigen::Vector3d(x, y, z);
-  intrinsics_ = Eigen::Matrix3d::Identity();                  // lc::RandomIntrinsics();
-  intrinsics_(0, 0) = 500;
-  intrinsics_(1, 1) = 500;
-  intrinsics_(0, 2) = 500;
-  intrinsics_(1, 2) = 500;
+  static constexpr double yaw_min = -45.0;
+  static constexpr double yaw_max = 45.0;
+  static constexpr double pitch_min = -45.0;
+  static constexpr double pitch_max = 45.0;
+  static constexpr double roll_min = -15.0;
+  static constexpr double roll_max = 15.0;
+
+  camera_T_target_ = RandomFrontFacingPose(x_min, x_max, y_min, y_max, z_min, z_max, yaw_min, yaw_max, pitch_min,
+                                           pitch_max, roll_min, roll_max);
+  intrinsics_ = lc::RandomIntrinsics();
   const std::vector<Eigen::Vector3d> target_t_target_points = TargetPoints();
   for (const auto& target_t_target_point : target_t_target_points) {
     const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
     if (camera_t_target_point.z() <= 0) continue;
     const Eigen::Vector2d image_point = Project3dPointToImageSpace(camera_t_target_point, intrinsics_);
-    std::cout << "image point: " << image_point.x() << ", " << image_point.y() << std::endl;
     correspondences_.AddCorrespondence(image_point, target_t_target_point);
   }
 }
@@ -97,5 +94,28 @@ std::vector<Eigen::Vector3d> RandomRegistrationCorrespondences::TargetPoints() {
     }
   }
   return target_points;
+}
+
+Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, const double y_min, const double y_max,
+                                        const double z_min, const double z_max, const double yaw_min,
+                                        const double yaw_max, const double pitch_min, const double pitch_max,
+                                        const double roll_min, const double roll_max) {
+  // Translation
+  const double x = lc::RandomDouble(x_min, x_max);
+  const double y = lc::RandomDouble(y_min, y_max);
+  const double z = lc::RandomDouble(z_min, z_max);
+
+  // Rotation
+  const double yaw = M_PI / 180.0 * lc::RandomDouble(yaw_min, yaw_max);
+  const double pitch = M_PI / 180.0 * lc::RandomDouble(pitch_min, pitch_max);
+  const double roll = M_PI / 180.0 * lc::RandomDouble(roll_min, roll_max);
+
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.translation() = Eigen::Vector3d(x, y, z);
+  pose.linear() = Eigen::Matrix3d(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+                                  Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+                                  Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()));
+
+  return pose;
 }
 }  // namespace calibration

@@ -212,6 +212,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
                                                                       << num_inliers << ".");
     return boost::none;
   }
+  LogError("intial estimate: " << std::endl << initial_estimate_and_inliers->first.matrix());
 
   if (!params.optimize_estimate) return initial_estimate_and_inliers;
 
