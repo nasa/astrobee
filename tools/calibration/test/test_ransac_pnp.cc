@@ -31,18 +31,26 @@ namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
 TEST(RansacPnPTester, RansacPnP) {
-  const auto params = ca::DefaultRansacPnPParams();
+  auto params = ca::DefaultRansacPnPParams();
+  params.pnp_method = cv::SOLVEPNP_ITERATIVE;
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.translation().z() = 3;
+  Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
+  intrinsics(0, 0) = 500;
+  intrinsics(1, 1) = 500;
+  intrinsics(0, 2) = 500;
+  intrinsics(1, 2) = 500;
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences =
-      ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints(10, 10));
+    const auto correspondences = ca::RegistrationCorrespondences(pose, intrinsics, ca::RandomFrontFacingPoints(100));
     const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
     ASSERT_TRUE(pose_estimate != boost::none);
+    ASSERT_TRUE(pose_estimate->second.size() == correspondences.correspondences().image_points.size());
     LogError("true pose: " << std::endl << correspondences.camera_T_target().matrix());
     LogError("pnp pose: " << std::endl << pose_estimate->first.matrix());
     // TODO(rsoussan): Decrease tolerance once cv::solvePnP issues are resolved
-    constexpr double tolerance = 1e-1;
+    constexpr double tolerance = 1e-2;
     ASSERT_TRUE(pose_estimate->first.matrix().isApprox(correspondences.camera_T_target().matrix(), tolerance));
   }
 }
