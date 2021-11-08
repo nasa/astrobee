@@ -66,16 +66,12 @@ RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d
   }
 }
 
-std::vector<Eigen::Vector3d> TargetPoints() {
-  static constexpr double kRowSpacing = 0.1;
-  static constexpr double kColSpacing = 0.1;
-  static constexpr int kNumPointsPerRow = 3;  // 10;
-  static constexpr int kNumPointsPerCol = 3;  // 10;
-
+std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col, const double row_spacing,
+                                          const double col_spacing) {
   std::vector<Eigen::Vector3d> target_points;
-  for (int i = 0; i < kNumPointsPerCol; ++i) {
-    for (int j = 0; j < kNumPointsPerRow; ++j) {
-      target_points.emplace_back(Eigen::Vector3d(i * kColSpacing, j * kRowSpacing, 0));
+  for (int i = 0; i < points_per_col; ++i) {
+    for (int j = 0; j < points_per_row; ++j) {
+      target_points.emplace_back(Eigen::Vector3d(i * col_spacing, j * row_spacing, 0));
     }
   }
   return target_points;

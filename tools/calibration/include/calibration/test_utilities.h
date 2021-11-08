@@ -36,7 +36,8 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
                                         const double roll_min, const double roll_max);
 Eigen::Isometry3d RandomFrontFacingPose();
 
-std::vector<Eigen::Vector3d> TargetPoints();
+std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col,
+                                          const double row_spacing = 0.1, const double col_spacing = 0.1);
 
 std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
 

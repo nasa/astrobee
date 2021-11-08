@@ -39,7 +39,7 @@ TEST(RansacPnPTester, RansacPnP) {
   intrinsics(0, 2) = 500;
   intrinsics(1, 2) = 500;
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences(pose, intrinsics, ca::RandomFrontFacingPoints(4));
+    const auto correspondences = ca::RegistrationCorrespondences(pose, intrinsics, ca::RandomFrontFacingPoints(40));
     std::vector<cv::Point2d> image_points_cv;
     for (const auto& image_point : correspondences.correspondences().image_points) {
       image_points_cv.emplace_back(cv::Point2d(image_point.x(), image_point.y()));
@@ -54,13 +54,13 @@ TEST(RansacPnPTester, RansacPnP) {
     cv::eigen2cv(correspondences.intrinsics(), intrinsics_cv);
     cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
     cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-    ca::UndistortedPnP(image_points_cv, points_3d_cv, intrinsics_cv, cv::SOLVEPNP_P3P, rodrigues_rotation_cv,
+    ca::UndistortedPnP(image_points_cv, points_3d_cv, intrinsics_cv, cv::SOLVEPNP_EPNP, rodrigues_rotation_cv,
                        translation_cv);
     const Eigen::Isometry3d pose_estimate = ca::Isometry3d(rodrigues_rotation_cv, translation_cv);
     LogError("true pose: " << std::endl << correspondences.camera_T_target().matrix());
     LogError("pnp pose: " << std::endl << pose_estimate.matrix());
     // TODO(rsoussan): Decrease tolerance once cv::solvePnP issues are resolved
-    constexpr double tolerance = 1e-1;
+    constexpr double tolerance = 1e-3;
     ASSERT_TRUE(pose_estimate.matrix().isApprox(correspondences.camera_T_target().matrix(), tolerance));
   }
 }

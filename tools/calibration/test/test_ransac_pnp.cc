@@ -34,7 +34,7 @@ TEST(RansacPnPTester, RansacPnP) {
   const auto params = ca::DefaultRansacPnPParams();
   for (int i = 0; i < 500; ++i) {
     const auto correspondences =
-      ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints());
+      ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints(10, 10));
     const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
