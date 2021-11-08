@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, United States Government, as represented by the
+/* Copyright (c) 2017, United S/ates Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  *
  * All rights reserved.
@@ -36,17 +36,22 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
                                         const double roll_min, const double roll_max);
 Eigen::Isometry3d RandomFrontFacingPose();
 
+std::vector<Eigen::Vector3d> TargetPoints();
+
+std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
+
+Eigen::Vector3d RandomFrontFacingPoint();
+
 class RegistrationCorrespondences {
  public:
-  RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target, const Eigen::Matrix3d& intrinsics);
+  RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target, const Eigen::Matrix3d& intrinsics,
+                              const std::vector<Eigen::Vector3d>& target_t_target_point);
 
   const localization_common::ImageCorrespondences& correspondences() const { return correspondences_; }
 
   const Eigen::Isometry3d& camera_T_target() const { return camera_T_target_; }
 
   const Eigen::Matrix3d& intrinsics() const { return intrinsics_; }
-
-  static std::vector<Eigen::Vector3d> TargetPoints();
 
  private:
   localization_common::ImageCorrespondences correspondences_;

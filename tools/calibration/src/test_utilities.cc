@@ -55,9 +55,9 @@ ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams() {
 }
 
 RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target,
-                                                         const Eigen::Matrix3d& intrinsics)
+                                                         const Eigen::Matrix3d& intrinsics,
+                                                         const std::vector<Eigen::Vector3d>& target_t_target_points)
     : camera_T_target_(camera_T_target), intrinsics_(intrinsics) {
-  const std::vector<Eigen::Vector3d> target_t_target_points = TargetPoints();
   for (const auto& target_t_target_point : target_t_target_points) {
     const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
     if (camera_t_target_point.z() <= 0) continue;
@@ -66,7 +66,7 @@ RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d
   }
 }
 
-std::vector<Eigen::Vector3d> RegistrationCorrespondences::TargetPoints() {
+std::vector<Eigen::Vector3d> TargetPoints() {
   static constexpr double kRowSpacing = 0.1;
   static constexpr double kColSpacing = 0.1;
   static constexpr int kNumPointsPerRow = 3;  // 10;
@@ -79,6 +79,28 @@ std::vector<Eigen::Vector3d> RegistrationCorrespondences::TargetPoints() {
     }
   }
   return target_points;
+}
+
+std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points) {
+  std::vector<Eigen::Vector3d> points;
+  for (int i = 0; i < num_points; ++i) {
+    points.emplace_back(RandomFrontFacingPoint());
+  }
+  return points;
+}
+
+Eigen::Vector3d RandomFrontFacingPoint() {
+  static constexpr double x_min = -10.0;
+  static constexpr double x_max = 10.0;
+  static constexpr double y_min = -10.0;
+  static constexpr double y_max = 10.0;
+  static constexpr double z_min = 0.1;
+  static constexpr double z_max = 30.0;
+
+  const double x = lc::RandomDouble(x_min, x_max);
+  const double y = lc::RandomDouble(y_min, y_max);
+  const double z = lc::RandomDouble(z_min, z_max);
+  return Eigen::Vector3d(x, y, z);
 }
 
 Eigen::Isometry3d RandomFrontFacingPose() {

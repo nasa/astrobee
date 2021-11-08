@@ -33,7 +33,8 @@ namespace oc = optimization_common;
 TEST(RansacPnPTester, RansacPnP) {
   const auto params = ca::DefaultRansacPnPParams();
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics());
+    const auto correspondences =
+      ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints());
     const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);

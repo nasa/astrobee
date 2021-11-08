@@ -39,18 +39,14 @@ TEST(RansacPnPTester, RansacPnP) {
   intrinsics(0, 2) = 500;
   intrinsics(1, 2) = 500;
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences(pose, intrinsics);
+    const auto correspondences = ca::RegistrationCorrespondences(pose, intrinsics, ca::RandomFrontFacingPoints(4));
     std::vector<cv::Point2d> image_points_cv;
-    int count = 0;
     for (const auto& image_point : correspondences.correspondences().image_points) {
-      if (count++ >= 4) break;
       image_points_cv.emplace_back(cv::Point2d(image_point.x(), image_point.y()));
     }
 
-    count = 0;
     std::vector<cv::Point3d> points_3d_cv;
     for (const auto& point_3d : correspondences.correspondences().points_3d) {
-      if (count++ >= 4) break;
       points_3d_cv.emplace_back(point_3d.x(), point_3d.y(), point_3d.z());
     }
 
