@@ -22,6 +22,7 @@
 #include <calibration/reprojection_pose_estimate_params.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/logger.h>
+#include <localization_common/utilities.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 
@@ -88,7 +89,14 @@ template <typename DISTORTER>
 boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimateWithInitialEstimate(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
-  const ReprojectionPoseEstimateParams& params);
+  const ReprojectionPoseEstimateParams& params, const Eigen::Isometry3d& initial_estimate,
+  const std::vector<int>& initial_inliers);
+
+template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimateWithInitialEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params,
+  const Eigen::Isometry3d& initial_estimate, const std::vector<int>& initial_inliers);
 
 template <typename DISTORTER>
 Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
@@ -283,10 +291,20 @@ template <typename DISTORTER>
 boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params) {
-  const Eigen::Vector2d focal_lengths(intrinsics(0, 0), intrinsics(1, 1));
-  const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
-  return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
-                                             params);
+  const auto focal_lengths_and_principal_points = localization_common::FocalLengthsAndPrincipalPoints(intrinsics);
+  return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths_and_principal_points.first,
+                                             focal_lengths_and_principal_points.second, distortion, params);
+}
+
+template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimateWithInitialEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params,
+  const Eigen::Isometry3d& initial_estimate, const std::vector<int>& initial_inliers) {
+  const auto focal_lengths_and_principal_points = localization_common::FocalLengthsAndPrincipalPoints(intrinsics);
+  return ReprojectionPoseEstimateWithInitialEstimate<DISTORTER>(
+    image_points, points_3d, focal_lengths_and_principal_points.first, focal_lengths_and_principal_points.second,
+    distortion, params, initial_estimate, initial_inliers);
 }
 }  // namespace calibration
 #endif  // CALIBRATION_CAMERA_UTILITIES_H_

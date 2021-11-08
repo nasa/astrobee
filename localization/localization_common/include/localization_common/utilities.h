@@ -38,6 +38,7 @@
 #include <std_msgs/Header.h>
 
 #include <string>
+#include <utility>
 
 namespace localization_common {
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
@@ -129,6 +130,7 @@ double Rad2Deg(const double radians);
 // Uses Euler Angles in intrinsic ypr representation in degrees
 Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
 
+std::pair<Eigen::Vector2d, Eigen::Vector2d> FocalLengthsAndPrincipalPoints(const Eigen::Matrix3d& intrinsics);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

@@ -165,4 +165,10 @@ Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, co
   const Eigen::Matrix3d rotation(yaw_aa * yaw_aa * pitch_aa * yaw_aa * pitch_aa * roll_aa);
   return rotation;
 }
+
+std::pair<Eigen::Vector2d, Eigen::Vector2d> FocalLengthsAndPrincipalPoints(const Eigen::Matrix3d& intrinsics) {
+  const Eigen::Vector2d focal_lengths(intrinsics(0, 0), intrinsics(1, 1));
+  const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
+  return std::make_pair(focal_lengths, principal_points);
+}
 }  // namespace localization_common
