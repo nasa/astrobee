@@ -230,10 +230,10 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
     return boost::none;
   }
 
-  const int num_inliers = initial_inliers.size();
-  if (num_inliers < params.ransac_pnp.min_num_inliers) {
+  const int num_initial_inliers = initial_inliers.size();
+  if (num_initial_inliers < params.ransac_pnp.min_num_inliers) {
     LogError("ReprojectionPoseEstimateWithInitialEstimate: Too few inliers provided. Need "
-             << params.ransac_pnp.min_num_inliers << ", got " << num_inliers << ".");
+             << params.ransac_pnp.min_num_inliers << ", got " << num_initial_inliers << ".");
     return boost::none;
   }
 
@@ -247,7 +247,7 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
   Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(initial_estimate);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
 
-  for (int i = 0; i < num_inliers; ++i) {
+  for (int i = 0; i < num_initial_inliers; ++i) {
     const int inlier_index = initial_inliers[i];
     optimization_common::ReprojectionError<DISTORTER>::AddCostFunction(
       image_points[inlier_index], points_3d[inlier_index], pose_estimate_vector,
@@ -272,8 +272,12 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
     return boost::none;
   }
 
-  // TODO(rsoussan): recount inliers, return this!!!
-  return std::make_pair(optimized_estimate, initial_inliers);
+  std::vector<int> inliers;
+  const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
+  // TODO(rsoussan): Use different max inlier threshold? Add another param?
+  Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, optimized_estimate,
+                     params.ransac_pnp.max_inlier_threshold, inliers);
+  return std::make_pair(optimized_estimate, inliers);
 }
 
 template <typename DISTORTER>
