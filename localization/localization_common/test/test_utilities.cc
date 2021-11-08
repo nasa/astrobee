@@ -31,3 +31,17 @@ TEST(UtilitiesTester, Deg2Rad2Deg) {
     ASSERT_NEAR(degrees, degrees_again, 1e-6);
   }
 }
+
+TEST(UtilitiesTester, EulerAngles) {
+  for (int i = 0; i < 500; ++i) {
+    const double yaw = lc::RandomDouble(-360.0, 360.0);
+    const double pitch = lc::RandomDouble(-360.0, 360.0);
+    const double roll = lc::RandomDouble(-360.0, 360.0);
+    const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
+    // ypr intrinsics equivalent to rpy extrinsics, and Eigen uses extrinsics convention
+    const Eigen::Vector3d angles = rotation.eulerAngles(0, 1, 2);
+    const Eigen::Matrix3d rotation_again =
+      lc::RotationFromEulerAngles(lc::Rad2Deg(angles[2]), lc::Rad2Deg(angles[1]), lc::Rad2Deg(angles[0]));
+    ASSERT_TRUE(rotation.matrix().isApprox(rotation_again.matrix(), 1e-6));
+  }
+}
