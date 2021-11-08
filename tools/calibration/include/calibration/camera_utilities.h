@@ -85,6 +85,12 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
   const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params);
 
 template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimateWithInitialEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
+  const ReprojectionPoseEstimateParams& params);
+
+template <typename DISTORTER>
 Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
                                                          const Eigen::Matrix3d& intrinsics,
                                                          const Eigen::VectorXd& distortion_params) {
@@ -191,11 +197,6 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
     return boost::none;
   }
 
-  ceres::Problem problem;
-  optimization_common::AddConstantParameterBlock(2, focal_lengths.data(), problem);
-  optimization_common::AddConstantParameterBlock(2, principal_points.data(), problem);
-  optimization_common::AddConstantParameterBlock(DISTORTER::kNumParams, distortion.data(), problem);
-
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
@@ -212,16 +213,42 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
                                                                       << num_inliers << ".");
     return boost::none;
   }
-  LogError("intial estimate: " << std::endl << initial_estimate_and_inliers->first.matrix());
 
-  if (!params.optimize_estimate) return initial_estimate_and_inliers;
+  return ReprojectionPoseEstimateWithInitialEstimate<DISTORTER>(
+    image_points, points_3d, focal_lengths, principal_points, distortion, params, initial_estimate_and_inliers->first,
+    initial_estimate_and_inliers->second);
+}
 
-  Eigen::Matrix<double, 6, 1> pose_estimate_vector =
-    optimization_common::VectorFromIsometry3d(initial_estimate_and_inliers->first);
+template <typename DISTORTER>
+boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimateWithInitialEstimate(
+  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
+  const Eigen::Vector2d& focal_lengths, const Eigen::Vector2d& principal_points, const Eigen::VectorXd& distortion,
+  const ReprojectionPoseEstimateParams& params, const Eigen::Isometry3d& initial_estimate,
+  const std::vector<int>& initial_inliers) {
+  if (image_points.size() < 4) {
+    LogError("ReprojectionPoseEstimateWithInitialEstimate: Too few matched points given.");
+    return boost::none;
+  }
+
+  const int num_inliers = initial_inliers.size();
+  if (num_inliers < params.ransac_pnp.min_num_inliers) {
+    LogError("ReprojectionPoseEstimateWithInitialEstimate: Too few inliers provided. Need "
+             << params.ransac_pnp.min_num_inliers << ", got " << num_inliers << ".");
+    return boost::none;
+  }
+
+  if (!params.optimize_estimate) return std::make_pair(initial_estimate, initial_inliers);
+
+  ceres::Problem problem;
+  optimization_common::AddConstantParameterBlock(2, focal_lengths.data(), problem);
+  optimization_common::AddConstantParameterBlock(2, principal_points.data(), problem);
+  optimization_common::AddConstantParameterBlock(DISTORTER::kNumParams, distortion.data(), problem);
+
+  Eigen::Matrix<double, 6, 1> pose_estimate_vector = optimization_common::VectorFromIsometry3d(initial_estimate);
   problem.AddParameterBlock(pose_estimate_vector.data(), 6);
 
   for (int i = 0; i < num_inliers; ++i) {
-    const int inlier_index = initial_estimate_and_inliers->second[i];
+    const int inlier_index = initial_inliers[i];
     optimization_common::ReprojectionError<DISTORTER>::AddCostFunction(
       image_points[inlier_index], points_3d[inlier_index], pose_estimate_vector,
       const_cast<Eigen::Vector2d&>(focal_lengths), const_cast<Eigen::Vector2d&>(principal_points),
@@ -232,19 +259,21 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
   ceres::Solve(params.optimization.solver_options, &problem, &summary);
   const Eigen::Isometry3d optimized_estimate = optimization_common::Isometry3d(pose_estimate_vector);
   if (params.optimization.verbose) {
-    LogError("ReprojectionPoseEstimate: Initial estimate: " << std::endl
-                                                            << initial_estimate_and_inliers->first.matrix() << std::endl
-                                                            << "Optimized estimate: " << std::endl
-                                                            << optimized_estimate.matrix() << std::endl
-                                                            << "Summary: " << std::endl
-                                                            << summary.FullReport());
+    LogError("ReprojectionPoseEstimateWithInitialEstimate: Initial estimate: " << std::endl
+                                                                               << initial_estimate.matrix() << std::endl
+                                                                               << "Optimized estimate: " << std::endl
+                                                                               << optimized_estimate.matrix()
+                                                                               << std::endl
+                                                                               << "Summary: " << std::endl
+                                                                               << summary.FullReport());
   }
   if (!summary.IsSolutionUsable()) {
-    LogError("ReprojectionPoseEstimate: Failed to find solution.");
+    LogError("ReprojectionPoseEstimateWithInitialEstimate: Failed to find solution.");
     return boost::none;
   }
 
-  return std::make_pair(optimized_estimate, initial_estimate_and_inliers->second);
+  // TODO(rsoussan): recount inliers, return this!!!
+  return std::make_pair(optimized_estimate, initial_inliers);
 }
 
 template <typename DISTORTER>
@@ -255,6 +284,6 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
   const Eigen::Vector2d principal_points(intrinsics(0, 2), intrinsics(1, 2));
   return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
                                              params);
-}  // namespace calibration
+}
 }  // namespace calibration
 #endif  // CALIBRATION_CAMERA_UTILITIES_H_
