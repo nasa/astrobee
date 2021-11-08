@@ -70,7 +70,6 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   compression_max_dev = cfg_.Get<double>("traj_compression_max_dev");
   traj_resolution = cfg_.Get<double>("traj_compression_resolution");
   octomap_update_rate_ = cfg_.Get<double>("octomap_update_rate");
-  tf_update_rate_ = cfg_.Get<double>("tf_update_rate");
   fading_memory_update_rate_ = cfg_.Get<double>("fading_memory_update_rate");
   use_haz_cam = cfg_.Get<bool>("use_haz_cam");
   use_perch_cam = cfg_.Get<bool>("use_perch_cam");
@@ -122,15 +121,6 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   timer_f_ = nh->createTimer(
     ros::Duration(ros::Rate(fading_memory_update_rate_)),
       &MapperNodelet::FadeTask, this, false, true);
-  timer_h_ = nh->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::HazTfTask, this, false, true);
-  timer_p_ = nh->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::PerchTfTask, this, false, true);
-  timer_b_ = nh->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::BodyTfTask, this, false, true);
 
   // Subscribers
   std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;

@@ -29,30 +29,6 @@ void MapperNodelet::FadeTask(ros::TimerEvent const& event) {
       globals_.octomap.FadeMemory(fading_memory_update_rate_);
 }
 
-// Thread for constantly updating the tfTree values
-void MapperNodelet::HazTfTask(ros::TimerEvent const& event) {
-  try {
-    globals_.tf_cam2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
-      GetTransform(FRAME_NAME_HAZ_CAM), ros::Time(0));
-  } catch (tf2::TransformException &ex) {}
-}
-
-// Thread for constantly updating the tfTree values
-void MapperNodelet::PerchTfTask(ros::TimerEvent const& event) {
-  try {
-    globals_.tf_perch2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
-      GetTransform(FRAME_NAME_PERCH_CAM), ros::Time(0));
-  } catch (tf2::TransformException &ex) {}
-}
-
-// Thread for updating the tfTree values
-void MapperNodelet::BodyTfTask(ros::TimerEvent const& event) {
-  try {
-    globals_.tf_body2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
-      GetTransform(FRAME_NAME_BODY), ros::Time(0));
-  } catch (tf2::TransformException &ex) {}
-}
-
 // Sentinel
 void MapperNodelet::CollisionCheckTask() {
   // visualization markers
@@ -141,6 +117,20 @@ void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
   // If there are no pcl point clounds
   if (globals_.pcl_queue.empty())
     return;
+
+// Update TF values
+  try {
+    globals_.tf_cam2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+      GetTransform(FRAME_NAME_HAZ_CAM), ros::Time(0));
+  } catch (tf2::TransformException &ex) {}
+  try {
+    globals_.tf_perch2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+      GetTransform(FRAME_NAME_PERCH_CAM), ros::Time(0));
+  } catch (tf2::TransformException &ex) {}
+  try {
+    globals_.tf_body2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+      GetTransform(FRAME_NAME_BODY), ros::Time(0));
+  } catch (tf2::TransformException &ex) {}
 
   // Get time for when this task started
   const ros::Time t0 = ros::Time::now();

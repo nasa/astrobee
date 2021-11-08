@@ -157,11 +157,6 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   // Thread for fading memory of the octomap
   void FadeTask(ros::TimerEvent const& event);
 
-  // Timers for constantly updating the tfTree values
-  void HazTfTask(ros::TimerEvent const& event);
-  void PerchTfTask(ros::TimerEvent const& event);
-  void BodyTfTask(ros::TimerEvent const& event);
-
   // Collision checking
   void CollisionCheckTask();
 
@@ -179,9 +174,6 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   ros::Timer timer_o_;  // Octomapping Task
   ros::Timer timer_d_;  // Diagnostics
   ros::Timer timer_f_;  // Fade Task
-  ros::Timer timer_h_;  // Haz TF Task
-  ros::Timer timer_p_;  // Perch TF Task
-  ros::Timer timer_b_;  // Body TF task
 
   // Subscriber variables
   ros::Subscriber haz_sub_, perch_sub_, segment_sub_, reset_sub_;
