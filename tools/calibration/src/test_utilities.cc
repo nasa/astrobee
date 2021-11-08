@@ -128,18 +128,10 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
   const double y = lc::RandomDouble(y_min, y_max);
   const double z = lc::RandomDouble(z_min, z_max);
 
-  // Rotation using intrinsic Euler Angles, ypr convention
-  const Eigen::AngleAxisd yaw =
-    Eigen::AngleAxisd(M_PI / 180.0 * lc::RandomDouble(yaw_min, yaw_max), Eigen::Vector3d::UnitZ());
-  const Eigen::AngleAxisd pitch =
-    Eigen::AngleAxisd(M_PI / 180.0 * lc::RandomDouble(pitch_min, pitch_max), Eigen::Vector3d::UnitY());
-  const Eigen::AngleAxisd roll =
-    Eigen::AngleAxisd(M_PI / 180.0 * lc::RandomDouble(roll_min, roll_max), Eigen::Vector3d::UnitX());
-  const Eigen::Matrix3d rotation(yaw * yaw * pitch * yaw * pitch * roll);
-
-  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
-  pose.translation() = Eigen::Vector3d(x, y, z);
-  pose.linear() = rotation;
-  return pose;
+  const double yaw = lc::RandomDouble(yaw_min, yaw_max);
+  const double pitch = lc::RandomDouble(pitch_min, pitch_max);
+  const double roll = lc::RandomDouble(roll_min, roll_max);
+  const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
+  return lc::Isometry3d(Eigen::Vector3d(x, y, z), rotation);
 }
 }  // namespace calibration
