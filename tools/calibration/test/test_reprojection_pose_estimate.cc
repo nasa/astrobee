@@ -39,7 +39,7 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsAndRa
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(),
                                                                  ca::RandomFrontFacingPoints(num_points));
-    const Eigen::Isometry3d noisy_initial_estimate = lc::NoisyIsometry3d(
+    const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
@@ -61,7 +61,7 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsTarge
   for (int i = 0; i < 500; ++i) {
     const auto correspondences =
       ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints(10, 10));
-    const Eigen::Isometry3d noisy_initial_estimate = lc::NoisyIsometry3d(
+    const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,

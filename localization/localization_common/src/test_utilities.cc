@@ -32,6 +32,13 @@ double RandomDouble(const double min, const double max) {
   return std::uniform_real_distribution<double>(min, max)(rng);
 }
 
+double Noise(const double stddev) {
+  std::random_device dev;
+  std::mt19937 rng(dev());
+  std::normal_distribution<double> distribution(0.0, stddev);
+  return distribution(rng);
+}
+
 Eigen::Vector3d RandomVector() {
   // Eigen::Vector3 is constrained to [-1, 1]
   return RandomDouble() * Eigen::Vector3d::Random();
@@ -73,8 +80,8 @@ Eigen::Matrix3d RandomIntrinsics() {
   return intrinsics;
 }
 
-Eigen::Isometry3d NoisyIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
-                                  const double rotation_stddev) {
+Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
+                                       const double rotation_stddev) {
   const double mean = 0.0;
   std::random_device dev;
   std::mt19937 rng(dev());

@@ -31,6 +31,9 @@ double RandomPositiveDouble();
 // Selected from [min, max]
 double RandomDouble(const double min, const double max);
 
+// Returns white noise with set stddev
+double Noise(const double stddev);
+
 // Each index ranges from [-100, 100]
 Eigen::Vector3d RandomVector();
 
@@ -45,8 +48,19 @@ Eigen::Affine3d RandomAffine3d();
 // Focal lengths and principal points selected from [0.1, 1000]
 Eigen::Matrix3d RandomIntrinsics();
 
-// Adds noise to isometry3d pose
-Eigen::Isometry3d NoisyIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
-                                  const double rotation_stddev);
+Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
+                                       const double rotation_stddev);
+
+template <int N>
+Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev);
+
+template <int N>
+Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev) {
+  Eigen::Matrix<double, N, 1> noisy_vector = vector;
+  for (int i = 0; i < vector.cols; ++i) {
+    noisy_vector(i, 0) += Noise(noise_stddev);
+  }
+  return noisy_vector;
+}
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_

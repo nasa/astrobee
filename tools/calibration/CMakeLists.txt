@@ -60,6 +60,11 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_pnp
     calibration localization_common optimization_common 
   )
-
-
+  add_rostest_gtest(test_camera_utilities
+    test/test_camera_utilities.test
+    test/test_camera_utilities.cc
+  )
+  target_link_libraries(test_camera_utilities
+    calibration localization_common optimization_common 
+  )
 endif()
