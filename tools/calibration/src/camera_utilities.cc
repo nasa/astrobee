@@ -17,6 +17,7 @@
  */
 
 #include <calibration/camera_utilities.h>
+#include <localization_common/utilities.h>
 
 #include <opencv2/core/eigen.hpp>
 
@@ -25,6 +26,8 @@
 #include <unordered_map>
 
 namespace calibration {
+namespace lc = localization_common;
+
 Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics) {
   return (intrinsics * cam_t_point).hnormalized();
 }
@@ -36,10 +39,7 @@ Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat
   cv::Mat rotation_cv;
   cv::Rodrigues(rodrigues_rotation_cv, rotation_cv);
   cv::cv2eigen(rotation_cv, rotation);
-  Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
-  pose.translation() = translation;
-  pose.linear() = rotation;
-  return pose;
+  return lc::Isometry3d(translation, rotation);
 }
 
 void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, const std::vector<cv::Point3d>& points_3d,
