@@ -44,5 +44,9 @@ Eigen::Affine3d RandomAffine3d();
 
 // Focal lengths and principal points selected from [0.1, 1000]
 Eigen::Matrix3d RandomIntrinsics();
+
+// Adds noise to isometry3d pose
+Eigen::Isometry3d NoisyIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
+                                  const double rotation_stddev);
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_

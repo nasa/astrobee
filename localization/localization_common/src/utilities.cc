@@ -146,4 +146,23 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
   // Add gravity correction to measurement to offset negatively measured gravity
   return (uncorrected_accelerometer_measurement + imu_F_gravity);
 }
+
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation) {
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.translation() = translation;
+  pose.linear() = rotation;
+  return pose;
+}
+
+double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
+
+double Rad2Deg(const double radians) { return 180.0 / M_PI * radians; }
+
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll) {
+  const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw), Eigen::Vector3d::UnitZ());
+  const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch), Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll), Eigen::Vector3d::UnitX());
+  const Eigen::Matrix3d rotation(yaw_aa * yaw_aa * pitch_aa * yaw_aa * pitch_aa * roll_aa);
+  return rotation;
+}
 }  // namespace localization_common

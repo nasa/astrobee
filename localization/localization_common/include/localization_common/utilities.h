@@ -120,6 +120,15 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
   msg_conversions::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 }
 
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
+
+double Deg2Rad(const double degrees);
+
+double Rad2Deg(const double radians);
+
+// Uses Euler Angles in intrinsic ypr representation in degrees
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
+
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

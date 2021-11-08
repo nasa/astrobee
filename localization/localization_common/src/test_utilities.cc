@@ -72,4 +72,21 @@ Eigen::Matrix3d RandomIntrinsics() {
   intrinsics(1, 2) = p_y;
   return intrinsics;
 }
+
+Eigen::Isometry3d NoisyIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
+                                  const double rotation_stddev) {
+  const double mean = 0.0;
+  std::random_device dev;
+  std::mt19937 rng(dev());
+  std::normal_distribution<double> translation_distribution(mean, translation_stddev);
+  std::normal_distribution<double> rotation_distribution(mean, rotation_stddev);
+
+  const Eigen::Vector3d translation_noise(translation_distribution(rng), translation_distribution(rng),
+                                          translation_distribution(rng));
+  const Eigen::Matrix3d rotation_noise(
+    RotationFromEulerAngles(rotation_distribution(rng), rotation_distribution(rng), rotation_distribution(rng)));
+
+  Eigen::Isometry3d pose_noise = Isometry3d(translation_noise, rotation_noise);
+  return pose * pose_noise;
+}
 }  // namespace localization_common
