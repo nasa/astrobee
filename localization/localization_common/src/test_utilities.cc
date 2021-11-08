@@ -32,6 +32,8 @@ double RandomDouble(const double min, const double max) {
   return std::uniform_real_distribution<double>(min, max)(rng);
 }
 
+bool RandomBool() { return RandomDouble(0, 1) < 0.5; }
+
 double Noise(const double stddev) {
   std::random_device dev;
   std::mt19937 rng(dev());

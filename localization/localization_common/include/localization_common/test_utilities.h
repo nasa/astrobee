@@ -31,6 +31,8 @@ double RandomPositiveDouble();
 // Selected from [min, max]
 double RandomDouble(const double min, const double max);
 
+bool RandomBool();
+
 // Returns white noise with set stddev
 double Noise(const double stddev);
 
@@ -62,5 +64,6 @@ Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& 
   }
   return noisy_vector;
 }
+
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_
