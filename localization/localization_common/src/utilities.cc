@@ -162,7 +162,9 @@ Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, co
   const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw), Eigen::Vector3d::UnitZ());
   const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch), Eigen::Vector3d::UnitY());
   const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll), Eigen::Vector3d::UnitX());
-  const Eigen::Matrix3d rotation(yaw_aa * yaw_aa * pitch_aa * yaw_aa * pitch_aa * roll_aa);
+  // For intrinsics euler angle convention, yaw, pitch, then roll in intrinsic body frame is equivalent to
+  // roll, pitch, then yaw in extrinsic global frame
+  const Eigen::Matrix3d rotation(roll_aa * pitch_aa * yaw_aa);
   return rotation;
 }
 

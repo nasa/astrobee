@@ -45,8 +45,10 @@ TEST(ReprojectionPoseEstimateTester, ReprojectionPoseEstimate) {
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(1), params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
+    LogError("noisy pose: " << std::endl << noisy_initial_estimate.matrix());
     LogError("true pose: " << std::endl << correspondences.camera_T_target().matrix());
     LogError("repojection pose: " << std::endl << pose_estimate->first.matrix());
     ASSERT_TRUE(pose_estimate->first.matrix().isApprox(correspondences.camera_T_target().matrix(), 1e-6));
+    ASSERT_TRUE(pose_estimate->second.size() == num_points);
   }
 }
