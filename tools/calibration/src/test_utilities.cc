@@ -57,14 +57,6 @@ ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams() {
 RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target,
                                                          const Eigen::Matrix3d& intrinsics)
     : camera_T_target_(camera_T_target), intrinsics_(intrinsics) {
-  /* camera_T_target_ = RandomFrontFacingPose();
-  intrinsics_ = lc::RandomIntrinsics();
-  intrinsics_ = Eigen::Matrix3d::Identity();
-  intrinsics_(0, 0) = 500;
-  intrinsics_(1, 1) = 500;
-  intrinsics_(0, 2) = 500;
-  intrinsics_(1, 2) = 500;*/
-
   const std::vector<Eigen::Vector3d> target_t_target_points = TargetPoints();
   for (const auto& target_t_target_point : target_t_target_points) {
     const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;

@@ -53,5 +53,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_reprojection_pose_estimate
     calibration localization_common optimization_common 
   )
+  add_rostest_gtest(test_pnp
+    test/test_pnp.test
+    test/test_pnp.cc
+  )
+  target_link_libraries(test_pnp
+    calibration localization_common optimization_common 
+  )
+
 
 endif()
