@@ -31,14 +31,14 @@ namespace oc = optimization_common;
 TEST(CameraUtilitiesTester, Inliers) {
   const auto params = ca::DefaultReprojectionPoseEstimateParams();
   const int num_points = 20;
-  std::unordered_set<int> noisy_point_indices;
-  std::unordered_set<int> inlier_point_indices;
   const double inlier_threshold = 3.0;
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(),
                                                                  ca::RandomFrontFacingPoints(num_points));
 
     std::vector<Eigen::Vector2d> noisy_image_points;
+    std::unordered_set<int> noisy_point_indices;
+    std::unordered_set<int> inlier_point_indices;
     for (int j = 0; j < static_cast<int>(correspondences.correspondences().image_points.size()); ++j) {
       const auto& image_point = correspondences.correspondences().image_points[j];
       const bool add_noise = lc::RandomBool();
@@ -57,9 +57,11 @@ TEST(CameraUtilitiesTester, Inliers) {
     const int num_inliers = ca::Inliers<oc::IdentityDistorter>(
       noisy_image_points, correspondences.correspondences().points_3d, correspondences.intrinsics(), Eigen::VectorXd(1),
       correspondences.camera_T_target(), inlier_threshold, inliers);
+    ASSERT_EQ(num_points, inlier_point_indices.size() + noisy_point_indices.size());
     ASSERT_EQ(num_inliers, num_points - noisy_point_indices.size());
     for (const auto inlier_index : inliers) {
-      ASSERT_GT(inlier_point_indices.count(inlier_index) > 0);
+      ASSERT_GT(inlier_point_indices.count(inlier_index), 0);
+      ASSERT_EQ(noisy_point_indices.count(inlier_index), 0);
     }
   }
 }
