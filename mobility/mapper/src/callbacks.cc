@@ -44,9 +44,6 @@ void MapperNodelet::PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg) {
   globals_.pcl_queue.push(new_pcl);
   if (globals_.pcl_queue.size() > max_queue_size)
     globals_.pcl_queue.pop();
-
-  // signal octomap thread to process new pcl data
-  CollisionCheckTask();
 }
 
 
