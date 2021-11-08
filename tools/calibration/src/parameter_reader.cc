@@ -53,6 +53,7 @@ void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, Rep
   LoadOptimizationParams(config, params.optimization, "reprojection_");
   LoadRansacPnPParams(config, params.ransac_pnp);
   params.optimize_estimate = mc::LoadBool(config, "reprojection_optimize_estimate");
+  params.max_inlier_threshold = mc::LoadDouble(config, "reprojection_max_inlier_threshold");
 }
 
 void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,

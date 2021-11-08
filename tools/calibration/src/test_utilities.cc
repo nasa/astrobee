@@ -51,6 +51,7 @@ ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams() {
   params.optimization = DefaultOptimizationParams();
   params.ransac_pnp = DefaultRansacPnPParams();
   params.optimize_estimate = true;
+  params.max_inlier_threshold = 3.0;
   return params;
 }
 

@@ -26,6 +26,7 @@ struct ReprojectionPoseEstimateParams {
   OptimizationParams optimization;
   RansacPnPParams ransac_pnp;
   bool optimize_estimate;
+  double max_inlier_threshold;
 };
 }  // namespace calibration
 

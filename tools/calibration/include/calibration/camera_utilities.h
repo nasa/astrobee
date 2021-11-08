@@ -274,9 +274,8 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
 
   std::vector<int> inliers;
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
-  // TODO(rsoussan): Use different max inlier threshold? Add another param?
-  Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, optimized_estimate,
-                     params.ransac_pnp.max_inlier_threshold, inliers);
+  Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, optimized_estimate, params.max_inlier_threshold,
+                     inliers);
   return std::make_pair(optimized_estimate, inliers);
 }
 
