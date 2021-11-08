@@ -42,7 +42,7 @@ RansacPnPParams DefaultRansacPnPParams() {
   params.min_num_inliers = 4;
   // TODO(rsoussan): Change this to p3p when p3p bug or opencv version fixed
   // Currenty p3p leads to significant errors even with perfect data
-  params.pnp_method = cv::SOLVEPNP_ITERATIVE;
+  params.pnp_method = cv::SOLVEPNP_EPNP;  // cv::SOLVEPNP_ITERATIVE;
   return params;
 }
 
@@ -54,25 +54,12 @@ ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams() {
   return params;
 }
 
-RandomRegistrationCorrespondences::RandomRegistrationCorrespondences() {
-  static constexpr double x_min = -10.0;
-  static constexpr double x_max = 10.0;
-  static constexpr double y_min = -10.0;
-  static constexpr double y_max = 10.0;
-  static constexpr double z_min = 0.1;
-  static constexpr double z_max = 30.0;
-
-  static constexpr double yaw_min = -45.0;
-  static constexpr double yaw_max = 45.0;
-  static constexpr double pitch_min = -45.0;
-  static constexpr double pitch_max = 45.0;
-  static constexpr double roll_min = -15.0;
-  static constexpr double roll_max = 15.0;
-
-  camera_T_target_ = RandomFrontFacingPose(x_min, x_max, y_min, y_max, z_min, z_max, yaw_min, yaw_max, pitch_min,
-                                           pitch_max, roll_min, roll_max);
+RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target,
+                                                         const Eigen::Matrix3d& intrinsics)
+    : camera_T_target_(camera_T_target), intrinsics_(intrinsics) {
+  /* camera_T_target_ = RandomFrontFacingPose();
   intrinsics_ = lc::RandomIntrinsics();
-  /*intrinsics_ = Eigen::Matrix3d::Identity();
+  intrinsics_ = Eigen::Matrix3d::Identity();
   intrinsics_(0, 0) = 500;
   intrinsics_(1, 1) = 500;
   intrinsics_(0, 2) = 500;
@@ -87,7 +74,7 @@ RandomRegistrationCorrespondences::RandomRegistrationCorrespondences() {
   }
 }
 
-std::vector<Eigen::Vector3d> RandomRegistrationCorrespondences::TargetPoints() {
+std::vector<Eigen::Vector3d> RegistrationCorrespondences::TargetPoints() {
   static constexpr double kRowSpacing = 0.1;
   static constexpr double kColSpacing = 0.1;
   static constexpr int kNumPointsPerRow = 3;  // 10;
@@ -100,6 +87,25 @@ std::vector<Eigen::Vector3d> RandomRegistrationCorrespondences::TargetPoints() {
     }
   }
   return target_points;
+}
+
+Eigen::Isometry3d RandomFrontFacingPose() {
+  static constexpr double x_min = -10.0;
+  static constexpr double x_max = 10.0;
+  static constexpr double y_min = -10.0;
+  static constexpr double y_max = 10.0;
+  static constexpr double z_min = 0.1;
+  static constexpr double z_max = 30.0;
+
+  static constexpr double yaw_min = -45.0;
+  static constexpr double yaw_max = 45.0;
+  static constexpr double pitch_min = 0;  // -45.0;
+  static constexpr double pitch_max = 0;  // 45.0;
+  static constexpr double roll_min = 0;   // -15.0;
+  static constexpr double roll_max = 0;   // 15.0;
+
+  return RandomFrontFacingPose(x_min, x_max, y_min, y_max, z_min, z_max, yaw_min, yaw_max, pitch_min, pitch_max,
+                               roll_min, roll_max);
 }
 
 Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, const double y_min, const double y_max,

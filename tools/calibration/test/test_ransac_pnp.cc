@@ -30,10 +30,10 @@
 namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
-TEST(UtilitiesTester, Isometry3dToVectorToIsometry3d) {
+TEST(RansacPnPTester, RansacPnP) {
   const auto params = ca::DefaultRansacPnPParams();
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RandomRegistrationCorrespondences();
+    const auto correspondences = ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics());
     const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
@@ -45,3 +45,12 @@ TEST(UtilitiesTester, Isometry3dToVectorToIsometry3d) {
     ASSERT_TRUE(pose_estimate->first.matrix().isApprox(correspondences.camera_T_target().matrix(), tolerance));
   }
 }
+
+/*TEST(RansacPnPTester, Inliers) {
+const int num_inliers = Inliers<optimization_common::Identity>(const std::vector<Eigen::Vector2d>& image_points, const
+std::vector<Eigen::Vector3d>& points_3d, const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const
+Eigen::Isometry3d& pose_estimate, const double max_inlier_threshold, boost::optional<std::vector<int>&> inliers =
+boost::none);
+
+
+}*/
