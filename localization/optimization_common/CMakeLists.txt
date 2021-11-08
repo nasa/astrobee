@@ -35,13 +35,11 @@ create_library(TARGET ${PROJECT_NAME}
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_utilities
+  add_rostest_gtest(test_utilities_optimization_common
     test/test_utilities.test
     test/test_utilities.cc
   )
-  target_link_libraries(test_utilities
+  target_link_libraries(test_utilities_optimization_common
     localization_common optimization_common 
   )
 endif()
-
-#install_launch_files()

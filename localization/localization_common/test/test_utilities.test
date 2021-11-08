@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="optimization_common" type="test_utilities_optimization_common" test-name="test_utilities" />
+  <test pkg="localization_common" type="test_utilities_localization_common" test-name="test_utilities" />
 </launch>
