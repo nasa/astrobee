@@ -20,6 +20,7 @@
 
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/match_set.h>
+#include <calibration/state_parameters.h>
 #include <calibration/utilities.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
@@ -37,53 +38,6 @@
 #include <vector>
 
 namespace calibration {
-struct StateParameters {
-  bool operator==(const StateParameters& rhs) const {
-    bool equal = true;
-    equal &= focal_lengths.matrix().isApprox(rhs.focal_lengths.matrix(), 1e-6);
-    equal &= principal_points.matrix().isApprox(rhs.principal_points.matrix(), 1e-6);
-    equal &= distortion.matrix().isApprox(rhs.distortion.matrix(), 1e-6);
-    return equal;
-  }
-
-  Eigen::Vector2d focal_lengths;
-  Eigen::Vector2d principal_points;
-  Eigen::VectorXd distortion;
-};
-
-// Container for state parameters in vector form used during optimization
-struct OptimizationStateParameters {
-  void SetInitialStateParameters(const StateParameters& initial_state_parameters) {
-    focal_lengths = initial_state_parameters.focal_lengths;
-    principal_points = initial_state_parameters.principal_points;
-    distortion = initial_state_parameters.distortion;
-  }
-
-  void AddCameraTTarget(const Eigen::Isometry3d& camera_T_target) {
-    camera_T_targets.emplace_back(optimization_common::VectorFromIsometry3d(camera_T_target));
-  }
-
-  StateParameters OptimizedStateParameters() const {
-    StateParameters optimized_state_parameters;
-    optimized_state_parameters.focal_lengths = focal_lengths;
-    optimized_state_parameters.principal_points = principal_points;
-    optimized_state_parameters.distortion = distortion;
-    return optimized_state_parameters;
-  }
-
-  std::vector<Eigen::Isometry3d> OptimizedCameraTTargets() const {
-    std::vector<Eigen::Isometry3d> optimized_camera_T_targets;
-    for (const auto& camera_T_target : camera_T_targets)
-      optimized_camera_T_targets.emplace_back(optimization_common::Isometry3d(camera_T_target));
-    return optimized_camera_T_targets;
-  }
-
-  Eigen::Vector2d focal_lengths;
-  Eigen::Vector2d principal_points;
-  Eigen::VectorXd distortion;
-  std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
-};
-
 template <typename DISTORTER>
 class CameraTargetBasedIntrinsicsCalibrator {
  public:

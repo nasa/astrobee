@@ -17,6 +17,7 @@
  */
 
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
+#include <calibration/state_parameters.h>
 #include <calibration/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
@@ -32,6 +33,7 @@ namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
 
+// No Noise Tests
 TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsIdentityDistortionNoNoise) {
   const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
   const int num_points_per_set = 20;
@@ -106,4 +108,29 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
     ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
   }
 }
+
+// Noise Tests
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsIdentityDistortionWithNoise) {
+  const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  const int num_points_per_set = 20;
+  const int num_match_sets = 20;
+  const double focal_lengths_stddev = 1.0;
+  const double principal_points_stddev = 1.0;
+  const double distortion_stddev = 0.1;
+  for (int i = 0; i < 50; ++i) {
+    const auto intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = Eigen::VectorXd(1);
+    const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
+                                                                      principal_points_stddev, distortion_stddev);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomMatchSets<oc::IdentityDistorter>(num_match_sets, num_points_per_set, intrinsics);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+  }
+}
+
 // TODO(rsoussan): Add test with EstimateTargetPoseAndCalibrateIntrinsics once pnp issues are resolved

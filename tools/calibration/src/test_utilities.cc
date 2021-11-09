@@ -165,4 +165,14 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
   const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
   return lc::Isometry3d(Eigen::Vector3d(x, y, z), rotation);
 }
+
+StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
+                                          const double principal_points_stddev, const double distortion_stddev) {
+  StateParameters noisy_state_parameters;
+  noisy_state_parameters.focal_lengths = lc::AddNoiseToVector(state_parameters.focal_lengths, focal_lengths_stddev);
+  noisy_state_parameters.principal_points =
+    lc::AddNoiseToVector(state_parameters.principal_points, principal_points_stddev);
+  noisy_state_parameters.distortion = lc::AddNoiseToVector(state_parameters.distortion, distortion_stddev);
+  return noisy_state_parameters;
+}
 }  // namespace calibration

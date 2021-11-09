@@ -20,6 +20,7 @@
 
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/match_set.h>
+#include <calibration/state_parameters.h>
 #include <calibration/optimization_params.h>
 #include <calibration/ransac_pnp_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>
@@ -107,6 +108,9 @@ std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_po
   }
   return match_sets;
 }
+
+StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
+                                          const double principal_points_stddev, const double distortion_stddev);
 }  // namespace calibration
 
 #endif  // CALIBRATION_TEST_UTILITIES_H_

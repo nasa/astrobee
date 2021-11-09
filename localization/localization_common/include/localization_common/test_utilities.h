@@ -59,7 +59,7 @@ Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& 
 template <int N>
 Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev) {
   Eigen::Matrix<double, N, 1> noisy_vector = vector;
-  for (int i = 0; i < vector.cols; ++i) {
+  for (int i = 0; i < vector.cols(); ++i) {
     noisy_vector(i, 0) += Noise(noise_stddev);
   }
   return noisy_vector;
