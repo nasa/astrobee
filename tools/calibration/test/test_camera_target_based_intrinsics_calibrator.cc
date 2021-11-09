@@ -22,6 +22,8 @@
 #include <localization_common/test_utilities.h>
 #include <optimization_common/identity_distorter.h>
 #include <optimization_common/fov_distorter.h>
+#include <optimization_common/rad_distorter.h>
+#include <optimization_common/radtan_distorter.h>
 #include <optimization_common/utilities.h>
 
 #include <gtest/gtest.h>
@@ -34,7 +36,7 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
   const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
   const int num_points_per_set = 20;
   const int num_match_sets = 20;
-  for (int i = 0; i < 500; ++i) {
+  for (int i = 0; i < 50; ++i) {
     const auto intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
@@ -52,15 +54,12 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
   const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
   const int num_points_per_set = 20;
   const int num_match_sets = 20;
-  for (int i = 0; i < 500; ++i) {
+  for (int i = 0; i < 50; ++i) {
     const auto intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
-    true_state_parameters.distortion = Eigen::VectorXd(1);
-    // TODO(rsoussan): What should the range be for this?
-    // TODO(rsoussan): Add fcn in test utils to generate random fov eigen vectorxd!
-    true_state_parameters.distortion[0] = lc::RandomDouble(0, 3.0);
+    true_state_parameters.distortion = ca::RandomFovDistortion();
     ca::StateParameters calibrated_state_parameters;
     const auto match_sets = ca::RandomMatchSets<oc::FovDistorter>(num_match_sets, num_points_per_set, intrinsics,
                                                                   true_state_parameters.distortion);
@@ -70,4 +69,41 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
   }
 }
 
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsRadDistortionNoNoise) {
+  const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  const int num_points_per_set = 20;
+  const int num_match_sets = 20;
+  for (int i = 0; i < 50; ++i) {
+    const auto intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = ca::RandomRadDistortion();
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomMatchSets<oc::RadDistorter>(num_match_sets, num_points_per_set, intrinsics,
+                                                                  true_state_parameters.distortion);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
+    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+  }
+}
+
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsRadTanDistortionNoNoise) {
+  const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  const int num_points_per_set = 20;
+  const int num_match_sets = 20;
+  for (int i = 0; i < 50; ++i) {
+    const auto intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = ca::RandomRadTanDistortion();
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomMatchSets<oc::RadTanDistorter>(num_match_sets, num_points_per_set, intrinsics,
+                                                                     true_state_parameters.distortion);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadTanDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
+    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+  }
+}
 // TODO(rsoussan): Add test with EstimateTargetPoseAndCalibrateIntrinsics once pnp issues are resolved
