@@ -110,7 +110,8 @@ std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_po
 }
 
 StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
-                                          const double principal_points_stddev, const double distortion_stddev);
+                                          const double principal_points_stddev, const double distortion_stddev,
+                                          const bool ensure_distortion_positive = false);
 }  // namespace calibration
 
 #endif  // CALIBRATION_TEST_UTILITIES_H_

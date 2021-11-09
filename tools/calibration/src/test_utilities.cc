@@ -84,17 +84,17 @@ Eigen::VectorXd RandomFovDistortion() {
 
 Eigen::VectorXd RandomRadDistortion() {
   Eigen::VectorXd distortion(2);
-  distortion[0] = lc::RandomDouble(0.1, 3.0);
-  distortion[1] = lc::RandomDouble(0.1, 3.0);
+  distortion[0] = lc::RandomDouble(-1.0, 1.0);
+  distortion[1] = lc::RandomDouble(-1.0, 1.0);
   return distortion;
 }
 
 Eigen::VectorXd RandomRadTanDistortion() {
   Eigen::VectorXd distortion(4);
-  distortion[0] = lc::RandomDouble(0.1, 3.0);
-  distortion[1] = lc::RandomDouble(0.1, 3.0);
-  distortion[2] = lc::RandomDouble(0.1, 3.0);
-  distortion[3] = lc::RandomDouble(0.1, 3.0);
+  distortion[0] = lc::RandomDouble(-1.0, 1.0);
+  distortion[1] = lc::RandomDouble(-1.0, 1.0);
+  distortion[2] = lc::RandomDouble(-1.0, 1.0);
+  distortion[3] = lc::RandomDouble(-1.0, 1.0);
   return distortion;
 }
 
@@ -167,12 +167,18 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
 }
 
 StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
-                                          const double principal_points_stddev, const double distortion_stddev) {
+                                          const double principal_points_stddev, const double distortion_stddev,
+                                          const bool ensure_distortion_positive) {
   StateParameters noisy_state_parameters;
   noisy_state_parameters.focal_lengths = lc::AddNoiseToVector(state_parameters.focal_lengths, focal_lengths_stddev);
   noisy_state_parameters.principal_points =
     lc::AddNoiseToVector(state_parameters.principal_points, principal_points_stddev);
   noisy_state_parameters.distortion = lc::AddNoiseToVector(state_parameters.distortion, distortion_stddev);
+  if (ensure_distortion_positive) {
+    for (int i = 0; i < static_cast<int>(noisy_state_parameters.distortion.size()); ++i) {
+      if (noisy_state_parameters.distortion[i] < 0) noisy_state_parameters.distortion[i] = 0.0001;
+    }
+  }
   return noisy_state_parameters;
 }
 }  // namespace calibration

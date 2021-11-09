@@ -134,24 +134,30 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
     const auto match_sets = ca::RandomMatchSets<oc::IdentityDistorter>(num_match_sets, num_points_per_set, intrinsics);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
     calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
-    LogError("noisy focal: " << std::endl
-                             << noisy_state_parameters.focal_lengths.matrix() << std::endl
-                             << "pp: " << std::endl
-                             << noisy_state_parameters.principal_points.matrix() << std::endl
-                             << "d: " << std::endl
-                             << noisy_state_parameters.distortion.matrix());
-    LogError("csp focal: " << std::endl
-                           << calibrated_state_parameters.focal_lengths.matrix() << std::endl
-                           << "pp: " << std::endl
-                           << calibrated_state_parameters.principal_points.matrix() << std::endl
-                           << "d: " << std::endl
-                           << calibrated_state_parameters.distortion.matrix());
-    LogError("true focal: " << std::endl
-                            << true_state_parameters.focal_lengths.matrix() << std::endl
-                            << "pp: " << std::endl
-                            << true_state_parameters.principal_points.matrix() << std::endl
-                            << "d: " << std::endl
-                            << true_state_parameters.distortion.matrix());
+    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+  }
+}
+
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsFovDistortionWithNoise) {
+  auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  const int num_points_per_set = 20;
+  const int num_match_sets = 20;
+  const double focal_lengths_stddev = 1.0;
+  const double principal_points_stddev = 1.0;
+  const double distortion_stddev = 0.1;
+  for (int i = 0; i < 50; ++i) {
+    const auto intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = ca::RandomFovDistortion();
+    const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
+                                                                      principal_points_stddev, distortion_stddev, true);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomMatchSets<oc::FovDistorter>(num_match_sets, num_points_per_set, intrinsics,
+                                                                  true_state_parameters.distortion);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::FovDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
     ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
   }
 }
