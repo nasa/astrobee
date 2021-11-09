@@ -92,29 +92,27 @@ template <typename DISTORTER>
 void Calibrate(const ca::CameraTargetBasedIntrinsicsCalibratorParams& params,
                const std::vector<lc::ImageCorrespondences>& target_matches, const std::string& output_file) {
   ca::CameraTargetBasedIntrinsicsCalibrator<DISTORTER> calibrator(params);
-  const Eigen::Vector2d initial_focal_lengths = calibrator.params().camera_params->GetFocalVector();
-  const Eigen::Vector2d initial_principal_points = calibrator.params().camera_params->GetOpticalOffset();
-  const Eigen::VectorXd initial_distortion = calibrator.params().camera_params->GetDistortion();
-  Eigen::Vector2d calibrated_focal_lengths;
-  Eigen::Vector2d calibrated_principal_points;
-  Eigen::VectorXd calibrated_distortion;
-  calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_focal_lengths, initial_principal_points,
-                                                    initial_distortion, calibrated_focal_lengths,
-                                                    calibrated_principal_points, calibrated_distortion);
+  ca::StateParameters initial_state_parameters;
+  initial_state_parameters.focal_lengths = calibrator.params().camera_params->GetFocalVector();
+  initial_state_parameters.principal_points = calibrator.params().camera_params->GetOpticalOffset();
+  initial_state_parameters.distortion = calibrator.params().camera_params->GetDistortion();
+  ca::StateParameters calibrated_state_parameters;
+  calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_state_parameters,
+                                                    calibrated_state_parameters);
   if (params.calibrate_focal_lengths) {
-    LogInfo("initial focal lengths: " << std::endl << initial_focal_lengths.matrix());
-    LogInfo("calibrated focal lengths: " << std::endl << calibrated_focal_lengths.matrix());
+    LogInfo("initial focal lengths: " << std::endl << initial_state_parameters.focal_lengths.matrix());
+    LogInfo("calibrated focal lengths: " << std::endl << calibrated_state_parameters.focal_lengths.matrix());
   }
   if (params.calibrate_principal_points) {
-    LogInfo("initial principal points: " << std::endl << initial_principal_points.matrix());
-    LogInfo("calibrated principal points: " << std::endl << calibrated_principal_points.matrix());
+    LogInfo("initial principal points: " << std::endl << initial_state_parameters.principal_points.matrix());
+    LogInfo("calibrated principal points: " << std::endl << calibrated_state_parameters.principal_points.matrix());
   }
   if (params.calibrate_distortion) {
-    LogInfo("initial distortion: " << std::endl << initial_distortion.matrix());
-    LogInfo("calibrated distortion: " << std::endl << calibrated_distortion.matrix());
+    LogInfo("initial distortion: " << std::endl << initial_state_parameters.distortion.matrix());
+    LogInfo("calibrated distortion: " << std::endl << calibrated_state_parameters.distortion.matrix());
   }
-  WriteCalibrationResultsToFile(calibrated_focal_lengths, calibrated_principal_points, calibrated_distortion,
-                                output_file);
+  WriteCalibrationResultsToFile(calibrated_state_parameters.focal_lengths, calibrated_state_parameters.principal_points,
+                                calibrated_state_parameters.distortion, output_file);
 }
 
 int main(int argc, char** argv) {
