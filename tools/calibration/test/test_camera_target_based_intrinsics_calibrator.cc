@@ -62,7 +62,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
     // TODO(rsoussan): Add fcn in test utils to generate random fov eigen vectorxd!
     true_state_parameters.distortion[0] = lc::RandomDouble(0, 3.0);
     ca::StateParameters calibrated_state_parameters;
-    const auto match_sets = ca::RandomMatchSets<oc::FovDistorter>(num_match_sets, num_points_per_set, intrinsics);
+    const auto match_sets = ca::RandomMatchSets<oc::FovDistorter>(num_match_sets, num_points_per_set, intrinsics,
+                                                                  true_state_parameters.distortion);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::FovDistorter> calibrator(params);
     calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
     ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
