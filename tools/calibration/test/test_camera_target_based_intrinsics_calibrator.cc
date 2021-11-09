@@ -29,18 +29,33 @@ namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
 
-TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsIdentityDistortion) {
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsIdentityDistortionNoNoise) {
   const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
-  const double initial_estimate_translation_noise = 0.1;
-  const double initial_estimate_rotation_noise = 0.1;
-  const int num_points = 20;
+  const int num_points_per_set = 20;
+  const int num_match_sets = 20;
   for (int i = 0; i < 500; ++i) {
     const auto intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
-    true_state_parameters.distortion = Eigen::VectorXd(0);
+    true_state_parameters.distortion = Eigen::VectorXd(1);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomMatchSets(num_match_sets, num_points_per_set, intrinsics);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
+    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+  }
+}
+
+/*TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsIdentityDistortionNoisyIntrinsics)
+{ const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams(); const int num_points_per_set = 20; const
+int num_match_sets = 20; for (int i = 0; i < 500; ++i) { const auto intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = Eigen::VectorXd(1);
     ca::StateParameters noisy_state_parameters;
+    ca::StateParameters calibrated_state_parameters;
     // TODO(rsoussan): use loc common, get true state params, add noise to these
     const auto match_sets = ca::RandomMatchSets(num_match_sets, num_points_per_set, intrinsics);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
@@ -48,6 +63,6 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
     calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
     ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
   }
-}
+}*/
 
 // TODO(rsoussan): Add test with EstimateTargetPoseAndCalibrateIntrinsics once pnp issues are resolved
