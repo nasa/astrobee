@@ -76,6 +76,28 @@ CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCa
   return params;
 }
 
+Eigen::VectorXd RandomFovDistortion() {
+  Eigen::VectorXd distortion(1);
+  distortion[0] = lc::RandomDouble(0.1, 3.0);
+  return distortion;
+}
+
+Eigen::VectorXd RandomRadDistortion() {
+  Eigen::VectorXd distortion(2);
+  distortion[0] = lc::RandomDouble(0.1, 3.0);
+  distortion[1] = lc::RandomDouble(0.1, 3.0);
+  return distortion;
+}
+
+Eigen::VectorXd RandomRadTanDistortion() {
+  Eigen::VectorXd distortion(4);
+  distortion[0] = lc::RandomDouble(0.1, 3.0);
+  distortion[1] = lc::RandomDouble(0.1, 3.0);
+  distortion[2] = lc::RandomDouble(0.1, 3.0);
+  distortion[3] = lc::RandomDouble(0.1, 3.0);
+  return distortion;
+}
+
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col, const double row_spacing,
                                           const double col_spacing) {
   std::vector<Eigen::Vector3d> target_points;
