@@ -33,8 +33,8 @@ TEST(CameraUtilitiesTester, Inliers) {
   const int num_points = 20;
   const double inlier_threshold = 3.0;
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(),
-                                                                 ca::RandomFrontFacingPoints(num_points));
+    const auto correspondences = ca::RegistrationCorrespondences<oc::IdentityDistorter>(
+      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_points));
 
     std::vector<Eigen::Vector2d> noisy_image_points;
     std::unordered_set<int> noisy_point_indices;

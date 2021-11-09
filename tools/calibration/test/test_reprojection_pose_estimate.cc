@@ -37,8 +37,8 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsAndRa
   // Fill inliers with all indices
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(),
-                                                                 ca::RandomFrontFacingPoints(num_points));
+    const auto correspondences = ca::RegistrationCorrespondences<oc::IdentityDistorter>(
+      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_points));
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::IdentityDistorter>(
@@ -59,8 +59,8 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsTarge
   // Fill inliers with all indices
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences =
-      ca::RegistrationCorrespondences(ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints(10, 10));
+    const auto correspondences = ca::RegistrationCorrespondences<oc::IdentityDistorter>(
+      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::TargetPoints(10, 10));
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::IdentityDistorter>(

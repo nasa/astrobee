@@ -46,13 +46,16 @@ std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
 
 Eigen::Vector3d RandomFrontFacingPoint();
 
+template <typename DISTORTER>
 std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
-                                      const Eigen::Matrix3d& intrinsics);
-
+                                      const Eigen::Matrix3d& intrinsics,
+                                      const Eigen::VectorXd& distortion = Eigen::VectorXd());
+template <typename DISTORTER>
 class RegistrationCorrespondences {
  public:
   RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target, const Eigen::Matrix3d& intrinsics,
-                              const std::vector<Eigen::Vector3d>& target_t_target_point);
+                              const std::vector<Eigen::Vector3d>& target_t_target_point,
+                              const Eigen::VectorXd& distortion = Eigen::VectorXd());
 
   const localization_common::ImageCorrespondences& correspondences() const { return correspondences_; }
 
@@ -65,6 +68,35 @@ class RegistrationCorrespondences {
   Eigen::Isometry3d camera_T_target_;
   Eigen::Matrix3d intrinsics_;
 };
+
+template <typename DISTORTER>
+RegistrationCorrespondences<DISTORTER>::RegistrationCorrespondences(
+  const Eigen::Isometry3d& camera_T_target, const Eigen::Matrix3d& intrinsics,
+  const std::vector<Eigen::Vector3d>& target_t_target_points, const Eigen::VectorXd& distortion)
+    : camera_T_target_(camera_T_target), intrinsics_(intrinsics) {
+  for (const auto& target_t_target_point : target_t_target_points) {
+    const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
+    if (camera_t_target_point.z() <= 0) continue;
+    const Eigen::Vector2d image_point =
+      Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics_, distortion);
+    correspondences_.AddCorrespondence(image_point, target_t_target_point);
+  }
+}
+
+template <typename DISTORTER>
+std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
+                                      const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
+  std::vector<int> inliers(num_points_per_set);
+  std::iota(inliers.begin(), inliers.end(), 0);
+  std::vector<MatchSet> match_sets;
+  match_sets.reserve(num_match_sets);
+  for (int i = 0; i < num_match_sets; ++i) {
+    const auto correspondences = RegistrationCorrespondences<DISTORTER>(
+      RandomFrontFacingPose(), intrinsics, RandomFrontFacingPoints(num_points_per_set), distortion);
+    match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
+  }
+  return match_sets;
+}
 }  // namespace calibration
 
 #endif  // CALIBRATION_TEST_UTILITIES_H_

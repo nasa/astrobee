@@ -40,12 +40,30 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
     true_state_parameters.distortion = Eigen::VectorXd(1);
     ca::StateParameters calibrated_state_parameters;
-    const auto match_sets = ca::RandomMatchSets(num_match_sets, num_points_per_set, intrinsics);
+    const auto match_sets = ca::RandomMatchSets<oc::IdentityDistorter>(num_match_sets, num_points_per_set, intrinsics);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
     calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
     ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
   }
 }
+
+/*TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsFovDistortionNoNoise) {
+  const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  const int num_points_per_set = 20;
+  const int num_match_sets = 20;
+  for (int i = 0; i < 500; ++i) {
+    const auto intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = Eigen::VectorXd(1);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomMatchSets(num_match_sets, num_points_per_set, intrinsics);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, true_state_parameters, calibrated_state_parameters);
+    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+  }
+}*/
 
 /*TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsIdentityDistortionNoisyIntrinsics)
 { const auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams(); const int num_points_per_set = 20; const

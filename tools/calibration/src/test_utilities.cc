@@ -76,18 +76,6 @@ CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCa
   return params;
 }
 
-RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target,
-                                                         const Eigen::Matrix3d& intrinsics,
-                                                         const std::vector<Eigen::Vector3d>& target_t_target_points)
-    : camera_T_target_(camera_T_target), intrinsics_(intrinsics) {
-  for (const auto& target_t_target_point : target_t_target_points) {
-    const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
-    if (camera_t_target_point.z() <= 0) continue;
-    const Eigen::Vector2d image_point = Project3dPointToImageSpace(camera_t_target_point, intrinsics_);
-    correspondences_.AddCorrespondence(image_point, target_t_target_point);
-  }
-}
-
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col, const double row_spacing,
                                           const double col_spacing) {
   std::vector<Eigen::Vector3d> target_points;
@@ -154,19 +142,5 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
   const double roll = lc::RandomDouble(roll_min, roll_max);
   const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
   return lc::Isometry3d(Eigen::Vector3d(x, y, z), rotation);
-}
-
-std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
-                                      const Eigen::Matrix3d& intrinsics) {
-  std::vector<int> inliers(num_points_per_set);
-  std::iota(inliers.begin(), inliers.end(), 0);
-  std::vector<MatchSet> match_sets;
-  match_sets.reserve(num_match_sets);
-  for (int i = 0; i < num_match_sets; ++i) {
-    const auto correspondences =
-      RegistrationCorrespondences(RandomFrontFacingPose(), intrinsics, RandomFrontFacingPoints(num_points_per_set));
-    match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
-  }
-  return match_sets;
 }
 }  // namespace calibration
