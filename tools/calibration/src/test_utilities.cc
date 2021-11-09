@@ -155,4 +155,18 @@ Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, 
   const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
   return lc::Isometry3d(Eigen::Vector3d(x, y, z), rotation);
 }
+
+std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
+                                      const Eigen::Matrix3d& intrinsics) {
+  std::vector<int> inliers(num_points_per_set);
+  std::iota(inliers.begin(), inliers.end(), 0);
+  std::vector<MatchSet> match_sets;
+  match_sets.reserve(num_match_sets);
+  for (int i = 0; i < num_match_sets; ++i) {
+    const auto correspondences =
+      RegistrationCorrespondences(RandomFrontFacingPose(), intrinsics, RandomFrontFacingPoints(num_points_per_set));
+    match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
+  }
+  return match_sets;
+}
 }  // namespace calibration

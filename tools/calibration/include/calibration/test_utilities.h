@@ -19,6 +19,7 @@
 #define CALIBRATION_TEST_UTILITIES_H_
 
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
+#include <calibration/match_set.h>
 #include <calibration/optimization_params.h>
 #include <calibration/ransac_pnp_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>
@@ -44,6 +45,9 @@ std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int po
 std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
 
 Eigen::Vector3d RandomFrontFacingPoint();
+
+std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
+                                      const Eigen::Matrix3d& intrinsics);
 
 class RegistrationCorrespondences {
  public:

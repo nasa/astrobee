@@ -291,9 +291,10 @@ template <typename DISTORTER>
 boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPoseEstimate(
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params) {
-  const auto focal_lengths_and_principal_points = localization_common::FocalLengthsAndPrincipalPoints(intrinsics);
-  return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths_and_principal_points.first,
-                                             focal_lengths_and_principal_points.second, distortion, params);
+  const auto focal_lengths = localization_common::FocalLengths(intrinsics);
+  const auto principal_points = localization_common::PrincipalPoints(intrinsics);
+  return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
+                                             params);
 }
 
 template <typename DISTORTER>
@@ -301,10 +302,10 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> ReprojectionPose
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params,
   const Eigen::Isometry3d& initial_estimate, const std::vector<int>& initial_inliers) {
-  const auto focal_lengths_and_principal_points = localization_common::FocalLengthsAndPrincipalPoints(intrinsics);
+  const auto focal_lengths = localization_common::FocalLengths(intrinsics);
+  const auto principal_points = localization_common::PrincipalPoints(intrinsics);
   return ReprojectionPoseEstimateWithInitialEstimate<DISTORTER>(
-    image_points, points_3d, focal_lengths_and_principal_points.first, focal_lengths_and_principal_points.second,
-    distortion, params, initial_estimate, initial_inliers);
+    image_points, points_3d, focal_lengths, principal_points, distortion, params, initial_estimate, initial_inliers);
 }
 }  // namespace calibration
 #endif  // CALIBRATION_CAMERA_UTILITIES_H_
