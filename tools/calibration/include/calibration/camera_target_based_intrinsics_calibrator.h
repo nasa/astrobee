@@ -108,8 +108,8 @@ class CameraTargetBasedIntrinsicsCalibrator {
                                                           const std::vector<int>& inliers) const;
 
   CameraTargetBasedIntrinsicsCalibratorParams params_;
-  ceres::Problem problem_;
   OptimizationStateParameters state_parameters_;
+  ceres::Problem problem_;
   // Keep track of correspondences used to create final reprojection image
   std::vector<localization_common::ImageCorrespondences> valid_correspondences_set_;
 };
@@ -151,7 +151,9 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
                                                                  const StateParameters& initial_state_parameters,
                                                                  StateParameters& calibrated_state_parameters) {
   Initialize(initial_state_parameters);
-
+  // Reserve so that pointers aren't modified while new target poses are added.
+  // This can mess up ceres::Problem since it relies on pointers of add parameters.
+  state_parameters_.camera_T_targets.reserve(match_sets.size());
   // Add residuals to problem
   for (const auto& match_set : match_sets) {
     AddCameraTTargetParameter(match_set.pose_estimate);
