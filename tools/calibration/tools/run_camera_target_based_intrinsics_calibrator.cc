@@ -89,25 +89,25 @@ void WriteCalibrationResultsToFile(const Eigen::Vector2d& focal_lengths, const E
 }
 
 template <typename DISTORTER>
-void Calibrate(const ca::CameraTargetBasedIntrinsicsCalibratorParams& params,
-               const std::vector<lc::ImageCorrespondences>& target_matches, const std::string& output_file) {
-  ca::CameraTargetBasedIntrinsicsCalibrator<DISTORTER> calibrator(params);
+void Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::ImageCorrespondences>& target_matches,
+               const std::string& output_file) {
+  ca::CameraTargetBasedIntrinsicsCalibrator<DISTORTER> calibrator(params.camera_target_based_intrinsics_calibrator);
   ca::StateParameters initial_state_parameters;
-  initial_state_parameters.focal_lengths = calibrator.params().camera_params->GetFocalVector();
-  initial_state_parameters.principal_points = calibrator.params().camera_params->GetOpticalOffset();
-  initial_state_parameters.distortion = calibrator.params().camera_params->GetDistortion();
+  initial_state_parameters.focal_lengths = params.camera_params->GetFocalVector();
+  initial_state_parameters.principal_points = params.camera_params->GetOpticalOffset();
+  initial_state_parameters.distortion = params.camera_params->GetDistortion();
   ca::StateParameters calibrated_state_parameters;
   calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_state_parameters,
                                                     calibrated_state_parameters);
-  if (params.calibrate_focal_lengths) {
+  if (params.camera_target_based_intrinsics_calibrator.calibrate_focal_lengths) {
     LogInfo("initial focal lengths: " << std::endl << initial_state_parameters.focal_lengths.matrix());
     LogInfo("calibrated focal lengths: " << std::endl << calibrated_state_parameters.focal_lengths.matrix());
   }
-  if (params.calibrate_principal_points) {
+  if (params.camera_target_based_intrinsics_calibrator.calibrate_principal_points) {
     LogInfo("initial principal points: " << std::endl << initial_state_parameters.principal_points.matrix());
     LogInfo("calibrated principal points: " << std::endl << calibrated_state_parameters.principal_points.matrix());
   }
-  if (params.calibrate_distortion) {
+  if (params.camera_target_based_intrinsics_calibrator.calibrate_distortion) {
     LogInfo("initial distortion: " << std::endl << initial_state_parameters.distortion.matrix());
     LogInfo("calibrated distortion: " << std::endl << calibrated_state_parameters.distortion.matrix());
   }
@@ -171,11 +171,11 @@ int main(int argc, char** argv) {
     LoadAllTargetMatches(corners_directory, params.camera_target_based_intrinsics_calibrator.max_num_match_sets);
   LogInfo("Number of target match sets: " << target_matches.size());
   if (params.distortion_type == "fov") {
-    Calibrate<oc::FovDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
+    Calibrate<oc::FovDistorter>(params, target_matches, output_file);
   } else if (params.distortion_type == "rad") {
-    Calibrate<oc::RadDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
+    Calibrate<oc::RadDistorter>(params, target_matches, output_file);
   } else if (params.distortion_type == "radtan") {
-    Calibrate<oc::RadTanDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
+    Calibrate<oc::RadTanDistorter>(params, target_matches, output_file);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

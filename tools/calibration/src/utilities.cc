@@ -27,13 +27,13 @@ namespace calibration {
 namespace lc = localization_common;
 namespace oc = optimization_common;
 
-void PrintCameraTTargetsStats(const std::vector<Eigen::Isometry3d>& initial_camera_T_targets,
-                              const std::vector<Eigen::Matrix<double, 6, 1>>& optimized_camera_T_targets) {
+void PrintCameraTTargetsStats(const std::vector<MatchSet>& match_sets,
+                              const std::vector<Eigen::Isometry3d>& optimized_camera_T_targets) {
   lc::Averager position_diff_norm_averager("Initial vs. optimized camera_T_target position diff norm");
   lc::Averager rotation_diff_averager("Initial vs. optimized camera_T_target rotation diff");
-  for (int i = 0; i < static_cast<int>(initial_camera_T_targets.size()); ++i) {
-    const auto& initial_camera_T_target = initial_camera_T_targets[i];
-    const Eigen::Isometry3d optimized_camera_T_target = oc::Isometry3d(optimized_camera_T_targets[i]);
+  for (int i = 0; i < static_cast<int>(match_sets.size()); ++i) {
+    const Eigen::Isometry3d& initial_camera_T_target = match_sets[i].pose_estimate;
+    const Eigen::Isometry3d& optimized_camera_T_target = optimized_camera_T_targets[i];
     const double position_diff_norm =
       (initial_camera_T_target.translation() - optimized_camera_T_target.translation()).norm();
     position_diff_norm_averager.Update(position_diff_norm);

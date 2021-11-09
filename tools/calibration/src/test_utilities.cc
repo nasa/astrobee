@@ -69,6 +69,7 @@ CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCa
   params.max_num_match_sets = 10000000;
   params.min_num_target_inliers = 4;
   params.save_individual_initial_reprojection_images = false;
+  params.save_final_reprojection_image = false;
   params.max_visualization_error_norm = 50;
   params.individual_max_visualization_error_norm = 50;
   params.image_size = Eigen::Vector2i(1280, 960);

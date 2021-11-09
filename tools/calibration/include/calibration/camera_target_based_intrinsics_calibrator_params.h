@@ -44,12 +44,9 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   int min_num_target_inliers;
   int max_visualization_error_norm;
   bool save_individual_initial_reprojection_images;
+  bool save_final_reprojection_image;
   double individual_max_visualization_error_norm;
   Eigen::Vector2i image_size;
-  std::shared_ptr<camera::CameraParameters> camera_params;
-  std::string camera_name;
-  // fov, rad, or radtan
-  std::string distortion_type;
 };
 }  // namespace calibration
 

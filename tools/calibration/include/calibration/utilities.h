@@ -19,6 +19,7 @@
 #define CALIBRATION_UTILITIES_H_
 
 #include <calibration/camera_utilities.h>
+#include <calibration/match_set.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 #include <optimization_common/utilities.h>
@@ -38,8 +39,8 @@
 #include <vector>
 
 namespace calibration {
-void PrintCameraTTargetsStats(const std::vector<Eigen::Isometry3d>& initial_camera_T_targets,
-                              const std::vector<Eigen::Matrix<double, 6, 1>>& optimized_camera_T_targets);
+void PrintCameraTTargetsStats(const std::vector<MatchSet>& match_sets,
+                              const std::vector<Eigen::Isometry3d>& optimized_camera_T_targets);
 
 template <typename DISTORTER>
 void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
@@ -49,7 +50,7 @@ void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
                            const std::string& name);
 
 template <typename DISTORTER>
-void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
+void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Isometry3d>& camera_T_targets,
                                          const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                                          const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
                                          const Eigen::Vector2i& image_size,
@@ -101,7 +102,7 @@ void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
 }
 
 template <typename DISTORTER>
-void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double, 6, 1>>& camera_T_targets,
+void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Isometry3d>& camera_T_targets,
                                          const std::vector<localization_common::ImageCorrespondences>& valid_match_sets,
                                          const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
                                          const Eigen::Vector2i& image_size, const double max_visualization_error_norm) {
@@ -112,7 +113,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
   errors_file.open("errors_file.txt");
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
-    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3d(camera_T_targets[i]);
+    const Eigen::Isometry3d camera_T_target = camera_T_targets[i];
     for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
       const auto& image_point = match_set.image_points[j];
       const auto& target_point = match_set.points_3d[j];
@@ -141,7 +142,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Matrix<double,
   cv::Mat relative_reprojection_image_grayscale(image_size.y(), image_size.x(), CV_8UC1, cv::Scalar(0));
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
-    const Eigen::Isometry3d camera_T_target = optimization_common::Isometry3d(camera_T_targets[i]);
+    const Eigen::Isometry3d camera_T_target = camera_T_targets[i];
     for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
       const auto& image_point = match_set.image_points[j];
       const auto& target_point = match_set.points_3d[j];
