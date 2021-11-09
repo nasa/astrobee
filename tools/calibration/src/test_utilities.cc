@@ -55,6 +55,30 @@ ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams() {
   return params;
 }
 
+CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCalibratorParams() {
+  CameraTargetBasedIntrinsicsCalibratorParams params;
+  params.optimization = DefaultOptimizationParams();
+  params.reprojection_pose_estimate = DefaultReprojectionPoseEstimateParams();
+  params.calibrate_focal_lengths = true;
+  params.calibrate_principal_points = true;
+  params.calibrate_distortion = true;
+  params.calibrate_target_poses = true;
+  params.scale_loss_radially = false;
+  params.radial_scale_power = 1.0;
+  params.only_use_inliers = true;
+  params.max_num_match_sets = 10000000;
+  params.min_num_target_inliers = 4;
+  params.save_individual_initial_reprojection_images = false;
+
+  /*  int max_visualization_error_norm;
+    double individual_max_visualization_error_norm;
+    Eigen::Vector2i image_size;
+    std::shared_ptr<camera::CameraParameters> camera_params;
+    std::string camera_name;
+    // fov, rad, or radtan
+    std::string distortion_type;*/
+}
+
 RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target,
                                                          const Eigen::Matrix3d& intrinsics,
                                                          const std::vector<Eigen::Vector3d>& target_t_target_points)

@@ -30,6 +30,7 @@ namespace calibration {
 OptimizationParams DefaultOptimizationParams();
 RansacPnPParams DefaultRansacPnPParams();
 ReprojectionPoseEstimateParams DefaultReprojectionPoseEstimateParams();
+CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCalibratorParams();
 Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, const double y_min, const double y_max,
                                         const double z_min, const double z_max, const double yaw_min,
                                         const double yaw_max, const double pitch_min, const double pitch_max,

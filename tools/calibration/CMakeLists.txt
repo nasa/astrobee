@@ -67,4 +67,11 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_camera_utilities
     calibration localization_common optimization_common 
   )
+  add_rostest_gtest(test_camera_target_based_intrinsics_calibrator
+    test/test_camera_target_based_intrinsics_calibrator.test
+    test/test_camera_target_based_intrinsics_calibrator.cc
+  )
+  target_link_libraries(test_camera_target_based_intrinsics_calibrator
+    calibration localization_common optimization_common 
+  )
 endif()

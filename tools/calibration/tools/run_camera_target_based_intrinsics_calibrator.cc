@@ -161,8 +161,8 @@ int main(int argc, char** argv) {
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  ca::CameraTargetBasedIntrinsicsCalibratorParams params;
-  LoadCalibratorParams(config, params);
+  ca::RunCalibratorParams params;
+  LoadRunCalibratorParams(config, params);
 
   std::vector<lc::ImageCorrespondences> target_matches;
   if (!boost::filesystem::is_directory(corners_directory)) {
@@ -172,11 +172,11 @@ int main(int argc, char** argv) {
   target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
   LogInfo("Number of target match sets: " << target_matches.size());
   if (params.distortion_type == "fov") {
-    Calibrate<oc::FovDistorter>(params, target_matches, output_file);
+    Calibrate<oc::FovDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
   } else if (params.distortion_type == "rad") {
-    Calibrate<oc::RadDistorter>(params, target_matches, output_file);
+    Calibrate<oc::RadDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
   } else if (params.distortion_type == "radtan") {
-    Calibrate<oc::RadTanDistorter>(params, target_matches, output_file);
+    Calibrate<oc::RadTanDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

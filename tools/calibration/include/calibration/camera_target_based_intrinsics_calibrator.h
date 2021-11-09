@@ -102,6 +102,10 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
                                                                  Eigen::Vector2d& calibrated_focal_lengths,
                                                                  Eigen::Vector2d& calibrated_principal_points,
                                                                  Eigen::VectorXd& calibrated_distortion) {
+  // TODO(rsoussan): add optimization state parameters struct!
+  // add state parameters struct, use this to pass initial and calibrated data!
+  // add functions to optimization struct to initialize with state parameters struct and
+  // to set final parameters to state parameters struct!
   Eigen::Vector2d focal_lengths = initial_focal_lengths;
   Eigen::Vector2d principal_points = initial_principal_points;
   Eigen::VectorXd distortion = initial_distortion;
@@ -136,6 +140,7 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
     localization_common::ImageCorrespondences valid_correspondences;
+    // TODO(rsoussan): use ternary expression here
     if (params_.only_use_inliers) {
       valid_correspondences = InlierMatches(match_set.correspondences, match_set.inliers);
     } else {
@@ -159,8 +164,10 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
   calibrated_principal_points = principal_points;
   calibrated_distortion = distortion;
 
+  // TODO(rsoussan): pass match set instead of initial camera t targets here, remove initial camera t targets
   if (params_.calibrate_target_poses) PrintCameraTTargetsStats(initial_camera_T_targets, camera_T_targets);
 
+  // TODO(rsoussan): add option for saving final target image
   const Eigen::Matrix3d calibrated_intrinsics =
     optimization_common::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
   SaveReprojectionFromAllTargetsImage<DISTORTER>(camera_T_targets, valid_correspondences_set, calibrated_intrinsics,

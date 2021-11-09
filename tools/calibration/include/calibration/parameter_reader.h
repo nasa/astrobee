@@ -18,6 +18,7 @@
 #ifndef CALIBRATION_PARAMETER_READER_H_
 #define CALIBRATION_PARAMETER_READER_H_
 
+#include <calibration/run_calibrator_params.h>
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/optimization_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>
@@ -28,7 +29,10 @@
 #include <string>
 
 namespace calibration {
-void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBasedIntrinsicsCalibratorParams& params);
+void LoadRunCalibratorParams(config_reader::ConfigReader& config, RunCalibratorParams& params);
+
+void LoadCameraTargetBasedIntrinsicsCalibratorParams(config_reader::ConfigReader& config,
+                                                     CameraTargetBasedIntrinsicsCalibratorParams& params);
 
 void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params);
 

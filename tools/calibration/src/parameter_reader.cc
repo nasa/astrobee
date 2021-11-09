@@ -25,7 +25,15 @@
 namespace calibration {
 namespace mc = msg_conversions;
 
-void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBasedIntrinsicsCalibratorParams& params) {
+void LoadRunCalibratorParams(config_reader::ConfigReader& config, RunCalibratorParams& params) {
+  LoadCameraTargetBasedIntrinsicsCalibratorParams(config, params.camera_target_based_intrinsics_calibrator);
+  params.camera_name = mc::LoadString(config, "camera");
+  params.camera_params.reset(new camera::CameraParameters(&config, params.camera_name.c_str()));
+  params.distortion_type = mc::LoadString(config, "distortion_type");
+}
+
+void LoadCameraTargetBasedIntrinsicsCalibratorParams(config_reader::ConfigReader& config,
+                                                     CameraTargetBasedIntrinsicsCalibratorParams& params) {
   LoadOptimizationParams(config, params.optimization, "calibrator_");
   LoadReprojectionPoseEstimateParams(config, params.reprojection_pose_estimate);
   params.calibrate_focal_lengths = mc::LoadBool(config, "calibrate_focal_lengths");
@@ -44,9 +52,6 @@ void LoadCalibratorParams(config_reader::ConfigReader& config, CameraTargetBased
   const int image_width = mc::LoadInt(config, "image_width");
   const int image_height = mc::LoadInt(config, "image_height");
   params.image_size = Eigen::Vector2i(image_width, image_height);
-  params.camera_name = mc::LoadString(config, "camera");
-  params.camera_params.reset(new camera::CameraParameters(&config, params.camera_name.c_str()));
-  params.distortion_type = mc::LoadString(config, "distortion_type");
 }
 
 void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params) {
