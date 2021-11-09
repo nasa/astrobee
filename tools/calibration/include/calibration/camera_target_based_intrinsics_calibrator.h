@@ -188,10 +188,12 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Initialize(const StatePar
                                          !params_.calibrate_principal_points);
   optimization_common::AddParameterBlock(DISTORTER::kNumParams, state_parameters_.distortion.data(), problem_,
                                          !params_.calibrate_distortion);
-  if (params_.calibrate_focal_lengths) LogInfo("Calibrating focal lengths.");
-  if (params_.calibrate_principal_points) LogInfo("Calibrating principal points.");
-  if (params_.calibrate_distortion) LogInfo("Calibrating distortion.");
-  if (params_.calibrate_target_poses) LogInfo("Calibrating target poses.");
+  if (params_.optimization.verbose) {
+    if (params_.calibrate_focal_lengths) LogInfo("Calibrating focal lengths.");
+    if (params_.calibrate_principal_points) LogInfo("Calibrating principal points.");
+    if (params_.calibrate_distortion) LogInfo("Calibrating distortion.");
+    if (params_.calibrate_target_poses) LogInfo("Calibrating target poses.");
+  }
 }
 
 template <typename DISTORTER>
@@ -226,10 +228,12 @@ localization_common::ImageCorrespondences CameraTargetBasedIntrinsicsCalibrator<
 template <typename DISTORTER>
 void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::SaveResults(const StateParameters& calibrated_state_parameters,
                                                                    const std::vector<MatchSet>& match_sets) const {
-  if (!params_.calibrate_target_poses && !params_.save_final_reprojection_image) return;
+  if (!(params_.calibrate_target_poses && params_.optimization.verbose) && !params_.save_final_reprojection_image)
+    return;
 
   const auto calibrated_camera_T_targets = state_parameters_.OptimizedCameraTTargets();
-  if (params_.calibrate_target_poses) PrintCameraTTargetsStats(match_sets, calibrated_camera_T_targets);
+  if (params_.calibrate_target_poses && params_.optimization.verbose)
+    PrintCameraTTargetsStats(match_sets, calibrated_camera_T_targets);
 
   if (params_.save_final_reprojection_image) {
     const Eigen::Matrix3d calibrated_intrinsics = optimization_common::Intrinsics(
