@@ -42,7 +42,7 @@ struct CameraTargetBasedIntrinsicsCalibratorParams {
   bool only_use_inliers;
   int max_num_match_sets;
   int min_num_target_inliers;
-  int max_visualization_error_norm;
+  double max_visualization_error_norm;
   bool save_individual_initial_reprojection_images;
   bool save_final_reprojection_image;
   double individual_max_visualization_error_norm;
