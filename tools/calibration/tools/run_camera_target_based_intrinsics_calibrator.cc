@@ -98,8 +98,9 @@ void Calibrate(const ca::CameraTargetBasedIntrinsicsCalibratorParams& params,
   Eigen::Vector2d calibrated_focal_lengths;
   Eigen::Vector2d calibrated_principal_points;
   Eigen::VectorXd calibrated_distortion;
-  calibrator.Calibrate(target_matches, initial_focal_lengths, initial_principal_points, initial_distortion,
-                       calibrated_focal_lengths, calibrated_principal_points, calibrated_distortion);
+  calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_focal_lengths, initial_principal_points,
+                                                    initial_distortion, calibrated_focal_lengths,
+                                                    calibrated_principal_points, calibrated_distortion);
   if (params.calibrate_focal_lengths) {
     LogInfo("initial focal lengths: " << std::endl << initial_focal_lengths.matrix());
     LogInfo("calibrated focal lengths: " << std::endl << calibrated_focal_lengths.matrix());

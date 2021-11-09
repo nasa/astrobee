@@ -36,15 +36,29 @@
 #include <vector>
 
 namespace calibration {
+struct MatchSet {
+  MatchSet(const localization_common::ImageCorrespondences& correspondences, const Eigen::Isometry3d& pose_estimate,
+           const std::vector<int>& inliers)
+      : correspondences(correspondences), pose_estimate(pose_estimate), inliers(inliers) {}
+  localization_common::ImageCorrespondences correspondences;
+  Eigen::Isometry3d pose_estimate;
+  std::vector<int> inliers;
+};
+
 template <typename DISTORTER>
 class CameraTargetBasedIntrinsicsCalibrator {
  public:
   explicit CameraTargetBasedIntrinsicsCalibrator(const CameraTargetBasedIntrinsicsCalibratorParams& params)
       : params_(params) {}
-  void Calibrate(const std::vector<localization_common::ImageCorrespondences>& match_sets,
-                 const Eigen::Vector2d& initial_focal_lengths, const Eigen::Vector2d& initial_principal_points,
-                 const Eigen::VectorXd& initial_distortion, Eigen::Vector2d& calibrated_focal_lengths,
-                 Eigen::Vector2d& calibrated_principal_points, Eigen::VectorXd& calibrated_distortion);
+  void EstimateInitialTargetPosesAndCalibrate(
+    const std::vector<localization_common::ImageCorrespondences>& correspondences_set,
+    const Eigen::Vector2d& initial_focal_lengths, const Eigen::Vector2d& initial_principal_points,
+    const Eigen::VectorXd& initial_distortion, Eigen::Vector2d& calibrated_focal_lengths,
+    Eigen::Vector2d& calibrated_principal_points, Eigen::VectorXd& calibrated_distortion);
+  void Calibrate(const std::vector<MatchSet>& match_sets, const Eigen::Vector2d& initial_focal_lengths,
+                 const Eigen::Vector2d& initial_principal_points, const Eigen::VectorXd& initial_distortion,
+                 Eigen::Vector2d& calibrated_focal_lengths, Eigen::Vector2d& calibrated_principal_points,
+                 Eigen::VectorXd& calibrated_distortion);
 
   const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }
 
@@ -57,11 +71,37 @@ class CameraTargetBasedIntrinsicsCalibrator {
 };
 
 template <typename DISTORTER>
-void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
-  const std::vector<localization_common::ImageCorrespondences>& match_sets,
+void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPosesAndCalibrate(
+  const std::vector<localization_common::ImageCorrespondences>& correspondences_set,
   const Eigen::Vector2d& initial_focal_lengths, const Eigen::Vector2d& initial_principal_points,
   const Eigen::VectorXd& initial_distortion, Eigen::Vector2d& calibrated_focal_lengths,
   Eigen::Vector2d& calibrated_principal_points, Eigen::VectorXd& calibrated_distortion) {
+  std::vector<MatchSet> match_sets;
+  for (const auto& correspondences : correspondences_set) {
+    const auto camera_T_target = ReprojectionPoseEstimate<DISTORTER>(
+      correspondences.image_points, correspondences.points_3d, initial_focal_lengths, initial_principal_points,
+      initial_distortion, params_.reprojection_pose_estimate);
+
+    if (!camera_T_target) {
+      LogError("Failed to get camera_T_target with " << correspondences.points_3d.size() << " matches.");
+      continue;
+    }
+
+    match_sets.emplace_back(correspondences, camera_T_target->first, camera_T_target->second);
+  }
+
+  Calibrate(match_sets, initial_focal_lengths, initial_principal_points, initial_distortion, calibrated_focal_lengths,
+            calibrated_principal_points, calibrated_distortion);
+}
+
+template <typename DISTORTER>
+void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vector<MatchSet>& match_sets,
+                                                                 const Eigen::Vector2d& initial_focal_lengths,
+                                                                 const Eigen::Vector2d& initial_principal_points,
+                                                                 const Eigen::VectorXd& initial_distortion,
+                                                                 Eigen::Vector2d& calibrated_focal_lengths,
+                                                                 Eigen::Vector2d& calibrated_principal_points,
+                                                                 Eigen::VectorXd& calibrated_distortion) {
   Eigen::Vector2d focal_lengths = initial_focal_lengths;
   Eigen::Vector2d principal_points = initial_principal_points;
   Eigen::VectorXd distortion = initial_distortion;
@@ -80,42 +120,34 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
   std::vector<Eigen::Isometry3d> initial_camera_T_targets;
 
   const Eigen::Matrix3d initial_intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
-  std::vector<localization_common::ImageCorrespondences> valid_match_sets;
+  std::vector<localization_common::ImageCorrespondences> valid_correspondences_set;
   camera_T_targets.reserve(match_sets.size());
   for (const auto& match_set : match_sets) {
-    const auto camera_T_target =
-      ReprojectionPoseEstimate<DISTORTER>(match_set.image_points, match_set.points_3d, focal_lengths, principal_points,
-                                          distortion, params_.reprojection_pose_estimate);
-
-    if (!camera_T_target) {
-      LogError("Failed to get camera_T_target with " << match_set.points_3d.size() << " matches.");
-      continue;
-    }
-
-    camera_T_targets.emplace_back(optimization_common::VectorFromIsometry3d(camera_T_target->first));
-    initial_camera_T_targets.emplace_back(camera_T_target->first);
+    camera_T_targets.emplace_back(optimization_common::VectorFromIsometry3d(match_set.pose_estimate));
+    initial_camera_T_targets.emplace_back(match_set.pose_estimate);
     if (params_.save_individual_initial_reprojection_images) {
       static int image_count = 0;
-      SaveReprojectionImage<DISTORTER>(match_set.image_points, match_set.points_3d, camera_T_target->second,
-                                       initial_intrinsics, distortion, camera_T_target->first,
+      SaveReprojectionImage<DISTORTER>(match_set.correspondences.image_points, match_set.correspondences.points_3d,
+                                       match_set.inliers, initial_intrinsics, distortion, match_set.pose_estimate,
                                        params_.individual_max_visualization_error_norm,
                                        "reprojection_image_" + std::to_string(image_count++) + ".png");
     }
 
     problem.AddParameterBlock(camera_T_targets.back().data(), 6);
     if (!params_.calibrate_target_poses) problem.SetParameterBlockConstant(camera_T_targets.back().data());
-    localization_common::ImageCorrespondences valid_match_set;
+    localization_common::ImageCorrespondences valid_correspondences;
     if (params_.only_use_inliers) {
-      valid_match_set = InlierMatches(match_set, camera_T_target->second);
+      valid_correspondences = InlierMatches(match_set.correspondences, match_set.inliers);
     } else {
-      valid_match_set = match_set;
+      valid_correspondences = match_set.correspondences;
     }
-    valid_match_sets.emplace_back(valid_match_set);
-    for (int i = 0; i < static_cast<int>(match_set.image_points.size()) && i < params_.max_num_match_sets; ++i) {
-      const double radial_scale_factor = RadialScaleFactor(match_set.image_points[i], params_.image_size);
+    valid_correspondences_set.emplace_back(valid_correspondences);
+    for (int i = 0; i < static_cast<int>(valid_correspondences.image_points.size()) && i < params_.max_num_match_sets;
+         ++i) {
+      const double radial_scale_factor = RadialScaleFactor(valid_correspondences.image_points[i], params_.image_size);
       optimization_common::ReprojectionError<DISTORTER>::AddCostFunction(
-        match_set.image_points[i], match_set.points_3d[i], camera_T_targets.back(), focal_lengths, principal_points,
-        distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
+        valid_correspondences.image_points[i], valid_correspondences.points_3d[i], camera_T_targets.back(),
+        focal_lengths, principal_points, distortion, problem, radial_scale_factor, params_.optimization.huber_loss);
     }
   }
 
@@ -131,8 +163,8 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(
 
   const Eigen::Matrix3d calibrated_intrinsics =
     optimization_common::Intrinsics(calibrated_focal_lengths, calibrated_principal_points);
-  SaveReprojectionFromAllTargetsImage<DISTORTER>(camera_T_targets, valid_match_sets, calibrated_intrinsics, distortion,
-                                                 params_.image_size, params_.max_visualization_error_norm);
+  SaveReprojectionFromAllTargetsImage<DISTORTER>(camera_T_targets, valid_correspondences_set, calibrated_intrinsics,
+                                                 distortion, params_.image_size, params_.max_visualization_error_norm);
 }
 
 template <typename DISTORTER>
