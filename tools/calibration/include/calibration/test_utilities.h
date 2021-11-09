@@ -18,6 +18,7 @@
 #ifndef CALIBRATION_TEST_UTILITIES_H_
 #define CALIBRATION_TEST_UTILITIES_H_
 
+#include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/optimization_params.h>
 #include <calibration/ransac_pnp_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>

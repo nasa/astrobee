@@ -69,14 +69,10 @@ CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCa
   params.max_num_match_sets = 10000000;
   params.min_num_target_inliers = 4;
   params.save_individual_initial_reprojection_images = false;
-
-  /*  int max_visualization_error_norm;
-    double individual_max_visualization_error_norm;
-    Eigen::Vector2i image_size;
-    std::shared_ptr<camera::CameraParameters> camera_params;
-    std::string camera_name;
-    // fov, rad, or radtan
-    std::string distortion_type;*/
+  params.max_visualization_error_norm = 50;
+  params.individual_max_visualization_error_norm = 50;
+  params.image_size = Eigen::Vector2i(1280, 960);
+  return params;
 }
 
 RegistrationCorrespondences::RegistrationCorrespondences(const Eigen::Isometry3d& camera_T_target,

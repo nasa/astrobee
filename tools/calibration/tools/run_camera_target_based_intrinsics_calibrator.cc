@@ -169,7 +169,8 @@ int main(int argc, char** argv) {
     LogFatal("Corners directory " << corners_directory << " not found.");
   }
   LogInfo("Calibrating " << robot_config_file << ", camera: " << params.camera_name);
-  target_matches = LoadAllTargetMatches(corners_directory, params.max_num_match_sets);
+  target_matches =
+    LoadAllTargetMatches(corners_directory, params.camera_target_based_intrinsics_calibrator.max_num_match_sets);
   LogInfo("Number of target match sets: " << target_matches.size());
   if (params.distortion_type == "fov") {
     Calibrate<oc::FovDistorter>(params.camera_target_based_intrinsics_calibrator, target_matches, output_file);
