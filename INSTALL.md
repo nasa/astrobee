@@ -2,16 +2,17 @@
 
 ## Quick Start using the Astrobee docker image
 
-If you just want to try out the astrobee simulator, you can use one of the docker images in the [Docker Hub](https://hub.docker.com/r/astrobee/astrobee). 
+If you just want to try out the astrobee simulator, you can use one of the docker images in the [Github Container Registry](https://github.com/nasa/astrobee/pkgs/container/astrobee).
 
-Given that Docker (see note) is installed:
+Make sure you have docker installed in your ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
-	git clone https://github.com/nasa/astrobee.git
-	cd astrobee
-	./scripts/docker/run.sh
+For some systems (with discrete graphics cards), you may need to install additional software. For Nvidia graphics cards, [see here](https://github.com/NVIDIA/nvidia-docker).
 
-*Note: Be aware that this only works on a native ubuntu install.*
-*Note: Make sure you have docker installed in your ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).*
+``` bash
+git clone https://github.com/nasa/astrobee.git
+cd astrobee
+./scripts/docker/run.sh --remote
+```
 
 ## Building the code natively
 
