@@ -75,8 +75,8 @@ Eigen::Matrix3d RandomIntrinsics() {
   const double f_x = RandomGaussianDouble(500, 100);
   // Ensure that focal lengths are quite similar
   const double f_y = RandomGaussianDouble(f_x, 5);
-  const double p_x = RandomGaussianDouble(500, 100);
-  const double p_y = RandomGaussianDouble(500, 100);
+  const double p_x = RandomGaussianDouble(640, 100);
+  const double p_y = RandomGaussianDouble(480, 100);
 
   intrinsics(0, 0) = f_x;
   intrinsics(1, 1) = f_y;

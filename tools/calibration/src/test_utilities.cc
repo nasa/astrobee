@@ -84,26 +84,28 @@ Eigen::VectorXd RandomFovDistortion() {
 
 Eigen::VectorXd RandomRadDistortion() {
   Eigen::VectorXd distortion(2);
-  distortion[0] = lc::RandomDouble(-1.0, 1.0);
-  distortion[1] = lc::RandomDouble(-1.0, 1.0);
+  distortion[0] = lc::RandomDouble(-0.5, 0.5);
+  distortion[1] = lc::RandomDouble(-0.5, 0.5);
   return distortion;
 }
 
 Eigen::VectorXd RandomRadTanDistortion() {
   Eigen::VectorXd distortion(4);
-  distortion[0] = lc::RandomDouble(-1.0, 1.0);
-  distortion[1] = lc::RandomDouble(-1.0, 1.0);
-  distortion[2] = lc::RandomDouble(-1.0, 1.0);
-  distortion[3] = lc::RandomDouble(-1.0, 1.0);
+  distortion[0] = lc::RandomDouble(-0.5, 0.5);
+  distortion[1] = lc::RandomDouble(-0.5, 0.5);
+  distortion[2] = lc::RandomDouble(0, 0.1);
+  distortion[3] = lc::RandomDouble(0, 0.1);
   return distortion;
 }
 
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col, const double row_spacing,
                                           const double col_spacing) {
+  Eigen::Vector3d target_center(points_per_col * col_spacing / 2.0, points_per_row * row_spacing / 2.0, 0.0);
   std::vector<Eigen::Vector3d> target_points;
   for (int i = 0; i < points_per_col; ++i) {
     for (int j = 0; j < points_per_row; ++j) {
-      target_points.emplace_back(Eigen::Vector3d(i * col_spacing, j * row_spacing, 0));
+      // Center target points about (0,0)
+      target_points.emplace_back(Eigen::Vector3d(i * col_spacing, j * row_spacing, 0) - target_center);
     }
   }
   return target_points;
@@ -132,39 +134,39 @@ Eigen::Vector3d RandomFrontFacingPoint() {
 }
 
 Eigen::Isometry3d RandomFrontFacingPose() {
-  static constexpr double x_min = -10.0;
-  static constexpr double x_max = 10.0;
-  static constexpr double y_min = -10.0;
-  static constexpr double y_max = 10.0;
-  static constexpr double z_min = 0.1;
-  static constexpr double z_max = 30.0;
+  static constexpr double rho_min = 0.1;
+  static constexpr double rho_max = 3.0;
+  static constexpr double phi_min = -25.0;
+  static constexpr double phi_max = 25.0;
+  static constexpr double z_rho_scale = 1;
 
   static constexpr double yaw_min = -45.0;
   static constexpr double yaw_max = 45.0;
-  // Target points can handle larger orientations than random points
   static constexpr double pitch_min = -10;
   static constexpr double pitch_max = 10;
   static constexpr double roll_min = -10;
   static constexpr double roll_max = 10;
 
-  return RandomFrontFacingPose(x_min, x_max, y_min, y_max, z_min, z_max, yaw_min, yaw_max, pitch_min, pitch_max,
+  return RandomFrontFacingPose(rho_min, rho_max, phi_min, phi_max, z_rho_scale, yaw_min, yaw_max, pitch_min, pitch_max,
                                roll_min, roll_max);
 }
 
-Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, const double y_min, const double y_max,
-                                        const double z_min, const double z_max, const double yaw_min,
+Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_max, const double phi_min,
+                                        const double phi_max, const double z_rho_scale, const double yaw_min,
                                         const double yaw_max, const double pitch_min, const double pitch_max,
                                         const double roll_min, const double roll_max) {
-  // Translation
-  const double x = lc::RandomDouble(x_min, x_max);
-  const double y = lc::RandomDouble(y_min, y_max);
-  const double z = lc::RandomDouble(z_min, z_max);
+  const double rho = lc::RandomDouble(rho_min, rho_max);
+  const double phi = lc::RandomDouble(phi_min, phi_max);
+  const double z = lc::RandomDouble(-1.0 * z_rho_scale * rho, z_rho_scale * rho);
+  // Z and x are swapped so z defines distance from camera rather than height
+  const Eigen::Vector3d tmp = lc::CylindricalToCartesian(Eigen::Vector3d(rho, phi, z));
+  const Eigen::Vector3d translation(tmp.z(), tmp.y(), tmp.x());
 
   const double yaw = lc::RandomDouble(yaw_min, yaw_max);
   const double pitch = lc::RandomDouble(pitch_min, pitch_max);
   const double roll = lc::RandomDouble(roll_min, roll_max);
   const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
-  return lc::Isometry3d(Eigen::Vector3d(x, y, z), rotation);
+  return lc::Isometry3d(translation, rotation);
 }
 
 StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,

@@ -44,10 +44,14 @@ Eigen::VectorXd RandomRadDistortion();
 
 Eigen::VectorXd RandomRadTanDistortion();
 
-Eigen::Isometry3d RandomFrontFacingPose(const double x_min, const double x_max, const double y_min, const double y_max,
-                                        const double z_min, const double z_max, const double yaw_min,
+// Samples in cylindrical coordinates for pose translation to keep pose in view frustrum.
+// Samples z using scaled rho value to prevent large z vals with small rho values
+// that may move the pose out of the view frustrum.
+Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_max, const double phi_min,
+                                        const double phi_max, const double z_rho_scale, const double yaw_min,
                                         const double yaw_max, const double pitch_min, const double pitch_max,
                                         const double roll_min, const double roll_max);
+
 Eigen::Isometry3d RandomFrontFacingPose();
 
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col,
@@ -97,16 +101,16 @@ RegistrationCorrespondences<DISTORTER>::RegistrationCorrespondences(
 template <typename DISTORTER>
 std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int num_target_points_per_row_and_col,
                                             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
-  std::vector<int> inliers(num_target_points_per_row_and_col * num_target_points_per_row_and_col);
-  std::iota(inliers.begin(), inliers.end(), 0);
   std::vector<MatchSet> match_sets;
   match_sets.reserve(num_match_sets);
   for (int i = 0; i < num_match_sets; ++i) {
-    // TODO(rsoussan): Change this to random pose!
-    Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
-    pose.translation().z() = 3;
     const auto correspondences = RegistrationCorrespondences<DISTORTER>(
-      pose, intrinsics, TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
+      RandomFrontFacingPose(), intrinsics,
+      TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
+    // Set inliers using correspondence point size since correspondence points with negative z are not
+    // included in RegistrationCorrespondences
+    std::vector<int> inliers(correspondences.correspondences().image_points.size());
+    std::iota(inliers.begin(), inliers.end(), 0);
     match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
   }
   return match_sets;
