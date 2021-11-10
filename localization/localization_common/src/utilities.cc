@@ -158,6 +158,14 @@ double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
 
 double Rad2Deg(const double radians) { return 180.0 / M_PI * radians; }
 
+Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordinates) {
+  Eigen::Vector3d cartesian_coordinates;
+  cartesian_coordinates.x() = cylindrical_coordinates[0] * std::cos(Deg2Rad(cylindrical_coordinates[1]));
+  cartesian_coordinates.y() = cylindrical_coordinates[0] * std::sin(Deg2Rad(cylindrical_coordinates[1]));
+  cartesian_coordinates.z() = cylindrical_coordinates[2];
+  return cartesian_coordinates;
+}
+
 Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll) {
   const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw), Eigen::Vector3d::UnitZ());
   const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch), Eigen::Vector3d::UnitY());

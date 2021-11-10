@@ -127,6 +127,9 @@ double Deg2Rad(const double degrees);
 
 double Rad2Deg(const double radians);
 
+// Assumes angles in degrees, ordered as rho, phi, z
+Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordinates);
+
 // Uses Euler Angles in intrinsic ypr representation in degrees
 Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
 
