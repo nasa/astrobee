@@ -141,7 +141,7 @@ Eigen::Isometry3d RandomFrontFacingPose() {
 
   static constexpr double yaw_min = -45.0;
   static constexpr double yaw_max = 45.0;
-  // TODO(rsoussan): Results are very sensitive to changing pitch and roll, is there an issue somewhere?
+  // Target points can handle larger orientations than random points
   static constexpr double pitch_min = 0;
   static constexpr double pitch_max = 0;
   static constexpr double roll_min = 0;
