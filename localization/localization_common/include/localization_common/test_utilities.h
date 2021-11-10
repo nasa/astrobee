@@ -31,6 +31,8 @@ double RandomPositiveDouble();
 // Selected from [min, max]
 double RandomDouble(const double min, const double max);
 
+double RandomGaussianDouble(const double mean, const double stddev);
+
 bool RandomBool();
 
 // Returns white noise with set stddev

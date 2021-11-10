@@ -32,14 +32,16 @@ double RandomDouble(const double min, const double max) {
   return std::uniform_real_distribution<double>(min, max)(rng);
 }
 
-bool RandomBool() { return RandomDouble(0, 1) < 0.5; }
-
-double Noise(const double stddev) {
+double RandomGaussianDouble(const double mean, const double stddev) {
   std::random_device dev;
   std::mt19937 rng(dev());
-  std::normal_distribution<double> distribution(0.0, stddev);
+  std::normal_distribution<double> distribution(mean, stddev);
   return distribution(rng);
 }
+
+bool RandomBool() { return RandomDouble(0, 1) < 0.5; }
+
+double Noise(const double stddev) { return RandomGaussianDouble(0.0, stddev); }
 
 Eigen::Vector3d RandomVector() {
   // Eigen::Vector3 is constrained to [-1, 1]
@@ -70,10 +72,11 @@ Eigen::Affine3d RandomAffine3d() {
 
 Eigen::Matrix3d RandomIntrinsics() {
   Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
-  const double f_x = RandomDouble(0.1, 1000);
-  const double f_y = RandomDouble(0.1, 1000);
-  const double p_x = RandomDouble(0.1, 1000);
-  const double p_y = RandomDouble(0.1, 1000);
+  const double f_x = RandomGaussianDouble(500, 100);
+  // Ensure that focal lengths are quite similar
+  const double f_y = RandomGaussianDouble(f_x, 5);
+  const double p_x = RandomGaussianDouble(500, 100);
+  const double p_y = RandomGaussianDouble(500, 100);
 
   intrinsics(0, 0) = f_x;
   intrinsics(1, 1) = f_y;
