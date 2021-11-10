@@ -58,9 +58,9 @@ std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
 Eigen::Vector3d RandomFrontFacingPoint();
 
 template <typename DISTORTER>
-std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
-                                      const Eigen::Matrix3d& intrinsics,
-                                      const Eigen::VectorXd& distortion = Eigen::VectorXd());
+std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int num_target_points_per_row_and_col,
+                                            const Eigen::Matrix3d& intrinsics,
+                                            const Eigen::VectorXd& distortion = Eigen::VectorXd());
 template <typename DISTORTER>
 class RegistrationCorrespondences {
  public:
@@ -95,15 +95,18 @@ RegistrationCorrespondences<DISTORTER>::RegistrationCorrespondences(
 }
 
 template <typename DISTORTER>
-std::vector<MatchSet> RandomMatchSets(const int num_match_sets, const int num_points_per_set,
-                                      const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
-  std::vector<int> inliers(num_points_per_set);
+std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int num_target_points_per_row_and_col,
+                                            const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion) {
+  std::vector<int> inliers(num_target_points_per_row_and_col * num_target_points_per_row_and_col);
   std::iota(inliers.begin(), inliers.end(), 0);
   std::vector<MatchSet> match_sets;
   match_sets.reserve(num_match_sets);
   for (int i = 0; i < num_match_sets; ++i) {
+    // TODO(rsoussan): Change this to random pose!
+    Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+    pose.translation().z() = 3;
     const auto correspondences = RegistrationCorrespondences<DISTORTER>(
-      RandomFrontFacingPose(), intrinsics, RandomFrontFacingPoints(num_points_per_set), distortion);
+      pose, intrinsics, TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
     match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
   }
   return match_sets;

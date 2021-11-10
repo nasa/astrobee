@@ -142,10 +142,10 @@ Eigen::Isometry3d RandomFrontFacingPose() {
   static constexpr double yaw_min = -45.0;
   static constexpr double yaw_max = 45.0;
   // Target points can handle larger orientations than random points
-  static constexpr double pitch_min = 0;
-  static constexpr double pitch_max = 0;
-  static constexpr double roll_min = 0;
-  static constexpr double roll_max = 0;
+  static constexpr double pitch_min = -10;
+  static constexpr double pitch_max = 10;
+  static constexpr double roll_min = -10;
+  static constexpr double roll_max = 10;
 
   return RandomFrontFacingPose(x_min, x_max, y_min, y_max, z_min, z_max, yaw_min, yaw_max, pitch_min, pitch_max,
                                roll_min, roll_max);
