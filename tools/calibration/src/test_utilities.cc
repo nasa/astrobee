@@ -84,15 +84,15 @@ Eigen::VectorXd RandomFovDistortion() {
 
 Eigen::VectorXd RandomRadDistortion() {
   Eigen::VectorXd distortion(2);
-  distortion[0] = lc::RandomDouble(-0.5, 0.5);
-  distortion[1] = lc::RandomDouble(-0.5, 0.5);
+  distortion[0] = lc::RandomDouble(-0.1, 0.1);
+  distortion[1] = lc::RandomDouble(-0.1, 0.1);
   return distortion;
 }
 
 Eigen::VectorXd RandomRadTanDistortion() {
   Eigen::VectorXd distortion(4);
-  distortion[0] = lc::RandomDouble(-0.5, 0.5);
-  distortion[1] = lc::RandomDouble(-0.5, 0.5);
+  distortion[0] = lc::RandomDouble(-0.1, 0.1);
+  distortion[1] = lc::RandomDouble(-0.1, 0.1);
   distortion[2] = lc::RandomDouble(0, 0.1);
   distortion[3] = lc::RandomDouble(0, 0.1);
   return distortion;

@@ -162,35 +162,37 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
   }
 }*/
 
-TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsRadDistortionWithNoise) {
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsRadTanDistortionWithNoise) {
   auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
-  // Too many free params with Rad Distortion can lead to occasional errors in calibrated intrinsics/distortion
+  // Too many free params with RadTan Distortion can lead to occasional errors in calibrated intrinsics/distortion
   params.calibrate_target_poses = false;
+  // Calibrated focal lengths and full RadTan Distortion at same time leads to errors
   params.calibrate_focal_lengths = false;
-  params.calibrate_principal_points = false;
-  params.save_individual_initial_reprojection_images = true;
-  params.save_final_reprojection_image = true;
   const int num_target_points_per_row_and_col = 10;
-  const int num_match_sets = 20;
+  const int num_match_sets = 50;
+  const double principal_points_stddev = 1.0;
   const double distortion_stddev = 0.1;
-  for (int i = 0; i < 1; ++i) {
-    auto intrinsics = lc::RandomIntrinsics();
-    LogError("intrinsics: " << std::endl << intrinsics.matrix());
+  for (int i = 0; i < 10; ++i) {
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
-    true_state_parameters.distortion = ca::RandomRadDistortion();
-    LogError("distortion: " << std::endl << true_state_parameters.distortion.matrix());
+    true_state_parameters.distortion = ca::RandomRadTanDistortion();
     auto noisy_state_parameters = true_state_parameters;
-    // noisy_state_parameters.distortion = lc::AddNoiseToVector(noisy_state_parameters.distortion, distortion_stddev);
+    noisy_state_parameters.distortion = lc::AddNoiseToVector(noisy_state_parameters.distortion, distortion_stddev);
+    noisy_state_parameters.principal_points =
+      lc::AddNoiseToVector(noisy_state_parameters.principal_points, principal_points_stddev);
     ca::StateParameters calibrated_state_parameters;
-    const auto match_sets = ca::RandomTargetMatchSets<oc::RadDistorter>(
+    const auto match_sets = ca::RandomTargetMatchSets<oc::RadTanDistorter>(
       num_match_sets, num_target_points_per_row_and_col, intrinsics, true_state_parameters.distortion);
-
-    LogError("target pose: " << std::endl << match_sets[0].pose_estimate.matrix());
-    ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadDistorter> calibrator(params);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadTanDistorter> calibrator(params);
     calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
-    ASSERT_TRUE(calibrated_state_parameters == true_state_parameters);
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
+                 calibrated_state_parameters.focal_lengths.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
+                 calibrated_state_parameters.principal_points.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.matrix(),
+                 calibrated_state_parameters.distortion.matrix());
   }
 }
 
