@@ -162,6 +162,76 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
   }
 }*/
 
+// TODO(rsoussan): Why does this lead to a solve failure? issue somewhere??
+/*TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsFovDistortionWithNoise) {
+  auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  // Too many free params with FovDistortion can lead to occasional errors in calibrated intrinsics/distortion
+  params.calibrate_target_poses = false;
+  // Calibrated focal lengths and full FovDistortion at same time leads to errors
+  params.calibrate_focal_lengths = false;
+  const int num_target_points_per_row_and_col = 10;
+  const int num_match_sets = 50;
+  const double principal_points_stddev = 1.0;
+  const double distortion_stddev = 0.1;
+  for (int i = 0; i < 10; ++i) {
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = ca::RandomFovDistortion();
+    auto noisy_state_parameters = true_state_parameters;
+    noisy_state_parameters.distortion = lc::AddNoiseToVector(noisy_state_parameters.distortion, distortion_stddev);
+    noisy_state_parameters.principal_points =
+      lc::AddNoiseToVector(noisy_state_parameters.principal_points, principal_points_stddev);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomTargetMatchSets<oc::FovDistorter>(
+      num_match_sets, num_target_points_per_row_and_col, intrinsics, true_state_parameters.distortion);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::FovDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
+                 calibrated_state_parameters.focal_lengths.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
+                 calibrated_state_parameters.principal_points.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.matrix(),
+                 calibrated_state_parameters.distortion.matrix());
+  }
+}*/
+
+// TODO(rsoussan): Why does this sometime fail but radtan doesnt?
+/*TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsRadDistortionWithNoise) {
+  auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  // Too many free params with RadDistortion can lead to occasional errors in calibrated intrinsics/distortion
+  params.calibrate_target_poses = false;
+  // Calibrated focal lengths and full RadDistortion at same time leads to errors
+  params.calibrate_focal_lengths = false;
+  const int num_target_points_per_row_and_col = 10;
+  const int num_match_sets = 50;
+  const double principal_points_stddev = 1.0;
+  const double distortion_stddev = 0.1;
+  for (int i = 0; i < 10; ++i) {
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = ca::RandomRadDistortion();
+    auto noisy_state_parameters = true_state_parameters;
+    noisy_state_parameters.distortion = lc::AddNoiseToVector(noisy_state_parameters.distortion, distortion_stddev);
+    noisy_state_parameters.principal_points =
+      lc::AddNoiseToVector(noisy_state_parameters.principal_points, principal_points_stddev);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::RandomTargetMatchSets<oc::RadDistorter>(
+      num_match_sets, num_target_points_per_row_and_col, intrinsics, true_state_parameters.distortion);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadDistorter> calibrator(params);
+    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
+                 calibrated_state_parameters.focal_lengths.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
+                 calibrated_state_parameters.principal_points.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.matrix(),
+                 calibrated_state_parameters.distortion.matrix());
+  }
+}*/
+
 TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPointsRadTanDistortionWithNoise) {
   auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
   // Too many free params with RadTan Distortion can lead to occasional errors in calibrated intrinsics/distortion

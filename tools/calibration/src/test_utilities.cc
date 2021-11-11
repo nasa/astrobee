@@ -78,7 +78,7 @@ CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCa
 
 Eigen::VectorXd RandomFovDistortion() {
   Eigen::VectorXd distortion(1);
-  distortion[0] = lc::RandomDouble(0.1, 3.0);
+  distortion[0] = lc::RandomDouble(0.01, 1.0);
   return distortion;
 }
 
