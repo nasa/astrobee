@@ -28,14 +28,6 @@
 
 namespace calibration {
 struct StateParameters {
-  bool operator==(const StateParameters& rhs) const {
-    bool equal = true;
-    equal &= focal_lengths.matrix().isApprox(rhs.focal_lengths.matrix(), 1e-6);
-    equal &= principal_points.matrix().isApprox(rhs.principal_points.matrix(), 1e-6);
-    equal &= distortion.matrix().isApprox(rhs.distortion.matrix(), 1e-6);
-    return equal;
-  }
-
   Eigen::Vector2d focal_lengths;
   Eigen::Vector2d principal_points;
   Eigen::VectorXd distortion;
