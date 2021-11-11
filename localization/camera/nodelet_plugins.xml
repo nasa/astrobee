@@ -1,0 +1,9 @@
+<library path="lib/libcamera">
+  <class name="camera/UndistorterNodelet"
+	 type="camera::UndistorterNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet undistorts images
+    </description>
+  </class>
+</library>

@@ -34,4 +34,7 @@
   <run_depend>ff_msgs</run_depend>
   <run_depend>nodelet</run_depend>
   <run_depend>tf2</run_depend>
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
 </package>

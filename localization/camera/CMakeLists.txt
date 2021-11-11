@@ -20,6 +20,7 @@ project(camera)
 
 set(LIBS
   config_reader
+  ff_nodelet
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${OpenCV_LIBRARIES}
@@ -29,6 +30,7 @@ set(LIBS
   )
 set(INCLUDES
   config_reader
+  ff_nodelet
   ${GFLAGS_INCLUDE_DIRS}
   ${GLOG_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
@@ -39,12 +41,12 @@ set(INCLUDES
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES camera
-  CATKIN_DEPENDS
+  CATKIN_DEPENDS cv_bridge
 #  DEPENDS system_lib
 )
 
 create_library(TARGET camera
-  LIBS ${LIBS}
+  LIBS ${LIBS} ${catkin_LIBRARIES}
   INC ${INCLUDES}
 )
 
