@@ -90,7 +90,8 @@ void SemanticLocFactorAdder::SetCombinedNavState(const boost::optional<localizat
 }
 
 std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::SemanticDetsMeasurement& semantic_dets) {
-  if (std::abs(last_combined_nav_state_.timestamp() - semantic_dets.timestamp) < 0.1) {
+  if (std::abs(last_combined_nav_state_.timestamp() - semantic_dets.timestamp) > 0.1) {
+    LogInfo("Time delta too large: " << std::abs(last_combined_nav_state_.timestamp() - semantic_dets.timestamp));
     return std::vector<go::FactorsToAdd>(); // return empty set, no factors
   }
 
@@ -106,7 +107,7 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
     last_matches_.push_back(SemanticMatch(det.class_id, det.image_point, det.bounding_box));
   }
 
-  LogDebug("SemanticLoc: adding sem loc factors");
+  LogInfo("SemanticLoc: adding sem loc factors");
 
   const auto assignments = assigner_->assign(world_T_body, semantic_dets.semantic_dets);
 
@@ -127,7 +128,6 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
   std::vector<go::FactorsToAdd> factors_to_add;
   ComputeFactorsToAdd(factors_to_add, matched_projections_measurement);
-  LogInfo("Timestamp: " << semantic_dets.timestamp);
 
   return factors_to_add;
 }
