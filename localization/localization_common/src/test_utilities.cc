@@ -22,6 +22,11 @@
 #include <random>
 
 namespace localization_common {
+Sampler::Sampler(const double min, const double max, const double count)
+    : min_(min), scale_((max - min) / static_cast<double>(count - 1)) {}
+
+double Sampler::Sample(const int increment) const { return min_ + increment * scale_; }
+
 double RandomDouble() { return RandomDouble(-100, 100); }
 
 double RandomPositiveDouble() { return RandomDouble(0, 100); }

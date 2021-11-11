@@ -22,6 +22,16 @@
 #include <gtsam/geometry/Pose3.h>
 
 namespace localization_common {
+class Sampler {
+ public:
+  Sampler(const double min, const double max, const double count);
+  double Sample(const int increment) const;
+
+ private:
+  const double scale_;
+  const double min_;
+};
+
 // Selected from [-100, 100]
 double RandomDouble();
 

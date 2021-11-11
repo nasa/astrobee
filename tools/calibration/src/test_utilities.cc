@@ -173,38 +173,31 @@ Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_m
 std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows, const int num_cols, const int num_y_levels) {
   constexpr double yaw = 0.0;
   // Pitch acts like yaw since z axis points out of camera frame
-  constexpr double pitch_min = -15.0;
-  constexpr double pitch_max = 15.0;
-  constexpr double roll = 0.0;
+  const lc::Sampler pitch_sampler(-15.0, 15.0, num_cols);
+  const lc::Sampler roll_sampler(-15.0, 15.0, num_cols);
+  constexpr double roll = 0;
 
   // Cylindrical coordinates for translation
-  constexpr double rho_min = 1.0;
-  constexpr double rho_max = 3.0;
+  const lc::Sampler rho_sampler(1.0, 3.0, num_rows);
   constexpr double phi = 0.0;
 
-  const double rho_scale = (rho_max - rho_min) / static_cast<double>(num_rows - 1);
-  const double pitch_scale = (pitch_max - pitch_min) / static_cast<double>(num_cols - 1);
   // Use smaller y_rho scale factor since image is shorter than it is wide
   constexpr double y_rho_scale = 0.235;
   constexpr double z_rho_scale = 0.5;
 
   std::vector<Eigen::Isometry3d> poses;
   for (int i = 0; i < num_rows; ++i) {
-    const double rho = rho_min + i * rho_scale;
-    const double z_min = -1.0 * rho * z_rho_scale;
-    const double z_max = rho * z_rho_scale;
-    const double z_scale = (z_max - z_min) / static_cast<double>(num_cols - 1);
+    const double rho = rho_sampler.Sample(i);
+    const lc::Sampler z_sampler(-1.0 * rho * z_rho_scale, rho * z_rho_scale, num_cols);
     for (int j = 0; j < num_cols; ++j) {
-      const double pitch = pitch_min + j * pitch_scale;
-      const double z = z_min + j * z_scale;
+      const double pitch = pitch_sampler.Sample(j);
+      const double z = z_sampler.Sample(j);
       // Z and x are swapped so z defines distance from camera rather than height
       const Eigen::Vector3d tmp = lc::CylindricalToCartesian(Eigen::Vector3d(rho, phi, z));
       const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
-      const double y_min = -1.0 * rho * y_rho_scale;
-      const double y_max = rho * y_rho_scale;
-      const double y_scale = (y_max - y_min) / static_cast<double>(num_y_levels - 1);
+      const lc::Sampler y_sampler(-1.0 * rho * y_rho_scale, rho * y_rho_scale, num_y_levels);
       for (int k = 0; k < num_y_levels; ++k) {
-        const double y = y_min + k * y_scale;
+        const double y = y_sampler.Sample(k);
         const Eigen::Vector3d translation(tmp.z(), y, tmp.x());
         poses.emplace_back(lc::Isometry3d(translation, rotation));
       }
