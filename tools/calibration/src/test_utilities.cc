@@ -134,16 +134,17 @@ Eigen::Vector3d RandomFrontFacingPoint() {
 }
 
 Eigen::Isometry3d RandomFrontFacingPose() {
-  static constexpr double rho_min = 0.1;
+  static constexpr double rho_min = 1.0;
   static constexpr double rho_max = 3.0;
   static constexpr double phi_min = -25.0;
   static constexpr double phi_max = 25.0;
-  static constexpr double z_rho_scale = 1;
+  static constexpr double z_rho_scale = 0.5;
 
-  static constexpr double yaw_min = -45.0;
-  static constexpr double yaw_max = 45.0;
-  static constexpr double pitch_min = -10;
-  static constexpr double pitch_max = 10;
+  // Pitch acts like yaw since z axis points outwards in camera frame
+  static constexpr double yaw_min = -10.0;
+  static constexpr double yaw_max = 10.0;
+  static constexpr double pitch_min = -45;
+  static constexpr double pitch_max = 45;
   static constexpr double roll_min = -10;
   static constexpr double roll_max = 10;
 
