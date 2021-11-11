@@ -58,6 +58,12 @@ Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const doub
 template <int N>
 Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev);
 
+// Template on tolerance power so this can be used with gtest's ASSERT_PRED2.
+// If pass tolerance as argument, this is no longer a binary function and valid for usage with
+// ASSERT_PRED2.
+template <int TolerancePower = 6>
+bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs);
+
 template <int N>
 Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev) {
   Eigen::Matrix<double, N, 1> noisy_vector = vector;
@@ -67,5 +73,14 @@ Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& 
   return noisy_vector;
 }
 
+template <int TolerancePower>
+bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
+  constexpr double tolerance = std::pow(10, -1.0 * TolerancePower);
+  // Seperately check for zero matrices since isApprox fails for these
+  if (lhs.isZero(tolerance) || rhs.isZero(tolerance)) {
+    return lhs.isZero(tolerance) && rhs.isZero(tolerance);
+  }
+  return lhs.isApprox(rhs, tolerance);
+}
 }  // namespace localization_common
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_
