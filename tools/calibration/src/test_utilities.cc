@@ -171,11 +171,10 @@ Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_m
 }
 
 std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows, const int num_cols, const int num_y_levels) {
-  constexpr double yaw = 0.0;
   // Pitch acts like yaw since z axis points out of camera frame
   const lc::Sampler pitch_sampler(-15.0, 15.0, num_cols);
   const lc::Sampler roll_sampler(-15.0, 15.0, num_cols);
-  constexpr double roll = 0;
+  const lc::Sampler yaw_sampler(-15.0, 15.0, num_cols);
 
   // Cylindrical coordinates for translation
   const lc::Sampler rho_sampler(1.0, 3.0, num_rows);
@@ -191,6 +190,8 @@ std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows, const
     const lc::Sampler z_sampler(-1.0 * rho * z_rho_scale, rho * z_rho_scale, num_cols);
     for (int j = 0; j < num_cols; ++j) {
       const double pitch = pitch_sampler.Sample(j);
+      const double roll = roll_sampler.Sample(j);
+      const double yaw = yaw_sampler.Sample(j);
       const double z = z_sampler.Sample(j);
       // Z and x are swapped so z defines distance from camera rather than height
       const Eigen::Vector3d tmp = lc::CylindricalToCartesian(Eigen::Vector3d(rho, phi, z));
