@@ -41,7 +41,7 @@ while [ "$1" != "" ]; do
                                         ;;
         -f | --focal )                  os="focal"
                                         ;;
-        -r | --remote )                 tagrepo=ghcr.io
+        -r | --remote )                 tagrepo=ghcr.io/nasa
                                         ;;
         --args )                        args+=" $2"
                                         shift
