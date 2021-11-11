@@ -157,7 +157,7 @@ std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const
 
 StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
                                           const double principal_points_stddev, const double distortion_stddev,
-                                          const bool ensure_distortion_positive = false);
+                                          const bool fov = false);
 }  // namespace calibration
 
 #endif  // CALIBRATION_TEST_UTILITIES_H_

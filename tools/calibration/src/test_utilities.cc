@@ -210,16 +210,15 @@ std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows, const
 
 StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
                                           const double principal_points_stddev, const double distortion_stddev,
-                                          const bool ensure_distortion_positive) {
+                                          const bool fov) {
   StateParameters noisy_state_parameters;
   noisy_state_parameters.focal_lengths = lc::AddNoiseToVector(state_parameters.focal_lengths, focal_lengths_stddev);
   noisy_state_parameters.principal_points =
     lc::AddNoiseToVector(state_parameters.principal_points, principal_points_stddev);
   noisy_state_parameters.distortion = lc::AddNoiseToVector(state_parameters.distortion, distortion_stddev);
-  if (ensure_distortion_positive) {
-    for (int i = 0; i < static_cast<int>(noisy_state_parameters.distortion.size()); ++i) {
-      if (noisy_state_parameters.distortion[i] < 0) noisy_state_parameters.distortion[i] = 0.0001;
-    }
+  if (fov) {
+    // Close to zero fov values cause issues for solver, neg values are same as positive values
+      noisy_state_parameteres.distortion[0] = std::max(0.1, noisy_state_parameters.distortion[0];
   }
   return noisy_state_parameters;
 }
