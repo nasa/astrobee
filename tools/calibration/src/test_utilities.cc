@@ -218,7 +218,7 @@ StateParameters AddNoiseToStateParameters(const StateParameters& state_parameter
   noisy_state_parameters.distortion = lc::AddNoiseToVector(state_parameters.distortion, distortion_stddev);
   if (fov) {
     // Close to zero fov values cause issues for solver, neg values are same as positive values
-      noisy_state_parameteres.distortion[0] = std::max(0.1, noisy_state_parameters.distortion[0];
+    noisy_state_parameters.distortion[0] = std::max(0.1, noisy_state_parameters.distortion[0]);
   }
   return noisy_state_parameters;
 }
