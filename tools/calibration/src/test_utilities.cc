@@ -169,6 +169,40 @@ Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_m
   return lc::Isometry3d(translation, rotation);
 }
 
+std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows, const int num_cols) {
+  constexpr double yaw_min = -15.0;
+  constexpr double yaw_max = 15.0;
+  constexpr double pitch = 0.0;
+  constexpr double roll = 0.0;
+
+  // Cylindrical coordinates for translation
+  constexpr double rho_min = 0.1;
+  constexpr double rho_max = 3.0;
+  constexpr double phi = 0.0;
+
+  const double rho_scale = (rho_max - rho_min) / static_cast<double>(num_rows - 1);
+  const double yaw_scale = (yaw_max - yaw_min) / static_cast<double>(num_cols - 1);
+
+  std::vector<Eigen::Isometry3d> poses;
+  for (int i = 0; i < num_rows; ++i) {
+    const double rho = rho_min + i * rho_scale;
+    const double z_min = -1.0 * rho * 0.5;
+    const double z_max = rho * 0.5;
+    const double z_scale = (z_max - z_min) / static_cast<double>(num_cols - 1);
+    for (int j = 0; j < num_cols; ++j) {
+      const double yaw = yaw_min + j * yaw_scale;
+      const double z = z_min + j * z_scale;
+      // Z and x are swapped so z defines distance from camera rather than height
+      const Eigen::Vector3d tmp = lc::CylindricalToCartesian(Eigen::Vector3d(rho, phi, z));
+      const Eigen::Vector3d translation(tmp.z(), tmp.y(), tmp.x());
+      const Eigen::Matrix3d rotation = lc::RotationFromEulerAngles(yaw, pitch, roll);
+      poses.emplace_back(lc::Isometry3d(translation, rotation));
+    }
+  }
+
+  return poses;
+}
+
 StateParameters AddNoiseToStateParameters(const StateParameters& state_parameters, const double focal_lengths_stddev,
                                           const double principal_points_stddev, const double distortion_stddev,
                                           const bool ensure_distortion_positive) {

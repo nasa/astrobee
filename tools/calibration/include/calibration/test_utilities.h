@@ -54,6 +54,11 @@ Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_m
 
 Eigen::Isometry3d RandomFrontFacingPose();
 
+// Spaced out poses for targets which when projected into image space cover
+// the image well with target points.  Poses are sampled for each row/col combination
+// and evenly spaced in cylindrical coordinates
+std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows = 5, const int num_cols = 5);
+
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col,
                                           const double row_spacing = 0.1, const double col_spacing = 0.1);
 
@@ -65,6 +70,13 @@ template <typename DISTORTER>
 std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int num_target_points_per_row_and_col,
                                             const Eigen::Matrix3d& intrinsics,
                                             const Eigen::VectorXd& distortion = Eigen::VectorXd());
+
+template <typename DISTORTER>
+std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const int num_pose_cols,
+                                                  const int num_target_points_per_row_and_col,
+                                                  const Eigen::Matrix3d& intrinsics,
+                                                  const Eigen::VectorXd& distortion = Eigen::VectorXd());
+
 template <typename DISTORTER>
 class RegistrationCorrespondences {
  public:
@@ -107,6 +119,29 @@ std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int 
     const auto correspondences = RegistrationCorrespondences<DISTORTER>(
       RandomFrontFacingPose(), intrinsics,
       TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
+    // Set inliers using correspondence point size since correspondence points with negative z are not
+    // included in RegistrationCorrespondences
+    std::vector<int> inliers(correspondences.correspondences().image_points.size());
+    std::iota(inliers.begin(), inliers.end(), 0);
+    match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
+  }
+  return match_sets;
+}
+
+template <typename DISTORTER>
+std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const int num_pose_cols,
+                                                  const int num_target_points_per_row_and_col,
+                                                  const Eigen::Matrix3d& intrinsics,
+                                                  const Eigen::VectorXd& distortion) {
+  const std::vector<Eigen::Isometry3d> target_poses = EvenlySpacedTargetPoses(num_pose_rows, num_pose_cols);
+  std::vector<MatchSet> match_sets;
+  const int num_match_sets = target_poses.size();
+  match_sets.reserve(num_match_sets);
+  const std::vector<Eigen::Vector3d> target_points =
+    TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col);
+  for (int i = 0; i < num_match_sets; ++i) {
+    const auto correspondences =
+      RegistrationCorrespondences<DISTORTER>(target_poses[i], intrinsics, target_points, distortion);
     // Set inliers using correspondence point size since correspondence points with negative z are not
     // included in RegistrationCorrespondences
     std::vector<int> inliers(correspondences.correspondences().image_points.size());
