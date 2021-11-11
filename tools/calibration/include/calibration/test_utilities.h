@@ -57,7 +57,8 @@ Eigen::Isometry3d RandomFrontFacingPose();
 // Spaced out poses for targets which when projected into image space cover
 // the image well with target points.  Poses are sampled for each row/col combination
 // and evenly spaced in cylindrical coordinates
-std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows = 5, const int num_cols = 5);
+std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows = 3, const int num_cols = 5,
+                                                       const int num_y_levels = 2);
 
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col,
                                           const double row_spacing = 0.1, const double col_spacing = 0.1);
@@ -73,6 +74,7 @@ std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int 
 
 template <typename DISTORTER>
 std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const int num_pose_cols,
+                                                  const int num_pose_y_levels,
                                                   const int num_target_points_per_row_and_col,
                                                   const Eigen::Matrix3d& intrinsics,
                                                   const Eigen::VectorXd& distortion = Eigen::VectorXd());
@@ -130,10 +132,12 @@ std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int 
 
 template <typename DISTORTER>
 std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const int num_pose_cols,
+                                                  const int num_pose_y_levels,
                                                   const int num_target_points_per_row_and_col,
                                                   const Eigen::Matrix3d& intrinsics,
                                                   const Eigen::VectorXd& distortion) {
-  const std::vector<Eigen::Isometry3d> target_poses = EvenlySpacedTargetPoses(num_pose_rows, num_pose_cols);
+  const std::vector<Eigen::Isometry3d> target_poses =
+    EvenlySpacedTargetPoses(num_pose_rows, num_pose_cols, num_pose_y_levels);
   std::vector<MatchSet> match_sets;
   const int num_match_sets = target_poses.size();
   match_sets.reserve(num_match_sets);
