@@ -55,15 +55,6 @@ while [ "$1" != "" ]; do
     shift
 done
 
-
-rootdir=$(dirname "$(readlink -f "$0")")
-cd $rootdir
-
-XSOCK=/tmp/.X11-unix
-XAUTH=/tmp/.docker.xauth
-touch $XAUTH
-xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
-
 if [ "$os" = "xenial" ]; then
 tag=astrobee:latest-ubuntu16.04
 elif [ "$os" = "bionic" ]; then
@@ -78,6 +69,15 @@ if [ "$tagrepo" = "astrobee" ] && [[ "$(docker images -q $tagrepo/$tag 2> /dev/n
   usage
   exit 1
 fi
+
+rootdir=$(dirname "$(readlink -f "$0")")
+cd $rootdir
+
+# setup XServer for Docker
+XSOCK=/tmp/.X11-unix
+XAUTH=/tmp/.docker.xauth
+touch $XAUTH
+xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
