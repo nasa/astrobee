@@ -40,9 +40,9 @@ RansacPnPParams DefaultRansacPnPParams() {
   params.max_inlier_threshold = 3;
   params.num_iterations = 100;
   params.min_num_inliers = 4;
-  // TODO(rsoussan): Change this to p3p when p3p bug or opencv version fixed
-  // Currenty p3p leads to significant errors even with perfect data
-  params.pnp_method = cv::SOLVEPNP_EPNP;  // cv::SOLVEPNP_ITERATIVE;
+  // TODO(rsoussan): Change this to cv::SOLVEPNP_IPPE when available.
+  // Currenty cv::SOLVEPNP_P3P and cv::SOLVEPNP_ITERATIVE lead to significant errors even with perfect data
+  params.pnp_method = cv::SOLVEPNP_EPNP;
   return params;
 }
 

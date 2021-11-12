@@ -45,11 +45,11 @@ namespace oc = optimization_common;
   for (int i = 0; i < target_poses.size(); ++i) {
     const auto correspondences =
       ca::RegistrationCorrespondences<oc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
-      const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
+    const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_PRED2(lc::MatrixEquality<2>, pose_estimate->first.matrix(), correspondences.camera_T_target().matrix());
-    ASSERT_TRUE(pose_estimate->second.size() == correspondences.correspondences().image_points.size());
+    ASSERT_PRED2(lc::MatrixEquality<2>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    ASSERT_TRUE(pose_estimate->inliers.size() == correspondences.correspondences().image_points.size());
   }
 }*/
