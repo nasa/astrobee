@@ -77,6 +77,7 @@ def load_dataframe(files):
 
 
 def run_command_and_save_output(command, output_filename):
+    print(command)
     with open(output_filename, "w") as output_file:
         subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
 
