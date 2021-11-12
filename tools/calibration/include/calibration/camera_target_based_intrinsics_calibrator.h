@@ -56,6 +56,7 @@ class CameraTargetBasedIntrinsicsCalibrator {
 
  private:
   void Initialize(const StateParameters& initial_state_parameters);
+  boost::optional<StateParametersCovariances> Covariances();
   void AddCameraTTargetParameter(const Eigen::Isometry3d& camera_T_target);
   double RadialScaleFactor(const Eigen::Vector2d& image_point, const Eigen::Vector2i& image_size) const;
   void SaveResults(const StateParameters& calibrated_state_parameters, const std::vector<MatchSet>& match_sets) const;
@@ -156,6 +157,34 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Initialize(const StatePar
     if (params_.calibrate_distortion) LogInfo("Calibrating distortion.");
     if (params_.calibrate_target_poses) LogInfo("Calibrating target poses.");
   }
+}
+
+template <typename DISTORTER>
+boost::optional<StateParametersCovariances> CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Covariances() {
+  ceres::Covariance::Options options;
+  ceres::Covariance covariance(options);
+
+  std::vector<std::pair<const double*, const double*> > covariance_blocks;
+  covariance_blocks.push_back(
+    std::make_pair(state_parameters_.focal_lengths.data(), state_parameters_.focal_lengths.data()));
+  covariance_blocks.push_back(
+    std::make_pair(state_parameters_.principal_points.data(), state_parameters_.principal_points.data()));
+  covariance_blocks.push_back(std::make_pair(state_parameters_.distortion.data(), state_parameters_.distortion.data()));
+
+  if (!covariance.Compute(covariance_blocks, &problem_)) {
+    LogError("Covariances: Failed to compute covariances.");
+    return boost::none;
+  }
+
+  StateParametersCovariances covariances;
+  covariance.GetCovarianceBlock(state_parameters_.focal_lengths.data(), state_parameters_.focal_lengths.data(),
+                                covariances.focal_lengths.data());
+  covariance.GetCovarianceBlock(state_parameters_.principal_points.data(), state_parameters_.principal_points.data(),
+                                covariances.principal_points.data());
+  covariances.distortion = Eigen::MatrixXd(state_parameters_.distortion.size());
+  covariance.GetCovarianceBlock(state_parameters_.distortion.data(), state_parameters_.distortion.data(),
+                                covariances.distortion.data());
+  return covariances;
 }
 
 template <typename DISTORTER>
