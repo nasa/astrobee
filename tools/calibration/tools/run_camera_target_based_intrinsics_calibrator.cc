@@ -89,7 +89,7 @@ void WriteCalibrationResultsToFile(const Eigen::Vector2d& focal_lengths, const E
 }
 
 template <typename DISTORTER>
-void Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::ImageCorrespondences>& target_matches,
+bool Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::ImageCorrespondences>& target_matches,
                const std::string& output_file) {
   ca::CameraTargetBasedIntrinsicsCalibrator<DISTORTER> calibrator(params.camera_target_based_intrinsics_calibrator);
   ca::StateParameters initial_state_parameters;
@@ -97,8 +97,12 @@ void Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::Imag
   initial_state_parameters.principal_points = params.camera_params->GetOpticalOffset();
   initial_state_parameters.distortion = params.camera_params->GetDistortion();
   ca::StateParameters calibrated_state_parameters;
-  calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_state_parameters,
-                                                    calibrated_state_parameters);
+  const bool success = calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_state_parameters,
+                                                                         calibrated_state_parameters);
+  if (!success) {
+    LogError("Calibrate: Calibration failed.");
+    return false;
+  }
   if (params.camera_target_based_intrinsics_calibrator.calibrate_focal_lengths) {
     LogInfo("initial focal lengths: " << std::endl << initial_state_parameters.focal_lengths.matrix());
     LogInfo("calibrated focal lengths: " << std::endl << calibrated_state_parameters.focal_lengths.matrix());
@@ -113,6 +117,7 @@ void Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::Imag
   }
   WriteCalibrationResultsToFile(calibrated_state_parameters.focal_lengths, calibrated_state_parameters.principal_points,
                                 calibrated_state_parameters.distortion, output_file);
+  return true;
 }
 
 int main(int argc, char** argv) {

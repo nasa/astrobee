@@ -44,11 +44,11 @@ class CameraTargetBasedIntrinsicsCalibrator {
   explicit CameraTargetBasedIntrinsicsCalibrator(const CameraTargetBasedIntrinsicsCalibratorParams& params)
       : params_(params) {}
 
-  void EstimateInitialTargetPosesAndCalibrate(
+  bool EstimateInitialTargetPosesAndCalibrate(
     const std::vector<localization_common::ImageCorrespondences>& correspondences_set,
     const StateParameters& initial_state_parameters, StateParameters& calibrated_state_parameters);
 
-  void Calibrate(const std::vector<MatchSet>& match_sets, const StateParameters& initial_state_parameters,
+  bool Calibrate(const std::vector<MatchSet>& match_sets, const StateParameters& initial_state_parameters,
                  StateParameters& calibrated_state_parameters);
 
   const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }
@@ -69,7 +69,7 @@ class CameraTargetBasedIntrinsicsCalibrator {
 };
 
 template <typename DISTORTER>
-void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPosesAndCalibrate(
+bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPosesAndCalibrate(
   const std::vector<localization_common::ImageCorrespondences>& correspondences_set,
   const StateParameters& initial_state_parameters, StateParameters& calibrated_state_parameters) {
   std::vector<MatchSet> match_sets;
@@ -97,11 +97,11 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPose
     }
   }
 
-  Calibrate(match_sets, initial_state_parameters, calibrated_state_parameters);
+  return Calibrate(match_sets, initial_state_parameters, calibrated_state_parameters);
 }
 
 template <typename DISTORTER>
-void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vector<MatchSet>& match_sets,
+bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vector<MatchSet>& match_sets,
                                                                  const StateParameters& initial_state_parameters,
                                                                  StateParameters& calibrated_state_parameters) {
   Initialize(initial_state_parameters);
@@ -128,9 +128,14 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
   ceres::Solver::Summary summary;
   ceres::Solve(params_.optimization.solver_options, &problem_, &summary);
   if (params_.optimization.verbose) std::cout << summary.FullReport() << std::endl;
+  if (!summary.IsSolutionUsable()) {
+    LogError("Calibrate: Calibration failed.");
+    return false;
+  }
 
   calibrated_state_parameters = state_parameters_.OptimizedStateParameters();
   SaveResults(calibrated_state_parameters, match_sets);
+  return true;
 }
 
 template <typename DISTORTER>
