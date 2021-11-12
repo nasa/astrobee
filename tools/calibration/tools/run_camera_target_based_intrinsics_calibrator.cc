@@ -107,14 +107,17 @@ bool Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::Imag
   if (params.camera_target_based_intrinsics_calibrator.calibrate_focal_lengths) {
     LogInfo("initial focal lengths: " << std::endl << initial_state_parameters.focal_lengths.matrix());
     LogInfo("calibrated focal lengths: " << std::endl << calibrated_state_parameters.focal_lengths.matrix());
+    LogInfo("calibrated focal length covariance: " << std::endl << covariances.focal_lengths.matrix());
   }
   if (params.camera_target_based_intrinsics_calibrator.calibrate_principal_points) {
     LogInfo("initial principal points: " << std::endl << initial_state_parameters.principal_points.matrix());
     LogInfo("calibrated principal points: " << std::endl << calibrated_state_parameters.principal_points.matrix());
+    LogInfo("calibrated principal points covariance: " << std::endl << covariances.principal_points.matrix());
   }
   if (params.camera_target_based_intrinsics_calibrator.calibrate_distortion) {
     LogInfo("initial distortion: " << std::endl << initial_state_parameters.distortion.matrix());
     LogInfo("calibrated distortion: " << std::endl << calibrated_state_parameters.distortion.matrix());
+    LogInfo("calibrated distortion covariance: " << std::endl << covariances.distortion.matrix());
   }
   WriteCalibrationResultsToFile(calibrated_state_parameters.focal_lengths, calibrated_state_parameters.principal_points,
                                 calibrated_state_parameters.distortion, output_file);

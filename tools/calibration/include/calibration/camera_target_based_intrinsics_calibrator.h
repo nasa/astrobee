@@ -139,6 +139,14 @@ bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
 
   calibrated_state_parameters = state_parameters_.OptimizedStateParameters();
   SaveResults(calibrated_state_parameters, match_sets);
+
+  const auto state_covariances = Covariances();
+  if (!state_covariances) {
+    LogError("Calibrate: Failed to get covariances");
+    return false;
+  }
+  covariances = *state_covariances;
+
   return true;
 }
 
@@ -181,7 +189,7 @@ boost::optional<StateParametersCovariances> CameraTargetBasedIntrinsicsCalibrato
                                 covariances.focal_lengths.data());
   covariance.GetCovarianceBlock(state_parameters_.principal_points.data(), state_parameters_.principal_points.data(),
                                 covariances.principal_points.data());
-  covariances.distortion = Eigen::MatrixXd(state_parameters_.distortion.size());
+  covariances.distortion = Eigen::MatrixXd(state_parameters_.distortion.size(), state_parameters_.distortion.size());
   covariance.GetCovarianceBlock(state_parameters_.distortion.data(), state_parameters_.distortion.data(),
                                 covariances.distortion.data());
   return covariances;
