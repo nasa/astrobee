@@ -72,9 +72,11 @@ template <typename T>
 std::vector<T> SampledValues(const std::vector<T>& values, const std::vector<int>& indices);
 
 template <typename DISTORTER>
-boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP(
-  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
-  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const RansacPnPParams& params);
+boost::optional<PoseWithCovarianceAndInliers> RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
+                                                        const std::vector<Eigen::Vector3d>& points_3d,
+                                                        const Eigen::Matrix3d& intrinsics,
+                                                        const Eigen::VectorXd& distortion,
+                                                        const RansacPnPParams& params);
 
 template <typename DISTORTER>
 boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimate(const std::vector<Eigen::Vector2d>& image_points,
@@ -145,9 +147,11 @@ std::vector<T> SampledValues(const std::vector<T>& values, const std::vector<int
 }
 
 template <typename DISTORTER>
-boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP(
-  const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
-  const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const RansacPnPParams& params) {
+boost::optional<PoseWithCovarianceAndInliers> RansacPnP(const std::vector<Eigen::Vector2d>& image_points,
+                                                        const std::vector<Eigen::Vector3d>& points_3d,
+                                                        const Eigen::Matrix3d& intrinsics,
+                                                        const Eigen::VectorXd& distortion,
+                                                        const RansacPnPParams& params) {
   if (image_points.size() < 4) {
     LogError("RansacPnP: Too few matched points given.");
     return boost::none;
@@ -198,7 +202,8 @@ boost::optional<std::pair<Eigen::Isometry3d, std::vector<int>>> RansacPnP(
   std::vector<int> inliers;
   Inliers<DISTORTER>(image_points, points_3d, intrinsics, distortion, best_pose_estimate, params.max_inlier_threshold,
                      inliers);
-  return std::make_pair(best_pose_estimate, inliers);
+  // TODO(rsoussan): Get covariance for ransac pnp
+  return PoseWithCovarianceAndInliers(best_pose_estimate, Eigen::Matrix<double, 6, 6>::Identity(), inliers);
 }
 
 template <typename DISTORTER>
@@ -216,14 +221,14 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimate(const std
   const Eigen::Matrix3d intrinsics = optimization_common::Intrinsics(focal_lengths, principal_points);
   // Use RansacPnP for initial estimate since using identity transform can lead to image projection issues
   // if any points_3d z values are 0.
-  const auto initial_estimate_and_inliers =
+  const auto ransac_pnp_estimate =
     RansacPnP<DISTORTER>(image_points, points_3d, intrinsics, distortion, params.ransac_pnp);
-  if (!initial_estimate_and_inliers) {
-    LogError("ReprojectionPoseEstimate: Failed to get initial estimate.");
+  if (!ransac_pnp_estimate) {
+    LogError("ReprojectionPoseEstimate: Failed to get ransac pnp initial estimate.");
     return boost::none;
   }
 
-  const int num_inliers = initial_estimate_and_inliers->second.size();
+  const int num_inliers = ransac_pnp_estimate->inliers.size();
   if (num_inliers < params.ransac_pnp.min_num_inliers) {
     LogError("ReprojectionPoseEstimate: Too few inliers found. Need " << params.ransac_pnp.min_num_inliers << ", got "
                                                                       << num_inliers << ".");
@@ -231,8 +236,8 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimate(const std
   }
 
   return ReprojectionPoseEstimateWithInitialEstimate<DISTORTER>(
-    image_points, points_3d, focal_lengths, principal_points, distortion, params, initial_estimate_and_inliers->first,
-    initial_estimate_and_inliers->second);
+    image_points, points_3d, focal_lengths, principal_points, distortion, params, ransac_pnp_estimate->pose,
+    ransac_pnp_estimate->inliers);
 }
 
 template <typename DISTORTER>
