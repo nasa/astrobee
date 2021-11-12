@@ -50,6 +50,6 @@ namespace oc = optimization_common;
       correspondences.intrinsics(), Eigen::VectorXd(), params);
     ASSERT_TRUE(pose_estimate != boost::none);
     ASSERT_PRED2(lc::MatrixEquality<2>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
-    ASSERT_TRUE(pose_estimate->inliers.size() == correspondences.correspondences().image_points.size());
+    ASSERT_TRUE(pose_estimate->inliers.size() == correspondences.correspondences().size());
   }
 }*/

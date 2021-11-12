@@ -64,8 +64,8 @@ std::vector<lc::ImageCorrespondences> LoadAllTargetMatches(const std::string& co
   int i = 0;
   for (const auto& corners_file : corners_files) {
     const auto& matches = LoadTargetMatches(corners_file);
-    if (matches.image_points.size() < 4) {
-      LogError("Too few matches, only " << matches.image_points.size() << ".");
+    if (matches.size() < 4) {
+      LogError("Too few matches, only " << matches.size() << ".");
       continue;
     }
     all_matches.emplace_back(matches);

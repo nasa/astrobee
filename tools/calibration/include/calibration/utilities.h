@@ -114,7 +114,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Isometry3d>& c
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
     const Eigen::Isometry3d camera_T_target = camera_T_targets[i];
-    for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
+    for (int j = 0; j < match_set.size(); ++j) {
       const auto& image_point = match_set.image_points[j];
       const auto& target_point = match_set.points_3d[j];
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
@@ -143,7 +143,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Isometry3d>& c
   for (int i = 0; i < static_cast<int>(valid_match_sets.size()); ++i) {
     const auto& match_set = valid_match_sets[i];
     const Eigen::Isometry3d camera_T_target = camera_T_targets[i];
-    for (int j = 0; j < static_cast<int>(match_set.image_points.size()); ++j) {
+    for (int j = 0; j < match_set.size(); ++j) {
       const auto& image_point = match_set.image_points[j];
       const auto& target_point = match_set.points_3d[j];
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;

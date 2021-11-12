@@ -39,7 +39,7 @@ TEST(CameraUtilitiesTester, Inliers) {
     std::vector<Eigen::Vector2d> noisy_image_points;
     std::unordered_set<int> noisy_point_indices;
     std::unordered_set<int> inlier_point_indices;
-    for (int j = 0; j < static_cast<int>(correspondences.correspondences().image_points.size()); ++j) {
+    for (int j = 0; j < static_cast<int>(correspondences.correspondences().size()); ++j) {
       const auto& image_point = correspondences.correspondences().image_points[j];
       const bool add_noise = lc::RandomBool();
       if (add_noise) {

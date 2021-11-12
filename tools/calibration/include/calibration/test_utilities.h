@@ -123,7 +123,7 @@ std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int 
       TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
     // Set inliers using correspondence point size since correspondence points with negative z are not
     // included in RegistrationCorrespondences
-    std::vector<int> inliers(correspondences.correspondences().image_points.size());
+    std::vector<int> inliers(correspondences.correspondences().size());
     std::iota(inliers.begin(), inliers.end(), 0);
     match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
   }
@@ -148,7 +148,7 @@ std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const
       RegistrationCorrespondences<DISTORTER>(target_poses[i], intrinsics, target_points, distortion);
     // Set inliers using correspondence point size since correspondence points with negative z are not
     // included in RegistrationCorrespondences
-    std::vector<int> inliers(correspondences.correspondences().image_points.size());
+    std::vector<int> inliers(correspondences.correspondences().size());
     std::iota(inliers.begin(), inliers.end(), 0);
     match_sets.emplace_back(correspondences.correspondences(), correspondences.camera_T_target(), inliers);
   }
