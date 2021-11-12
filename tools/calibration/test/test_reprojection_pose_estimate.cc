@@ -31,29 +31,33 @@
 namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
-TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsRandomPointsIdentityDistortion) {
+TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsIdentityDistortionWithNoise) {
   const auto params = ca::DefaultReprojectionPoseEstimateParams();
-  const double initial_estimate_translation_noise = 0.1;
-  const double initial_estimate_rotation_noise = 0.1;
-  const int num_points = 20;
-  std::vector<int> initial_inliers(num_points);
+  const int num_rows = 5;
+  const int num_cols = 5;
+  const int num_y_levels = 5;
+  const auto target_poses = ca::EvenlySpacedTargetPoses(num_rows, num_cols, num_y_levels);
+  const auto target_points = ca::TargetPoints(10, 10);
+  std::vector<int> initial_inliers(target_points.size());
   // Fill inliers with all indices
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
-  for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences<oc::IdentityDistorter>(
-      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_points));
+  const double initial_estimate_translation_noise = 0.1;
+  const double initial_estimate_rotation_noise = 0.1;
+  for (int i = 0; i < target_poses.size(); ++i) {
+    const auto correspondences =
+      ca::RegistrationCorrespondences<oc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(1), params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_TRUE(pose_estimate->first.matrix().isApprox(correspondences.camera_T_target().matrix(), 1e-6));
-    ASSERT_TRUE(pose_estimate->second.size() == num_points);
+    ASSERT_PRED2(lc::MatrixEquality<4>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    ASSERT_TRUE(pose_estimate->inliers.size() == target_points.size());
   }
 }
 
-TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsRandomPointsFovDistortion) {
+/*TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsRandomPointsFovDistortion) {
   const auto params = ca::DefaultReprojectionPoseEstimateParams();
   const double initial_estimate_translation_noise = 0.1;
   const double initial_estimate_rotation_noise = 0.1;
@@ -90,8 +94,8 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsRando
       ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_points), distortion);
     // TODO(rsoussan): Adding noise to initial estimate sometimes messes up estimate
     // Use noisy esetimate if this is no longer the case
-    /*const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
-      correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);*/
+    //const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
+    //  correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::RadDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, correspondences.camera_T_target(), initial_inliers);
@@ -115,8 +119,8 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsRando
       ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_points), distortion);
     // TODO(rsoussan): Adding noise to initial estimate sometimes messes up estimate
     // Use noisy esetimate if this is no longer the case
-    /*const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
-      correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);*/
+    //const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
+    //  correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
     const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::RadTanDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, correspondences.camera_T_target(), initial_inliers);
@@ -146,6 +150,6 @@ TEST(ReprojectionPoseEstimateTester, RandomFrontFacingPosesRandomIntrinsicsTarge
     ASSERT_TRUE(pose_estimate->first.matrix().isApprox(correspondences.camera_T_target().matrix(), 1e-6));
     ASSERT_TRUE(pose_estimate->second.size() == num_points);
   }
-}
+}*/
 
 // TODO(rsoussan): Add test with ReprojectionPoseEstimate without initial estimate once pnp issues are resolved
