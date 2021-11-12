@@ -15,6 +15,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Updates robot config file with calibration output generated
+by intrinsics calibrator.
+"""
 
 import argparse
 import csv
@@ -73,10 +77,12 @@ def copy_calibration_params_to_config(config, camera_name, calibration_file):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--config")
-  parser.add_argument("--camera-name")
-  parser.add_argument("-c", "--calibration_file", default="calibrated_params.txt")
+  parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+  parser.add_argument("--config", help="Full path to robot config file.")
+  parser.add_argument("--camera-name", help="Camera name in robot config file to update.")
+  parser.add_argument("-c", "--calibration_file", default="calibrated_params.txt", help="Calibration file with new calibration params to use for update.")
   args = parser.parse_args()
   if not os.path.isfile(args.config):
     print("Config file " + args.config + " does not exist.")
