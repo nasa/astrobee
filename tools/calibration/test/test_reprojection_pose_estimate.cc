@@ -43,7 +43,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsIdentityDistortionWithNo
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   const double initial_estimate_translation_noise = 0.1;
   const double initial_estimate_rotation_noise = 0.1;
-  for (int i = 0; i < target_poses.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto correspondences =
       ca::RegistrationCorrespondences<oc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
@@ -69,7 +69,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsFovDistortionWithNoise) 
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   const double initial_estimate_translation_noise = 0.1;
   const double initial_estimate_rotation_noise = 0.1;
-  for (int i = 0; i < target_poses.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto distortion = ca::RandomFovDistortion();
     const auto correspondences = ca::RegistrationCorrespondences<oc::FovDistorter>(
       target_poses[i], lc::RandomIntrinsics(), target_points, distortion);
@@ -96,7 +96,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsRadDistortionWithNoise) 
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   const double initial_estimate_translation_noise = 0.1;
   const double initial_estimate_rotation_noise = 0.1;
-  for (int i = 0; i < target_poses.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto distortion = ca::RandomRadDistortion();
     const auto correspondences = ca::RegistrationCorrespondences<oc::RadDistorter>(
       target_poses[i], lc::RandomIntrinsics(), target_points, distortion);
@@ -123,7 +123,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsRadTanDistortionWithNois
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   const double initial_estimate_translation_noise = 0.1;
   const double initial_estimate_rotation_noise = 0.1;
-  for (int i = 0; i < target_poses.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto distortion = ca::RandomRadTanDistortion();
     const auto correspondences = ca::RegistrationCorrespondences<oc::RadTanDistorter>(
       target_poses[i], lc::RandomIntrinsics(), target_points, distortion);

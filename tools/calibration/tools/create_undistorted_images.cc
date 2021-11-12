@@ -40,17 +40,18 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   std::string output_undistorted_images_directory;
-  po::options_description desc("Creates undistorted images using intrinsics and distortion params for camera.");
+  po::options_description desc(
+    "Creates undistorted images using the intrinsics and distortion params of the selected camera.");
   desc.add_options()("help", "produce help message")("distorted-images-directory", po::value<std::string>()->required(),
                                                      "Distorted images directory")(
-    "distortion-type", po::value<std::string>()->required(), "distortion type")(
-    "camera-name", po::value<std::string>()->required(), "Camera name")(
-    "config-path", po::value<std::string>()->required(), "Config path")(
+    "distortion-type", po::value<std::string>()->required(), "fov, rad, or radtan.")(
+    "camera-name", po::value<std::string>()->required(), "Selected camera name from robot config file.")(
+    "config-path", po::value<std::string>()->required(), "Config path.")(
     "output-directory,o",
     po::value<std::string>(&output_undistorted_images_directory)->default_value("undistorted_images"),
-    "Output undistorted images directory")(
+    "Output directory for the undistorted images.")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name.");
   po::positional_options_description p;
   p.add("distorted-images-directory", 1);
   p.add("distortion-type", 1);

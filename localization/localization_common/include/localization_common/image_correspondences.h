@@ -33,7 +33,7 @@ struct ImageCorrespondences {
     points_3d.emplace_back(point_3d);
   }
 
-  int size() const { return static_cast<int>(image_points.size()); }
+  size_t size() const { return image_points.size(); }
 
   std::vector<Eigen::Vector2d> image_points;
   std::vector<Eigen::Vector3d> points_3d;

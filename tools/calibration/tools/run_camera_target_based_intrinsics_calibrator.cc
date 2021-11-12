@@ -130,11 +130,12 @@ int main(int argc, char** argv) {
   std::string output_file;
   po::options_description desc("Calibrates camera intrinsics using target detections.");
   desc.add_options()("help", "produce help message")("corners-directory", po::value<std::string>()->required(),
-                                                     "Corners Directory")(
+                                                     "Directory containing target detections to use for calibration.")(
     "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
-    "output-file,o", po::value<std::string>(&output_file)->default_value("calibrated_params.txt"), "Output file");
+    "output-file,o", po::value<std::string>(&output_file)->default_value("calibrated_params.txt"),
+    "File where calibrated parameters are saved.");
   po::positional_options_description p;
   p.add("corners-directory", 1);
   p.add("config-path", 1);
