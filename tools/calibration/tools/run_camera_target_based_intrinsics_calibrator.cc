@@ -97,8 +97,9 @@ bool Calibrate(const ca::RunCalibratorParams& params, const std::vector<lc::Imag
   initial_state_parameters.principal_points = params.camera_params->GetOpticalOffset();
   initial_state_parameters.distortion = params.camera_params->GetDistortion();
   ca::StateParameters calibrated_state_parameters;
+  ca::StateParametersCovariances covariances;
   const bool success = calibrator.EstimateInitialTargetPosesAndCalibrate(target_matches, initial_state_parameters,
-                                                                         calibrated_state_parameters);
+                                                                         calibrated_state_parameters, covariances);
   if (!success) {
     LogError("Calibrate: Calibration failed.");
     return false;

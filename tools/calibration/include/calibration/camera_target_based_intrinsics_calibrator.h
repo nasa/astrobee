@@ -46,10 +46,11 @@ class CameraTargetBasedIntrinsicsCalibrator {
 
   bool EstimateInitialTargetPosesAndCalibrate(
     const std::vector<localization_common::ImageCorrespondences>& correspondences_set,
-    const StateParameters& initial_state_parameters, StateParameters& calibrated_state_parameters);
+    const StateParameters& initial_state_parameters, StateParameters& calibrated_state_parameters,
+    StateParametersCovariances& covariances);
 
   bool Calibrate(const std::vector<MatchSet>& match_sets, const StateParameters& initial_state_parameters,
-                 StateParameters& calibrated_state_parameters);
+                 StateParameters& calibrated_state_parameters, StateParametersCovariances& covariances);
 
   const CameraTargetBasedIntrinsicsCalibratorParams& params() { return params_; }
 
@@ -71,7 +72,8 @@ class CameraTargetBasedIntrinsicsCalibrator {
 template <typename DISTORTER>
 bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPosesAndCalibrate(
   const std::vector<localization_common::ImageCorrespondences>& correspondences_set,
-  const StateParameters& initial_state_parameters, StateParameters& calibrated_state_parameters) {
+  const StateParameters& initial_state_parameters, StateParameters& calibrated_state_parameters,
+  StateParametersCovariances& covariances) {
   std::vector<MatchSet> match_sets;
   const Eigen::Matrix3d initial_intrinsics =
     optimization_common::Intrinsics(initial_state_parameters.focal_lengths, initial_state_parameters.principal_points);
@@ -97,13 +99,14 @@ bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPose
     }
   }
 
-  return Calibrate(match_sets, initial_state_parameters, calibrated_state_parameters);
+  return Calibrate(match_sets, initial_state_parameters, calibrated_state_parameters, covariances);
 }
 
 template <typename DISTORTER>
 bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vector<MatchSet>& match_sets,
                                                                  const StateParameters& initial_state_parameters,
-                                                                 StateParameters& calibrated_state_parameters) {
+                                                                 StateParameters& calibrated_state_parameters,
+                                                                 StateParametersCovariances& covariances) {
   Initialize(initial_state_parameters);
   // Reserve so that pointers aren't modified while new target poses are added.
   // This can mess up ceres::Problem since it relies on pointers of add parameters.

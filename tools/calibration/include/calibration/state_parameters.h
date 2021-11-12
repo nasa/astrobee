@@ -65,6 +65,12 @@ struct OptimizationStateParameters {
   Eigen::VectorXd distortion;
   std::vector<Eigen::Matrix<double, 6, 1>> camera_T_targets;
 };
+
+struct StateParametersCovariances {
+  Eigen::Matrix2d focal_lengths;
+  Eigen::Matrix2d principal_points;
+  Eigen::MatrixXd distortion;
+};
 }  // namespace calibration
 
 #endif  // CALIBRATION_STATE_PARAMETERS_H_
