@@ -15,6 +15,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Calibrates camera intrinsics using provided config file and target detections
+and updates the provided config file with the calibration results.
+Optionally undistorts images for provided directory with calibration results.
+"""
 
 import argparse
 import os
@@ -22,8 +27,10 @@ import subprocess
 import sys
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('corners_directory')
+  parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+  parser.add_argument('corners_directory', help="Path to target detections to use for calibration.")
   parser.add_argument('config_path')
   parser.add_argument('robot_config_file')
   parser.add_argument('-w', '--world', default='iss')
