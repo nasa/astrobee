@@ -15,6 +15,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Generates an image showing all image space target detections for target 
+detection files in a directory.
+"""
 
 import argparse
 import csv
@@ -52,8 +56,11 @@ def view_detections(directory):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument("-d", "--directory", default="./")
+  parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+
+  parser.add_argument("-d", "--directory", default="./", help="Directory containing target detection files. Assumes at least one image is in same directory from which the image dimensions can be used for the generated image.")
   args = parser.parse_args()
   if not os.path.isdir(args.directory):
     print("Directory " + args.directory + " does not exist.")
