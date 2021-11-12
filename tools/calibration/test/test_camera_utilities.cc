@@ -30,16 +30,16 @@ namespace lc = localization_common;
 namespace oc = optimization_common;
 TEST(CameraUtilitiesTester, Inliers) {
   const auto params = ca::DefaultReprojectionPoseEstimateParams();
-  const int num_points = 20;
   const double inlier_threshold = 3.0;
+  const int num_desired_points = 20;
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = ca::RegistrationCorrespondences<oc::IdentityDistorter>(
-      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_points));
-
+      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_desired_points));
+    const int num_points = static_cast<int>(correspondences.correspondences().size());
     std::vector<Eigen::Vector2d> noisy_image_points;
     std::unordered_set<int> noisy_point_indices;
     std::unordered_set<int> inlier_point_indices;
-    for (int j = 0; j < static_cast<int>(correspondences.correspondences().size()); ++j) {
+    for (int j = 0; j < num_points; ++j) {
       const auto& image_point = correspondences.correspondences().image_points[j];
       const bool add_noise = lc::RandomBool();
       if (add_noise) {

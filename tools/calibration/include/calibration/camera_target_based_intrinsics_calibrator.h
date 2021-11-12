@@ -120,7 +120,7 @@ bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::Calibrate(const std::vect
       params_.only_use_inliers ? InlierMatches(match_set.correspondences, match_set.inliers)
                                : match_set.correspondences;
     valid_correspondences_set_.emplace_back(valid_correspondences);
-    for (int i = 0; i < static_cast<int>(valid_correspondences.size()) && i < params_.max_num_match_sets; ++i) {
+    for (int i = 0; i < valid_correspondences.size() && i < params_.max_num_match_sets; ++i) {
       const double radial_scale_factor = RadialScaleFactor(valid_correspondences.image_points[i], params_.image_size);
       optimization_common::ReprojectionError<DISTORTER>::AddCostFunction(
         valid_correspondences.image_points[i], valid_correspondences.points_3d[i],

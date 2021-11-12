@@ -67,6 +67,9 @@ std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
 
 Eigen::Vector3d RandomFrontFacingPoint();
 
+Eigen::Vector3d RandomFrontFacingPoint(const double rho_min, const double rho_max, const double phi_min,
+                                       const double phi_max, const double z_rho_scale);
+
 template <typename DISTORTER>
 std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int num_target_points_per_row_and_col,
                                             const Eigen::Matrix3d& intrinsics,
