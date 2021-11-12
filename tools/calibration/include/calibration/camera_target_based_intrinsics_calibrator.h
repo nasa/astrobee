@@ -90,7 +90,7 @@ bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPose
       continue;
     }
 
-    match_sets.emplace_back(correspondences, camera_T_target->first, camera_T_target->second);
+    match_sets.emplace_back(correspondences, camera_T_target->pose, camera_T_target->inliers);
     if (params_.save_individual_initial_reprojection_images) {
       static int image_count = 0;
       const auto& match_set = match_sets.back();
