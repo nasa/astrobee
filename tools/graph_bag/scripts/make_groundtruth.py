@@ -134,6 +134,7 @@ if __name__ == "__main__":
     utilities.run_command_and_save_output(
         make_groundtruth_command, "make_groundtruth.txt"
     )
+    os.rename("run_graph_bag_command.txt", "groundtruth_run_graph_bag_command.txt")
 
     loc_results_bag = bag_prefix + "_results.bag"
     loc_pdf = "loc_results.pdf"
@@ -165,3 +166,4 @@ if __name__ == "__main__":
     utilities.run_command_and_save_output(
         get_loc_results_command, "get_loc_results.txt"
     )
+    os.rename("run_graph_bag_command.txt", "loc_run_graph_bag_command.txt")
