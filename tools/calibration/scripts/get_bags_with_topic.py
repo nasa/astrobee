@@ -15,6 +15,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Finds all bags in a directory with a given topic.
+"""
 
 import argparse
 import os
@@ -57,9 +60,11 @@ def find_bags_with_topic(directory, topic):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--cam-topic", default="/hw/cam_nav")
-  parser.add_argument("-d", "--directory", default="./")
+  parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+  parser.add_argument("--cam-topic", default="/hw/cam_nav", help="Camera topic that bag files must contain.")
+  parser.add_argument("-d", "--directory", default="./", help="Directory to search in.")
   args = parser.parse_args()
   bag_names_with_topic = find_bags_with_topic(args.directory, args.cam_topic)
   if len(bag_names_with_topic) == 0:

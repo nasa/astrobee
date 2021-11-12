@@ -15,6 +15,12 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Generates target corner detection files from a set of bagfiles in
+a directory containing images.  Optionally prunes overlapping detections
+to help prevent having too many detections in one area and potentially
+biasing the calibrator.
+"""
 
 import argparse
 import os
@@ -151,12 +157,15 @@ def save_images_from_bags_directory_with_target_detections(bags_directory, targe
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument("-d", "--directory", default="./")
+  parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+
+  parser.add_argument("-d", "--directory", default="./", help="Directory of bagfiles containing images used for target detection.")
   parser.add_argument("-o", "--output-directory", default="./images_with_target_detections")
-  parser.add_argument("--cam-topic", default="/hw/cam_nav")
-  parser.add_argument("-t", "--target-yaml")
-  parser.add_argument("--threshold", type=float, default=100)
+  parser.add_argument("--cam-topic", default="/hw/cam_nav", help="Camera topic in bagfiles.")
+  parser.add_argument("-t", "--target-yaml", help="Target yamf file specifying target parameters for target detection.")
+  parser.add_argument("--threshold", type=float, default=100, help="Threshold to prevent overlapping images. If the mean difference norm in image space for a new image's target detection points compared with any already added target detections image are below the provided value, the image is ignored.  The two images must detect the exact same point set.")
   args = parser.parse_args()
   save_images_from_bags_directory_with_target_detections(args.directory, args.target_yaml, args.cam_topic,
                                                          args.output_directory, args.threshold)

@@ -15,6 +15,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Generates a histogram of errors using the output errors file from 
+a calibration run.
+"""
+
 
 import argparse
 import csv
@@ -62,8 +67,10 @@ def make_histograms(errors_file):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-e', '--errors-file', default='errors_file.txt')
+  parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+  parser.add_argument('-e', '--errors-file', default='errors_file.txt', help="Errors file used to generate histogram. Errors are output from the intrinsics calibration pipeline.")
   args = parser.parse_args()
   if not os.path.isfile(args.errors_file):
     print('Errors file not found.')
