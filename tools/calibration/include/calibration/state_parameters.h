@@ -19,6 +19,7 @@
 #define CALIBRATION_STATE_PARAMETERS_H_
 
 #include <ff_common/eigen_vectors.h>
+#include <localization_common/logger.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -28,6 +29,12 @@
 
 namespace calibration {
 struct StateParameters {
+  void Print() {
+    LogInfo("Focal lengths: " << std::endl << focal_lengths.matrix());
+    LogInfo("Principal points: " << std::endl << principal_points.matrix());
+    LogInfo("Distortion: " << std::endl << distortion.matrix());
+  }
+
   Eigen::Vector2d focal_lengths;
   Eigen::Vector2d principal_points;
   Eigen::VectorXd distortion;
@@ -67,6 +74,12 @@ struct OptimizationStateParameters {
 };
 
 struct StateParametersCovariances {
+  void Print() {
+    LogInfo("Focal length covariances: " << std::endl << focal_lengths.matrix());
+    LogInfo("Principal point covariances: " << std::endl << principal_points.matrix());
+    LogInfo("Distortion covariances: " << std::endl << distortion.matrix());
+  }
+
   Eigen::Matrix2d focal_lengths;
   Eigen::Matrix2d principal_points;
   Eigen::MatrixXd distortion;

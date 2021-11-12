@@ -162,11 +162,14 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesRandomPo
   }
 }*/
 
-TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesTargetPointsIdentityDistortionWithNoise) {
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsIdentityDistortionWithNoise) {
   auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
   params.calibrate_distortion = false;
+  params.calibrate_target_poses = false;
   const int num_target_points_per_row_and_col = 10;
-  const int num_match_sets = 50;
+  const int num_pose_rows = 3;
+  const int num_pose_cols = 5;
+  const int num_pose_y_levels = 2;
   const double focal_lengths_stddev = 1.0;
   const double principal_points_stddev = 1.0;
   const double distortion_stddev = 0;
@@ -180,10 +183,11 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesTargetPo
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
     ca::StateParameters calibrated_state_parameters;
-    const auto match_sets =
-      ca::RandomTargetMatchSets<oc::IdentityDistorter>(num_match_sets, num_target_points_per_row_and_col, intrinsics);
+    const auto match_sets = ca::EvenlySpacedTargetMatchSets<oc::IdentityDistorter>(
+      num_pose_rows, num_pose_cols, num_pose_y_levels, num_target_points_per_row_and_col, intrinsics);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::IdentityDistorter> calibrator(params);
-    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ca::StateParametersCovariances covariances;
+    ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
                  calibrated_state_parameters.focal_lengths.matrix());
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
@@ -213,7 +217,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesTargetPo
     const auto match_sets = ca::RandomTargetMatchSets<oc::FovDistorter>(
       num_match_sets, num_target_points_per_row_and_col, intrinsics, true_state_parameters.distortion);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::FovDistorter> calibrator(params);
-    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ca::StateParametersCovariances covariances;
+    ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
                  calibrated_state_parameters.focal_lengths.matrix());
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
@@ -244,7 +249,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesTargetPo
     const auto match_sets = ca::RandomTargetMatchSets<oc::RadDistorter>(
       num_match_sets, num_target_points_per_row_and_col, intrinsics, true_state_parameters.distortion);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadDistorter> calibrator(params);
-    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ca::StateParametersCovariances covariances;
+    ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
                  calibrated_state_parameters.focal_lengths.matrix());
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
@@ -275,7 +281,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesTargetPo
     const auto match_sets = ca::RandomTargetMatchSets<oc::RadTanDistorter>(
       num_match_sets, num_target_points_per_row_and_col, intrinsics, true_state_parameters.distortion);
     ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadTanDistorter> calibrator(params);
-    calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters);
+    ca::StateParametersCovariances covariances;
+    ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
                  calibrated_state_parameters.focal_lengths.matrix());
     ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
