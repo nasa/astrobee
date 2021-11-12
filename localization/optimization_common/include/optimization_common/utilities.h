@@ -28,6 +28,9 @@
 namespace optimization_common {
 // Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
 // First 3 values of isometry_data are the compact angle axis, next 3 are the translation
+template <typename T>
+Eigen::Matrix<T, 6, 1> VectorFromIsometry3(const Eigen::Transform<T, 3, Eigen::Isometry>& isometry_3);
+
 Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d);
 // Assumes compact angle axis (3d vector where norm gives the angle) parameterization for rotations
 // First 3 values of isometry_data are the compact angle axis, next 3 are the translation, last is scale
@@ -71,6 +74,18 @@ double ResidualNorm(const std::vector<double>& residual, const int index, const 
 
 // Assumes each residual is the same size
 void CheckResiduals(const int residual_size, ceres::Problem& problem, const double outlier_threshold = 0.99);
+
+template <typename T>
+Eigen::Matrix<T, 6, 1> VectorFromIsometry3(const Eigen::Transform<T, 3, Eigen::Isometry>& isometry_3) {
+  // Isometry3d linear().data() returns the data pointer to the full Isometry3d matrix rather than just the rotation
+  const Eigen::Matrix<T, 3, 3> rotation = isometry_3.linear();
+  Eigen::Matrix<T, 6, 1> isometry_3_vector;
+  ceres::RotationMatrixToAngleAxis(rotation.data(), &(isometry_3_vector.data()[0]));
+  isometry_3_vector[3] = isometry_3.translation().x();
+  isometry_3_vector[4] = isometry_3.translation().y();
+  isometry_3_vector[5] = isometry_3.translation().z();
+  return isometry_3_vector;
+}
 
 template <typename T>
 Eigen::Transform<T, 3, Eigen::Isometry> Isometry3(const T* isometry_data) {

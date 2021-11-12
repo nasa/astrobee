@@ -26,6 +26,7 @@
 #include <localization_common/image_correspondences.h>
 #include <localization_common/logger.h>
 #include <optimization_common/residuals.h>
+#include <optimization_common/se3_local_parameterization.h>
 #include <optimization_common/utilities.h>
 
 #include <Eigen/Core>
@@ -201,6 +202,8 @@ void CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::AddCameraTTargetParameter
   state_parameters_.AddCameraTTarget(camera_T_target);
   optimization_common::AddParameterBlock(6, state_parameters_.camera_T_targets.back().data(), problem_,
                                          !params_.calibrate_target_poses);
+  ceres::LocalParameterization* se3_local_parameterization = new optimization_common::SE3LocalParameterization;
+  problem_.SetParameterization(state_parameters_.camera_T_targets.back().data(), se3_local_parameterization);
 }
 
 template <typename DISTORTER>

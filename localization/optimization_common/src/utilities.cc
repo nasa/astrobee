@@ -20,12 +20,7 @@
 
 namespace optimization_common {
 Eigen::Matrix<double, 6, 1> VectorFromIsometry3d(const Eigen::Isometry3d& isometry_3d) {
-  // Isometry3d linear().data() returns the data pointer to the full Isometry3d matrix rather than just the rotation
-  const Eigen::Matrix3d rotation = isometry_3d.linear();
-  Eigen::Matrix<double, 6, 1> isometry_3d_vector;
-  ceres::RotationMatrixToAngleAxis(rotation.data(), &(isometry_3d_vector.data()[0]));
-  isometry_3d_vector.block<3, 1>(3, 0) = isometry_3d.translation();
-  return isometry_3d_vector;
+  return VectorFromIsometry3<double>(isometry_3d);
 }
 
 Eigen::Matrix<double, 7, 1> VectorFromAffine3d(const Eigen::Affine3d& affine_3d) {
