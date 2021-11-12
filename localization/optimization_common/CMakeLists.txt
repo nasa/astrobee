@@ -42,4 +42,12 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_utilities_optimization_common
     localization_common optimization_common 
   )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_se3_local_parameterization
+    test/test_se3_local_parameterization.test
+    test/test_se3_local_parameterization.cc
+  )
+  target_link_libraries(test_se3_local_parameterization
+    localization_common optimization_common 
+  )
 endif()
