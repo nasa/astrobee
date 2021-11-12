@@ -86,7 +86,7 @@ bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPose
       params_.reprojection_pose_estimate);
 
     if (!camera_T_target) {
-      LogError("Failed to get camera_T_target with " << correspondences.points_3d.size() << " matches.");
+      LogError("Failed to get camera_T_target with " << correspondences.size() << " matches.");
       continue;
     }
 
