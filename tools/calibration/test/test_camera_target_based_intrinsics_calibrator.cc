@@ -230,6 +230,41 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsFovDistorti
   }
 }
 
+TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadDistortionWithNoise) {
+  auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
+  params.calibrate_target_poses = false;
+  const int num_target_points_per_row_and_col = 10;
+  const int num_pose_rows = 3;
+  const int num_pose_cols = 5;
+  const int num_pose_y_levels = 2;
+  const double focal_lengths_stddev = 1.0;
+  const double principal_points_stddev = 1.0;
+  const double distortion_stddev = 0.05;
+  for (int i = 0; i < 10; ++i) {
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+    ca::StateParameters true_state_parameters;
+    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.distortion = ca::RandomRadDistortion();
+    const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
+                                                                      principal_points_stddev, distortion_stddev);
+    ca::StateParameters calibrated_state_parameters;
+    const auto match_sets = ca::EvenlySpacedTargetMatchSets<oc::RadDistorter>(
+      num_pose_rows, num_pose_cols, num_pose_y_levels, num_target_points_per_row_and_col, intrinsics,
+      true_state_parameters.distortion);
+    ca::CameraTargetBasedIntrinsicsCalibrator<oc::RadDistorter> calibrator(params);
+    ca::StateParametersCovariances covariances;
+    ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
+                 calibrated_state_parameters.focal_lengths.matrix());
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
+                 calibrated_state_parameters.principal_points.matrix());
+    // Use absolute value for Fov distortion comparison since positive and negative values have same meaning
+    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.cwiseAbs().matrix(),
+                 calibrated_state_parameters.distortion.cwiseAbs().matrix());
+  }
+}
+
 // TODO(rsoussan): Why does this lead to a solve failure? issue somewhere??
 TEST(CameraTargetBasedIntrinsicsCalibratorTester, RandomFrontFacingPosesTargetPointsFovDistortionWithNoise) {
   auto params = ca::DefaultCameraTargetBasedIntrinsicsCalibratorParams();
