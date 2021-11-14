@@ -50,7 +50,7 @@ void LoadCameraTargetBasedIntrinsicsCalibratorParams(config_reader::ConfigReader
     mc::LoadBool(config, "save_individual_initial_reprojection_images");
   params.save_individual_initial_reprojection_images =
     mc::LoadBool(config, "save_individual_initial_reprojection_images");
-  params.save_final_reprojection_image = mc::LoadDouble(config, "save_final_reprojection_image");
+  params.save_final_reprojection_image = mc::LoadBool(config, "save_final_reprojection_image");
   const int image_width = mc::LoadInt(config, "image_width");
   const int image_height = mc::LoadInt(config, "image_height");
   params.image_size = Eigen::Vector2i(image_width, image_height);
