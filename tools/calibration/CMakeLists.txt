@@ -68,6 +68,7 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${
 ## Declare a C++ executable: create_undistorted_images
 add_executable(create_undistorted_images tools/create_undistorted_images.cc)
 add_dependencies(create_undistorted_images ${catkin_EXPORTED_TARGETS})
+# TODO(rsoussan): This shouldn't need to link against gtsam, issue in localization_common CMakelists.txt?
 target_link_libraries(create_undistorted_images
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
@@ -75,6 +76,7 @@ target_link_libraries(create_undistorted_images
 add_executable(run_camera_target_based_intrinsics_calibrator tools/run_camera_target_based_intrinsics_calibrator.cc)
 add_dependencies(run_camera_target_based_intrinsics_calibrator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(run_camera_target_based_intrinsics_calibrator
+# TODO(rsoussan): This shouldn't need to link against gtsam, issue in localization_common CMakelists.txt?
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
 #############
