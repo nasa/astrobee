@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME}
   src/ros_timer.cc
   src/time.cc
   src/timer.cc
+  src/test_utilities.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
