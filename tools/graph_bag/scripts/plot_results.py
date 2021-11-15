@@ -538,7 +538,8 @@ def add_imu_bias_tester_velocities(pdf, imu_bias_tester_velocities):
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states, sparse_mapping_poses,
                         ar_tag_poses):
   add_feature_count_plots(pdf, graph_localization_states)
-  add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states, sparse_mapping_poses, ar_tag_poses)
+  if imu_augmented_graph_localization_states is not None:
+    add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states, sparse_mapping_poses, ar_tag_poses)
 
 
 def load_pose_msgs(vec_of_poses, bag, bag_start_time):
@@ -548,7 +549,6 @@ def load_pose_msgs(vec_of_poses, bag, bag_start_time):
       if poses.topic == topic:
         poses.add_msg(msg, msg.header.stamp, bag_start_time)
         break
-
 
 def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
   topics = [loc_states.topic for loc_states in vec_of_loc_states]
@@ -612,21 +612,22 @@ def create_plots(bagfile,
       add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states, sparse_mapping_poses,
                           ar_tag_poses)
     else:
-      add_other_loc_plots(pdf, graph_localization_states, graph_localization_states)
+      add_other_loc_plots(pdf, graph_localization_states, None, sparse_mapping_poses, ar_tag_poses)
     plot_loc_state_stats(pdf,
                          graph_localization_states,
                          sparse_mapping_poses,
                          output_csv_file,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
-    plot_loc_state_stats(pdf,
-                         imu_augmented_graph_localization_states,
-                         sparse_mapping_poses,
-                         output_csv_file,
-                         'imu_augmented_',
-                         0.01,
-                         rmse_rel_start_time=rmse_rel_start_time,
-                         rmse_rel_end_time=rmse_rel_end_time)
+    if has_imu_augmented_graph_localization_state:
+      plot_loc_state_stats(pdf,
+                           imu_augmented_graph_localization_states,
+                           sparse_mapping_poses,
+                           output_csv_file,
+                           'imu_augmented_',
+                           0.01,
+                           rmse_rel_start_time=rmse_rel_start_time,
+                           rmse_rel_end_time=rmse_rel_end_time)
     if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,

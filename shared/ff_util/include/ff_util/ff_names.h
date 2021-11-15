@@ -112,6 +112,7 @@
 
 #define SUBSYSTEM_GNC                               "gnc"
 
+#define NODE_UNDISTORTER                            "undistorter"
 #define NODE_CTL                                    "ctl"
 #define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
