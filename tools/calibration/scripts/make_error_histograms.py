@@ -27,52 +27,58 @@ import os
 import sys
 
 import matplotlib
+
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 
 def make_histograms(errors_file):
-  x_errors = []
-  y_errors = []
-  error_norms = []
-  with open(errors_file) as errors_csvfile:
-    reader = csv.reader(errors_csvfile, delimiter=" ")
-    for row in reader:
-      x_error = float(row[0])
-      y_error = float(row[1])
-      error_norm = x_error * x_error + y_error * y_error
-      x_errors.append(x_error)
-      y_errors.append(y_error)
-      error_norms.append(error_norm)
+    x_errors = []
+    y_errors = []
+    error_norms = []
+    with open(errors_file) as errors_csvfile:
+        reader = csv.reader(errors_csvfile, delimiter=" ")
+        for row in reader:
+            x_error = float(row[0])
+            y_error = float(row[1])
+            error_norm = x_error * x_error + y_error * y_error
+            x_errors.append(x_error)
+            y_errors.append(y_error)
+            error_norms.append(error_norm)
 
-  with PdfPages('errors_histograms.pdf') as pdf:
-    plt.hist(x_errors, bins=100)
-    plt.ylabel('Count')
-    plt.xlabel('X Errors')
-    pdf.savefig()
-    plt.close()
+    with PdfPages("errors_histograms.pdf") as pdf:
+        plt.hist(x_errors, bins=100)
+        plt.ylabel("Count")
+        plt.xlabel("X Errors")
+        pdf.savefig()
+        plt.close()
 
-    plt.hist(y_errors, bins=100)
-    plt.ylabel('Count')
-    plt.xlabel('Y Errors')
-    pdf.savefig()
-    plt.close()
+        plt.hist(y_errors, bins=100)
+        plt.ylabel("Count")
+        plt.xlabel("Y Errors")
+        pdf.savefig()
+        plt.close()
 
-    plt.hist(error_norms, bins=100)
-    plt.ylabel('Count')
-    plt.xlabel('Error Norms')
-    pdf.savefig()
-    plt.close()
+        plt.hist(error_norms, bins=100)
+        plt.ylabel("Count")
+        plt.xlabel("Error Norms")
+        pdf.savefig()
+        plt.close()
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
-  )
-  parser.add_argument('-e', '--errors-file', default='errors_file.txt', help="Errors file used to generate histogram. Errors are output from the intrinsics calibration pipeline.")
-  args = parser.parse_args()
-  if not os.path.isfile(args.errors_file):
-    print('Errors file not found.')
-    sys.exit()
-  make_histograms(args.errors_file)
+    )
+    parser.add_argument(
+        "-e",
+        "--errors-file",
+        default="errors_file.txt",
+        help="Errors file used to generate histogram. Errors are output from the intrinsics calibration pipeline.",
+    )
+    args = parser.parse_args()
+    if not os.path.isfile(args.errors_file):
+        print("Errors file not found.")
+        sys.exit()
+    make_histograms(args.errors_file)
