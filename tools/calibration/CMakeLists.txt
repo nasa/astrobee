@@ -29,11 +29,17 @@ find_package(catkin2 REQUIRED COMPONENTS
   optimization_common
 )
 
+# Find OpenCV3
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV 3 REQUIRED)
+
 find_package(Eigen3 REQUIRED)
 
+find_package(Ceres REQUIRED)
+
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES}  
-  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
+  INCLUDE_DIRS include 
   CATKIN_DEPENDS camera localization_common msg_conversions optimization_common 
 )
 
@@ -44,6 +50,8 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS} 
+  ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
 )
 
@@ -55,19 +63,19 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${CERES_LIBRARIES})
 
 ## Declare a C++ executable: create_undistorted_images
 add_executable(create_undistorted_images tools/create_undistorted_images.cc)
 add_dependencies(create_undistorted_images ${catkin_EXPORTED_TARGETS})
 target_link_libraries(create_undistorted_images
-  ${PROJECT_NAME} ${catkin_LIBRARIES})
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
 ## Declare a C++ executable: create_undistorted_images
 add_executable(run_camera_target_based_intrinsics_calibrator tools/run_camera_target_based_intrinsics_calibrator.cc)
 add_dependencies(run_camera_target_based_intrinsics_calibrator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(run_camera_target_based_intrinsics_calibrator
-  ${PROJECT_NAME} ${catkin_LIBRARIES})
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
 #############
 ## Install ##

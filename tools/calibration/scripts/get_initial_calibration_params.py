@@ -59,9 +59,9 @@ def load_observation(csv_row, target):
 # TODO(rsoussan): Unify these with view_all_detections.py
 def load_observations(directory, target):
   detection_files = [
-    directory + filename
+    os.path.join(directory, filename)
     for filename in os.listdir(directory)
-    if os.path.isfile(directory + filename) and filename.endswith(".txt")
+    if os.path.isfile(os.path.join(directory,filename)) and filename.endswith(".txt")
   ]
   if len(detection_files) == 0:
     print("No detection files found in directory.")
@@ -76,23 +76,23 @@ def load_observations(directory, target):
         observations.append(observation) 
   return observations
 
-def calibrate_with_corners(directory, target_yaml):
+def get_initial_calibration_params(directory, target_yaml):
   target_config = kc.CalibrationTargetParameters(target_yaml)
   # TODO: add this as param! load different models!
   camera_model = acvb.DistortedPinhole
   target_detector = kcc.TargetDetector(target_config, camera_model.geometry())
   observations = load_observations(directory, target_detector.detector.target())
   # TODO: need to fake dataset!!
-  dataset = kc.BagImageDatasetReader('/home/rsoussan/iss_data/queen_test/large_bag_pruned.bag', '/cam0/image_raw')
+  dataset = kc.BagImageDatasetReader('/home/rsoussan/iss_data/queen_calibration/2021_09_20/bags/20210920_1108_proc-204_step-2-nav_run-001.bag', '/hw/cam_nav')
   camera = kcc.CameraGeometry(camera_model, target_config, dataset)
   calibrate(observations, camera)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
+  parser.add_argument("target_yaml")
   parser.add_argument("-d", "--directory", default="./")
-  parser.add_argument("-t", "--target-yaml")
   args = parser.parse_args()
   if not os.path.isdir(args.directory):
     print("Directory " + args.directory + " does not exist.")
     sys.exit()
-  calibrate_with_corners(args.directory, args.target_yaml)
+  get_initial_calibration_params(args.directory, args.target_yaml)
