@@ -18,13 +18,9 @@
 
 #include <camera/camera_model.h>
 
-#include <opencv2/calib3d.hpp>
-
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-
 #include <iostream>
-
 
 namespace camera {
 
