@@ -20,6 +20,7 @@ Updates robot config file with calibration output generated
 by intrinsics calibrator.
 """
 
+from __future__ import print_function
 import argparse
 import csv
 import fileinput
@@ -70,7 +71,7 @@ def copy_calibration_params_to_config(config, camera_name, calibration_file):
   new_calibration_string = make_calibration_params_string(calibration_file)
   config_file = fileinput.input(config, inplace=1)
   for line in config_file:
-    print line,
+    print(line, end="")
     if line.strip() == camera_name_line:
       print(new_calibration_string)
       [config_file.next() for x in range(6)]
