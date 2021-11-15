@@ -35,8 +35,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "GncFamCmdStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/GncFamCmdStateSupport.h"
 
 namespace ff {
 

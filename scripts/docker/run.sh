@@ -27,6 +27,7 @@ usage()
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+args="dds:=false robot:=sim_pub"
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -36,11 +37,14 @@ while [ "$1" != "" ]; do
                                         ;;
         -f | --focal )                  os="focal"
                                         ;;
-        -h | --help )           		usage
-                                		exit
-                                		;;
-        * )                     		usage
-                                		exit 1
+        --args )                        args+=" $2"
+                                        shift
+                                        ;;
+        -h | --help )                   usage
+                                        exit
+                                        ;;
+        * )                             usage
+                                        exit 1
     esac
     shift
 done
@@ -60,26 +64,25 @@ docker run -it --rm --name astrobee \
         --volume=$XAUTH:$XAUTH:rw \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
-        --user="astrobee" \
         --gpus all \
       astrobee/astrobee:latest-ubuntu16.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch $args
 elif [ "$os" = "bionic" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
         --volume=$XAUTH:$XAUTH:rw \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
-        --user="astrobee" \
+        --gpus all \
       astrobee/astrobee:latest-ubuntu18.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch $args
 elif [ "$os" = "focal" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
         --volume=$XAUTH:$XAUTH:rw \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
-        --user="astrobee" \
+        --gpus all \
       astrobee/astrobee:latest-ubuntu20.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch $args
 fi

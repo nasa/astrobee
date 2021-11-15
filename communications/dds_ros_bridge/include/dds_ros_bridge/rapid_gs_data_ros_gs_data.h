@@ -32,11 +32,11 @@
 
 #include "ff_msgs/GuestScienceData.h"
 
-#include "AstrobeeConstants.h"
+#include "dds_msgs/AstrobeeConstants.h"
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "GuestScienceDataSupport.h"
+#include "dds_msgs/GuestScienceDataSupport.h"
 
 #include "rapidDds/RapidConstants.h"
 

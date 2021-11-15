@@ -37,10 +37,10 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "GuestScienceConfigSupport.h"
-#include "GuestScienceDataSupport.h"
-#include "GuestScienceStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/GuestScienceConfigSupport.h"
+#include "dds_msgs/GuestScienceDataSupport.h"
+#include "dds_msgs/GuestScienceStateSupport.h"
 
 namespace ff {
 

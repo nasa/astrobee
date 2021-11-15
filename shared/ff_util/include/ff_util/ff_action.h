@@ -26,7 +26,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 
-// C++11 includes
+// C++ includes
 #include <functional>
 #include <memory>
 #include <string>

@@ -18,8 +18,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "PmcCmdStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/PmcCmdStateSupport.h"
 
 namespace ff {
 

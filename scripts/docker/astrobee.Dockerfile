@@ -3,12 +3,16 @@
 # You must set the docker context to be the repository root directory
 
 ARG UBUNTU_VERSION=16.04
-FROM astrobee/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
+ARG REMOTE=astrobee
+FROM ${REMOTE}/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
 
-ENV USERNAME astrobee
+ARG ROS_VERSION=kinetic
 
-COPY . /src/astrobee
-RUN /src/astrobee/scripts/configure.sh -l -F -D -T -p /opt/astrobee -b /build/astrobee
-RUN cd /build/astrobee && make -j`nproc`
+COPY . /src/astrobee/src/
+RUN . /opt/ros/${ROS_VERSION}/setup.sh \
+	&& cd /src/astrobee \
+	&& ./src/scripts/configure.sh -l -F -D -T \
+	&& CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/src/astrobee/src/cmake \
+	&& catkin build
 
 COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources

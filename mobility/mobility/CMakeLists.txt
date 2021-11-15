@@ -15,25 +15,66 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Subsystem matapackage
+cmake_minimum_required(VERSION 3.0)
 project(mobility)
 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  choreographer
+  mapper
+  planner_trapezoidal
+  planner_qp
+  ff_msgs
+  ff_util
+  jsonloader
+)
 catkin_package(
   CATKIN_DEPENDS
     choreographer
     mapper
-    sentinel
     planner_trapezoidal
     planner_qp
-    docker
     ff_msgs
     ff_util
+    jsonloader
 )
 
-create_tool_targets(
-  DIR tools
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} config_client ff_common ff_flight planner_trapezoidal
-  INC  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs ff_common
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
+## Declare a C++ executable: plangen
+add_executable(plangen tools/plangen.cc)
+add_dependencies(plangen ${catkin_EXPORTED_TARGETS})
+target_link_libraries(plangen
+  gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: teleop
+add_executable(teleop tools/teleop.cc)
+add_dependencies(teleop ${catkin_EXPORTED_TARGETS})
+target_link_libraries(teleop
+  gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Install C++ executables
+install(TARGETS plangen DESTINATION bin)
+install(TARGETS teleop DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/plangen share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/teleop share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")

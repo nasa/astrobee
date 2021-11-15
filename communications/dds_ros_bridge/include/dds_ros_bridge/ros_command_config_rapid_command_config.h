@@ -36,7 +36,7 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeCommandConstants.h"
+#include "dds_msgs/AstrobeeCommandConstants.h"
 
 namespace ff {
 

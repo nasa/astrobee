@@ -1,9 +1,0 @@
-<library path="lib/libarm_sim">
-  <class name="arm_sim/ArmSim"
-    type="arm_sim::ArmSim"
-    base_class_type="nodelet::Nodelet">
-    <description>
-      Nodelet to simulate the arm."
-    </description>
-  </class>
-</library>

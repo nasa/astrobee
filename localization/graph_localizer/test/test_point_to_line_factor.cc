@@ -137,3 +137,9 @@ TEST(PointToLineFactorTester, ZeroErrorForZeroOffest) {
   error_norm = (factor.evaluateError(world_T_body)).norm();
   EXPECT_DOUBLE_EQ(error_norm, 0);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
