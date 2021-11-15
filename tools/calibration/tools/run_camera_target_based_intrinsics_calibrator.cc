@@ -21,7 +21,6 @@
 #include <calibration/parameter_reader.h>
 #include <ff_common/init.h>
 #include <ff_common/utils.h>
-#include <ff_util/ff_names.h>
 #include <localization_common/image_correspondences.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>

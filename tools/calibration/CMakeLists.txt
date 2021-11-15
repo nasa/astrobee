@@ -24,16 +24,17 @@ add_compile_options(-std=c++14)
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
   camera 
-  ff_nodelet
   localization_common
   msg_conversions
   optimization_common
 )
 
+find_package(Eigen3 REQUIRED)
+
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES}  
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
-  CATKIN_DEPENDS camera ff_nodelet localization_common msg_conversions optimization_common 
+  CATKIN_DEPENDS camera localization_common msg_conversions optimization_common 
 )
 
 ###########
@@ -60,13 +61,13 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(create_undistorted_images tools/create_undistorted_images.cc)
 add_dependencies(create_undistorted_images ${catkin_EXPORTED_TARGETS})
 target_link_libraries(create_undistorted_images
-  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+  ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: create_undistorted_images
 add_executable(run_camera_target_based_intrinsics_calibrator tools/run_camera_target_based_intrinsics_calibrator.cc)
 add_dependencies(run_camera_target_based_intrinsics_calibrator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(run_camera_target_based_intrinsics_calibrator
-  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+  ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 #############
 ## Install ##

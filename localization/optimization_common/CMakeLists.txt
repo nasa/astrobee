@@ -33,8 +33,8 @@ find_package(OpenCV331 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} 
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} 
   CATKIN_DEPENDS localization_common 
 )
 
