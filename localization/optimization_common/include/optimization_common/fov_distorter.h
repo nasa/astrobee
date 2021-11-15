@@ -60,7 +60,7 @@ class FovDistorter : public Distorter<1, FovDistorter> {
   cv::Mat Undistort(const cv::Mat& distorted_image, const Eigen::Matrix3d& intrinsics,
                     const Eigen::VectorXd& distortion) const final {
     cv::Mat gray_distorted_image;
-    cv::cvtColor(distorted_image, gray_distorted_image, CV_BGR2GRAY);
+    cv::cvtColor(distorted_image, gray_distorted_image, cv::COLOR_BGRA2GRAY);
     cv::Mat undistorted_image(distorted_image.size(), CV_8UC1, cv::Scalar(0));
     for (int y = 0; y < undistorted_image.rows; ++y) {
       for (int x = 0; x < undistorted_image.cols; ++x) {
