@@ -61,6 +61,7 @@ class ImuAugmentorWrapper {
 
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
   boost::optional<localization_common::CombinedNavState> latest_combined_nav_state_;
+  boost::optional<localization_common::CombinedNavState> latest_imu_augmented_combined_nav_state_;
   boost::optional<localization_common::CombinedNavStateCovariances> latest_covariances_;
   boost::optional<ff_msgs::GraphState> latest_loc_msg_;
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;

@@ -61,6 +61,8 @@ void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& l
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
+  // Reset imu augmented state so IMU data is added starting with the most recent combined nav state's biases
+  latest_imu_augmented_combined_nav_state_ = latest_combined_nav_state_;
   latest_loc_msg_ = loc_msg;
   standstill_ = loc_msg.standstill;
 }
@@ -83,7 +85,8 @@ void ImuAugmentorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_m
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
-  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) {
+  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_ ||
+      !latest_imu_augmented_combined_nav_state_) {
     LogError(
       "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
@@ -95,13 +98,13 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
                                                                             *latest_covariances_};
   }
 
-  const auto latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
-  if (!latest_imu_augmented_combined_nav_state) {
+  imu_augmentor_->PimPredict(*latest_combined_nav_state_, *latest_imu_augmented_combined_nav_state_);
+  if (!latest_imu_augmented_combined_nav_state_) {
     LogError("LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.");
     return boost::none;
   }
   // TODO(rsoussan): propogate uncertainties from imu augmentor
-  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_imu_augmented_combined_nav_state,
+  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_imu_augmented_combined_nav_state_,
                                                                           *latest_covariances_};
 }
 
