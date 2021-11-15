@@ -53,3 +53,9 @@ namespace oc = optimization_common;
     ASSERT_TRUE(pose_estimate->inliers.size() == correspondences.correspondences().size());
   }
 }*/
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
