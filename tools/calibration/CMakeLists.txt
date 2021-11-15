@@ -15,27 +15,87 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
+cmake_minimum_required(VERSION 3.0)
 project(calibration)
 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  camera 
+  ff_nodelet
+  localization_common
+  msg_conversions
+  optimization_common
+)
+
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} camera ff_nodelet localization_common msg_conversions optimization_common sparse_mapping 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES}  
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
-  CATKIN_DEPENDS 
-  DEPENDS 
+  CATKIN_DEPENDS camera ff_nodelet localization_common msg_conversions optimization_common 
 )
 
-# include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${CERES_LIBRARIES} camera ff_nodelet localization_common optimization_common sparse_mapping 
-  INC ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} 
+###########
+## Build ##
+###########
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME}
-  INC ${catkin_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  src/camera_utilities.cc
+  src/parameter_reader.cc
+  src/test_utilities.cc
+  src/utilities.cc
 )
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+## Declare a C++ executable: create_undistorted_images
+add_executable(create_undistorted_images tools/create_undistorted_images.cc)
+add_dependencies(create_undistorted_images ${catkin_EXPORTED_TARGETS})
+target_link_libraries(create_undistorted_images
+  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
+## Declare a C++ executable: create_undistorted_images
+add_executable(run_camera_target_based_intrinsics_calibrator tools/run_camera_target_based_intrinsics_calibrator.cc)
+add_dependencies(run_camera_target_based_intrinsics_calibrator ${catkin_EXPORTED_TARGETS})
+target_link_libraries(run_camera_target_based_intrinsics_calibrator
+  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+# Install C++ executables
+install(TARGETS create_undistorted_images DESTINATION bin)
+install(TARGETS run_camera_target_based_intrinsics_calibrator DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/create_undistorted_images share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_camera_target_based_intrinsics_calibrator share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
