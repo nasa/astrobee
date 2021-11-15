@@ -17,7 +17,6 @@
  */
 
 #include <camera/camera_model.h>
-
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <iostream>
