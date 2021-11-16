@@ -28,6 +28,7 @@ ImuAugmentorParams DefaultImuAugmentorParams() {
   params.gravity = gtsam::Vector3::Zero();
   params.body_T_imu = gtsam::Pose3::identity();
   // Filer params are already default none
+  params.filter = imu_integration::ImuFilterParams();
   params.gyro_sigma = 0.1;
   params.accel_sigma = 0.1;
   params.accel_bias_sigma = 0.1;
@@ -35,6 +36,7 @@ ImuAugmentorParams DefaultImuAugmentorParams() {
   params.integration_variance = 0.1;
   params.bias_acc_omega_int = 0.1;
   params.standstill_enabled = true;
+  return params;
 }
 
 std::vector<lm::ImuMeasurement> ConstantAccelerationMeasurements(const gtsam::Vector3& acceleration,

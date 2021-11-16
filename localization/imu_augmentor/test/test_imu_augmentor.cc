@@ -27,7 +27,7 @@ namespace ia = imu_augmentor;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 TEST(IMUAugmentorTester, PimPredictConstantAcceleration) {
-  const auto params = ia::DefaultImuAugmentorParams();
+  const ia::ImuAugmentorParams params = ia::DefaultImuAugmentorParams();
   ia::ImuAugmentor imu_augmentor(params);
   // Pass Acceleration vector and time increment to const accel measurements!! (AAAAA)
   const Eigen::Vector3d acceleration(0.01, 0.01, 0.01);
