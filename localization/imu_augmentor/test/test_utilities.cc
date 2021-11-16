@@ -90,5 +90,6 @@ sensor_msgs::Imu ImuMsg(const localization_measurements::ImuMeasurement& imu_mea
   msg_conversions::VectorToMsg(imu_measurement.acceleration, imu_msg.linear_acceleration);
   msg_conversions::VectorToMsg(imu_measurement.angular_velocity, imu_msg.angular_velocity);
   lc::TimeToHeader(imu_measurement.timestamp, imu_msg.header);
+  return imu_msg;
 }
 }  // namespace imu_augmentor
