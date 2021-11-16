@@ -56,6 +56,8 @@ class ConstantAccelerationTest : public ::testing::Test {
 
   double time_increment() { return time_increment_; }
 
+  double start_time() { return start_time_; }
+
   int num_measurements() { return num_measurements_; }
 
  private:
@@ -81,9 +83,9 @@ class ConstantAngularVelocityTest : public ::testing::Test {
   }
 
   void SetUp() final {
-    const std::vector<lm::ImuMeasurement> imu_measurements =
+    imu_measurements_ =
       ia::ConstantAngularVelocityMeasurements(angular_velocity_, num_measurements_, start_time_, time_increment_);
-    for (const auto& imu_measurement : imu_measurements) {
+    for (const auto& imu_measurement : imu_measurements_) {
       imu_augmentor_->BufferImuMeasurement(imu_measurement);
     }
   }
@@ -96,7 +98,11 @@ class ConstantAngularVelocityTest : public ::testing::Test {
 
   double time_increment() { return time_increment_; }
 
+  double start_time() { return start_time_; }
+
   int num_measurements() { return num_measurements_; }
+
+  const std::vector<lm::ImuMeasurement>& imu_measurements() { return imu_measurements_; }
 
  private:
   std::unique_ptr<ia::ImuAugmentor> imu_augmentor_;
@@ -105,6 +111,7 @@ class ConstantAngularVelocityTest : public ::testing::Test {
   const double time_increment_;
   const lc::Time start_time_;
   const int num_measurements_;
+  std::vector<lm::ImuMeasurement> imu_measurements_;
 };
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
@@ -167,7 +174,8 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   // TODO(rsoussan): update this!!!! -> add fcn to do integration!!
-  gtsam::Rot3 expected_orientation = gtsam::Rot3::identity();
+  gtsam::Rot3 expected_orientation =
+    ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), start_time());
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
 }

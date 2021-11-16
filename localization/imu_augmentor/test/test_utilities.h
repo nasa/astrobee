@@ -42,6 +42,10 @@ std::vector<localization_measurements::ImuMeasurement> ConstantAccelerationMeasu
 std::vector<localization_measurements::ImuMeasurement> ConstantAngularVelocityMeasurements(
   const Eigen::Vector3d& angular_velocity, const int num_measurements, const localization_common::Time start_time,
   const double time_increment);
+
+gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measurements::ImuMeasurement>& imu_measurements,
+                                       const gtsam::Rot3& starting_orientation,
+                                       const localization_common::Time starting_time);
 }  // namespace imu_augmentor
 
 #endif  // IMU_AUGMENTOR_TEST_UTILITIES_H_ // NOLINT
