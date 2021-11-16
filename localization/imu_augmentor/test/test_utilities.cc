@@ -69,6 +69,16 @@ std::vector<lm::ImuMeasurement> ConstantAngularVelocityMeasurements(const Eigen:
 gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measurements::ImuMeasurement>& imu_measurements,
                                        const gtsam::Rot3& starting_orientation,
                                        const localization_common::Time starting_time) {
-  return starting_orientation;
+  gtsam::Rot3 integrated_orientation = starting_orientation;
+  lc::Time integrated_time = starting_time;
+  for (const auto& imu_measurement : imu_measurements) {
+    if (imu_measurement.timestamp <= integrated_time) continue;
+    const double dt = imu_measurement.timestamp - integrated_time;
+    integrated_time = imu_measurement.timestamp;
+    // TODO(rsoussan): subtract ang vel bias first!! add this as param!!
+    const gtsam::Rot3 orientation_update = gtsam::Rot3::Expmap(imu_measurement.angular_velocity * dt);
+    integrated_orientation = integrated_orientation * orientation_update;
+  }
+  return integrated_orientation;
 }
 }  // namespace imu_augmentor
