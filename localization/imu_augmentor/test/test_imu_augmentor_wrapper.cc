@@ -72,6 +72,8 @@ class ConstantAccelerationTest : public ::testing::Test {
 
   int num_measurements() { return num_measurements_; }
 
+  double TotalDuration() { return num_measurements_ * time_increment_; }
+
  private:
   std::unique_ptr<ia::ImuAugmentorWrapper> imu_augmentor_wrapper_;
   const double acceleration_i_;
@@ -87,13 +89,13 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
   AddCombinedNavState(initial_state);
   const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
   ASSERT_TRUE(imu_augmented_state != boost::none);
-  EXPECT_NEAR(imu_augmented_state->first.timestamp(), num_measurements() * time_increment(), 1e-6);
-  const double expected_velocity_i = acceleration_i() * num_measurements() * time_increment();
+  EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
+  const double expected_velocity_i = acceleration_i() * TotalDuration();
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
   // x = 1/2*a*t^2
-  const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() * time_increment(), 2);
+  const double expected_position_i = acceleration_i() * 0.5 * std::pow(TotalDuration(), 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
@@ -109,7 +111,7 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithHalfwayBias) {
   const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
 
   ASSERT_TRUE(imu_augmented_state != boost::none);
-  EXPECT_NEAR(imu_augmented_state->first.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(
     imu_augmented_state->first.velocity().matrix().isApprox(halfway_state_with_bias.velocity().matrix(), 1e-6));
@@ -134,23 +136,18 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
 
   const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
   ASSERT_TRUE(imu_augmented_state != boost::none);
-  EXPECT_NEAR(imu_augmented_state->first.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
   // Expect half the acceleration for the last three quarters of the imu msgs
-  const double expected_velocity_i = acceleration_i() / 2 * num_measurements() * 0.75 * time_increment();
+  const double expected_velocity_i = acceleration_i() / 2 * TotalDuration() * 0.75;
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
-  // x = 1/2*a*t^2
-  /*const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() * time_increment(), 2);
+  // x = v_0*t + 1/2*a*t^2
+  const double expected_position_i =
+    expected_velocity_i * TotalDuration() * 0.75 + acceleration_i() / 2.0 * 0.5 * std::pow(TotalDuration() * 0.75, 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(
-    imu_augmented_state->first.velocity().matrix().isApprox(halfway_state_with_bias.velocity().matrix(), 1e-6));
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(
-    halfway_state_with_bias.pose().translation().matrix(), 1e-6));
-*/
+  EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
 }
 
 // Run all the tests that were declared with TEST()
