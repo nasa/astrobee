@@ -16,16 +16,25 @@
  * under the License.
  */
 
+#include "test_utilities.h"  // NOLINT
 #include <imu_augmentor/imu_augmentor.h>
 #include <localization_common/logger.h>
 
 #include <gtest/gtest.h>
 
-// Test that timestamp is correct!
-// make a bunch of same imu measurements
-// pass these to imu aug
-// integrate and check resulting timestamp, ensure this is correct!
-TEST(IMUAugmentorTester, PimPredict) { asdfasfasd; }
+namespace ia = imu_augmentor;
+TEST(IMUAugmentorTester, PimPredictTimestamp) {
+  const auto params = ia::DefaultImuAugmentorParams();
+  ia::ImuAugmentor augmentor(params);
+
+  // TODO(rsoussan): add function to add linear accel measurements with ascending timestamps, just pass num
+  // measurements! (AAA)
+
+  // Test that timestamp is correct! (BB)
+  // make a bunch of same imu measurements
+  // pass these to imu aug
+  // integrate and check resulting timestamp, ensure this is correct!
+}
 
 // Test imu integration accuracy!
 // pass accel only data
