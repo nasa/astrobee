@@ -142,9 +142,8 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
-  // x = v_0*t + 1/2*a*t^2
-  const double expected_position_i =
-    expected_velocity_i * TotalDuration() * 0.75 + acceleration_i() / 2.0 * 0.5 * std::pow(TotalDuration() * 0.75, 2);
+  // x = 1/2*a*t^2
+  const double expected_position_i = acceleration_i() / 2.0 * 0.5 * std::pow(TotalDuration() * 0.75, 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
