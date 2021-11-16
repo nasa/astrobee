@@ -67,6 +67,46 @@ class ConstantAccelerationTest : public ::testing::Test {
   const int num_measurements_;
 };
 
+class ConstantAngularVelocityTest : public ::testing::Test {
+ public:
+  // Start at time increment so first IMU measurement is after starting combined nav state time
+  ConstantAngularVelocityTest()
+      : angular_velocity_i_(0.1),
+        angular_velocity_(angular_velocity_i_, angular_velocity_i_, angular_velocity_i_),
+        time_increment_(1.0 / 125.0),
+        start_time_(time_increment_),
+        num_measurements_(20) {
+    const ia::ImuAugmentorParams params = ia::DefaultImuAugmentorParams();
+    imu_augmentor_.reset(new ia::ImuAugmentor(params));
+  }
+
+  void SetUp() final {
+    const std::vector<lm::ImuMeasurement> imu_measurements =
+      ia::ConstantAngularVelocityMeasurements(angular_velocity_, num_measurements_, start_time_, time_increment_);
+    for (const auto& imu_measurement : imu_measurements) {
+      imu_augmentor_->BufferImuMeasurement(imu_measurement);
+    }
+  }
+
+  ia::ImuAugmentor& imu_augmentor() { return *imu_augmentor_; }
+
+  double angular_velocity_i() { return angular_velocity_i_; }
+
+  const Eigen::Vector3d& angular_velocity() { return angular_velocity_; }
+
+  double time_increment() { return time_increment_; }
+
+  int num_measurements() { return num_measurements_; }
+
+ private:
+  std::unique_ptr<ia::ImuAugmentor> imu_augmentor_;
+  const double angular_velocity_i_;
+  const Eigen::Vector3d angular_velocity_;
+  const double time_increment_;
+  const lc::Time start_time_;
+  const int num_measurements_;
+};
+
 TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), 0);
@@ -118,6 +158,11 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(gtsam::Vector3::Zero().matrix(), 1e-6));
 }
 
+// TODO(rsoussan): make same tests for this!!!
+// create const ang vel measurements!
+// - rename constaceel meas to const measurements
+// - add wrappers for this for accel and ang!
+// Finish other tests!!!
 /*TEST(IMUAugmentorTester, PimPredictConstantAngularVelocity) {
   const ia::ImuAugmentorParams params = ia::DefaultImuAugmentorParams();
   ia::ImuAugmentor imu_augmentor(params);
@@ -151,12 +196,7 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
 }*/
 
-// Test imu integration accuracy!
-// pass accel only data
-// ensure resulting position and velocity are correct!
-
-// pass omega only data
-// ensure resulting orientation is correct!
+// TODO(rsoussan): Test imu aug wrapper!!!!!
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

@@ -39,15 +39,30 @@ ImuAugmentorParams DefaultImuAugmentorParams() {
   return params;
 }
 
-std::vector<lm::ImuMeasurement> ConstantAccelerationMeasurements(const gtsam::Vector3& acceleration,
-                                                                 const int num_measurements, const lc::Time start_time,
-                                                                 const double time_increment) {
-  const Eigen::Vector3d angular_velocity(Eigen::Vector3d::Zero());
+std::vector<lm::ImuMeasurement> ConstantMeasurements(const Eigen::Vector3d& acceleration,
+                                                     const Eigen::Vector3d& angular_velocity,
+                                                     const int num_measurements, const lc::Time start_time,
+                                                     const double time_increment) {
   std::vector<lm::ImuMeasurement> imu_measurements;
   for (int i = 0; i < num_measurements; ++i) {
     const lc::Time time = start_time + i * time_increment;
     imu_measurements.emplace_back(lm::ImuMeasurement(acceleration, angular_velocity, time));
   }
   return imu_measurements;
+}
+
+std::vector<lm::ImuMeasurement> ConstantAccelerationMeasurements(const Eigen::Vector3d& acceleration,
+                                                                 const int num_measurements, const lc::Time start_time,
+                                                                 const double time_increment) {
+  const Eigen::Vector3d zero_angular_velocity(Eigen::Vector3d::Zero());
+  return ConstantMeasurements(acceleration, zero_angular_velocity, num_measurements, start_time, time_increment);
+}
+
+std::vector<lm::ImuMeasurement> ConstantAngularVelocityMeasurements(const Eigen::Vector3d& angular_velocity,
+                                                                    const int num_measurements,
+                                                                    const lc::Time start_time,
+                                                                    const double time_increment) {
+  const Eigen::Vector3d zero_acceleration(Eigen::Vector3d::Zero());
+  return ConstantMeasurements(zero_acceleration, angular_velocity, num_measurements, start_time, time_increment);
 }
 }  // namespace imu_augmentor

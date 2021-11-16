@@ -29,8 +29,18 @@
 namespace imu_augmentor {
 ImuAugmentorParams DefaultImuAugmentorParams();
 
+std::vector<localization_measurements::ImuMeasurement> ConstantMeasurements(const Eigen::Vector3d& acceleration,
+                                                                            const Eigen::Vector3d& angular_velocity,
+                                                                            const int num_measurements,
+                                                                            const localization_common::Time start_time,
+                                                                            const double time_increment);
+
 std::vector<localization_measurements::ImuMeasurement> ConstantAccelerationMeasurements(
-  const gtsam::Vector3& acceleration, const int num_measurements, const localization_common::Time start_time,
+  const Eigen::Vector3d& acceleration, const int num_measurements, const localization_common::Time start_time,
+  const double time_increment);
+
+std::vector<localization_measurements::ImuMeasurement> ConstantAngularVelocityMeasurements(
+  const Eigen::Vector3d& angular_velocity, const int num_measurements, const localization_common::Time start_time,
   const double time_increment);
 }  // namespace imu_augmentor
 
