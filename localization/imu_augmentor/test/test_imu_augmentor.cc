@@ -19,21 +19,34 @@
 #include "test_utilities.h"  // NOLINT
 #include <imu_augmentor/imu_augmentor.h>
 #include <localization_common/logger.h>
+#include <localization_common/time.h>
 
 #include <gtest/gtest.h>
 
 namespace ia = imu_augmentor;
-TEST(IMUAugmentorTester, PimPredictTimestamp) {
+namespace lc = localization_common;
+namespace lm = localization_measurements;
+TEST(IMUAugmentorTester, PimPredictConstantAcceleration) {
   const auto params = ia::DefaultImuAugmentorParams();
-  ia::ImuAugmentor augmentor(params);
+  ia::ImuAugmentor imu_augmentor(params);
+  // Pass Acceleration vector and time increment to const accel measurements!! (AAAAA)
+  const Eigen::Vector3d acceleration(0.01, 0.01, 0.01);
+  constexpr double time_increment = 1 / 125.0;
+  // Start at time increment so first IMU measurement is after starting combined nav state time
+  const lc::Time start_time = time_increment;
+  constexpr int num_measurements = 20;
+  const std::vector<lm::ImuMeasurement> imu_measurements =
+    ia::ConstantAccelerationMeasurements(acceleration, num_measurements, start_time, time_increment);
+  for (const auto& imu_measurement : imu_measurements) {
+    imu_augmentor.BufferImuMeasurement(imu_measurement);
+  }
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), 0);
+  lc::CombinedNavState imu_augmented_state = initial_state;
 
-  // TODO(rsoussan): add function to add linear accel measurements with ascending timestamps, just pass num
-  // measurements! (AAA)
-
-  // Test that timestamp is correct! (BB)
-  // make a bunch of same imu measurements
-  // pass these to imu aug
-  // integrate and check resulting timestamp, ensure this is correct!
+  imu_augmentor.PimPredict(initial_state, imu_augmented_state);
+  ASSERT_NEAR(imu_augmented_state.timestamp(), start_time + num_measurements * time_increment, 1e-6);
+  // make sure position and velocity are correct!! (AC)
 }
 
 // Test imu integration accuracy!

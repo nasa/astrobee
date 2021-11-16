@@ -29,7 +29,9 @@
 namespace imu_augmentor {
 ImuAugmentorParams DefaultImuAugmentorParams();
 
-std::vector<localization_measurements::ImuMeasurement> ConstantAccelerationMeasurements(const int num_measurements);
+std::vector<localization_measurements::ImuMeasurement> ConstantAccelerationMeasurements(
+  const gtsam::Vector3& acceleration, const int num_measurements, const localization_common::Time start_time,
+  const double time_increment);
 }  // namespace imu_augmentor
 
 #endif  // IMU_AUGMENTOR_TEST_UTILITIES_H_ // NOLINT

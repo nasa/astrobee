@@ -20,6 +20,9 @@
 #include <localization_common/logger.h>
 
 namespace imu_augmentor {
+namespace lc = localization_common;
+namespace lm = localization_measurements;
+
 ImuAugmentorParams DefaultImuAugmentorParams() {
   ImuAugmentorParams params;
   params.gravity = gtsam::Vector3::Zero();
@@ -34,4 +37,15 @@ ImuAugmentorParams DefaultImuAugmentorParams() {
   params.standstill_enabled = true;
 }
 
+std::vector<lm::ImuMeasurement> ConstantAccelerationMeasurements(const gtsam::Vector3& acceleration,
+                                                                 const int num_measurements, const lc::Time start_time,
+                                                                 const double time_increment) {
+  const Eigen::Vector3d angular_velocity(Eigen::Vector3d::Zero());
+  std::vector<lm::ImuMeasurement> imu_measurements;
+  for (int i = 0; i < num_measurements; ++i) {
+    const lc::Time time = start_time + i * time_increment;
+    imu_measurements.emplace_back(lm::ImuMeasurement(acceleration, angular_velocity, time));
+  }
+  return imu_measurements;
+}
 }  // namespace imu_augmentor
