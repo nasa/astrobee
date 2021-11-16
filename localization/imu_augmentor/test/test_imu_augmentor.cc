@@ -46,11 +46,15 @@ TEST(IMUAugmentorTester, PimPredictConstantAcceleration) {
 
   imu_augmentor.PimPredict(initial_state, imu_augmented_state);
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements * time_increment, 1e-6);
-  const double expected_velocity_i = acceleration_i * num_measurements;
+  const double expected_velocity_i = acceleration_i * num_measurements * time_increment;
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
-  // make sure position and velocity are correct!! (AC)
+  // x = 1/2*a*t^2
+  const double expected_position_i = acceleration_i * 0.5 * std::pow(num_measurements * time_increment, 2);
+  const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
+  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+  EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
 }
 
 // Test imu integration accuracy!
