@@ -114,8 +114,10 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithHalfwayBias) {
   EXPECT_TRUE(
     imu_augmented_state->first.velocity().matrix().isApprox(halfway_state_with_bias.velocity().matrix(), 1e-6));
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(
-    halfway_state_with_bias.pose().translation().matrix(), 1e-6));
+  const gtsam::Point3 expected_translation =
+    halfway_state_with_bias.pose().translation() +
+    halfway_state_with_bias.velocity() * num_measurements() / 2 * time_increment();
+  EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_translation, 1e-6));
 }
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
@@ -127,7 +129,7 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
     gtsam::imuBias::ConstantBias(acceleration() / 2.0, gtsam::Vector3::Zero()),
     num_measurements() / 4 * time_increment());
   AddCombinedNavState(state_b_half_bias_quarter_time);
-  // TODO: check correct val! (AAA)
+  // TODO(rsoussan): check correct val! (AAA)
   // add halway state with offset and no bias, check correct val!!!! (B)
 
   const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
