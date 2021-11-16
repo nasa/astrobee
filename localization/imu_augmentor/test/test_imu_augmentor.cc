@@ -45,7 +45,7 @@ TEST(IMUAugmentorTester, PimPredictConstantAcceleration) {
   lc::CombinedNavState imu_augmented_state = initial_state;
 
   imu_augmentor.PimPredict(initial_state, imu_augmented_state);
-  ASSERT_NEAR(imu_augmented_state.timestamp(), start_time + num_measurements * time_increment, 1e-6);
+  ASSERT_NEAR(imu_augmented_state.timestamp(), num_measurements * time_increment, 1e-6);
   // make sure position and velocity are correct!! (AC)
 }
 
