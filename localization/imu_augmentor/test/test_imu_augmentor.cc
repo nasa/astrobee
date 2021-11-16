@@ -173,9 +173,8 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   imu_augmentor().PimPredict(initial_state, imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
-  // TODO(rsoussan): update this!!!! -> add fcn to do integration!!
   gtsam::Rot3 expected_orientation =
-    ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), start_time());
+    ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
 }
