@@ -188,7 +188,7 @@ TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
-    ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
+    ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), imu_augmented_state_start_time);
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
   EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
 }
