@@ -158,43 +158,19 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(gtsam::Vector3::Zero().matrix(), 1e-6));
 }
 
-// TODO(rsoussan): make same tests for this!!!
-// create const ang vel measurements!
-// - rename constaceel meas to const measurements
-// - add wrappers for this for accel and ang!
-// Finish other tests!!!
-/*TEST(IMUAugmentorTester, PimPredictConstantAngularVelocity) {
-  const ia::ImuAugmentorParams params = ia::DefaultImuAugmentorParams();
-  ia::ImuAugmentor imu_augmentor(params);
-  const double angular_velocity_i = 0.01;
-  const Eigen::Vector3d angular_velocity(angular_velocity_i, angular_velocity_i, angular_velocity_i);
-  constexpr double time_increment = 1 / 125.0;
-  // Start at time increment so first IMU measurement is after starting combined nav state time
-  const lc::Time start_time = time_increment;
-  constexpr int num_measurements = 20;
-  //TODO(rsoussan): Add this!!
-  const std::vector<lm::ImuMeasurement> imu_measurements =
-    ia::ConstantAngularVelocityMeasurements(angular_velocity, num_measurements, start_time, time_increment);
-  for (const auto& imu_measurement : imu_measurements) {
-    imu_augmentor.BufferImuMeasurement(imu_measurement);
-  }
+// TODO(rsoussan): make ang vel same tests!!!
+TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), 0);
   lc::CombinedNavState imu_augmented_state = initial_state;
+  imu_augmentor().PimPredict(initial_state, imu_augmented_state);
 
-  imu_augmentor.PimPredict(initial_state, imu_augmented_state);
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements * time_increment, 1e-6);
-  // Update these!!!
-  const double expected_velocity_i = acceleration_i * num_measurements * time_increment;
-  const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  // TODO(rsoussan): update this!!!! -> add fcn to do integration!!
+  gtsam::Rot3 expected_orientation = gtsam::Rot3::identity();
   // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
-  // x = 1/2*a*t^2
-  const double expected_position_i = acceleration_i * 0.5 * std::pow(num_measurements * time_increment, 2);
-  const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
-}*/
+  EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
+}
 
 // TODO(rsoussan): Test imu aug wrapper!!!!!
 
