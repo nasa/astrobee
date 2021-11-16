@@ -165,7 +165,6 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(gtsam::Vector3::Zero().matrix(), 1e-6));
 }
 
-// TODO(rsoussan): make ang vel same tests!!!
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), 0);
@@ -179,7 +178,33 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
 }
 
-// TODO(rsoussan): Test imu aug wrapper!!!!!
+TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), 0);
+  const lc::Time imu_augmented_state_start_time = num_measurements() / 2 * time_increment();
+  lc::CombinedNavState imu_augmented_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
+  imu_augmentor().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  gtsam::Rot3 expected_orientation =
+    ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
+  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+  EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
+}
+
+TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(gtsam::Vector3::Zero(), angular_velocity()), 0);
+  lc::CombinedNavState imu_augmented_state = initial_state;
+  imu_augmentor().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+  EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(gtsam::Rot3::identity().matrix(), 1e-6));
+}
+
+// TODO(rsoussan): Test imu aug wrapper!!!!! (B)
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
