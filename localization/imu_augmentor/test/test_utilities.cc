@@ -18,10 +18,13 @@
 
 #include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
+#include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 namespace imu_augmentor {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
 
 ImuAugmentorParams DefaultImuAugmentorParams() {
   ImuAugmentorParams params;
@@ -80,5 +83,12 @@ gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measuremen
     integrated_orientation = integrated_orientation * orientation_update;
   }
   return integrated_orientation;
+}
+
+sensor_msgs::Imu ImuMsg(const localization_measurements::ImuMeasurement& imu_measurement) {
+  sensor_msgs::Imu imu_msg;
+  msg_conversions::VectorToMsg(imu_measurement.acceleration, imu_msg.linear_acceleration);
+  msg_conversions::VectorToMsg(imu_measurement.angular_velocity, imu_msg.angular_velocity);
+  lc::TimeToHeader(imu_measurement.timestamp, imu_msg.header);
 }
 }  // namespace imu_augmentor

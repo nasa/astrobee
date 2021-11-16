@@ -46,6 +46,8 @@ std::vector<localization_measurements::ImuMeasurement> ConstantAngularVelocityMe
 gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measurements::ImuMeasurement>& imu_measurements,
                                        const gtsam::Rot3& starting_orientation,
                                        const localization_common::Time starting_time);
+
+sensor_msgs::Imu ImuMsg(const localization_measurements::ImuMeasurement& imu_measurement);
 }  // namespace imu_augmentor
 
 #endif  // IMU_AUGMENTOR_TEST_UTILITIES_H_ // NOLINT

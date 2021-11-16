@@ -78,6 +78,15 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_imu_augmentor
     imu_augmentor ${catkin_LIBRARIES} 
   )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_imu_augmentor_wrapper
+    test/test_imu_augmentor_wrapper.test
+    test/test_imu_augmentor_wrapper.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_imu_augmentor_wrapper
+    imu_augmentor ${catkin_LIBRARIES} 
+  )
 endif()
 
 #############

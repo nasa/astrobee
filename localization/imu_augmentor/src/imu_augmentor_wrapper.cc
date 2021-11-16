@@ -41,8 +41,16 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
     LogFatal("Failed to read config files.");
   }
 
-  ii::LoadImuIntegratorParams(config, params_);
-  params_.standstill_enabled = mc::LoadBool(config, "imu_augmentor_standstill");
+  ImuAugmentorParams params;
+  ii::LoadImuIntegratorParams(config, params);
+  params.standstill_enabled = mc::LoadBool(config, "imu_augmentor_standstill");
+  Initialize(params);
+}
+
+ImuAugmentorWrapper::ImuAugmentorWrapper(const ImuAugmentorParams& params) { Initialize(params); }
+
+void ImuAugmentorWrapper::Initialize(const ImuAugmentorParams& params) {
+  params_ = params;
   imu_augmentor_.reset(new ImuAugmentor(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the

@@ -204,8 +204,6 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
   EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(gtsam::Rot3::identity().matrix(), 1e-6));
 }
 
-// TODO(rsoussan): Test imu aug wrapper!!!!! (B)
-
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
