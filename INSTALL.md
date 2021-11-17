@@ -1,12 +1,12 @@
 # Install
 
-## Quick Start using the Astrobee docker image
+## Quick start using the Astrobee Docker image
 
 *The following has been tested on native (non-VM) Ubuntu systems using X11 (the default). Please see [these ROS pages](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more resources.*
 
-If you just want to try out the astrobee simulator, you can use one of the docker images in the [Github Container Registry](https://github.com/nasa/astrobee/pkgs/container/astrobee).
+If you just want to try out the astrobee simulator, you can use one of the Docker images in the [Github Container Registry](https://github.com/nasa/astrobee/pkgs/container/astrobee).
 
-Make sure you have docker installed in your ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+Make sure you have Docker installed in your Ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
 For some systems (with discrete graphics cards), you may need to install [additional software](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
 
