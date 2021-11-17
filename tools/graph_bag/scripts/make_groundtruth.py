@@ -93,6 +93,9 @@ if __name__ == "__main__":
     base_surf_map = os.path.abspath(args.base_surf_map)
     maps_directory = os.path.abspath(args.maps_directory)
 
+    os.mkdir(args.output_directory)
+    os.chdir(args.output_directory)
+
     map_name = args.map_name
     bag_prefix = utilities.basename(bagfile)
     if not args.map_name:
@@ -131,6 +134,7 @@ if __name__ == "__main__":
     utilities.run_command_and_save_output(
         make_groundtruth_command, "make_groundtruth.txt"
     )
+    os.rename("run_graph_bag_command.txt", "groundtruth_run_graph_bag_command.txt")
 
     loc_results_bag = bag_prefix + "_results.bag"
     loc_pdf = "loc_results.pdf"
@@ -158,7 +162,8 @@ if __name__ == "__main__":
         + groundtruth_bag
     )
     if not args.use_image_features:
-        make_groundtruth_command += " --generate-image-features"
+        get_loc_results_command += " --generate-image-features"
     utilities.run_command_and_save_output(
         get_loc_results_command, "get_loc_results.txt"
     )
+    os.rename("run_graph_bag_command.txt", "loc_run_graph_bag_command.txt")

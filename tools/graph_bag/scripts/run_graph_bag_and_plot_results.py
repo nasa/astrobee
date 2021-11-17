@@ -98,7 +98,7 @@ if __name__ == "__main__":
         + " -w "
         + args.world
         + " --use-image-features "
-        + str(args.use_image_features)
+        + (str(args.use_image_features)).lower()
         + " -o "
         + args.output_bagfile
     )
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     # Plot results
     plot_results_command = (
         "rosrun graph_bag plot_results_main.py "
-        + bagfile
+        + args.output_bagfile
         + " --output-file "
         + args.output_file
         + " --output-csv-file "
