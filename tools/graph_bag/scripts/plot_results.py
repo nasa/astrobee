@@ -37,7 +37,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def l2_map(vector3ds):
-<<<<<<< HEAD
   return map(lambda (x, y, z): math.sqrt(x*x + y*y + z*z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
@@ -325,7 +324,6 @@ def plot_features(
         markersize=markersize,
         label=label,
     )
->>>>>>> upstream/develop
 
 
 def add_feature_count_plots(pdf, graph_localization_states):

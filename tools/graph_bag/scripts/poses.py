@@ -18,7 +18,6 @@
 # under the License.
 
 import orientations
-<<<<<<< HEAD
 import pose
 import pose_covariances
 import vector3ds
