@@ -71,12 +71,14 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
  private:
   void PublishLoop();
   bool EnableService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);  // NOLINT
+  void LoadCameraInfo();
 
   sensor_msgs::ImagePtr img_msg_buffer_[kImageMsgBuffer];
+  sensor_msgs::CameraInfo info_msg_;
   size_t img_msg_buffer_idx_;
   std::thread thread_;
   std::atomic<bool> thread_running_;
-  ros::Publisher pub_;
+  ros::Publisher pub_, info_pub_;
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;

@@ -31,7 +31,7 @@ catkin_package(
   )
 
 create_library(TARGET is_camera
-  LIBS ${catkin_LIBRARIES} ${V4L2_LIBRARY} config_reader ff_nodelet
+  LIBS ${catkin_LIBRARIES} ${V4L2_LIBRARY} config_reader ff_nodelet camera
   INC ${catkin_INCLUDE_DIRS} ${V4L2_INCLUDE_DIR}
   DEPS ff_msgs)
 
