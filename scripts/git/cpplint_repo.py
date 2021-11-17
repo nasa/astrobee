@@ -33,13 +33,8 @@ def run_cpplint(filename, cpplint_path):
 
 
 def print_objection():
-    print("   ____  __      _           __  _             __")
-    print("  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /")
-    print(" / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / ")
-    print("/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  ")
-    print("\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   ")
-    print("          /___/                                  ")
-
+    print("Code formatting errors were found.")
+    print("==================================")
 
 def main():
     num_errors = 0
@@ -98,9 +93,9 @@ def main():
 
     print(("=" * 50))
     if num_errors > 0:
-        print(("  You have %d lint errors" % num_errors))
+        print(("  You have %d lint errors." % num_errors))
     elif num_errors == 0:
-        print("  Code adheres to style guide lines")
+        print("  Code adheres to style guidelines.")
 
     exit(num_errors)
 
