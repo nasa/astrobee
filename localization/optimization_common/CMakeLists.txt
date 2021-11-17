@@ -32,9 +32,12 @@ find_package(OpenCV331 REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
+# Non-linear optimizer
+find_package(Ceres REQUIRED)
+
 catkin_package(
-  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} 
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} 
+  INCLUDE_DIRS include 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
   CATKIN_DEPENDS localization_common 
 )
 
@@ -76,7 +79,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_utilities.cc
   )
   target_link_libraries(test_utilities_optimization_common
-    localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
   find_package(rostest REQUIRED)
   add_rostest_gtest(test_se3_local_parameterization
@@ -84,7 +87,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_se3_local_parameterization.cc
   )
   target_link_libraries(test_se3_local_parameterization
-    localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES}   
   )
 endif()
 
