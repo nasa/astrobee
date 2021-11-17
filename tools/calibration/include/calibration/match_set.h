@@ -15,22 +15,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef CALIBRATION_MATCH_SET_H_
+#define CALIBRATION_MATCH_SET_H_
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
-
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+#include <localization_common/image_correspondences.h>
 
 #include <Eigen/Geometry>
-#include <Eigen/StdVector>
 
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+#include <vector>
+
+namespace calibration {
+struct MatchSet {
+  MatchSet(const localization_common::ImageCorrespondences& correspondences, const Eigen::Isometry3d& pose_estimate,
+           const std::vector<int>& inliers)
+      : correspondences(correspondences), pose_estimate(pose_estimate), inliers(inliers) {}
+  localization_common::ImageCorrespondences correspondences;
+  Eigen::Isometry3d pose_estimate;
+  std::vector<int> inliers;
+};
+}  // namespace calibration
+
+#endif  // CALIBRATION_MATCH_SET_H_

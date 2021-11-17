@@ -15,22 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#include <graph_localizer/test_utilities.h>
+#include <localization_common/test_utilities.h>
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
+#include <gtsam/geometry/Point3.h>
 
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+namespace graph_localizer {
+namespace lc = localization_common;
 
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+localization_measurements::Plane RandomPlane() {
+  gtsam::Point3 point = lc::RandomVector();
+  gtsam::Vector3 normal = lc::RandomVector().normalized();
+  return localization_measurements::Plane(point, normal);
+}
+}  // namespace graph_localizer

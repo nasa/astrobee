@@ -15,22 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef CALIBRATION_RUN_CALIBRATOR_PARAMS_H_
+#define CALIBRATION_RUN_CALIBRATOR_PARAMS_H_
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
+#include <calibration/camera_target_based_intrinsics_calibrator_params.h>
+#include <camera/camera_params.h>
 
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+#include <memory>
+#include <string>
 
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
+namespace calibration {
+struct RunCalibratorParams {
+  CameraTargetBasedIntrinsicsCalibratorParams camera_target_based_intrinsics_calibrator;
+  std::shared_ptr<camera::CameraParameters> camera_params;
+  std::string camera_name;
+  // fov, rad, or radtan
+  std::string distortion_type;
+};
+}  // namespace calibration
 
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+#endif  // CALIBRATION_RUN_CALIBRATOR_PARAMS_H_

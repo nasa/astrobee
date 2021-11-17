@@ -16,33 +16,29 @@
 #under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(localization_common)
+project(optimization_common)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-	camera
-	config_reader
-	msg_conversions
-  ff_msgs
+	localization_common
 )
 
-# Find GTSAM
-find_package(GTSAM REQUIRED)
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
 
-# System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
+
+# Non-linear optimizer
+find_package(Ceres REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include 
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam
-  CATKIN_DEPENDS
-    camera
-    config_reader
-    msg_conversions
-    ff_msgs
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
+  CATKIN_DEPENDS localization_common 
 )
 
 ###########
@@ -53,24 +49,17 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/averager.cc
-  src/combined_nav_state.cc
-  src/combined_nav_state_covariances.cc
-  src/rate_timer.cc
-  src/ros_timer.cc
-  src/time.cc
-  src/timer.cc
-  src/test_utilities.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} gtsam ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##
@@ -85,12 +74,20 @@ install(TARGETS ${PROJECT_NAME}
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_utilities_localization_common
+  add_rostest_gtest(test_utilities_optimization_common
     test/test_utilities.test
     test/test_utilities.cc
   )
-  target_link_libraries(test_utilities_localization_common
-    ${PROJECT_NAME}  
+  target_link_libraries(test_utilities_optimization_common
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_se3_local_parameterization
+    test/test_se3_local_parameterization.test
+    test/test_se3_local_parameterization.cc
+  )
+  target_link_libraries(test_se3_local_parameterization
+    ${PROJECT_NAME} ${catkin_LIBRARIES}   
   )
 endif()
 

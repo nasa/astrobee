@@ -15,22 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef CALIBRATION_RANSAC_PNP_PARAMS_H_
+#define CALIBRATION_RANSAC_PNP_PARAMS_H_
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
+#include <string>
 
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+namespace calibration {
+struct RansacPnPParams {
+  double max_inlier_threshold;
+  int num_iterations;
+  int min_num_inliers;
+  // TODO(rsoussan): Change this to cv::SolvePnPMethod when opencv version updated
+  int pnp_method;
+};
+}  // namespace calibration
 
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+#endif  // CALIBRATION_RANSAC_PNP_PARAMS_H_

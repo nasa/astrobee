@@ -15,22 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef CALIBRATION_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
+#define CALIBRATION_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
+#include <calibration/optimization_params.h>
+#include <calibration/ransac_pnp_params.h>
 
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+namespace calibration {
+struct ReprojectionPoseEstimateParams {
+  OptimizationParams optimization;
+  RansacPnPParams ransac_pnp;
+  bool optimize_estimate;
+  double max_inlier_threshold;
+};
+}  // namespace calibration
 
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+#endif  // CALIBRATION_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
