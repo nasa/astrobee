@@ -41,13 +41,14 @@ def create_groundtruth(
     extract_images_command = (
         "rosrun localization_node extract_image_bag "
         + bagfile
-        + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory " + gt_images
+        + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory "
+        + gt_images
     )
     utilities.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
     all_gt_images = os.path.join(gt_images, "*.jpg")
     select_images_command = (
-        "rosrun sparse_mapping select_images -density_factor 1.4 " + all_gt_images 
+        "rosrun sparse_mapping select_images -density_factor 1.4 " + all_gt_images
     )
     utilities.run_command_and_save_output(select_images_command, "select_images.txt")
 
@@ -65,7 +66,9 @@ def create_groundtruth(
     # Build groundtruth
     groundtruth_map = map_name + ".map"
     build_map_command = (
-        "rosrun sparse_mapping build_map " + all_gt_images + " -output_map "
+        "rosrun sparse_mapping build_map "
+        + all_gt_images
+        + " -output_map "
         + groundtruth_map
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100"
     )
@@ -88,7 +91,7 @@ def create_groundtruth(
     # image files to appear to be in correct relative path
     os.symlink(maps_directory, "maps")
     maps_gt_images = os.path.join("maps", gt_images_dir)
-    os.symlink(gt_images, maps_gt_images) 
+    os.symlink(gt_images, maps_gt_images)
 
     # Convert SURF to BRISK map
     # Get full path to output file to avoid permission errors when running
