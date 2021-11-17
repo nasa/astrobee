@@ -15,40 +15,97 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(depth_odometry)
 
-if (USE_ROS)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  ff_nodelet 
+  ff_util
+  localization_common 
+  localization_measurements 
+  msg_conversions 
+)
+
+# Find OpenCV3
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV 3 REQUIRED)
+
+find_package(Eigen3 REQUIRED)
+
+find_package(Ceres REQUIRED)
+
+find_package(PCL REQUIRED COMPONENTS common)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ff_nodelet ${GTSAM_LIBRARIES} localization_common localization_measurements msg_conversions sparse_mapping 
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
-  CATKIN_DEPENDS roscpp pcl pcl_conversions 
-  DEPENDS gtsam ff_msgs 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
+  CATKIN_DEPENDS roscpp ff_msgs ff_nodelet ff_util localization_common localization_measurements msg_conversions  
+  DEPENDS gtsam pcl pcl_conversions  
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${CERES_LIBRARIES} gtsam ${PCL_LIBRARIES} ff_nodelet localization_common localization_measurements msg_conversions sparse_mapping 
-  INC ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS} 
-  DEPS ff_msgs
+###########
+## Build ##
+###########
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS} 
+  ${OpenCV_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME} 
-  INC ${catkin_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  src/brisk_feature_detector_and_matcher.cc
+  src/depth_image_aligner.cc
+  src/depth_odometry.cc
+  src/depth_odometry_nodelet.cc
+  src/depth_odometry_wrapper.cc
+  src/good_features_to_track_detector.cc
+  src/icp.cc
+  src/lk_optical_flow_feature_detector_and_matcher.cc
+  src/optimization_residuals.cc
+  src/optimization_utilities.cc
+  src/parameter_reader.cc
+  src/point_cloud_utilities.cc
+  src/point_cloud_with_known_correspondences_aligner.cc
+  src/surf_feature_detector_and_matcher.cc
 )
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
 if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
+ find_package(rostest REQUIRED)
   add_rostest_gtest(test_point_to_plane
     test/test_point_to_plane.test
     test/test_point_to_plane.cc
   )
   target_link_libraries(test_point_to_plane
-    depth_odometry gtsam
+    ${PROJECT_NAME} gtsam
   )
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
 
-endif (USE_ROS)
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
