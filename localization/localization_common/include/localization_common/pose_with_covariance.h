@@ -1,3 +1,4 @@
+
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  *
@@ -16,21 +17,21 @@
  * under the License.
  */
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
-
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+#ifndef LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_H_
+#define LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_H_
 
 #include <Eigen/Geometry>
-#include <Eigen/StdVector>
 
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+namespace localization_common {
+using PoseCovariance = Eigen::Matrix<double, 6, 6>;
+struct PoseWithCovariance {
+  PoseWithCovariance(const Eigen::Isometry3d& pose, const PoseCovariance& covariance)
+      : pose(pose), covariance(covariance) {}
+  Eigen::Isometry3d pose;
+  PoseCovariance covariance;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+}  // namespace localization_common
+
+#endif  // LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_H_

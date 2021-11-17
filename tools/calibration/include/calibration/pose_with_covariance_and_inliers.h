@@ -15,22 +15,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef CALIBRATION_POSE_WITH_COVARIANCE_AND_INLIERS_H_
+#define CALIBRATION_POSE_WITH_COVARIANCE_AND_INLIERS_H_
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
-
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+#include <localization_common/pose_with_covariance.h>
 
 #include <Eigen/Geometry>
-#include <Eigen/StdVector>
 
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+#include <vector>
+
+namespace calibration {
+struct PoseWithCovarianceAndInliers : public localization_common::PoseWithCovariance {
+  PoseWithCovarianceAndInliers(const Eigen::Isometry3d& pose, const localization_common::PoseCovariance& covariance,
+                               const std::vector<int>& inliers)
+      : PoseWithCovariance(pose, covariance), inliers(inliers) {}
+  std::vector<int> inliers;
+};
+}  // namespace calibration
+
+#endif  // CALIBRATION_POSE_WITH_COVARIANCE_AND_INLIERS_H_

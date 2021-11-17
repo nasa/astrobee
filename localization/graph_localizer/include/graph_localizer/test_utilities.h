@@ -16,21 +16,12 @@
  * under the License.
  */
 
-/**
- * This header makes vectors using Eigen objects align properly.
- * It should be included in any file that uses vectors of Eigen objects.
- **/
+#ifndef GRAPH_LOCALIZER_TEST_UTILITIES_H_
+#define GRAPH_LOCALIZER_TEST_UTILITIES_H_
 
-#ifndef FF_COMMON_EIGEN_VECTORS_H_
-#define FF_COMMON_EIGEN_VECTORS_H_
+#include <localization_measurements/plane.h>
 
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Isometry3d)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // FF_COMMON_EIGEN_VECTORS_H_
+namespace graph_localizer {
+localization_measurements::Plane RandomPlane();
+}  // namespace graph_localizer
+#endif  // GRAPH_LOCALIZER_TEST_UTILITIES_H_

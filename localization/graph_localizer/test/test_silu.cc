@@ -16,18 +16,19 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
 #include <graph_localizer/silu.h>
 #include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 
 #include <gtsam/base/numericalDerivative.h>
 
 #include <gtest/gtest.h>
 
 namespace gl = graph_localizer;
+namespace lc = localization_common;
 TEST(SiluTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const double x = gl::RandomDouble();
+    const double x = lc::RandomDouble();
     gtsam::Matrix H;
     gl::Silu(x, H);
     const auto numerical_H = gtsam::numericalDerivative11<double, double>(
@@ -38,8 +39,8 @@ TEST(SiluTester, Jacobian) {
 
 TEST(SiluWithOffsetTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const double x = gl::RandomDouble();
-    const double offset = gl::RandomPositiveDouble();
+    const double x = lc::RandomDouble();
+    const double offset = lc::RandomPositiveDouble();
     gtsam::Matrix H;
     gl::SiluWithOffset(x, offset, H);
     const auto numerical_H = gtsam::numericalDerivative21<double, double, double>(
@@ -93,8 +94,8 @@ TEST(SiluWithOffsetTester, XMuchLessThanOffset) {
 
 TEST(SiluWithOffsetTwoWayTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const double x = gl::RandomDouble();
-    const double offset = gl::RandomPositiveDouble();
+    const double x = lc::RandomDouble();
+    const double offset = lc::RandomPositiveDouble();
     gtsam::Matrix H;
     gl::SiluWithOffsetTwoWay(x, offset, H);
     const auto numerical_H = gtsam::numericalDerivative21<double, double, double>(
