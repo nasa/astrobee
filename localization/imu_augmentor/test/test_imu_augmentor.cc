@@ -19,6 +19,7 @@
 #include "test_utilities.h"  // NOLINT
 #include <imu_augmentor/imu_augmentor.h>
 #include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 #include <localization_common/time.h>
 
 #include <gtest/gtest.h>
@@ -123,13 +124,11 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   const double expected_velocity_i = acceleration_i() * num_measurements() * time_increment();
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.velocity().matrix(), expected_velocity.matrix());
   // x = 1/2*a*t^2
   const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() * time_increment(), 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().translation().matrix(), expected_position.matrix());
 }
 
 TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
@@ -143,13 +142,11 @@ TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   const double expected_velocity_i = acceleration_i() * num_measurements() / 2 * time_increment();
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.velocity().matrix(), expected_velocity.matrix());
   // x = 1/2*a*t^2
   const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() / 2 * time_increment(), 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().translation().matrix(), expected_position.matrix());
 }
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
@@ -159,10 +156,9 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   imu_augmentor().PimPredict(initial_state, imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.velocity().matrix().isApprox(gtsam::Vector3::Zero().matrix(), 1e-6));
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().translation().matrix().isApprox(gtsam::Vector3::Zero().matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.velocity().matrix(), gtsam::Vector3::Zero().matrix());
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().translation().matrix(),
+               gtsam::Vector3::Zero().matrix());
 }
 
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
@@ -174,8 +170,7 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
     ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().rotation().matrix(), expected_orientation.matrix());
 }
 
 TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
@@ -189,8 +184,7 @@ TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
     ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), imu_augmented_state_start_time);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(expected_orientation.matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().rotation().matrix(), expected_orientation.matrix());
 }
 
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
@@ -200,8 +194,7 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
   imu_augmentor().PimPredict(initial_state, imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state.pose().rotation().matrix().isApprox(gtsam::Rot3::identity().matrix(), 1e-6));
+  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().rotation().matrix(), gtsam::Rot3::identity().matrix());
 }
 
 // Run all the tests that were declared with TEST()
