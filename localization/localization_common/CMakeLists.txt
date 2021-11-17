@@ -36,7 +36,7 @@ find_package(GTSAM REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} 
+  INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam
   CATKIN_DEPENDS
     camera
@@ -66,6 +66,7 @@ add_library(${PROJECT_NAME}
   src/ros_timer.cc
   src/time.cc
   src/timer.cc
+  src/test_utilities.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
@@ -81,6 +82,17 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_utilities_localization_common
+    test/test_utilities.test
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_utilities_localization_common
+    ${PROJECT_NAME}  
+  )
+endif()
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

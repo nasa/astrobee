@@ -38,6 +38,7 @@
 #include <std_msgs/Header.h>
 
 #include <string>
+#include <utility>
 
 namespace localization_common {
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
@@ -120,6 +121,21 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
   msg_conversions::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 }
 
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
+
+double Deg2Rad(const double degrees);
+
+double Rad2Deg(const double radians);
+
+// Assumes angles in degrees, ordered as rho, phi, z
+Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordinates);
+
+// Uses Euler Angles in intrinsic ypr representation in degrees
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
+
+Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
+
+Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_
