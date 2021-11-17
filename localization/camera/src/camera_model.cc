@@ -21,8 +21,6 @@
 #include <glog/logging.h>
 #include <iostream>
 
-#include <opencv2/calib3d.hpp>
-
 namespace camera {
 
 CameraModel::CameraModel(const Eigen::Vector3d & position, const Eigen::Matrix3d & rotation,
@@ -91,33 +89,6 @@ Eigen::Vector2d CameraModel::ImageCoordinates(double x, double y, double z) cons
 Eigen::Vector2d CameraModel::ImageCoordinates(const Eigen::Vector3d & p) const {
   // This returns undistorted pixels relative to the center of the undistorted image.
   return params_.GetFocalVector().cwiseProduct((cam_t_global_ * p).hnormalized());
-}
-
-Eigen::Vector2d CameraModel::DistortedImageCoordinates(const Eigen::Vector3d & p) const {
-  // TODO(rsoussan): clean this up!
-  const auto focal_lengths = params_.GetFocalVector();
-  const auto distortion_params = params_.GetDistortion();
-  const auto principal_points = params_.GetOpticalOffset();
-  cv::Mat intrinsics = (cv::Mat::zeros(3, 3, cv::DataType<double>::type));
-  intrinsics.at<double>(0, 0) = focal_lengths[0];
-  intrinsics.at<double>(1, 1) = focal_lengths[1];
-  intrinsics.at<double>(0, 2) = principal_points[0];
-  intrinsics.at<double>(1, 2) = principal_points[1];
-  intrinsics.at<double>(2, 2) = 1;
-  cv::Mat distortion = (cv::Mat::zeros(4, 1, cv::DataType<double>::type));
-  for (int i = 0; i < distortion_params.size(); ++i) {
-    distortion.at<double>(i, 0) = distortion_params[i];
-  }
-
-  cv::Mat zero_r(cv::Mat::eye(3, 3, cv::DataType<double>::type));
-  cv::Mat zero_t(cv::Mat::zeros(3, 1, cv::DataType<double>::type));
-  std::vector<cv::Point2d> projected_points;
-  std::vector<cv::Point3d> object_points;
-  const auto& frame_changed_pt = cam_t_global_ * p;
-  object_points.emplace_back(cv::Point3d(frame_changed_pt.x(), frame_changed_pt.y(), frame_changed_pt.z()));
-  cv::projectPoints(object_points, zero_r, zero_t, intrinsics, distortion, projected_points);
-  const auto& projected_point = projected_points[0];
-  return Eigen::Vector2d(projected_point.x, projected_point.y);
 }
 
 Eigen::Vector3d CameraModel::Ray(int x, int y) const {
