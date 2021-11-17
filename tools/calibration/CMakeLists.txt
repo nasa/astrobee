@@ -38,8 +38,8 @@ find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
   INCLUDE_DIRS include 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
   CATKIN_DEPENDS camera localization_common msg_conversions optimization_common 
 )
 
@@ -115,34 +115,34 @@ if(CATKIN_ENABLE_TESTING)
     test/test_ransac_pnp.cc
   )
   target_link_libraries(test_ransac_pnp
-    calibration localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_reprojection_pose_estimate
     test/test_reprojection_pose_estimate.test
     test/test_reprojection_pose_estimate.cc
   )
   target_link_libraries(test_reprojection_pose_estimate
-    calibration localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_pnp
     test/test_pnp.test
     test/test_pnp.cc
   )
   target_link_libraries(test_pnp
-    calibration localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_camera_utilities
     test/test_camera_utilities.test
     test/test_camera_utilities.cc
   )
   target_link_libraries(test_camera_utilities
-    calibration localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
   add_rostest_gtest(test_camera_target_based_intrinsics_calibrator
     test/test_camera_target_based_intrinsics_calibrator.test
     test/test_camera_target_based_intrinsics_calibrator.cc
   )
   target_link_libraries(test_camera_target_based_intrinsics_calibrator
-    calibration localization_common optimization_common 
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
 endif()

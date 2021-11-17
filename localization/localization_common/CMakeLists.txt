@@ -36,14 +36,13 @@ find_package(GTSAM REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} 
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}
+  INCLUDE_DIRS include 
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam
   CATKIN_DEPENDS
     camera
     config_reader
     msg_conversions
     ff_msgs
-  DEPENDS gtsam
 )
 
 ###########
@@ -91,7 +90,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_utilities.cc
   )
   target_link_libraries(test_utilities_localization_common
-    localization_common 
+    ${PROJECT_NAME}  
   )
 endif()
 
