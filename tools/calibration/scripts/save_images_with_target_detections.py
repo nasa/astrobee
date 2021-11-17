@@ -26,10 +26,9 @@ import argparse
 import os
 import sys
 
-import get_bags_with_topic
-
 import aslam_cv_backend as acvb
 import cv2
+import get_bags_with_topic
 import kalibr_camera_calibration as kcc
 import kalibr_common as kc
 import numpy as np
