@@ -16,9 +16,10 @@
  * under the License.
  */
 
+#include "test_utilities.h"  // NOLINT
+
 #include <calibration/camera_target_based_intrinsics_calibrator.h>
 #include <calibration/state_parameters.h>
-#include <calibration/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <optimization_common/identity_distorter.h>

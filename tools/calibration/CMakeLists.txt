@@ -59,7 +59,6 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/camera_utilities.cc
   src/parameter_reader.cc
-  src/test_utilities.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
@@ -113,6 +112,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_ransac_pnp
     test/test_ransac_pnp.test
     test/test_ransac_pnp.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_ransac_pnp
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
@@ -120,6 +120,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_reprojection_pose_estimate
     test/test_reprojection_pose_estimate.test
     test/test_reprojection_pose_estimate.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_reprojection_pose_estimate
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
@@ -127,6 +128,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_pnp
     test/test_pnp.test
     test/test_pnp.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_pnp
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
@@ -134,6 +136,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_camera_utilities
     test/test_camera_utilities.test
     test/test_camera_utilities.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_camera_utilities
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
@@ -141,6 +144,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_camera_target_based_intrinsics_calibrator
     test/test_camera_target_based_intrinsics_calibrator.test
     test/test_camera_target_based_intrinsics_calibrator.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_camera_target_based_intrinsics_calibrator
     ${PROJECT_NAME} ${catkin_LIBRARIES}  

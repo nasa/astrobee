@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_TEST_UTILITIES_H_
-#define CALIBRATION_TEST_UTILITIES_H_
+#ifndef CALIBRATION_TEST_UTILITIES_H_  // NOLINT
+#define CALIBRATION_TEST_UTILITIES_H_  // NOLINT
 
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
 #include <calibration/match_set.h>
@@ -24,6 +24,7 @@
 #include <calibration/optimization_params.h>
 #include <calibration/ransac_pnp_params.h>
 #include <calibration/reprojection_pose_estimate_params.h>
+#include <calibration/utilities.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 
@@ -163,4 +164,4 @@ StateParameters AddNoiseToStateParameters(const StateParameters& state_parameter
                                           const bool fov = false);
 }  // namespace calibration
 
-#endif  // CALIBRATION_TEST_UTILITIES_H_
+#endif  // CALIBRATION_TEST_UTILITIES_H_  // NOLINT
