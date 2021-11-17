@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="imu_augmentor_wrapper" type="test_imu_augmentor_wrapper" test-name="test_imu_augmentor_wrapper" />
+  <test pkg="imu_augmentor" type="test_imu_augmentor_wrapper" test-name="test_imu_augmentor_wrapper" />
 </launch>
