@@ -21,6 +21,7 @@ add_subdirectory(imu_integration)
 add_subdirectory(interest_point)
 add_subdirectory(localization_common)
 add_subdirectory(localization_measurements)
+add_subdirectory(optimization_common)
 add_subdirectory(sparse_mapping)
 
 if (USE_ROS)

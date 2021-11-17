@@ -7,20 +7,19 @@ and the robot's motion.
 
 # Required Inputs
 
-* `/ctl/fam`
-* `/pmc_actuator/command`
+* `hw/pmc/command`
 
 # Simulated Outputs
 
-* `/imu/data`
-* `/ctl/vpp_state`
-* `/pmc_actuator/telemetry`
+* `hw/imu`
+* `hw/pmc/telemetry`
 * `/clock`
-* `/localization/mapped_landmarks/registration`
-* `/localization/mapped_landmarks/features`
-* `/localization/optical_flow/features`
-* `/localization/optical_flow/registration`
-* `/localization/handrail/features`
-* `/localization/handrail/registration`
-* `/ground_truth`
+* `hw/cam_nav`
+* `loc/ml/registration`
+* `loc/ml/features`
+* `loc/of/features`
+* `loc/of/registration`
+* `loc/hr/features`
+* `loc/hr/registration`
+* `loc/truth/pose`
 

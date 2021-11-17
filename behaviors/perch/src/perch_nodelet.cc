@@ -156,6 +156,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // then we can try moving to the approach pose in nominal mode.
     fsm_.Add(STATE::PERCHING_SWITCHING_TO_HR_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        SaveApproachPose();
         Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::PERCHING_MOVING_TO_APPROACH_POSE;
       });
@@ -200,7 +201,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // [11] - If we successfully stopped, we switch to perch localization (future work)
     fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_PERCH);
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::PERCHING_SWITCHING_TO_PL_LOC;
       });
     // [12] - With all steps done, we conclude we are perched.
@@ -472,6 +473,10 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       &PerchNodelet::ReconfigureCallback, this, _1)))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                          "Could not load config");
+
+    // Setup the platform name
+    platform_name_ = GetPlatform();
+    platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
 
     // Create a transform buffer to listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
@@ -758,7 +763,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
    */
   void SaveApproachPose(void) {
     geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-     "world", "body", ros::Time(0));
+     "world", platform_name_ + "body", ros::Time(0));
 
     ROS_WARN("[Perch] Saving Approach Pose");
 
@@ -812,34 +817,34 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       // then to the complete pose.
       case COMPLETE_POSE:
         // The movement to approach pose is already done twice
-        msg.header.frame_id = "handrail/approach";
+        msg.header.frame_id = platform_name_ + "handrail/approach";
         goal.states.push_back(msg);
-        msg.header.frame_id = "handrail/complete";
+        msg.header.frame_id = platform_name_ + "handrail/complete";
         goal.states.push_back(msg);
         break;
       // Move to the approach pose.
       case APPROACH_POSE:
-        msg.header.frame_id = "handrail/approach";
+        msg.header.frame_id = platform_name_ + "handrail/approach";
         goal.states.push_back(msg);
         break;
       // Move to the recovery pose. This option is currently used to move to the
       // approach pose, but it is here for potential change in recovery options.
       case RECOVERY_POSE:
-        msg.header.frame_id = "body";
+        msg.header.frame_id = platform_name_ + "body";
         goal.states.push_back(msg);
         break;
       // Move to the perched pose. This option is currently used as a placeholder
       // operation for perched localization. It is implemented for futrure use,
       // if the user wants the robot to have a pan and tilt position for example.
       case PERCHED_POSE:
-        msg.header.frame_id = "body";
+        msg.header.frame_id = platform_name_ + "body";
         goal.states.push_back(msg);
         break;
       // Move to the unperched pose. Placeholder to return to a default pan/tilt
       // option, to make the aft face parallel to the wall supporting the handrail,
       // for example.
       case UNPERCHED_POSE:
-        msg.header.frame_id = "body";
+        msg.header.frame_id = platform_name_ + "body";
         goal.states.push_back(msg);
         break;
       default:
@@ -1025,6 +1030,12 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
   Eigen::Vector3d approach_position_;
   int32_t err_;
   std::string err_msg_;
+  std::string platform_name_;
+
+ public:
+  // This fixes the Eigen aligment issue
+  // http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 PLUGINLIB_EXPORT_CLASS(perch::PerchNodelet, nodelet::Nodelet);

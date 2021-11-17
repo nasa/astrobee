@@ -17,5 +17,5 @@
 
 <launch>
   <env name="DATA_DIR" value="$(find sparse_mapping)/test/data/" />
-  <test pkg="sparse_mapping" type="test_sparse_map" test-name="test_sparse_map" />
+  <test pkg="sparse_mapping" type="test_sparse_map" test-name="test_sparse_map"  time-limit="1000.0"/>
 </launch>

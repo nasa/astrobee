@@ -21,8 +21,8 @@
 
 #include <config_reader/config_reader.h>
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -85,8 +85,10 @@ void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
-void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg);
-void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovariance& pose_cov_msg);
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
+                              geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg);
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
+                              geometry_msgs::PoseWithCovariance& pose_cov_msg);
 
 template <typename VectorType, typename MsgVectorType>
 VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
@@ -125,9 +127,9 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
 }
 
 template <typename ArrayType>
-void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array){
-  for (int i = 0; i < 6; ++i){
-    for (int j = 0; j < 6; ++j){
+void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array) {
+  for (int i = 0; i < 6; ++i) {
+    for (int j = 0; j < 6; ++j) {
       covariance_array[i*6 + j] = covariance(i, j);
     }
   }

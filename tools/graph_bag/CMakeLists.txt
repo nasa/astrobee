@@ -15,25 +15,112 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
+cmake_minimum_required(VERSION 3.0)
 project(graph_bag)
 
 if (USE_ROS)
 
-catkin_package(
-  CATKIN_DEPENDS roscpp rosbag
+  ## Compile as C++14, supported in ROS Kinetic and newer
+  add_compile_options(-std=c++14)
+
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+    rosbag
+    ff_util
+    ff_msgs
+    ff_common
+    graph_localizer
+    camera
+    lk_optical_flow
+    imu_bias_tester
+    localization_node
+    imu_augmentor
+  )
+
+  # Find GTSAM
+  find_package(GTSAM REQUIRED)
+
+  catkin_package(
+    LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}
+    INCLUDE_DIRS include
+    CATKIN_DEPENDS roscpp rosbag ff_util ff_msgs ff_common graph_localizer camera lk_optical_flow imu_bias_tester localization_node imu_augmentor
+  )
+   
+  ###########
+  ## Build ##
+  ###########
+  # Specify additional locations of header files
+  include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS} 
+    ${PCL_CONVERSIONS_INCLUDE_DIRS}
+  )
+
+  # Declare C++ libraries
+  add_library(${PROJECT_NAME}
+    src/bag_imu_filterer.cc
+    src/graph_bag.cc
+    src/graph_localizer_simulator.cc
+    src/imu_bias_tester_adder.cc
+    src/live_measurement_simulator.cc
+    src/parameter_reader.cc
+    src/sparse_mapping_pose_adder.cc
+    src/utilities.cc
+  )
+  add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+  ## Declare a C++ executable: run_bag_imu_filterer
+  add_executable(run_bag_imu_filterer tools/run_bag_imu_filterer.cc)
+  add_dependencies(run_bag_imu_filterer ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_bag_imu_filterer
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
+  ## Declare a C++ executable: run_graph_bag
+  add_executable(run_graph_bag tools/run_graph_bag.cc)
+  add_dependencies(run_graph_bag ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_graph_bag
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
+  ## Declare a C++ executable: run_imu_bias_tester_adder
+  add_executable(run_imu_bias_tester_adder tools/run_imu_bias_tester_adder.cc)
+  add_dependencies(run_imu_bias_tester_adder ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_imu_bias_tester_adder
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
+  ## Declare a C++ executable: run_sparse_mapping_pose_adder
+  add_executable(run_sparse_mapping_pose_adder tools/run_sparse_mapping_pose_adder.cc)
+  add_dependencies(run_sparse_mapping_pose_adder ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_sparse_mapping_pose_adder
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-# include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ff_common ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} camera depth_odometry ff_nodelet graph_localizer imu_augmentor imu_bias_tester imu_integration lk_optical_flow localization_common localization_measurements localization_node sparse_mapping msg_conversions 
-  INC ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}
-)
-
-create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME} # profiler
-  INC ${catkin_INCLUDE_DIRS}
-)
+# Install C++ executables
+install(TARGETS run_bag_imu_filterer DESTINATION bin)
+install(TARGETS run_graph_bag DESTINATION bin)
+install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
+install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/run_bag_imu_filterer share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_graph_bag share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_imu_bias_tester_adder share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
 
 endif (USE_ROS)

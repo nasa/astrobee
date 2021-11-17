@@ -20,10 +20,12 @@ import poses
 
 import datetime
 import glob
-import numpy as np
 import os
-import pandas as pd
+import subprocess
 
+import numpy as np
+import pandas as pd
+import poses
 import rosbag
 
 
@@ -31,84 +33,123 @@ import rosbag
 # even when running commands through multiprocessing
 # pooling
 def full_traceback(func):
-  import traceback, functools
+    import functools
+    import traceback
 
-  @functools.wraps(func)
-  def wrapper(*args, **kwargs):
-    try:
-      return func(*args, **kwargs)
-    except Exception as e:
-      msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
-      raise type(e)(msg)
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
+            raise type(e)(msg)
 
-  return wrapper
+    return wrapper
 
 
 def get_files(directory, file_string):
-  return glob.glob(os.path.join(directory, file_string))
+    return glob.glob(os.path.join(directory, file_string))
 
 
 def get_files_recursive(directory, file_string):
-  subdirectory_csv_files = []
-  _, subdirectories, _ = os.walk(directory).next()
-  for subdirectory in subdirectories:
-    subdirectory_path = os.path.join(directory, subdirectory)
-    for subdirectory_csv_file in get_files(subdirectory_path, file_string):
-      subdirectory_csv_files.append(subdirectory_csv_file)
-  return subdirectory_csv_files
+    subdirectory_csv_files = []
+    _, subdirectories, _ = next(os.walk(directory))
+    for subdirectory in subdirectories:
+        subdirectory_path = os.path.join(directory, subdirectory)
+        for subdirectory_csv_file in get_files(subdirectory_path, file_string):
+            subdirectory_csv_files.append(subdirectory_csv_file)
+    return subdirectory_csv_files
 
 
 def create_directory(directory=None):
-  if directory == None:
-    directory = os.path.join(os.getcwd(), datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-  if os.path.exists(directory):
-    print(directory + " already exists!")
-    exit()
-  os.makedirs(directory)
-  return directory
+    if directory == None:
+        directory = os.path.join(
+            os.getcwd(), datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        )
+    if os.path.exists(directory):
+        print((directory + " already exists!"))
+        exit()
+    os.makedirs(directory)
+    return directory
 
 
 def load_dataframe(files):
-  dataframes = [pd.read_csv(file) for file in files]
-  dataframe = pd.concat(dataframes)
-  return dataframe
+    dataframes = [pd.read_csv(file) for file in files]
+    dataframe = pd.concat(dataframes)
+    return dataframe
 
 
-def get_topic_rates(bag_name,
-                    topic,
-                    min_time_diff_for_gap,
-                    use_header_time=True,
-                    verbose=False,
-                    ignore_zero_time_diffs=True):
-  with rosbag.Bag(bag_name, 'r') as bag:
-    last_time = 0.0
-    gaps = 0
-    time_diffs = []
-    for _, msg, t in bag.read_messages([topic]):
-      time = msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9 if use_header_time else t.secs + t.nsecs * 1.0e-9
-      time_diff = time - last_time
-      if last_time != 0 and time_diff >= min_time_diff_for_gap:
+def run_command_and_save_output(command, output_filename, print_command=True):
+    if print_command:
+        print(command)
+    with open(output_filename, "w") as output_file:
+        subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
+
+
+def basename(filename):
+    return os.path.splitext(os.path.basename(filename))[0]
+
+
+# TODO(rsoussan): Move these to different utilities file
+def get_topic_rates(
+    bag_name,
+    topic,
+    min_time_diff_for_gap,
+    use_header_time=True,
+    verbose=False,
+    ignore_zero_time_diffs=True,
+):
+    with rosbag.Bag(bag_name, "r") as bag:
+        last_time = 0.0
+        gaps = 0
+        time_diffs = []
+        for _, msg, t in bag.read_messages([topic]):
+            time = (
+                msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9
+                if use_header_time
+                else t.secs + t.nsecs * 1.0e-9
+            )
+            time_diff = time - last_time
+            if last_time != 0 and time_diff >= min_time_diff_for_gap:
+                if verbose:
+                    print(
+                        (
+                            topic
+                            + " Gap: time: "
+                            + str(time)
+                            + ", last_time: "
+                            + str(last_time)
+                            + ", diff: "
+                            + str(time_diff)
+                        )
+                    )
+                gaps += 1
+            if last_time != 0 and (time_diff != 0 or not ignore_zero_time_diffs):
+                time_diffs.append(time_diff)
+            last_time = time
+
+        mean_time_diff = np.mean(time_diffs)
+        min_time_diff = np.min(time_diffs)
+        max_time_diff = np.max(time_diffs)
+        stddev_time_diff = np.std(time_diffs)
         if verbose:
-          print(topic + ' Gap: time: ' + str(time) + ', last_time: ' + str(last_time) + ', diff: ' + str(time_diff))
-        gaps += 1
-      if (last_time != 0 and (time_diff != 0 or not ignore_zero_time_diffs)):
-        time_diffs.append(time_diff)
-      last_time = time
-
-    mean_time_diff = np.mean(time_diffs)
-    min_time_diff = np.min(time_diffs)
-    max_time_diff = np.max(time_diffs)
-    stddev_time_diff = np.std(time_diffs)
-    if verbose:
-      if use_header_time:
-        print('Using Header time.')
-      else:
-        print('Using Receive time.')
-      print('Found ' + str(gaps) + ' time diffs >= ' + str(min_time_diff_for_gap) + ' secs.')
-      print('Mean time diff: ' + str(mean_time_diff))
-      print('Min time diff: ' + str(min_time_diff))
-      print('Max time diff: ' + str(max_time_diff))
-      print('Stddev time diff: ' + str(stddev_time_diff))
+            if use_header_time:
+                print("Using Header time.")
+            else:
+                print("Using Receive time.")
+            print(
+                (
+                    "Found "
+                    + str(gaps)
+                    + " time diffs >= "
+                    + str(min_time_diff_for_gap)
+                    + " secs."
+                )
+            )
+            print(("Mean time diff: " + str(mean_time_diff)))
+            print(("Min time diff: " + str(min_time_diff)))
+            print(("Max time diff: " + str(max_time_diff)))
+            print(("Stddev time diff: " + str(stddev_time_diff)))
 
 def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name):
   starting_relative_time = relative_poses.times[0]

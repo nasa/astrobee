@@ -397,6 +397,8 @@
      <arg name="default" value="true" />
    </include>
 
+  <include file="$(find pico_driver)/launch/pico_proxy.launch" />
+
    <!-- Monitors -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />

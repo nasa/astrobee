@@ -101,7 +101,7 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   // The set function does all of the internal work. We have moved this out
   // of the onInit() call, so that it can be invoked when a nodelet is not used
   // for example, in simulation, where the dynamic loading is within gazebo...
-  void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt);
+  void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name);
 
   std::map<std::string, int> faults_;
 

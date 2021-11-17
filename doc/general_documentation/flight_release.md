@@ -1,7 +1,5 @@
 \page release Creating a Flight Release
 
-# Creating a Flight Release
-
 This page describes the steps required to complete a flight release. It assumes
 that your environment is configured to cross-compile the fsw for the `armhf`
 architecture.
@@ -75,10 +73,10 @@ fixes, recreate the debians, and repeat the release testing procedure.
 ## Finish Release
 
 Once the debians pass all the required testing, it is ready to become an
-official flight release. Please make two pull requests; one on astrobee develop
-and one on astrobee master. Set Brian, Katie, or Marina as the reviewer. They
-will review the request and do the merging into develop and master. You will
-also need to copy the debians to a temporary location on volar.
+official flight release. Please make one pull request on astrobee develop.
+Set Brian, Katie, or Marina as the reviewer. They will review the request
+and do the merging into develop and master. You will also need to copy the
+debians to a temporary location on volar.
 
     scp astrobee0_0.x.x_armhf.deb \
       <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
@@ -96,5 +94,5 @@ sign it and stage it.
 This section is for reviewers only! After reviewing the pull request and
 verifying that the release passed all sections of the release testing procedure,
 please merge the pull request into develop. You will then need to merge the
-release branch into master as well. After this merge, please create a github
-release.
+develop branch into master (squash and merge). After this merge, please create
+a github release and merge master back into develop (merge commit).

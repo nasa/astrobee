@@ -15,46 +15,80 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(ff_util)
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  config_reader
+  roscpp
+  nodelet
+  dynamic_reconfigure
+  ff_msgs diagnostic_msgs
+  tf2_geometry_msgs
+  actionlib
+  msg_conversions
+)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ff_nodelet config_server config_client perf_timer
-  CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib
+  LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer
+  CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
 )
 
-create_library(TARGET ff_nodelet
-  DIR src/ff_nodelet
-  LIBS ${roscpp_LIBRARIES} ${nodelet_LIBRARIES} config_reader
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+# Your package locations should be listed before other locations
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${JSONCPP_INCLUDE_DIRS}
 )
 
-create_library(TARGET ff_flight
-  DIR src/ff_flight
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} config_reader msg_conversions
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs
+# Declare C++ libraries
+add_library(ff_nodelet
+  src/ff_nodelet/ff_nodelet.cc
 )
+add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ff_nodelet ${catkin_LIBRARIES})
 
-create_library(TARGET config_server
-  DIR src/config_server
-  LIBS ${catkin_LIBRARIES} config_reader
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS config_reader diagnostic_msgs
+# Declare C++ libraries
+add_library(ff_flight
+  src/ff_flight/ff_flight.cc
 )
+add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ff_flight ${catkin_LIBRARIES})
 
-create_library(TARGET config_client
-  DIR src/config_client
-  LIBS ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(config_server
+  src/config_server/config_server.cc
 )
+add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
+target_link_libraries(config_server ${catkin_LIBRARIES})
 
-create_library(TARGET perf_timer
-  DIR src/perf_timer
-  LIBS ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(config_client
+  src/config_client/config_client.cc
 )
+add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
+target_link_libraries(config_client ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(perf_timer
+  src/perf_timer/perf_timer.cc
+)
+add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
+target_link_libraries(perf_timer ${catkin_LIBRARIES})
+
+##########
+## Test ##
+##########
 
 # Only test if it is enabled
 if (CATKIN_ENABLE_TESTING)
@@ -64,7 +98,6 @@ if (CATKIN_ENABLE_TESTING)
   include_directories(${catkin_INCLUDE_DIRS} include)
 
   # ff_action
-
   add_rostest_gtest(ff_action_nominal_behaviour
     test/ff_action_nominal_behaviour.test
     test/ff_action_nominal_behaviour.cc)
@@ -108,4 +141,25 @@ if (CATKIN_ENABLE_TESTING)
 
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
