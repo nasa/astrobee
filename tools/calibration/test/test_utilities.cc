@@ -21,6 +21,8 @@
 #include <calibration/camera_utilities.h>
 #include <localization_common/test_utilities.h>
 
+#include <algorithm>
+
 namespace calibration {
 namespace lc = localization_common;
 
