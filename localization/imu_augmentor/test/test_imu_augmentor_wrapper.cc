@@ -123,30 +123,53 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithHalfwayBias) {
 }
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
-  const lc::CombinedNavState state_a_no_bias(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                             gtsam::imuBias::ConstantBias(), 0);
-  AddCombinedNavState(state_a_no_bias);
-  const lc::CombinedNavState state_b_half_bias_quarter_time(
-    gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-    gtsam::imuBias::ConstantBias(acceleration() / 2.0, gtsam::Vector3::Zero()),
-    num_measurements() / 4 * time_increment());
-  AddCombinedNavState(state_b_half_bias_quarter_time);
-  // TODO(rsoussan): check correct val! (AAA)
-  // add halway state with offset and no bias, check correct val!!!! (B)
+  {
+    const lc::CombinedNavState state_a_no_bias(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                               gtsam::imuBias::ConstantBias(), 0);
+    AddCombinedNavState(state_a_no_bias);
+    const lc::CombinedNavState state_b_half_bias_quarter_time(
+      gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+      gtsam::imuBias::ConstantBias(acceleration() / 2.0, gtsam::Vector3::Zero()),
+      num_measurements() / 4 * time_increment());
+    AddCombinedNavState(state_b_half_bias_quarter_time);
+    const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
+    ASSERT_TRUE(imu_augmented_state != boost::none);
+    EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
+    // Expect half the acceleration for the last three quarters of the imu msgs
+    const double expected_velocity_i = acceleration_i() / 2 * TotalDuration() * 0.75;
+    const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
+    // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+    EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
+    // x = 1/2*a*t^2
+    const double expected_position_i = acceleration_i() / 2.0 * 0.5 * std::pow(TotalDuration() * 0.75, 2);
+    const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
+    // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+    EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
+  }
 
-  const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
-  ASSERT_TRUE(imu_augmented_state != boost::none);
-  EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
-  // Expect half the acceleration for the last three quarters of the imu msgs
-  const double expected_velocity_i = acceleration_i() / 2 * TotalDuration() * 0.75;
-  const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
-  // x = 1/2*a*t^2
-  const double expected_position_i = acceleration_i() / 2.0 * 0.5 * std::pow(TotalDuration() * 0.75, 2);
-  const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
-  EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
+  {
+    const lc::CombinedNavState state_c_quarter_bias_half_time_initial_pose_and_velocity(
+      gtsam::Pose3(gtsam::Rot3::identity(), gtsam::Point3(1, 2, 3)), gtsam::Velocity3(4, 5, 6),
+      gtsam::imuBias::ConstantBias(acceleration() / 4.0, gtsam::Vector3::Zero()), TotalDuration() / 2.0);
+    AddCombinedNavState(state_c_quarter_bias_half_time_initial_pose_and_velocity);
+    const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
+    ASSERT_TRUE(imu_augmented_state != boost::none);
+    EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
+    // Expect quater of the acceleration for the last half of the imu msgs
+    const double expected_velocity_i = acceleration_i() / 4.0 * TotalDuration() * 0.5;
+    const gtsam::Vector3 expected_velocity =
+      state_c_quarter_bias_half_time_initial_pose_and_velocity.velocity() +
+      gtsam::Vector3(expected_velocity_i, expected_velocity_i, expected_velocity_i);
+    // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+    EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
+    // x = v_0*t + 1/2*a*t^2
+    const double expected_position_i = acceleration_i() / 4.0 * 0.5 * std::pow(TotalDuration() * 0.5, 2);
+    const gtsam::Vector3 expected_position =
+      state_c_quarter_bias_half_time_initial_pose_and_velocity.velocity() * TotalDuration() * 0.5 +
+      gtsam::Vector3(expected_position_i, expected_position_i, expected_position_i);
+    // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
+    EXPECT_TRUE(imu_augmented_state->first.pose().translation().matrix().isApprox(expected_position.matrix(), 1e-6));
+  }
 }
 
 // Run all the tests that were declared with TEST()
