@@ -155,16 +155,17 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
     const auto imu_augmented_state = imu_augmentor_wrapper().LatestImuAugmentedCombinedNavStateAndCovariances();
     ASSERT_TRUE(imu_augmented_state != boost::none);
     EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
-    // Expect quater of the acceleration for the last half of the imu msgs
-    const double expected_velocity_i = acceleration_i() / 4.0 * TotalDuration() * 0.5;
+    // Expect 3/4 of the acceleration for the last half of the imu msgs
+    const double expected_velocity_i = acceleration_i() * 0.75 * TotalDuration() * 0.5;
     const gtsam::Vector3 expected_velocity =
       state_c_quarter_bias_half_time_initial_pose_and_velocity.velocity() +
       gtsam::Vector3(expected_velocity_i, expected_velocity_i, expected_velocity_i);
     // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
     EXPECT_TRUE(imu_augmented_state->first.velocity().matrix().isApprox(expected_velocity.matrix(), 1e-6));
-    // x = v_0*t + 1/2*a*t^2
-    const double expected_position_i = acceleration_i() / 4.0 * 0.5 * std::pow(TotalDuration() * 0.5, 2);
+    // x = x_0 + v_0*t + 1/2*a*t^2
+    const double expected_position_i = acceleration_i() * 0.75 * 0.5 * std::pow(TotalDuration() * 0.5, 2);
     const gtsam::Vector3 expected_position =
+      state_c_quarter_bias_half_time_initial_pose_and_velocity.pose().translation() +
       state_c_quarter_bias_half_time_initial_pose_and_velocity.velocity() * TotalDuration() * 0.5 +
       gtsam::Vector3(expected_position_i, expected_position_i, expected_position_i);
     // TODO(rsoussan): Replace this with assert pred2 with eigen comparisson when other pr merged
