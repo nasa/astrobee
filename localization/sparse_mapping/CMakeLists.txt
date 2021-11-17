@@ -152,6 +152,12 @@ add_dependencies(localize ${catkin_EXPORTED_TARGETS})
 target_link_libraries(localize
   sparse_mapping gflags glog ${catkin_LIBRARIES})
 
+## Declare a C++ executable: merge_maps 
+add_executable(merge_maps tools/merge_maps.cc)
+add_dependencies(merge_maps ${catkin_EXPORTED_TARGETS})
+target_link_libraries(merge_maps
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
 ## Declare a C++ executable: nvm_visualize
 add_executable(nvm_visualize tools/nvm_visualize.cc)
 add_dependencies(nvm_visualize ${catkin_EXPORTED_TARGETS})
