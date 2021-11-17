@@ -31,7 +31,7 @@ The Astrobee Robot Software remains a work in progress. Please consult the
 ### Contributing
 
 The Astrobee Robot Software is open source, and we welcome contributions
-from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch.
+from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch. The code must follow the \ref astrobee-code-style.
 For us to merge any pull requests, we must request that contributors sign and submit a
 [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
 due to NASA legal requirements. Thank you for your understanding.
