@@ -35,7 +35,7 @@ If you are a NASA user and want to install the cross-compiler for robot testing 
 
 ## Using Docker
 
-Docker build is also available for Ubuntu 16 and Ubuntu 18, 
+Docker builds are available for Ubuntu 16.04, 18.04 and 20.04.
 
 Instructions on how to build the images natively and run the containers are in:
 
