@@ -43,6 +43,7 @@ GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_
     LogFatal("Failed to read config files.");
   }
   LoadGraphLocalizerNodeletParams(config, params_);
+  last_heartbeat_time_ = ros::Time::now();
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
@@ -286,7 +287,9 @@ void GraphLocalizerNodelet::PublishReset() const {
 
 void GraphLocalizerNodelet::PublishHeartbeat() {
   heartbeat_.header.stamp = ros::Time::now();
+  if ((heartbeat_.header.stamp - last_heartbeat_time_).toSec() < 1.0) return;
   heartbeat_pub_.publish(heartbeat_);
+  last_heartbeat_time_ = heartbeat_.header.stamp;
 }
 
 void GraphLocalizerNodelet::PublishGraphMessages() {
