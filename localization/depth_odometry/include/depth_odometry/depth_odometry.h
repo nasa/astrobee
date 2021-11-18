@@ -52,9 +52,9 @@ class DepthOdometry {
   const DepthOdometryParams& params() const { return params_; }
 
  private:
-  boost::optional<localization_common::PoseWithCovariance> PointCloudCallback(
+  boost::optional<localization_common::PoseWithCovariance> GetPointCloudAlignerRelativeTransform(
     const localization_measurements::DepthImageMeasurement& depth_image);
-  boost::optional<localization_common::PoseWithCovariance> ImageCallback(
+  boost::optional<localization_common::PoseWithCovariance> GetDepthImageAlignerRelativeTransform(
     const localization_measurements::DepthImageMeasurement& depth_image);
 
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;

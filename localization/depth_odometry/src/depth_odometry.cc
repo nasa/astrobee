@@ -47,12 +47,12 @@ DepthOdometry::DepthOdometry() {
 boost::optional<lc::PoseWithCovariance> DepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   // TODO(rsoussan): Ensure only one of these is enabled
-  if (params_.depth_point_cloud_registration_enabled) return PointCloudCallback(depth_image_measurement);
-  if (params_.depth_image_registration_enabled) return ImageCallback(depth_image_measurement);
+  if (params_.depth_point_cloud_registration_enabled) return GetPointCloudAlignerRelativeTransform(depth_image_measurement);
+  if (params_.depth_image_registration_enabled) return GetDepthImageAlignerRelativeTransform(depth_image_measurement);
   return boost::none;
 }
 
-boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
+boost::optional<lc::PoseWithCovariance> DepthOdometry::GetPointCloudAlignerRelativeTransform(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   pcl::copyPointCloud(*(depth_image_measurement.point_cloud), *filtered_cloud);
@@ -63,7 +63,7 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
   }
   const lc::Time timestamp = depth_image_measurement.timestamp;
   if (timestamp < latest_depth_cloud_.first) {
-    LogWarning("PointCloudCallback: Out of order measurement received.");
+    LogWarning("GetPointCloudAlignerRelativeTransform: Out of order measurement received.");
     return boost::none;
   }
   previous_depth_cloud_ = latest_depth_cloud_;
@@ -71,17 +71,17 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
 
   const double time_diff = latest_depth_cloud_.first - previous_depth_cloud_.first;
   if (time_diff > params_.max_time_diff) {
-    LogWarning("PointCloudCallback: Time difference too large, time diff: " << time_diff);
+    LogWarning("GetPointCloudAlignerRelativeTransform: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
   auto relative_transform = icp_->ComputeRelativeTransform(previous_depth_cloud_.second, latest_depth_cloud_.second);
   if (!relative_transform) {
-    LogWarning("PointCloudCallback: Failed to get relative transform.");
+    LogWarning("GetPointCloudAlignerRelativeTransform: Failed to get relative transform.");
     return boost::none;
   }
 
   if (!CovarianceSane(relative_transform->covariance)) {
-    LogWarning("PointCloudCallback: Sanity check failed - invalid covariance.");
+    LogWarning("GetPointCloudAlignerRelativeTransform: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
@@ -97,27 +97,27 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
   return relative_transform;
 }
 
-boost::optional<lc::PoseWithCovariance> DepthOdometry::ImageCallback(const lm::DepthImageMeasurement& depth_image) {
+boost::optional<lc::PoseWithCovariance> DepthOdometry::GetDepthImageAlignerRelativeTransform(const lm::DepthImageMeasurement& depth_image) {
   if (!previous_depth_image_ && !latest_depth_image_) {
     latest_depth_image_ = depth_image;
     return boost::none;
   }
   if (depth_image.timestamp < latest_depth_image_->timestamp) {
-    LogWarning("ImageCallback: Out of order measurement received.");
+    LogWarning("GetDepthImageAlignerRelativeTransform: Out of order measurement received.");
     return boost::none;
   }
   previous_depth_image_ = latest_depth_image_;
   latest_depth_image_ = depth_image;
   const double time_diff = latest_depth_image_->timestamp - previous_depth_image_->timestamp;
   if (time_diff > params_.max_time_diff) {
-    LogWarning("ImageCallback: Time difference too large, time diff: " << time_diff);
+    LogWarning("GetDepthImageAlignerRelativeTransform: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
 
   depth_image_aligner_->AddLatestDepthImage(*latest_depth_image_);
   auto relative_transform = depth_image_aligner_->ComputeRelativeTransform();
   if (!relative_transform) {
-    LogError("ImageCallback: Failed to get relative transform.");
+    LogError("GetDepthImageAlignerRelativeTransform: Failed to get relative transform.");
     return boost::none;
   }
   /*if (params_.frame_change_transform) {
