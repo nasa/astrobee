@@ -20,8 +20,8 @@
 #include <localization_common/timer.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/icp.h>
-#include <point_cloud_common/point_cloud_utilities.h>
 #include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls.h>
+#include <point_cloud_common/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
 

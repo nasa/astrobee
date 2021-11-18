@@ -28,6 +28,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   localization_measurements 
   msg_conversions 
   optimization_common
+  point_cloud_common
 )
 
 # Find OpenCV3
@@ -43,7 +44,7 @@ find_package(PCL REQUIRED COMPONENTS common)
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common 
+  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common point_cloud_common 
   DEPENDS gtsam pcl pcl_conversions  
 )
 
@@ -68,26 +69,12 @@ add_library(${PROJECT_NAME}
   src/depth_odometry_nodelet.cc
   src/depth_odometry_wrapper.cc
   src/good_features_to_track_detector.cc
-  src/icp.cc
   src/lk_optical_flow_feature_detector_and_matcher.cc
   src/parameter_reader.cc
-  src/point_cloud_utilities.cc
-  src/point_cloud_with_known_correspondences_aligner.cc
   src/surf_feature_detector_and_matcher.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
-
-if(CATKIN_ENABLE_TESTING)
- find_package(rostest REQUIRED)
-  add_rostest_gtest(test_point_to_plane
-    test/test_point_to_plane.test
-    test/test_point_to_plane.cc
-  )
-  target_link_libraries(test_point_to_plane
-    ${PROJECT_NAME} gtsam
-  )
-endif()
 
 #############
 ## Install ##

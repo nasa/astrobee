@@ -18,7 +18,7 @@
 
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-#include <point_cloud_common/point_cloud_utilities.h>
+#include <point_cloud_common/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>

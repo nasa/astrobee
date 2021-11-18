@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef POINT_CLOUD_COMMON_POINT_CLOUD_UTILITIES_H_
-#define POINT_CLOUD_COMMON_POINT_CLOUD_UTILITIES_H_
+#ifndef POINT_CLOUD_COMMON_UTILITIES_H_
+#define POINT_CLOUD_COMMON_UTILITIES_H_
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
@@ -130,4 +130,4 @@ typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl
   return downsampled_cloud;
 }
 }  // namespace point_cloud_common
-#endif  // POINT_CLOUD_COMMON_POINT_CLOUD_UTILITIES_H_
+#endif  // POINT_CLOUD_COMMON_UTILITIES_H_

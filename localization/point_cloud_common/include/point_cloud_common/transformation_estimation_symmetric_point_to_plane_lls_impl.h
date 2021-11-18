@@ -54,11 +54,11 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
   Matrix4& transformation_matrix) const {
   const auto nr_points = cloud_src.size();
   if (cloud_tgt.size() != nr_points) {
-    PCL_ERROR("[pcl::TransformationEstimationSymmetricPointToPlaneLLS::"
-              "estimateRigidTransformation] Number or points in source (%zu) differs "
-              "from target (%zu)!\n",
-              static_cast<std::size_t>(nr_points),
-              static_cast<std::size_t>(cloud_tgt.size()));
+    PCL_ERROR(
+      "[pcl::TransformationEstimationSymmetricPointToPlaneLLS::"
+      "estimateRigidTransformation] Number or points in source (%zu) differs "
+      "from target (%zu)!\n",
+      static_cast<std::size_t>(nr_points), static_cast<std::size_t>(cloud_tgt.size()));
     return;
   }
 
@@ -73,11 +73,11 @@ void TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, 
   const pcl::PointCloud<PointTarget>& cloud_tgt, Matrix4& transformation_matrix) const {
   const auto nr_points = indices_src.size();
   if (cloud_tgt.size() != nr_points) {
-    PCL_ERROR("[pcl::TransformationEstimationSymmetricPointToPlaneLLS::"
-              "estimateRigidTransformation] Number or points in source (%zu) differs "
-              "than target (%zu)!\n",
-              indices_src.size(),
-              static_cast<std::size_t>(cloud_tgt.size()));
+    PCL_ERROR(
+      "[pcl::TransformationEstimationSymmetricPointToPlaneLLS::"
+      "estimateRigidTransformation] Number or points in source (%zu) differs "
+      "than target (%zu)!\n",
+      indices_src.size(), static_cast<std::size_t>(cloud_tgt.size()));
     return;
   }
 
@@ -94,11 +94,11 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
   Matrix4& transformation_matrix) const {
   const auto nr_points = indices_src.size();
   if (indices_tgt.size() != nr_points) {
-    PCL_ERROR("[pcl::TransformationEstimationSymmetricPointToPlaneLLS::"
-              "estimateRigidTransformation] Number or points in source (%zu) differs "
-              "than target (%zu)!\n",
-              indices_src.size(),
-              indices_tgt.size());
+    PCL_ERROR(
+      "[pcl::TransformationEstimationSymmetricPointToPlaneLLS::"
+      "estimateRigidTransformation] Number or points in source (%zu) differs "
+      "than target (%zu)!\n",
+      indices_src.size(), indices_tgt.size());
     return;
   }
 
@@ -126,9 +126,8 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
   const Eigen::AngleAxis<Scalar> rotation_y(parameters(1), Eigen::Matrix<Scalar, 3, 1>::UnitY());
   const Eigen::AngleAxis<Scalar> rotation_x(parameters(0), Eigen::Matrix<Scalar, 3, 1>::UnitX());
   const Eigen::Translation<Scalar, 3> translation(parameters(3), parameters(4), parameters(5));
-  const Eigen::Transform<Scalar, 3, Eigen::Affine> transform = rotation_z * rotation_y * rotation_x *
-                                                               translation *
-                                                               rotation_z * rotation_y * rotation_x;
+  const Eigen::Transform<Scalar, 3, Eigen::Affine> transform =
+    rotation_z * rotation_y * rotation_x * translation * rotation_z * rotation_y * rotation_x;
   transformation_matrix = transform.matrix();
 }
 
@@ -144,7 +143,7 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
   Vector6 ATb;
   ATA.setZero();
   ATb.setZero();
-  auto M = ATA.template selfadjointView<Eigen::Upper> ();
+  auto M = ATA.template selfadjointView<Eigen::Upper>();
 
   // Approximate as a linear least squares problem
   source_it.reset();

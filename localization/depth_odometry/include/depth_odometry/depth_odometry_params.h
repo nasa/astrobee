@@ -19,7 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
 
 #include <depth_odometry/depth_image_aligner_params.h>
-#include <depth_odometry/icp_params.h>
+#include <point_cloud_common/icp_params.h>
 
 #include <Eigen/Geometry>
 
@@ -28,7 +28,7 @@ struct DepthOdometryParams {
   bool depth_point_cloud_registration_enabled;
   bool depth_image_registration_enabled;
   DepthImageAlignerParams depth_image_aligner;
-  ICPParams icp;
+  point_cloud_common::ICPParams icp;
   double max_time_diff;
   double max_image_and_point_cloud_time_diff;
   double position_covariance_threshold;

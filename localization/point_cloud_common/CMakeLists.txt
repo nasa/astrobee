@@ -58,8 +58,9 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/icp.cc
-  src/point_cloud_utilities.cc
+  src/parameter_reader.cc
   src/point_cloud_with_known_correspondences_aligner.cc
+  src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)

@@ -15,23 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_ICP_PARAMS_H_
-#define DEPTH_ODOMETRY_ICP_PARAMS_H_
+#ifndef POINT_CLOUD_COMMON_PARAMETER_READER_H_
+#define POINT_CLOUD_COMMON_PARAMETER_READER_H_
 
-namespace depth_odometry {
-struct ICPParams {
-  double search_radius;
-  double fitness_threshold;
-  int max_iterations;
-  bool symmetric_objective;
-  bool enforce_same_direction_normals;
-  bool correspondence_rejector_surface_normal;
-  double correspondence_rejector_surface_normal_threshold;
-  bool coarse_to_fine;
-  int num_coarse_to_fine_levels;
-  double coarse_to_fine_final_leaf_size;
-  bool downsample_last_coarse_to_fine_iteration;
-};
-}  // namespace depth_odometry
+#include <config_reader/config_reader.h>
+#include <point_cloud_common/icp_params.h>
+#include <point_cloud_common/point_cloud_with_known_correspondences_aligner_params.h>
 
-#endif  // DEPTH_ODOMETRY_ICP_PARAMS_H_
+namespace point_cloud_common {
+void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params);
+void LoadPointCloudWithKnownCorrespondencesAlignerParams(config_reader::ConfigReader& config,
+                                                         PointCloudWithKnownCorrespondencesAlignerParams& params);
+}  // namespace point_cloud_common
+#endif  // POINT_CLOUD_COMMON_PARAMETER_READER_H_

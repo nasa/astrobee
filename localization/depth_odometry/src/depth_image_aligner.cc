@@ -19,14 +19,15 @@
 #include <depth_odometry/brisk_feature_detector_and_matcher.h>
 #include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher.h>
-#include <depth_odometry/point_cloud_utilities.h>
 #include <depth_odometry/surf_feature_detector_and_matcher.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
+#include <point_cloud_common/utilities.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace pcc = point_cloud_common;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params)
     : params_(params),
@@ -55,7 +56,7 @@ bool DepthImageAligner::ValidImagePoint(const Eigen::Vector2d& image_point) cons
 }
 
 bool DepthImageAligner::Valid3dPoint(const boost::optional<pcl::PointXYZI>& point) const {
-  return point && ValidPoint(*point) && point->z >= 0;
+  return point && pcc::ValidPoint(*point) && point->z >= 0;
 }
 
 void DepthImageAligner::InitializeKdTree(const pcl::PointCloud<pcl::PointXYZI>& point_cloud,
@@ -63,7 +64,7 @@ void DepthImageAligner::InitializeKdTree(const pcl::PointCloud<pcl::PointXYZI>& 
                                          pcl::PointCloud<pcl::PointXYZI>::Ptr& filtered_point_cloud) const {
   kdtree = pcl::search::KdTree<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>());
   filtered_point_cloud = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>(point_cloud));
-  RemoveNansAndZerosFromPoints(*filtered_point_cloud);
+  pcc::RemoveNansAndZerosFromPoints(*filtered_point_cloud);
   kdtree->setInputCloud(filtered_point_cloud);
 }
 
@@ -93,11 +94,11 @@ bool DepthImageAligner::GetRequiredNormals(const Eigen::Vector3d& source_landmar
                                            std::vector<Eigen::Vector3d>& target_normals) const {
   if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
       params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-    const auto target_normal = GetNormal(target_landmark, target_filtered_point_cloud, target_kdtree,
+    const auto target_normal = pcc::GetNormal(target_landmark, target_filtered_point_cloud, target_kdtree,
                                          params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
     if (!target_normal) return false;
     if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-      const auto source_normal = GetNormal(source_landmark, source_filtered_point_cloud, source_kdtree,
+      const auto source_normal = pcc::GetNormal(source_landmark, source_filtered_point_cloud, source_kdtree,
                                            params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
       if (!source_normal) return false;
       source_normals.emplace_back(*source_normal);
@@ -181,8 +182,9 @@ void DepthImageAligner::AddLatestDepthImage(const lm::DepthImageMeasurement& lat
     clahe_->apply(latest_depth_image.image, clahe_depth_image.image);
     latest_feature_depth_image_.reset(
       new lm::FeatureDepthImageMeasurement(clahe_depth_image, feature_detector_and_matcher_->detector()));
-  } else
+  } else {
     latest_feature_depth_image_.reset(
       new lm::FeatureDepthImageMeasurement(latest_depth_image, feature_detector_and_matcher_->detector()));
+  }
 }
 }  // namespace depth_odometry

@@ -20,17 +20,19 @@
 
 #include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/depth_odometry_params.h>
-#include <depth_odometry/icp.h>
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 #include <localization_measurements/image_measurement.h>
+#include <point_cloud_common/icp.h>
 
 #include <boost/optional.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
+
+#include <utility>
 
 namespace depth_odometry {
 class DepthOdometry {
@@ -57,7 +59,7 @@ class DepthOdometry {
 
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
 
-  std::unique_ptr<ICP> icp_;
+  std::unique_ptr<point_cloud_common::ICP> icp_;
   std::unique_ptr<DepthImageAligner> depth_image_aligner_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> latest_depth_cloud_;

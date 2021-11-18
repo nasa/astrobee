@@ -19,9 +19,11 @@
 #include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <msg_conversions/msg_conversions.h>
+#include <point_cloud_common/parameter_reader.h>
 
 namespace depth_odometry {
 namespace mc = msg_conversions;
+namespace pcc = point_cloud_common;
 
 void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params) {
   params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
@@ -29,7 +31,7 @@ void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOd
 
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
   LoadDepthImageAlignerParams(config, params.depth_image_aligner);
-  LoadICPParams(config, params.icp);
+  pcc::LoadICPParams(config, params.icp);
   params.max_time_diff = mc::LoadDouble(config, "max_time_diff");
   params.max_image_and_point_cloud_time_diff = mc::LoadDouble(config, "max_image_and_point_cloud_time_diff");
   params.depth_point_cloud_registration_enabled = mc::LoadBool(config, "depth_point_cloud_registration_enabled");
@@ -93,35 +95,8 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.min_x_distance_to_border = mc::LoadDouble(config, "min_x_distance_to_border");
   params.min_y_distance_to_border = mc::LoadDouble(config, "min_y_distance_to_border");
   params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");
-  LoadPointCloudWithKnownCorrespondencesAlignerParams(config, params.point_cloud_with_known_correspondences_aligner);
+  pcc::LoadPointCloudWithKnownCorrespondencesAlignerParams(config,
+                                                           params.point_cloud_with_known_correspondences_aligner);
   params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
-}
-
-void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
-  params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
-  params.search_radius = mc::LoadDouble(config, "search_radius");
-  params.max_iterations = mc::LoadInt(config, "max_iterations");
-  params.symmetric_objective = mc::LoadBool(config, "symmetric_objective");
-  params.enforce_same_direction_normals = mc::LoadBool(config, "enforce_same_direction_normals");
-  params.correspondence_rejector_surface_normal = mc::LoadBool(config, "correspondence_rejector_surface_normal");
-  params.correspondence_rejector_surface_normal_threshold =
-    mc::LoadDouble(config, "correspondence_rejector_surface_normal_threshold");
-  params.coarse_to_fine = mc::LoadBool(config, "coarse_to_fine");
-  params.num_coarse_to_fine_levels = mc::LoadInt(config, "num_coarse_to_fine_levels");
-  params.coarse_to_fine_final_leaf_size = mc::LoadDouble(config, "coarse_to_fine_final_leaf_size");
-  params.downsample_last_coarse_to_fine_iteration = mc::LoadBool(config, "downsample_last_coarse_to_fine_iteration");
-}
-
-void LoadPointCloudWithKnownCorrespondencesAlignerParams(config_reader::ConfigReader& config,
-                                                         PointCloudWithKnownCorrespondencesAlignerParams& params) {
-  params.max_num_iterations = mc::LoadInt(config, "pcwkca_max_num_iterations");
-  params.function_tolerance = mc::LoadDouble(config, "pcwkca_function_tolerance");
-  params.max_num_matches = mc::LoadInt(config, "pcwkca_max_num_match_sets");
-  params.normal_search_radius = mc::LoadDouble(config, "pcwkca_normal_search_radius");
-  params.use_umeyama_initial_guess = mc::LoadBool(config, "pcwkca_use_umeyama_initial_guess");
-  params.use_single_iteration_umeyama = mc::LoadBool(config, "pcwkca_use_single_iteration_umeyama");
-  params.use_point_to_plane_cost = mc::LoadBool(config, "pcwkca_use_point_to_plane_cost");
-  params.use_symmetric_point_to_plane_cost = mc::LoadBool(config, "pcwkca_use_symmetric_point_to_plane_cost");
-  params.verbose_optimization = mc::LoadBool(config, "pcwkca_verbose_optimization");
 }
 }  // namespace depth_odometry

@@ -17,15 +17,16 @@
  */
 
 #include <depth_odometry/depth_odometry.h>
-#include <depth_odometry/point_cloud_utilities.h>
 #include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 #include <localization_common/utilities.h>
+#include <point_cloud_common/utilities.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace pcc = point_cloud_common;
 
 DepthOdometry::DepthOdometry() {
   // TODO(rsoussan): remove this
@@ -40,7 +41,7 @@ DepthOdometry::DepthOdometry() {
 
   LoadDepthOdometryParams(config, params_);
   depth_image_aligner_.reset(new DepthImageAligner(params_.depth_image_aligner));
-  icp_.reset(new ICP(params_.icp));
+  icp_.reset(new pcc::ICP(params_.icp));
 }
 
 boost::optional<lc::PoseWithCovariance> DepthOdometry::DepthImageCallback(
@@ -55,7 +56,7 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::PointCloudCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   pcl::copyPointCloud(*(depth_image_measurement.point_cloud), *filtered_cloud);
-  RemoveNansAndZerosFromPoints(*filtered_cloud);
+  pcc::RemoveNansAndZerosFromPoints(*filtered_cloud);
   if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) {
     latest_depth_cloud_ = std::make_pair(depth_image_measurement.timestamp, filtered_cloud);
     return boost::none;

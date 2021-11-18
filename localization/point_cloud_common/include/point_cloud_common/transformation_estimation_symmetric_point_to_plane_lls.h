@@ -149,6 +149,6 @@ class TransformationEstimationSymmetricPointToPlaneLLS
 }  // namespace registration
 }  // namespace pcl
 
-#include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls_impl.h> // NOLINT
+#include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls_impl.h>  // NOLINT
 
 #endif  // POINT_CLOUD_COMMON_TRANSFORMATION_ESTIMATION_SYMMETRIC_POINT_TO_PLANE_LLS_H_

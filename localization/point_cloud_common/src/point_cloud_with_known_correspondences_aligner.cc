@@ -21,7 +21,7 @@
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner.h>
-#include <point_cloud_common/point_cloud_utilities.h>
+#include <point_cloud_common/utilities.h>
 
 namespace point_cloud_common {
 namespace lc = localization_common;

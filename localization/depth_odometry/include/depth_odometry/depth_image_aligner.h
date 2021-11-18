@@ -22,10 +22,10 @@
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_matches.h>
 #include <depth_odometry/feature_detector_and_matcher.h>
-#include <depth_odometry/point_cloud_with_known_correspondences_aligner.h>
 #include <localization_common/pose_with_covariance.h>
 #include <localization_measurements/depth_image_measurement.h>
 #include <localization_measurements/feature_depth_image_measurement.h>
+#include <point_cloud_common/point_cloud_with_known_correspondences_aligner.h>
 
 #include <boost/optional.hpp>
 
@@ -43,7 +43,7 @@
 namespace depth_odometry {
 class DepthImageAligner {
  public:
-  DepthImageAligner(const DepthImageAlignerParams& params);
+  explicit DepthImageAligner(const DepthImageAlignerParams& params);
   boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform();
   void AddLatestDepthImage(const localization_measurements::DepthImageMeasurement& latest_depth_image);
   const boost::optional<DepthMatches>& matches() const { return matches_; }
@@ -70,7 +70,7 @@ class DepthImageAligner {
                                              const std::vector<Eigen::Vector3d>& target_landmarks) const;
 
   DepthImageAlignerParams params_;
-  PointCloudWithKnownCorrespondencesAligner point_cloud_aligner_;
+  point_cloud_common::PointCloudWithKnownCorrespondencesAligner point_cloud_aligner_;
   std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> previous_feature_depth_image_;
   std::unique_ptr<localization_measurements::FeatureDepthImageMeasurement> latest_feature_depth_image_;
   std::unique_ptr<FeatureDetectorAndMatcher> feature_detector_and_matcher_;
