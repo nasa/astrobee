@@ -23,7 +23,6 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  ff_nodelet 
   ff_util
   localization_common 
   localization_measurements 
@@ -40,11 +39,10 @@ find_package(Ceres REQUIRED)
 
 find_package(PCL REQUIRED COMPONENTS common)
 
-# include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_nodelet ff_util localization_common localization_measurements msg_conversions  
+  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions  
   DEPENDS gtsam pcl pcl_conversions  
 )
 

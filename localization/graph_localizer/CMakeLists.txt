@@ -45,7 +45,6 @@ find_package(catkin2 REQUIRED COMPONENTS
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
-# include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 

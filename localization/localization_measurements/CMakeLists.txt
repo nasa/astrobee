@@ -29,15 +29,15 @@ find_package(catkin2 REQUIRED COMPONENTS
   msg_conversions
 )
 
-find_package(PCL REQUIRED COMPONENTS common)
+find_package(PCL REQUIRED)
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES}
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions
+  LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES} 
+  INCLUDE_DIRS include ${PCL_INCLUDE_DIRS}
+  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions 
 )
 
 ###########
@@ -58,7 +58,7 @@ add_library(${PROJECT_NAME}
 )
 
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 
 if(CATKIN_ENABLE_TESTING)
