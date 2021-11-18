@@ -27,6 +27,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   localization_common 
   localization_measurements 
   msg_conversions 
+  optimization_common
 )
 
 # Find OpenCV3
@@ -42,7 +43,7 @@ find_package(PCL REQUIRED COMPONENTS common)
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions  
+  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common 
   DEPENDS gtsam pcl pcl_conversions  
 )
 
@@ -69,8 +70,6 @@ add_library(${PROJECT_NAME}
   src/good_features_to_track_detector.cc
   src/icp.cc
   src/lk_optical_flow_feature_detector_and_matcher.cc
-  src/optimization_residuals.cc
-  src/optimization_utilities.cc
   src/parameter_reader.cc
   src/point_cloud_utilities.cc
   src/point_cloud_with_known_correspondences_aligner.cc

@@ -16,14 +16,16 @@
  * under the License.
  */
 
-#include <depth_odometry/optimization_residuals.h>
 #include <depth_odometry/point_cloud_with_known_correspondences_aligner.h>
 #include <depth_odometry/point_cloud_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
+#include <optimization_common/residuals.h>
+#include <optimization_common/utilities.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
+namespace oc = optimization_common;
 
 PointCloudWithKnownCorrespondencesAligner::PointCloudWithKnownCorrespondencesAligner(
   const PointCloudWithKnownCorrespondencesAlignerParams& params)
@@ -32,25 +34,25 @@ PointCloudWithKnownCorrespondencesAligner::PointCloudWithKnownCorrespondencesAli
 Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::vector<Eigen::Vector3d>& source_points,
                                                                    const std::vector<Eigen::Vector3d>& target_points,
                                                                    const Eigen::Isometry3d& initial_guess) const {
-  Eigen::Matrix<double, 6, 1> relative_transform = VectorFromIsometry3d(initial_guess);
+  Eigen::Matrix<double, 6, 1> relative_transform = oc::VectorFromIsometry3d(initial_guess);
   ceres::Problem problem;
   problem.AddParameterBlock(relative_transform.data(), 6);
   if (params_.use_symmetric_point_to_plane_cost) {
     if (!target_normals_ || !source_normals_)
       LogFatal("Align: Attempting to use symmetric point to plane cost without having set source and target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      AddSymmetricPointToPlaneCostFunction(source_points[i], target_points[i], (*source_normals_)[i],
+      oc::SymmetricPointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*source_normals_)[i],
                                            (*target_normals_)[i], relative_transform, problem);
     }
   } else if (params_.use_point_to_plane_cost) {
     if (!target_normals_) LogFatal("Align: Attempting to use point to plane cost without having set target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      AddPointToPlaneCostFunction(source_points[i], target_points[i], (*target_normals_)[i], relative_transform,
-                                  problem);
+      oc::PointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*target_normals_)[i],
+                                             relative_transform, problem);
     }
   } else {
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      AddPointToPointCostFunction(source_points[i], target_points[i], relative_transform, problem);
+      oc::PointToPointError::AddCostFunction(source_points[i], target_points[i], relative_transform, problem);
     }
   }
 
@@ -63,6 +65,7 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
   if (params_.verbose_optimization) {
     std::cout << summary.FullReport() << "\n";
     int residual_size;
+    // TODO(rsousssan): Template on this? add somewhere else?
     if (params_.use_symmetric_point_to_plane_cost) {
       residual_size = 2;
     } else if (params_.use_point_to_plane_cost) {
@@ -70,9 +73,9 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
     } else {
       residual_size = 3;
     }
-    CheckResiduals(residual_size, problem);
+    oc::CheckResiduals(residual_size, problem);
   }
-  return Isometry3(relative_transform.data());
+  return oc::Isometry3d(relative_transform);
 }
 
 lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
@@ -92,11 +95,11 @@ lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativ
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
 
-void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(std::vector<Eigen::Vector3d>&& source_normals) {
+void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(std::vector<Eigen::Vector3d>&& source_normals) { // NOLINT
   source_normals_ = std::move(source_normals);
 }
 
-void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(std::vector<Eigen::Vector3d>&& target_normals) {
+void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(std::vector<Eigen::Vector3d>&& target_normals) { // NOLINT
   target_normals_ = std::move(target_normals);
 }
 }  // namespace depth_odometry

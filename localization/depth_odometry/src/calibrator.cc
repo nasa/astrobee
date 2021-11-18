@@ -17,13 +17,14 @@
  */
 
 #include <depth_odometry/calibrator.h>
-#include <depth_odometry/optimization_residuals.h>
 #include <localization_common/logger.h>
+#include <optimization_common/residuals.h>
 
 #include <ceres/ceres.h>
 #include <ceres/solver.h>
 
 namespace depth_odometry {
+// TODO(rsoussan): use structs with state parameteres, opt parameters!!
 void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
                            const Eigen::Affine3d& initial_depth_image_A_depth_cloud,
                            const Eigen::Matrix3d& initial_intrinsics,
@@ -38,6 +39,7 @@ void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
   problem.AddParameterBlock(intrinsics.data(), 4);
   problem.AddParameterBlock(distortion.data(), 4);
 
+  // TODO(rsoussan): replace this with opt common fcn
   if (params_.calibrate_depth_image_A_depth_haz)
     LogError("Calibrating depth_image_A_depth_haz.");
   else
@@ -53,7 +55,7 @@ void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
 
   for (const auto& match_set : match_sets) {
     for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
-      AddAffineReprojectionCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i],
+      oc::AffineReprojectionError::AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i],
                                         depth_image_A_depth_cloud, intrinsics, distortion, problem);
     }
   }
