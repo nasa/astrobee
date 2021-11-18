@@ -54,39 +54,48 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
   DataBagger();
   ~DataBagger();
 
-  bool SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
+  // Service that sets delayed recording settings
+  bool SetDelayedDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
                             ff_msgs::SetDataToDisk::Response &res);
 
-  bool EnableRecordingService(ff_msgs::EnableRecording::Request &req,
+  // This service enables and disables the delayed recording
+  bool EnableDelayedRecordingService(ff_msgs::EnableRecording::Request &req,
                               ff_msgs::EnableRecording::Response &res);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
-  bool ReadParams();
+  bool ReadParams();  // Reads data bagger parameters and default profile
 
  private:
+  // Reads all topic names published by the robot
   void GetTopicNames();
 
+  // Recursively created bag destionation folder
   bool MakeDir(std::string dir, bool assert_init_fault, std::string &err_msg);
 
+  // Gets the date for name generation
   std::string GetDate(bool with_time);
 
-  void FixTopicNamespace(std::string &topic);
+  // Adds the namespace to topic names
+  void AddTopicNamespace(std::string &topic);
 
+  // Timer for when the robot finishes startup, starts immediate recording
   void OnStartupTimer(ros::TimerEvent const& event);
 
+  // Sets immediate recording settings
   bool SetImmediateDataToDisk(std::string &err_msg);
 
-  bool SetDelayedDataToDisk(ff_msgs::DataToDiskState &state,
-                            std::string &err_msg);
-
+  // Start Recordings
   void StartDelayedRecording();
   void StartImmediateRecording();
 
+  // Clear topics, stop recording
   void ResetRecorders(bool immediate);
 
+  // Update data bagger profile state
   void GenerateCombinedState(ff_msgs::DataToDiskState *ground_state);
 
+  // Publish data bagger state
   void PublishState();
 
   astrobee_rosbag::Recorder *delayed_recorder_, *immediate_recorder_;
@@ -107,7 +116,6 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
   rosbag::RecorderOptions recorder_options_delayed_;
   rosbag::RecorderOptions recorder_options_immediate_;
 
-  std::thread delayed_thread_, immediate_thread_;
   std::string save_dir_, robot_name_, delayed_profile_name_;
 };
 
