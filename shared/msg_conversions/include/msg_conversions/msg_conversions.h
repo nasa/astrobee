@@ -74,6 +74,8 @@ bool config_read_quat(config_reader::ConfigReader::Table* t, geometry_msgs::Quat
 bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Vector3* vec);
 bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Point* point);
 
+bool SingleBoolTrue(const std::initializer_list<bool>& bools);
+
 // Alternative format for loading configs
 Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
 double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name);

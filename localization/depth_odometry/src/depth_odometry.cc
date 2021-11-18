@@ -46,9 +46,10 @@ DepthOdometry::DepthOdometry() {
 
 boost::optional<lc::PoseWithCovariance> DepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
-  // TODO(rsoussan): Ensure only one of these is enabled
-  if (params_.depth_point_cloud_registration_enabled) return GetPointCloudAlignerRelativeTransform(depth_image_measurement);
-  if (params_.depth_image_registration_enabled) return GetDepthImageAlignerRelativeTransform(depth_image_measurement);
+  if (params_.depth_point_cloud_registration_enabled)
+    return GetPointCloudAlignerRelativeTransform(depth_image_measurement);
+  else if (params_.depth_image_registration_enabled)
+    return GetDepthImageAlignerRelativeTransform(depth_image_measurement);
   return boost::none;
 }
 
@@ -97,7 +98,8 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::GetPointCloudAlignerRelat
   return relative_transform;
 }
 
-boost::optional<lc::PoseWithCovariance> DepthOdometry::GetDepthImageAlignerRelativeTransform(const lm::DepthImageMeasurement& depth_image) {
+boost::optional<lc::PoseWithCovariance> DepthOdometry::GetDepthImageAlignerRelativeTransform(
+  const lm::DepthImageMeasurement& depth_image) {
   if (!previous_depth_image_ && !latest_depth_image_) {
     latest_depth_image_ = depth_image;
     return boost::none;

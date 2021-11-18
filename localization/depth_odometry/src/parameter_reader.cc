@@ -36,6 +36,10 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.max_image_and_point_cloud_time_diff = mc::LoadDouble(config, "max_image_and_point_cloud_time_diff");
   params.depth_point_cloud_registration_enabled = mc::LoadBool(config, "depth_point_cloud_registration_enabled");
   params.depth_image_registration_enabled = mc::LoadBool(config, "depth_image_registration_enabled");
+  if (!mc::SingleBoolTrue({params.depth_point_cloud_registration_enabled, params.depth_image_registration_enabled})) {
+    LogFatal(
+      "LoadDepthOdometryParams: Invalid number of registration options enabled.  Exactly one should be enabled.");
+  }
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
   params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");

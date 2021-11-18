@@ -230,6 +230,15 @@ bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Po
   return success;
 }
 
+bool SingleBoolTrue(const std::initializer_list<bool>& bools) {
+  int num_true_bools = 0;
+  for (const auto bool_value : bools) {
+    if (bool_value) ++num_true_bools;
+    if (num_true_bools > 1) return false;
+  }
+  return num_true_bools == 1;
+}
+
 Eigen::Affine3d ros_pose_to_eigen_transform(const geometry_msgs::Pose& p) {
   Eigen::Affine3d transform;
   transform.translation() = Eigen::Vector3d(p.position.x, p.position.y, p.position.z);
@@ -306,11 +315,13 @@ Eigen::Vector3d CovDiagToVariances(const float* const cov_diag) {
   return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
 }
 
-void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg){
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
+                              geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg) {
   EigenPoseCovarianceToMsg(pose, covariance, pose_cov_msg.pose);
 }
 
-void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovariance& pose_cov_msg){
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
+                              geometry_msgs::PoseWithCovariance& pose_cov_msg) {
   EigenPoseToMsg(pose, pose_cov_msg.pose);
   EigenCovarianceToMsg(covariance, pose_cov_msg.covariance);
 }
