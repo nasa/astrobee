@@ -25,7 +25,6 @@ add_compile_options(-std=c++14)
 find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   localization_common 
-  localization_measurements 
   msg_conversions 
   optimization_common
 )
@@ -39,7 +38,7 @@ find_package(PCL REQUIRED COMPONENTS common)
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common 
+  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common msg_conversions optimization_common 
   DEPENDS gtsam pcl pcl_conversions  
 )
 

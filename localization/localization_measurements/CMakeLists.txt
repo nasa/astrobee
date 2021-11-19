@@ -27,6 +27,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   config_reader
   localization_common
   msg_conversions
+  point_cloud_common
 )
 
 find_package(PCL REQUIRED)
@@ -37,7 +38,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES} 
   INCLUDE_DIRS include ${PCL_INCLUDE_DIRS}
-  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions 
+  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions point_cloud_common 
 )
 
 ###########
@@ -54,6 +55,7 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
+  src/depth_image_measurement.cc
   src/measurement_conversions.cc
 )
 
