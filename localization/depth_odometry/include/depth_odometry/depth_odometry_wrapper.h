@@ -46,7 +46,7 @@ class DepthOdometryWrapper {
   }
 
  private:
-  std::vector<ff_msgs::Odometry> ProcessDepthImageAndCloudMeasurementsIfAvailable();
+  std::vector<ff_msgs::Odometry> ProcessDepthImageIfAvailable();
 
   DepthOdometry depth_odometry_;
   localization_common::MeasurementBuffer<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;

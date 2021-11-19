@@ -37,16 +37,16 @@ namespace mc = msg_conversions;
 std::vector<ff_msgs::Odometry> DepthOdometryWrapper::PointCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
   point_cloud_buffer_.Add(lc::TimeFromHeader(depth_cloud_msg->header), depth_cloud_msg);
-  return ProcessDepthImageAndCloudMeasurementsIfAvailable();
+  return ProcessDepthImageIfAvailable();
 }
 
 std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ImageCallback(
   const sensor_msgs::ImageConstPtr& depth_image_msg) {
   image_buffer_.Add(lc::TimeFromHeader(depth_image_msg->header), depth_image_msg);
-  return ProcessDepthImageAndCloudMeasurementsIfAvailable();
+  return ProcessDepthImageIfAvailable();
 }
 
-std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageAndCloudMeasurementsIfAvailable() {
+std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailable() {
   std::vector<lm::DepthImageMeasurement> depth_image_measurements;
   boost::optional<lc::Time> latest_added_point_cloud_msg_time;
   boost::optional<lc::Time> latest_added_image_msg_time;
@@ -60,7 +60,7 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageAndCloudMe
       const auto depth_image_measurement = lm::MakeDepthImageMeasurement(*point_cloud_msg, depth_image_msg.second,
                                                                          depth_odometry_.params().haz_cam_A_haz_depth);
       if (!depth_image_measurement) {
-        LogError("ProcessDepthImageAndCloudMeasurementsIfAvailable: Failed to create depth image measurement.");
+        LogError("ProcessDepthImageIfAvailable: Failed to create depth image measurement.");
         continue;
       }
       depth_image_measurements.emplace_back(*depth_image_measurement);
