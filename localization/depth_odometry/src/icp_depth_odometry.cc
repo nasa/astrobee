@@ -16,10 +16,8 @@
  * under the License.
  */
 
-#include <depth_odometry/depth_odometry.h>
-#include <depth_odometry/parameter_reader.h>
+#include <depth_odometry/icp_depth_odometry.h>
 #include <localization_common/logger.h>
-#include <localization_common/timer.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/utilities.h>
 
@@ -29,21 +27,12 @@ namespace lm = localization_measurements;
 namespace pcc = point_cloud_common;
 
 DepthOdometry::DepthOdometry(const DepthOdometryParams& params) : params_(params) {
-  depth_image_aligner_.reset(new DepthImageAligner(params_.depth_image_aligner));
   icp_.reset(new pcc::ICP(params_.icp));
 }
 
-boost::optional<lc::PoseWithCovariance> DepthOdometry::DepthImageCallback(
+boost::optional<lc::PoseWithCovarianceAndMatches> DepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
-  if (params_.depth_point_cloud_registration_enabled)
-    return GetPointCloudAlignerRelativeTransform(depth_image_measurement);
-  else if (params_.depth_image_registration_enabled)
-    return GetDepthImageAlignerRelativeTransform(depth_image_measurement);
-  return boost::none;
-}
-
-boost::optional<lc::PoseWithCovariance> DepthOdometry::GetPointCloudAlignerRelativeTransform(
-  const lm::DepthImageMeasurement& depth_image_measurement) {
+  // TODO(rsoussan): add pointcloudwithnormals? store previous and latest as member vars!
   pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   pcl::copyPointCloud(*(depth_image_measurement.point_cloud), *filtered_cloud);
   pcc::RemoveNansAndZerosFromPoints(*filtered_cloud);
@@ -77,39 +66,5 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::GetPointCloudAlignerRelat
 
   latest_relative_transform_ = relative_transform->pose;
   return relative_transform;
-}
-
-boost::optional<lc::PoseWithCovariance> DepthOdometry::GetDepthImageAlignerRelativeTransform(
-  const lm::DepthImageMeasurement& depth_image) {
-  if (!previous_depth_image_ && !latest_depth_image_) {
-    latest_depth_image_ = depth_image;
-    return boost::none;
-  }
-  if (depth_image.timestamp < latest_depth_image_->timestamp) {
-    LogWarning("GetDepthImageAlignerRelativeTransform: Out of order measurement received.");
-    return boost::none;
-  }
-  previous_depth_image_ = latest_depth_image_;
-  latest_depth_image_ = depth_image;
-  const double time_diff = latest_depth_image_->timestamp - previous_depth_image_->timestamp;
-  if (time_diff > params_.max_time_diff) {
-    LogWarning("GetDepthImageAlignerRelativeTransform: Time difference too large, time diff: " << time_diff);
-    return boost::none;
-  }
-
-  depth_image_aligner_->AddLatestDepthImage(*latest_depth_image_);
-  auto relative_transform = depth_image_aligner_->ComputeRelativeTransform();
-  if (!relative_transform) {
-    LogError("GetDepthImageAlignerRelativeTransform: Failed to get relative transform.");
-    return boost::none;
-  }
-  return relative_transform;
-}
-
-bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
-  const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
-  const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
-  return (position_covariance_norm <= params_.position_covariance_threshold &&
-          orientation_covariance_norm <= params_.orientation_covariance_threshold);
 }
 }  // namespace depth_odometry

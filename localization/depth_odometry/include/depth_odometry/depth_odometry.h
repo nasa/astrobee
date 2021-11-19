@@ -18,55 +18,30 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 
-#include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/depth_odometry_params.h>
-#include <localization_common/pose_with_covariance.h>
+#include <depth_odometry/pose_with_covariance_and_matches.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
-#include <localization_measurements/image_measurement.h>
-#include <point_cloud_common/icp.h>
 
 #include <boost/optional.hpp>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/registration/icp.h>
-
-#include <utility>
 
 namespace depth_odometry {
 class DepthOdometry {
  public:
-  explicit DepthOdometry(const DepthOdometryParams& params);
-  boost::optional<localization_common::PoseWithCovariance> DepthImageCallback(
-    const localization_measurements::DepthImageMeasurement& depth_image);
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud() const {
-    return previous_depth_cloud_;
-  }
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> latest_depth_cloud() const {
-    return latest_depth_cloud_;
-  }
-  const boost::optional<pcl::Correspondences>& point_cloud_correspondences() const { return icp_->correspondences(); }
-  const boost::optional<DepthMatches>& image_correspondences() const { return depth_image_aligner_->matches(); }
-  Eigen::Isometry3d latest_relative_transform() const { return latest_relative_transform_; }
+  explicit virtual DepthOdometry(const DepthOdometryParams& params) = 0;
+  virtual boost::optional<PoseWithCovarianceAndMatches> DepthImageCallback(
+    const localization_measurements::DepthImageMeasurement& depth_image) = 0;
   const DepthOdometryParams& params() const { return params_; }
 
- private:
-  boost::optional<localization_common::PoseWithCovariance> GetPointCloudAlignerRelativeTransform(
-    const localization_measurements::DepthImageMeasurement& depth_image);
-  boost::optional<localization_common::PoseWithCovariance> GetDepthImageAlignerRelativeTransform(
-    const localization_measurements::DepthImageMeasurement& depth_image);
+  // TODO(rsoussan): move this to utils
+  bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
+    const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
+    const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
+    return (position_covariance_norm <= params_.position_covariance_threshold &&
+            orientation_covariance_norm <= params_.orientation_covariance_threshold);
+  }
 
-  bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
-
-  std::unique_ptr<point_cloud_common::ICP> icp_;
-  std::unique_ptr<DepthImageAligner> depth_image_aligner_;
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud_;
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> latest_depth_cloud_;
-  boost::optional<localization_measurements::DepthImageMeasurement> previous_depth_image_;
-  boost::optional<localization_measurements::DepthImageMeasurement> latest_depth_image_;
   DepthOdometryParams params_;
-  Eigen::Isometry3d latest_relative_transform_;
 };
 }  // namespace depth_odometry
 

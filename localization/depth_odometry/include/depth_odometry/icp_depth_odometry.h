@@ -15,13 +15,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
-#define DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
+#ifndef DEPTH_ODOMETRY_ICP_DEPTH_ODOMETRY_H_
+#define DEPTH_ODOMETRY_ICP_DEPTH_ODOMETRY_H_
 
-#include <localization_common/pose_with_covariance.h>
+#include <depth_odometry/depth_odometry.h>
 
 namespace depth_odometry {
-struct PoseWithCovarianceAndMatches : public localization_common::PoseWithCovariance {};
+class ICPDepthOdometry : public DepthOdometry {
+ public:
+  explicit virtual DepthOdometry(const DepthOdometryParams& params);
+  boost::optional<PoseWithCovarianceAndMatches> DepthImageCallback(
+    const localization_measurements::DepthImageMeasurement& depth_image) final;
+
+ private:
+  std::unique_ptr<point_cloud_common::ICP> icp_;
+};
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
+#endif  // DEPTH_ODOMETRY_ICP_DEPTH_ODOMETRY_H_
