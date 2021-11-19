@@ -15,20 +15,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
-#define DEPTH_ODOMETRY_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#ifndef DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
+#define DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
+
+#include <localization_common/pose_with_covariance.h>
 
 namespace depth_odometry {
-struct LKOpticalFlowFeatureDetectorAndMatcherParams {
-  int max_iterations;
-  double termination_epsilon;
-  int window_width;
-  int window_height;
-  int max_level;
-  double min_eigen_threshold;
-  double max_flow_distance;
-  double max_backward_match_distance;
+struct PoseWithCovarianceAndMatches : public localization_common::PoseWithCovariance {
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#endif  // DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_

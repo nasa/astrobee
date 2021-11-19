@@ -15,24 +15,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
-#define DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
+#ifndef VISION_COMMON_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#define VISION_COMMON_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
 
-#include <depth_odometry/feature_match.h>
-#include <localization_measurements/feature_image.h>
-
-#include <opencv2/features2d.hpp>
-
-namespace depth_odometry {
-class FeatureDetectorAndMatcher {
- public:
-  virtual FeatureMatches Match(const localization_measurements::FeatureImage& source_image,
-                               const localization_measurements::FeatureImage& target_image) = 0;
-  const cv::Ptr<cv::Feature2D>& detector() { return detector_; }
-
- protected:
-  cv::Ptr<cv::Feature2D> detector_;
+namespace vision_common {
+struct BriskFeatureDetectorAndMatcherParams {
+  // Detection
+  int brisk_threshold;
+  int brisk_octaves;
+  float brisk_float_pattern_scale;
+  // Matching
+  int max_match_hamming_distance;
+  int flann_table_number;
+  int flann_key_size;
+  int flann_multi_probe_level;
 };
-}  // namespace depth_odometry
+}  // namespace vision_common
 
-#endif  // DEPTH_ODOMETRY_FEATURE_DETECTOR_AND_MATCHER_H_
+#endif  // VISION_COMMON_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_

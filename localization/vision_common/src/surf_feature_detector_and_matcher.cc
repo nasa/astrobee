@@ -16,31 +16,25 @@
  * under the License.
  */
 
-#include <depth_odometry/brisk_feature_detector_and_matcher.h>
-#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
 #include <localization_common/logger.h>
+#include <vision_common/surf_feature_detector_and_matcher.h>
+#include <vision_common/surf_feature_detector_and_matcher_params.h>
 
-namespace depth_odometry {
-namespace lm = localization_measurements;
+#include <opencv2/xfeatures2d.hpp>
 
-BriskFeatureDetectorAndMatcher::BriskFeatureDetectorAndMatcher(const BriskFeatureDetectorAndMatcherParams& params)
-    : params_(params),
-      flann_matcher_(cv::makePtr<cv::flann::LshIndexParams>(params_.flann_table_number, params_.flann_key_size,
-                                                            params_.flann_multi_probe_level)) {
-  detector_ = cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
+namespace vision_common {
+SurfFeatureDetectorAndMatcher::SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params)
+    : params_(params) {
+  detector_ = cv::xfeatures2d::SURF::create(params_.surf_threshold);
 }
-
-FeatureMatches BriskFeatureDetectorAndMatcher::Match(const lm::FeatureImage& source_image,
-                                                     const lm::FeatureImage& target_image) {
+FeatureMatches SurfFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
+                                                    const FeatureImage& target_image) {
   std::vector<cv::DMatch> matches;
   flann_matcher_.match(source_image.descriptors(), target_image.descriptors(), matches);
-  LogError("matches pre filtering: " << matches.size());
   const auto filtered_end = std::remove_if(matches.begin(), matches.end(), [this](const cv::DMatch& match) {
-    return match.distance > params_.max_match_hamming_distance;
+    return match.distance > params_.max_match_distance;
   });
   matches.erase(filtered_end, matches.end());
-  LogError("keypoints a: " << source_image.keypoints().size() << ", b: " << target_image.keypoints().size());
-  LogError("matches post filtering: " << matches.size());
   FeatureMatches feature_matches;
   for (const auto& match : matches) {
     const auto& source_point = source_image.keypoints()[match.queryIdx].pt;
@@ -50,4 +44,4 @@ FeatureMatches BriskFeatureDetectorAndMatcher::Match(const lm::FeatureImage& sou
   }
   return feature_matches;
 }
-}  // namespace depth_odometry
+}  // namespace vision_common

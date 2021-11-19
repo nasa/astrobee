@@ -15,13 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef LOCALIZATION_MEASUREMENTS_FEATURE_IMAGE_H_
-#define LOCALIZATION_MEASUREMENTS_FEATURE_IMAGE_H_
+#ifndef VISION_COMMON_FEATURE_IMAGE_H_
+#define VISION_COMMON_FEATURE_IMAGE_H_
 
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 
-namespace localization_measurements {
+#include <vector>
+
+namespace vision_common {
 class FeatureImage {
  public:
   FeatureImage(const cv::Mat& image, const cv::Ptr<cv::Feature2D> feature_detector) : image_(image) {
@@ -41,6 +43,6 @@ class FeatureImage {
   std::vector<cv::Point2f> feature_points_;
   cv::Mat descriptors_;
 };
-}  // namespace localization_measurements
+}  // namespace vision_common
 
-#endif  // LOCALIZATION_MEASUREMENTS_FEATURE_IMAGE_H_
+#endif  // VISION_COMMON_FEATURE_IMAGE_H_

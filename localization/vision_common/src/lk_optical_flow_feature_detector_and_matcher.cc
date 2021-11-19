@@ -16,23 +16,21 @@
  * under the License.
  */
 
-#include <depth_odometry/good_features_to_track_detector.h>
-#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher.h>
-#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <vision_common/good_features_to_track_detector.h>
+#include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
+#include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 
 #include <opencv2/video/tracking.hpp>
 
-namespace depth_odometry {
-namespace lm = localization_measurements;
-
+namespace vision_common {
 LKOpticalFlowFeatureDetectorAndMatcher::LKOpticalFlowFeatureDetectorAndMatcher(
   const LKOpticalFlowFeatureDetectorAndMatcherParams& params)
     : params_(params) {
   detector_.reset(new cv::GoodFeaturesToTrackDetector());
 }
 
-FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const lm::FeatureImage& source_image,
-                                                             const lm::FeatureImage& target_image) {
+FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
+                                                             const FeatureImage& target_image) {
   const cv::TermCriteria termination_criteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, params_.max_iterations,
                                               params_.termination_epsilon);
   const cv::Size window_size(params_.window_width, params_.window_height);
@@ -65,4 +63,4 @@ FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const lm::FeatureIm
   }
   return matches;
 }
-}  // namespace depth_odometry
+}  // namespace vision_common

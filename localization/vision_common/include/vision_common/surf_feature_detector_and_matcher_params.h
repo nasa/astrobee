@@ -15,19 +15,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
-#define DEPTH_ODOMETRY_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
+#ifndef VISION_COMMON_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#define VISION_COMMON_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
 
-#include <opencv2/features2d.hpp>
-
-namespace cv {
-class GoodFeaturesToTrackDetector : public cv::Feature2D {
- public:
-  GoodFeaturesToTrackDetector() {}
-  ~GoodFeaturesToTrackDetector() final {}
-  void detectAndCompute(cv::InputArray image, cv::InputArray mask, std::vector<cv::KeyPoint>& keypoints,
-                        cv::OutputArray descriptors, bool useProvidedKeypoints = false) final;
+namespace vision_common {
+struct SurfFeatureDetectorAndMatcherParams {
+  int surf_threshold;
+  double max_match_distance;
 };
-}  // namespace cv
+}  // namespace vision_common
 
-#endif  // DEPTH_ODOMETRY_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
+#endif  // VISION_COMMON_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_

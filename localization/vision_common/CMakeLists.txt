@@ -16,19 +16,14 @@
 #under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(depth_odometry)
+project(vision_common)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  ff_util
   localization_common 
-  localization_measurements 
-  msg_conversions 
-  optimization_common
-  point_cloud_common
 )
 
 # Find OpenCV3
@@ -37,15 +32,10 @@ find_package(OpenCV 3 REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
-find_package(Ceres REQUIRED)
-
-find_package(PCL REQUIRED COMPONENTS common)
-
 catkin_package(
-  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common point_cloud_common 
-  DEPENDS gtsam pcl pcl_conversions  
+  INCLUDE_DIRS include 
+  LIBRARIES ${PROJECT_NAME} 
+  CATKIN_DEPENDS localization_common 
 )
 
 ###########
@@ -55,22 +45,19 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS} 
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/depth_image_aligner.cc
-  src/depth_odometry.cc
-  src/depth_odometry_nodelet.cc
-  src/depth_odometry_wrapper.cc
-  src/parameter_reader.cc
+  src/brisk_feature_detector_and_matcher.cc
+  src/good_features_to_track_detector.cc
+  src/lk_optical_flow_feature_detector_and_matcher.cc
+  src/surf_feature_detector_and_matcher.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##

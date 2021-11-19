@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <depth_odometry/good_features_to_track_detector.h>
+#include <vision_common/good_features_to_track_detector.h>
 
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>

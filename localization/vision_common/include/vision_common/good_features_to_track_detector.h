@@ -15,21 +15,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
-#define DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#ifndef VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
+#define VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
 
-namespace depth_odometry {
-struct BriskFeatureDetectorAndMatcherParams {
-  // Detection
-  int brisk_threshold;
-  int brisk_octaves;
-  float brisk_float_pattern_scale;
-  // Matching
-  int max_match_hamming_distance;
-  int flann_table_number;
-  int flann_key_size;
-  int flann_multi_probe_level;
+#include <opencv2/features2d.hpp>
+
+#include <vector>
+
+namespace cv {
+class GoodFeaturesToTrackDetector : public cv::Feature2D {
+ public:
+  GoodFeaturesToTrackDetector() {}
+  ~GoodFeaturesToTrackDetector() final {}
+  void detectAndCompute(cv::InputArray image, cv::InputArray mask, std::vector<cv::KeyPoint>& keypoints,
+                        cv::OutputArray descriptors, bool useProvidedKeypoints = false) final;
 };
-}  // namespace depth_odometry
+}  // namespace cv
 
-#endif  // DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#endif  // VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_H_

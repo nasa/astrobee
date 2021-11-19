@@ -15,24 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
-#define DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#ifndef VISION_COMMON_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#define VISION_COMMON_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
 
-#include <depth_odometry/feature_detector_and_matcher.h>
-#include <depth_odometry/surf_feature_detector_and_matcher_params.h>
-#include <localization_measurements/feature_image.h>
+#include <vision_common/feature_detector_and_matcher.h>
+#include <vision_common/feature_image.h>
+#include <vision_common/surf_feature_detector_and_matcher_params.h>
 
-namespace depth_odometry {
+namespace vision_common {
 class SurfFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
-  SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const localization_measurements::FeatureImage& source_image,
-                       const localization_measurements::FeatureImage& target_image) final;
+  explicit SurfFeatureDetectorAndMatcher(const SurfFeatureDetectorAndMatcherParams& params);
+  FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) final;
 
  private:
   SurfFeatureDetectorAndMatcherParams params_;
   cv::FlannBasedMatcher flann_matcher_;
 };
-}  // namespace depth_odometry
+}  // namespace vision_common
 
-#endif  // DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_H_
+#endif  // VISION_COMMON_SURF_FEATURE_DETECTOR_AND_MATCHER_H_

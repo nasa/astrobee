@@ -15,14 +15,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
-#define DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#ifndef VISION_COMMON_FEATURE_MATCH_H_
+#define VISION_COMMON_FEATURE_MATCH_H_
 
-namespace depth_odometry {
-struct SurfFeatureDetectorAndMatcherParams {
-  int surf_threshold;
-  double max_match_distance;
+#include <Eigen/Core>
+
+#include <vector>
+
+namespace vision_common {
+struct FeatureMatch {
+  FeatureMatch(const Eigen::Vector2d& source_point, const Eigen::Vector2d& target_point, const double distance)
+      : source_point(source_point), target_point(target_point), distance(distance) {}
+  Eigen::Vector2d source_point;
+  Eigen::Vector2d target_point;
+  double distance;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
-}  // namespace depth_odometry
+using FeatureMatches = std::vector<FeatureMatch>;
+}  // namespace vision_common
 
-#endif  // DEPTH_ODOMETRY_SURF_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#endif  // VISION_COMMON_FEATURE_MATCH_H_

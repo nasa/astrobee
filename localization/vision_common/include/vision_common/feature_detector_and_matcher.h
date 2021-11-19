@@ -15,22 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_FEATURE_MATCH_H_
-#define DEPTH_ODOMETRY_FEATURE_MATCH_H_
+#ifndef VISION_COMMON_FEATURE_DETECTOR_AND_MATCHER_H_
+#define VISION_COMMON_FEATURE_DETECTOR_AND_MATCHER_H_
 
-#include <Eigen/Core>
+#include <vision_common/feature_match.h>
+#include <vision_common/feature_image.h>
 
-namespace depth_odometry {
-struct FeatureMatch {
-  FeatureMatch(const Eigen::Vector2d& source_point, const Eigen::Vector2d& target_point, const double distance)
-      : source_point(source_point), target_point(target_point), distance(distance) {}
-  Eigen::Vector2d source_point;
-  Eigen::Vector2d target_point;
-  double distance;
+#include <opencv2/features2d.hpp>
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+namespace vision_common {
+class FeatureDetectorAndMatcher {
+ public:
+  virtual FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) = 0;
+  const cv::Ptr<cv::Feature2D>& detector() { return detector_; }
+
+ protected:
+  cv::Ptr<cv::Feature2D> detector_;
 };
-using FeatureMatches = std::vector<FeatureMatch>;
-}  // namespace depth_odometry
+}  // namespace vision_common
 
-#endif  // DEPTH_ODOMETRY_FEATURE_MATCH_H_
+#endif  // VISION_COMMON_FEATURE_DETECTOR_AND_MATCHER_H_

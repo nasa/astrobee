@@ -15,24 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_H_
-#define DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_H_
+#ifndef VISION_COMMON_BRISK_FEATURE_DETECTOR_AND_MATCHER_H_
+#define VISION_COMMON_BRISK_FEATURE_DETECTOR_AND_MATCHER_H_
 
-#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
-#include <depth_odometry/feature_detector_and_matcher.h>
-#include <localization_measurements/feature_image.h>
+#include <vision_common/brisk_feature_detector_and_matcher_params.h>
+#include <vision_common/feature_detector_and_matcher.h>
+#include <vision_common/feature_image.h>
 
-namespace depth_odometry {
+namespace vision_common {
 class BriskFeatureDetectorAndMatcher : public FeatureDetectorAndMatcher {
  public:
   BriskFeatureDetectorAndMatcher(const BriskFeatureDetectorAndMatcherParams& params);
-  FeatureMatches Match(const localization_measurements::FeatureImage& source_image,
-                       const localization_measurements::FeatureImage& target_image) final;
+  FeatureMatches Match(const FeatureImage& source_image, const FeatureImage& target_image) final;
 
  private:
   BriskFeatureDetectorAndMatcherParams params_;
   cv::FlannBasedMatcher flann_matcher_;
 };
-}  // namespace depth_odometry
+}  // namespace vision_common
 
-#endif  // DEPTH_ODOMETRY_BRISK_FEATURE_DETECTOR_AND_MATCHER_H_
+#endif  // VISION_COMMON_BRISK_FEATURE_DETECTOR_AND_MATCHER_H_
