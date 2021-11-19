@@ -52,11 +52,11 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 
   image_transport::ImageTransport image_transport(*nh);
   // TODO(rsoussan): Fix this
-  const std::string depth_image_topic =   "/hw/depth_haz/extended/amplitude_int";
-/*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
-                                  static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
-    image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
+  const std::string depth_image_topic = "/hw/depth_haz/extended/amplitude_int";
+  /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
+  image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
   odom_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
   depth_correspondences_pub_ =
     nh->advertise<ff_msgs::DepthCorrespondences>(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, 10);

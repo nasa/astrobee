@@ -37,7 +37,7 @@
 namespace depth_odometry {
 class DepthOdometry {
  public:
-  DepthOdometry();
+  explicit DepthOdometry(const DepthOdometryParams& params);
   boost::optional<localization_common::PoseWithCovariance> DepthImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image);
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> previous_depth_cloud() const {

@@ -28,18 +28,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace pcc = point_cloud_common;
 
-DepthOdometry::DepthOdometry() {
-  // TODO(rsoussan): remove this
-  config_reader::ConfigReader config;
-  config.AddFile("cameras.config");
-  config.AddFile("transforms.config");
-  config.AddFile("geometry.config");
-  config.AddFile("localization/depth_odometry.config");
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
-  }
-
-  LoadDepthOdometryParams(config, params_);
+DepthOdometry::DepthOdometry(const DepthOdometryParams& params) : params_(params) {
   depth_image_aligner_.reset(new DepthImageAligner(params_.depth_image_aligner));
   icp_.reset(new pcc::ICP(params_.icp));
 }

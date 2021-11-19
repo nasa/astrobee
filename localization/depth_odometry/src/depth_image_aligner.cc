@@ -94,12 +94,14 @@ bool DepthImageAligner::GetRequiredNormals(const Eigen::Vector3d& source_landmar
                                            std::vector<Eigen::Vector3d>& target_normals) const {
   if (params_.point_cloud_with_known_correspondences_aligner.use_point_to_plane_cost ||
       params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-    const auto target_normal = pcc::GetNormal(target_landmark, target_filtered_point_cloud, target_kdtree,
-                                         params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
+    const auto target_normal =
+      pcc::GetNormal(target_landmark, target_filtered_point_cloud, target_kdtree,
+                     params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
     if (!target_normal) return false;
     if (params_.point_cloud_with_known_correspondences_aligner.use_symmetric_point_to_plane_cost) {
-      const auto source_normal = pcc::GetNormal(source_landmark, source_filtered_point_cloud, source_kdtree,
-                                           params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
+      const auto source_normal =
+        pcc::GetNormal(source_landmark, source_filtered_point_cloud, source_kdtree,
+                       params_.point_cloud_with_known_correspondences_aligner.normal_search_radius);
       if (!source_normal) return false;
       source_normals.emplace_back(*source_normal);
     }

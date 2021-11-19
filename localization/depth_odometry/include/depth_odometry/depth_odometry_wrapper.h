@@ -33,6 +33,7 @@
 namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
+  DepthOdometryWrapper();
   std::vector<ff_msgs::Odometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
   std::vector<ff_msgs::Odometry> ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
   boost::optional<ff_msgs::DepthCorrespondences> GetPointCloudCorrespondencesMsg() const;
@@ -40,15 +41,15 @@ class DepthOdometryWrapper {
   sensor_msgs::PointCloud2 GetPreviousPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetLatestPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetTransformedPreviousPointCloudMsg() const;
-  bool depth_image_registration_enabled() const { return depth_odometry_.params().depth_image_registration_enabled; }
+  bool depth_image_registration_enabled() const { return depth_odometry_->params().depth_image_registration_enabled; }
   bool depth_point_cloud_registration_enabled() const {
-    return depth_odometry_.params().depth_point_cloud_registration_enabled;
+    return depth_odometry_->params().depth_point_cloud_registration_enabled;
   }
 
  private:
   std::vector<ff_msgs::Odometry> ProcessDepthImageIfAvailable();
 
-  DepthOdometry depth_odometry_;
+  std::unique_ptr<DepthOdometry> depth_odometry_;
   localization_common::MeasurementBuffer<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;
   localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> image_buffer_;
 };

@@ -56,7 +56,7 @@ void Calibrator::Calibrate(const std::vector<DepthMatches>& match_sets,
   for (const auto& match_set : match_sets) {
     for (int i = 0; i < static_cast<int>(match_set.source_image_points.size()) && i < params_.max_num_match_sets; ++i) {
       oc::AffineReprojectionError::AddCostFunction(match_set.source_image_points[i], match_set.source_3d_points[i],
-                                        depth_image_A_depth_cloud, intrinsics, distortion, problem);
+                                                   depth_image_A_depth_cloud, intrinsics, distortion, problem);
     }
   }
 
