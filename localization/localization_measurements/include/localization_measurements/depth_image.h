@@ -16,12 +16,12 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_MEASUREMENT_H_
-#define LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_MEASUREMENT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_H_
+#define LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_H_
 
 #include <localization_common/time.h>
-#include <localization_measurements/depth_image.h>
-#include <localization_measurements/measurement.h>
+
+#include <boost/optional.hpp>
 
 #include <opencv2/core.hpp>
 
@@ -29,12 +29,21 @@
 #include <pcl/point_types.h>
 
 namespace localization_measurements {
-struct DepthImageMeasurement : public Measurement {
-  DepthImageMeasurement(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud,
-                        const localization_common::Time timestamp)
-      : Measurement(timestamp), depth_image(image, point_cloud) {}
-  DepthImage depth_image;
+class DepthImage {
+ public:
+  DepthImage(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud);
+  // Point lookups using depth image col and rows need to use the unfiltered point cloud since the indices
+  // of the unfiltered cloud correlate to the image space indices.
+  boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const int col, const int row);
+  boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const double col, const double row);
+  boost::optional<pcl::PointXYZI> InterpolatePoint3D(const double col, const double row);
+
+ private:
+  bool ValidPoint(const boost::optional<const pcl::PointXYZI&> point);
+
+  cv::Mat image_;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr unfiltered_point_cloud_;
 };
 }  // namespace localization_measurements
 
-#endif  // LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_MEASUREMENT_H_
+#endif  // LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_H_

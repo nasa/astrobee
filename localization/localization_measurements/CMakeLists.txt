@@ -55,7 +55,7 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/depth_image_measurement.cc
+  src/depth_image.cc
   src/measurement_conversions.cc
 )
 
