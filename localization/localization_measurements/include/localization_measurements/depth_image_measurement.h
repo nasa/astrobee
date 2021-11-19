@@ -34,14 +34,14 @@ class DepthImageMeasurement : public Measurement {
  public:
   DepthImageMeasurement(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud,
                         const localization_common::Time timestamp);
+  // Point lookups using depth image col and rows need to use the unfiltered point cloud since the indices
+  // of the unfiltered cloud correlate to the image space indices.
   boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const int col, const int row);
   boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const double col, const double row);
   boost::optional<pcl::PointXYZI> InterpolatePoint3D(const double col, const double row);
 
  private:
-  // TODO(rsoussan): move this to pcc
-  pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b);
-  bool ValidAccessedPoint(const boost::optional<const pcl::PointXYZI&> point);
+  bool ValidPoint(const boost::optional<const pcl::PointXYZI&> point);
 
   cv::Mat image_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr unfiltered_point_cloud_;

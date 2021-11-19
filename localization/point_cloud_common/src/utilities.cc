@@ -209,6 +209,16 @@ Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vecto
   return covariance;
 }
 
+pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b) {
+  const double beta = 1.0 - alpha;
+  pcl::PointXYZI interpolated_point;
+  interpolated_point.x = beta * point_a.x + alpha * point_b.x;
+  interpolated_point.y = beta * point_a.y + alpha * point_b.y;
+  interpolated_point.z = beta * point_a.z + alpha * point_b.z;
+  interpolated_point.intensity = beta * point_a.intensity + alpha * point_b.intensity;
+  return interpolated_point;
+}
+
 template <>
 bool ValidPoint<pcl::PointXYZ>(const pcl::PointXYZ& point) {
   return ValidPointXYZ(point);

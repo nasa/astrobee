@@ -62,6 +62,8 @@ bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector);
 Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
                                                                 const Eigen::Isometry3d& relative_transform);
 
+pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b);
+
 template <typename PointType>
 bool ValidPoint(const PointType& point) = delete;
 
