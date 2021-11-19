@@ -283,8 +283,8 @@ option until the final map is computed, as this step can be
 time-consuming.
 
 If the first of the two maps to merge is already registered, it may be
-desirable to keep that portion fixed during merging. That is
-accomplished with the flag -fix_first_map.
+desirable to keep that portion fixed during merging when bundle
+adjustment happens. That is accomplished with the flag -fix_first_map.
   
 #### How to build a map efficiently
 
