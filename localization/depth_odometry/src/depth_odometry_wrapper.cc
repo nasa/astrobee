@@ -90,10 +90,9 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailabl
   for (const auto& depth_image_measurement : depth_image_measurements) {
     auto relative_transform = depth_odometry_->DepthImageCallback(depth_image_measurement);
     if (relative_transform) {
-      // TODO(rsoussan): Make function that does this, use new PoseWithCovariance type (add both to loc common)
       ff_msgs::Odometry pose_msg;
-      const Eigen::Isometry3d body_F_a_T_b = depth_odometry_->params().body_T_haz_cam * relative_transform->pose *
-                                             depth_odometry_->params().body_T_haz_cam.inverse();
+      const Eigen::Isometry3d body_F_a_T_b =
+        lc::FrameChangeRelativeTransform(relative_transform->pose, depth_odometry_->params().body_T_haz_cam);
       // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
       // rotated by rotation matrix)
       mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg.sensor_F_a_T_b);

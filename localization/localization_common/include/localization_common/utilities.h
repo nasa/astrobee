@@ -136,6 +136,9 @@ Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, co
 Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
 
 Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
+
+Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
+                                               const Eigen::Isometry3d& b_T_a);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

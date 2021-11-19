@@ -183,4 +183,9 @@ Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics) {
 Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
   return Eigen::Vector2d(intrinsics(0, 2), intrinsics(1, 2));
 }
+
+Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
+                                               const Eigen::Isometry3d& b_T_a) {
+  return b_T_a * a_F_relative_transform * b_T_a.inverse();
+}
 }  // namespace localization_common
