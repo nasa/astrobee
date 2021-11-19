@@ -28,11 +28,13 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <vector>
+
 namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
-  std::vector<ff_msgs::Odometry> DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-  std::vector<ff_msgs::Odometry> DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
+  std::vector<ff_msgs::Odometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
+  std::vector<ff_msgs::Odometry> ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
   boost::optional<ff_msgs::DepthCorrespondences> GetPointCloudCorrespondencesMsg() const;
   boost::optional<ff_msgs::DepthCorrespondences> GetImageCorrespondencesMsg() const;
   sensor_msgs::PointCloud2 GetPreviousPointCloudMsg() const;

@@ -34,13 +34,13 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-std::vector<ff_msgs::Odometry> DepthOdometryWrapper::DepthCloudCallback(
+std::vector<ff_msgs::Odometry> DepthOdometryWrapper::PointCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
   point_cloud_buffer_.Add(lc::TimeFromHeader(depth_cloud_msg->header), depth_cloud_msg);
   return ProcessDepthImageAndCloudMeasurementsIfAvailable();
 }
 
-std::vector<ff_msgs::Odometry> DepthOdometryWrapper::DepthImageCallback(
+std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ImageCallback(
   const sensor_msgs::ImageConstPtr& depth_image_msg) {
   image_buffer_.Add(lc::TimeFromHeader(depth_image_msg->header), depth_image_msg);
   return ProcessDepthImageAndCloudMeasurementsIfAvailable();
@@ -80,8 +80,8 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageAndCloudMe
       ff_msgs::Odometry pose_msg;
       const Eigen::Isometry3d body_F_a_T_b = depth_odometry_.params().body_T_haz_cam * relative_transform->pose *
                                              depth_odometry_.params().body_T_haz_cam.inverse();
-      // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated
-      // by rotation matrix)
+      // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
+      // rotated by rotation matrix)
       mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg.sensor_F_a_T_b);
       mc::EigenPoseCovarianceToMsg(body_F_a_T_b, relative_transform->covariance, pose_msg.body_F_a_T_b);
       lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);

@@ -48,14 +48,15 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                                         static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
   point_cloud_sub_ = nh->subscribe<sensor_msgs::PointCloud2>(
-    depth_cloud_topic, 10, &DepthOdometryNodelet::DepthCloudCallback, this, ros::TransportHints().tcpNoDelay());
+    depth_cloud_topic, 10, &DepthOdometryNodelet::PointCloudCallback, this, ros::TransportHints().tcpNoDelay());
 
   image_transport::ImageTransport image_transport(*nh);
-  const std::string depth_image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+  // TODO(rsoussan): Fix this
+  const std::string depth_image_topic =   "/hw/depth_haz/extended/amplitude_int";
+/*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                   static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
-    "/hw/depth_haz/extended/amplitude_int";
-  depth_image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::DepthImageCallback, this);
+    image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
   odom_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
   depth_correspondences_pub_ =
     nh->advertise<ff_msgs::DepthCorrespondences>(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, 10);
@@ -66,8 +67,8 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   }
 }
 
-void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  const auto pose_msgs = depth_odometry_wrapper_.DepthCloudCallback(depth_cloud_msg);
+void DepthOdometryNodelet::PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
+  const auto pose_msgs = depth_odometry_wrapper_.PointCloudCallback(depth_cloud_msg);
   for (const auto& pose_msg : pose_msgs) {
     odom_pub_.publish(pose_msg);
   }
@@ -81,8 +82,8 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   }
 }
 
-void DepthOdometryNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  const auto pose_msgs = depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
+void DepthOdometryNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
+  const auto pose_msgs = depth_odometry_wrapper_.ImageCallback(depth_image_msg);
   for (const auto& pose_msg : pose_msgs) {
     odom_pub_.publish(pose_msg);
   }

@@ -86,14 +86,6 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::GetPointCloudAlignerRelat
     return boost::none;
   }
 
-  /*if (params_.frame_change_transform) {
-    relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
-    // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
-    // rotation matrix)
-  }*/
-
-  // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  // if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
   latest_relative_transform_ = relative_transform->pose;
   return relative_transform;
 }
@@ -122,22 +114,12 @@ boost::optional<lc::PoseWithCovariance> DepthOdometry::GetDepthImageAlignerRelat
     LogError("GetDepthImageAlignerRelativeTransform: Failed to get relative transform.");
     return boost::none;
   }
-  /*if (params_.frame_change_transform) {
-    LogError("do bTh: " << std::endl << params_.body_T_haz_cam.matrix());
-    LogError("do rel trafo pre change: " << std::endl << relative_transform->first.matrix());
-    relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
-  }*/
-
-  // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  // if (relative_transform->pose.translation().norm() > 0.5) LogError("large position jump!!");
-  // latest_relative_transform_ = relative_transform->first;
   return relative_transform;
 }
 
 bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
   const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
   const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
-  // LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
   return (position_covariance_norm <= params_.position_covariance_threshold &&
           orientation_covariance_norm <= params_.orientation_covariance_threshold);
 }

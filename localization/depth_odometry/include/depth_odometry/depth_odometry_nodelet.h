@@ -37,14 +37,14 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
  private:
   void Initialize(ros::NodeHandle* nh) final;
   void SubscribeAndAdvertise(ros::NodeHandle* nh);
-  void DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-  void DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
+  void PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
+  void ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
   void PublishPointClouds() const;
 
   DepthOdometryNodeletParams params_;
   DepthOdometryWrapper depth_odometry_wrapper_;
   ros::Subscriber point_cloud_sub_;
-  image_transport::Subscriber depth_image_sub_;
+  image_transport::Subscriber image_sub_;
   ros::Publisher odom_pub_;
   ros::Publisher source_cloud_pub_, target_cloud_pub_, point_cloud_result_pub_, depth_correspondences_pub_;
 };
