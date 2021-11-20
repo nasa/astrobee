@@ -98,6 +98,8 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
   // Publish data bagger state
   void PublishState();
 
+  ros::NodeHandle nh_;
+
   astrobee_rosbag::Recorder *delayed_recorder_, *immediate_recorder_;
 
   config_reader::ConfigReader config_params_;

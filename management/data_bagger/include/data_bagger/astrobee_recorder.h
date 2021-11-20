@@ -68,65 +68,25 @@ using rosbag::Bag;
 
 class ROSBAG_DECL Recorder {
  public:
-  explicit Recorder(RecorderOptions const& options);
+  explicit Recorder(RecorderOptions const& options, ros::NodeHandle *nh);
 
   int run();
 
   void stop();
 
  private:
-  // void printUsage();
+  void checkDisk(const ros::TimerEvent&);
 
-  // void updateFilenames();
-  // void stopWriting();
+  void doRecord();
 
-  // bool scheduledCheckDisk();
-  bool checkDisk();
-
-  // void snapshotTrigger(std_msgs::Empty::ConstPtr trigger);
-  // void doQueue(const ros::MessageEvent<topic_tools::ShapeShifter const>& msg_event,
-  //              std::string const& topic,
-  //              boost::shared_ptr<ros::Subscriber> subscriber,
-  //              boost::shared_ptr<int> count);
-  pid_t doRecord();
-  void checkNumSplits();
-  bool checkSize();
-  bool checkDuration(const ros::Time&);
-  bool checkLogging();
-  // void doRecordSnapshotter();
-  // void doCheckMaster(ros::TimerEvent const& e, ros::NodeHandle& node_handle);
-
-  // bool shouldSubscribeToTopic(std::string const& topic, bool from_node = false);
-
-  // template<class T>
-  // static std::string timeToStr(T ros_t);
+  pid_t popen2(const char *command, int *infp, int *outfp);
 
  private:
     RecorderOptions               options_;
+
     pid_t                         child_process_;
 
-    std::string                   target_filename_;
-    std::string                   write_filename_;
-    std::list<std::string>        current_files_;
-
-    std::set<std::string>         currently_recording_;  //!< set of currenly recording topics
-    int                           num_subscribers_;      //!< used for book-keeping of our number of subscribers
-
-    int                           exit_code_;            //!< eventual exit code
-
-    uint64_t                      split_count_;          //!< split count
-
-    ros::Time                     last_buffer_warn_;
-
-    ros::Time                     start_time_;
-
-    bool                          writing_enabled_;
-
-    ros::WallTime                 check_disk_next_;
-    ros::WallTime                 warn_next_;
-
-    ros::NodeHandle               node_handle_;
-    bool                          should_stop_;
+    ros::Timer                    timer_check_disk_;
 };
 
 }  // namespace astrobee_rosbag

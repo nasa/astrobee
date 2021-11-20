@@ -51,6 +51,7 @@ bool DataBagger::SetDelayedDataToDiskService(ff_msgs::SetDataToDisk::Request &re
 
   // Clear delayed topics if we get new delayed topics to record
   recorder_options_delayed_.topics.clear();
+  recorder_options_delayed_.name = "data_bagger_delayed";
 
   // Also clear current profile name
   delayed_profile_name_ = "";
@@ -101,6 +102,12 @@ bool DataBagger::EnableDelayedRecordingService(ff_msgs::EnableRecording::Request
                                                ff_msgs::EnableRecording::Response &res) {
   // Check if we are starting a recording or stopping a recording
   if (req.enable) {
+    // It's already recording, can't accept new requests
+    if (combined_data_state_.recording == true) {
+      res.success = false;
+      return true;
+    }
+
     // Check to make sure a delayed profile is loaded
     if (delayed_profile_name_ == "" ||
                                 recorder_options_delayed_.topics.size() == 0) {
@@ -136,6 +143,12 @@ bool DataBagger::EnableDelayedRecordingService(ff_msgs::EnableRecording::Request
 
     PublishState();
   } else {
+    // It's already stopped, can't accept new requests
+    if (combined_data_state_.recording == false) {
+      res.success = false;
+      return true;
+    }
+
     // Send false to reset the delayed recorder
     ResetRecorders(false);
     combined_data_state_.recording = false;
@@ -147,6 +160,7 @@ bool DataBagger::EnableDelayedRecordingService(ff_msgs::EnableRecording::Request
 }
 
 void DataBagger::Initialize(ros::NodeHandle *nh) {
+  nh_ = *nh;
   config_params_.AddFile("management/data_bagger.config");
   if (!ReadParams()) {
     return;
@@ -186,7 +200,6 @@ void DataBagger::Initialize(ros::NodeHandle *nh) {
 }
 
 bool DataBagger::ReadParams() {
-      ROS_ERROR_STREAM("ReadParams");
   // Read config files into lua
   if (!config_params_.ReadFiles()) {
     this->AssertFault(ff_util::INITIALIZATION_FAILED,
@@ -227,7 +240,6 @@ bool DataBagger::ReadParams() {
   if (config_params_.CheckValExists("default_topics")) {
     config_reader::ConfigReader::Table topics_table(&config_params_,
                                                     "default_topics");
-      ROS_ERROR_STREAM("default_topics ");
     // If there isn't anything in the table, don't set the profile name
     if (topics_table.GetSize() > 0) {
       default_data_state_.name = "ars_default";
@@ -236,10 +248,7 @@ bool DataBagger::ReadParams() {
     std::string downlink;
     ff_msgs::SaveSettings save_settings;
     // Lua indices start at one
-      ROS_ERROR_STREAM("default_topics " << topics_table.GetSize());
     for (int i = 1; i < (topics_table.GetSize() + 1); i++) {
-      ROS_ERROR_STREAM("topics_table ");
-
       config_reader::ConfigReader::Table topic_entry(&topics_table, i);
       if (!topic_entry.GetStr("topic", &save_settings.topic_name)) {
         this->AssertFault(ff_util::INITIALIZATION_FAILED,
@@ -247,7 +256,6 @@ bool DataBagger::ReadParams() {
         return false;
       }
 
-      ROS_ERROR_STREAM("topic immediate " << save_settings.topic_name);
       AddTopicNamespace(save_settings.topic_name);
 
       if (!topic_entry.GetStr("downlink", &downlink)) {
@@ -299,7 +307,6 @@ void DataBagger::GetTopicNames() {
 bool DataBagger::MakeDir(std::string dir,
                          bool assert_init_fault,
                          std::string &err_msg) {
-  ROS_ERROR_STREAM("MakeDir" << dir);
   struct stat dir_info;
 
   // Check if directory exists and if it doesn't, create it
@@ -416,15 +423,12 @@ void DataBagger::AddTopicNamespace(std::string &topic) {
 // Starts the immediate recording
 void DataBagger::OnStartupTimer(ros::TimerEvent const& event) {
   std::string err_msg = "";
-  ROS_ERROR_STREAM("OnStartupTimer");
 
   // Get name of topics being published
   GetTopicNames();
-  ROS_ERROR_STREAM("OnStartupTimer1");
 
   // Check to see if there were default topics to start recording.
   if (default_data_state_.topic_save_settings.size() > 0) {
-  ROS_ERROR_STREAM("OnStartupTimer2");
     if (!SetImmediateDataToDisk(err_msg)) {
       this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
       return;
@@ -433,11 +437,11 @@ void DataBagger::OnStartupTimer(ros::TimerEvent const& event) {
 }
 
 bool DataBagger::SetImmediateDataToDisk(std::string &err_msg) {
-  ROS_ERROR_STREAM("SetImmediateDataToDisk");
   ResetRecorders(true);
 
   // Clear record options if we get new immediate data
   recorder_options_immediate_.topics.clear();
+  recorder_options_delayed_.name = "data_bagger_immediate";
 
   for (auto & setting : default_data_state_.topic_save_settings) {
     // Can assume all downlink options are immediate since this comes from the
@@ -476,13 +480,12 @@ bool DataBagger::SetImmediateDataToDisk(std::string &err_msg) {
 }
 
 void DataBagger::StartDelayedRecording() {
-  delayed_recorder_ = new astrobee_rosbag::Recorder(recorder_options_delayed_);
+  delayed_recorder_ = new astrobee_rosbag::Recorder(recorder_options_delayed_, &nh_);
   delayed_recorder_->run();
 }
 
 void DataBagger::StartImmediateRecording() {
-  ROS_ERROR_STREAM("StartImmediateRecording");
-  immediate_recorder_ = new astrobee_rosbag::Recorder(recorder_options_immediate_);
+  immediate_recorder_ = new astrobee_rosbag::Recorder(recorder_options_immediate_, &nh_);
   immediate_recorder_->run();
 }
 

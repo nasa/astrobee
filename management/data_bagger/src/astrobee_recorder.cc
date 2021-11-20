@@ -64,6 +64,9 @@
 
 #define foreach BOOST_FOREACH
 
+#define READ 0
+#define WRITE 1
+
 using std::cout;
 using std::endl;
 using std::set;
@@ -72,23 +75,15 @@ using std::vector;
 using boost::shared_ptr;
 using ros::Time;
 
-using rosbag::OutgoingMessage;
-using rosbag::OutgoingQueue;
-using rosbag::RecorderOptions;
-using rosbag::Bag;
-using rosbag::BagException;
-
 namespace astrobee_rosbag {
 // Recorder
 
-  Recorder::Recorder(RecorderOptions const& options) :
+  Recorder::Recorder(RecorderOptions const& options, ros::NodeHandle *nh) :
   options_(options),
-  child_process_(-1),
-  num_subscribers_(0),
-  exit_code_(0),
-  split_count_(0),
-  writing_enabled_(true),
-  should_stop_(false) {}
+  child_process_(-1) {
+    // Declare check disk timer
+    timer_check_disk_ = nh->createTimer(ros::Duration(20.0), &Recorder::checkDisk, this, false, false);
+  }
 
   // Called by the data bagger to start recording
   int Recorder::run() {
@@ -107,155 +102,65 @@ namespace astrobee_rosbag {
       }
     }
 
-    if (!node_handle_.ok())
-      return 0;
-
     // Start the recording
-    child_process_ = doRecord();
-
-
-    // // Schedule the disk space check
-    // warn_next_ = ros::WallTime();
-    // check_disk_next_ = ros::WallTime::now();
-
-    // // Start check timers
-    // checkSize();
-    // // checkDuration(out.time);
-    // checkDisk();
-    // checkLogging();
+    doRecord();
   }
 
   // Called by the data bagger to stop recording
   void Recorder::stop() {
-    if (child_process_ != -1)
-      kill(child_process_, SIGKILL);
+    // There is a rosbag record running
+    if ((child_process_ != -1) && (system(("rosnode kill /" + options_.name).c_str()) < 0)) {
+      ROS_ERROR("Could not stop recording, recorder PID is %i", child_process_);
+      return;
+    }
+    timer_check_disk_.stop();
+    child_process_ = -1;
   }
 
+  //! Thread that starts the rosbag record command.
+  void Recorder::doRecord() {
+    // Start recording command
+    std::string cmd = "rosbag record ";
 
-//! Thread that actually does writing to file.
-pid_t Recorder::doRecord() {
-  // Start recording command
-  std::string cmd = "rosbag record ";
-  // Specify topics to record
-  for (uint i = 0 ; i < options_.topics.size(); ++i) {
-    cmd += options_.topics[i] + " ";
+    // Specify name
+    if (options_.prefix != "") {
+      cmd += " --output-name=" + options_.prefix;
+    }
+
+    // Specify split option
+    if (options_.split == true) {
+      cmd += " --split --size=" + std::to_string(options_.max_size);
+    }
+
+    // // Specify maximum duration
+    if (options_.max_duration.toSec() != -1) {
+      cmd += " --duration=" + std::to_string(options_.max_duration.toSec());
+    }
+
+    // Specify topics to record
+    for (uint i = 0 ; i < options_.topics.size(); ++i) {
+      cmd += " " + options_.topics[i];
+    }
+
+    // Specify node name
+    cmd += " __name:=" + options_.name;
+
+    ROS_DEBUG("%s", cmd.c_str());
+    int infp, outfp;
+    if ((child_process_ = popen2(cmd.c_str(), &infp, &outfp)) <= 0) {
+      printf("Unable to start recording\n");
+      exit(1);
+    }
+    // Start timer for disk check
+    timer_check_disk_.start();
   }
-  // Add split option
 
-
-
-
-  // ROS_ERROR_STREAM(cmd);
-  // // Fork
-  // pid_t pid = fork();
-
-  // // Error, failed to fork()
-  // if (pid == -1) {
-  //   ROS_ERROR("Failed to start the fork");
-  //   return pid;
-  // // This is the parent
-  // } else if (pid > 0) {
-  //   return pid;
-  // // This is the child, start recording
-  // } else {
-
-
-
-  //     execve(...);
-  //     _exit(EXIT_FAILURE);   // exec never returns
-  // }
-}
-
-  // void Recorder::updateFilenames() {
-  //   vector<string> parts;
-
-  //   std::string prefix = options_.prefix;
-  //   size_t ind = prefix.rfind(".bag");
-
-  //   if (ind != std::string::npos && ind == prefix.size() - 4) {
-  //     prefix.erase(ind);
-  //   }
-
-  //   if (prefix.length() > 0)
-  //     parts.push_back(prefix);
-  //   if (options_.append_date)
-  //     parts.push_back(timeToStr(ros::WallTime::now()));
-  //   if (options_.split)
-  //     parts.push_back(boost::lexical_cast<string>(split_count_));
-
-  //   if (parts.size() == 0) {
-  //     throw BagException("Bag filename is empty (neither of these was specified: prefix, append_date, split)");
-  //   }
-
-  //   target_filename_ = parts[0];
-  //   for (unsigned int i = 1; i < parts.size(); i++)
-  //     target_filename_ += string("_") + parts[i];
-
-  //   target_filename_ += string(".bag");
-  //   write_filename_ = target_filename_ + string(".active");
-  // }
-
-void Recorder::checkNumSplits() {
-//     if (options_.max_splits > 0) {
-//         current_files_.push_back(target_filename_);
-//         if (current_files_.size() > options_.max_splits) {
-//             int err = unlink(current_files_.front().c_str());
-//             if (err != 0) {
-//                 ROS_ERROR("Unable to remove %s: %s", current_files_.front().c_str(), strerror(errno));
-//             }
-//             current_files_.pop_front();
-//         }
-//     }
-}
-
-bool Recorder::checkSize() {
-//     if (options_.max_size > 0) {
-//         if (bag_.getSize() > options_.max_size) {
-//             if (options_.split) {
-//                 stopWriting();
-//                 split_count_++;
-//                 checkNumSplits();
-//                 startWriting();
-//             } else {
-//                 ros::shutdown();
-//                 return true;
-//             }
-//         }
-//     }
-    return false;
-}
-
-bool Recorder::checkDuration(const ros::Time& t) {
-//     if (options_.max_duration > ros::Duration(0)) {
-//         if (t - start_time_ > options_.max_duration) {
-//             if (options_.split) {
-//                 while (start_time_ + options_.max_duration < t) {
-//                     stopWriting();
-//                     split_count_++;
-//                     checkNumSplits();
-//                     start_time_ += options_.max_duration;
-//                     startWriting();
-//                 }
-//             } else {
-//                 ros::shutdown();
-//                 return true;
-//             }
-//         }
-//     }
-    return false;
-}
-
-// Check
-bool Recorder::checkDisk() {
-  // Check if 20s have passed to check the disk again
-  if (ros::WallTime::now() < check_disk_next_)
-    return true;
-  check_disk_next_ += ros::WallDuration().fromSec(20.0);
-
+// Check dist usage to make sure the recorder doesn't overflow the disk
+void Recorder::checkDisk(const ros::TimerEvent&) {
   // Get the disk stats
 #if BOOST_FILESYSTEM_VERSION < 3
   struct statvfs fiData;
-  if ((statvfs(bag_.getFileName().c_str(), &fiData)) < 0) {
+  if ((statvfs(options_.prefix.substr(0, options_.prefix.find_last_of('/')).c_str(), &fiData)) < 0) {
     ROS_WARN("Failed to check filesystem stats.");
     return true;
   }
@@ -263,72 +168,74 @@ bool Recorder::checkDisk() {
   free_space = (uint64_t) (fiData.f_bsize) * (uint64_t) (fiData.f_bavail);
   if (free_space < options_.min_space) {
     ROS_ERROR("Less than %s of space free on disk with %s.  Disabling recording.",
-      options_.min_space_str.c_str(), bag_.getFileName().c_str());
-
-
-
-
-
-
-
-    writing_enabled_ = false;
-    return false;
+      options_.min_space_str.c_str(), options_.prefix.c_str());
+    // Stop recording
+    stop();
+    return;
   } else if (free_space < 5 * options_.min_space) {
     ROS_WARN("Less than 5 x %s of space free on disk with %s.",
-      options_.min_space_str.c_str(), bag_.getFileName().c_str());
-  } else {
-    writing_enabled_ = true;
+      options_.min_space_str.c_str(), options_.prefix.c_str());
   }
 #else
-  // boost::filesystem::path p(boost::filesystem::system_complete(bag_.getFileName().c_str()));
-  // p = p.parent_path();
-  // boost::filesystem::space_info info;
-  // try {
-  //   info = boost::filesystem::space(p);
-  // }
-  // catch (boost::filesystem::filesystem_error &e) {
-  //   ROS_WARN("Failed to check filesystem stats [%s].", e.what());
-  //   writing_enabled_ = false;
-  //   return false;
-  // }
-  // if (info.available < options_.min_space) {
-  //   ROS_ERROR("Less than %s of space free on disk with %s.  Disabling recording.",
-  //     options_.min_space_str.c_str(), bag_.getFileName().c_str());
-
-
-
-
-
-
-
-
-  //   writing_enabled_ = false;
-  //   return false;
-  // } else if (info.available < 5 * options_.min_space) {
-  //   ROS_WARN("Less than 5 x %s of space free on disk with %s.",
-  //     options_.min_space_str.c_str(), bag_.getFileName().c_str());
-  //   writing_enabled_ = true;
-  // } else {
-  //   writing_enabled_ = true;
-  // }
-#endif
-  return true;
-}
-
-bool Recorder::checkLogging() {
-  if (writing_enabled_)
-    return true;
-
-  // Send warning every 5s if it is not logging
-  ros::WallTime now = ros::WallTime::now();
-  if (now >= warn_next_) {
-    warn_next_ = now + ros::WallDuration().fromSec(5.0);
-    ROS_WARN("Not logging message because logging disabled.  Most likely cause is a full disk.");
+  boost::filesystem::path p(
+    boost::filesystem::system_complete(options_.prefix.substr(0, options_.prefix.find_last_of('/')).c_str()));
+  p = p.parent_path();
+  boost::filesystem::space_info info;
+  try {
+    info = boost::filesystem::space(p);
   }
-  return false;
+  catch (boost::filesystem::filesystem_error &e) {
+    ROS_WARN("Failed to check filesystem stats [%s].", e.what());
+    return;
+  }
+  if (info.available < options_.min_space) {
+    ROS_ERROR("Less than %s of space free on disk with %s.  Disabling recording.",
+      options_.min_space_str.c_str(), options_.prefix.c_str());
+    // Stop recording
+    stop();
+    return;
+  } else if (info.available < 5 * options_.min_space) {
+    ROS_WARN("Less than 5 x %s of space free on disk with %s.",
+      options_.min_space_str.c_str(), options_.prefix.c_str());
+  }
+#endif
+  return;
 }
 
+// Generalized popen2 function that returns the PID and allows read/write
+pid_t Recorder::popen2(const char *command, int *infp, int *outfp) {
+  int p_stdin[2], p_stdout[2];
+  pid_t pid;
 
+  if (pipe(p_stdin) != 0 || pipe(p_stdout) != 0)
+    return -1;
+
+  pid = fork();
+
+  if (pid < 0) {
+    return pid;
+  } else if (pid == 0) {
+    close(p_stdin[WRITE]);
+    dup2(p_stdin[READ], READ);
+    close(p_stdout[READ]);
+    dup2(p_stdout[WRITE], WRITE);
+
+    execl("/bin/sh", "sh", "-c", command, NULL);
+    perror("execl");
+    exit(1);
+  }
+  if (infp == NULL)
+    close(p_stdin[WRITE]);
+  else
+    *infp = p_stdin[WRITE];
+
+  if (outfp == NULL)
+    close(p_stdout[READ]);
+  else
+    *outfp = p_stdout[READ];
+
+  return pid;
+}
 
 }  // namespace astrobee_rosbag
 
