@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>interactive_marker_teleop</name>
+  <version>1.0.0</version>
+  <description>The interactive_marker_teleop package. Used to send movement commands from rviz.</description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>ff_hw_msgs</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_util</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>interactive_markers</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <exec_depend>ff_hw_msgs</exec_depend>
+  <exec_depend>ff_msgs</exec_depend>
+  <exec_depend>ff_util</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>interactive_markers</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
