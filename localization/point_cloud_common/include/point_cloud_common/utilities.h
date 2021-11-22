@@ -196,10 +196,10 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
 template <typename PointType, typename PointWithNormalType>
 typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals(
   const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud, const double search_radius) {
-  typename pcl::PointCloud<PointType>::Ptr filtered_cloud = FilteredPointCloud(unfiltered_cloud);
+  typename pcl::PointCloud<PointType>::Ptr filtered_cloud = FilteredPointCloud<PointType>(unfiltered_cloud);
   typename pcl::PointCloud<PointWithNormalType>::Ptr filtered_cloud_with_normals(
     new pcl::PointCloud<PointWithNormalType>());
-  EstimateNormals(filtered_cloud, *filtered_cloud_with_normals);
+  EstimateNormals<PointType, PointWithNormalType>(filtered_cloud, search_radius, *filtered_cloud_with_normals);
   RemoveNansAndZerosFromPoints(*filtered_cloud_with_normals);
   return filtered_cloud_with_normals;
 }

@@ -15,15 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
-#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
+#ifndef DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_PARAMS_H_
+#define DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_PARAMS_H_
+
+#include <depth_odometry/depth_odometry_params.h>
+#include <point_cloud_common/point_to_plane_icp_params.h>
 
 namespace depth_odometry {
-struct DepthOdometryParams {
-  double max_time_diff;
-  double position_covariance_threshold;
-  double orientation_covariance_threshold;
+struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
+  point_cloud_common::PointToPlaneICPParams icp;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
+#endif  // DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_PARAMS_H_

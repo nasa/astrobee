@@ -34,15 +34,18 @@ class PointToPlaneICP {
   explicit PointToPlaneICP(const PointToPlaneICPParams& params);
   const boost::optional<pcl::Correspondences>& correspondences() const { return correspondences_; }
   boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
-    const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
 
  private:
   boost::optional<localization_common::PoseWithCovariance> RunPointToPlaneICP(
-    const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
   boost::optional<localization_common::PoseWithCovariance> RunCoarseToFinePointToPlaneICP(
-    const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
+    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,

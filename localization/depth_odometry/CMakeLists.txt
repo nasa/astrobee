@@ -63,11 +63,11 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/depth_image_aligner.cc
-  src/depth_odometry_nodelet.cc
-  src/depth_odometry_wrapper.cc
-  src/image_feature_depth_odometry.cc
-  src/parameter_reader.cc
+  #src/depth_image_aligner.cc
+  #src/depth_odometry_nodelet.cc
+  #src/depth_odometry_wrapper.cc
+  #src/image_feature_depth_odometry.cc
+  #src/parameter_reader.cc
   src/point_to_plane_icp_depth_odometry.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})

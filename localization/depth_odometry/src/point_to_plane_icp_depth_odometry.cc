@@ -31,42 +31,45 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
   icp_.reset(new pcc::PointToPlaneICP(params_.icp));
 }
 
-boost::optional<lc::PoseWithCovarianceAndMatches> PointToPlaneICPDepthOdometry::DepthImageCallback(
+boost::optional<PoseWithCovarianceAndMatches> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
-  // TODO(rsoussan): add pointcloudwithnormals? store previous and latest as member vars!
-  pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
-  pcl::copyPointCloud(*(depth_image_measurement.point_cloud), *filtered_cloud);
-  pcc::RemoveNansAndZerosFromPoints(*filtered_cloud);
-  if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) {
-    latest_depth_cloud_ = std::make_pair(depth_image_measurement.timestamp, filtered_cloud);
+  if (!previous_point_cloud_with_normals_ && !latest_point_cloud_with_normals_) {
+    latest_point_cloud_with_normals_ = pcc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+      depth_image_measurement.depth_image.unfiltered_point_cloud(), params_.icp.search_radius);
+    latest_timestamp_ = depth_image_measurement.timestamp;
     return boost::none;
   }
   const lc::Time timestamp = depth_image_measurement.timestamp;
-  if (timestamp < latest_depth_cloud_.first) {
-    LogWarning("GetPointCloudAlignerRelativeTransform: Out of order measurement received.");
+  if (timestamp < latest_timestamp_) {
+    LogWarning("DepthImageCallback: Out of order measurement received.");
     return boost::none;
   }
-  previous_depth_cloud_ = latest_depth_cloud_;
-  latest_depth_cloud_ = std::make_pair(depth_image_measurement.timestamp, filtered_cloud);
 
-  const double time_diff = latest_depth_cloud_.first - previous_depth_cloud_.first;
+  previous_point_cloud_with_normals_ = latest_point_cloud_with_normals_;
+  previous_timestamp_ = latest_timestamp_;
+  latest_point_cloud_with_normals_ = pcc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+    depth_image_measurement.depth_image.unfiltered_point_cloud(), params_.icp.search_radius);
+  latest_timestamp_ = timestamp;
+
+  const double time_diff = latest_timestamp_ - previous_timestamp_;
   if (time_diff > params_.max_time_diff) {
-    LogWarning("GetPointCloudAlignerRelativeTransform: Time difference too large, time diff: " << time_diff);
+    LogWarning("DepthImageCallback: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
-  auto relative_transform = icp_->ComputeRelativeTransform(previous_depth_cloud_.second, latest_depth_cloud_.second);
+  auto relative_transform =
+    icp_->ComputeRelativeTransform(previous_point_cloud_with_normals_, latest_point_cloud_with_normals_);
   if (!relative_transform) {
-    LogWarning("GetPointCloudAlignerRelativeTransform: Failed to get relative transform.");
+    LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
   }
 
   if (!lc::PoseCovarianceSane(relative_transform->covariance, params_.position_covariance_threshold,
                               params_.orientation_covariance_threshold)) {
-    LogWarning("GetPointCloudAlignerRelativeTransform: Sanity check failed - invalid covariance.");
+    LogWarning("DepthImageCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
-  latest_relative_transform_ = relative_transform->pose;
-  return relative_transform;
+  // TODO(rsoussan): return rel trafo with matches!!!!!
+  // return relative_transform;
 }
 }  // namespace depth_odometry

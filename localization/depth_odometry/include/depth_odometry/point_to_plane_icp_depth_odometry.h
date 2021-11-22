@@ -19,6 +19,9 @@
 #define DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_H_
 
 #include <depth_odometry/depth_odometry.h>
+#include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
+#include <depth_odometry/pose_with_covariance_and_matches.h>
+#include <point_cloud_common/point_to_plane_icp.h>
 
 namespace depth_odometry {
 class PointToPlaneICPDepthOdometry : public DepthOdometry {
@@ -31,6 +34,10 @@ class PointToPlaneICPDepthOdometry : public DepthOdometry {
  private:
   std::unique_ptr<point_cloud_common::PointToPlaneICP> icp_;
   PointToPlaneICPDepthOdometryParams params_;
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr previous_point_cloud_with_normals_;
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr latest_point_cloud_with_normals_;
+  localization_common::Time previous_timestamp_;
+  localization_common::Time latest_timestamp_;
 };
 }  // namespace depth_odometry
 

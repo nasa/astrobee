@@ -19,15 +19,20 @@
 #define DEPTH_ODOMETRY_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
-#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
+#include <depth_odometry/depth_odometry_params.h>
+#include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
+/*#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_odometry_nodelet_params.h>
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
-#include <depth_odometry/surf_feature_detector_and_matcher_params.h>
+#include <depth_odometry/surf_feature_detector_and_matcher_params.h>*/
 
 namespace depth_odometry {
-void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);
+void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
+void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
+                                            PointToPlaneICPDepthOdometryParams& params);
+/*void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                               BriskFeatureDetectorAndMatcherParams& params);
@@ -35,6 +40,6 @@ void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReade
                                                       LKOpticalFlowFeatureDetectorAndMatcherParams& params);
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                              SurfFeatureDetectorAndMatcherParams& params);
-void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);
+void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);*/
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_PARAMETER_READER_H_

@@ -37,6 +37,8 @@ class DepthImage {
   boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const int col, const int row);
   boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const double col, const double row);
   boost::optional<pcl::PointXYZI> InterpolatePoint3D(const double col, const double row);
+  const cv::Mat& image() const { return image_; }
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr unfiltered_point_cloud() const { return unfiltered_point_cloud_; }
 
  private:
   bool ValidPoint(const boost::optional<const pcl::PointXYZI&> point);

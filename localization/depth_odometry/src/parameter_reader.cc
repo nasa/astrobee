@@ -25,7 +25,19 @@ namespace depth_odometry {
 namespace mc = msg_conversions;
 namespace pcc = point_cloud_common;
 
-void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params) {
+void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
+  params.max_time_diff = mc::LoadDouble(config, "max_time_diff");
+  params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
+  params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
+}
+
+void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
+                                            PointToPlaneICPDepthOdometryParams& params) {
+  pcc::LoadPointToPlaneICPParams(config, params.icp);
+  LoadDepthOdometryParms(params);
+}
+
+/*void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params) {
   params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
 }
 
@@ -46,17 +58,17 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
   // TODO(rsoussan): remove this as option?
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
-  /* Eigen::MatrixXd M(4, 4);
-    config_reader::ConfigReader::Table mat(&config, "hazcam_depth_to_image_transform");
-    int count = 0;
-    for (int row = 0; row < M.rows(); row++) {
-      for (int col = 0; col < M.cols(); col++) {
-        count++;  // note that the count stats from 1
-        if (!mat.GetReal(count, &M(row, col))) {
-          LogFatal("Failed to get val for hazcam_depth_to_image_trafo!");
-        }
-      }
-    } */
+  // Eigen::MatrixXd M(4, 4);
+  //  config_reader::ConfigReader::Table mat(&config, "hazcam_depth_to_image_transform");
+//    int count = 0;
+//    for (int row = 0; row < M.rows(); row++) {
+//      for (int col = 0; col < M.cols(); col++) {
+//        count++;  // note that the count stats from 1
+//        if (!mat.GetReal(count, &M(row, col))) {
+//          LogFatal("Failed to get val for hazcam_depth_to_image_trafo!");
+//        }
+//      }
+//    }
 }
 
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
@@ -102,5 +114,5 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   pcc::LoadPointCloudWithKnownCorrespondencesAlignerParams(config,
                                                            params.point_cloud_with_known_correspondences_aligner);
   params.camera_params.reset(new camera::CameraParameters(&config, "haz_cam"));
-}
+}*/
 }  // namespace depth_odometry
