@@ -22,15 +22,22 @@
 #include <gtsam/geometry/Point3.h>
 
 #include <pcl/features/fpfh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/impl/normal_3d.hpp>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/search/impl/kdtree.hpp>
+#include <pcl/search/impl/search.hpp>
 
 #include <vector>
 
 namespace point_cloud_common {
-void EstimateNormals(const pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double search_radius,
-                     pcl::PointCloud<pcl::PointXYZINormal>& cloud_with_normals);
+template <typename PointType, typename PointWithNormalType>
+void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const double search_radius,
+                     pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
+
 Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                          const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud);
 
@@ -111,6 +118,10 @@ template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
   const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud);
 
+template <typename PointType, typename PointWithNormalType>
+typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals(
+  const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud, const double search_radius);
+
 // Implementation
 template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point) {
@@ -167,6 +178,30 @@ typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
   pcl::copyPointCloud(*unfiltered_cloud, *filtered_cloud);
   RemoveNansAndZerosFromPoints(*filtered_cloud);
   return filtered_cloud;
+}
+
+template <typename PointType, typename PointWithNormalType>
+void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const double search_radius,
+                     typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
+  typename pcl::NormalEstimation<PointType, pcl::Normal> ne;
+  ne.setInputCloud(cloud);
+  typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+  ne.setSearchMethod(tree);
+  ne.setRadiusSearch(search_radius);
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+  ne.compute(*cloud_normals);
+  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
+}
+
+template <typename PointType, typename PointWithNormalType>
+typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals(
+  const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud, const double search_radius) {
+  typename pcl::PointCloud<PointType>::Ptr filtered_cloud = FilteredPointCloud(unfiltered_cloud);
+  typename pcl::PointCloud<PointWithNormalType>::Ptr filtered_cloud_with_normals(
+    new pcl::PointCloud<PointWithNormalType>());
+  EstimateNormals(filtered_cloud, *filtered_cloud_with_normals);
+  RemoveNansAndZerosFromPoints(*filtered_cloud_with_normals);
+  return filtered_cloud_with_normals;
 }
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_UTILITIES_H_

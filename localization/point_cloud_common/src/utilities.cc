@@ -35,18 +35,6 @@
 namespace point_cloud_common {
 namespace lc = localization_common;
 
-void EstimateNormals(const pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double search_radius,
-                     pcl::PointCloud<pcl::PointXYZINormal>& cloud_with_normals) {
-  pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> ne;
-  ne.setInputCloud(cloud);
-  pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>());
-  ne.setSearchMethod(tree);
-  ne.setRadiusSearch(search_radius);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-  ne.compute(*cloud_normals);
-  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
-}
-
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals) {
   pcl::FPFHEstimation<pcl::PointXYZINormal, pcl::PointXYZINormal, pcl::FPFHSignature33> feature_estimator;

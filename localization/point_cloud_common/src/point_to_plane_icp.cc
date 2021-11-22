@@ -60,11 +60,14 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   static lc::Timer icp_timer("PointToPlaneICP");
   icp_timer.Start();
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>);
-  EstimateNormals(target_cloud, params_.search_radius, *target_cloud_with_normals);
+  // TODO(rsoussan): Why does template deduction fail here?
+  EstimateNormals<pcl::PointXYZI, pcl::PointXYZINormal>(target_cloud, params_.search_radius,
+                                                        *target_cloud_with_normals);
 
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>);
   if (params_.symmetric_objective) {
-    EstimateNormals(source_cloud, params_.search_radius, *source_cloud_with_normals);
+    EstimateNormals<pcl::PointXYZI, pcl::PointXYZINormal>(source_cloud, params_.search_radius,
+                                                          *source_cloud_with_normals);
   } else {
     pcl::copyPointCloud(*source_cloud, *source_cloud_with_normals);
   }
