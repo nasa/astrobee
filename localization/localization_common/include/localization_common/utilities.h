@@ -100,6 +100,9 @@ void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgTyp
 template <class LocMsgType>
 void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg);
 
+template <typename MatrixType>
+double LogDeterminant(const MatrixType& matrix);
+
 Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
 
 double Deg2Rad(const double degrees);
@@ -145,6 +148,11 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
 
   // Position (12-14)
   msg_conversions::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
+}
+
+template <typename MatrixType>
+double LogDeterminant(const MatrixType& matrix) {
+  return std::log10(matrix.determinant());
 }
 }  // namespace localization_common
 
