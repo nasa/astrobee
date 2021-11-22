@@ -32,12 +32,8 @@ namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
   DepthOdometryWrapper();
-  std::vector<ff_msgs::Odometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-  std::vector<ff_msgs::Odometry> ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
-  bool depth_image_registration_enabled() const { return depth_odometry_->params().depth_image_registration_enabled; }
-  bool depth_point_cloud_registration_enabled() const {
-    return depth_odometry_->params().depth_point_cloud_registration_enabled;
-  }
+  std::vector<ff_msgs::Odometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
+  std::vector<ff_msgs::Odometry> ImageCallback(const sensor_msgs::ImageConstPtr& image_msg);
 
  private:
   std::vector<ff_msgs::Odometry> ProcessDepthImageIfAvailable();
