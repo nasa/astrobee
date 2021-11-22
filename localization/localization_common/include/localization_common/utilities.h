@@ -95,6 +95,32 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
                                                          const gtsam::Vector3& uncorrected_accelerometer_measurement);
 
 template <class LocMsgType>
+void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);
+
+template <class LocMsgType>
+void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg);
+
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
+
+double Deg2Rad(const double degrees);
+
+double Rad2Deg(const double radians);
+
+// Assumes angles in degrees, ordered as rho, phi, z
+Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordinates);
+
+// Uses Euler Angles in intrinsic ypr representation in degrees
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
+
+Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
+
+Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
+
+Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
+                                               const Eigen::Isometry3d& b_T_a);
+
+// Implementations
+template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
   PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
   msg_conversions::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
@@ -120,25 +146,6 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
   // Position (12-14)
   msg_conversions::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 }
-
-Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
-
-double Deg2Rad(const double degrees);
-
-double Rad2Deg(const double radians);
-
-// Assumes angles in degrees, ordered as rho, phi, z
-Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordinates);
-
-// Uses Euler Angles in intrinsic ypr representation in degrees
-Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
-
-Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
-
-Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
-
-Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
-                                               const Eigen::Isometry3d& b_T_a);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_
