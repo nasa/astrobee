@@ -26,15 +26,7 @@ namespace depth_odometry {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 
-DepthOdometryNodelet::DepthOdometryNodelet() : ff_util::FreeFlyerNodelet(NODE_DEPTH_ODOM, true) {
-  config_reader::ConfigReader config;
-  config.AddFile("localization/depth_odometry.config");
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
-  }
-
-  LoadDepthOdometryNodeletParams(config, params_);
-}
+DepthOdometryNodelet::DepthOdometryNodelet() : ff_util::FreeFlyerNodelet(NODE_DEPTH_ODOM, true) {}
 
 void DepthOdometryNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
 
@@ -50,20 +42,20 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDEND) +
     static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
   image_sub_ = image_transport.subscribe(image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
-  odom_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
+  depth_odometry_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
 }
 
 void DepthOdometryNodelet::PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
   const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
-    odom_pub_.publish(depth_odometry_msg);
+    depth_odometry_pub_.publish(depth_odometry_msg);
   }
 }
 
 void DepthOdometryNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
-    odom_pub_.publish(depth_odometry_msg);
+    depth_odometry_pub_.publish(depth_odometry_msg);
   }
 }
 }  // namespace depth_odometry

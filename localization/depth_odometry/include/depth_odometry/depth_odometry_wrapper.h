@@ -19,12 +19,10 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_WRAPPER_H_
 
 #include <depth_odometry/depth_odometry.h>
-#include <ff_msgs/DepthCorrespondences.h>
 #include <ff_msgs/Odometry.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 
-#include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -36,11 +34,6 @@ class DepthOdometryWrapper {
   DepthOdometryWrapper();
   std::vector<ff_msgs::Odometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
   std::vector<ff_msgs::Odometry> ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
-  boost::optional<ff_msgs::DepthCorrespondences> GetPointCloudCorrespondencesMsg() const;
-  boost::optional<ff_msgs::DepthCorrespondences> GetImageCorrespondencesMsg() const;
-  sensor_msgs::PointCloud2 GetPreviousPointCloudMsg() const;
-  sensor_msgs::PointCloud2 GetLatestPointCloudMsg() const;
-  sensor_msgs::PointCloud2 GetTransformedPreviousPointCloudMsg() const;
   bool depth_image_registration_enabled() const { return depth_odometry_->params().depth_image_registration_enabled; }
   bool depth_point_cloud_registration_enabled() const {
     return depth_odometry_->params().depth_point_cloud_registration_enabled;
