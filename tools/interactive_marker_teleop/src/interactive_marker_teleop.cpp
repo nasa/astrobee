@@ -27,7 +27,8 @@
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_util/ff_names.h>
-// #include <ff_util/>
+
+#include <string>
 
 using visualization_msgs::InteractiveMarker;
 using visualization_msgs::InteractiveMarkerControl;
@@ -40,17 +41,35 @@ interactive_markers::MenuHandler menu_handler;
 ros::Publisher cmd_publisher;
 ros::Subscriber ack_subscriber;
 
-Marker makeBox(InteractiveMarker& msg) {
+Marker makeMarker(const std::string marker_type) {
   Marker marker;
 
-  marker.type = Marker::CUBE;  // TODO(jdekarske) change to urdf or mesh?
-  marker.scale.x = msg.scale * 0.3175;
-  marker.scale.y = msg.scale * 0.3175;
-  marker.scale.z = msg.scale * 0.3175;
+  // make it yellowish and see through
   marker.color.r = 1.0;
   marker.color.g = 1.0;
   marker.color.b = 0.6;
   marker.color.a = 0.8;
+  marker.scale.x = 1.0;
+  marker.scale.y = 1.0;
+  marker.scale.z = 1.0;
+
+  // return a different marker using meshes from astrobee_media
+  if (marker_type == "cube") {
+    marker.type = Marker::CUBE;
+    marker.scale.x = 0.3175;
+    marker.scale.y = 0.3175;
+    marker.scale.z = 0.3175;
+  } else if (marker_type == "body") {
+    marker.type = Marker::MESH_RESOURCE;
+    marker.mesh_resource = "package://astrobee_freeflyer/meshes/body.dae";
+  } else if (marker_type == "pmc_left") {
+    marker.type = Marker::MESH_RESOURCE;
+    marker.mesh_resource = "package://astrobee_freeflyer/meshes/pmc_skin_.dae";
+  } else if (marker_type == "pmc_right") {
+    marker.type = Marker::MESH_RESOURCE;
+    marker.mesh_resource = "package://astrobee_freeflyer/meshes/pmc_skin_.dae";
+    marker.pose.orientation.z = 1.0;
+  }
 
   return marker;
 }
@@ -58,7 +77,9 @@ Marker makeBox(InteractiveMarker& msg) {
 InteractiveMarkerControl& makeBoxControl(InteractiveMarker& msg) {
   InteractiveMarkerControl control;
   control.always_visible = true;
-  control.markers.push_back(makeBox(msg));
+  control.markers.push_back(makeMarker("body"));
+  control.markers.push_back(makeMarker("pmc_left"));
+  control.markers.push_back(makeMarker("pmc_right"));
   msg.controls.push_back(control);
 
   return msg.controls.back();
