@@ -59,7 +59,8 @@ boost::optional<lc::PoseWithCovarianceAndMatches> DepthOdometry::DepthImageCallb
     return boost::none;
   }
 
-  if (!CovarianceSane(relative_transform->covariance)) {
+  if (!lc::PoseCovarianceSane(relative_transform->covariance, params_.position_covariance_threshold,
+                              params_.orientation_covariance_threshold)) {
     LogWarning("GetPointCloudAlignerRelativeTransform: Sanity check failed - invalid covariance.");
     return boost::none;
   }

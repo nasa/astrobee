@@ -33,14 +33,7 @@ class DepthOdometry {
     const localization_measurements::DepthImageMeasurement& depth_image) = 0;
   const DepthOdometryParams& params() const { return params_; }
 
-  // TODO(rsoussan): move this to utils
-  bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
-    const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
-    const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
-    return (position_covariance_norm <= params_.position_covariance_threshold &&
-            orientation_covariance_norm <= params_.orientation_covariance_threshold);
-  }
-
+ private:
   DepthOdometryParams params_;
 };
 }  // namespace depth_odometry
