@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <depth_odometry/icp_depth_odometry.h>
+#include <depth_odometry/point_to_plane_icp_depth_odometry.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/utilities.h>
@@ -26,11 +26,12 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace pcc = point_cloud_common;
 
-DepthOdometry::DepthOdometry(const DepthOdometryParams& params) : params_(params) {
-  icp_.reset(new pcc::ICP(params_.icp));
+PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params)
+    : params_(params) {
+  icp_.reset(new pcc::PointToPlaneICP(params_.icp));
 }
 
-boost::optional<lc::PoseWithCovarianceAndMatches> DepthOdometry::DepthImageCallback(
+boost::optional<lc::PoseWithCovarianceAndMatches> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   // TODO(rsoussan): add pointcloudwithnormals? store previous and latest as member vars!
   pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>());

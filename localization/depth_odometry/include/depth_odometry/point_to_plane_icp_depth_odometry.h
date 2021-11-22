@@ -15,21 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_ICP_DEPTH_ODOMETRY_H_
-#define DEPTH_ODOMETRY_ICP_DEPTH_ODOMETRY_H_
+#ifndef DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_H_
+#define DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_H_
 
 #include <depth_odometry/depth_odometry.h>
 
 namespace depth_odometry {
-class ICPDepthOdometry : public DepthOdometry {
+class PointToPlaneICPDepthOdometry : public DepthOdometry {
  public:
-  explicit virtual DepthOdometry(const DepthOdometryParams& params);
+  explicit PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params);
   boost::optional<PoseWithCovarianceAndMatches> DepthImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image) final;
+  const PointToPlaneICPDepthOdometryParams& params() const { return params_; }
 
  private:
-  std::unique_ptr<point_cloud_common::ICP> icp_;
+  std::unique_ptr<point_cloud_common::PointToPlaneICP> icp_;
+  PointToPlaneICPDepthOdometryParams params_;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_ICP_DEPTH_ODOMETRY_H_
+#endif  // DEPTH_ODOMETRY_POINT_TO_PLANE_ICP_DEPTH_ODOMETRY_H_

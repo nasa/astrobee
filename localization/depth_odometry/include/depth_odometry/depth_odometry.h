@@ -28,13 +28,8 @@
 namespace depth_odometry {
 class DepthOdometry {
  public:
-  explicit virtual DepthOdometry(const DepthOdometryParams& params) = 0;
   virtual boost::optional<PoseWithCovarianceAndMatches> DepthImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image) = 0;
-  const DepthOdometryParams& params() const { return params_; }
-
- private:
-  DepthOdometryParams params_;
 };
 }  // namespace depth_odometry
 
