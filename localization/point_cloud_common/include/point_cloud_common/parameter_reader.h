@@ -19,11 +19,11 @@
 #define POINT_CLOUD_COMMON_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
-#include <point_cloud_common/icp_params.h>
+#include <point_cloud_common/point_to_plane_icp_params.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner_params.h>
 
 namespace point_cloud_common {
-void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params);
+void LoadPointToPlaneICPParams(config_reader::ConfigReader& config, PointToPlaneICPParams& params);
 void LoadPointCloudWithKnownCorrespondencesAlignerParams(config_reader::ConfigReader& config,
                                                          PointCloudWithKnownCorrespondencesAlignerParams& params);
 }  // namespace point_cloud_common

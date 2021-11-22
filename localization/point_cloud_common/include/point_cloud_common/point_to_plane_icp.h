@@ -15,12 +15,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef POINT_CLOUD_COMMON_ICP_H_
-#define POINT_CLOUD_COMMON_ICP_H_
+#ifndef POINT_CLOUD_COMMON_POINT_TO_PLANE_ICP_H_
+#define POINT_CLOUD_COMMON_POINT_TO_PLANE_ICP_H_
 
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
-#include <point_cloud_common/icp_params.h>
+#include <point_cloud_common/point_to_plane_icp_params.h>
 
 #include <boost/optional.hpp>
 
@@ -29,19 +29,19 @@
 #include <pcl/registration/icp.h>
 
 namespace point_cloud_common {
-class ICP {
+class PointToPlaneICP {
  public:
-  explicit ICP(const ICPParams& params);
+  explicit PointToPlaneICP(const PointToPlaneICPParams& params);
   const boost::optional<pcl::Correspondences>& correspondences() const { return correspondences_; }
   boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
 
  private:
-  boost::optional<localization_common::PoseWithCovariance> RunICP(
+  boost::optional<localization_common::PoseWithCovariance> RunPointToPlaneICP(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
-  boost::optional<localization_common::PoseWithCovariance> RunCoarseToFineICP(
+  boost::optional<localization_common::PoseWithCovariance> RunCoarseToFinePointToPlaneICP(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
@@ -50,8 +50,8 @@ class ICP {
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
     const Eigen::Isometry3d& relative_transform);
   boost::optional<pcl::Correspondences> correspondences_;
-  ICPParams params_;
+  PointToPlaneICPParams params_;
 };
 }  // namespace point_cloud_common
 
-#endif  // POINT_CLOUD_COMMON_ICP_H_
+#endif  // POINT_CLOUD_COMMON_POINT_TO_PLANE_ICP_H_

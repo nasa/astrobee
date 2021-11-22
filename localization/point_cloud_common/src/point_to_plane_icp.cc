@@ -19,7 +19,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 #include <localization_common/utilities.h>
-#include <point_cloud_common/icp.h>
+#include <point_cloud_common/point_to_plane_icp.h>
 #include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <point_cloud_common/utilities.h>
 
@@ -42,22 +42,22 @@
 namespace point_cloud_common {
 namespace lc = localization_common;
 
-ICP::ICP(const ICPParams& params) : params_(params) {}
+PointToPlaneICP::PointToPlaneICP(const PointToPlaneICPParams& params) : params_(params) {}
 
-boost::optional<lc::PoseWithCovariance> ICP::ComputeRelativeTransform(
+boost::optional<lc::PoseWithCovariance> PointToPlaneICP::ComputeRelativeTransform(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
   if (params_.coarse_to_fine) {
-    return RunCoarseToFineICP(source_cloud, target_cloud, initial_estimate);
+    return RunCoarseToFinePointToPlaneICP(source_cloud, target_cloud, initial_estimate);
   } else {
-    return RunICP(source_cloud, target_cloud, initial_estimate);
+    return RunPointToPlaneICP(source_cloud, target_cloud, initial_estimate);
   }
 }
 
-boost::optional<lc::PoseWithCovariance> ICP::RunICP(const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud,
-                                                    const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
-                                                    const Eigen::Isometry3d& initial_estimate) {
-  static lc::Timer icp_timer("ICP");
+boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+  const Eigen::Isometry3d& initial_estimate) {
+  static lc::Timer icp_timer("PointToPlaneICP");
   icp_timer.Start();
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>);
   EstimateNormals(target_cloud, params_.search_radius, *target_cloud_with_normals);
@@ -122,10 +122,10 @@ boost::optional<lc::PoseWithCovariance> ICP::RunICP(const pcl::PointCloud<pcl::P
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
 
-boost::optional<lc::PoseWithCovariance> ICP::RunCoarseToFineICP(const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud,
-                                                                const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
-                                                                const Eigen::Isometry3d& initial_estimate) {
-  static lc::Timer coarse_to_fine_icp_timer("Coarse To Fine ICP");
+boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunCoarseToFinePointToPlaneICP(
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
+  const Eigen::Isometry3d& initial_estimate) {
+  static lc::Timer coarse_to_fine_icp_timer("Coarse To Fine PointToPlaneICP");
   coarse_to_fine_icp_timer.Start();
   boost::optional<lc::PoseWithCovariance> latest_relative_transform =
     lc::PoseWithCovariance(initial_estimate, Eigen::Matrix<double, 6, 6>());
@@ -143,9 +143,9 @@ boost::optional<lc::PoseWithCovariance> ICP::RunCoarseToFineICP(const pcl::Point
       icp_source_cloud = DownsamplePointCloud<pcl::PointXYZI>(source_cloud, leaf_size);
       icp_target_cloud = DownsamplePointCloud<pcl::PointXYZI>(target_cloud, leaf_size);
     }
-    latest_relative_transform = RunICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->pose);
+    latest_relative_transform = RunPointToPlaneICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->pose);
     if (!latest_relative_transform) {
-      LogWarning("RunCoarseToFineICP: Failed to get relative transform.");
+      LogWarning("RunCoarseToFinePointToPlaneICP: Failed to get relative transform.");
       coarse_to_fine_icp_timer.StopAndLog();
       return boost::none;
     }
@@ -154,7 +154,7 @@ boost::optional<lc::PoseWithCovariance> ICP::RunCoarseToFineICP(const pcl::Point
   return latest_relative_transform;
 }
 
-Eigen::Matrix<double, 6, 6> ICP::ComputeCovarianceMatrix(
+Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,

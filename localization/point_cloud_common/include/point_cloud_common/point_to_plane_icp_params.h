@@ -15,11 +15,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef POINT_CLOUD_COMMON_ICP_PARAMS_H_
-#define POINT_CLOUD_COMMON_ICP_PARAMS_H_
+#ifndef POINT_CLOUD_COMMON_POINT_TO_PLANE_ICP_PARAMS_H_
+#define POINT_CLOUD_COMMON_POINT_TO_PLANE_ICP_PARAMS_H_
 
 namespace point_cloud_common {
-struct ICPParams {
+struct PointToPlaneICPParams {
   double search_radius;
   double fitness_threshold;
   int max_iterations;
@@ -34,4 +34,4 @@ struct ICPParams {
 };
 }  // namespace point_cloud_common
 
-#endif  // POINT_CLOUD_COMMON_ICP_PARAMS_H_
+#endif  // POINT_CLOUD_COMMON_POINT_TO_PLANE_ICP_PARAMS_H_
