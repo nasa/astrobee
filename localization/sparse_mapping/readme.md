@@ -283,11 +283,8 @@ option until the final map is computed, as this step can be
 time-consuming.
 
 If the first of the two maps to merge is already registered, it may be
-desirable to keep that portion fixed during merging. To achieve that,
-the merging can be done without bundle adjustment, and then build_map
-can be invoked only to do bundle adjustment, while specifying the
-range of cameras to optimize (the ones from the second map). See
-build_map.md for details.
+desirable to keep that portion fixed during merging when bundle
+adjustment happens. That is accomplished with the flag -fix_first_map.
   
 #### How to build a map efficiently
 

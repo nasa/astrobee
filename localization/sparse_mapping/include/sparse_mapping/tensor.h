@@ -85,14 +85,16 @@ namespace sparse_mapping {
    * Improve the map with bundle adjustment. Vary only the cameras
    * between given indices.
    **/
-  void BundleAdjust(bool fix_cameras, sparse_mapping::SparseMap * map);
+  void BundleAdjust(bool fix_all_cameras, sparse_mapping::SparseMap * map,
+                    std::set<int> const& fixed_cameras = std::set<int>());
 
   void BundleAdjustment(sparse_mapping::SparseMap * s,
                         ceres::LossFunction * loss,
                         const ceres::Solver::Options & options,
                         ceres::Solver::Summary * summary,
                         int first = 0, int last = std::numeric_limits<int>::max(),
-                        bool fix_cameras = false);
+                        bool fix_all_cameras = false,
+                        std::set<int> const& fixed_cameras = std::set<int>());
 
   /**
      Append map file.
@@ -100,7 +102,7 @@ namespace sparse_mapping {
   void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
                      int num_image_overlaps_at_endpoints,
                      double outlier_factor,
-                     bool bundle_adjust);
+                     bool bundle_adjust, bool fix_first_map);
 
   /**
      Merge two maps.
