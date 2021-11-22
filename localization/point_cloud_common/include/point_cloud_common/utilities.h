@@ -84,6 +84,22 @@ bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
   return std::abs(point) <= epsilon;
 }
 
+template <typename PointXYZType>
+bool ValidPointXYZ(const PointXYZType& point);
+
+template <typename PointNormalType>
+bool ValidNormal(const PointNormalType& point);
+
+template <typename PointIntensityType>
+bool ValidIntensity(const PointIntensityType& point);
+
+template <typename PointType>
+void RemoveNansAndZerosFromPoints(pcl::PointCloud<PointType>& cloud);
+
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
+                                                              const double leaf_size);
+
 void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
                            const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
                            pcl::Correspondences& correspondences);
