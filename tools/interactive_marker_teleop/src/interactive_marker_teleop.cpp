@@ -24,6 +24,11 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/tf.h>
 
+#include <ff_msgs/CommandStamped.h>
+#include <ff_msgs/CommandConstants.h>
+#include <ff_util/ff_names.h>
+// #include <ff_util/>
+
 using visualization_msgs::InteractiveMarker;
 using visualization_msgs::InteractiveMarkerControl;
 using visualization_msgs::InteractiveMarkerFeedbackConstPtr;
@@ -31,6 +36,9 @@ using visualization_msgs::Marker;
 
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 interactive_markers::MenuHandler menu_handler;
+
+ros::Publisher cmd_publisher;
+ros::Subscriber ack_subscriber;
 
 Marker makeBox(InteractiveMarker& msg) {
   Marker marker;
@@ -56,21 +64,61 @@ InteractiveMarkerControl& makeBoxControl(InteractiveMarker& msg) {
   return msg.controls.back();
 }
 
-void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
-  std::ostringstream s;
-  s << "Feedback from marker '" << feedback->marker_name << "' "
-    << " / control '" << feedback->control_name << "'";
+void sendMoveCommand(const geometry_msgs::Pose& desired_pose) {
+  // Make ros command message to send to the executive. see `simple_move.cc`
+  ff_msgs::CommandStamped move_cmd;
+  move_cmd.header.stamp = ros::Time::now();
+  move_cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
+  move_cmd.cmd_id = "interactive_marker" + std::to_string(move_cmd.header.stamp.sec);
+  move_cmd.cmd_src = "interactive_marker";
+  move_cmd.subsys_name = "Astrobee";
 
+  // Move command has 4 arguements; frame, xyz, xyz tolerance, and rotation
+  move_cmd.args.resize(4);
+  move_cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+  move_cmd.args[0].s = "world";
+
+  // Set location where you want Astrobee to go to
+  move_cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+  move_cmd.args[1].vec3d[0] = desired_pose.position.x;  // x
+  move_cmd.args[1].vec3d[1] = desired_pose.position.y;  // y
+  move_cmd.args[1].vec3d[2] = desired_pose.position.z;  // z (This axis may not currently work
+
+  // "Tolerance not used!" If you want to set the tolerance, you need to use the
+  move_cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+  move_cmd.args[2].vec3d[0] = 0;
+  move_cmd.args[2].vec3d[1] = 0;
+  move_cmd.args[2].vec3d[2] = 0;
+
+  // Target attitude, quaternion, only the first 4 values are used
+  // TODO(jdekarske) add an attitude
+  move_cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
+  move_cmd.args[3].mat33f[0] = 0;
+  move_cmd.args[3].mat33f[1] = 0;
+  move_cmd.args[3].mat33f[2] = 0;
+  move_cmd.args[3].mat33f[3] = 1;
+  move_cmd.args[3].mat33f[4] = 0;
+  move_cmd.args[3].mat33f[5] = 0;
+  move_cmd.args[3].mat33f[6] = 0;
+  move_cmd.args[3].mat33f[7] = 0;
+  move_cmd.args[3].mat33f[8] = 0;
+
+  // Send command
+  cmd_publisher.publish(move_cmd);
+}
+
+void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
   std::ostringstream mouse_point_ss;
-  if (feedback->mouse_point_valid) {
-    mouse_point_ss << " at " << feedback->mouse_point.x << ", " << feedback->mouse_point.y << ", "
-                   << feedback->mouse_point.z << " in frame " << feedback->header.frame_id;
-  }
+  // if (feedback->mouse_point_valid) {
+  mouse_point_ss << " at " << feedback->pose.position.x << ", " << feedback->pose.position.y << ", "
+                 << feedback->pose.position.z << " in frame " << feedback->header.frame_id;
+  // }
 
   switch (feedback->event_type) {
     case visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT:
-      ROS_INFO_STREAM(s.str() << ": menu item " << feedback->menu_entry_id << " clicked" << mouse_point_ss.str()
-                              << ".");
+      // ROS_INFO_STREAM(s.str() << ": menu item " << feedback->menu_entry_id << " clicked" << mouse_point_ss.str()
+      //                         << ".");
+      sendMoveCommand(feedback->pose);
       break;
 
       // TODO(jdekarske) check for keep out zones here
@@ -96,7 +144,7 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position, bool show_6dof) {
+void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position) {
   InteractiveMarker int_marker;
   int_marker.header.frame_id = "world";
   tf::pointTFToMsg(position, int_marker.pose.position);
@@ -111,60 +159,34 @@ void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position, 
 
   InteractiveMarkerControl control;
 
-  if (show_6dof) {
-    tf::Quaternion orien(1.0, 0.0, 0.0, 1.0);
-    orien.normalize();
-    tf::quaternionTFToMsg(orien, control.orientation);
-    control.name = "rotate_x";
-    control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
-    int_marker.controls.push_back(control);
-    control.name = "move_x";
-    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-    int_marker.controls.push_back(control);
+  tf::Quaternion orien(1.0, 0.0, 0.0, 1.0);
+  orien.normalize();
+  tf::quaternionTFToMsg(orien, control.orientation);
+  control.name = "rotate_x";
+  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+  int_marker.controls.push_back(control);
+  control.name = "move_x";
+  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+  int_marker.controls.push_back(control);
 
-    orien = tf::Quaternion(0.0, 1.0, 0.0, 1.0);
-    orien.normalize();
-    tf::quaternionTFToMsg(orien, control.orientation);
-    control.name = "rotate_z";
-    control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
-    int_marker.controls.push_back(control);
-    control.name = "move_z";
-    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-    int_marker.controls.push_back(control);
+  orien = tf::Quaternion(0.0, 1.0, 0.0, 1.0);
+  orien.normalize();
+  tf::quaternionTFToMsg(orien, control.orientation);
+  control.name = "rotate_z";
+  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+  int_marker.controls.push_back(control);
+  control.name = "move_z";
+  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+  int_marker.controls.push_back(control);
 
-    orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
-    orien.normalize();
-    tf::quaternionTFToMsg(orien, control.orientation);
-    control.name = "rotate_y";
-    control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
-    int_marker.controls.push_back(control);
-    control.name = "move_y";
-    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-    int_marker.controls.push_back(control);
-  }
-
-  server->insert(int_marker);
-  server->setCallback(int_marker.name, &processFeedback);
-  if (interaction_mode != InteractiveMarkerControl::NONE) menu_handler.apply(*server, int_marker.name);
-}
-
-void makeMenuMarker(const tf::Vector3& position) {
-  InteractiveMarker int_marker;
-  int_marker.header.frame_id = "base_link";
-  tf::pointTFToMsg(position, int_marker.pose.position);
-  int_marker.scale = 1;
-
-  int_marker.name = "context_menu";
-  int_marker.description = "Context Menu\n(Right Click)";
-
-  InteractiveMarkerControl control;
-
-  control.interaction_mode = InteractiveMarkerControl::MENU;
-  control.name = "menu_only_control";
-
-  Marker marker = makeBox(int_marker);
-  control.markers.push_back(marker);
-  control.always_visible = true;
+  orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
+  orien.normalize();
+  tf::quaternionTFToMsg(orien, control.orientation);
+  control.name = "rotate_y";
+  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+  int_marker.controls.push_back(control);
+  control.name = "move_y";
+  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
   server->insert(int_marker);
@@ -174,8 +196,9 @@ void makeMenuMarker(const tf::Vector3& position) {
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "position_command");
-  ros::NodeHandle n;
+  ros::NodeHandle nh;
 
+  // Make the marker
   server.reset(new interactive_markers::InteractiveMarkerServer("position_command", "", false));
 
   ros::Duration(0.1).sleep();
@@ -188,8 +211,12 @@ int main(int argc, char** argv) {
 
   tf::Vector3 position;
   position = tf::Vector3(0, 0, 0);
-  make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position, true);
+  make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
   server->applyChanges();
+
+  // publish and acknowledge command actions
+  cmd_publisher = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
+  // ack_subscriber = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback);
 
   ros::spin();
 
