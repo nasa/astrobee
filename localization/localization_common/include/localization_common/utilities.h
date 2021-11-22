@@ -103,6 +103,11 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
 template <typename MatrixType>
 double LogDeterminant(const MatrixType& matrix);
 
+double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,
+                          const double position_covariance_threshold = 0,
+                          const double orientation_covariance_threshold = 0,
+                          const bool check_position_covariance = true, const bool check_orientation_covariance = true);
+
 Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
 
 double Deg2Rad(const double degrees);

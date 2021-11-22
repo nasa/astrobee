@@ -188,4 +188,21 @@ Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_rela
                                                const Eigen::Isometry3d& b_T_a) {
   return b_T_a * a_F_relative_transform * b_T_a.inverse();
 }
+
+double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,
+                          const double position_covariance_threshold, const double orientation_covariance_threshold,
+                          const bool check_position_covariance, const bool check_orientation_covariance) {
+  bool sane = true;
+  if (check_position_covariance) {
+    const double log_det_position_cov = LogDeterminant(pose_covariance.block<3, 3>(0, 0));
+    sane &= (log_det_position_cov <= position_covariance_threshold);
+  }
+
+  if (check_orientation_covariance) {
+    const double log_det_orientation_cov = LogDeterminant(pose_covariance.block<3, 3>(3, 3));
+    sane &= (log_det_orientation_cov <= orientation_covariance_threshold);
+  }
+
+  return sane;
+}
 }  // namespace localization_common
