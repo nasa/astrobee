@@ -84,6 +84,14 @@ bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
   return std::abs(point) <= epsilon;
 }
 
+void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
+                           const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
+                           pcl::Correspondences& correspondences);
+
+Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointXYZINormal& source_point, const pcl::PointXYZINormal& target_point,
+                                     const Eigen::Isometry3d& relative_transform);
+
+// Implementation
 template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point) {
   const bool finite_point = pcl_isfinite(point.x) && pcl_isfinite(point.y) && pcl_isfinite(point.z);

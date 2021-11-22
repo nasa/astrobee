@@ -154,33 +154,6 @@ boost::optional<lc::PoseWithCovariance> ICP::RunCoarseToFineICP(const pcl::Point
   return latest_relative_transform;
 }
 
-Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointXYZINormal& source_point,
-                                          const pcl::PointXYZINormal& target_point,
-                                          const Eigen::Isometry3d& relative_transform) const {
-  const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
-  const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
-  const gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
-  return point_cloud_common::Jacobian(gt_point, gt_normal, gt_relative_transform);
-}
-
-void ICP::FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
-                                const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
-                                pcl::Correspondences& correspondences) const {
-  for (auto correspondence_it = correspondences.begin(); correspondence_it != correspondences.end();) {
-    const auto& input_point = (input_cloud)[correspondence_it->index_query];
-    const auto& target_point = (target_cloud)[correspondence_it->index_match];
-    const bool invalid_correspondence =
-      std::isnan(input_point.x) || std::isnan(input_point.y) || std::isnan(input_point.z) ||
-      std::isnan(target_point.x) || std::isnan(target_point.y) || std::isnan(target_point.z) ||
-      std::isnan(target_point.normal_x) || std::isnan(target_point.normal_y) || std::isnan(target_point.normal_z);
-    if (invalid_correspondence) {
-      correspondence_it = correspondences.erase(correspondence_it);
-      continue;
-    }
-    ++correspondence_it;
-  }
-}
-
 Eigen::Matrix<double, 6, 6> ICP::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,

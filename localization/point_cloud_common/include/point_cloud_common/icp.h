@@ -44,18 +44,11 @@ class ICP {
   boost::optional<localization_common::PoseWithCovariance> RunCoarseToFineICP(
     const pcl::PointCloud<pcl::PointXYZI>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
-  void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
-                             const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
-                             pcl::Correspondences& correspondences) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
     const Eigen::Isometry3d& relative_transform);
-  Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointXYZINormal& source_point,
-                                       const pcl::PointXYZINormal& target_point,
-                                       const Eigen::Isometry3d& relative_transform) const;
-
   boost::optional<pcl::Correspondences> correspondences_;
   ICPParams params_;
 };
