@@ -107,6 +107,10 @@ void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cl
 Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointXYZINormal& source_point, const pcl::PointXYZINormal& target_point,
                                      const Eigen::Isometry3d& relative_transform);
 
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
+  const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud);
+
 // Implementation
 template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point) {
@@ -154,6 +158,15 @@ typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl
   voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
   voxel_grid.filter(*downsampled_cloud);
   return downsampled_cloud;
+}
+
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
+  const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud) {
+  typename pcl::PointCloud<PointType>::Ptr filtered_cloud(new pcl::PointCloud<PointType>());
+  pcl::copyPointCloud(*unfiltered_cloud, *filtered_cloud);
+  RemoveNansAndZerosFromPoints(*filtered_cloud);
+  return filtered_cloud;
 }
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_UTILITIES_H_
