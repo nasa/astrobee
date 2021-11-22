@@ -103,21 +103,20 @@ void sendMoveCommand(const geometry_msgs::Pose& desired_pose) {
   move_cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
   move_cmd.args[1].vec3d[0] = desired_pose.position.x;  // x
   move_cmd.args[1].vec3d[1] = desired_pose.position.y;  // y
-  move_cmd.args[1].vec3d[2] = desired_pose.position.z;  // z (This axis may not currently work
+  move_cmd.args[1].vec3d[2] = desired_pose.position.z;  // z
 
-  // "Tolerance not used!" If you want to set the tolerance, you need to use the
+  // "Tolerance not used!"
   move_cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
   move_cmd.args[2].vec3d[0] = 0;
   move_cmd.args[2].vec3d[1] = 0;
   move_cmd.args[2].vec3d[2] = 0;
 
   // Target attitude, quaternion, only the first 4 values are used
-  // TODO(jdekarske) add an attitude
   move_cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
-  move_cmd.args[3].mat33f[0] = 0;
-  move_cmd.args[3].mat33f[1] = 0;
-  move_cmd.args[3].mat33f[2] = 0;
-  move_cmd.args[3].mat33f[3] = 1;
+  move_cmd.args[3].mat33f[0] = desired_pose.orientation.x;
+  move_cmd.args[3].mat33f[1] = desired_pose.orientation.y;
+  move_cmd.args[3].mat33f[2] = desired_pose.orientation.z;
+  move_cmd.args[3].mat33f[3] = desired_pose.orientation.w;
   move_cmd.args[3].mat33f[4] = 0;
   move_cmd.args[3].mat33f[5] = 0;
   move_cmd.args[3].mat33f[6] = 0;
