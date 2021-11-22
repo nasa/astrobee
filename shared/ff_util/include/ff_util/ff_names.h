@@ -403,6 +403,7 @@
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX             "/points"
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED    "/extended"
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE "/depth_image"
+#define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE "/amplitude_int"
 #define TOPIC_HARDWARE_NAME_HAZ_CAM                 "haz"
 #define TOPIC_HARDWARE_NAME_PERCH_CAM               "perch"
 #define TOPIC_HARDWARE_SPEED_CAM_CAMERA_IMAGE       "hw/speed_cam/camera_image"

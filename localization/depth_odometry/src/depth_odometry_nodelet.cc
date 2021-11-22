@@ -18,14 +18,9 @@
 
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <depth_odometry/parameter_reader.h>
-#include <ff_msgs/DepthCorrespondences.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
@@ -44,60 +39,32 @@ DepthOdometryNodelet::DepthOdometryNodelet() : ff_util::FreeFlyerNodelet(NODE_DE
 void DepthOdometryNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
 
 void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  const std::string depth_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+  const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                         static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
   point_cloud_sub_ = nh->subscribe<sensor_msgs::PointCloud2>(
-    depth_cloud_topic, 10, &DepthOdometryNodelet::PointCloudCallback, this, ros::TransportHints().tcpNoDelay());
+    point_cloud_topic, 10, &DepthOdometryNodelet::PointCloudCallback, this, ros::TransportHints().tcpNoDelay());
 
   image_transport::ImageTransport image_transport(*nh);
-  // TODO(rsoussan): Fix this
-  const std::string depth_image_topic = "/hw/depth_haz/extended/amplitude_int";
-  /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
-                                    static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
-  image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
+  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) + static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDEND) +
+    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
+  image_sub_ = image_transport.subscribe(image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
   odom_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
-  depth_correspondences_pub_ =
-    nh->advertise<ff_msgs::DepthCorrespondences>(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, 10);
-  if (params_.publish_point_clouds) {
-    source_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("source_cloud", 10);
-    target_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("target_cloud", 10);
-    point_cloud_result_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_result", 10);
+}
+
+void DepthOdometryNodelet::PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
+  const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
+  for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+    odom_pub_.publish(depth_odometry_msg);
   }
 }
 
-void DepthOdometryNodelet::PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  const auto pose_msgs = depth_odometry_wrapper_.PointCloudCallback(depth_cloud_msg);
-  for (const auto& pose_msg : pose_msgs) {
-    odom_pub_.publish(pose_msg);
+void DepthOdometryNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
+  const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
+  for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+    odom_pub_.publish(depth_odometry_msg);
   }
-  if (depth_odometry_wrapper_.depth_point_cloud_registration_enabled()) {
-    const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
-    if (!correspondences_msg) return;
-    depth_correspondences_pub_.publish(*correspondences_msg);
-    if (params_.publish_point_clouds) {
-      PublishPointClouds();
-    }
-  }
-}
-
-void DepthOdometryNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  const auto pose_msgs = depth_odometry_wrapper_.ImageCallback(depth_image_msg);
-  for (const auto& pose_msg : pose_msgs) {
-    odom_pub_.publish(pose_msg);
-  }
-  if (depth_odometry_wrapper_.depth_image_registration_enabled()) {
-    const auto correspondences_msg = depth_odometry_wrapper_.GetImageCorrespondencesMsg();
-    if (!correspondences_msg) return;
-    depth_correspondences_pub_.publish(*correspondences_msg);
-  }
-}
-
-void DepthOdometryNodelet::PublishPointClouds() const {
-  source_cloud_pub_.publish(depth_odometry_wrapper_.GetPreviousPointCloudMsg());
-  target_cloud_pub_.publish(depth_odometry_wrapper_.GetLatestPointCloudMsg());
-  point_cloud_result_pub_.publish(depth_odometry_wrapper_.GetTransformedPreviousPointCloudMsg());
 }
 }  // namespace depth_odometry
 

@@ -20,7 +20,8 @@
 
 namespace depth_odometry {
 struct DepthOdometryNodeletParams {
-  bool publish_point_clouds;
+  // TODO(rsoussan): Remove this file?
+  // bool publish_point_clouds;
 };
 }  // namespace depth_odometry
 
