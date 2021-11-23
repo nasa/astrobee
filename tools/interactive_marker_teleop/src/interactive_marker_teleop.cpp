@@ -88,46 +88,67 @@ InteractiveMarkerControl& makeBoxControl(InteractiveMarker& msg) {
   return msg.controls.back();
 }
 
-void sendMoveCommand(const geometry_msgs::Pose& desired_pose) {
-  // Make ros command message to send to the executive. see `simple_move.cc`
-  ff_msgs::CommandStamped move_cmd;
-  move_cmd.header.stamp = ros::Time::now();
-  move_cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
-  move_cmd.cmd_id = "interactive_marker" + std::to_string(move_cmd.header.stamp.sec);
-  move_cmd.cmd_src = "interactive_marker";
-  move_cmd.subsys_name = "Astrobee";
+void sendMobilityCommand(std::string command, const geometry_msgs::Pose& desired_pose) {
+  if (command == ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
+    // Make ros command message to send to the executive. see `simple_move.cc`
+    ff_msgs::CommandStamped move_cmd;
+    move_cmd.header.stamp = ros::Time::now();
+    move_cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
+    move_cmd.cmd_id = "interactive_marker" + std::to_string(move_cmd.header.stamp.sec);
+    move_cmd.cmd_src = "interactive_marker";
+    move_cmd.subsys_name = "Astrobee";
 
-  // Move command has 4 arguements; frame, xyz, xyz tolerance, and rotation
-  move_cmd.args.resize(4);
-  move_cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
-  move_cmd.args[0].s = "world";
+    // Move command has 4 arguements; frame, xyz, xyz tolerance, and rotation
+    move_cmd.args.resize(4);
+    move_cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+    move_cmd.args[0].s = "world";
 
-  // Set location where you want Astrobee to go to
-  move_cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
-  move_cmd.args[1].vec3d[0] = desired_pose.position.x;  // x
-  move_cmd.args[1].vec3d[1] = desired_pose.position.y;  // y
-  move_cmd.args[1].vec3d[2] = desired_pose.position.z;  // z
+    // Set location where you want Astrobee to go to
+    move_cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+    move_cmd.args[1].vec3d[0] = desired_pose.position.x;  // x
+    move_cmd.args[1].vec3d[1] = desired_pose.position.y;  // y
+    move_cmd.args[1].vec3d[2] = desired_pose.position.z;  // z
 
-  // "Tolerance not used!"
-  move_cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
-  move_cmd.args[2].vec3d[0] = 0;
-  move_cmd.args[2].vec3d[1] = 0;
-  move_cmd.args[2].vec3d[2] = 0;
+    // "Tolerance not used!"
+    move_cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+    move_cmd.args[2].vec3d[0] = 0;
+    move_cmd.args[2].vec3d[1] = 0;
+    move_cmd.args[2].vec3d[2] = 0;
 
-  // Target attitude, quaternion, only the first 4 values are used
-  move_cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
-  move_cmd.args[3].mat33f[0] = desired_pose.orientation.x;
-  move_cmd.args[3].mat33f[1] = desired_pose.orientation.y;
-  move_cmd.args[3].mat33f[2] = desired_pose.orientation.z;
-  move_cmd.args[3].mat33f[3] = desired_pose.orientation.w;
-  move_cmd.args[3].mat33f[4] = 0;
-  move_cmd.args[3].mat33f[5] = 0;
-  move_cmd.args[3].mat33f[6] = 0;
-  move_cmd.args[3].mat33f[7] = 0;
-  move_cmd.args[3].mat33f[8] = 0;
+    // Target attitude, quaternion, only the first 4 values are used
+    move_cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
+    move_cmd.args[3].mat33f[0] = desired_pose.orientation.x;
+    move_cmd.args[3].mat33f[1] = desired_pose.orientation.y;
+    move_cmd.args[3].mat33f[2] = desired_pose.orientation.z;
+    move_cmd.args[3].mat33f[3] = desired_pose.orientation.w;
+    move_cmd.args[3].mat33f[4] = 0;
+    move_cmd.args[3].mat33f[5] = 0;
+    move_cmd.args[3].mat33f[6] = 0;
+    move_cmd.args[3].mat33f[7] = 0;
+    move_cmd.args[3].mat33f[8] = 0;
 
-  // Send command
-  cmd_publisher.publish(move_cmd);
+    // Send command
+    cmd_publisher.publish(move_cmd);
+  } else {
+    ROS_ERROR("only simplemove supported with pose");
+  }
+}
+
+void sendMobilityCommand(std::string command) {
+  ff_msgs::CommandStamped cmd;
+  cmd.header.stamp = ros::Time::now();
+  cmd.subsys_name = "Astrobee";
+  cmd.cmd_name = command;
+  cmd.cmd_id = command;
+
+  if (command == ff_msgs::CommandConstants::CMD_NAME_DOCK) {
+    // Dock has one argument
+    cmd.args.resize(1);
+    cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
+    cmd.args[0].i = 1;  // TODO(jdekarske) support other berth
+  }
+
+  cmd_publisher.publish(cmd);
 }
 
 void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
@@ -151,7 +172,17 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
         }
         case 2:  // move to desired position
         {
-          sendMoveCommand(feedback->pose);
+          sendMobilityCommand(ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF, feedback->pose);
+          break;
+        }
+        case 3:  // dock
+        {
+          sendMobilityCommand(ff_msgs::CommandConstants::CMD_NAME_DOCK);
+          break;
+        }
+        case 4:  // undock
+        {
+          sendMobilityCommand(ff_msgs::CommandConstants::CMD_NAME_UNDOCK);
           break;
         }
         default:
@@ -177,8 +208,6 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
       //   break;
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////////
 
 void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position) {
   InteractiveMarker int_marker;
@@ -236,15 +265,18 @@ int main(int argc, char** argv) {
 
   // Start tf listener
   tfListener = std::shared_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tfBuffer));
+
   // Make the marker
   server.reset(new interactive_markers::InteractiveMarkerServer("interactive_marker_teleop", "", false));
   ros::Duration(0.1).sleep();
   menu_handler.insert("Snap to Astrobee", &processFeedback);
   menu_handler.insert("Go to Position", &processFeedback);
+  menu_handler.insert("Dock", &processFeedback);
+  menu_handler.insert("Undock", &processFeedback);
+
   // menu_handler.insert("Add to plan", &processFeedback);  // TODO(jdekarske) would be cool to add a new marker for
   // each station
   // menu_handler.insert("Remove from plan", &processFeedback);
-  // menu_handler.insert("Dock", &processFeedback); menu_handler.insert("Undock", &processFeedback);
 
   geometry_msgs::Pose position;
   make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
