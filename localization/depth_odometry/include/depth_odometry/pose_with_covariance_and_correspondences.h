@@ -19,10 +19,16 @@
 #define DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_CORRESPONDENCES_H_
 
 #include <depth_odometry/depth_correspondences.h>
+#include <point_cloud_common/icp_correspondences.h>
 #include <localization_common/pose_with_covariance.h>
 
 namespace depth_odometry {
 struct PoseWithCovarianceAndCorrespondences {
+  PoseWithCovarianceAndCorrespondences(const localization_common::PoseWithCovariance& pose_with_covariance,
+                                       const point_cloud_common::ICPCorrespondences& correspondences)
+      : pose_with_covariance(pose_with_covariance),
+        depth_correspondences(correspondences.source_points, correspondences.target_points) {}
+
   localization_common::PoseWithCovariance pose_with_covariance;
   depth_odometry::DepthCorrespondences depth_correspondences;
 };

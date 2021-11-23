@@ -69,7 +69,12 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     return boost::none;
   }
 
-  // TODO(rsoussan): return rel trafo with matches!!!!!
-  // return relative_transform;
+  const auto correspondences = icp_->correspondences();
+  if (!correspondences) {
+    LogWarning("DepthImageCallback: Failed to get correspondences.");
+    return boost::none;
+  }
+
+  return PoseWithCovarianceAndCorrespondences(*relative_transform, *correspondences);
 }
 }  // namespace depth_odometry
