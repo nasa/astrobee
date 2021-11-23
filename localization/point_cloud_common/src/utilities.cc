@@ -191,7 +191,22 @@ Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vecto
   for (int i = 0; i < num_correspondences; ++i) {
     const Eigen::Matrix<double, 1, 6> jacobian = PointToPointJacobian(source_points[i], lc::GtPose(relative_transform));
     if (!ValidVector6d(jacobian)) continue;
-    full_jacobian.block(i++, 0, 1, 6) = jacobian;
+    full_jacobian.block(i, 0, 1, 6) = jacobian;
+  }
+  const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
+  return covariance;
+}
+
+Eigen::Matrix<double, 6, 6> ComputePointToPlaneCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
+                                                                const std::vector<Eigen::Vector3d>& target_normals,
+                                                                const Eigen::Isometry3d& relative_transform) {
+  const int num_correspondences = static_cast<int>(source_points.size());
+  Eigen::MatrixXd full_jacobian(num_correspondences, 6);
+  for (int i = 0; i < num_correspondences; ++i) {
+    const Eigen::Matrix<double, 1, 6> jacobian =
+      PointToPlaneJacobian(source_points[i], target_normals[i], lc::GtPose(relative_transform));
+    if (!ValidVector6d(jacobian)) continue;
+    full_jacobian.block(i, 0, 1, 6) = jacobian;
   }
   const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
   return covariance;
@@ -225,15 +240,6 @@ bool ValidPoint<pcl::PointNormal>(const pcl::PointNormal& point) {
 template <>
 bool ValidPoint<pcl::PointXYZINormal>(const pcl::PointXYZINormal& point) {
   return ValidPointXYZ(point) && ValidNormal(point) && ValidIntensity(point);
-}
-
-Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const pcl::PointXYZINormal& source_point,
-                                                 const pcl::PointXYZINormal& target_point,
-                                                 const Eigen::Isometry3d& relative_transform) {
-  const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
-  const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
-  const gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
-  return point_cloud_common::PointToPlaneJacobian(gt_point, gt_normal, gt_relative_transform);
 }
 
 void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,

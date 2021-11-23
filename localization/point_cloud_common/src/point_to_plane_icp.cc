@@ -148,7 +148,6 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunCoarseToFinePointToP
   return latest_relative_transform;
 }
 
-// TODO(rsoussan): Move this to utilities!!
 Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
@@ -160,19 +159,18 @@ Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
   icp.correspondence_estimation_->determineCorrespondences(*correspondences_, icp.corr_dist_threshold_);
   const auto& target_cloud = icp.target_;
   FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
-  const int num_correspondences = correspondences_->size();
-  Eigen::MatrixXd full_jacobian(num_correspondences, 6);
-  int index = 0;
-  for (const auto correspondence : *correspondences_) {
-    const auto& input_point = (*source_cloud)[correspondence.index_query];
-    const auto& target_point = (*target_cloud)[correspondence.index_match];
-    const Eigen::Matrix<double, 1, 6> jacobian = PointToPlaneJacobian(input_point, target_point, relative_transform);
-    if (std::isnan(jacobian(0, 0)) || std::isnan(jacobian(0, 1)) || std::isnan(jacobian(0, 2)) ||
-        std::isnan(jacobian(0, 3)) || std::isnan(jacobian(0, 4)) || std::isnan(jacobian(0, 5)))
-      continue;
-    full_jacobian.block(index++, 0, 1, 6) = jacobian;
+  std::vector<Eigen::Vector3d> source_points;
+  std::vector<Eigen::Vector3d> target_normals;
+  for (const auto& correspondence : *correspondences_) {
+    const auto& pcl_source_point = (*source_cloud)[correspondence.index_query];
+    const auto& pcl_target_point = (*target_cloud)[correspondence.index_match];
+    // TODO(rsousan): add conversion functions to utils!!!
+    const Eigen::Vector3d source_point(pcl_source_point.x, pcl_source_point.y, pcl_source_point.z);
+    const Eigen::Vector3d target_normal(pcl_target_point.normal[0], pcl_target_point.normal[1],
+                                        pcl_target_point.normal[2]);
+    source_points.emplace_back(source_point);
+    target_normals.emplace_back(target_normal);
   }
-  const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
-  return covariance;
+  return ComputePointToPlaneCovarianceMatrix(source_points, target_normals, relative_transform);
 }
 }  // namespace point_cloud_common

@@ -68,6 +68,10 @@ bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector);
 Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
                                                                 const Eigen::Isometry3d& relative_transform);
 
+Eigen::Matrix<double, 6, 6> ComputePointToPlaneCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
+                                                                const std::vector<Eigen::Vector3d>& target_normals,
+                                                                const Eigen::Isometry3d& relative_transform);
+
 pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b);
 
 template <typename PointType>
@@ -109,10 +113,6 @@ typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl
 void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,
                            const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
                            pcl::Correspondences& correspondences);
-
-Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const pcl::PointXYZINormal& source_point,
-                                                 const pcl::PointXYZINormal& target_point,
-                                                 const Eigen::Isometry3d& relative_transform);
 
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
