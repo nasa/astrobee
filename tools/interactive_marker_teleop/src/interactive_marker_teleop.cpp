@@ -21,8 +21,8 @@
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
 
-#include <tf/transform_broadcaster.h>
-#include <tf/tf.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CommandConstants.h>
@@ -35,11 +35,14 @@ using visualization_msgs::InteractiveMarkerControl;
 using visualization_msgs::InteractiveMarkerFeedbackConstPtr;
 using visualization_msgs::Marker;
 
-boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
+std::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 interactive_markers::MenuHandler menu_handler;
 
 ros::Publisher cmd_publisher;
 ros::Subscriber ack_subscriber;
+
+tf2_ros::Buffer tfBuffer;
+std::shared_ptr<tf2_ros::TransformListener> tfListener;
 
 Marker makeMarker(const std::string marker_type) {
   Marker marker;
@@ -128,17 +131,32 @@ void sendMoveCommand(const geometry_msgs::Pose& desired_pose) {
 }
 
 void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
-  std::ostringstream mouse_point_ss;
-  // if (feedback->mouse_point_valid) {
-  mouse_point_ss << " at " << feedback->pose.position.x << ", " << feedback->pose.position.y << ", "
-                 << feedback->pose.position.z << " in frame " << feedback->header.frame_id;
-  // }
-
   switch (feedback->event_type) {
     case visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT:
-      // ROS_INFO_STREAM(s.str() << ": menu item " << feedback->menu_entry_id << " clicked" << mouse_point_ss.str()
-      //                         << ".");
-      sendMoveCommand(feedback->pose);
+      switch (feedback->menu_entry_id) {
+        case 1:  // snap to astrobee
+        {
+          // get astrobee position
+          geometry_msgs::TransformStamped t;
+          t = tfBuffer.lookupTransform("world", "body", ros::Time(0));
+          // set marker pose
+          geometry_msgs::Pose p;
+          p.position.x = t.transform.translation.x;  // Help! is there a better way to do this?
+          p.position.y = t.transform.translation.y;
+          p.position.z = t.transform.translation.z;
+          p.orientation = t.transform.rotation;
+          server->setPose("astrobee_teleop", p);
+          server->applyChanges();
+          break;
+        }
+        case 2:  // move to desired position
+        {
+          sendMoveCommand(feedback->pose);
+          break;
+        }
+        default:
+          break;
+      }
       break;
 
       // TODO(jdekarske) check for keep out zones here
@@ -158,19 +176,17 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
       //                           << feedback->header.stamp.nsec << " nsec");
       //   break;
   }
-
-  server->applyChanges();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position) {
+void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position) {
   InteractiveMarker int_marker;
   int_marker.header.frame_id = "world";
-  tf::pointTFToMsg(position, int_marker.pose.position);
+  int_marker.pose = position;
   int_marker.scale = 1;
 
-  int_marker.name = "simple_6dof";
+  int_marker.name = "astrobee_teleop";
   int_marker.description = "Astrobee Command";
 
   // insert a box
@@ -179,9 +195,9 @@ void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position) 
 
   InteractiveMarkerControl control;
 
-  tf::Quaternion orien(1.0, 0.0, 0.0, 1.0);
+  tf2::Quaternion orien(1.0, 0.0, 0.0, 1.0);
   orien.normalize();
-  tf::quaternionTFToMsg(orien, control.orientation);
+  tf2::convert(orien, control.orientation);
   control.name = "rotate_x";
   control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
@@ -189,9 +205,9 @@ void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position) 
   control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
-  orien = tf::Quaternion(0.0, 1.0, 0.0, 1.0);
+  orien = tf2::Quaternion(0.0, 1.0, 0.0, 1.0);
   orien.normalize();
-  tf::quaternionTFToMsg(orien, control.orientation);
+  tf2::convert(orien, control.orientation);
   control.name = "rotate_z";
   control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
@@ -199,9 +215,9 @@ void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position) 
   control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
-  orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
+  orien = tf2::Quaternion(0.0, 0.0, 1.0, 1.0);
   orien.normalize();
-  tf::quaternionTFToMsg(orien, control.orientation);
+  tf2::convert(orien, control.orientation);
   control.name = "rotate_y";
   control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
@@ -215,28 +231,29 @@ void make6DofMarker(unsigned int interaction_mode, const tf::Vector3& position) 
 }
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "position_command");
+  ros::init(argc, argv, "interactive_marker_teleop");
   ros::NodeHandle nh;
 
+  // Start tf listener
+  tfListener = std::shared_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tfBuffer));
   // Make the marker
-  server.reset(new interactive_markers::InteractiveMarkerServer("position_command", "", false));
-
+  server.reset(new interactive_markers::InteractiveMarkerServer("interactive_marker_teleop", "", false));
   ros::Duration(0.1).sleep();
-
+  menu_handler.insert("Snap to Astrobee", &processFeedback);
   menu_handler.insert("Go to Position", &processFeedback);
-  menu_handler.insert("Add to plan", &processFeedback);  // would be cool to add a new marker for each station
-  menu_handler.insert("Remove from plan", &processFeedback);
-  menu_handler.insert("Dock", &processFeedback);
-  menu_handler.insert("Undock", &processFeedback);
+  // menu_handler.insert("Add to plan", &processFeedback);  // TODO(jdekarske) would be cool to add a new marker for
+  // each station
+  // menu_handler.insert("Remove from plan", &processFeedback);
+  // menu_handler.insert("Dock", &processFeedback); menu_handler.insert("Undock", &processFeedback);
 
-  tf::Vector3 position;
-  position = tf::Vector3(0, 0, 0);
+  geometry_msgs::Pose position;
   make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
   server->applyChanges();
 
   // publish and acknowledge command actions
   cmd_publisher = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
-  // ack_subscriber = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback);
+  // ack_subscriber = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback); // TODO(jdekarske) status goes in the marker
+  // text
 
   ros::spin();
 

@@ -19,14 +19,18 @@
   <build_depend>roscpp</build_depend>
   <build_depend>interactive_markers</build_depend>
   <build_depend>visualization_msgs</build_depend>
-  <build_depend>tf</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
   <exec_depend>ff_hw_msgs</exec_depend>
   <exec_depend>ff_msgs</exec_depend>
   <exec_depend>ff_util</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>interactive_markers</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>
-  <exec_depend>tf</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

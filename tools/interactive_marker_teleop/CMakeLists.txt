@@ -29,7 +29,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   interactive_markers
   visualization_msgs
-  tf
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 ###################################
