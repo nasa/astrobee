@@ -107,7 +107,7 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   const Eigen::Isometry3d relative_transform(
     (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
   const Eigen::Matrix<double, 6, 6> covariance =
-    ComputeCovarianceMatrix(icp, source_cloud_with_normals, result, relative_transform);
+    PointToPlaneCovariance(icp, source_cloud_with_normals, result, relative_transform);
   icp_timer.StopAndLog();
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
@@ -148,7 +148,7 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunCoarseToFinePointToP
   return latest_relative_transform;
 }
 
-Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
+Eigen::Matrix<double, 6, 6> PointToPlaneICP::PointToPlaneCovariance(
   const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
@@ -171,6 +171,6 @@ Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
     source_points.emplace_back(source_point);
     target_normals.emplace_back(target_normal);
   }
-  return ComputePointToPlaneCovarianceMatrix(source_points, target_normals, relative_transform);
+  return point_cloud_common::PointToPlaneCovariance(source_points, target_normals, relative_transform);
 }
 }  // namespace point_cloud_common

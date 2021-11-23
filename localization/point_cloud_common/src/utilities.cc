@@ -87,8 +87,8 @@ Eigen::Matrix<double, 1, 6> PointToPointJacobian(const gtsam::Point3& source_poi
   return H1;
 }
 
-Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
-                                                  const std::vector<Eigen::Vector3d>& target_points) {
+Eigen::Isometry3d RelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
+                                           const std::vector<Eigen::Vector3d>& target_points) {
   const int num_points = static_cast<int>(source_points.size());
   Eigen::Matrix<double, 3, Eigen::Dynamic> source_cloud_matrix(3, num_points);
   Eigen::Matrix<double, 3, Eigen::Dynamic> target_cloud_matrix(3, num_points);
@@ -184,8 +184,8 @@ bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector) {
   return true;
 }
 
-Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
-                                                                const Eigen::Isometry3d& relative_transform) {
+Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                   const Eigen::Isometry3d& relative_transform) {
   const int num_correspondences = static_cast<int>(source_points.size());
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   for (int i = 0; i < num_correspondences; ++i) {
@@ -197,9 +197,9 @@ Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vecto
   return covariance;
 }
 
-Eigen::Matrix<double, 6, 6> ComputePointToPlaneCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
-                                                                const std::vector<Eigen::Vector3d>& target_normals,
-                                                                const Eigen::Isometry3d& relative_transform) {
+Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                   const std::vector<Eigen::Vector3d>& target_normals,
+                                                   const Eigen::Isometry3d& relative_transform) {
   const int num_correspondences = static_cast<int>(source_points.size());
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   for (int i = 0; i < num_correspondences; ++i) {

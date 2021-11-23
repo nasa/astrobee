@@ -81,17 +81,17 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
 lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const {
   if (params_.use_single_iteration_umeyama) {
-    const Eigen::Isometry3d relative_transform = ComputeRelativeTransformUmeyama(source_points, target_points);
-    const lc::PoseCovariance covariance = ComputePointToPointCovarianceMatrix(source_points, relative_transform);
+    const Eigen::Isometry3d relative_transform = RelativeTransformUmeyama(source_points, target_points);
+    const lc::PoseCovariance covariance = PointToPointCovariance(source_points, relative_transform);
     return lc::PoseWithCovariance(relative_transform, covariance);
   }
 
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
-                                            ? ComputeRelativeTransformUmeyama(source_points, target_points)
+                                            ? RelativeTransformUmeyama(source_points, target_points)
                                             : Eigen::Isometry3d::Identity();
   const Eigen::Isometry3d relative_transform = Align(source_points, target_points, initial_guess);
   // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane
-  const lc::PoseCovariance covariance = ComputePointToPointCovarianceMatrix(source_points, relative_transform);
+  const lc::PoseCovariance covariance = PointToPointCovariance(source_points, relative_transform);
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
 

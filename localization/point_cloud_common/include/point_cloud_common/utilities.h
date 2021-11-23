@@ -50,8 +50,8 @@ Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& point, con
 Eigen::Matrix<double, 1, 6> PointToPointJacobian(const gtsam::Point3& source_point,
                                                  const gtsam::Pose3& relative_transform);
 
-Eigen::Isometry3d ComputeRelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
-                                                  const std::vector<Eigen::Vector3d>& target_points);
+Eigen::Isometry3d RelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
+                                           const std::vector<Eigen::Vector3d>& target_points);
 
 boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
                                            const pcl::search::KdTree<pcl::PointXYZI>& kdtree,
@@ -65,12 +65,12 @@ void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float v
 
 bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector);
 
-Eigen::Matrix<double, 6, 6> ComputePointToPointCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
-                                                                const Eigen::Isometry3d& relative_transform);
+Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                   const Eigen::Isometry3d& relative_transform);
 
-Eigen::Matrix<double, 6, 6> ComputePointToPlaneCovarianceMatrix(const std::vector<Eigen::Vector3d>& source_points,
-                                                                const std::vector<Eigen::Vector3d>& target_normals,
-                                                                const Eigen::Isometry3d& relative_transform);
+Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                   const std::vector<Eigen::Vector3d>& target_normals,
+                                                   const Eigen::Isometry3d& relative_transform);
 
 pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b);
 
