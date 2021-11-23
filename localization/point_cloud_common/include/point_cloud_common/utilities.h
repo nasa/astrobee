@@ -72,6 +72,12 @@ Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vect
                                                    const std::vector<Eigen::Vector3d>& target_normals,
                                                    const Eigen::Isometry3d& relative_transform);
 
+template <typename PointType>
+Eigen::Vector3d Vector3d(const PointType& point);
+
+template <typename PointType>
+Eigen::Vector3d NormalVector3d(const PointType& point_with_normal);
+
 pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b);
 
 template <typename PointType>
@@ -202,6 +208,16 @@ typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals
   EstimateNormals<PointType, PointWithNormalType>(filtered_cloud, search_radius, *filtered_cloud_with_normals);
   RemoveNansAndZerosFromPoints(*filtered_cloud_with_normals);
   return filtered_cloud_with_normals;
+}
+
+template <typename PointType>
+Eigen::Vector3d Vector3d(const PointType& point) {
+  return Eigen::Vector3d(point.x, point.y, point.z);
+}
+
+template <typename PointType>
+Eigen::Vector3d NormalVector3d(const PointType& point_with_normal) {
+  return Eigen::Vector3d(point_with_normal.normal[0], point_with_normal.normal[1], point_with_normal.normal[2]);
 }
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_UTILITIES_H_

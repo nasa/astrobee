@@ -162,14 +162,10 @@ Eigen::Matrix<double, 6, 6> PointToPlaneICP::PointToPlaneCovariance(
   std::vector<Eigen::Vector3d> source_points;
   std::vector<Eigen::Vector3d> target_normals;
   for (const auto& correspondence : *correspondences_) {
-    const auto& pcl_source_point = (*source_cloud)[correspondence.index_query];
-    const auto& pcl_target_point = (*target_cloud)[correspondence.index_match];
-    // TODO(rsousan): add conversion functions to utils!!!
-    const Eigen::Vector3d source_point(pcl_source_point.x, pcl_source_point.y, pcl_source_point.z);
-    const Eigen::Vector3d target_normal(pcl_target_point.normal[0], pcl_target_point.normal[1],
-                                        pcl_target_point.normal[2]);
-    source_points.emplace_back(source_point);
-    target_normals.emplace_back(target_normal);
+    const auto& source_point = (*source_cloud)[correspondence.index_query];
+    const auto& target_point = (*target_cloud)[correspondence.index_match];
+    source_points.emplace_back(Vector3d(source_point));
+    target_normals.emplace_back(NormalVector3d(target_point));
   }
   return point_cloud_common::PointToPlaneCovariance(source_points, target_normals, relative_transform);
 }
