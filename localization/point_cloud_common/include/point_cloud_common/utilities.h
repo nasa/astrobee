@@ -70,11 +70,6 @@ Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vect
                                                    const std::vector<Eigen::Vector3d>& target_normals,
                                                    const Eigen::Isometry3d& relative_transform);
 
-Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const pcl::PointCloud<pcl::PointXYZINormal>& source_cloud,
-                                                   const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
-                                                   const pcl::Correspondences& correspondences,
-                                                   const Eigen::Isometry3d& relative_transform);
-
 template <typename PointType>
 Eigen::Vector3d Vector3d(const PointType& point);
 

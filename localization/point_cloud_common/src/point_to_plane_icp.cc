@@ -108,7 +108,7 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
     (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
   SaveCorrespondences(icp, source_cloud_with_normals, result);
   const Eigen::Matrix<double, 6, 6> covariance =
-    PointToPlaneCovariance(*source_cloud_with_normals, *(icp.target_), *correspondences_, relative_transform);
+    PointToPlaneCovariance(correspondences_->source_points, correspondences_->target_normals, relative_transform);
   icp_timer.StopAndLog();
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
@@ -154,10 +154,23 @@ void PointToPlaneICP::SaveCorrespondences(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed) {
   icp.correspondence_estimation_->setInputSource(source_cloud_transformed);
-  correspondences_ = pcl::Correspondences();
+  pcl::Correspondences pcl_correspondences;
   // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
-  icp.correspondence_estimation_->determineCorrespondences(*correspondences_, icp.corr_dist_threshold_);
+  icp.correspondence_estimation_->determineCorrespondences(pcl_correspondences, icp.corr_dist_threshold_);
   const auto& target_cloud = icp.target_;
-  FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
+  FilterCorrespondences(*source_cloud, *target_cloud, pcl_correspondences);
+  std::vector<Eigen::Vector3d> source_points;
+  std::vector<Eigen::Vector3d> target_points;
+  std::vector<Eigen::Vector3d> target_normals;
+  for (const auto& correspondence : pcl_correspondences) {
+    const auto& pcl_source_point = (*source_cloud)[correspondence.index_query];
+    const auto& pcl_target_point = (*target_cloud)[correspondence.index_match];
+    source_points.emplace_back(Vector3d(pcl_source_point));
+    target_points.emplace_back(Vector3d(pcl_target_point));
+    target_normals.emplace_back(NormalVector3d(pcl_target_point));
+  }
+  correspondences_ = ICPCorrespondences(source_points, target_points, target_normals);
 }
+
+const boost::optional<ICPCorrespondences>& PointToPlaneICP::correspondences() const { return correspondences_; }
 }  // namespace point_cloud_common

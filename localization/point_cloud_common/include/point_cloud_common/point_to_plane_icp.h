@@ -20,6 +20,7 @@
 
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
+#include <point_cloud_common/icp_correspondences.h>
 #include <point_cloud_common/point_to_plane_icp_params.h>
 
 #include <boost/optional.hpp>
@@ -32,11 +33,11 @@ namespace point_cloud_common {
 class PointToPlaneICP {
  public:
   explicit PointToPlaneICP(const PointToPlaneICPParams& params);
-  const boost::optional<pcl::Correspondences>& correspondences() const { return correspondences_; }
   boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
+  const boost::optional<ICPCorrespondences>& correspondences() const;
 
  private:
   boost::optional<localization_common::PoseWithCovariance> RunPointToPlaneICP(
@@ -50,7 +51,7 @@ class PointToPlaneICP {
   void SaveCorrespondences(const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
                            const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                            const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed);
-  boost::optional<pcl::Correspondences> correspondences_;
+  boost::optional<ICPCorrespondences> correspondences_;
   PointToPlaneICPParams params_;
 };
 }  // namespace point_cloud_common
