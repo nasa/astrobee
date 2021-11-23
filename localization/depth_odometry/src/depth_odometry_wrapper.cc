@@ -17,16 +17,11 @@
  */
 #include <depth_odometry/depth_odometry_wrapper.h>
 #include <depth_odometry/parameter_reader.h>
-#include <ff_msgs/DepthCorrespondences.h>
+#include <depth_odometry/point_to_plane_icp_depth_odometry.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
-#include <msg_conversions/msg_conversions.h>
-
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 
 #include <sensor_msgs/image_encodings.h>
 
@@ -44,9 +39,16 @@ DepthOdometryWrapper::DepthOdometryWrapper() {
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  DepthOdometryParams params;
-  LoadDepthOdometryParams(config, params);
-  depth_odometry_.reset(new DepthOdometry(params));
+  LoadDepthOdometryWrapperParams(config, params_);
+  if (params_.method == "icp") {
+    PointToPlaneICPDepthOdometryParams params;
+    LoadPointToPlaneICPDepthOdometryParams(config, params);
+    depth_odometry_.reset(new PointToPlaneICPDepthOdometry(params));
+  } else if (params_.method == "image_feature") {
+    // TODO(rsoussan): support this!
+  } else {
+    LogFatal("DepthOdometryWrapper: Invalid depth odometry method selected.");
+  }
 }
 
 std::vector<ff_msgs::Odometry> DepthOdometryWrapper::PointCloudCallback(
@@ -69,10 +71,10 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailabl
   for (const auto& image_msg : image_buffer_.measurements()) {
     const auto image_msg_timestamp = image_msg.first;
     const auto point_cloud_msg =
-      point_cloud_buffer_.GetNearby(image_msg_timestamp, depth_odometry_->params().max_image_and_point_cloud_time_diff);
+      point_cloud_buffer_.GetNearby(image_msg_timestamp, params_.max_image_and_point_cloud_time_diff);
     if (point_cloud_msg) {
-      const auto depth_image_measurement = lm::MakeDepthImageMeasurement(*point_cloud_msg, image_msg.second,
-                                                                         depth_odometry_->params().haz_cam_A_haz_depth);
+      const auto depth_image_measurement =
+        lm::MakeDepthImageMeasurement(*point_cloud_msg, image_msg.second, params_.haz_cam_A_haz_depth);
       if (!depth_image_measurement) {
         LogError("ProcessDepthImageIfAvailable: Failed to create depth image measurement.");
         continue;
@@ -92,7 +94,7 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailabl
     if (relative_transform) {
       ff_msgs::Odometry pose_msg;
       const Eigen::Isometry3d body_F_a_T_b =
-        lc::FrameChangeRelativeTransform(relative_transform->pose, depth_odometry_->params().body_T_haz_cam);
+        lc::FrameChangeRelativeTransform(relative_transform->pose, params_.body_T_haz_cam);
       // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
       // rotated by rotation matrix)
       mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg.sensor_F_a_T_b);

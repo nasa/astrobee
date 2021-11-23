@@ -20,6 +20,7 @@
 
 #include <config_reader/config_reader.h>
 #include <depth_odometry/depth_odometry_params.h>
+#include <depth_odometry/depth_odometry_wrapper_params.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
 /*#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
 #include <depth_odometry/depth_image_aligner_params.h>
@@ -30,6 +31,7 @@
 
 namespace depth_odometry {
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
+void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOdometryWrapperParams& params);
 void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
                                             PointToPlaneICPDepthOdometryParams& params);
 /*void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);

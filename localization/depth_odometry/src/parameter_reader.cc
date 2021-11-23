@@ -25,6 +25,13 @@ namespace depth_odometry {
 namespace mc = msg_conversions;
 namespace pcc = point_cloud_common;
 
+void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOdometryWrapperParams& params) {
+  params.max_image_and_point_cloud_time_diff = mc::LoadDouble(config, "max_image_and_point_cloud_time_diff");
+  params.method = mc::LoadString(config, "depth_odometry_method");
+  params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
+  params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
+}
+
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
   params.max_time_diff = mc::LoadDouble(config, "max_time_diff");
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
@@ -34,7 +41,7 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
                                             PointToPlaneICPDepthOdometryParams& params) {
   pcc::LoadPointToPlaneICPParams(config, params.icp);
-  LoadDepthOdometryParms(params);
+  LoadDepthOdometryParams(config, params);
 }
 
 /*void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params) {
