@@ -16,7 +16,6 @@
 # under the License.
 #
 
-Header header
 time time_a 
 time time_b
 geometry_msgs/PoseWithCovariance sensor_F_a_T_b

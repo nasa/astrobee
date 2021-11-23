@@ -17,6 +17,7 @@
 #
 
 Header header
-time source_time 
-time target_time
+ff_msgs/Odometry odometry
 ff_msgs/DepthCorrespondence[] correspondences
+bool valid_image_points
+bool valid_points_3d

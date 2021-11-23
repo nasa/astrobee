@@ -20,7 +20,7 @@
 
 #include <depth_odometry/depth_odometry.h>
 #include <depth_odometry/depth_odometry_wrapper_params.h>
-#include <ff_msgs/Odometry.h>
+#include <ff_msgs/DepthOdometry.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 
@@ -37,11 +37,11 @@ namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
   DepthOdometryWrapper();
-  std::vector<ff_msgs::Odometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
-  std::vector<ff_msgs::Odometry> ImageCallback(const sensor_msgs::ImageConstPtr& image_msg);
+  std::vector<ff_msgs::DepthOdometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
+  std::vector<ff_msgs::DepthOdometry> ImageCallback(const sensor_msgs::ImageConstPtr& image_msg);
 
  private:
-  std::vector<ff_msgs::Odometry> ProcessDepthImageIfAvailable();
+  std::vector<ff_msgs::DepthOdometry> ProcessDepthImageIfAvailable();
   std::unique_ptr<DepthOdometry> depth_odometry_;
   DepthOdometryWrapperParams params_;
   localization_common::MeasurementBuffer<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;

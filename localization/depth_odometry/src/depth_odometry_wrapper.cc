@@ -51,18 +51,18 @@ DepthOdometryWrapper::DepthOdometryWrapper() {
   }
 }
 
-std::vector<ff_msgs::Odometry> DepthOdometryWrapper::PointCloudCallback(
+std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::PointCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
   point_cloud_buffer_.Add(lc::TimeFromHeader(point_cloud_msg->header), point_cloud_msg);
   return ProcessDepthImageIfAvailable();
 }
 
-std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
+std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   image_buffer_.Add(lc::TimeFromHeader(image_msg->header), image_msg);
   return ProcessDepthImageIfAvailable();
 }
 
-std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailable() {
+std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ProcessDepthImageIfAvailable() {
   std::vector<lm::DepthImageMeasurement> depth_image_measurements;
   boost::optional<lc::Time> latest_added_point_cloud_msg_time;
   boost::optional<lc::Time> latest_added_image_msg_time;
@@ -88,22 +88,23 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailabl
   if (latest_added_point_cloud_msg_time) point_cloud_buffer_.EraseUpToAndIncluding(*latest_added_point_cloud_msg_time);
   if (latest_added_image_msg_time) image_buffer_.EraseUpToAndIncluding(*latest_added_image_msg_time);
 
-  std::vector<ff_msgs::Odometry> relative_pose_msgs;
+  std::vector<ff_msgs::DepthOdometry> depth_odometry_msgs;
   for (const auto& depth_image_measurement : depth_image_measurements) {
-    auto relative_transform = depth_odometry_->DepthImageCallback(depth_image_measurement);
-    if (relative_transform) {
-      const auto& pose_with_covariance = relative_transform->pose_with_covariance;
-      ff_msgs::Odometry pose_msg;
-      const Eigen::Isometry3d body_F_a_T_b =
+    auto pose_with_covariance_and_correspondences = depth_odometry_->DepthImageCallback(depth_image_measurement);
+    if (pose_with_covariance_and_correspondences) {
+      const auto& pose_with_covariance = pose_with_covariance_and_correspondences->pose_with_covariance;
+      ff_msgs::DepthOdometry depth_odometry_msg;
+      // TODO(rsoussan): Add fcn to convert to depth odom msg in utils!!! (A)
+      /*const Eigen::Isometry3d body_F_a_T_b =
         lc::FrameChangeRelativeTransform(pose_with_covariance.pose, params_.body_T_haz_cam);
       // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
       // rotated by rotation matrix)
       mc::EigenPoseCovarianceToMsg(pose_with_covariance.pose, pose_with_covariance.covariance, pose_msg.sensor_F_a_T_b);
       mc::EigenPoseCovarianceToMsg(body_F_a_T_b, pose_with_covariance.covariance, pose_msg.body_F_a_T_b);
-      lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);
-      relative_pose_msgs.emplace_back(pose_msg);
+      lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);*/
+      depth_odometry_msgs.emplace_back(depth_odometry_msg);
     }
   }
-  return relative_pose_msgs;
+  return depth_odometry_msgs;
 }
 }  // namespace depth_odometry

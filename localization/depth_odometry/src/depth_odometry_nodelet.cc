@@ -43,7 +43,7 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
   image_sub_ = image_transport.subscribe(image_topic, 10, &DepthOdometryNodelet::ImageCallback, this);
-  depth_odometry_pub_ = nh->advertise<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
+  depth_odometry_pub_ = nh->advertise<ff_msgs::DepthOdometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
 }
 
 void DepthOdometryNodelet::PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
