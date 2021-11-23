@@ -47,11 +47,6 @@ class PointToPlaneICP {
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
-  Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(
-    const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
-    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
-    const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
-    const Eigen::Isometry3d& relative_transform);
   void SaveCorrespondences(const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
                            const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                            const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed);

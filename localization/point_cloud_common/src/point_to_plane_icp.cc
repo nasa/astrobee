@@ -108,8 +108,7 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
     (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
   SaveCorrespondences(icp, source_cloud_with_normals, result);
   const Eigen::Matrix<double, 6, 6> covariance =
-    PointToPlaneCovariance(icp, source_cloud_with_normals, result, relative_transform);
-
+    PointToPlaneCovariance(*source_cloud_with_normals, *(icp.target_), *correspondences_, relative_transform);
   icp_timer.StopAndLog();
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
@@ -160,27 +159,5 @@ void PointToPlaneICP::SaveCorrespondences(
   icp.correspondence_estimation_->determineCorrespondences(*correspondences_, icp.corr_dist_threshold_);
   const auto& target_cloud = icp.target_;
   FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
-}
-
-Eigen::Matrix<double, 6, 6> PointToPlaneICP::PointToPlaneCovariance(
-  const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
-  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
-  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
-  const Eigen::Isometry3d& relative_transform) {
-  icp.correspondence_estimation_->setInputSource(source_cloud_transformed);
-  correspondences_ = pcl::Correspondences();
-  // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
-  icp.correspondence_estimation_->determineCorrespondences(*correspondences_, icp.corr_dist_threshold_);
-  const auto& target_cloud = icp.target_;
-  FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
-  std::vector<Eigen::Vector3d> source_points;
-  std::vector<Eigen::Vector3d> target_normals;
-  for (const auto& correspondence : *correspondences_) {
-    const auto& source_point = (*source_cloud)[correspondence.index_query];
-    const auto& target_point = (*target_cloud)[correspondence.index_match];
-    source_points.emplace_back(Vector3d(source_point));
-    target_normals.emplace_back(NormalVector3d(target_point));
-  }
-  return point_cloud_common::PointToPlaneCovariance(source_points, target_normals, relative_transform);
 }
 }  // namespace point_cloud_common

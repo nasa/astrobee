@@ -250,4 +250,19 @@ void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cl
     ++correspondence_it;
   }
 }
+
+Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const pcl::PointCloud<pcl::PointXYZINormal>& source_cloud,
+                                                   const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
+                                                   const pcl::Correspondences& correspondences,
+                                                   const Eigen::Isometry3d& relative_transform) {
+  std::vector<Eigen::Vector3d> source_points;
+  std::vector<Eigen::Vector3d> target_normals;
+  for (const auto& correspondence : correspondences) {
+    const auto& source_point = source_cloud[correspondence.index_query];
+    const auto& target_point = target_cloud[correspondence.index_match];
+    source_points.emplace_back(Vector3d(source_point));
+    target_normals.emplace_back(NormalVector3d(target_point));
+  }
+  return PointToPlaneCovariance(source_points, target_normals, relative_transform);
+}
 }  // namespace point_cloud_common
