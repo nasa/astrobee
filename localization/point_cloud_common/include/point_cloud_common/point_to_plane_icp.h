@@ -52,6 +52,9 @@ class PointToPlaneICP {
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
     const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed,
     const Eigen::Isometry3d& relative_transform);
+  void SaveCorrespondences(const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
+                           const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
+                           const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed);
   boost::optional<pcl::Correspondences> correspondences_;
   PointToPlaneICPParams params_;
 };

@@ -106,8 +106,10 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   // TODO(rsoussan): don't take inverse??
   const Eigen::Isometry3d relative_transform(
     (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
+  SaveCorrespondences(icp, source_cloud_with_normals, result);
   const Eigen::Matrix<double, 6, 6> covariance =
     PointToPlaneCovariance(icp, source_cloud_with_normals, result, relative_transform);
+
   icp_timer.StopAndLog();
   return lc::PoseWithCovariance(relative_transform, covariance);
 }
@@ -146,6 +148,18 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunCoarseToFinePointToP
   }
   coarse_to_fine_icp_timer.StopAndLog();
   return latest_relative_transform;
+}
+
+void PointToPlaneICP::SaveCorrespondences(
+  const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_transformed) {
+  icp.correspondence_estimation_->setInputSource(source_cloud_transformed);
+  correspondences_ = pcl::Correspondences();
+  // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
+  icp.correspondence_estimation_->determineCorrespondences(*correspondences_, icp.corr_dist_threshold_);
+  const auto& target_cloud = icp.target_;
+  FilterCorrespondences(*source_cloud, *target_cloud, *correspondences_);
 }
 
 Eigen::Matrix<double, 6, 6> PointToPlaneICP::PointToPlaneCovariance(
