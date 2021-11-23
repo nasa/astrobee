@@ -44,9 +44,8 @@ Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals);
 
-// TODO(rsoussan): rename to point to plane jacobian!
-Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
-                                     const gtsam::Pose3& relative_transform);
+Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
+                                                 const gtsam::Pose3& relative_transform);
 
 Eigen::Matrix<double, 1, 6> PointToPointJacobian(const gtsam::Point3& source_point,
                                                  const gtsam::Pose3& relative_transform);
@@ -111,8 +110,9 @@ void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cl
                            const pcl::PointCloud<pcl::PointXYZINormal>& target_cloud,
                            pcl::Correspondences& correspondences);
 
-Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointXYZINormal& source_point, const pcl::PointXYZINormal& target_point,
-                                     const Eigen::Isometry3d& relative_transform);
+Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const pcl::PointXYZINormal& source_point,
+                                                 const pcl::PointXYZINormal& target_point,
+                                                 const Eigen::Isometry3d& relative_transform);
 
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(

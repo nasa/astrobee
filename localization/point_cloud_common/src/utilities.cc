@@ -73,8 +73,8 @@ Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source
   return sac_ia_aligner.getFinalTransformation();
 }
 
-Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
-                                     const gtsam::Pose3& relative_transform) {
+Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
+                                                 const gtsam::Pose3& relative_transform) {
   gtsam::Matrix H1;
   relative_transform.transformFrom(point, H1);
   return normal.transpose() * H1;
@@ -227,12 +227,13 @@ bool ValidPoint<pcl::PointXYZINormal>(const pcl::PointXYZINormal& point) {
   return ValidPointXYZ(point) && ValidNormal(point) && ValidIntensity(point);
 }
 
-Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointXYZINormal& source_point, const pcl::PointXYZINormal& target_point,
-                                     const Eigen::Isometry3d& relative_transform) {
+Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const pcl::PointXYZINormal& source_point,
+                                                 const pcl::PointXYZINormal& target_point,
+                                                 const Eigen::Isometry3d& relative_transform) {
   const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
   const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
   const gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
-  return point_cloud_common::Jacobian(gt_point, gt_normal, gt_relative_transform);
+  return point_cloud_common::PointToPlaneJacobian(gt_point, gt_normal, gt_relative_transform);
 }
 
 void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cloud,

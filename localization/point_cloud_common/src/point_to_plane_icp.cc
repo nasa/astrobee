@@ -148,6 +148,7 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunCoarseToFinePointToP
   return latest_relative_transform;
 }
 
+// TODO(rsoussan): Move this to utilities!!
 Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal>& icp,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
@@ -165,7 +166,7 @@ Eigen::Matrix<double, 6, 6> PointToPlaneICP::ComputeCovarianceMatrix(
   for (const auto correspondence : *correspondences_) {
     const auto& input_point = (*source_cloud)[correspondence.index_query];
     const auto& target_point = (*target_cloud)[correspondence.index_match];
-    const Eigen::Matrix<double, 1, 6> jacobian = Jacobian(input_point, target_point, relative_transform);
+    const Eigen::Matrix<double, 1, 6> jacobian = PointToPlaneJacobian(input_point, target_point, relative_transform);
     if (std::isnan(jacobian(0, 0)) || std::isnan(jacobian(0, 1)) || std::isnan(jacobian(0, 2)) ||
         std::isnan(jacobian(0, 3)) || std::isnan(jacobian(0, 4)) || std::isnan(jacobian(0, 5)))
       continue;
