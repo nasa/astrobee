@@ -80,7 +80,7 @@ Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& point, con
   return normal.transpose() * H1;
 }
 
-Eigen::Matrix<double, 1, 6> PointToPointJacobian(const gtsam::Point3& source_point,
+Eigen::Matrix<double, 3, 6> PointToPointJacobian(const gtsam::Point3& source_point,
                                                  const gtsam::Pose3& relative_transform) {
   gtsam::Matrix H1;
   relative_transform.transformFrom(source_point, H1);
@@ -177,39 +177,30 @@ void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float v
   }
 }
 
-bool ValidVector6d(const Eigen::Matrix<double, 1, 6>& vector) {
-  if (std::isnan(vector(0, 0)) || std::isnan(vector(0, 1)) || std::isnan(vector(0, 2)) || std::isnan(vector(0, 3)) ||
-      std::isnan(vector(0, 4)) || std::isnan(vector(0, 5)))
-    return false;
-  return true;
-}
-
 Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
                                                    const Eigen::Isometry3d& relative_transform) {
+  std::vector<Eigen::Matrix<double, 3, 6>> jacobians;
   const int num_correspondences = static_cast<int>(source_points.size());
-  Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   for (int i = 0; i < num_correspondences; ++i) {
-    const Eigen::Matrix<double, 1, 6> jacobian = PointToPointJacobian(source_points[i], lc::GtPose(relative_transform));
-    if (!ValidVector6d(jacobian)) continue;
-    full_jacobian.block(i, 0, 1, 6) = jacobian;
+    const Eigen::Matrix<double, 3, 6> jacobian = PointToPointJacobian(source_points[i], lc::GtPose(relative_transform));
+    if (!jacobian.allFinite()) continue;
+    jacobians.emplace_back(jacobian);
   }
-  const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
-  return covariance;
+  return lc::LeastSquaresCovariance(jacobians);
 }
 
 Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
                                                    const std::vector<Eigen::Vector3d>& target_normals,
                                                    const Eigen::Isometry3d& relative_transform) {
+  std::vector<Eigen::Matrix<double, 1, 6>> jacobians;
   const int num_correspondences = static_cast<int>(source_points.size());
-  Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   for (int i = 0; i < num_correspondences; ++i) {
     const Eigen::Matrix<double, 1, 6> jacobian =
       PointToPlaneJacobian(source_points[i], target_normals[i], lc::GtPose(relative_transform));
-    if (!ValidVector6d(jacobian)) continue;
-    full_jacobian.block(i, 0, 1, 6) = jacobian;
+    if (!jacobian.allFinite()) continue;
+    jacobians.emplace_back(jacobian);
   }
-  const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
-  return covariance;
+  return lc::LeastSquaresCovariance(jacobians);
 }
 
 pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b) {

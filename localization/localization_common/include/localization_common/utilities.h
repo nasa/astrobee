@@ -39,6 +39,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace localization_common {
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
@@ -127,6 +128,10 @@ Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
 Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
                                                const Eigen::Isometry3d& b_T_a);
 
+template <int CostDim, int StateDim>
+Eigen::Matrix<double, StateDim, StateDim> LeastSquaresCovariance(
+  const std::vector<Eigen::Matrix<double, CostDim, StateDim>>& cost_jacobians);
+
 // Implementations
 template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
@@ -158,6 +163,20 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
 template <typename MatrixType>
 double LogDeterminant(const MatrixType& matrix) {
   return std::log10(matrix.determinant());
+}
+
+template <int CostDim, int StateDim>
+Eigen::Matrix<double, StateDim, StateDim> LeastSquaresCovariance(
+  const std::vector<Eigen::Matrix<double, CostDim, StateDim>>& cost_jacobians) {
+  const int num_costs = cost_jacobians.size();
+  Eigen::MatrixXd stacked_jacobians(num_costs * CostDim, StateDim);
+  int row_index = 0;
+  for (const auto& jacobian : cost_jacobians) {
+    stacked_jacobians.block(row_index, 0, CostDim, StateDim) = jacobian;
+    row_index += CostDim;
+  }
+  const Eigen::Matrix<double, 6, 6> covariance = (stacked_jacobians.transpose() * stacked_jacobians).inverse();
+  return covariance;
 }
 }  // namespace localization_common
 
