@@ -85,8 +85,8 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailabl
     }
   }
 
-  if (latest_added_point_cloud_msg_time) point_cloud_buffer_.EraseIncluding(*latest_added_point_cloud_msg_time);
-  if (latest_added_image_msg_time) image_buffer_.EraseIncluding(*latest_added_image_msg_time);
+  if (latest_added_point_cloud_msg_time) point_cloud_buffer_.EraseUpToAndIncluding(*latest_added_point_cloud_msg_time);
+  if (latest_added_image_msg_time) image_buffer_.EraseUpToAndIncluding(*latest_added_image_msg_time);
 
   std::vector<ff_msgs::Odometry> relative_pose_msgs;
   for (const auto& depth_image_measurement : depth_image_measurements) {

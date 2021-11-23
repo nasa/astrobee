@@ -21,6 +21,8 @@
 
 #include <localization_common/time.h>
 
+#include <map>
+
 namespace localization_common {
 template <typename MeasurementType>
 class MeasurementBuffer {
@@ -67,7 +69,7 @@ class MeasurementBuffer {
     measurements_.erase(measurements_.begin(), measurement_it);
   }
 
-  void EraseIncluding(const Time oldest_allowed_time) {
+  void EraseUpToAndIncluding(const Time oldest_allowed_time) {
     const auto measurement_it = measurements_.upper_bound(oldest_allowed_time);
     measurements_.erase(measurements_.begin(), measurement_it);
   }
