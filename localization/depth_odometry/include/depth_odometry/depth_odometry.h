@@ -19,7 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 
 #include <depth_odometry/depth_odometry_params.h>
-#include <depth_odometry/pose_with_covariance_and_matches.h>
+#include <depth_odometry/pose_with_covariance_and_correspondences.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 
@@ -28,7 +28,7 @@
 namespace depth_odometry {
 class DepthOdometry {
  public:
-  virtual boost::optional<PoseWithCovarianceAndMatches> DepthImageCallback(
+  virtual boost::optional<PoseWithCovarianceAndCorrespondences> DepthImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image) = 0;
 };
 }  // namespace depth_odometry

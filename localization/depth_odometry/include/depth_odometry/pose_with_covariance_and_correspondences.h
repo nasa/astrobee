@@ -15,13 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
-#define DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
+#ifndef DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_CORRESPONDENCES_H_
+#define DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_CORRESPONDENCES_H_
 
+#include <depth_odometry/depth_correspondences.h>
 #include <localization_common/pose_with_covariance.h>
 
 namespace depth_odometry {
-struct PoseWithCovarianceAndMatches : public localization_common::PoseWithCovariance {};
+struct PoseWithCovarianceAndCorrespondences {
+  localization_common::PoseWithCovariance pose_with_covariance;
+  depth_odometry::DepthCorrespondences depth_correspondences;
+};
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_MATCHES_H_
+#endif  // DEPTH_ODOMETRY_POSE_WITH_COVARIANCE_AND_CORRESPONDENCES_H_

@@ -15,33 +15,40 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_MATCHES_H_
-#define DEPTH_ODOMETRY_DEPTH_MATCHES_H_
+#ifndef DEPTH_ODOMETRY_DEPTH_CORRESPONDENCES_H_
+#define DEPTH_ODOMETRY_DEPTH_CORRESPONDENCES_H_
 
-#include <depth_odometry/feature_match.h>
 #include <ff_common/eigen_vectors.h>
-#include <localization_common/time.h>
+
+#include <vector>
 
 namespace depth_odometry {
-struct DepthMatches {
-  DepthMatches(const std::vector<Eigen::Vector2d>& source_image_points,
-               const std::vector<Eigen::Vector2d>& target_image_points,
-               const std::vector<Eigen::Vector3d>& source_3d_points,
-               const std::vector<Eigen::Vector3d>& target_3d_points, const localization_common::Time source_time,
-               const localization_common::Time target_time)
+struct DepthCorrespondences {
+  DepthCorrespondences(const std::vector<Eigen::Vector2d>& source_image_points,
+                       const std::vector<Eigen::Vector2d>& target_image_points,
+                       const std::vector<Eigen::Vector3d>& source_3d_points,
+                       const std::vector<Eigen::Vector3d>& target_3d_points)
       : source_image_points(source_image_points),
         target_image_points(target_image_points),
         source_3d_points(source_3d_points),
         target_3d_points(target_3d_points),
-        source_time(source_time),
-        target_time(target_time) {}
+        valid_image_points(true),
+        valid_3d_points(true) {}
+
+  DepthCorrespondences(const std::vector<Eigen::Vector3d>& source_3d_points,
+                       const std::vector<Eigen::Vector3d>& target_3d_points)
+      : source_3d_points(source_3d_points),
+        target_3d_points(target_3d_points),
+        valid_image_points(false),
+        valid_3d_points(true) {}
+
+  bool valid_image_points;
+  bool valid_3d_points;
   std::vector<Eigen::Vector2d> source_image_points;
   std::vector<Eigen::Vector2d> target_image_points;
   std::vector<Eigen::Vector3d> source_3d_points;
   std::vector<Eigen::Vector3d> target_3d_points;
-  localization_common::Time source_time;
-  localization_common::Time target_time;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_DEPTH_MATCHES_H_
+#endif  // DEPTH_ODOMETRY_DEPTH_CORRESPONDENCES_H_

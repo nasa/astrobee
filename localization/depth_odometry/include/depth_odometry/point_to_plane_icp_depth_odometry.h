@@ -20,14 +20,14 @@
 
 #include <depth_odometry/depth_odometry.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
-#include <depth_odometry/pose_with_covariance_and_matches.h>
+#include <depth_odometry/pose_with_covariance_and_correspondences.h>
 #include <point_cloud_common/point_to_plane_icp.h>
 
 namespace depth_odometry {
 class PointToPlaneICPDepthOdometry : public DepthOdometry {
  public:
   explicit PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params);
-  boost::optional<PoseWithCovarianceAndMatches> DepthImageCallback(
+  boost::optional<PoseWithCovarianceAndCorrespondences> DepthImageCallback(
     const localization_measurements::DepthImageMeasurement& depth_image) final;
   const PointToPlaneICPDepthOdometryParams& params() const { return params_; }
 

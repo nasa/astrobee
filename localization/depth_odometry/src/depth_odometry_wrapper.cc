@@ -92,13 +92,14 @@ std::vector<ff_msgs::Odometry> DepthOdometryWrapper::ProcessDepthImageIfAvailabl
   for (const auto& depth_image_measurement : depth_image_measurements) {
     auto relative_transform = depth_odometry_->DepthImageCallback(depth_image_measurement);
     if (relative_transform) {
+      const auto& pose_with_covariance = relative_transform->pose_with_covariance;
       ff_msgs::Odometry pose_msg;
       const Eigen::Isometry3d body_F_a_T_b =
-        lc::FrameChangeRelativeTransform(relative_transform->pose, params_.body_T_haz_cam);
+        lc::FrameChangeRelativeTransform(pose_with_covariance.pose, params_.body_T_haz_cam);
       // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
       // rotated by rotation matrix)
-      mc::EigenPoseCovarianceToMsg(relative_transform->pose, relative_transform->covariance, pose_msg.sensor_F_a_T_b);
-      mc::EigenPoseCovarianceToMsg(body_F_a_T_b, relative_transform->covariance, pose_msg.body_F_a_T_b);
+      mc::EigenPoseCovarianceToMsg(pose_with_covariance.pose, pose_with_covariance.covariance, pose_msg.sensor_F_a_T_b);
+      mc::EigenPoseCovarianceToMsg(body_F_a_T_b, pose_with_covariance.covariance, pose_msg.body_F_a_T_b);
       lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);
       relative_pose_msgs.emplace_back(pose_msg);
     }

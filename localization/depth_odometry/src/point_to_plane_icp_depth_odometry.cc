@@ -31,7 +31,7 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
   icp_.reset(new pcc::PointToPlaneICP(params_.icp));
 }
 
-boost::optional<PoseWithCovarianceAndMatches> PointToPlaneICPDepthOdometry::DepthImageCallback(
+boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   if (!previous_point_cloud_with_normals_ && !latest_point_cloud_with_normals_) {
     latest_point_cloud_with_normals_ = pcc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
