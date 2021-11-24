@@ -24,6 +24,7 @@
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
 #include <msg_conversions/msg_conversions.h>
 
@@ -70,6 +71,8 @@ Time TimeFromHeader(const std_msgs::Header& header);
 Time TimeFromRosTime(const ros::Time& time);
 
 void TimeToHeader(const Time timestamp, std_msgs::Header& header);
+
+void TimeToMsg(const Time timestamp, ros::Time& time_msg);
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg);
 
@@ -125,8 +128,13 @@ Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
 
 Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
 
-Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
-                                               const Eigen::Isometry3d& b_T_a);
+Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a);
+
+Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
+  const Eigen::Matrix<double, 6, 6>& a_F_relative_pose_covariance, const Eigen::Isometry3d& b_T_a);
+
+PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
+                                                         const Eigen::Isometry3d& b_T_a);
 
 template <int CostDim, int StateDim>
 Eigen::Matrix<double, StateDim, StateDim> LeastSquaresCovariance(

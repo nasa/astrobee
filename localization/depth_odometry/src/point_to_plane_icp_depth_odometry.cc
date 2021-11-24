@@ -75,6 +75,7 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     return boost::none;
   }
 
-  return PoseWithCovarianceAndCorrespondences(*relative_transform, *correspondences);
+  return PoseWithCovarianceAndCorrespondences(*relative_transform, *correspondences, previous_timestamp_,
+                                              latest_timestamp_);
 }
 }  // namespace depth_odometry

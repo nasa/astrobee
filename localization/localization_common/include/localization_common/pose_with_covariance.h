@@ -26,6 +26,8 @@ using PoseCovariance = Eigen::Matrix<double, 6, 6>;
 struct PoseWithCovariance {
   PoseWithCovariance(const Eigen::Isometry3d& pose, const PoseCovariance& covariance)
       : pose(pose), covariance(covariance) {}
+  PoseWithCovariance() {}
+
   Eigen::Isometry3d pose;
   PoseCovariance covariance;
 

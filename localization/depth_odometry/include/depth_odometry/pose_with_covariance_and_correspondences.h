@@ -21,16 +21,23 @@
 #include <depth_odometry/depth_correspondences.h>
 #include <point_cloud_common/icp_correspondences.h>
 #include <localization_common/pose_with_covariance.h>
+#include <localization_common/time.h>
 
 namespace depth_odometry {
 struct PoseWithCovarianceAndCorrespondences {
   PoseWithCovarianceAndCorrespondences(const localization_common::PoseWithCovariance& pose_with_covariance,
-                                       const point_cloud_common::ICPCorrespondences& correspondences)
+                                       const point_cloud_common::ICPCorrespondences& correspondences,
+                                       const localization_common::Time source_time,
+                                       const localization_common::Time target_time)
       : pose_with_covariance(pose_with_covariance),
-        depth_correspondences(correspondences.source_points, correspondences.target_points) {}
+        depth_correspondences(correspondences.source_points, correspondences.target_points),
+        source_time(source_time),
+        target_time(target_time) {}
 
   localization_common::PoseWithCovariance pose_with_covariance;
   depth_odometry::DepthCorrespondences depth_correspondences;
+  localization_common::Time source_time;
+  localization_common::Time target_time;
 };
 }  // namespace depth_odometry
 

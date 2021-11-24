@@ -82,11 +82,9 @@ Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stam
 
 Time TimeFromRosTime(const ros::Time& time) { return GetTime(time.sec, time.nsec); }
 
-void TimeToHeader(const Time timestamp, std_msgs::Header& header) {
-  ros::Time ros_time(timestamp);
-  header.stamp.sec = ros_time.sec;
-  header.stamp.nsec = ros_time.nsec;
-}
+void TimeToHeader(const Time timestamp, std_msgs::Header& header) { TimeToMsg(timestamp, header.stamp); }
+
+void TimeToMsg(const Time timestamp, ros::Time& time_msg) { time_msg = ros::Time(timestamp); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
 
@@ -184,9 +182,24 @@ Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
   return Eigen::Vector2d(intrinsics(0, 2), intrinsics(1, 2));
 }
 
-Eigen::Isometry3d FrameChangeRelativeTransform(const Eigen::Isometry3d& a_F_relative_transform,
-                                               const Eigen::Isometry3d& b_T_a) {
-  return b_T_a * a_F_relative_transform * b_T_a.inverse();
+Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a) {
+  return b_T_a * a_F_relative_pose * b_T_a.inverse();
+}
+
+Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
+  const Eigen::Matrix<double, 6, 6>& a_F_relative_pose_covariance, const Eigen::Isometry3d& b_T_a) {
+  // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
+  // rotated by rotation matrix)
+  return a_F_relative_pose_covariance;
+}
+
+PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
+                                                         const Eigen::Isometry3d& b_T_a) {
+  PoseWithCovariance b_F_relative_pose_with_covariance;
+  b_F_relative_pose_with_covariance.pose = FrameChangeRelativePose(a_F_relative_pose_with_covariance.pose, b_T_a);
+  b_F_relative_pose_with_covariance.covariance =
+    FrameChangeRelativeCovariance(a_F_relative_pose_with_covariance.covariance, b_T_a);
+  return b_F_relative_pose_with_covariance;
 }
 
 double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,

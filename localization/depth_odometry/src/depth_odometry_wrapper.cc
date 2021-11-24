@@ -18,6 +18,7 @@
 #include <depth_odometry/depth_odometry_wrapper.h>
 #include <depth_odometry/parameter_reader.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry.h>
+#include <depth_odometry/utilities.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -93,15 +94,10 @@ std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ProcessDepthImageIfAva
     auto pose_with_covariance_and_correspondences = depth_odometry_->DepthImageCallback(depth_image_measurement);
     if (pose_with_covariance_and_correspondences) {
       const auto& pose_with_covariance = pose_with_covariance_and_correspondences->pose_with_covariance;
-      ff_msgs::DepthOdometry depth_odometry_msg;
-      // TODO(rsoussan): Add fcn to convert to depth odom msg in utils!!! (A)
-      /*const Eigen::Isometry3d body_F_a_T_b =
-        lc::FrameChangeRelativeTransform(pose_with_covariance.pose, params_.body_T_haz_cam);
-      // TODO(rsoussan): rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be
-      // rotated by rotation matrix)
-      mc::EigenPoseCovarianceToMsg(pose_with_covariance.pose, pose_with_covariance.covariance, pose_msg.sensor_F_a_T_b);
-      mc::EigenPoseCovarianceToMsg(body_F_a_T_b, pose_with_covariance.covariance, pose_msg.body_F_a_T_b);
-      lc::TimeToHeader(depth_image_measurement.timestamp, pose_msg.header);*/
+      const lc::PoseWithCovariance body_frame_pose_with_covariance =
+        lc::FrameChangeRelativePoseWithCovariance(pose_with_covariance, params_.body_T_haz_cam);
+      ff_msgs::DepthOdometry depth_odometry_msg =
+        DepthOdometryMsg(*pose_with_covariance_and_correspondences, body_frame_pose_with_covariance);
       depth_odometry_msgs.emplace_back(depth_odometry_msg);
     }
   }
