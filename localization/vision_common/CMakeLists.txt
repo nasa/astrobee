@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME}
   src/brisk_feature_detector_and_matcher.cc
   src/good_features_to_track_detector.cc
   src/lk_optical_flow_feature_detector_and_matcher.cc
+  src/parameter_reader.cc
   src/surf_feature_detector_and_matcher.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})

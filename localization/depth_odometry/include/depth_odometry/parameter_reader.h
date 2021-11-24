@@ -22,6 +22,7 @@
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/depth_odometry_wrapper_params.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
+#include <depth_odometry/image_feature_known_correspondences_aligner_depth_odometry_params.h>
 /*#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_odometry_nodelet_params.h>
@@ -34,6 +35,8 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOdometryWrapperParams& params);
 void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
                                             PointToPlaneICPDepthOdometryParams& params);
+void LoadImageFeatureKnownCorrespondencesAlignerDepthOdometryParams(
+  config_reader::ConfigReader& config, ImageFeatureKnownCorrespondencesAlignerDepthOdometryParams& params);
 /*void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
