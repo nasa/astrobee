@@ -29,7 +29,7 @@ DataBagger::DataBagger() :
   immediate_recorder_(nullptr),
   pub_queue_size_(10),
   startup_time_secs_(20),
-  bag_size_bytes_(96000000),
+  bag_size_MB_(1024),
   delayed_profile_name_("") {
 }
 
@@ -134,7 +134,7 @@ bool DataBagger::EnableDelayedRecordingService(ff_msgs::EnableRecording::Request
     }
 
     recorder_options_delayed_.split = true;
-    recorder_options_delayed_.max_size = bag_size_bytes_;
+    recorder_options_delayed_.max_size = bag_size_MB_;
     recorder_options_delayed_.append_date = false;
 
     StartDelayedRecording();
@@ -221,9 +221,9 @@ bool DataBagger::ReadParams() {
   }
 
   // Get max bag size in bytes.
-  if (!config_params_.GetLongLong("bag_size_bytes", &bag_size_bytes_)) {
+  if (!config_params_.GetLongLong("bag_size_MB", &bag_size_MB_)) {
     NODELET_WARN("Unable to read bag size bytes. Setting to 96 MB.");
-    bag_size_bytes_ = 96000000;
+    bag_size_MB_ = 1024;
   }
 
   if (!config_params_.GetStr("bags_save_directory", &save_dir_)) {
@@ -468,7 +468,7 @@ bool DataBagger::SetImmediateDataToDisk(std::string &err_msg) {
   recorder_options_immediate_.prefix = dated_dir + GetDate(true) + "_" +
                                                       default_data_state_.name;
   recorder_options_immediate_.split = true;
-  recorder_options_immediate_.max_size = bag_size_bytes_;
+  recorder_options_immediate_.max_size = bag_size_MB_;
   recorder_options_immediate_.append_date = false;
 
   StartImmediateRecording();

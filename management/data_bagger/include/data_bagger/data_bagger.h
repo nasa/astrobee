@@ -108,7 +108,7 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
 
   int pub_queue_size_;
   unsigned int startup_time_secs_;
-  int64_t bag_size_bytes_;
+  int64_t bag_size_MB_;
 
   ros::Publisher pub_data_state_, pub_data_topics_;
   ros::Timer startup_timer_;
