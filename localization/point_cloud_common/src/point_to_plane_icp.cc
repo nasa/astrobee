@@ -17,7 +17,6 @@
  */
 
 #include <localization_common/logger.h>
-#include <localization_common/timer.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/point_to_plane_icp.h>
 #include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls.h>
@@ -59,8 +58,6 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
   const Eigen::Isometry3d& initial_estimate) {
-  static lc::Timer icp_timer("PointToPlaneICP");
-  icp_timer.Start();
   pcl::IterativeClosestPointWithNormals<pcl::PointXYZINormal, pcl::PointXYZINormal> icp;
 
   if (params_.symmetric_objective) {
@@ -91,14 +88,12 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
 
   if (!icp.hasConverged()) {
     LogError("Icp: Failed to converge.");
-    icp_timer.Stop();
     return boost::none;
   }
 
   const double fitness_score = icp.getFitnessScore();
   if (fitness_score > params_.fitness_threshold) {
     LogError("Icp: Fitness score too large: " << fitness_score << ".");
-    icp_timer.Stop();
     return boost::none;
   }
 
@@ -109,44 +104,45 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   SaveCorrespondences(icp, source_cloud_with_normals, result);
   const Eigen::Matrix<double, 6, 6> covariance =
     PointToPlaneCovariance(correspondences_->source_points, correspondences_->target_normals, relative_transform);
-  icp_timer.StopAndLog();
   return lc::PoseWithCovariance(relative_transform, covariance);
+}
+
+boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunDownsampledPointToPlaneICP(
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
+  const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals, const double leaf_size,
+  const Eigen::Isometry3d& initial_estimate) {
+  // TODO(rsoussan): Why does template deduction fail without this?
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr downsampled_source_cloud_with_normals =
+    DownsamplePointCloud<pcl::PointXYZINormal>(source_cloud_with_normals, leaf_size);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr downsampled_target_cloud_with_normals =
+    DownsamplePointCloud<pcl::PointXYZINormal>(target_cloud_with_normals, leaf_size);
+  return RunPointToPlaneICP(downsampled_source_cloud_with_normals, downsampled_target_cloud_with_normals,
+                            initial_estimate);
 }
 
 boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunCoarseToFinePointToPlaneICP(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud_with_normals,
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud_with_normals,
   const Eigen::Isometry3d& initial_estimate) {
-  static lc::Timer coarse_to_fine_icp_timer("Coarse To Fine PointToPlaneICP");
-  coarse_to_fine_icp_timer.Start();
-  boost::optional<lc::PoseWithCovariance> latest_relative_transform =
+  boost::optional<lc::PoseWithCovariance> coarse_to_fine_relative_transform =
     lc::PoseWithCovariance(initial_estimate, Eigen::Matrix<double, 6, 6>());
   for (int i = 0; i < params_.num_coarse_to_fine_levels; ++i) {
-    pcl::PointCloud<pcl::PointXYZINormal>::Ptr downsampled_source_cloud_with_normals;
-    pcl::PointCloud<pcl::PointXYZINormal>::Ptr downsampled_target_cloud_with_normals;
+    // Final iteration and no downsampling enabled for last iteration
     if (i == params_.num_coarse_to_fine_levels - 1 && !params_.downsample_last_coarse_to_fine_iteration) {
-      downsampled_source_cloud_with_normals = source_cloud_with_normals;
-      downsampled_target_cloud_with_normals = target_cloud_with_normals;
-    } else {
-      const double leaf_size_ratio =
-        static_cast<double>(params_.num_coarse_to_fine_levels) / static_cast<double>(i + 1.0);
-      const double leaf_size = leaf_size_ratio * params_.coarse_to_fine_final_leaf_size;
-      // TODO(rsoussan): Why does template deduction fail without this?
-      downsampled_source_cloud_with_normals =
-        DownsamplePointCloud<pcl::PointXYZINormal>(source_cloud_with_normals, leaf_size);
-      downsampled_target_cloud_with_normals =
-        DownsamplePointCloud<pcl::PointXYZINormal>(target_cloud_with_normals, leaf_size);
+      coarse_to_fine_relative_transform = RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
+                                                             coarse_to_fine_relative_transform->pose);
+    } else {  // Downsampled for other iterations
+      const double leaf_size =
+        static_cast<double>(params_.num_coarse_to_fine_levels - i) * params_.coarse_to_fine_final_leaf_size;
+      coarse_to_fine_relative_transform = RunDownsampledPointToPlaneICP(
+        source_cloud_with_normals, target_cloud_with_normals, leaf_size, coarse_to_fine_relative_transform->pose);
     }
-    latest_relative_transform = RunPointToPlaneICP(
-      downsampled_source_cloud_with_normals, downsampled_target_cloud_with_normals, latest_relative_transform->pose);
-    if (!latest_relative_transform) {
+    if (!coarse_to_fine_relative_transform) {
       LogWarning("RunCoarseToFinePointToPlaneICP: Failed to get relative transform.");
-      coarse_to_fine_icp_timer.StopAndLog();
       return boost::none;
     }
   }
-  coarse_to_fine_icp_timer.StopAndLog();
-  return latest_relative_transform;
+  return coarse_to_fine_relative_transform;
 }
 
 void PointToPlaneICP::SaveCorrespondences(
