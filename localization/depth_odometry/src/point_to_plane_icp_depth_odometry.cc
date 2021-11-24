@@ -27,9 +27,7 @@ namespace lm = localization_measurements;
 namespace pcc = point_cloud_common;
 
 PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params)
-    : params_(params) {
-  icp_.reset(new pcc::PointToPlaneICP(params_.icp));
-}
+    : params_(params), icp_(params_.icp) {}
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
@@ -57,7 +55,7 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     return boost::none;
   }
   auto relative_transform =
-    icp_->ComputeRelativeTransform(previous_point_cloud_with_normals_, latest_point_cloud_with_normals_);
+    icp_.ComputeRelativeTransform(previous_point_cloud_with_normals_, latest_point_cloud_with_normals_);
   if (!relative_transform) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
@@ -69,7 +67,7 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     return boost::none;
   }
 
-  const auto correspondences = icp_->correspondences();
+  const auto correspondences = icp_.correspondences();
   if (!correspondences) {
     LogWarning("DepthImageCallback: Failed to get correspondences.");
     return boost::none;

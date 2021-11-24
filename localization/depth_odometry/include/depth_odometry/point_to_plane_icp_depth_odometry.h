@@ -32,7 +32,7 @@ class PointToPlaneICPDepthOdometry : public DepthOdometry {
   const PointToPlaneICPDepthOdometryParams& params() const { return params_; }
 
  private:
-  std::unique_ptr<point_cloud_common::PointToPlaneICP> icp_;
+  point_cloud_common::PointToPlaneICP icp_;
   PointToPlaneICPDepthOdometryParams params_;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr previous_point_cloud_with_normals_;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr latest_point_cloud_with_normals_;
