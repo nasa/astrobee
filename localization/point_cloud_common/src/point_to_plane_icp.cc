@@ -49,6 +49,9 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::ComputeRelativeTransfor
   const Eigen::Isometry3d& initial_estimate) {
   if (params_.coarse_to_fine) {
     return RunCoarseToFinePointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, initial_estimate);
+  } else if (params_.downsample) {
+    return RunDownsampledPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
+                                         params_.downsample_leaf_size, initial_estimate);
   } else {
     return RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, initial_estimate);
   }
