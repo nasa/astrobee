@@ -185,6 +185,11 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
           sendMobilityCommand(ff_msgs::CommandConstants::CMD_NAME_UNDOCK);
           break;
         }
+        case 5:  // stop
+        {
+          sendMobilityCommand(ff_msgs::CommandConstants::CMD_NAME_STOP_ALL_MOTION);
+          break;
+        }
         default:
           break;
       }
@@ -273,6 +278,7 @@ int main(int argc, char** argv) {
   menu_handler.insert("Go to Position", &processFeedback);
   menu_handler.insert("Dock", &processFeedback);
   menu_handler.insert("Undock", &processFeedback);
+  menu_handler.insert("Stop", &processFeedback);
 
   // menu_handler.insert("Add to plan", &processFeedback);  // TODO(jdekarske) would be cool to add a new marker for
   // each station
