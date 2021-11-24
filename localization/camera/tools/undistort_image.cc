@@ -45,10 +45,10 @@
   separate directory is specified.
 */
 
-DEFINE_string(image_list, "", "The list of images to undistort, one per line. If not specified, "
-              "it is assumed they are passed in directly on the command line.");
+DEFINE_string(image_list, "", "A file having the list of images to undistort, one per line. "
+              "If not specified, it is assumed they are passed in directly on the command line.");
 
-DEFINE_string(output_directory, "", "If not specified, undistorted images will "
+DEFINE_string(output_directory, "", "Output directory. If not specified, undistorted images will "
               "saved in the same directory as the inputs.");
 
 DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their width "
@@ -57,7 +57,7 @@ DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their 
 DEFINE_string(undistorted_crop_win, "",
               "After undistorting, apply a crop window of these dimensions "
               "centered at the undistorted image center. The adjusted "
-              "dimensions and optical center will be displayed below. "
+              "dimensions and optical center will be printed on screen. "
               "Specify as: 'crop_x crop_y'.");
 
 DEFINE_bool(save_bgr, false,
@@ -67,7 +67,7 @@ DEFINE_bool(histogram_equalization, false,
             "If true, do histogram equalization.");
 
 DEFINE_string(robot_camera, "nav_cam",
-              "Which of bot's cameras to use. Anything except nav_cam is experimental.");
+              "Which of bot's cameras to use. Tested with nav_cam and sci_cam.");
 
 int main(int argc, char ** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
