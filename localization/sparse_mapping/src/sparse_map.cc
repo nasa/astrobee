@@ -135,7 +135,7 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vect
   boost::to_lower(ext);
 
   if (ext == "nvm") {
-    std::cout << "Reading a map in NVM format." << std::endl;
+    std::cout << "NVM format detected." << std::endl;
 
     sparse_mapping::ReadNVM(filename, &cid_to_keypoint_map_, &cid_to_filename_, &pid_to_cid_fid_, &pid_to_xyz_,
                             &cid_to_cam_t_global_);
@@ -167,7 +167,8 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vect
     int new_cid = 0;
     for (auto order_it = orig_order.begin(); order_it != orig_order.end() ; order_it++) {
       auto base_it = base2cid.find(order_it->second);
-      if (base_it == base2cid.end()) LOG(FATAL) << "Book-keeping error in ReadNVM";  // should not happen
+      if (base_it == base2cid.end()) continue;  // Not all input images may be present in the map
+
       int old_cid = base_it->second;
       old_cid_to_new_cid[old_cid] = new_cid;
       new_cid++;
@@ -186,7 +187,7 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vect
     reorderMap(old_cid_to_new_cid);
 
   } else if (bundler_format) {
-    std::cout << "Reading a map in Bundler format." << std::endl;
+    std::cout << "Bundler format detected." << std::endl;
 
     int num_cams = 0;
 
@@ -222,58 +223,6 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vect
       cid_to_cam_t_global_[i].linear() = T;  // not sure
       cid_to_cam_t_global_[i].translation() = P;
     }
-
-    // Initialize other data expected in the map
-    cid_to_keypoint_map_.resize(num_cams);
-    cid_to_descriptor_map_.resize(num_cams);
-
-  } else {
-    // This is very old code and may need to be wiped. Now
-    // Theia writes in binary format and it provides a tool to export
-    // to NVM which we read as above.
-    std::cout << "Reading a map in Theia's text format." << std::endl;
-
-    int num_cams = 0;
-
-    std::ifstream is(filename.c_str());
-    is >> num_cams;
-    cid_to_cam_t_global_.resize(num_cams);
-    cid_to_filename_.resize(num_cams);
-
-    for (int i = 0; i < num_cams; i++) {
-      std::string line;
-      std::getline(is, line);  // empty line
-      std::getline(is, line);  // actual data
-      cid_to_filename_[i] = line;
-
-      Eigen::Matrix3d T;
-      for (int row = 0; row < T.rows(); row++) {
-        for (int col = 0; col < T.cols(); col++) {
-          is >> T(row, col);
-        }
-      }
-
-      Eigen::Vector3d P;
-      for (int row = 0; row < P.size(); row++)
-        is >> P[row];
-
-      cid_to_cam_t_global_[i].linear() = T.transpose();  // not sure
-      cid_to_cam_t_global_[i].translation() = P;
-      cid_to_cam_t_global_[i] = cid_to_cam_t_global_[i].inverse();
-    }
-
-    int num_pts;
-    is >> num_pts;
-    pid_to_xyz_.resize(num_pts);
-    pid_to_cid_fid_.resize(num_pts);
-    for (int i = 0; i < num_pts; i++) {
-      Eigen::Vector3d P;
-      for (int row = 0; row < P.size(); row++) {
-        is >> P[row];
-      }
-      pid_to_xyz_[i] = P;
-    }
-    is.close();
 
     // Initialize other data expected in the map
     cid_to_keypoint_map_.resize(num_cams);
