@@ -50,7 +50,8 @@ Usually the bags are acquired at a very high frame rate, and they are
 huge. A preliminary filtering of the bag images while still on the
 robot can be done with the command:
 
-    rosbag filter input.bag output.bag "(topic == '/hw/cam_nav') and (float(t.nsecs)/1e+9 <= 0.1)"
+    rosbag filter input.bag output.bag                           \
+      "(topic == '/hw/cam_nav') and (float(t.nsecs)/1e+9 <= 0.1)"
 
 Here, for every second of recorded data, we keep only the first tenth
 of a second. This number may need to be adjusted. Later, a further
@@ -62,7 +63,8 @@ From the local machine, fetch the bag:
 
     rsync -avzP astrobee@10.42.0.32:/data/bagfile.bag .
 
-Here, the IP address of P4D was used, which may differ from your robot's IP address.
+Here, the IP address of P4D was used, which may differ from your
+robot's IP address.
 
 ### Merging bags
 
@@ -70,18 +72,18 @@ The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
 as follows:
 
-    astrobee_build/devel/lib/localization_node/merge_bags \
+    astrobee/build/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
 ### Extracting images
 
 To extract images from a bag file:
 
-     extract_image_bag <bagfile.bag> -use_timestamp_as_image_name \
-       -image_topic /hw/cam_nav -output_directory <output dir>
+    astrobee/build/devel/lib/localization_node/extract_image_bag   \
+      <bagfile.bag> -use_timestamp_as_image_name                   \
+      -image_topic /hw/cam_nav -output_directory <output dir>
 
-The above assumes that the software was built with ROS on. This tool should
-exist in astrobee_build/native.
+The above assumes that the software was built with ROS on.
 
 Please check using 'rosbag info' the nav cam topic in the bag, as its
 name can change.
@@ -238,7 +240,7 @@ need to be rebuilt for the extracted submap using
     build_map -vocab_db
 
 
-#### Merge maps
+### Merge maps
 
 Given a set of SURF maps, they can be merged using the command:
 
@@ -286,7 +288,7 @@ If the first of the two maps to merge is already registered, it may be
 desirable to keep that portion fixed during merging when bundle
 adjustment happens. That is accomplished with the flag -fix_first_map.
   
-#### How to build a map efficiently
+### How to build a map efficiently
 
 Often times map-building can take a long time, or it can fail. A
 cautious way of building a map is to build it in portions (perhaps on
@@ -328,7 +330,7 @@ Only when a good enough map is obtained, a renamed copy of it
 should be rebuilt with BRISK features and a vocabulary database
 to be used on the robot.
 
-#### Map strategy for the space station
+### Map strategy for the space station
 
 For the space station, there exists one large SURF map with many
 images, and a small BRISK map with fewer images. If new images are
@@ -348,7 +350,7 @@ for 80 of them localization failed. So, things will change as follows:
 
 The precise details are described in the next section.
 
-#### Growing a map when more images are acquired
+### Growing a map when more images are acquired
 
 Sometimes things in the desired environment change enough, or the
 lighting changes, and an existing map may no longer do as well in some
@@ -409,7 +411,7 @@ batch if they are not strictly necessary.
 
 The following Python code implements this:
 
-    python ~/astrobee/localization/sparse_mapping/tools/grow_map.py   \
+    python astrobee/src/localization/sparse_mapping/tools/grow_map.py \
       -histogram_equalization -small_map prev_brisk_vocab_hist.map    \
       -big_map curr_brisk_no_prune_hist.map -work_dir work            \
       -output_map curr_brisk_vocab_hist.map                           \
@@ -428,7 +430,7 @@ cohesiveness.
 Also note that the grow_map.py script takes a lot of other parameters
 on input that must be the same as in localization.config.
 
-#### Reducing the number of images in a map
+### Reducing the number of images in a map
 
 Sometimes a map has too many similar images. The tool reduce_map.py
 attempts to reduce their number without sacrificing the map quality.
@@ -439,10 +441,11 @@ need not have a vocab db.
 
 Usage:
 
-    python reduce_map.py -input_map <input map> -min_brisk_threshold <val> \
-           -default_brisk_threshold <val> -max_brisk_threshold <val>       \
-           -localization_error <val> -work_dir <work dir>                  \
-           -sample_rate <val> -histogram_equalization
+    python astrobee/src/localization/sparse_mapping/tools/reduce_map.py \
+      -input_map <input map> -min_brisk_threshold <val>                 \
+      -default_brisk_threshold <val> -max_brisk_threshold <val>         \
+      -localization_error <val> -work_dir <work dir>                    \
+      -sample_rate <val> -histogram_equalization
 
 The BRISK thresholds here must be as when the map was built (ideally
 like in localization.config). The -histogram_equalization flag is
@@ -478,6 +481,40 @@ reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
 
+# Importing a map
+
+A map built with Theia using undistorted nav cam images can be
+exported to the NVM format as::
+
+    /path/to/TheiaSfM/build/bin/export_to_nvm_file \
+      -input_reconstruction_file map-0             \
+      -output_nvm_file map.nvm
+
+The NVM map can be saved as an Astrobee sparse map with the command::
+
+    astrobee/build/devel/lib/sparse_mapping/import_map                       \
+      -undistorted_camera_params "wid_x wid_y focal_len opt_ctr_x opt_ctr_y" \
+      <undistorted images>                                                   \
+      -input_map map.nvm -output_map map.map
+ 
+This assumes that the images were acquired with the nav camera of the
+robot given by $ASTROBEE_ROBOT and undistorted with the Astrobee
+program ``undistort_image``. The undistorted camera parameters to use
+should be as printed on the screen by ``undistort_image``.
+
+If desired to replace on importing the undistorted images with the
+original distorted ones, as it is usually expected of a sparse map,
+the above command should be called instead as::
+  
+    astrobee/build/devel/lib/sparse_mapping/import_map \
+      <undistorted images>                             \
+      -distorted_images_list list.txt                  \
+      -input_map map.nvm -output_map map.map
+
+Here, the file list.txt must have one image per line. It is important
+that both undistorted and distorted images be specified, as the former
+are needed to look up camera poses and other data in the .nvm file
+before being replaced with the distorted ones.
 
 \subpage map_building
 \subpage total_station
