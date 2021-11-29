@@ -26,6 +26,8 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
+
 namespace lc = localization_common;
 namespace pc = point_cloud_common;
 namespace sym = gtsam::symbol_shorthand;
@@ -67,8 +69,322 @@ TEST(UtilitiesTester, PointToPointJacobian) {
   }
 }
 
-TEST(UtilitiesTester, A) {}
+TEST(UtilitiesTester, ValidPoint_XYZ) {
+  // Valid
+  {
+    pcl::PointXYZ p(1, 2, 3);
+    ASSERT_TRUE(pc::ValidPoint(p));
+  }
+  // Invalid nan
+  {
+    pcl::PointXYZ p(std::numeric_limits<double>::quiet_NaN(), 2, 3);
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointXYZ p(std::numeric_limits<double>::infinity(), 2, 3);
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+}
 
+TEST(UtilitiesTester, ValidPoint_Normal) {
+  // Valid
+  {
+    pcl::PointNormal p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_TRUE(pc::ValidPoint(p));
+  }
+  // Invalid nan
+  {
+    // point
+    pcl::PointNormal p;
+    p.x = std::numeric_limits<double>::quiet_NaN();
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    // normal
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = std::numeric_limits<double>::quiet_NaN();
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointNormal p;
+    // point
+    p.x = std::numeric_limits<double>::infinity();
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    // normal
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = std::numeric_limits<double>::infinity();
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+}
+
+TEST(UtilitiesTester, ValidPoint_XYZI) {
+  // Valid
+  {
+    pcl::PointXYZI p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    ASSERT_TRUE(pc::ValidPoint(p));
+  }
+  // Invalid nan
+  {
+    pcl::PointXYZI p;
+    p.x = std::numeric_limits<double>::quiet_NaN();
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    ASSERT_FALSE(pc::ValidPoint(p));
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = std::numeric_limits<double>::quiet_NaN();
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointXYZI p;
+    p.x = std::numeric_limits<double>::infinity();
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 1;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = std::numeric_limits<double>::infinity();
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+}
+
+TEST(UtilitiesTester, ValidPoint_XYZINormal) {
+  // Valid
+  {
+    pcl::PointXYZINormal p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_TRUE(pc::ValidPoint(p));
+  }
+  // Invalid nan
+  {
+    // point
+    pcl::PointXYZINormal p;
+    p.x = std::numeric_limits<double>::quiet_NaN();
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    // intensity
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = std::numeric_limits<double>::quiet_NaN();
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    // normal
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    p.normal[0] = std::numeric_limits<double>::quiet_NaN();
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointXYZINormal p;
+    // point
+    p.x = std::numeric_limits<double>::infinity();
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 1;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    // intensity
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = std::numeric_limits<double>::infinity();
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+
+    // normal
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 1;
+    p.normal[0] = std::numeric_limits<double>::infinity();
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
+}
+
+TEST(UtilitiesTester, ValidPointXYZ) {
+  // Valid
+  {
+    pcl::PointXYZ p(1, 2, 3);
+    ASSERT_TRUE(pc::ValidPointXYZ(p));
+  }
+  // Invalid nan
+  {
+    pcl::PointXYZ p(std::numeric_limits<double>::quiet_NaN(), 2, 3);
+    ASSERT_FALSE(pc::ValidPointXYZ(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointXYZ p(std::numeric_limits<double>::infinity(), 2, 3);
+    ASSERT_FALSE(pc::ValidPointXYZ(p));
+  }
+}
+
+TEST(UtilitiesTester, ValidNormal) {
+  // Valid
+  {
+    pcl::PointNormal p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_TRUE(pc::ValidNormal(p));
+  }
+  // Invalid nan
+  {
+    pcl::PointNormal p;
+    p.x = std::numeric_limits<double>::quiet_NaN();
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_TRUE(pc::ValidNormal(p));
+
+    // normal
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = std::numeric_limits<double>::quiet_NaN();
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidNormal(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointNormal p;
+    // point
+    p.x = std::numeric_limits<double>::infinity();
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 1;
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_TRUE(pc::ValidNormal(p));
+
+    // normal
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = std::numeric_limits<double>::infinity();
+    p.normal[1] = 2;
+    p.normal[2] = 3;
+    ASSERT_FALSE(pc::ValidNormal(p));
+  }
+}
+
+TEST(UtilitiesTester, ValidIntensity) {
+  // Valid
+  {
+    pcl::PointXYZI p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    ASSERT_TRUE(pc::ValidIntensity(p));
+  }
+  // Invalid nan
+  {
+    pcl::PointXYZI p;
+    p.x = std::numeric_limits<double>::quiet_NaN();
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 4;
+    ASSERT_TRUE(pc::ValidIntensity(p));
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = std::numeric_limits<double>::quiet_NaN();
+    ASSERT_FALSE(pc::ValidIntensity(p));
+  }
+  // Invalid inf
+  {
+    pcl::PointXYZI p;
+    p.x = std::numeric_limits<double>::infinity();
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 1;
+    ASSERT_TRUE(pc::ValidIntensity(p));
+
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = std::numeric_limits<double>::infinity();
+    ASSERT_FALSE(pc::ValidIntensity(p));
+  }
+}
+
+/*
+template <typename Type>
+bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
+  return std::abs(point) <= epsilon;
+}
+*/
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
