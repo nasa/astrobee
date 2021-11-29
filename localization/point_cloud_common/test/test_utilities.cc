@@ -141,6 +141,17 @@ TEST(UtilitiesTester, ValidPoint_Normal) {
     p.normal[2] = 3;
     ASSERT_FALSE(pc::ValidPoint(p));
   }
+  // Invalid Zero Normal
+  {
+    pcl::PointNormal p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 0;
+    p.normal[1] = 0;
+    p.normal[2] = 0;
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
 }
 
 TEST(UtilitiesTester, ValidPoint_XYZI) {
@@ -263,6 +274,18 @@ TEST(UtilitiesTester, ValidPoint_XYZINormal) {
     p.normal[2] = 3;
     ASSERT_FALSE(pc::ValidPoint(p));
   }
+  // Invalid Zero Normal
+  {
+    pcl::PointXYZINormal p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.intensity = 1;
+    p.normal[0] = 0;
+    p.normal[1] = 0;
+    p.normal[2] = 0;
+    ASSERT_FALSE(pc::ValidPoint(p));
+  }
 }
 
 TEST(UtilitiesTester, ValidPointXYZ) {
@@ -336,6 +359,17 @@ TEST(UtilitiesTester, ValidNormal) {
     p.normal[2] = 3;
     ASSERT_FALSE(pc::ValidNormal(p));
   }
+  // Invalid Zero Normal
+  {
+    pcl::PointNormal p;
+    p.x = 1;
+    p.y = 2;
+    p.z = 3;
+    p.normal[0] = 0;
+    p.normal[1] = 0;
+    p.normal[2] = 0;
+    ASSERT_FALSE(pc::ValidNormal(p));
+  }
 }
 
 TEST(UtilitiesTester, ValidIntensity) {
@@ -379,12 +413,13 @@ TEST(UtilitiesTester, ValidIntensity) {
   }
 }
 
-/*
-template <typename Type>
-bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
-  return std::abs(point) <= epsilon;
+TEST(UtilitiesTester, ApproxZero) {
+  ASSERT_FALSE(pc::ApproxZero(1.0));
+  ASSERT_TRUE(pc::ApproxZero(0.0));
+  ASSERT_TRUE(pc::ApproxZero(1e-9));
+  ASSERT_TRUE(pc::ApproxZero(1, 2));
 }
-*/
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
