@@ -57,7 +57,7 @@ Here, for every second of recorded data, we keep only the first tenth
 of a second. This number may need to be adjusted. Later, a further
 selection of the images can be done.
 
-### Copy the bag from the robot:
+### Copy the bag from the robot
 
 From the local machine, fetch the bag:
 
@@ -137,7 +137,7 @@ collecting a subset of the images. (After clicking, a bug in OpenCV
 disables the arrow keys, then one can navigate with the "Ins" and
 "Del" keys on the numpad.)
 
-This tool can be invoked to just look at images, without any map being
+This tool can be invoked to look at just images, without any map being
 built. It can also delete images in this mode, with the 'Delete' and
 'x' keys, if invoked as:
 
@@ -480,41 +480,6 @@ Instead of taking images out of the map randomly, one can start with a
 reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
-
-# Importing a map
-
-A map built with Theia using undistorted nav cam images can be
-exported to the NVM format as::
-
-    /path/to/TheiaSfM/build/bin/export_to_nvm_file \
-      -input_reconstruction_file map-0             \
-      -output_nvm_file map.nvm
-
-The NVM map can be saved as an Astrobee sparse map with the command::
-
-    astrobee/build/devel/lib/sparse_mapping/import_map                       \
-      -undistorted_camera_params "wid_x wid_y focal_len opt_ctr_x opt_ctr_y" \
-      <undistorted images>                                                   \
-      -input_map map.nvm -output_map map.map
- 
-This assumes that the images were acquired with the nav camera of the
-robot given by $ASTROBEE_ROBOT and undistorted with the Astrobee
-program ``undistort_image``. The undistorted camera parameters to use
-should be as printed on the screen by ``undistort_image``.
-
-If desired to replace on importing the undistorted images with the
-original distorted ones, as it is usually expected of a sparse map,
-the above command should be called instead as::
-  
-    astrobee/build/devel/lib/sparse_mapping/import_map \
-      <undistorted images>                             \
-      -distorted_images_list list.txt                  \
-      -input_map map.nvm -output_map map.map
-
-Here, the file list.txt must have one image per line. It is important
-that both undistorted and distorted images be specified, as the former
-are needed to look up camera poses and other data in the .nvm file
-before being replaced with the distorted ones.
 
 \subpage map_building
 \subpage total_station

@@ -39,59 +39,80 @@ DEFINE_string(output_map, "output.map",
 DEFINE_bool(bundler_map, false,
             "If true, read the Bundler format. This will be ignored for input .nvm files.");
 DEFINE_string(undistorted_camera_params, "",
-              "Intrinsics of the undistorted camera. Specify as: "
+              "Intrinsics of the undistorted camera. Not needed if --distorted_images_list "
+              "is specified, as then the camera is set via ASTROBEE_ROBOT. Specify as: "
               "'wid_x wid_y focal_len opt_ctr_x opt_ctr_y'.");
+DEFINE_string(undistorted_images_list, "",
+              "The full list of undistorted images used to create the sparse map. "
+              "If not specified, the images should be passed on the command line. "
+              "Note that not all of them may have been used in the map.");
 DEFINE_string(distorted_images_list, "",
               "Replace the undistorted images specified on input with distorted images "
-              "from this list. The correct value of ASTROBEE_ROBOT must be set.");
+              "from this list (one file per line). The correct value of ASTROBEE_ROBOT "
+              "must be set.");
 
-// Replace the undistorted images which Theia used with distorted images
-void replaceWithDistortedImages(std::vector<std::string> const& undist_images,
-                                std::string const& distorted_images_list,
-                                sparse_mapping::SparseMap & map) {
-  // Must overwrite the camera params for the distorted images
-  std::cout << "Using distorted camera parameters for nav_cam for robot: "
-            << getenv("ASTROBEE_ROBOT") << ".\n";
-  config_reader::ConfigReader config;
-  config.AddFile("cameras.config");
-  if (!config.ReadFiles()) LOG(FATAL) << "Failed to read config files.\n";
+namespace {
+  // Keep these utilities in a local namespace
 
-  camera::CameraParameters cam_params(&config, "nav_cam");
-  map.SetCameraParameters(cam_params);
-
-  // Replace the undistorted images with distorted ones
-  std::vector<std::string> distorted_images;
-  std::string image;
-  std::ifstream ifs(distorted_images_list.c_str());
-  while (ifs >> image)
-    distorted_images.push_back(image);
-
-  if (undist_images.size() != distorted_images.size())
-    LOG(FATAL) << "The number of distorted images in the list and undistorted ones "
-               << "passed on the command line must be the same.\n";
-
-  std::map<std::string, std::string> undist_to_dist;
-  for (size_t it = 0; it < undist_images.size(); it++) undist_to_dist[undist_images[it]] = distorted_images[it];
-
-  // Replace the images in the map. Keep in mind that the map
-  // may have just a subset of the input images.
-  for (size_t it = 0; it < map.cid_to_filename_.size(); it++) {
-    auto map_it = undist_to_dist.find(map.cid_to_filename_[it]);
-    if (map_it == undist_to_dist.end())
-      LOG(FATAL) << "This map image was not specified on input: "
-                 << map.cid_to_filename_[it] << ".\n";
-    map.cid_to_filename_[it] = map_it->second;
+  void readLines(std::string const& list, std::vector<std::string> & lines) {
+    lines.clear();
+    std::string line;
+    std::ifstream ifs(list.c_str());
+    while (ifs >> line)
+      lines.push_back(line);
   }
-}
+
+  // Replace the undistorted images which Theia used with distorted images.
+  // The interest points need not be modified as those are always undistorted
+  // when saved, even if the map has distorted images.
+  void replaceWithDistortedImages(std::vector<std::string> const& undist_images,
+                                  std::string const& distorted_images_list,
+                                  sparse_mapping::SparseMap & map) {
+    // Must overwrite the camera params for the distorted images
+    std::cout << "Using distorted camera parameters for nav_cam for robot: "
+              << getenv("ASTROBEE_ROBOT") << ".\n";
+    config_reader::ConfigReader config;
+    config.AddFile("cameras.config");
+    if (!config.ReadFiles()) LOG(FATAL) << "Failed to read config files.\n";
+
+    camera::CameraParameters cam_params(&config, "nav_cam");
+    map.SetCameraParameters(cam_params);
+
+    // Replace the undistorted images with distorted ones
+    std::vector<std::string> distorted_images;
+    readLines(distorted_images_list, distorted_images);
+
+    if (undist_images.size() != distorted_images.size())
+      LOG(FATAL) << "The number of distorted images in the list and undistorted ones "
+                 << "passed on the command line must be the same.\n";
+
+    std::map<std::string, std::string> undist_to_dist;
+    for (size_t it = 0; it < undist_images.size(); it++) undist_to_dist[undist_images[it]] = distorted_images[it];
+
+    // Replace the images in the map. Keep in mind that the map
+    // may have just a subset of the input images.
+    for (size_t it = 0; it < map.cid_to_filename_.size(); it++) {
+      auto map_it = undist_to_dist.find(map.cid_to_filename_[it]);
+      if (map_it == undist_to_dist.end())
+        LOG(FATAL) << "This map image was not specified on input: "
+                   << map.cid_to_filename_[it] << ".\n";
+      map.cid_to_filename_[it] = map_it->second;
+    }
+  }
+}  // namespace
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  // Read the images from the command line
+  // Read the images from the .list or the command line
   std::vector<std::string> undist_images;
-  for (int i = 1; i < argc; i++)
-    undist_images.push_back(argv[i]);
+  if (FLAGS_undistorted_images_list != "") {
+    readLines(FLAGS_undistorted_images_list, undist_images);
+  } else {
+    for (int i = 1; i < argc; i++)
+      undist_images.push_back(argv[i]);
+  }
 
   std::cout << "Reading map: " << FLAGS_input_map << std::endl;
   sparse_mapping::SparseMap map(FLAGS_bundler_map, FLAGS_input_map, undist_images);
