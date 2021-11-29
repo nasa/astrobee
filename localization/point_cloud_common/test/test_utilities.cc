@@ -49,6 +49,24 @@ TEST(UtilitiesTester, PointToPlaneJacobian) {
   }
 }
 
+gtsam::Vector3 PointToPointError(const gtsam::Point3& point_1, const gtsam::Point3& point_2,
+                                 const gtsam::Pose3& relative_transform) {
+  return relative_transform * point_1 - point_2;
+}
+
+TEST(UtilitiesTester, PointToPointJacobian) {
+  for (int i = 0; i < 500; ++i) {
+    const gtsam::Point3 point_1 = lc::RandomVector();
+    const gtsam::Point3 point_2 = lc::RandomVector();
+    const gtsam::Pose3 relative_transform = lc::RandomPose();
+    const gtsam::Matrix H = pc::PointToPointJacobian(point_1, relative_transform);
+    const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
+      boost::function<gtsam::Vector3(const gtsam::Pose3&)>(boost::bind(&PointToPointError, point_1, point_2, _1)),
+      relative_transform, 1e-5);
+    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+  }
+}
+
 TEST(UtilitiesTester, A) {}
 
 // Run all the tests that were declared with TEST()
