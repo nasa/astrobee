@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_IMAGE_FEATURE_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
-#define DEPTH_ODOMETRY_IMAGE_FEATURE_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
+#ifndef DEPTH_ODOMETRY_IMAGE_FEATURES_WITH_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
+#define DEPTH_ODOMETRY_IMAGE_FEATURES_WITH_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
 
 #include <depth_odometry/depth_odometry_params.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner_params.h>
@@ -27,7 +27,7 @@
 #include <string>
 
 namespace depth_odometry {
-struct ImageFeatureKnownCorrespondencesAlignerDepthOdometryParams : public DepthOdometryParams {
+struct ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams : public DepthOdometryParams {
   point_cloud_common::PointCloudWithKnownCorrespondencesAlignerParams aligner;
   vision_common::BriskFeatureDetectorAndMatcherParams brisk_feature_detector_and_matcher;
   vision_common::LKOpticalFlowFeatureDetectorAndMatcherParams lk_optical_flow_feature_detector_and_matcher;
@@ -44,4 +44,4 @@ struct ImageFeatureKnownCorrespondencesAlignerDepthOdometryParams : public Depth
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_IMAGE_FEATURE_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
+#endif  // DEPTH_ODOMETRY_IMAGE_FEATURES_WITH_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_

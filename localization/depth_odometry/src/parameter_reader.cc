@@ -46,8 +46,8 @@ void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
   LoadDepthOdometryParams(config, params);
 }
 
-void LoadImageFeatureKnownCorrespondencesAlignerDepthOdometryParams(
-  config_reader::ConfigReader& config, ImageFeatureKnownCorrespondencesAlignerDepthOdometryParams& params) {
+void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
+  config_reader::ConfigReader& config, ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams& params) {
   pcc::LoadPointCloudWithKnownCorrespondencesAlignerParams(config, params.aligner);
   vc::LoadBriskFeatureDetectorAndMatcherParams(config, params.brisk_feature_detector_and_matcher);
   vc::LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config, params.lk_optical_flow_feature_detector_and_matcher);

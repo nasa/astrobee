@@ -34,14 +34,14 @@ class DepthImage {
   DepthImage(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud);
   // Point lookups using depth image col and rows need to use the unfiltered point cloud since the indices
   // of the unfiltered cloud correlate to the image space indices.
-  boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const int col, const int row);
-  boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const double col, const double row);
-  boost::optional<pcl::PointXYZI> InterpolatePoint3D(const double col, const double row);
+  boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const int col, const int row) const;
+  boost::optional<const pcl::PointXYZI&> UnfilteredPoint3D(const double col, const double row) const;
+  boost::optional<pcl::PointXYZI> InterpolatePoint3D(const double col, const double row) const;
   const cv::Mat& image() const { return image_; }
   const pcl::PointCloud<pcl::PointXYZI>::Ptr unfiltered_point_cloud() const { return unfiltered_point_cloud_; }
 
  private:
-  bool ValidPoint(const boost::optional<const pcl::PointXYZI&> point);
+  static bool ValidPoint(const boost::optional<const pcl::PointXYZI&> point);
 
   cv::Mat image_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr unfiltered_point_cloud_;

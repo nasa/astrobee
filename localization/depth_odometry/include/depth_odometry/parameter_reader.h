@@ -22,29 +22,14 @@
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/depth_odometry_wrapper_params.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
-#include <depth_odometry/image_feature_known_correspondences_aligner_depth_odometry_params.h>
-/*#include <depth_odometry/brisk_feature_detector_and_matcher_params.h>
-#include <depth_odometry/depth_image_aligner_params.h>
-#include <depth_odometry/depth_odometry_nodelet_params.h>
-#include <depth_odometry/depth_odometry_params.h>
-#include <depth_odometry/lk_optical_flow_feature_detector_and_matcher_params.h>
-#include <depth_odometry/surf_feature_detector_and_matcher_params.h>*/
+#include <depth_odometry/image_features_with_known_correspondences_aligner_depth_odometry_params.h>
 
 namespace depth_odometry {
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
 void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOdometryWrapperParams& params);
 void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
                                             PointToPlaneICPDepthOdometryParams& params);
-void LoadImageFeatureKnownCorrespondencesAlignerDepthOdometryParams(
-  config_reader::ConfigReader& config, ImageFeatureKnownCorrespondencesAlignerDepthOdometryParams& params);
-/*void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);
-void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
-void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
-                                              BriskFeatureDetectorAndMatcherParams& params);
-void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
-                                                      LKOpticalFlowFeatureDetectorAndMatcherParams& params);
-void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
-                                             SurfFeatureDetectorAndMatcherParams& params);
-void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);*/
+void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
+  config_reader::ConfigReader& config, ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams& params);
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_PARAMETER_READER_H_

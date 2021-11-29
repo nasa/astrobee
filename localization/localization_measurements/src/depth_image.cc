@@ -24,14 +24,14 @@ namespace pcc = point_cloud_common;
 DepthImage::DepthImage(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud)
     : image_(image), unfiltered_point_cloud_(point_cloud) {}
 
-boost::optional<const pcl::PointXYZI&> DepthImage::UnfilteredPoint3D(const int col, const int row) {
+boost::optional<const pcl::PointXYZI&> DepthImage::UnfilteredPoint3D(const int col, const int row) const {
   if (col >= image_.cols || row >= image_.rows) return boost::none;
   return unfiltered_point_cloud_->points[image_.cols * row + col];
 }
-boost::optional<const pcl::PointXYZI&> DepthImage::UnfilteredPoint3D(const double col, const double row) {
+boost::optional<const pcl::PointXYZI&> DepthImage::UnfilteredPoint3D(const double col, const double row) const {
   return UnfilteredPoint3D(static_cast<int>(std::round(col)), static_cast<int>(std::round(row)));
 }
-boost::optional<pcl::PointXYZI> DepthImage::InterpolatePoint3D(const double col, const double row) {
+boost::optional<pcl::PointXYZI> DepthImage::InterpolatePoint3D(const double col, const double row) const {
   double col_alpha = col - std::floor(col);
   double row_alpha = row - std::floor(row);
   const auto floor_col_floor_row_point = UnfilteredPoint3D(std::floor(col), std::floor(row));
