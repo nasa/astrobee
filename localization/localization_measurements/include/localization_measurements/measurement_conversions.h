@@ -24,6 +24,7 @@
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/utilities.h>
 #include <localization_measurements/depth_image_measurement.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
@@ -43,6 +44,7 @@
 
 #include <sensor_msgs/PointCloud2.h>
 
+#include <string>
 #include <utility>
 
 namespace localization_measurements {

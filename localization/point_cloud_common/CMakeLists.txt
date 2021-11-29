@@ -37,7 +37,7 @@ find_package(PCL REQUIRED COMPONENTS common)
 
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES} 
   CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common msg_conversions optimization_common 
   DEPENDS gtsam pcl pcl_conversions  
 )
@@ -66,12 +66,12 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CER
 
 if(CATKIN_ENABLE_TESTING)
  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_point_to_plane
-    test/test_point_to_plane.test
-    test/test_point_to_plane.cc
+  add_rostest_gtest(test_utilities_point_cloud_common
+    test/test_utilities.test
+    test/test_utilities.cc
   )
-  target_link_libraries(test_point_to_plane
-    ${PROJECT_NAME} gtsam
+  target_link_libraries(test_utilities_point_cloud_common
+    ${PROJECT_NAME} ${catkin_LIBRARIES} gtsam 
   )
 endif()
 

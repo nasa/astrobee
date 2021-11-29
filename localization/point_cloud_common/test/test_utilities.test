@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="depth_odometry" type="test_point_to_plane" test-name="test_point_to_plane" />
+  <test pkg="point_cloud_common" type="test_utilities_point_cloud_common" test-name="test_utilities" />
 </launch>
