@@ -41,11 +41,11 @@ TEST(UtilitiesTester, PointToPlaneJacobian) {
     const gtsam::Point3 point_2 = lc::RandomVector();
     const gtsam::Vector3 normal_2 = lc::RandomVector();
     const gtsam::Pose3 relative_transform = lc::RandomPose();
-    /*    const gtsam::Matrix H = pc::PointToPlaneJacobian(point_1, normal_2, relative_transform);
-        const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Pose3>(
-          boost::function<double(const gtsam::Pose3&)>(boost::bind(&PointToPlaneError, point_1, point_2, normal_2, _1)),
-          relative_transform, 1e-5);
-        ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));*/
+    const gtsam::Matrix H = pc::PointToPlaneJacobian(point_1, normal_2, relative_transform);
+    const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Pose3>(
+      boost::function<double(const gtsam::Pose3&)>(boost::bind(&PointToPlaneError, point_1, point_2, normal_2, _1)),
+      relative_transform, 1e-5);
+    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
 
