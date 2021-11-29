@@ -32,21 +32,19 @@ class PointCloudWithKnownCorrespondencesAligner {
  public:
   explicit PointCloudWithKnownCorrespondencesAligner(const PointCloudWithKnownCorrespondencesAlignerParams& params);
 
-  Eigen::Isometry3d Align(const std::vector<Eigen::Vector3d>& source_points,
-                          const std::vector<Eigen::Vector3d>& target_points,
-                          const Eigen::Isometry3d& initial_guess) const;
+  Eigen::Isometry3d Align(
+    const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
+    const Eigen::Isometry3d& initial_guess,
+    const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
+    const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals = boost::none) const;
 
   localization_common::PoseWithCovariance ComputeRelativeTransform(
-    const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const;
-
-  void SetSourceNormals(std::vector<Eigen::Vector3d>&& source_normals);  // NOLINT
-
-  void SetTargetNormals(std::vector<Eigen::Vector3d>&& target_normals);  // NOLINT
+    const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
+    const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
+    const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals = boost::none) const;
 
  private:
   PointCloudWithKnownCorrespondencesAlignerParams params_;
-  boost::optional<std::vector<Eigen::Vector3d>> source_normals_;
-  boost::optional<std::vector<Eigen::Vector3d>> target_normals_;
 };
 }  // namespace point_cloud_common
 

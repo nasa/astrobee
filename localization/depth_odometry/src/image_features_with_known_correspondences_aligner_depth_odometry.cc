@@ -125,15 +125,17 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     return boost::none;
   }
 
-  aligner_.SetTargetNormals(std::move(target_normals));
-  aligner_.SetSourceNormals(std::move(source_normals));
-  if (target_landmarks.size() < 4) {
-    LogError("ComputeRelativeTransform: Not enough points with valid normals, need 4 but given "
-             << target_landmarks.size() << ".");
-    return boost::none;
-  }
+  // TODO(rsoussan): This isn't required with std:optional, remove when upgrade to c++17 and change normals
+  // containers to be boost::optional types
+  boost::optional<const std::vector<Eigen::Vector3d>&> source_normals_ref =
+    normals_required_ ? boost::optional<const std::vector<Eigen::Vector3d>&>(source_normals) : boost::none;
+  boost::optional<const std::vector<Eigen::Vector3d>&> target_normals_ref =
+    normals_required_ && params_.aligner.use_symmetric_point_to_plane_cost
+      ? boost::optional<const std::vector<Eigen::Vector3d>&>(target_normals)
+      : boost::none;
 
-  const auto relative_transform = aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks);
+  const auto relative_transform =
+    aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks, source_normals_ref, target_normals_ref);
   if (!lc::PoseCovarianceSane(relative_transform.covariance, params_.position_covariance_threshold,
                               params_.orientation_covariance_threshold)) {
     LogWarning("DepthImageCallback: Sanity check failed - invalid covariance.");

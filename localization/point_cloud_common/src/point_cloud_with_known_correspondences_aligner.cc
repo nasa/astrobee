@@ -31,23 +31,25 @@ PointCloudWithKnownCorrespondencesAligner::PointCloudWithKnownCorrespondencesAli
   const PointCloudWithKnownCorrespondencesAlignerParams& params)
     : params_(params) {}
 
-Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::vector<Eigen::Vector3d>& source_points,
-                                                                   const std::vector<Eigen::Vector3d>& target_points,
-                                                                   const Eigen::Isometry3d& initial_guess) const {
+Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
+  const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
+  const Eigen::Isometry3d& initial_guess, const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
+  const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
   Eigen::Matrix<double, 6, 1> relative_transform = oc::VectorFromIsometry3d(initial_guess);
   ceres::Problem problem;
   problem.AddParameterBlock(relative_transform.data(), 6);
   if (params_.use_symmetric_point_to_plane_cost) {
-    if (!target_normals_ || !source_normals_)
-      LogFatal("Align: Attempting to use symmetric point to plane cost without having set source and target normals.");
+    if (!target_normals || !source_normals)
+      LogFatal(
+        "Align: Attempting to use symmetric point to plane cost without having valid source and target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      oc::SymmetricPointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*source_normals_)[i],
-                                                      (*target_normals_)[i], relative_transform, problem);
+      oc::SymmetricPointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*source_normals)[i],
+                                                      (*target_normals)[i], relative_transform, problem);
     }
   } else if (params_.use_point_to_plane_cost) {
-    if (!target_normals_) LogFatal("Align: Attempting to use point to plane cost without having set target normals.");
+    if (!target_normals) LogFatal("Align: Attempting to use point to plane cost without having valid target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      oc::PointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*target_normals_)[i],
+      oc::PointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*target_normals)[i],
                                              relative_transform, problem);
     }
   } else {
@@ -79,7 +81,9 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(const std::ve
 }
 
 lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
-  const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points) const {
+  const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
+  const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
+  const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
   if (params_.use_single_iteration_umeyama) {
     const Eigen::Isometry3d relative_transform = RelativeTransformUmeyama(source_points, target_points);
     const lc::PoseCovariance covariance = PointToPointCovariance(source_points, relative_transform);
@@ -89,19 +93,10 @@ lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativ
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
                                             ? RelativeTransformUmeyama(source_points, target_points)
                                             : Eigen::Isometry3d::Identity();
-  const Eigen::Isometry3d relative_transform = Align(source_points, target_points, initial_guess);
+  const Eigen::Isometry3d relative_transform =
+    Align(source_points, target_points, initial_guess, source_normals, target_normals);
   // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane
   const lc::PoseCovariance covariance = PointToPointCovariance(source_points, relative_transform);
   return lc::PoseWithCovariance(relative_transform, covariance);
-}
-
-void PointCloudWithKnownCorrespondencesAligner::SetSourceNormals(
-  std::vector<Eigen::Vector3d>&& source_normals) {  // NOLINT
-  source_normals_ = std::move(source_normals);
-}
-
-void PointCloudWithKnownCorrespondencesAligner::SetTargetNormals(
-  std::vector<Eigen::Vector3d>&& target_normals) {  // NOLINT
-  target_normals_ = std::move(target_normals);
 }
 }  // namespace point_cloud_common
