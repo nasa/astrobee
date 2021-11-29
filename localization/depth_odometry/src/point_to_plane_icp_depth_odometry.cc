@@ -24,7 +24,7 @@
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-namespace pcc = point_cloud_common;
+namespace pc = point_cloud_common;
 
 PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params)
     : params_(params), icp_(params_.icp) {}
@@ -32,7 +32,7 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   if (!previous_point_cloud_with_normals_ && !latest_point_cloud_with_normals_) {
-    latest_point_cloud_with_normals_ = pcc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+    latest_point_cloud_with_normals_ = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
       depth_image_measurement.depth_image.unfiltered_point_cloud(), params_.icp.search_radius);
     latest_timestamp_ = depth_image_measurement.timestamp;
     return boost::none;
@@ -45,7 +45,7 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
 
   previous_point_cloud_with_normals_ = latest_point_cloud_with_normals_;
   previous_timestamp_ = latest_timestamp_;
-  latest_point_cloud_with_normals_ = pcc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+  latest_point_cloud_with_normals_ = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
     depth_image_measurement.depth_image.unfiltered_point_cloud(), params_.icp.search_radius);
   latest_timestamp_ = timestamp;
 

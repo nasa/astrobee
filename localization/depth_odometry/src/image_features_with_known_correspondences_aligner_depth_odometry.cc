@@ -27,7 +27,7 @@
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-namespace pcc = point_cloud_common;
+namespace pc = point_cloud_common;
 namespace vc = vision_common;
 
 ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry(
@@ -99,8 +99,8 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     const auto target_point_3d = latest_depth_image_features_and_points_->depth_image().InterpolatePoint3D(
       target_image_point.x(), target_image_point.y());
     if (!Valid3dPoint(source_point_3d) || !Valid3dPoint(target_point_3d)) continue;
-    const Eigen::Vector3d source_landmark = pcc::Vector3d(*source_point_3d);
-    const Eigen::Vector3d target_landmark = pcc::Vector3d(*target_point_3d);
+    const Eigen::Vector3d source_landmark = pc::Vector3d(*source_point_3d);
+    const Eigen::Vector3d target_landmark = pc::Vector3d(*target_point_3d);
     if (normals_required_) {
       const auto target_normal =
         latest_depth_image_features_and_points_->Normal(target_landmark, params_.aligner.normal_search_radius);
@@ -158,6 +158,6 @@ bool ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ValidImagePoint(
 
 bool ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::Valid3dPoint(
   const boost::optional<pcl::PointXYZI>& point) const {
-  return point && pcc::ValidPoint(*point) && point->z >= 0;
+  return point && pc::ValidPoint(*point) && point->z >= 0;
 }
 }  // namespace depth_odometry

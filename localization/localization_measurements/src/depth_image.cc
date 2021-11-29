@@ -20,7 +20,7 @@
 #include <point_cloud_common/utilities.h>
 
 namespace localization_measurements {
-namespace pcc = point_cloud_common;
+namespace pc = point_cloud_common;
 DepthImage::DepthImage(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud)
     : image_(image), unfiltered_point_cloud_(point_cloud) {}
 
@@ -43,13 +43,13 @@ boost::optional<pcl::PointXYZI> DepthImage::InterpolatePoint3D(const double col,
     return boost::none;
   // Interpolate column points for each row option using col weights, then interpolate these results using row weights
   const auto col_interpolated_floor_row =
-    pcc::Interpolate(col_alpha, *floor_col_floor_row_point, *ceil_col_floor_row_point);
+    pc::Interpolate(col_alpha, *floor_col_floor_row_point, *ceil_col_floor_row_point);
   const auto col_interpolated_ceil_row =
-    pcc::Interpolate(col_alpha, *floor_col_ceil_row_point, *ceil_col_ceil_row_point);
-  return pcc::Interpolate(row_alpha, col_interpolated_floor_row, col_interpolated_ceil_row);
+    pc::Interpolate(col_alpha, *floor_col_ceil_row_point, *ceil_col_ceil_row_point);
+  return pc::Interpolate(row_alpha, col_interpolated_floor_row, col_interpolated_ceil_row);
 }
 
 bool DepthImage::ValidPoint(const boost::optional<const pcl::PointXYZI&> point) {
-  return point && pcc::ValidPoint(*point);
+  return point && pc::ValidPoint(*point);
 }
 }  // namespace localization_measurements

@@ -24,7 +24,7 @@
 
 namespace depth_odometry {
 namespace mc = msg_conversions;
-namespace pcc = point_cloud_common;
+namespace pc = point_cloud_common;
 namespace vc = vision_common;
 
 void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOdometryWrapperParams& params) {
@@ -42,13 +42,13 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 
 void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
                                             PointToPlaneICPDepthOdometryParams& params) {
-  pcc::LoadPointToPlaneICPParams(config, params.icp);
+  pc::LoadPointToPlaneICPParams(config, params.icp);
   LoadDepthOdometryParams(config, params);
 }
 
 void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
   config_reader::ConfigReader& config, ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams& params) {
-  pcc::LoadPointCloudWithKnownCorrespondencesAlignerParams(config, params.aligner);
+  pc::LoadPointCloudWithKnownCorrespondencesAlignerParams(config, params.aligner);
   vc::LoadBriskFeatureDetectorAndMatcherParams(config, params.brisk_feature_detector_and_matcher);
   vc::LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config, params.lk_optical_flow_feature_detector_and_matcher);
   vc::LoadSurfFeatureDetectorAndMatcherParams(config, params.surf_feature_detector_and_matcher);
