@@ -34,6 +34,15 @@ struct PoseWithCovarianceAndCorrespondences {
         source_time(source_time),
         target_time(target_time) {}
 
+  PoseWithCovarianceAndCorrespondences(const localization_common::PoseWithCovariance& pose_with_covariance,
+                                       const DepthCorrespondences& correspondences,
+                                       const localization_common::Time source_time,
+                                       const localization_common::Time target_time)
+      : pose_with_covariance(pose_with_covariance),
+        depth_correspondences(correspondences),
+        source_time(source_time),
+        target_time(target_time) {}
+
   localization_common::PoseWithCovariance pose_with_covariance;
   depth_odometry::DepthCorrespondences depth_correspondences;
   localization_common::Time source_time;

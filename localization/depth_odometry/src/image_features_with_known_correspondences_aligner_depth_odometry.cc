@@ -125,9 +125,6 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     return boost::none;
   }
 
-  // matches_ = DepthMatches(source_image_points, target_image_points, source_landmarks, target_landmarks,
-  //                      previous_feature_depth_image_->timestamp, latest_feature_depth_image_->timestamp);
-
   aligner_.SetTargetNormals(std::move(target_normals));
   aligner_.SetSourceNormals(std::move(source_normals));
   if (target_landmarks.size() < 4) {
@@ -137,21 +134,16 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   }
 
   const auto relative_transform = aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks);
-  // TODO(rsoussan): make this a param?? is this already a param in depth odometry? (B)
-  /*if (relative_transform.pose.translation().norm() > 10) {
-    LogError("large norm!!!");
-    return boost::none;
-  }*/
   if (!lc::PoseCovarianceSane(relative_transform.covariance, params_.position_covariance_threshold,
                               params_.orientation_covariance_threshold)) {
     LogWarning("DepthImageCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
-  // TODO(rsoussan): get correspondences!!!!
-  // return PoseWithCovarianceAndCorrespondences(*relative_transform, *correspondences, previous_timestamp_,
-  //                                             latest_timestamp_);
-  return boost::none;
+  return PoseWithCovarianceAndCorrespondences(
+    relative_transform,
+    DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
+    previous_timestamp_, latest_timestamp_);
 }
 
 bool ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ValidImagePoint(
