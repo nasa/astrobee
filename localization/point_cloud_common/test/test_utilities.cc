@@ -730,8 +730,38 @@ TEST(UtilitiesTester, FilterCorrespondences) {
   correspondences.emplace_back(pcl::Correspondence(0, 2, 1));
   pc::FilterCorrespondences(cloud, cloud, correspondences);
   ASSERT_EQ(correspondences.size(), 1);
-  ASSERT_EQ(correspondences[0].index_query, 0);
-  ASSERT_EQ(correspondences[0].index_match, 0);
+  EXPECT_EQ(correspondences[0].index_query, 0);
+  EXPECT_EQ(correspondences[0].index_match, 0);
+}
+
+TEST(UtilitiesTester, DownsamplePointCloud) {
+  pcl::PointXYZ p1(0.3, 0, 0);
+  pcl::PointXYZ p2(0, 0.3, 0);
+  pcl::PointXYZ p3(0, 0, 0.3);
+  pcl::PointXYZ p_no_neighbors(100, 200, 300);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->points.emplace_back(p1);
+  cloud->points.emplace_back(p2);
+  cloud->points.emplace_back(p3);
+  cloud->points.emplace_back(p_no_neighbors);
+  ASSERT_EQ(cloud->points.size(), 4);
+  constexpr double leaf_size = 1.0;
+  const auto downsampled_cloud = pc::DownsamplePointCloud<pcl::PointXYZ>(cloud, leaf_size);
+  ASSERT_EQ(downsampled_cloud->points.size(), 2);
+  // Average of first three points is 0.1, 0.1, 0.1
+  {
+    const auto& p = downsampled_cloud->points[0];
+    EXPECT_NEAR(p.x, 0.1, 1e-6);
+    EXPECT_NEAR(p.y, 0.1, 1e-6);
+    EXPECT_NEAR(p.z, 0.1, 1e-6);
+  }
+  // Point with no neighbors should be preserved
+  {
+    const auto& p = downsampled_cloud->points[1];
+    EXPECT_NEAR(p.x, p_no_neighbors.x, 1e-6);
+    EXPECT_NEAR(p.y, p_no_neighbors.y, 1e-6);
+    EXPECT_NEAR(p.z, p_no_neighbors.z, 1e-6);
+  }
 }
 
 // Run all the tests that were declared with TEST()

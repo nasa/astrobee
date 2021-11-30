@@ -231,7 +231,7 @@ boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const p
   std::vector<int> nn_indices;
   std::vector<float> distances;
   if (kdtree.radiusSearch(pcl_point, search_radius, nn_indices, distances, 0) < 3) {
-    LogError("GetNormal: Failed to get enough neighboring points for query point.");
+    LogDebug("GetNormal: Failed to get enough neighboring points for query point.");
     return boost::none;
   }
 
@@ -240,7 +240,7 @@ boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const p
   float normal_z;
   float curvature;
   if (!computePointNormal(cloud, nn_indices, normal_x, normal_y, normal_z, curvature)) {
-    LogError("GetNormal: Failed to compute point normal.");
+    LogDebug("GetNormal: Failed to compute point normal.");
     return boost::none;
   }
 
