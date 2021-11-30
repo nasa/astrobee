@@ -108,7 +108,7 @@ template <typename PointIntensityType>
 bool ValidIntensity(const PointIntensityType& point);
 
 template <typename PointType>
-void RemoveNansAndZerosFromPoints(pcl::PointCloud<PointType>& cloud);
+void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud);
 
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
@@ -148,7 +148,7 @@ bool ValidIntensity(const PointIntensityType& point) {
 }
 
 template <typename PointType>
-void RemoveNansAndZerosFromPoints(pcl::PointCloud<PointType>& cloud) {
+void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud) {
   size_t new_index = 0;
   for (const auto& point : cloud.points) {
     const bool valid_point = ValidPoint(point);
@@ -180,7 +180,7 @@ typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
   const typename pcl::PointCloud<PointType>::Ptr unfiltered_cloud) {
   typename pcl::PointCloud<PointType>::Ptr filtered_cloud(new pcl::PointCloud<PointType>());
   pcl::copyPointCloud(*unfiltered_cloud, *filtered_cloud);
-  RemoveNansAndZerosFromPoints(*filtered_cloud);
+  RemoveInvalidAndZeroPoints(*filtered_cloud);
   return filtered_cloud;
 }
 
@@ -204,7 +204,7 @@ typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals
   typename pcl::PointCloud<PointWithNormalType>::Ptr filtered_cloud_with_normals(
     new pcl::PointCloud<PointWithNormalType>());
   EstimateNormals<PointType, PointWithNormalType>(filtered_cloud, search_radius, *filtered_cloud_with_normals);
-  RemoveNansAndZerosFromPoints(*filtered_cloud_with_normals);
+  RemoveInvalidAndZeroPoints(*filtered_cloud_with_normals);
   return filtered_cloud_with_normals;
 }
 

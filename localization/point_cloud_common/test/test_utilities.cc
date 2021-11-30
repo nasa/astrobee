@@ -439,7 +439,7 @@ TEST(UtilitiesTester, Pcl2EigenNormal) {
   ASSERT_NEAR(eigen_normal.z(), p.normal[2], 1e-6);
 }
 
-TEST(UtilitiesTester, RemoveNansAndZeros) {
+TEST(UtilitiesTester, RemoveInvalidAndZeroPoints) {
   pcl::PointXYZ p_valid(0, 1, 2);
   pcl::PointXYZ p_nan(std::numeric_limits<double>::quiet_NaN(), 2, 3);
   pcl::PointXYZ p_inf(std::numeric_limits<double>::infinity(), 2, 3);
@@ -450,7 +450,7 @@ TEST(UtilitiesTester, RemoveNansAndZeros) {
   cloud.points.emplace_back(p_inf);
   cloud.points.emplace_back(p_zero);
   ASSERT_EQ(cloud.points.size(), 4);
-  pc::RemoveNansAndZerosFromPoints(cloud);
+  pc::RemoveInvalidAndZeroPoints(cloud);
   ASSERT_EQ(cloud.points.size(), 1);
   ASSERT_NEAR(cloud.points[0].x, p_valid.x, 1e-6);
   ASSERT_NEAR(cloud.points[0].y, p_valid.y, 1e-6);
