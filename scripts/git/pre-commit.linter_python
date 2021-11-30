@@ -28,16 +28,18 @@ fi
 
 failed_lint=false
 
-if ! command -v black &> /dev/null
-then
-    echo "Black was not found, to install check https://github.com/psf/black"
-    echo "Unfortunately black requires Python 3.6.2+ to run"
+command -v black
+ans=$?
+if [ "$ans" -ne "0" ]; then
+    echo "'black' was not found. To install, check https://github.com/psf/black."
+    echo "Note that black requires Python 3.6.2+ to run."
     exit 0
 fi
 
-if ! command -v isort &> /dev/null
-then
-    echo "isort was not found, to install check https://github.com/PyCQA/isort"
+command -v isort
+ans=$?
+if [ "$ans" -ne "0" ]; then
+    echo "'isort' was not found. To install, check https://github.com/PyCQA/isort."
     exit 0
 fi
 
