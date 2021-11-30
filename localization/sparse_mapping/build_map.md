@@ -30,14 +30,14 @@ The higher the value of the density factor, the more images will be
 kept. Some experimentation with this number is necessary. A value of
 1.4 seems to work well. It may be needed to decrease this to 1.0 if
 images appear to be too dense. Ideally the images should have perhaps
-on the order of 2/3 to 3/4 of overlap. This tool is not perfect. One
-should inspect the images in the `eog` viewer, and delete redundant
+on the order of 3/4 to 4/5 of overlap. This tool is not perfect. One
+should inspect the images in the ``eog`` viewer, and delete redundant
 ones from it manually, using the Delete key.
 
-The images can also be inspected and deleted with nvm_visualize, a
-tool included with this software. See readme.md for details.  This
-tool, unlike eog, echoes each image name as it is displayed, which can
-be useful with image manipulation tasks.
+The images can also be inspected and deleted with ``nvm_visualize``, a
+tool included with this software. See \subpage sparsemapping for
+details.  This tool, unlike ``eog``, echoes each image name as it is
+displayed, which can be useful with image manipulation tasks.
 
 If the images do not have enough overlap, the selection tool needs to
 be run again with a different value of this factor, or otherwise
@@ -81,9 +81,8 @@ and none of the other available config files apply, you can just
 temporarily modify the above files to reflect your camera's parameters
 (without checking in your changes).
 
-More details on these and other environmental variables can be found in
-
-    $SOURCE_PATH/astrobee/readme.md
+More details on these and other environmental variables can be found
+in the \subpage astrobee configuration documentation.
 
 ## Building a map
 
@@ -110,8 +109,8 @@ before doing feature detection. It was shown to create maps that are
 more robust to illumination changes.
 
 In practice, the map is build in pieces, and then merged. Then the
-above process needs to be modified. See readme.md in this directory
-for how this approach should go.
+above process needs to be modified. See \subpage sparsemapping for the
+procedure.
 
 ### Map building pipeline
 
@@ -198,8 +197,8 @@ would drift from each other.
 
 If it is desired to take out images from the map, it should happen at
 this stage, before the vocabulary database and pruning happens at the
-next step. See readme.md when it comes to such operations, where the
-script grow_map.py is used.
+next step. See \subpage sparsemapping when it comes to such
+operations, where the script grow_map.py is used.
 
 #### Vocabulary database
 
@@ -290,8 +289,8 @@ The xyz locations of the control points for the granite lab, the
 ISS and MGTF are mentioned below.
 
 If a set of world coordinates needs to be acquired, one can use the
-Total Station, as described in the [total station](total_station.md)
-documentation.
+\subpage total_station. (Alternatively one can can try the 
+\subpage faro instrument but that is more technically involved.)
 
 Register the map with the command:
     
@@ -352,7 +351,7 @@ new image set.
 ### Registration in the granite lab
 
 See the xyz coordinates of the control points used for registration in
-[granite_lab_registration.md](granite_lab_registration.md)
+the \subpage granite_lab_registration section.
 
 ### Registration on the ISS
 
@@ -363,7 +362,7 @@ be visualized in the ISS as follows:
 
 Open two terminals, and in each one type:
 
-    export BUILD_PATH=$HOME/astrobee_build/native
+    export BUILD_PATH=$HOME/astrobee/build
     source $BUILD_PATH/devel/setup.bash
 
 In the first terminal start the simulator:
@@ -570,9 +569,9 @@ and compared to the old ones via:
 
 ## Evaluating the map without running the localization node
 
-See astrobee/tools/ekf_bag/readme.md for how to run the
-sparse_map_eval tool that takes as inputs a bag and a BRISK map and
-prints the number of detected features.
+See the \subpage ekfbag page for how to run the ``sparse_map_eval``
+tool that takes as inputs a bag and a BRISK map and prints the number
+of detected features.
 
 Note that this approach may give slightly different results than using
 the localization node, and even with using this node, things can

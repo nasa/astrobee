@@ -54,29 +54,29 @@ granite lab.
 Once you are done you need to export your project to the GSI format so you can read it back in.
 
  * Keep hitting ESC until you are back to the home screen.
- * Press "4" to convert
- * Press "1" to export
+ * Press "4" to convert.
+ * Press "1" to export.
  * Select Job, change to what ever is your job.
  * Select Format File, change to "gsi16_cartesian.frt".
  * Select File Name, write value for what you want the output file to be.
  * Press "F1" to save.
- * Press "F4" to close out.
+ * Press "F4" to exit.
 
 Turn the nob on the side of the station where it says "CF Card" and pull the card out. Hook it up to a USB reader and get the measurement file. Here is a sample data file:
 
-*110001+0000000000ORIGIN 81...0+0000000000000000 82...0+0000000000000000 83...0+0000000000000000 
-*110002+000000000000YREF 81...0+0000000000000000 82...0+0000000000006417 83...0-0000000000000022 
-*110003+0000000000000003 81...0+0000000000000004 82...0+0000000000006535 83...0-0000000000000786 
+    *110001+0000000000ORIGIN 81...0+0000000000000000 82...0+0000000000000000 83...0+0000000000000000 
+    *110002+000000000000YREF 81...0+0000000000000000 82...0+0000000000006417 83...0-0000000000000022 
+    *110003+0000000000000003 81...0+0000000000000004 82...0+0000000000006535 83...0-0000000000000786 
 
 What this means is that the points are in Cartesian coordinates with x,y,z measured in millimeters (note that some values are negative). After removing the redundant text and converting to meters, this looks like:
 
-Point 1 (Origin): 0.0    0.0      0.0
-Point 2 (YREF)  : 0.0    6.417    -0.022
-Point 3         : 0.004  6.535    -0.786     
+    Point 1 (Origin): 0.0    0.0      0.0
+    Point 2 (YREF)  : 0.0    6.417    -0.022
+    Point 3         : 0.004  6.535    -0.786     
 
-The program 
+The program:
 
-  localization/sparse_mapping/tools/parse_total_station.py
+    localization/sparse_mapping/tools/parse_total_station.py
 
 can be used to convert from the Total Station format to an xyz format
 that can be used for sparse map registration. 
