@@ -72,7 +72,7 @@
 --shared_calibration=true
 
 # If set to true, only views with known calibration are reconstructed.
---only_calibrated_views=false
+--only_calibrated_views=true
 
 ############### Global SfM Options ###############
 --global_position_estimator=LEAST_UNSQUARED_DEVIATION
@@ -123,8 +123,7 @@
 
 # Set this value to the determine the reprojection error in pixels at which
 # robustness begins (if a robust cost function is being used).
-# TODO(oalexan1): This looks too high. In Astrobee we use 2.0.
---bundle_adjustment_robust_loss_width=10.0
+--bundle_adjustment_robust_loss_width=2.0
 
 # Set this parameter to change which camera intrinsics should be
 # optimized. Valid options are NONE, ALL, FOCAL_LENGTH, PRINCIPAL_POINTS,
@@ -134,7 +133,7 @@
 
 # After BA, remove any points that have a reprojection error greater
 # than this.
---max_reprojection_error_pixels=8.0
+--max_reprojection_error_pixels=10.0
 
 ############### Track Subsampling Options ###############
 
@@ -161,8 +160,8 @@
 --min_num_optimized_tracks_per_view=100
 
 ############### Triangulation Options ###############
---min_triangulation_angle_degrees=0.1
---triangulation_reprojection_error_pixels=15.0
+--min_triangulation_angle_degrees=1.0
+--triangulation_reprojection_error_pixels=10.0
 --bundle_adjust_tracks=true
 
 ############### Logging Options ###############
