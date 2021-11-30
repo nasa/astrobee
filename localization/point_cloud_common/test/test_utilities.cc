@@ -420,6 +420,25 @@ TEST(UtilitiesTester, ApproxZero) {
   ASSERT_TRUE(pc::ApproxZero(1, 2));
 }
 
+TEST(UtilitiesTester, Pcl2EigenVec3) {
+  pcl::PointXYZ p(1, 2, 3);
+  const auto eigen_p = pc::Vector3d(p);
+  ASSERT_NEAR(eigen_p.x(), p.x, 1e-6);
+  ASSERT_NEAR(eigen_p.y(), p.y, 1e-6);
+  ASSERT_NEAR(eigen_p.z(), p.z, 1e-6);
+}
+
+TEST(UtilitiesTester, Pcl2EigenNormal) {
+  pcl::PointNormal p;
+  p.normal[0] = 1;
+  p.normal[1] = 2;
+  p.normal[2] = 3;
+  const auto eigen_normal = pc::NormalVector3d(p);
+  ASSERT_NEAR(eigen_normal.x(), p.normal[0], 1e-6);
+  ASSERT_NEAR(eigen_normal.y(), p.normal[1], 1e-6);
+  ASSERT_NEAR(eigen_normal.z(), p.normal[2], 1e-6);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
