@@ -18,6 +18,8 @@
 #ifndef POINT_CLOUD_COMMON_UTILITIES_H_
 #define POINT_CLOUD_COMMON_UTILITIES_H_
 
+#include <localization_common/logger.h>
+
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
 
@@ -53,15 +55,14 @@ Eigen::Matrix<double, 3, 6> PointToPointJacobian(const gtsam::Point3& source_poi
 Eigen::Isometry3d RelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
                                            const std::vector<Eigen::Vector3d>& target_points);
 
-boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<pcl::PointXYZI>& cloud,
-                                           const pcl::search::KdTree<pcl::PointXYZI>& kdtree,
+template <typename PointType>
+boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<PointType>& cloud,
+                                           const pcl::search::KdTree<PointType>& kdtree,
                                            const double search_radius = 0.03);
 
-bool computePointNormal(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<int>& indices, float& nx,
-                        float& ny, float& nz, float& curvature);
-
-void flipNormalTowardsViewpoint(const pcl::PointXYZI& point, float vp_x, float vp_y, float vp_z, float& nx, float& ny,
-                                float& nz);
+template <typename PointType>
+bool computePointNormal(const pcl::PointCloud<PointType>& cloud, const std::vector<int>& indices, float& normal_x,
+                        float& normal_y, float& normal_z, float& curvature);
 
 Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
                                                    const Eigen::Isometry3d& relative_transform);
@@ -216,6 +217,56 @@ Eigen::Vector3d Vector3d(const PointType& point) {
 template <typename PointType>
 Eigen::Vector3d NormalVector3d(const PointType& point_with_normal) {
   return Eigen::Vector3d(point_with_normal.normal[0], point_with_normal.normal[1], point_with_normal.normal[2]);
+}
+
+template <typename PointType>
+boost::optional<Eigen::Vector3d> GetNormal(const Eigen::Vector3d& point, const pcl::PointCloud<PointType>& cloud,
+                                           const pcl::search::KdTree<PointType>& kdtree, const double search_radius) {
+  // Adapted from pcl code
+  PointType pcl_point;
+  pcl_point.x = point.x();
+  pcl_point.y = point.y();
+  pcl_point.z = point.z();
+
+  std::vector<int> nn_indices;
+  std::vector<float> distances;
+  if (kdtree.radiusSearch(pcl_point, search_radius, nn_indices, distances, 0) < 3) {
+    LogError("GetNormal: Failed to get enough neighboring points for query point.");
+    return boost::none;
+  }
+
+  float normal_x;
+  float normal_y;
+  float normal_z;
+  float curvature;
+  if (!computePointNormal(cloud, nn_indices, normal_x, normal_y, normal_z, curvature)) {
+    LogError("GetNormal: Failed to compute point normal.");
+    return boost::none;
+  }
+
+  const double vpx = cloud.sensor_origin_.coeff(0);
+  const double vpy = cloud.sensor_origin_.coeff(1);
+  const double vpz = cloud.sensor_origin_.coeff(2);
+  flipNormalTowardsViewpoint(pcl_point, vpx, vpy, vpz, normal_x, normal_y, normal_z);
+  return Eigen::Vector3d(normal_x, normal_y, normal_z);
+}
+
+template <typename PointType>
+bool computePointNormal(const pcl::PointCloud<PointType>& cloud, const std::vector<int>& indices, float& normal_x,
+                        float& normal_y, float& normal_z, float& curvature) {
+  // Adapted from pcl::common::centroid.h, should be a static or free function but is a member function instead
+  /** \brief Placeholder for the 3x3 covariance matrix at each surface patch. */
+  static EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix_;
+  /** \brief 16-bytes aligned placeholder for the XYZ centroid of a surface patch. */
+  static Eigen::Vector4f xyz_centroid_;
+  if (indices.size() < 3 ||
+      pcl::computeMeanAndCovarianceMatrix(cloud, indices, covariance_matrix_, xyz_centroid_) == 0) {
+    return false;
+  }
+
+  // Get the plane normal and surface curvature
+  pcl::solvePlaneParameters(covariance_matrix_, normal_x, normal_y, normal_z, curvature);
+  return true;
 }
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_UTILITIES_H_

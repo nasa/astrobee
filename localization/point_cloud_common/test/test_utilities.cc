@@ -643,6 +643,52 @@ TEST(UtilitiesTester, EstimateNormals) {
   }
 }
 
+TEST(UtilitiesTester, GetNormal) {
+  pcl::PointXYZ p_xy_plane_1(0, 1, 0);
+  pcl::PointXYZ p_xy_plane_2(0, 1.1, 0);
+  pcl::PointXYZ p_xy_plane_3(0.1, 1, 0);
+  pcl::PointXYZ p_no_neighbors(100, 200, 300);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->points.emplace_back(p_xy_plane_1);
+  cloud->points.emplace_back(p_xy_plane_2);
+  cloud->points.emplace_back(p_xy_plane_3);
+  cloud->points.emplace_back(p_no_neighbors);
+  ASSERT_EQ(cloud->points.size(), 4);
+  constexpr double search_radius = 1.0;
+  pcl::search::KdTree<pcl::PointXYZ> kdtree;
+  kdtree.setInputCloud(cloud);
+
+  // p1
+  {
+    const auto normal = pc::GetNormal(pc::Vector3d(p_xy_plane_1), *cloud, kdtree, search_radius);
+    ASSERT_TRUE(normal != boost::none);
+    EXPECT_NEAR(normal->x(), 0, 1e-6);
+    EXPECT_NEAR(normal->y(), 0, 1e-6);
+    EXPECT_NEAR(normal->z(), 1, 1e-6);
+  }
+  // p2
+  {
+    const auto normal = pc::GetNormal(pc::Vector3d(p_xy_plane_2), *cloud, kdtree, search_radius);
+    ASSERT_TRUE(normal != boost::none);
+    EXPECT_NEAR(normal->x(), 0, 1e-6);
+    EXPECT_NEAR(normal->y(), 0, 1e-6);
+    EXPECT_NEAR(normal->z(), 1, 1e-6);
+  }
+  // p3
+  {
+    const auto normal = pc::GetNormal(pc::Vector3d(p_xy_plane_3), *cloud, kdtree, search_radius);
+    ASSERT_TRUE(normal != boost::none);
+    EXPECT_NEAR(normal->x(), 0, 1e-6);
+    EXPECT_NEAR(normal->y(), 0, 1e-6);
+    EXPECT_NEAR(normal->z(), 1, 1e-6);
+  }
+  // No neighbors
+  {
+    const auto normal = pc::GetNormal(pc::Vector3d(p_no_neighbors), *cloud, kdtree, search_radius);
+    ASSERT_EQ(normal, boost::none);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
