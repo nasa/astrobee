@@ -275,7 +275,7 @@ if __name__ == "__main__":
                '-output_map', args.output_map,
                '-rebuild', '-rebuild_refloat_cameras',
                '-rebuild_detector', 'SURF',
-               '--min_valid_angle', '1.0' # to avoid features only seen in close-by images
+               '--min_valid_angle', '1.0'  # to avoid features only seen in close-by images
                ]
     run_cmd(cmd)
     
