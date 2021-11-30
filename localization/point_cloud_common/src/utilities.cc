@@ -171,10 +171,11 @@ void FilterCorrespondences(const pcl::PointCloud<pcl::PointXYZINormal>& input_cl
   for (auto correspondence_it = correspondences.begin(); correspondence_it != correspondences.end();) {
     const auto& input_point = (input_cloud)[correspondence_it->index_query];
     const auto& target_point = (target_cloud)[correspondence_it->index_match];
-    const bool invalid_correspondence =
-      std::isnan(input_point.x) || std::isnan(input_point.y) || std::isnan(input_point.z) ||
-      std::isnan(target_point.x) || std::isnan(target_point.y) || std::isnan(target_point.z) ||
-      std::isnan(target_point.normal_x) || std::isnan(target_point.normal_y) || std::isnan(target_point.normal_z);
+    const bool invalid_correspondence = !std::isfinite(input_point.x) || !std::isfinite(input_point.y) ||
+                                        !std::isfinite(input_point.z) || !std::isfinite(target_point.x) ||
+                                        !std::isfinite(target_point.y) || !std::isfinite(target_point.z) ||
+                                        !std::isfinite(target_point.normal_x) ||
+                                        !std::isfinite(target_point.normal_y) || !std::isfinite(target_point.normal_z);
     if (invalid_correspondence) {
       correspondence_it = correspondences.erase(correspondence_it);
       continue;

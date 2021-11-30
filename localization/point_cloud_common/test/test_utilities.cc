@@ -689,6 +689,51 @@ TEST(UtilitiesTester, GetNormal) {
   }
 }
 
+TEST(UtilitiesTester, FilterCorrespondences) {
+  pcl::PointXYZINormal p_valid;
+  p_valid.x = 1;
+  p_valid.y = 2;
+  p_valid.z = 3;
+  p_valid.intensity = 4;
+  p_valid.normal[0] = 1;
+  p_valid.normal[1] = 2;
+  p_valid.normal[2] = 3;
+
+  pcl::PointXYZINormal p_nan;
+  p_nan.x = std::numeric_limits<double>::quiet_NaN();
+  p_nan.y = 2;
+  p_nan.z = 3;
+  p_nan.intensity = 4;
+  p_nan.normal[0] = 1;
+  p_nan.normal[1] = 2;
+  p_nan.normal[2] = 3;
+
+  pcl::PointXYZINormal p_inf;
+  p_inf.x = std::numeric_limits<double>::infinity();
+  p_inf.y = 2;
+  p_inf.z = 3;
+  p_inf.intensity = 1;
+  p_inf.normal[0] = 1;
+  p_inf.normal[1] = 2;
+  p_inf.normal[2] = 3;
+  pcl::PointCloud<pcl::PointXYZINormal> cloud;
+  cloud.points.emplace_back(p_valid);
+  cloud.points.emplace_back(p_nan);
+  cloud.points.emplace_back(p_inf);
+  ASSERT_EQ(cloud.points.size(), 3);
+  pcl::Correspondences correspondences;
+  // Only 0,0 is valid
+  correspondences.emplace_back(pcl::Correspondence(0, 0, 1));
+  correspondences.emplace_back(pcl::Correspondence(1, 0, 1));
+  correspondences.emplace_back(pcl::Correspondence(0, 1, 1));
+  correspondences.emplace_back(pcl::Correspondence(2, 0, 1));
+  correspondences.emplace_back(pcl::Correspondence(0, 2, 1));
+  pc::FilterCorrespondences(cloud, cloud, correspondences);
+  ASSERT_EQ(correspondences.size(), 1);
+  ASSERT_EQ(correspondences[0].index_query, 0);
+  ASSERT_EQ(correspondences[0].index_match, 0);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
