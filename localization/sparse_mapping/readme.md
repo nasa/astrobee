@@ -73,15 +73,15 @@ The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
 as follows:
 
-    astrobee/build/devel/lib/localization_node/merge_bags \
+    astrobee/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
 ### Extracting images
 
 To extract images from a bag file:
 
-    astrobee/build/devel/lib/localization_node/extract_image_bag   \
-      <bagfile.bag> -use_timestamp_as_image_name                   \
+    astrobee/devel/lib/localization_node/extract_image_bag     \
+      <bagfile.bag> -use_timestamp_as_image_name               \
       -image_topic /hw/cam_nav -output_directory <output dir>
 
 The above assumes that the software was built with ROS on.

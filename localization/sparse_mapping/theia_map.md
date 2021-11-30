@@ -67,12 +67,16 @@ directory needs to be added to the PATH.
 
 # Run the Astrobee wrapper around the Theia tools
 
-First set the environment. The following lines should be adjusted as needed,
+The conda environment set up earlier will confuse the lookup the
+depencencies for the Astrobee libraries. Hence the lines ``conda`` added
+to one's ``.bashrc`` should be removed, the bash shell restarted, and
+one should ensure that the ``env`` command has no mentions of conda.
+
+Set the environment. The following lines should be adjusted as needed,
 especially the robot name:
 
   export ASTROBEE_SOURCE_PATH=$HOME/projects/astrobee/src
-  export ASTROBEE_BUILD_PATH=$HOME/projects/astrobee/build
-  source $ASTROBEE_BUILD_PATH/devel/setup.bash
+  source $ASTROBEE_SOURCE_PATH/../devel/setup.bash
   export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
   export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
   export ASTROBEE_WORLD=iss
@@ -109,7 +113,7 @@ reference only.
 An NVM map exported by Theia (or some other SfM tool) can be saved as
 an Astrobee sparse map with the command::
 
-    astrobee/build/devel/lib/sparse_mapping/import_map                       \
+    astrobee/devel/lib/sparse_mapping/import_map                             \
       -undistorted_camera_params "wid_x wid_y focal_len opt_ctr_x opt_ctr_y" \
       <undistorted images>                                                   \
       -input_map map.nvm -output_map map.map
@@ -123,9 +127,9 @@ If desired to replace on importing the undistorted images with the
 original distorted ones, as it is usually expected of a sparse map,
 the above command should be called instead as::
   
-    astrobee/build/devel/lib/sparse_mapping/import_map \
-      -undistorted_images_list undist_list.txt         \
-      -distorted_images_list dist_list.txt             \
+    astrobee/devel/lib/sparse_mapping/import_map \
+      -undistorted_images_list undist_list.txt   \
+      -distorted_images_list dist_list.txt       \
       -input_map map.nvm -output_map map.map
 
 Here, the files undist_list.txt and dist_list.txt must have one image
