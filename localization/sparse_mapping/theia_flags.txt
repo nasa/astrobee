@@ -1,0 +1,172 @@
+############### Input/Output ###############
+# Input/output files.
+# Set these if a matches file is not present. Images should be a filepath with a
+# wildcard e.g., /home/my_username/my_images/*.jpg
+# These should be left empty if specified on the command line.
+--images=
+--output_matches_file=
+
+# If a matches file has already been created, set the filepath here. This avoids
+# having to recompute all features and matches.
+# This should be left empty if specified on the command line.
+--matches_file=
+
+# The calibration file indicates possibly known calibration e.g, from EXIF or
+# explicit calibration. Theia attempts to extract EXIF focal lengths if calibration
+# is not supplied for a given image.
+# These should be left empty if specified on the command line.
+--calibration_file=
+--output_reconstruction=
+
+############### Multithreading ###############
+# Set to the number of threads you want to use.
+--num_threads=16
+
+############### Feature Extraction ###############
+--descriptor=SIFT
+--feature_density=NORMAL
+
+############### Matching Options ###############
+# Perform matching out-of-core. If set to true, the matching_working_directory
+# must be set to a valid, writable directory (the directory will be created if
+# it does not exits) Set to false to perform all-in-memory matching.
+--match_out_of_core=true
+
+# During feature matching, features are saved to disk so that out-of-core
+# matching may be performed. This directory specifies which directory those
+# features should be saved to.
+# This should be left empty if specified on the command line.
+--matching_working_directory=
+
+# During feature matching we utilize an LRU cache for out-of-core matching. The size
+# of that cache (in terms of number of images) is controlled by this parameter. The
+# higher this number the more memory is required.
+--matching_max_num_images_in_cache=128
+
+--matching_strategy=CASCADE_HASHING
+--lowes_ratio=0.75
+--min_num_inliers_for_valid_match=30
+# NOTE: This threshold is relative to an image with a width of 1024 pixels. It
+# will be scaled appropriately based on the image resolutions. This allows a
+# single threshold to be used for images with different resolutions.
+--max_sampson_error_for_verified_match=6.0
+--bundle_adjust_two_view_geometry=true
+--keep_only_symmetric_matches=true
+
+# Global descriptor extractor settings. The global image descriptors are used to
+# speed up matching by selected the K most similar images for each image, and
+# only performing feature matching with these images.
+--num_nearest_neighbors_for_global_descriptor_matching=100
+--num_gmm_clusters_for_fisher_vector=16
+--max_num_features_for_fisher_vector_training=1000000
+
+############### General SfM Options ###############
+--reconstruction_estimator=GLOBAL
+--min_track_length=2
+--max_track_length=50
+--reconstruct_largest_connected_component=false
+
+# Set to true if all views were captured with the same camera. If true, then a
+# single set of camera intrinsic parameters will be used for all views in the
+# reconstruction.
+--shared_calibration=true
+
+# If set to true, only views with known calibration are reconstructed.
+--only_calibrated_views=false
+
+############### Global SfM Options ###############
+--global_position_estimator=LEAST_UNSQUARED_DEVIATION
+--global_rotation_estimator=ROBUST_L1L2
+# The value below should be bigger to filter less
+--post_rotation_filtering_degrees=10
+
+# This refinement is very unstable for rotation-only motions so
+# it is advised that this is set to false for these motions.
+--refine_relative_translations_after_rotation_estimation=false
+
+# If true, only cameras that are well-conditioned for position estimation will
+# be used for global position estimation
+--extract_maximal_rigid_subgraph=false
+
+# Filter the relative translations with the 1DSfM filter to remove potential
+# outliers in the relative pose measurements.
+--filter_relative_translations_with_1dsfm=true
+
+# Nonlinear position estimation options
+--position_estimation_min_num_tracks_per_view=0
+--position_estimation_robust_loss_width=0.1
+
+# If true, perform a single iteration of bundle adjustment only on the camera
+# positions and 3D points (rotation and camera intrinsics are held
+# constant). This helps often to constrain inaccurate intrinsics.
+--refine_camera_positions_and_points_after_position_estimation=true
+
+# After estimating camera poses, we perform trianguation, then BA,
+# then filter out bad points. This controls how many times we repeat
+# this process.
+--num_retriangulation_iterations=1
+
+############### Incremental SfM Options ###############
+# NOTE: This threshold is relative to an image with a width of 1024 pixels. It
+# will be scaled appropriately based on the image resolutions. This allows a
+# single threshold to be used for images with different resolutions.
+--absolute_pose_reprojection_error_threshold=4
+--partial_bundle_adjustment_num_views=20
+--full_bundle_adjustment_growth_percent=5
+--min_num_absolute_pose_inliers=30
+
+############### Bundle Adjustment Options ###############
+# Set this parameter to a value other than NONE if you want to utilize a robust
+# cost function during bundle adjustment. This can increase robustness to outliers
+# during the optimization.
+--bundle_adjustment_robust_loss_function=HUBER
+
+# Set this value to the determine the reprojection error in pixels at which
+# robustness begins (if a robust cost function is being used).
+# TODO(oalexan1): This looks too high. In Astrobee we use 2.0.
+--bundle_adjustment_robust_loss_width=10.0
+
+# Set this parameter to change which camera intrinsics should be
+# optimized. Valid options are NONE, ALL, FOCAL_LENGTH, PRINCIPAL_POINTS,
+# RADIAL_DISTORTION, ASPECT_RATIO, and SKEW. This parameter can be set using a
+# bitmask (with no spaces) e.g., FOCAL_LENGTH|RADIAL_DISTORTION
+--intrinsics_to_optimize=NONE
+
+# After BA, remove any points that have a reprojection error greater
+# than this.
+--max_reprojection_error_pixels=8.0
+
+############### Track Subsampling Options ###############
+
+# If true, the estimated tracks are subsampled for bundle adjustment to increase
+# the efficiency of BA. Tracks are chosen in a way which attempts to constraint
+# BA as best as possible. This has been shown to provide a significant speedup
+# without reducing the accuracy much (in fact, it increases the accuracy in some
+# cases).
+--subsample_tracks_for_bundle_adjustment=false
+
+# Subsampled tracks are chosen with a probability related to their track
+# length. We limit the effect of long tracks by capping the track length at this
+# value for the purpose of selecting tracks.
+--track_subset_selection_long_track_length_threshold=10
+
+# Tracks are chosen in a way that ensures each view is spatially
+# constrained. Tracks are first binned in an image grid and the top ranked track
+# is chosen for optimization from each grid cell to ensure good spatial coverage
+# of the image. The grid cells are set to be this size.
+--track_selection_image_grid_cell_size_pixels=100
+
+# Tracks are chosen such that each image observes at least this many tracks
+#  which are being optimized. This ensures that each image is well-constrained.
+--min_num_optimized_tracks_per_view=100
+
+############### Triangulation Options ###############
+--min_triangulation_angle_degrees=0.1
+--triangulation_reprojection_error_pixels=15.0
+--bundle_adjust_tracks=true
+
+############### Logging Options ###############
+# Logging verbosity.
+--logtostderr
+# Increase this number to get more verbose logging.
+--v=1
