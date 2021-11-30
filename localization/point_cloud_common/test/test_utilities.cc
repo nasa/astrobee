@@ -457,6 +457,24 @@ TEST(UtilitiesTester, RemoveInvalidAndZeroPoints) {
   ASSERT_NEAR(cloud.points[0].z, p_valid.z, 1e-6);
 }
 
+TEST(UtilitiesTester, FilteredPointCloud) {
+  pcl::PointXYZ p_valid(0, 1, 2);
+  pcl::PointXYZ p_nan(std::numeric_limits<double>::quiet_NaN(), 2, 3);
+  pcl::PointXYZ p_inf(std::numeric_limits<double>::infinity(), 2, 3);
+  pcl::PointXYZ p_zero(0, 0, 0);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->points.emplace_back(p_valid);
+  cloud->points.emplace_back(p_nan);
+  cloud->points.emplace_back(p_inf);
+  cloud->points.emplace_back(p_zero);
+  ASSERT_EQ(cloud->points.size(), 4);
+  const auto filtered_cloud = pc::FilteredPointCloud<pcl::PointXYZ>(cloud);
+  ASSERT_EQ(filtered_cloud->points.size(), 1);
+  ASSERT_NEAR(filtered_cloud->points[0].x, p_valid.x, 1e-6);
+  ASSERT_NEAR(filtered_cloud->points[0].y, p_valid.y, 1e-6);
+  ASSERT_NEAR(filtered_cloud->points[0].z, p_valid.z, 1e-6);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
