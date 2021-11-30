@@ -115,12 +115,12 @@ def process_args(args):
         os.path.dirname(os.path.dirname(os.path.dirname(src_path)))
     )
     undistort_image_path = os.path.join(
-        exec_path, "build/devel/lib/camera/undistort_image"
+        exec_path, "devel/lib/camera/undistort_image"
     )
     import_map_path = os.path.join(
-        exec_path, "build/devel/lib/sparse_mapping/import_map"
+        exec_path, "devel/lib/sparse_mapping/import_map"
     )
-    build_map_path = os.path.join(exec_path, "build/devel/lib/sparse_mapping/build_map")
+    build_map_path = os.path.join(exec_path, "devel/lib/sparse_mapping/build_map")
 
     parser = argparse.ArgumentParser(description="Parameters for the geometry mapper.")
     parser.add_argument(
