@@ -135,7 +135,7 @@ Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vect
   return lc::LeastSquaresCovariance(jacobians);
 }
 
-pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b) {
+pcl::PointXYZI Interpolate(const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b, const double alpha) {
   const double beta = 1.0 - alpha;
   pcl::PointXYZI interpolated_point;
   interpolated_point.x = beta * point_a.x + alpha * point_b.x;

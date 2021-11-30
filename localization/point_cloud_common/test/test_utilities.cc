@@ -764,6 +764,36 @@ TEST(UtilitiesTester, DownsamplePointCloud) {
   }
 }
 
+TEST(UtilitiesTester, Interpolate) {
+  pcl::PointXYZI p1;
+  p1.x = 0;
+  p1.y = 0;
+  p1.z = 0;
+  p1.intensity = 0;
+
+  pcl::PointXYZI p2;
+  p2.x = 10;
+  p2.y = 100;
+  p2.z = 1000;
+  p2.intensity = 10000;
+
+  {
+    const auto interpolated_p = pc::Interpolate(p1, p2, 0.5);
+    EXPECT_NEAR(interpolated_p.x, 5, 1e-6);
+    EXPECT_NEAR(interpolated_p.y, 50, 1e-6);
+    EXPECT_NEAR(interpolated_p.z, 500, 1e-6);
+    EXPECT_NEAR(interpolated_p.intensity, 5000, 1e-6);
+  }
+
+  {
+    const auto interpolated_p = pc::Interpolate(p1, p2, 0.3);
+    EXPECT_NEAR(interpolated_p.x, 3, 1e-6);
+    EXPECT_NEAR(interpolated_p.y, 30, 1e-6);
+    EXPECT_NEAR(interpolated_p.z, 300, 1e-6);
+    EXPECT_NEAR(interpolated_p.intensity, 3000, 1e-6);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

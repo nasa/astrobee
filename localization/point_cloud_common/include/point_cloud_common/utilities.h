@@ -77,7 +77,7 @@ Eigen::Vector3d Vector3d(const PointType& point);
 template <typename PointType>
 Eigen::Vector3d NormalVector3d(const PointType& point_with_normal);
 
-pcl::PointXYZI Interpolate(const double alpha, const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b);
+pcl::PointXYZI Interpolate(const pcl::PointXYZI& point_a, const pcl::PointXYZI& point_b, const double alpha);
 
 template <typename PointType>
 bool ValidPoint(const PointType& point) = delete;
