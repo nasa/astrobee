@@ -66,11 +66,11 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CER
 
 if(CATKIN_ENABLE_TESTING)
  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_utilities_point_cloud_common
-    test/test_utilities.test
-    test/test_utilities.cc
+  add_rostest_gtest(test_point_cloud_common_utilities
+    test/test_point_cloud_common_utilities.test
+    test/test_point_cloud_common_utilities.cc
   )
-  target_link_libraries(test_utilities_point_cloud_common
+  target_link_libraries(test_point_cloud_common_utilities
     ${PROJECT_NAME} ${catkin_LIBRARIES} gtsam 
   )
   add_rostest_gtest(test_umeyama
