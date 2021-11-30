@@ -475,6 +475,75 @@ TEST(UtilitiesTester, FilteredPointCloud) {
   ASSERT_NEAR(filtered_cloud->points[0].z, p_valid.z, 1e-6);
 }
 
+TEST(UtilitiesTester, FilteredPointCloudWithNormalsNoValidNormals) {
+  pcl::PointXYZ p_valid(0, 1, 2);
+  pcl::PointXYZ p_nan(std::numeric_limits<double>::quiet_NaN(), 2, 3);
+  pcl::PointXYZ p_inf(std::numeric_limits<double>::infinity(), 2, 3);
+  pcl::PointXYZ p_zero(0, 0, 0);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->points.emplace_back(p_valid);
+  cloud->points.emplace_back(p_nan);
+  cloud->points.emplace_back(p_inf);
+  cloud->points.emplace_back(p_zero);
+  ASSERT_EQ(cloud->points.size(), 4);
+  constexpr double search_radius = 1.0;
+  const auto filtered_cloud = pc::FilteredPointCloudWithNormals<pcl::PointXYZ, pcl::PointNormal>(cloud, search_radius);
+  ASSERT_EQ(filtered_cloud->points.size(), 0);
+}
+
+TEST(UtilitiesTester, FilteredPointCloudWithNormalsZAxisNormals) {
+  pcl::PointXYZ p_xy_plane_1(0, 1, 0);
+  pcl::PointXYZ p_xy_plane_2(0, 1.1, 0);
+  pcl::PointXYZ p_xy_plane_3(0.1, 1, 0);
+  pcl::PointXYZ p_no_neighbors(100, 200, 300);
+  pcl::PointXYZ p_nan(std::numeric_limits<double>::quiet_NaN(), 2, 3);
+  pcl::PointXYZ p_inf(std::numeric_limits<double>::infinity(), 2, 3);
+  pcl::PointXYZ p_zero(0, 0, 0);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->points.emplace_back(p_xy_plane_1);
+  cloud->points.emplace_back(p_xy_plane_2);
+  cloud->points.emplace_back(p_xy_plane_3);
+  cloud->points.emplace_back(p_no_neighbors);
+  cloud->points.emplace_back(p_nan);
+  cloud->points.emplace_back(p_inf);
+  cloud->points.emplace_back(p_zero);
+  ASSERT_EQ(cloud->points.size(), 7);
+  constexpr double search_radius = 1.0;
+  const auto filtered_cloud = pc::FilteredPointCloudWithNormals<pcl::PointXYZ, pcl::PointNormal>(cloud, search_radius);
+  // Successful normals for each XY planar point
+  ASSERT_EQ(filtered_cloud->points.size(), 3);
+  // p1
+  {
+    const auto& filtered_point_with_normal = filtered_cloud->points[0];
+    ASSERT_NEAR(filtered_point_with_normal.x, p_xy_plane_1.x, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.y, p_xy_plane_1.y, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.z, p_xy_plane_1.z, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[0], 0, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[1], 0, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[2], 1, 1e-6);
+  }
+  // p2
+  {
+    const auto& filtered_point_with_normal = filtered_cloud->points[1];
+    ASSERT_NEAR(filtered_point_with_normal.x, p_xy_plane_2.x, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.y, p_xy_plane_2.y, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.z, p_xy_plane_2.z, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[0], 0, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[1], 0, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[2], 1, 1e-6);
+  }
+  // p3
+  {
+    const auto& filtered_point_with_normal = filtered_cloud->points[2];
+    ASSERT_NEAR(filtered_point_with_normal.x, p_xy_plane_3.x, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.y, p_xy_plane_3.y, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.z, p_xy_plane_3.z, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[0], 0, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[1], 0, 1e-6);
+    ASSERT_NEAR(filtered_point_with_normal.normal[2], 1, 1e-6);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
