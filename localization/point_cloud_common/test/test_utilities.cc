@@ -596,11 +596,6 @@ TEST(UtilitiesTester, EstimateNormals) {
     EXPECT_NEAR(filtered_point_with_normal.normal[1], 0, 1e-6);
     EXPECT_NEAR(filtered_point_with_normal.normal[2], 1, 1e-6);
   }
-  /*
-    pcl::PointXYZ p_nan(std::numeric_limits<double>::quiet_NaN(), 2, 3);
-    pcl::PointXYZ p_inf(std::numeric_limits<double>::infinity(), 2, 3);
-    pcl::PointXYZ p_zero(0, 0, 0);
-  */
   // Invalid Points
   // No Neighbors
   {
@@ -608,6 +603,39 @@ TEST(UtilitiesTester, EstimateNormals) {
     EXPECT_NEAR(filtered_point_with_normal.x, p_no_neighbors.x, 1e-6);
     EXPECT_NEAR(filtered_point_with_normal.y, p_no_neighbors.y, 1e-6);
     EXPECT_NEAR(filtered_point_with_normal.z, p_no_neighbors.z, 1e-6);
+    // Invalid normal
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[0]));
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[1]));
+    ASSERT_TRUE(std::isnan(filtered_point_with_normal.normal[2]));
+  }
+  // Nan
+  {
+    const auto& filtered_point_with_normal = cloud_with_normals.points[4];
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.x));
+    EXPECT_NEAR(filtered_point_with_normal.y, p_nan.y, 1e-6);
+    EXPECT_NEAR(filtered_point_with_normal.z, p_nan.z, 1e-6);
+    // Invalid normal
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[0]));
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[1]));
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[2]));
+  }
+  // Inf
+  {
+    const auto& filtered_point_with_normal = cloud_with_normals.points[5];
+    EXPECT_FALSE(std::isfinite(filtered_point_with_normal.x));
+    EXPECT_NEAR(filtered_point_with_normal.y, p_inf.y, 1e-6);
+    EXPECT_NEAR(filtered_point_with_normal.z, p_inf.z, 1e-6);
+    // Invalid normal
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[0]));
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[1]));
+    EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[2]));
+  }
+  // Zero Point
+  {
+    const auto& filtered_point_with_normal = cloud_with_normals.points[6];
+    EXPECT_NEAR(filtered_point_with_normal.x, p_zero.x, 1e-6);
+    EXPECT_NEAR(filtered_point_with_normal.y, p_zero.y, 1e-6);
+    EXPECT_NEAR(filtered_point_with_normal.z, p_zero.z, 1e-6);
     // Invalid normal
     EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[0]));
     EXPECT_TRUE(std::isnan(filtered_point_with_normal.normal[1]));
