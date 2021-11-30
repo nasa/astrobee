@@ -109,8 +109,8 @@ Eigen::Isometry3d RelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& s
   return Eigen::Isometry3d(relative_transform.matrix());
 }
 
-Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
-                                                   const Eigen::Isometry3d& relative_transform) {
+boost::optional<Eigen::Matrix<double, 6, 6>> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                                    const Eigen::Isometry3d& relative_transform) {
   std::vector<Eigen::Matrix<double, 3, 6>> jacobians;
   const int num_correspondences = static_cast<int>(source_points.size());
   for (int i = 0; i < num_correspondences; ++i) {
@@ -121,9 +121,9 @@ Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vect
   return lc::LeastSquaresCovariance(jacobians);
 }
 
-Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
-                                                   const std::vector<Eigen::Vector3d>& target_normals,
-                                                   const Eigen::Isometry3d& relative_transform) {
+boost::optional<Eigen::Matrix<double, 6, 6>> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                                    const std::vector<Eigen::Vector3d>& target_normals,
+                                                                    const Eigen::Isometry3d& relative_transform) {
   std::vector<Eigen::Matrix<double, 1, 6>> jacobians;
   const int num_correspondences = static_cast<int>(source_points.size());
   for (int i = 0; i < num_correspondences; ++i) {

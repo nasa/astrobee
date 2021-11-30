@@ -136,14 +136,19 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
 
   const auto relative_transform =
     aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks, source_normals_ref, target_normals_ref);
-  if (!lc::PoseCovarianceSane(relative_transform.covariance, params_.position_covariance_threshold,
+  if (!relative_transform) {
+    LogWarning("DepthImageCallback: Failed to get relative transform.");
+    return boost::none;
+  }
+
+  if (!lc::PoseCovarianceSane(relative_transform->covariance, params_.position_covariance_threshold,
                               params_.orientation_covariance_threshold)) {
     LogWarning("DepthImageCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
   return PoseWithCovarianceAndCorrespondences(
-    relative_transform,
+    *relative_transform,
     DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
     previous_timestamp_, latest_timestamp_);
 }

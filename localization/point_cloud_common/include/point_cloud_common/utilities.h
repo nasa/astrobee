@@ -64,12 +64,12 @@ template <typename PointType>
 bool computePointNormal(const pcl::PointCloud<PointType>& cloud, const std::vector<int>& indices, float& normal_x,
                         float& normal_y, float& normal_z, float& curvature);
 
-Eigen::Matrix<double, 6, 6> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
-                                                   const Eigen::Isometry3d& relative_transform);
+boost::optional<Eigen::Matrix<double, 6, 6>> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                                    const Eigen::Isometry3d& relative_transform);
 
-Eigen::Matrix<double, 6, 6> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
-                                                   const std::vector<Eigen::Vector3d>& target_normals,
-                                                   const Eigen::Isometry3d& relative_transform);
+boost::optional<Eigen::Matrix<double, 6, 6>> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
+                                                                    const std::vector<Eigen::Vector3d>& target_normals,
+                                                                    const Eigen::Isometry3d& relative_transform);
 
 template <typename PointType>
 Eigen::Vector3d Vector3d(const PointType& point);

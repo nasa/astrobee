@@ -137,7 +137,7 @@ PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovarianc
                                                          const Eigen::Isometry3d& b_T_a);
 
 template <int CostDim, int StateDim>
-Eigen::Matrix<double, StateDim, StateDim> LeastSquaresCovariance(
+boost::optional<Eigen::Matrix<double, StateDim, StateDim>> LeastSquaresCovariance(
   const std::vector<Eigen::Matrix<double, CostDim, StateDim>>& cost_jacobians);
 
 // Implementations
@@ -174,7 +174,7 @@ double LogDeterminant(const MatrixType& matrix) {
 }
 
 template <int CostDim, int StateDim>
-Eigen::Matrix<double, StateDim, StateDim> LeastSquaresCovariance(
+boost::optional<Eigen::Matrix<double, StateDim, StateDim>> LeastSquaresCovariance(
   const std::vector<Eigen::Matrix<double, CostDim, StateDim>>& cost_jacobians) {
   const int num_costs = cost_jacobians.size();
   Eigen::MatrixXd stacked_jacobians(num_costs * CostDim, StateDim);
@@ -183,7 +183,11 @@ Eigen::Matrix<double, StateDim, StateDim> LeastSquaresCovariance(
     stacked_jacobians.block(row_index, 0, CostDim, StateDim) = jacobian;
     row_index += CostDim;
   }
-  const Eigen::Matrix<double, 6, 6> covariance = (stacked_jacobians.transpose() * stacked_jacobians).inverse();
+  const Eigen::Matrix<double, 6, 6> hessian = stacked_jacobians.transpose() * stacked_jacobians;
+  const Eigen::FullPivLU<Eigen::Matrix<double, StateDim, StateDim>> lu(hessian);
+  if (!lu.isInvertible()) return boost::none;
+  // Use lu inverse rather than hessian.inverse() for improved numerical stability
+  const Eigen::Matrix<double, 6, 6> covariance = lu.inverse();
   return covariance;
 }
 }  // namespace localization_common

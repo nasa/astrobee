@@ -80,14 +80,18 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
   return oc::Isometry3d(relative_transform);
 }
 
-lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
+boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
   const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
   if (params_.use_single_iteration_umeyama) {
     const Eigen::Isometry3d relative_transform = RelativeTransformUmeyama(source_points, target_points);
-    const lc::PoseCovariance covariance = PointToPointCovariance(source_points, relative_transform);
-    return lc::PoseWithCovariance(relative_transform, covariance);
+    const auto covariance = PointToPointCovariance(source_points, relative_transform);
+    if (!covariance) {
+      LogError("ComputeRelativeTransform: Failed to get covariance.");
+      return boost::none;
+    }
+    return lc::PoseWithCovariance(relative_transform, *covariance);
   }
 
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
@@ -96,7 +100,11 @@ lc::PoseWithCovariance PointCloudWithKnownCorrespondencesAligner::ComputeRelativ
   const Eigen::Isometry3d relative_transform =
     Align(source_points, target_points, initial_guess, source_normals, target_normals);
   // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane
-  const lc::PoseCovariance covariance = PointToPointCovariance(source_points, relative_transform);
-  return lc::PoseWithCovariance(relative_transform, covariance);
+  const auto covariance = PointToPointCovariance(source_points, relative_transform);
+  if (!covariance) {
+    LogError("ComputeRelativeTransform: Failed to get covariance.");
+    return boost::none;
+  }
+  return lc::PoseWithCovariance(relative_transform, *covariance);
 }
 }  // namespace point_cloud_common

@@ -38,7 +38,7 @@ class PointCloudWithKnownCorrespondencesAligner {
     const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
     const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals = boost::none) const;
 
-  localization_common::PoseWithCovariance ComputeRelativeTransform(
+  boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
     const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
     const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
     const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals = boost::none) const;

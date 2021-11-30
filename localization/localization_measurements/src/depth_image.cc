@@ -46,7 +46,7 @@ boost::optional<pcl::PointXYZI> DepthImage::InterpolatePoint3D(const double col,
     pc::Interpolate(*floor_col_floor_row_point, *ceil_col_floor_row_point, col_alpha);
   const auto col_interpolated_ceil_row =
     pc::Interpolate(*floor_col_ceil_row_point, *ceil_col_ceil_row_point, col_alpha);
-  return pc::Interpolate(row_alpha, col_interpolated_floor_row, col_interpolated_ceil_row);
+  return pc::Interpolate(col_interpolated_floor_row, col_interpolated_ceil_row, row_alpha);
 }
 
 bool DepthImage::ValidPoint(const boost::optional<const pcl::PointXYZI&> point) {

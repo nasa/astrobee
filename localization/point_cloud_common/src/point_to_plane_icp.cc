@@ -105,9 +105,13 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   const Eigen::Isometry3d relative_transform(
     (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
   SaveCorrespondences(icp, source_cloud_with_normals, result);
-  const Eigen::Matrix<double, 6, 6> covariance =
+  const auto covariance =
     PointToPlaneCovariance(correspondences_->source_points, correspondences_->target_normals, relative_transform);
-  return lc::PoseWithCovariance(relative_transform, covariance);
+  if (!covariance) {
+    LogError("Icp: Failed to get covariance.");
+    return boost::none;
+  }
+  return lc::PoseWithCovariance(relative_transform, *covariance);
 }
 
 boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunDownsampledPointToPlaneICP(
