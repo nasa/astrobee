@@ -28,7 +28,7 @@ fi
 
 failed_lint=false
 
-command -v black
+command -v black > /dev/null 2>&1
 ans=$?
 if [ "$ans" -ne "0" ]; then
     echo "'black' was not found. To install, check https://github.com/psf/black."
@@ -36,7 +36,7 @@ if [ "$ans" -ne "0" ]; then
     exit 0
 fi
 
-command -v isort
+command -v isort > /dev/null 2>&1
 ans=$?
 if [ "$ans" -ne "0" ]; then
     echo "'isort' was not found. To install, check https://github.com/PyCQA/isort."
@@ -44,22 +44,22 @@ if [ "$ans" -ne "0" ]; then
 fi
 
 echo "=================================================="
-echo "  Analysing with black"
+echo "  Analysing python code style with 'black'."
 # This check the files but they will not be commited
 if `black . --include ${files} --check --quiet`; then
-  echo "Linter black checks passed"
+    echo "Linter checks using 'black' passed."
 else
-  echo "Errors detected, fixing ..."
-  black . --include ${files}
-  failed_lint=true
+    echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
+    black . --include ${files}
+    failed_lint=true
 fi
 
 echo "=================================================="
-echo "  Analysing with isort"
+echo "  Analysing python code style with 'isort'."
 if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
-  echo "Linter isort checks passed"
+    echo "Linter checks using 'isort' passed."
 else
-  echo "Errors detected, fixing ..."
+    echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
   isort ${files} --extend-skip cmake --profile black >/dev/null
   failed_lint=true
 fi
