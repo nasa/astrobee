@@ -18,12 +18,12 @@ Fetch and install ``conda`` from:
 
     https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
+Restart your shell if it is suggested to do so. 
+
 Create and activate the environment:
 
     conda create -n theia   
     conda activate theia
-
-(Restart your shell if it is suggested to do so.)
 
 Run the following command to install some packages and GCC 11:
 
@@ -53,7 +53,8 @@ view_reconstruction. That visualizer logic is not easy to compile
 and is not needed.
 
 Run ``which cmake`` to ensure its version in the ``theia`` environemnt
-installed earlier is used. Do:
+installed earlier is used. Otherwise run again ``conda activate
+theia``.  Do:
 
   mkdir build
   cd build
@@ -71,13 +72,13 @@ especially the robot name:
 
   export ASTROBEE_SOURCE_PATH=$HOME/projects/astrobee/src
   export ASTROBEE_BUILD_PATH=$HOME/projects/astrobee/build
-  source $ASTROBEE_BUILD_PATH/devel/setup.zsh
+  source $ASTROBEE_BUILD_PATH/devel/setup.bash
   export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
   export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
   export ASTROBEE_WORLD=iss
   export ASTROBEE_ROBOT=bumble
 
-  python ASTROBEE_SOURCE_PATH/localization/sparse_mapping/tools/build_theia_map.py \
+  python $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/tools/build_theia_map.py \
      --output_map theia.map --work_dir theia_work --image_list image_list.txt
 
 This will take care of preparing everything Theia needs, will run it,
