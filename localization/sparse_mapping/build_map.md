@@ -362,8 +362,12 @@ be visualized in the ISS as follows:
 
 Open two terminals, and in each one type:
 
-    export BUILD_PATH=$HOME/astrobee/build
+    export BUILD_PATH=$HOME/astrobee
     source $BUILD_PATH/devel/setup.bash
+
+The Astrobee directory above must have ``src`` and ``devel``
+subdirectories, and needs to be adjusted given its location on your
+disk.
 
 In the first terminal start the simulator:
 
