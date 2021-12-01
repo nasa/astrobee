@@ -103,12 +103,17 @@ def sanity_checks(undistort_image_path, import_map_path, build_map_path, args):
     if which("export_to_nvm_file") is None:
         raise Exception("Cannot find the 'export_to_nvm_file' program in PATH.")
 
-
+    if args.keep_undistorted_images and (not args.skip_rebuilding):
+        raise Exception("Cannot rebuild the map if it has undistorted images.")
+    
 def process_args(args):
     """
     Set up the parser and parse the args.
     """
 
+    # Number of arguments before starting to parse them
+    num_input_args = len(sys.argv)
+    
     # Extract some paths before the args are parsed
     src_path = os.path.dirname(args[0])
     exec_path = os.path.dirname(
@@ -118,7 +123,7 @@ def process_args(args):
     import_map_path = os.path.join(exec_path, "devel/lib/sparse_mapping/import_map")
     build_map_path = os.path.join(exec_path, "devel/lib/sparse_mapping/build_map")
 
-    parser = argparse.ArgumentParser(description="Parameters for the geometry mapper.")
+    parser = argparse.ArgumentParser(description="")
     parser.add_argument(
         "--theia_flags",
         dest="theia_flags",
@@ -149,7 +154,20 @@ def process_args(args):
         help="A temporary work directory to be deleted by the user later.",
     )
 
+    parser.add_argument(
+        "--keep_undistorted_images",
+        dest="keep_undistorted_images",
+        action="store_true",
+        help="Do not replace the undistorted images Theia used with the original " +
+        "distorted ones in the sparse map imported from Theia. This is for testing " +
+        "purposes.",
+    )
     args = parser.parse_args()
+
+    # Print the help message if called with no arguments
+    if num_input_args <= 1:
+        parser.print_help()
+        sys.exit(1)
 
     if args.theia_flags == "":
         args.theia_flags = os.path.dirname(src_path) + "/theia_flags.txt"
@@ -207,7 +225,7 @@ def gen_undist_image_list(work_dir, dist_image_list):
 def gen_theia_calib_file(work_dir, undist_images, undist_intrinsics_file):
 
     calib_file = work_dir + "/" + "theia_calibration.json"
-
+    intrinsics_str = ""
     # Parse the intrinsics
     with open(undist_intrinsics_file, "r") as fh:
         for line in fh:
@@ -216,6 +234,7 @@ def gen_theia_calib_file(work_dir, undist_images, undist_intrinsics_file):
             if line[0] == "#":
                 continue
 
+            intrinsics_str = line.rstrip() # will need this later
             intrinsics = line.split()
             if len(intrinsics) < 5:
                 raise Exception(
@@ -256,8 +275,7 @@ def gen_theia_calib_file(work_dir, undist_images, undist_intrinsics_file):
         fh.write("]\n")
         fh.write("}\n")
 
-    return calib_file
-
+    return calib_file, intrinsics_str
 
 if __name__ == "__main__":
 
@@ -289,7 +307,7 @@ if __name__ == "__main__":
     ]
     run_cmd(cmd)
 
-    calib_file = gen_theia_calib_file(
+    (calib_file, intrinsics_str) = gen_theia_calib_file(
         args.work_dir, undist_images, undist_intrinsics_file
     )
     recon_file = args.work_dir + "/run"
@@ -341,10 +359,17 @@ if __name__ == "__main__":
         "-output_map",
         args.output_map,
         "-undistorted_images_list",
-        undist_image_list,
-        "-distorted_images_list",
-        args.image_list,
-    ]
+        undist_image_list]
+    
+    if not args.keep_undistorted_images:
+        cmd += ["-distorted_images_list",
+            args.image_list,
+            ]
+    else:
+        cmd += ["-undistorted_camera_params",
+                intrinsics_str,
+                ]
+        
     run_cmd(cmd)
 
     if not args.skip_rebuilding:
