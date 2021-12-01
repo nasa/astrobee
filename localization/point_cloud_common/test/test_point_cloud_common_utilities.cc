@@ -16,8 +16,10 @@
  * under the License.
  */
 
+#include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
+#include <localization_common/utilities.h>
 #include <point_cloud_common/utilities.h>
 
 #include <gtsam/base/numericalDerivative.h>
@@ -794,41 +796,15 @@ TEST(UtilitiesTester, Interpolate) {
   }
 }
 
-/*TEST(UtilitiesTester, PointToPlaneCovariance) {
- // const Eigen::Vector3d p_xy_plane_1(1,2,3);
- // const Eigen::Vector3d p_xy_plane_2(6, 5, 4);
- // const Eigen::Vector3d p_xy_plane_3(20, -1, 0.3);
- // std::vector<Eigen::Vector3d> points;
- // points.emplace_back(p_xy_plane_1);
- // points.emplace_back(p_xy_plane_2);
- // points.emplace_back(p_xy_plane_3);
- // const Eigen::Vector3d z_axis_normal = Eigen::Vector3d(7,0.1,100).normalized();
- // const Eigen::Vector3d z_axis_normal2 = Eigen::Vector3d(79,0.1,10).normalized();
- // const Eigen::Vector3d z_axis_normal1 = Eigen::Vector3d(1,2,3).normalized();
- // std::vector<Eigen::Vector3d> normals{z_axis_normal, z_axis_normal2, z_axis_normal1};
- // const auto covariance = pc::PointToPlaneCovariance(points, normals, lc::RandomIsometry3d());
-  const Eigen::Vector3d p_xy_plane_1 = lc::RandomVector();
-  std::vector<Eigen::Vector3d> points;
-  points.emplace_back(lc::RandomVector());
-  points.emplace_back(lc::RandomVector());
-  points.emplace_back(lc::RandomVector());
-  points.emplace_back(lc::RandomVector());
-  points.emplace_back(lc::RandomVector());
-  points.emplace_back(lc::RandomVector());
-  std::vector<Eigen::Vector3d> normals;
-  normals.emplace_back(lc::RandomVector().normalized());
-  normals.emplace_back(lc::RandomVector().normalized());
-  normals.emplace_back(lc::RandomVector().normalized());
-  normals.emplace_back(lc::RandomVector().normalized());
-  normals.emplace_back(lc::RandomVector().normalized());
-  normals.emplace_back(lc::RandomVector().normalized());
-  //const auto covariance = pc::PointToPlaneCovariance(points, normals, lc::RandomIsometry3d());
-  //const auto covariance = pc::PointToPointCovariance(points, lc::RandomIsometry3d());
-
-  // Covariance should be very large along the x and y axes since all points are planar and the error
-  // only constrains z distance (and roll and pitch).
-  std::cout << "cov: " << std::endl << covariance.matrix() << std::endl;
-}*/
+TEST(UmeyamaTester, PerfectEstimate) {
+  for (int i = 0; i < 50; ++i) {
+    const auto a_T_points = pc::RandomPoints(20);
+    const auto b_T_a = lc::RandomIsometry3d();
+    const auto b_T_points = lc::Transform(a_T_points, b_T_a);
+    const auto estimated_b_T_a = pc::RelativeTransformUmeyama(a_T_points, b_T_points);
+    EXPECT_PRED2(lc::MatrixEquality<6>, estimated_b_T_a.matrix(), b_T_a.matrix());
+  }
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

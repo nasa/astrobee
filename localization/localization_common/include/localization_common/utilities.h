@@ -140,6 +140,9 @@ template <int CostDim, int StateDim>
 boost::optional<Eigen::Matrix<double, StateDim, StateDim>> LeastSquaresCovariance(
   const std::vector<Eigen::Matrix<double, CostDim, StateDim>>& cost_jacobians);
 
+template <typename T>
+std::vector<T> Transform(const std::vector<T>& a_T_elements, const Eigen::Isometry3d& b_T_a);
+
 // Implementations
 template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
@@ -189,6 +192,15 @@ boost::optional<Eigen::Matrix<double, StateDim, StateDim>> LeastSquaresCovarianc
   // Use lu inverse rather than hessian.inverse() for improved numerical stability
   const Eigen::Matrix<double, 6, 6> covariance = lu.inverse();
   return covariance;
+}
+
+template <typename T>
+std::vector<T> Transform(const std::vector<T>& a_T_elements, const Eigen::Isometry3d& b_T_a) {
+  std::vector<T> b_T_elements;
+  for (const auto& a_T_element : a_T_elements) {
+    b_T_elements.emplace_back(b_T_a * a_T_element);
+  }
+  return b_T_elements;
 }
 }  // namespace localization_common
 

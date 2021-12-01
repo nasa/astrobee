@@ -69,19 +69,11 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_point_cloud_common_utilities
     test/test_point_cloud_common_utilities.test
     test/test_point_cloud_common_utilities.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_point_cloud_common_utilities
     ${PROJECT_NAME} ${catkin_LIBRARIES} gtsam 
   )
-  add_rostest_gtest(test_umeyama
-    test/test_umeyama.test
-    test/test_umeyama.cc
-    test/test_utilities.cc
-  )
-  target_link_libraries(test_umeyama
-    ${PROJECT_NAME} ${catkin_LIBRARIES}
-  )
-
 endif()
 
 #############
