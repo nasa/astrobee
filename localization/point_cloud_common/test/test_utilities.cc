@@ -48,8 +48,9 @@ std::vector<Eigen::Vector3d> PlanePoints(const Eigen::Vector3d& point, const Eig
   return plane_points;
 }
 
-std::vector<Eigen::Vector3d> CubicPoints() {
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> CubicPoints() {
   std::vector<Eigen::Vector3d> cubic_points;
+  std::vector<Eigen::Vector3d> normals;
   const Eigen::Vector3d origin(Eigen::Vector3d::Zero());
   const int num_width_points = 10;
   const int num_height_points = 10;
@@ -60,11 +61,14 @@ std::vector<Eigen::Vector3d> CubicPoints() {
   const Eigen::Vector3d z_vec(0, 0, 1);
   const auto xy_plane_points = PlanePoints(origin, x_vec, y_vec, width, height, num_width_points, num_height_points);
   cubic_points.insert(cubic_points.end(), xy_plane_points.begin(), xy_plane_points.end());
+  for (int i = 0; i < xy_plane_points.size(); ++i) normals.emplace_back(z_vec);
   const auto yz_plane_points = PlanePoints(origin, y_vec, z_vec, width, height, num_width_points, num_height_points);
+  for (int i = 0; i < yz_plane_points.size(); ++i) normals.emplace_back(x_vec);
   cubic_points.insert(cubic_points.end(), yz_plane_points.begin(), yz_plane_points.end());
   const auto xz_plane_points = PlanePoints(origin, x_vec, z_vec, width, height, num_width_points, num_height_points);
   cubic_points.insert(cubic_points.end(), xz_plane_points.begin(), xz_plane_points.end());
-  return cubic_points;
+  for (int i = 0; i < xz_plane_points.size(); ++i) normals.emplace_back(y_vec);
+  return std::make_pair(cubic_points, normals);
 }
 
 pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point) {
@@ -75,10 +79,30 @@ pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point) {
   return pcl_point;
 }
 
+pcl::PointNormal PCLPointNormal(const Eigen::Vector3d& point, const Eigen::Vector3d& normal) {
+  pcl::PointNormal pcl_point;
+  pcl_point.x = point.x();
+  pcl_point.y = point.y();
+  pcl_point.z = point.z();
+  pcl_point.normal[0] = normal.x();
+  pcl_point.normal[1] = normal.y();
+  pcl_point.normal[2] = normal.z();
+  return pcl_point;
+}
+
 pcl::PointCloud<pcl::PointXYZ>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   for (const auto& point : points) {
     cloud->points.emplace_back(PCLPoint(point));
+  }
+  return cloud;
+}
+
+pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<Eigen::Vector3d>& points,
+                                                             const std::vector<Eigen::Vector3d>& normals) {
+  pcl::PointCloud<pcl::PointNormal>::Ptr cloud(new pcl::PointCloud<pcl::PointNormal>());
+  for (int i = 0; i < points.size(); ++i) {
+    cloud->points.emplace_back(PCLPointNormal(points[i], normals[i]));
   }
   return cloud;
 }

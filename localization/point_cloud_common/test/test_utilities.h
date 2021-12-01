@@ -26,6 +26,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <utility>
 #include <vector>
 
 namespace point_cloud_common {
@@ -37,11 +38,16 @@ std::vector<Eigen::Vector3d> PlanePoints(const Eigen::Vector3d& point, const Eig
                                          const int num_width_points, const double num_height_points);
 
 // Returns points on three unqiue planes covering half of a cube
-std::vector<Eigen::Vector3d> CubicPoints();
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> CubicPoints();
 
 pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point);
 
+pcl::PointNormal PCLPointNormal(const Eigen::Vector3d& point, const Eigen::Vector3d& normal);
+
 pcl::PointCloud<pcl::PointXYZ>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points);
+
+pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<Eigen::Vector3d>& points,
+                                                             const std::vector<Eigen::Vector3d>& normals);
 
 PointToPlaneICPParams DefaultPointToPlaneICPParams();
 }  // namespace point_cloud_common
