@@ -105,7 +105,8 @@ def sanity_checks(undistort_image_path, import_map_path, build_map_path, args):
 
     if args.keep_undistorted_images and (not args.skip_rebuilding):
         raise Exception("Cannot rebuild the map if it has undistorted images.")
-    
+
+
 def process_args(args):
     """
     Set up the parser and parse the args.
@@ -113,7 +114,7 @@ def process_args(args):
 
     # Number of arguments before starting to parse them
     num_input_args = len(sys.argv)
-    
+
     # Extract some paths before the args are parsed
     src_path = os.path.dirname(args[0])
     exec_path = os.path.dirname(
@@ -158,9 +159,9 @@ def process_args(args):
         "--keep_undistorted_images",
         dest="keep_undistorted_images",
         action="store_true",
-        help="Do not replace the undistorted images Theia used with the original " +
-        "distorted ones in the sparse map imported from Theia. This is for testing " +
-        "purposes.",
+        help="Do not replace the undistorted images Theia used with the original "
+        + "distorted ones in the sparse map imported from Theia. This is for testing "
+        + "purposes.",
     )
     args = parser.parse_args()
 
@@ -234,7 +235,7 @@ def gen_theia_calib_file(work_dir, undist_images, undist_intrinsics_file):
             if line[0] == "#":
                 continue
 
-            intrinsics_str = line.rstrip() # will need this later
+            intrinsics_str = line.rstrip()  # will need this later
             intrinsics = line.split()
             if len(intrinsics) < 5:
                 raise Exception(
@@ -276,6 +277,7 @@ def gen_theia_calib_file(work_dir, undist_images, undist_intrinsics_file):
         fh.write("}\n")
 
     return calib_file, intrinsics_str
+
 
 if __name__ == "__main__":
 
@@ -359,17 +361,20 @@ if __name__ == "__main__":
         "-output_map",
         args.output_map,
         "-undistorted_images_list",
-        undist_image_list]
-    
+        undist_image_list,
+    ]
+
     if not args.keep_undistorted_images:
-        cmd += ["-distorted_images_list",
+        cmd += [
+            "-distorted_images_list",
             args.image_list,
-            ]
+        ]
     else:
-        cmd += ["-undistorted_camera_params",
-                intrinsics_str,
-                ]
-        
+        cmd += [
+            "-undistorted_camera_params",
+            intrinsics_str,
+        ]
+
     run_cmd(cmd)
 
     if not args.skip_rebuilding:
