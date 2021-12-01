@@ -71,7 +71,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_point_cloud_common_utilities.cc
     test/test_utilities.cc
   )
-  target_link_libraries(test_point_to_plane_icp
+  target_link_libraries(test_point_cloud_common_utilities
     ${PROJECT_NAME} ${catkin_LIBRARIES} gtsam 
   )
   add_rostest_gtest(test_point_to_plane_icp
