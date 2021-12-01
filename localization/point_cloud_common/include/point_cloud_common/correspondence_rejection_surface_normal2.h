@@ -59,6 +59,7 @@ namespace registration {
  * \author Aravindhan K Krishnan (original code from libpointmatcher: https://github.com/ethz-asl/libpointmatcher)
  * \ingroup registration
  */
+template <typename PointWithNormalT>
 class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRejector {
   using CorrespondenceRejector::getClassName;
   using CorrespondenceRejector::input_correspondences_;
@@ -103,7 +104,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
     // Test each correspondence
     for (size_t i = 0; i < original_correspondences.size(); ++i) {
       // TODO(rsoussan): Abs val?
-      if (std::abs(boost::static_pointer_cast<DataContainer<pcl::PointXYZI, pcl::PointXYZINormal> >(data_container_)
+      if (std::abs(boost::static_pointer_cast<DataContainer<PointWithNormalT, PointWithNormalT> >(data_container_)
                      ->getCorrespondenceScoreFromNormals(original_correspondences[i])) > threshold_) {
         remaining_correspondences[number_valid_correspondences++] = original_correspondences[i];
       }
@@ -112,16 +113,14 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
   }
 
   /** \brief Initialize the data container object for the point type and the normal type. */
-  template <typename PointT, typename NormalT>
   inline void initializeDataContainer() {
-    data_container_.reset(new DataContainer<PointT, NormalT>);
+    data_container_.reset(new DataContainer<PointWithNormalT, PointWithNormalT>);
   }
 
   /** \brief Provide a source point cloud dataset (must contain XYZ data!), used to compute the correspondence distance.
    * \param[in] input a cloud containing XYZ data
    */
-  template <typename PointT>
-  inline void setInputCloud(const typename pcl::PointCloud<PointT>::ConstPtr& input) {
+  inline void setInputCloud(const typename pcl::PointCloud<PointWithNormalT>::ConstPtr& input) {
     PCL_WARN("[pcl::registration::%s::setInputCloud] setInputCloud is deprecated. Please use setInputSource instead.\n",
              getClassName().c_str());
     if (!data_container_) {
@@ -131,14 +130,13 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    boost::static_pointer_cast<DataContainer<PointT> >(data_container_)->setInputSource(input);
+    boost::static_pointer_cast<DataContainer<PointWithNormalT> >(data_container_)->setInputSource(input);
   }
 
   /** \brief Provide a source point cloud dataset (must contain XYZ data!), used to compute the correspondence distance.
    * \param[in] input a cloud containing XYZ data
    */
-  template <typename PointT>
-  inline void setInputSource(const typename pcl::PointCloud<PointT>::ConstPtr& input) {
+  inline void setInputSource(const typename pcl::PointCloud<PointWithNormalT>::ConstPtr& input) {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::setInputCloud] Initialize the data container object by calling intializeDataContainer "
@@ -146,12 +144,11 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    boost::static_pointer_cast<DataContainer<PointT> >(data_container_)->setInputSource(input);
+    boost::static_pointer_cast<DataContainer<PointWithNormalT> >(data_container_)->setInputSource(input);
   }
 
   /** \brief Get the target input point cloud */
-  template <typename PointT>
-  inline typename pcl::PointCloud<PointT>::ConstPtr getInputSource() const {
+  inline typename pcl::PointCloud<PointWithNormalT>::ConstPtr getInputSource() const {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::getInputSource] Initialize the data container object by calling "
@@ -159,14 +156,13 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    return (boost::static_pointer_cast<DataContainer<PointT> >(data_container_)->getInputSource());
+    return (boost::static_pointer_cast<DataContainer<PointWithNormalT> >(data_container_)->getInputSource());
   }
 
   /** \brief Provide a target point cloud dataset (must contain XYZ data!), used to compute the correspondence distance.
    * \param[in] target a cloud containing XYZ data
    */
-  template <typename PointT>
-  inline void setInputTarget(const typename pcl::PointCloud<PointT>::ConstPtr& target) {
+  inline void setInputTarget(const typename pcl::PointCloud<PointWithNormalT>::ConstPtr& target) {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::setInputTarget] Initialize the data container object by calling "
@@ -174,7 +170,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    boost::static_pointer_cast<DataContainer<PointT> >(data_container_)->setInputTarget(target);
+    boost::static_pointer_cast<DataContainer<PointWithNormalT> >(data_container_)->setInputTarget(target);
   }
 
   /** \brief Provide a pointer to the search object used to find correspondences in
@@ -184,16 +180,14 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
    * recomputed, regardless of calls to setInputTarget. Only use if you are
    * confident that the tree will be set correctly.
    */
-  template <typename PointT>
-  inline void setSearchMethodTarget(const boost::shared_ptr<pcl::search::KdTree<PointT> >& tree,
+  inline void setSearchMethodTarget(const boost::shared_ptr<pcl::search::KdTree<PointWithNormalT> >& tree,
                                     bool force_no_recompute = false) {
-    boost::static_pointer_cast<DataContainer<PointT> >(data_container_)
+    boost::static_pointer_cast<DataContainer<PointWithNormalT> >(data_container_)
       ->setSearchMethodTarget(tree, force_no_recompute);
   }
 
   /** \brief Get the target input point cloud */
-  template <typename PointT>
-  inline typename pcl::PointCloud<PointT>::ConstPtr getInputTarget() const {
+  inline typename pcl::PointCloud<PointWithNormalT>::ConstPtr getInputTarget() const {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::getInputTarget] Initialize the data container object by calling "
@@ -201,14 +195,13 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    return (boost::static_pointer_cast<DataContainer<PointT> >(data_container_)->getInputTarget());
+    return (boost::static_pointer_cast<DataContainer<PointWithNormalT> >(data_container_)->getInputTarget());
   }
 
   /** \brief Set the normals computed on the input point cloud
    * \param[in] normals the normals computed for the input cloud
    */
-  template <typename PointT, typename NormalT>
-  inline void setInputNormals(const typename pcl::PointCloud<NormalT>::ConstPtr& normals) {
+  inline void setInputNormals(const typename pcl::PointCloud<PointWithNormalT>::ConstPtr& normals) {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::setInputNormals] Initialize the data container object by calling "
@@ -216,12 +209,12 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    boost::static_pointer_cast<DataContainer<PointT, NormalT> >(data_container_)->setInputNormals(normals);
+    boost::static_pointer_cast<DataContainer<PointWithNormalT, PointWithNormalT> >(data_container_)
+      ->setInputNormals(normals);
   }
 
   /** \brief Get the normals computed on the input point cloud */
-  template <typename NormalT>
-  inline typename pcl::PointCloud<NormalT>::Ptr getInputNormals() const {
+  inline typename pcl::PointCloud<PointWithNormalT>::Ptr getInputNormals() const {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::getInputNormals] Initialize the data container object by calling "
@@ -229,14 +222,14 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    return (boost::static_pointer_cast<DataContainer<pcl::PointXYZI, NormalT> >(data_container_)->getInputNormals());
+    return (boost::static_pointer_cast<DataContainer<PointWithNormalT, PointWithNormalT> >(data_container_)
+              ->getInputNormals());
   }
 
   /** \brief Set the normals computed on the target point cloud
    * \param[in] normals the normals computed for the input cloud
    */
-  template <typename PointT, typename NormalT>
-  inline void setTargetNormals(const typename pcl::PointCloud<NormalT>::ConstPtr& normals) {
+  inline void setTargetNormals(const typename pcl::PointCloud<PointWithNormalT>::ConstPtr& normals) {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::setTargetNormals] Initialize the data container object by calling "
@@ -244,12 +237,12 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    boost::static_pointer_cast<DataContainer<PointT, NormalT> >(data_container_)->setTargetNormals(normals);
+    boost::static_pointer_cast<DataContainer<PointWithNormalT, PointWithNormalT> >(data_container_)
+      ->setTargetNormals(normals);
   }
 
   /** \brief Get the normals computed on the target point cloud */
-  template <typename NormalT>
-  inline typename pcl::PointCloud<NormalT>::Ptr getTargetNormals() const {
+  inline typename pcl::PointCloud<PointWithNormalT>::Ptr getTargetNormals() const {
     if (!data_container_) {
       PCL_ERROR(
         "[pcl::registration::%s::getTargetNormals] Initialize the data container object by calling "
@@ -257,7 +250,8 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
         getClassName().c_str());
       return;
     }
-    return (boost::static_pointer_cast<DataContainer<pcl::PointXYZI, NormalT> >(data_container_)->getTargetNormals());
+    return (boost::static_pointer_cast<DataContainer<PointWithNormalT, PointWithNormalT> >(data_container_)
+              ->getTargetNormals());
   }
 
   /** \brief See if this rejector requires source points */
@@ -265,10 +259,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Blob method for setting the source cloud */
   void setSourcePoints(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZI, Normal>();
-    PointCloud<PointXYZI>::Ptr cloud(new PointCloud<PointXYZI>);
+    if (!data_container_) initializeDataContainer();
+    typename PointCloud<PointWithNormalT>::Ptr cloud(new PointCloud<PointWithNormalT>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setInputSource<PointXYZI>(cloud);
+    setInputSource(cloud);
   }
 
   /** \brief See if this rejector requires a target cloud */
@@ -276,10 +270,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Method for setting the target cloud */
   void setTargetPoints(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZI, Normal>();
-    PointCloud<PointXYZI>::Ptr cloud(new PointCloud<PointXYZI>);
+    if (!data_container_) initializeDataContainer();
+    typename PointCloud<PointWithNormalT>::Ptr cloud(new PointCloud<PointWithNormalT>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setInputTarget<PointXYZI>(cloud);
+    setInputTarget(cloud);
   }
 
   /** \brief See if this rejector requires source normals */
@@ -287,10 +281,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Blob method for setting the source normals */
   void setSourceNormals(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZI, pcl::PointXYZINormal>();
-    PointCloud<pcl::PointXYZINormal>::Ptr cloud(new PointCloud<pcl::PointXYZINormal>);
+    if (!data_container_) initializeDataContainer();
+    typename PointCloud<PointWithNormalT>::Ptr cloud(new PointCloud<PointWithNormalT>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setInputNormals<PointXYZI, pcl::PointXYZINormal>(cloud);
+    setInputNormals(cloud);
   }
 
   /** \brief See if this rejector requires target normals*/
@@ -298,10 +292,10 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
   /** \brief Method for setting the target normals */
   void setTargetNormals(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZI, pcl::PointXYZINormal>();
-    PointCloud<pcl::PointXYZINormal>::Ptr cloud(new PointCloud<pcl::PointXYZINormal>);
+    if (!data_container_) initializeDataContainer();
+    typename PointCloud<PointWithNormalT>::Ptr cloud(new PointCloud<PointWithNormalT>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setTargetNormals<PointXYZI, pcl::PointXYZINormal>(cloud);
+    setTargetNormals(cloud);
   }
 
  protected:

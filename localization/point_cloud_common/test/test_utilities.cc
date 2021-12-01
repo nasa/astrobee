@@ -66,4 +66,38 @@ std::vector<Eigen::Vector3d> CubicPoints() {
   cubic_points.insert(cubic_points.end(), xz_plane_points.begin(), xz_plane_points.end());
   return cubic_points;
 }
+
+pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point) {
+  pcl::PointXYZ pcl_point;
+  pcl_point.x = point.x();
+  pcl_point.y = point.y();
+  pcl_point.z = point.z();
+  return pcl_point;
+}
+
+pcl::PointCloud<pcl::PointXYZ> PointCloud(const std::vector<Eigen::Vector3d>& points) {
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  for (const auto& point : points) {
+    cloud.points.emplace_back(PCLPoint(point));
+  }
+  return cloud;
+}
+
+PointToPlaneICPParams DefaultPointToPlaneICPParams() {
+  PointToPlaneICPParams params;
+  params.search_radius = 0.03;
+  params.fitness_threshold = 1;
+  params.max_iterations = 10;
+  params.symmetric_objective = false;
+  params.enforce_same_direction_normals = false;
+  params.correspondence_rejector_surface_normal = false;
+  params.correspondence_rejector_surface_normal_threshold = 0.75;
+  params.downsample = false;
+  params.downsample_leaf_size = 0.02;
+  params.coarse_to_fine = false;
+  params.num_coarse_to_fine_levels = 2;
+  params.coarse_to_fine_final_leaf_size = 0.02;
+  params.downsample_last_coarse_to_fine_iteration = true;
+  return params;
+}
 }  // namespace point_cloud_common

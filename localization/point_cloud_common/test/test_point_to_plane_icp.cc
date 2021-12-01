@@ -26,6 +26,20 @@
 namespace lc = localization_common;
 namespace pc = point_cloud_common;
 
+TEST(PointToPlaneICPTester, PerfectEstimate) {
+  const auto params = pc::DefaultPointToPlaneICPParams();
+  PointToPlaneICP icp(params);
+  for (int i = 0; i < 50; ++i) {
+    const auto a_T_points = pc::CubicPoints();
+    const auto b_T_a = lc::RandomIsometry3d();
+    const auto b_T_points = lc::Transform(a_T_points, b_T_a);
+    const auto source_cloud = pc::PointCloud(a_T_points);
+    const auto target_cloud = pc::PointCloud(b_T_points);
+    const auto estimated_b_T_a = pc::RelativeTransformUmeyama(a_T_points, b_T_points);
+    EXPECT_PRED2(lc::MatrixEquality<6>, estimated_b_T_a.matrix(), b_T_a.matrix());
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

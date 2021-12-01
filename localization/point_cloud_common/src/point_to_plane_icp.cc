@@ -72,14 +72,13 @@ boost::optional<lc::PoseWithCovariance> PointToPlaneICP::RunPointToPlaneICP(
   }
 
   if (params_.correspondence_rejector_surface_normal) {
-    pcl::registration::CorrespondenceRejectorSurfaceNormal2::Ptr correspondence_rejector_surface_normal(
-      new pcl::registration::CorrespondenceRejectorSurfaceNormal2());
-    correspondence_rejector_surface_normal->initializeDataContainer<pcl::PointXYZI, pcl::PointXYZINormal>();
+    pcl::registration::CorrespondenceRejectorSurfaceNormal2<pcl::PointXYZINormal>::Ptr
+      correspondence_rejector_surface_normal(
+        new pcl::registration::CorrespondenceRejectorSurfaceNormal2<pcl::PointXYZINormal>());
+    correspondence_rejector_surface_normal->initializeDataContainer();
     correspondence_rejector_surface_normal->setThreshold(params_.correspondence_rejector_surface_normal_threshold);
-    correspondence_rejector_surface_normal->setInputNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
-      source_cloud_with_normals);
-    correspondence_rejector_surface_normal->setTargetNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
-      target_cloud_with_normals);
+    correspondence_rejector_surface_normal->setInputNormals(source_cloud_with_normals);
+    correspondence_rejector_surface_normal->setTargetNormals(target_cloud_with_normals);
     icp.addCorrespondenceRejector(correspondence_rejector_surface_normal);
   }
 
