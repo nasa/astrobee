@@ -122,7 +122,7 @@ void ImuAugmentorNodelet::PublishHeartbeat() {
 }
 
 void ImuAugmentorNodelet::Run() {
-  ros::Rate rate(100);
+  ros::Rate rate(62.5);
   while (ros::ok()) {
     imu_queue_.callAvailable();
     loc_queue_.callAvailable();
