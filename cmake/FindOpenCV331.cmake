@@ -16,7 +16,7 @@
 # under the License.
 
 # Find OpenCV and fix a 3.3.1 bug
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV 3.3.1 REQUIRED)
 if (USE_CTC)
   if (${OpenCV_VERSION} MATCHES "3.3.1")
     foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
