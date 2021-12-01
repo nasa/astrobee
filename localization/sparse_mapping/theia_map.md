@@ -68,7 +68,7 @@ directory needs to be added to the PATH.
 # Run the Astrobee wrapper around the Theia tools
 
 The conda environment set up earlier will confuse the lookup the
-depencencies for the Astrobee libraries. Hence the lines ``conda`` added
+dependencies for the Astrobee libraries. Hence the lines ``conda`` added
 to one's ``.bashrc`` should be removed, the bash shell restarted, and
 one should ensure that the ``env`` command has no mentions of conda.
 
@@ -101,6 +101,9 @@ This tool has the following command-line options:
     Theia.
   --work_dir: A temporary work directory to be deleted by the user
     later.
+  --keep_undistorted_images: Do not replace the undistorted images 
+    Theia used with the original distorted ones in the sparse map
+    imported from Theia. This is for testing purposes.
   --help: Show this help message and exit.
 
 # Auxiliary import_map tool
