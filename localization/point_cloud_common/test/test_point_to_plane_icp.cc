@@ -36,18 +36,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCubicPoints) {
   constexpr double rotation_stddev = 0.01;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::CubicPoints();
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::CubicPoints();
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
@@ -58,18 +58,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateRandomPoints) {
   constexpr int num_points = 50;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
@@ -80,24 +80,24 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateRandomPointsCorrespondencesTest)
   constexpr int num_points = 50;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
     const auto correspondences = icp.correspondences();
     ASSERT_TRUE(correspondences != boost::none);
     for (int i = 0; i < correspondences->size(); ++i) {
       const auto& source_point = correspondences->source_points[i];
       const auto& target_point = correspondences->target_points[i];
-      const Eigen::Vector3d transformed_target_point = estimated_a_T_b->pose * target_point;
+      const Eigen::Vector3d transformed_target_point = estimated_source_T_target->pose * target_point;
       EXPECT_PRED2(lc::MatrixEquality<2>, source_point.matrix(), transformed_target_point.matrix());
     }
   }
@@ -111,18 +111,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateSymmetricCostCubicPoints) {
   constexpr double rotation_stddev = 0.01;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::CubicPoints();
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::CubicPoints();
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
@@ -135,18 +135,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateSymmetricCostRandomPoints) {
   constexpr int num_points = 50;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
@@ -159,18 +159,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCorrespondenceRejectorRandomPoin
   constexpr int num_points = 50;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
@@ -183,18 +183,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateDownsampledRandomPoints) {
   constexpr int num_points = 50;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
@@ -209,18 +209,18 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCoarseToFineRandomPoints) {
   constexpr int num_points = 50;
   pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
-    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto source_T_target = lc::RandomIsometry3d();
     const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
     pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
     pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(b_T_a.matrix()));
-    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
-    const auto estimated_a_T_b =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
-    ASSERT_TRUE(estimated_a_T_b != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
+    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
+    const auto estimated_source_T_target =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    ASSERT_TRUE(estimated_source_T_target != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
 }
 
