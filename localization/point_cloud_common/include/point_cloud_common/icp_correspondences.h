@@ -28,6 +28,8 @@ struct ICPCorrespondences {
                      const std::vector<Eigen::Vector3d>& target_points,
                      const std::vector<Eigen::Vector3d>& target_normals)
       : source_points(source_points), target_points(target_points), target_normals(target_normals) {}
+  size_t size() const { return source_points.size(); }
+
   std::vector<Eigen::Vector3d> source_points;
   std::vector<Eigen::Vector3d> target_points;
   std::vector<Eigen::Vector3d> target_normals;
