@@ -75,10 +75,10 @@ pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point) {
   return pcl_point;
 }
 
-pcl::PointCloud<pcl::PointXYZ> PointCloud(const std::vector<Eigen::Vector3d>& points) {
-  pcl::PointCloud<pcl::PointXYZ> cloud;
+pcl::PointCloud<pcl::PointXYZ>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points) {
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   for (const auto& point : points) {
-    cloud.points.emplace_back(PCLPoint(point));
+    cloud->points.emplace_back(PCLPoint(point));
   }
   return cloud;
 }

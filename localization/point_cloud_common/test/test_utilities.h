@@ -19,8 +19,12 @@
 #define POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
 
 #include <ff_common/eigen_vectors.h>
+#include <point_cloud_common/point_to_plane_icp_params.h>
 
 #include <Eigen/Geometry>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 #include <vector>
 
@@ -34,5 +38,11 @@ std::vector<Eigen::Vector3d> PlanePoints(const Eigen::Vector3d& point, const Eig
 
 // Returns points on three unqiue planes covering half of a cube
 std::vector<Eigen::Vector3d> CubicPoints();
+
+pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point);
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points);
+
+PointToPlaneICPParams DefaultPointToPlaneICPParams();
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT

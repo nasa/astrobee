@@ -20,6 +20,8 @@
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <point_cloud_common/point_to_plane_icp.h>
+#include <point_cloud_common/utilities.h>
 
 #include <gtest/gtest.h>
 
@@ -28,15 +30,27 @@ namespace pc = point_cloud_common;
 
 TEST(PointToPlaneICPTester, PerfectEstimate) {
   const auto params = pc::DefaultPointToPlaneICPParams();
-  PointToPlaneICP icp(params);
+  constexpr double search_radius = 0.03;
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  pc::PointToPlaneICP<pcl::PointNormal> icp(params);
   for (int i = 0; i < 50; ++i) {
     const auto a_T_points = pc::CubicPoints();
     const auto b_T_a = lc::RandomIsometry3d();
     const auto b_T_points = lc::Transform(a_T_points, b_T_a);
     const auto source_cloud = pc::PointCloud(a_T_points);
+    const auto source_cloud_with_normals =
+      pc::FilteredPointCloudWithNormals<pcl::PointXYZ, pcl::PointNormal>(source_cloud, search_radius);
     const auto target_cloud = pc::PointCloud(b_T_points);
-    const auto estimated_b_T_a = pc::RelativeTransformUmeyama(a_T_points, b_T_points);
-    EXPECT_PRED2(lc::MatrixEquality<6>, estimated_b_T_a.matrix(), b_T_a.matrix());
+    const auto target_cloud_with_normals =
+      pc::FilteredPointCloudWithNormals<pcl::PointXYZ, pcl::PointNormal>(target_cloud, search_radius);
+    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
+    const auto estimated_b_T_a =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
+    // const auto estimated_b_T_a = icp.ComputeRelativeTransform(source_cloud_with_normals, source_cloud_with_normals,
+    // noisy_b_T_a);
+    ASSERT_TRUE(estimated_b_T_a != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<6>, estimated_b_T_a->pose.matrix(), b_T_a.matrix());
   }
 }
 
