@@ -102,6 +102,10 @@ of turning on and off options. To see which options are supported, simply run
     source ~/.bashrc
     popd
 
+The configure script modifies your ``.bashrc`` to source ``setup.bash`` for 
+the current ROS distribution and to set CMAKE_PREFIX_PATH. It is suggested
+to examine it and see if all changes were made correctly.
+
 If you want to explicitly specify the workspace and install directories, use
 instead:
 
