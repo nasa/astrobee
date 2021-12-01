@@ -58,7 +58,6 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/parameter_reader.cc
   src/point_cloud_with_known_correspondences_aligner.cc
-  src/point_to_plane_icp.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
