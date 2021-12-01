@@ -37,6 +37,8 @@ std::vector<Eigen::Vector3d> PlanePoints(const Eigen::Vector3d& point, const Eig
                                          const Eigen::Vector3d& height_vec, const double width, const double height,
                                          const int num_width_points, const double num_height_points);
 
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> RandomPointsWithNormals(const int num_points);
+
 // Returns points on three unqiue planes covering half of a cube
 std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> CubicPoints();
 

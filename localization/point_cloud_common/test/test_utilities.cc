@@ -48,6 +48,16 @@ std::vector<Eigen::Vector3d> PlanePoints(const Eigen::Vector3d& point, const Eig
   return plane_points;
 }
 
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> RandomPointsWithNormals(const int num_points) {
+  std::vector<Eigen::Vector3d> points;
+  std::vector<Eigen::Vector3d> normals;
+  for (int i = 0; i < num_points; ++i) {
+    points.emplace_back(lc::RandomVector());
+    normals.emplace_back(lc::RandomVector().normalized());
+  }
+  return std::make_pair(points, normals);
+}
+
 std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> CubicPoints() {
   std::vector<Eigen::Vector3d> cubic_points;
   std::vector<Eigen::Vector3d> normals;
