@@ -120,6 +120,30 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateSymmetricCostRandomPoints) {
   }
 }
 
+TEST(PointToPlaneICPTester, NoisyInitialEstimateCorrespondenceRejectorRandomPoints) {
+  auto params = pc::DefaultPointToPlaneICPParams();
+  params.correspondence_rejector_surface_normal = true;
+  params.correspondence_rejector_surface_normal_threshold = 0.75;
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  constexpr int num_points = 50;
+  pc::PointToPlaneICP<pcl::PointNormal> icp(params);
+  for (int i = 0; i < 50; ++i) {
+    const auto a_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto b_T_a = lc::RandomIsometry3d();
+    const auto source_cloud_with_normals =
+      pc::PointCloudWithNormals(a_T_points_and_normals.first, a_T_points_and_normals.second);
+    pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
+    pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
+                                        Eigen::Affine3d(b_T_a.matrix()));
+    const auto noisy_b_T_a = lc::AddNoiseToIsometry3d(b_T_a, translation_stddev, rotation_stddev);
+    const auto estimated_a_T_b =
+      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_b_T_a);
+    ASSERT_TRUE(estimated_a_T_b != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_a_T_b->pose.matrix(), b_T_a.inverse().matrix());
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
