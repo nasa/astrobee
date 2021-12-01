@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <point_cloud_common/utilities.h>
@@ -24,6 +25,8 @@
 
 namespace lc = localization_common;
 namespace pc = point_cloud_common;
+
+TEST(UmeyamaTester, PerfectEstimate) { const auto points = pc::RandomPoints(20); }
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

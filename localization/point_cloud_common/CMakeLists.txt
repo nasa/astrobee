@@ -76,6 +76,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_umeyama
     test/test_umeyama.test
     test/test_umeyama.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_umeyama
     ${PROJECT_NAME} ${catkin_LIBRARIES}

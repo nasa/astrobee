@@ -18,8 +18,21 @@
 #ifndef POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
 #define POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
 
+#include <ff_common/eigen_vectors.h>
+
+#include <Eigen/Geometry>
+
+#include <vector>
+
 namespace point_cloud_common {
+std::vector<Eigen::Vector3d> RandomPoints(const int num_points);
 
+// Assumes width and height vecs are normalized and define the plane attached to point
+std::vector<Eigen::Vector3d> PlanePoints(const Eigen::Vector3d& point, const Eigen::Vector3d& width_vec,
+                                         const Eigen::Vector3d& height_vec, const double width, const double height,
+                                         const int num_width_points, const double num_height_points);
 
-}
+// Returns points on three unqiue planes covering half of a cube
+std::vector<Eigen::Vector3d> CubicPoints();
+}  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
