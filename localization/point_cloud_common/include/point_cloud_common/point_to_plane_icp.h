@@ -174,7 +174,12 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
       LogWarning("RunCoarseToFinePointToPlaneICP: Failed to get relative transform.");
       return boost::none;
     }
+    // TODO(rsoussan): Cleaner way to do this, initial estimate is in inverted frame as RunPointToPlaneICP and
+    // RunDownsampledPointToPlaneICP expect, so the result of a coarse to fine iteration needs to be
+    // inverted before passing as new initial estimate for the next iteration
+    coarse_to_fine_relative_transform->pose = coarse_to_fine_relative_transform->pose.inverse();
   }
+  coarse_to_fine_relative_transform->pose = coarse_to_fine_relative_transform->pose.inverse();
   return coarse_to_fine_relative_transform;
 }
 
