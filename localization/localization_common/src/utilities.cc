@@ -218,4 +218,12 @@ double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,
 
   return sane;
 }
+
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformPointsWithNormals(
+  const std::vector<Eigen::Vector3d>& points, const std::vector<Eigen::Vector3d>& normals,
+  const Eigen::Isometry3d& b_T_a) {
+  std::vector<Eigen::Vector3d> transformed_points = Transform(points, b_T_a);
+  std::vector<Eigen::Vector3d> rotated_normals = Rotate(normals, b_T_a.linear());
+  return std::make_pair(transformed_points, rotated_normals);
+}
 }  // namespace localization_common

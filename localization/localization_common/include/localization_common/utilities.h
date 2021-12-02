@@ -143,6 +143,13 @@ boost::optional<Eigen::Matrix<double, StateDim, StateDim>> LeastSquaresCovarianc
 template <typename T>
 std::vector<T> Transform(const std::vector<T>& a_T_elements, const Eigen::Isometry3d& b_T_a);
 
+template <typename T>
+std::vector<T> Rotate(const std::vector<T>& a_F_a_T_elements, const Eigen::Matrix3d& b_R_a);
+
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformPointsWithNormals(
+  const std::vector<Eigen::Vector3d>& points, const std::vector<Eigen::Vector3d>& normals,
+  const Eigen::Isometry3d& b_T_a);
+
 // Implementations
 template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
@@ -201,6 +208,15 @@ std::vector<T> Transform(const std::vector<T>& a_T_elements, const Eigen::Isomet
     b_T_elements.emplace_back(b_T_a * a_T_element);
   }
   return b_T_elements;
+}
+
+template <typename T>
+std::vector<T> Rotate(const std::vector<T>& a_F_a_T_elements, const Eigen::Matrix3d& b_R_a) {
+  std::vector<T> b_F_a_T_elements;
+  for (const auto& a_F_a_T_element : a_F_a_T_elements) {
+    b_F_a_T_elements.emplace_back(b_R_a * a_F_a_T_element);
+  }
+  return b_F_a_T_elements;
 }
 }  // namespace localization_common
 
