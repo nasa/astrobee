@@ -147,6 +147,84 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, SymmetricPointToPlaneNoisy
   }
 }
 
+TEST(PointCloudWithKnownCorrespondencesAlignerTester, UmeyamaNoisyInitialEstimateCubicPoints) {
+  auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
+  params.use_single_iteration_umeyama = true;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
+  pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
+  for (int i = 0; i < 50; ++i) {
+    const auto source_T_points_and_normals = pc::CubicPoints();
+    const auto target_T_source = lc::RandomIsometry3d();
+    const auto target_T_points_and_normals = lc::TransformPointsWithNormals(
+      source_T_points_and_normals.first, source_T_points_and_normals.second, target_T_source);
+    const auto noisy_target_T_source = lc::AddNoiseToIsometry3d(target_T_source, translation_stddev, rotation_stddev);
+    const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
+      source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
+    ASSERT_TRUE(estimated_target_T_source != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+  }
+}
+
+TEST(PointCloudWithKnownCorrespondencesAlignerTester, UmeyamaNoisyInitialEstimateRandomPoints) {
+  auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
+  params.use_single_iteration_umeyama = true;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
+  constexpr int num_points = 50;
+  pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
+  for (int i = 0; i < 50; ++i) {
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto target_T_source = lc::RandomIsometry3d();
+    const auto target_T_points_and_normals = lc::TransformPointsWithNormals(
+      source_T_points_and_normals.first, source_T_points_and_normals.second, target_T_source);
+    const auto noisy_target_T_source = lc::AddNoiseToIsometry3d(target_T_source, translation_stddev, rotation_stddev);
+    const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
+      source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
+    ASSERT_TRUE(estimated_target_T_source != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+  }
+}
+
+TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointInitialUmeyamaNoisyInitialEstimateCubicPoints) {
+  auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
+  params.use_umeyama_initial_guess = true;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
+  pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
+  for (int i = 0; i < 50; ++i) {
+    const auto source_T_points_and_normals = pc::CubicPoints();
+    const auto target_T_source = lc::RandomIsometry3d();
+    const auto target_T_points_and_normals = lc::TransformPointsWithNormals(
+      source_T_points_and_normals.first, source_T_points_and_normals.second, target_T_source);
+    const auto noisy_target_T_source = lc::AddNoiseToIsometry3d(target_T_source, translation_stddev, rotation_stddev);
+    const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
+      source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
+    ASSERT_TRUE(estimated_target_T_source != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+  }
+}
+
+TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointInitialUmeyamaNoisyInitialEstimateRandomPoints) {
+  auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
+  params.use_umeyama_initial_guess = true;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
+  constexpr int num_points = 50;
+  pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
+  for (int i = 0; i < 50; ++i) {
+    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
+    const auto target_T_source = lc::RandomIsometry3d();
+    const auto target_T_points_and_normals = lc::TransformPointsWithNormals(
+      source_T_points_and_normals.first, source_T_points_and_normals.second, target_T_source);
+    const auto noisy_target_T_source = lc::AddNoiseToIsometry3d(target_T_source, translation_stddev, rotation_stddev);
+    const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
+      source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
+    ASSERT_TRUE(estimated_target_T_source != boost::none);
+    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
