@@ -73,17 +73,17 @@ Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source
   return sac_ia_aligner.getFinalTransformation();
 }
 
-Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
-                                                 const gtsam::Pose3& relative_transform) {
+Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& source_point, const gtsam::Vector3& normal,
+                                                 const gtsam::Pose3& target_T_source) {
   gtsam::Matrix H1;
-  relative_transform.transformFrom(point, H1);
+  target_T_source.transformFrom(source_point, H1);
   return normal.transpose() * H1;
 }
 
 Eigen::Matrix<double, 3, 6> PointToPointJacobian(const gtsam::Point3& source_point,
-                                                 const gtsam::Pose3& relative_transform) {
+                                                 const gtsam::Pose3& target_T_source) {
   gtsam::Matrix H1;
-  relative_transform.transformFrom(source_point, H1);
+  target_T_source.transformFrom(source_point, H1);
   return H1;
 }
 
@@ -104,17 +104,16 @@ Eigen::Isometry3d RelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& s
     target_cloud_matrix(2, i) = target_point.z();
   }
 
-  const Eigen::Matrix<double, 4, 4> relative_transform =
-    Eigen::umeyama(source_cloud_matrix, target_cloud_matrix, false);
-  return Eigen::Isometry3d(relative_transform.matrix());
+  const Eigen::Matrix<double, 4, 4> target_T_source = Eigen::umeyama(source_cloud_matrix, target_cloud_matrix, false);
+  return Eigen::Isometry3d(target_T_source.matrix());
 }
 
 boost::optional<Eigen::Matrix<double, 6, 6>> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
-                                                                    const Eigen::Isometry3d& relative_transform) {
+                                                                    const Eigen::Isometry3d& target_T_source) {
   std::vector<Eigen::Matrix<double, 3, 6>> jacobians;
   const int num_correspondences = static_cast<int>(source_points.size());
   for (int i = 0; i < num_correspondences; ++i) {
-    const Eigen::Matrix<double, 3, 6> jacobian = PointToPointJacobian(source_points[i], lc::GtPose(relative_transform));
+    const Eigen::Matrix<double, 3, 6> jacobian = PointToPointJacobian(source_points[i], lc::GtPose(target_T_source));
     if (!jacobian.allFinite()) continue;
     jacobians.emplace_back(jacobian);
   }
@@ -123,12 +122,12 @@ boost::optional<Eigen::Matrix<double, 6, 6>> PointToPointCovariance(const std::v
 
 boost::optional<Eigen::Matrix<double, 6, 6>> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
                                                                     const std::vector<Eigen::Vector3d>& target_normals,
-                                                                    const Eigen::Isometry3d& relative_transform) {
+                                                                    const Eigen::Isometry3d& target_T_source) {
   std::vector<Eigen::Matrix<double, 1, 6>> jacobians;
   const int num_correspondences = static_cast<int>(source_points.size());
   for (int i = 0; i < num_correspondences; ++i) {
     const Eigen::Matrix<double, 1, 6> jacobian =
-      PointToPlaneJacobian(source_points[i], target_normals[i], lc::GtPose(relative_transform));
+      PointToPlaneJacobian(source_points[i], target_normals[i], lc::GtPose(target_T_source));
     if (!jacobian.allFinite()) continue;
     jacobians.emplace_back(jacobian);
   }

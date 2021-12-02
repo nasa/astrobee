@@ -46,11 +46,11 @@ Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source
 pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
   const pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_with_normals);
 
-Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
-                                                 const gtsam::Pose3& relative_transform);
+Eigen::Matrix<double, 1, 6> PointToPlaneJacobian(const gtsam::Point3& source_point, const gtsam::Vector3& normal,
+                                                 const gtsam::Pose3& target_T_source);
 
 Eigen::Matrix<double, 3, 6> PointToPointJacobian(const gtsam::Point3& source_point,
-                                                 const gtsam::Pose3& relative_transform);
+                                                 const gtsam::Pose3& target_T_source);
 
 Eigen::Isometry3d RelativeTransformUmeyama(const std::vector<Eigen::Vector3d>& source_points,
                                            const std::vector<Eigen::Vector3d>& target_points);
@@ -65,11 +65,11 @@ bool computePointNormal(const pcl::PointCloud<PointType>& cloud, const std::vect
                         float& normal_y, float& normal_z, float& curvature);
 
 boost::optional<Eigen::Matrix<double, 6, 6>> PointToPointCovariance(const std::vector<Eigen::Vector3d>& source_points,
-                                                                    const Eigen::Isometry3d& relative_transform);
+                                                                    const Eigen::Isometry3d& target_T_source);
 
 boost::optional<Eigen::Matrix<double, 6, 6>> PointToPlaneCovariance(const std::vector<Eigen::Vector3d>& source_points,
                                                                     const std::vector<Eigen::Vector3d>& target_normals,
-                                                                    const Eigen::Isometry3d& relative_transform);
+                                                                    const Eigen::Isometry3d& target_T_source);
 
 template <typename PointType>
 Eigen::Vector3d Vector3d(const PointType& point);
