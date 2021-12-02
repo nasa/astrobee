@@ -223,14 +223,10 @@ pid_t Recorder::popen2(const char **args, int *infp, int *outfp) {
     close(p_stdout[READ]);
     dup2(p_stdout[WRITE], WRITE);
 
-#if ROS_VERSION_MINOR == 12
-    std::string binaryPath = "/opt/ros/kinetic/lib/rosbag/record";
-#elif ROS_VERSION_MINOR == 14
-    std::string binaryPath = "/opt/ros/melodic/lib/rosbag/record";
-#elif ROS_VERSION_MINOR == 15
-    std::string binaryPath = "/opt/ros/noetic/lib/rosbag/record";
-#endif
-
+    std::string ros_distro = getenv("ROS_DISTRO");
+    if (ros_distro.empty())
+      return -1;
+    std::string binaryPath = std::string("/opt/ros/") + ros_distro + "/lib/rosbag/record";
     execv(binaryPath.c_str(), const_cast<char**>(args));
 
     perror("execv");
