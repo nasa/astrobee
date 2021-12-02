@@ -136,7 +136,7 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
     (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
   SaveCorrespondences(icp, source_cloud_with_normals, result);
   const auto covariance = PointToPlaneCovariance(correspondences_->source_points, correspondences_->target_normals,
-                                                 estimated_source_T_target);
+                                                 estimated_source_T_target.inverse());
   if (!covariance) {
     LogError("Icp: Failed to get covariance.");
     return boost::none;
