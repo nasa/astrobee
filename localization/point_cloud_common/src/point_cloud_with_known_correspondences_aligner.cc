@@ -36,7 +36,6 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
   const Eigen::Isometry3d& initial_source_T_target_estimate,
   const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
-  // PointToXErrors expect target_T_source
   Eigen::Matrix<double, 6, 1> target_T_source = oc::VectorFromIsometry3d(initial_source_T_target_estimate.inverse());
   ceres::Problem problem;
   problem.AddParameterBlock(target_T_source.data(), 6);
@@ -88,9 +87,8 @@ boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligne
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals,
   const Eigen::Isometry3d& initial_source_T_target_estimate) const {
   if (params_.use_single_iteration_umeyama) {
-    // Umeyama returns target_T_source, need to invert this
     const Eigen::Isometry3d source_T_target_estimate = RelativeTransformUmeyama(source_points, target_points).inverse();
-    const auto covariance = PointToPointCovariance(source_points, source_T_target_estimate);
+    const auto covariance = PointToPointCovariance(source_points, source_T_target_estimate.inverse());
     if (!covariance) {
       LogError("ComputeRelativeTransform: Failed to get covariance.");
       return boost::none;
@@ -98,18 +96,18 @@ boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligne
     return lc::PoseWithCovariance(source_T_target_estimate, *covariance);
   }
 
-  const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
-                                            ? RelativeTransformUmeyama(source_points, target_points).inverse()
-                                            : initial_source_T_target_estimate;
-  const Eigen::Isometry3d relative_transform =
-    Align(source_points, target_points, initial_guess, source_normals, target_normals);
+  const Eigen::Isometry3d initial_source_T_target = params_.use_umeyama_initial_guess
+                                                      ? RelativeTransformUmeyama(source_points, target_points).inverse()
+                                                      : initial_source_T_target_estimate;
+  const Eigen::Isometry3d source_T_target =
+    Align(source_points, target_points, initial_source_T_target, source_normals, target_normals);
   // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane
-  const auto covariance = PointToPointCovariance(source_points, relative_transform);
+  const auto covariance = PointToPointCovariance(source_points, source_T_target.inverse());
   if (!covariance) {
     LogError("ComputeRelativeTransform: Failed to get covariance.");
     return boost::none;
   }
-  return lc::PoseWithCovariance(relative_transform, *covariance);
+  return lc::PoseWithCovariance(source_T_target, *covariance);
 }
 
 boost::optional<localization_common::PoseWithCovariance>
