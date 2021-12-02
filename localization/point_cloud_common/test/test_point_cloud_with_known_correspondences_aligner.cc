@@ -29,43 +29,16 @@ namespace lc = localization_common;
 namespace pc = point_cloud_common;
 
 /*TEST(PointToPlaneICPTester, NoisyInitialEstimateCubicPoints) {
-  const auto params = pc::DefaultPointToPlaneICPParams();
+  const auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
   constexpr double translation_stddev = 0.01;
   constexpr double rotation_stddev = 0.01;
-  pc::PointToPlaneICP<pcl::PointNormal> icp(params);
+  pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
     const auto source_T_points_and_normals = pc::CubicPoints();
     const auto source_T_target = lc::RandomIsometry3d();
-    const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
-    pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
-    pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
     const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
     const auto estimated_source_T_target =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
-    ASSERT_TRUE(estimated_source_T_target != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
-  }
-}
-
-TEST(PointToPlaneICPTester, NoisyInitialEstimateRandomPoints) {
-  const auto params = pc::DefaultPointToPlaneICPParams();
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
-  constexpr int num_points = 50;
-  pc::PointToPlaneICP<pcl::PointNormal> icp(params);
-  for (int i = 0; i < 50; ++i) {
-    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto source_T_target = lc::RandomIsometry3d();
-    const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
-    pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
-    pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(source_T_target.inverse().matrix()));
-    const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
-    const auto estimated_source_T_target =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+      aligner.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
     ASSERT_TRUE(estimated_source_T_target != boost::none);
     EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }

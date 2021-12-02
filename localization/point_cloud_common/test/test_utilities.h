@@ -20,6 +20,7 @@
 
 #include <ff_common/eigen_vectors.h>
 #include <point_cloud_common/point_to_plane_icp_params.h>
+#include <point_cloud_common/point_cloud_with_known_correspondences_aligner.h>
 
 #include <Eigen/Geometry>
 
@@ -52,5 +53,7 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<E
                                                              const std::vector<Eigen::Vector3d>& normals);
 
 PointToPlaneICPParams DefaultPointToPlaneICPParams();
+
+PointCloudWithKnownCorrespondencesAlignerParams DefaultPointCloudWithKnownCorrespondencesAlignerParams();
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
