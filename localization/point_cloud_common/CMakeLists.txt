@@ -81,6 +81,15 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_point_to_plane_icp
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
+  add_rostest_gtest(test_point_cloud_with_known_correspondences_aligner
+    test/test_point_cloud_with_known_correspondences_aligner.test
+    test/test_point_cloud_with_known_correspondences_aligner.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_point_cloud_with_known_correspondences_aligner
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+
 endif()
 
 #############
