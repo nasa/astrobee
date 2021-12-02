@@ -97,8 +97,8 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateRandomPointsCorrespondencesTest)
     for (int i = 0; i < correspondences->size(); ++i) {
       const auto& source_point = correspondences->source_points[i];
       const auto& target_point = correspondences->target_points[i];
-      const Eigen::Vector3d transformed_target_point = estimated_target_T_source->pose * target_point;
-      EXPECT_PRED2(lc::MatrixEquality<2>, source_point.matrix(), transformed_target_point.matrix());
+      const Eigen::Vector3d transformed_source_point = estimated_target_T_source->pose * source_point;
+      EXPECT_PRED2(lc::MatrixEquality<2>, target_point.matrix(), transformed_source_point.matrix());
     }
   }
 }
