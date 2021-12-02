@@ -120,34 +120,37 @@ namespace astrobee_rosbag {
   //! Thread that starts the rosbag record command.
   void Recorder::doRecord() {
     // Start recording command
-    std::string cmd = "rosbag record ";
+    std::vector<std::string> vector;
+    vector.push_back("record");
 
     // Specify name
     if (options_.prefix != "") {
-      cmd += " --output-name=" + options_.prefix;
+      vector.push_back("--output-name=" + options_.prefix);
     }
 
     // Specify split option
     if (options_.split == true) {
-      cmd += " --split --size=" + std::to_string(options_.max_size);
-    }
-
-    // // Specify maximum duration
-    if (options_.max_duration.toSec() != -1) {
-      cmd += " --duration=" + std::to_string(options_.max_duration.toSec());
+      vector.push_back("--split");
+      vector.push_back("--size");
+      vector.push_back(std::to_string(options_.max_size));
     }
 
     // Specify topics to record
     for (uint i = 0 ; i < options_.topics.size(); ++i) {
-      cmd += " " + options_.topics[i];
+      vector.push_back(options_.topics[i]);
     }
 
     // Specify node name
-    cmd += " __name:=" + options_.name;
+    vector.push_back("__name:=" + options_.name);
 
-    ROS_DEBUG("%s", cmd.c_str());
+    // Copy args to readable execv format
+    const char **args = new const char* [vector.size()+1];  // extra room for sentinel
+    for (int j = 0;  j < vector.size()+1;  ++j)
+      args[j+1] = vector[j] .c_str();
+    args[vector.size() + 1] = NULL;  // end of arguments sentinel is NULL
+
     int infp, outfp;
-    if ((child_process_ = popen2(cmd.c_str(), &infp, &outfp)) <= 0) {
+    if ((child_process_ = popen2(args, &infp, &outfp)) <= 0) {
       printf("Unable to start recording\n");
       exit(1);
     }
@@ -203,7 +206,7 @@ void Recorder::checkDisk(const ros::TimerEvent&) {
 }
 
 // Generalized popen2 function that returns the PID and allows read/write
-pid_t Recorder::popen2(const char *command, int *infp, int *outfp) {
+pid_t Recorder::popen2(const char **args, int *infp, int *outfp) {
   int p_stdin[2], p_stdout[2];
   pid_t pid;
 
@@ -220,8 +223,17 @@ pid_t Recorder::popen2(const char *command, int *infp, int *outfp) {
     close(p_stdout[READ]);
     dup2(p_stdout[WRITE], WRITE);
 
-    execl("/bin/sh", "sh", "-c", command, NULL);
-    perror("execl");
+#if ROS_VERSION_MINOR == 12
+    std::string binaryPath = "/opt/ros/kinetic/lib/rosbag/record";
+#elif ROS_VERSION_MINOR == 14
+    std::string binaryPath = "/opt/ros/melodic/lib/rosbag/record";
+#elif ROS_VERSION_MINOR == 15
+    std::string binaryPath = "/opt/ros/noetic/lib/rosbag/record";
+#endif
+
+    execv(binaryPath.c_str(), const_cast<char**>(args));
+
+    perror("execv");
     exit(1);
   }
   if (infp == NULL)

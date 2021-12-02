@@ -79,7 +79,7 @@ class ROSBAG_DECL Recorder {
 
   void doRecord();
 
-  pid_t popen2(const char *command, int *infp, int *outfp);
+  pid_t popen2(const char **args, int *infp, int *outfp);
 
  private:
     RecorderOptions               options_;
