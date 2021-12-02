@@ -54,14 +54,16 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     LogWarning("DepthImageCallback: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
-  auto relative_transform =
+  const auto target_T_source =
     icp_.ComputeRelativeTransform(previous_point_cloud_with_normals_, latest_point_cloud_with_normals_);
-  if (!relative_transform) {
+  if (!target_T_source) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
   }
 
-  if (!lc::PoseCovarianceSane(relative_transform->covariance, params_.position_covariance_threshold,
+  const auto source_T_target = lc::InvertPoseWithCovariance(*target_T_source);
+
+  if (!lc::PoseCovarianceSane(source_T_target.covariance, params_.position_covariance_threshold,
                               params_.orientation_covariance_threshold)) {
     LogWarning("DepthImageCallback: Sanity check failed - invalid covariance.");
     return boost::none;
@@ -73,7 +75,7 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     return boost::none;
   }
 
-  return PoseWithCovarianceAndCorrespondences(*relative_transform, *correspondences, previous_timestamp_,
+  return PoseWithCovarianceAndCorrespondences(source_T_target, *correspondences, previous_timestamp_,
                                               latest_timestamp_);
 }
 }  // namespace depth_odometry

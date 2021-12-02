@@ -202,6 +202,14 @@ PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovarianc
   return b_F_relative_pose_with_covariance;
 }
 
+PoseWithCovariance InvertPoseWithCovariance(const PoseWithCovariance& pose_with_covariance) {
+  PoseWithCovariance inverted_pose_with_covariance;
+  inverted_pose_with_covariance.pose = pose_with_covariance.pose.inverse();
+  // TODO(rsoussan): Do this properly!!
+  inverted_pose_with_covariance.covariance = pose_with_covariance.covariance;
+  return inverted_pose_with_covariance;
+}
+
 double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,
                           const double position_covariance_threshold, const double orientation_covariance_threshold,
                           const bool check_position_covariance, const bool check_orientation_covariance) {

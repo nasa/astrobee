@@ -134,22 +134,23 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
       ? boost::optional<const std::vector<Eigen::Vector3d>&>(target_normals)
       : boost::none;
 
-  const auto relative_transform =
+  const auto target_T_source =
     aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks, source_normals_ref, target_normals_ref);
-  if (!relative_transform) {
+  if (!target_T_source) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
   }
 
-  if (!lc::PoseCovarianceSane(relative_transform->covariance, params_.position_covariance_threshold,
+  const auto source_T_target = lc::InvertPoseWithCovariance(*target_T_source);
+
+  if (!lc::PoseCovarianceSane(source_T_target.covariance, params_.position_covariance_threshold,
                               params_.orientation_covariance_threshold)) {
     LogWarning("DepthImageCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
   return PoseWithCovarianceAndCorrespondences(
-    *relative_transform,
-    DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
+    source_T_target, DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
     previous_timestamp_, latest_timestamp_);
 }
 

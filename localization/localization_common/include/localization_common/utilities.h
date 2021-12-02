@@ -136,6 +136,8 @@ Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
 PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
                                                          const Eigen::Isometry3d& b_T_a);
 
+PoseWithCovariance InvertPoseWithCovariance(const PoseWithCovariance& pose_with_covariance);
+
 template <int CostDim, int StateDim>
 boost::optional<Eigen::Matrix<double, StateDim, StateDim>> LeastSquaresCovariance(
   const std::vector<Eigen::Matrix<double, CostDim, StateDim>>& cost_jacobians);
