@@ -143,8 +143,9 @@ PointCloudWithKnownCorrespondencesAlignerParams DefaultPointCloudWithKnownCorres
   params.normal_search_radius = 0.03;
   params.use_umeyama_initial_guess = false;
   params.use_single_iteration_umeyama = false;
-  params.use_point_to_plane_cost = true;
+  params.use_point_to_plane_cost = false;
   params.use_symmetric_point_to_plane_cost = false;
   params.verbose_optimization = false;
+  return params;
 }
 }  // namespace point_cloud_common
