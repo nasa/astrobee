@@ -108,7 +108,10 @@ class SymmetricPointToPlaneError {
     const Eigen::Matrix<T, 3, 1> estimated_target_t_point = target_T_source * source_t_point_.cast<T>();
     const Eigen::Matrix<T, 3, 1> target_F_point_t_estimated_point =
       estimated_target_t_point - target_t_point_.cast<T>();
-    symmetric_point_to_plane_error[0] = target_F_point_t_estimated_point.dot(source_normal_.cast<T>());
+    const Eigen::Matrix<T, 3, 1> estimated_source_t_point = target_T_source.inverse() * target_t_point_.cast<T>();
+    const Eigen::Matrix<T, 3, 1> source_F_point_t_estimated_point =
+      estimated_source_t_point - source_t_point_.cast<T>();
+    symmetric_point_to_plane_error[0] = source_F_point_t_estimated_point.dot(source_normal_.cast<T>());
     symmetric_point_to_plane_error[1] = target_F_point_t_estimated_point.dot(target_normal_.cast<T>());
     return true;
   }
