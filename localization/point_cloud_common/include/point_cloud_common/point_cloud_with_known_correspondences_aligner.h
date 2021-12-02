@@ -34,7 +34,7 @@ class PointCloudWithKnownCorrespondencesAligner {
 
   Eigen::Isometry3d Align(
     const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
-    const Eigen::Isometry3d& initial_source_T_target_estimate,
+    const Eigen::Isometry3d& initial_target_T_source_estimate,
     const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
     const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals = boost::none) const;
 
@@ -42,11 +42,11 @@ class PointCloudWithKnownCorrespondencesAligner {
     const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
     const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
     const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals = boost::none,
-    const Eigen::Isometry3d& initial_source_T_target_estimate = Eigen::Isometry3d::Identity()) const;
+    const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity()) const;
 
   boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
     const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
-    const Eigen::Isometry3d& initial_source_T_target_estimate = Eigen::Isometry3d::Identity()) const;
+    const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity()) const;
 
  private:
   PointCloudWithKnownCorrespondencesAlignerParams params_;

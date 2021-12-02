@@ -33,10 +33,10 @@ PointCloudWithKnownCorrespondencesAligner::PointCloudWithKnownCorrespondencesAli
 
 Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
-  const Eigen::Isometry3d& initial_source_T_target_estimate,
+  const Eigen::Isometry3d& initial_target_T_source_estimate,
   const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
-  Eigen::Matrix<double, 6, 1> target_T_source = oc::VectorFromIsometry3d(initial_source_T_target_estimate.inverse());
+  Eigen::Matrix<double, 6, 1> target_T_source = oc::VectorFromIsometry3d(initial_target_T_source_estimate);
   ceres::Problem problem;
   problem.AddParameterBlock(target_T_source.data(), 6);
   if (params_.use_symmetric_point_to_plane_cost) {
@@ -78,43 +78,43 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
     }
     oc::CheckResiduals(residual_size, problem);
   }
-  return oc::Isometry3d(target_T_source).inverse();
+  return oc::Isometry3d(target_T_source);
 }
 
 boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
   const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals,
-  const Eigen::Isometry3d& initial_source_T_target_estimate) const {
+  const Eigen::Isometry3d& initial_target_T_source_estimate) const {
   if (params_.use_single_iteration_umeyama) {
-    const Eigen::Isometry3d source_T_target_estimate = RelativeTransformUmeyama(source_points, target_points).inverse();
-    const auto covariance = PointToPointCovariance(source_points, source_T_target_estimate.inverse());
+    const Eigen::Isometry3d target_T_source_estimate = RelativeTransformUmeyama(source_points, target_points);
+    const auto covariance = PointToPointCovariance(source_points, target_T_source_estimate);
     if (!covariance) {
       LogError("ComputeRelativeTransform: Failed to get covariance.");
       return boost::none;
     }
-    return lc::PoseWithCovariance(source_T_target_estimate, *covariance);
+    return lc::PoseWithCovariance(target_T_source_estimate, *covariance);
   }
 
-  const Eigen::Isometry3d initial_source_T_target = params_.use_umeyama_initial_guess
-                                                      ? RelativeTransformUmeyama(source_points, target_points).inverse()
-                                                      : initial_source_T_target_estimate;
-  const Eigen::Isometry3d source_T_target =
-    Align(source_points, target_points, initial_source_T_target, source_normals, target_normals);
+  const Eigen::Isometry3d initial_target_T_source = params_.use_umeyama_initial_guess
+                                                      ? RelativeTransformUmeyama(source_points, target_points)
+                                                      : initial_target_T_source_estimate;
+  const Eigen::Isometry3d target_T_source =
+    Align(source_points, target_points, initial_target_T_source, source_normals, target_normals);
   // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane
-  const auto covariance = PointToPointCovariance(source_points, source_T_target.inverse());
+  const auto covariance = PointToPointCovariance(source_points, target_T_source);
   if (!covariance) {
     LogError("ComputeRelativeTransform: Failed to get covariance.");
     return boost::none;
   }
-  return lc::PoseWithCovariance(source_T_target, *covariance);
+  return lc::PoseWithCovariance(target_T_source, *covariance);
 }
 
 boost::optional<localization_common::PoseWithCovariance>
 PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
-  const Eigen::Isometry3d& initial_source_T_target_estimate) const {
+  const Eigen::Isometry3d& initial_target_T_source_estimate) const {
   return ComputeRelativeTransform(source_points, target_points, boost::none, boost::none,
-                                  initial_source_T_target_estimate);
+                                  initial_target_T_source_estimate);
 }
 }  // namespace point_cloud_common
