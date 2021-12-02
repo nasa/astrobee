@@ -46,22 +46,22 @@ class PointToPlaneICP {
   boost::optional<localization_common::PoseWithCovariance> ComputeRelativeTransform(
     const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
     const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals,
-    const Eigen::Isometry3d& initial_source_T_target_estimate = Eigen::Isometry3d::Identity());
+    const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity());
   const boost::optional<ICPCorrespondences>& correspondences() const;
 
  private:
   boost::optional<localization_common::PoseWithCovariance> RunPointToPlaneICP(
     const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
     const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals,
-    const Eigen::Isometry3d& initial_source_T_target_estimate = Eigen::Isometry3d::Identity());
+    const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity());
   boost::optional<localization_common::PoseWithCovariance> RunCoarseToFinePointToPlaneICP(
     const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
     const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals,
-    const Eigen::Isometry3d& initial_source_T_target_estimate = Eigen::Isometry3d::Identity());
+    const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity());
   boost::optional<localization_common::PoseWithCovariance> RunDownsampledPointToPlaneICP(
     const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
     const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals, const double leaf_size,
-    const Eigen::Isometry3d& initial_source_T_target_estimate = Eigen::Isometry3d::Identity());
+    const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity());
   void SaveCorrespondences(const pcl::IterativeClosestPointWithNormals<PointType, PointType>& icp,
                            const typename pcl::PointCloud<PointType>::Ptr source_cloud,
                            const typename pcl::PointCloud<PointType>::Ptr source_cloud_transformed);
@@ -77,15 +77,15 @@ template <typename PointType>
 boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointType>::ComputeRelativeTransform(
   const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
   const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals,
-  const Eigen::Isometry3d& initial_source_T_target_estimate) {
+  const Eigen::Isometry3d& initial_target_T_source_estimate) {
   if (params_.coarse_to_fine) {
     return RunCoarseToFinePointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
-                                          initial_source_T_target_estimate);
+                                          initial_target_T_source_estimate);
   } else if (params_.downsample) {
     return RunDownsampledPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
-                                         params_.downsample_leaf_size, initial_source_T_target_estimate);
+                                         params_.downsample_leaf_size, initial_target_T_source_estimate);
   } else {
-    return RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, initial_source_T_target_estimate);
+    return RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, initial_target_T_source_estimate);
   }
 }
 
@@ -93,7 +93,7 @@ template <typename PointType>
 boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointType>::RunPointToPlaneICP(
   const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
   const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals,
-  const Eigen::Isometry3d& initial_source_T_target_estimate) {
+  const Eigen::Isometry3d& initial_target_T_source_estimate) {
   pcl::IterativeClosestPointWithNormals<PointType, PointType> icp;
 
   if (params_.symmetric_objective) {
@@ -117,8 +117,7 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
   icp.setInputTarget(target_cloud_with_normals);
   icp.setMaximumIterations(params_.max_iterations);
   typename pcl::PointCloud<PointType>::Ptr result(new pcl::PointCloud<PointType>);
-  // PCL ICP expects target_T_source as initial estimate
-  icp.align(*result, initial_source_T_target_estimate.inverse().matrix().cast<float>());
+  icp.align(*result, initial_target_T_source_estimate.matrix().cast<float>());
 
   if (!icp.hasConverged()) {
     LogError("Icp: Failed to converge.");
@@ -131,56 +130,55 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
     return boost::none;
   }
 
-  // PCL ICP returns target_T_source as computed transform, need to invert this
-  const Eigen::Isometry3d estimated_source_T_target(
-    (Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>()).inverse());
+  const Eigen::Isometry3d estimated_target_T_source(
+    Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());
   SaveCorrespondences(icp, source_cloud_with_normals, result);
   const auto covariance = PointToPlaneCovariance(correspondences_->source_points, correspondences_->target_normals,
-                                                 estimated_source_T_target.inverse());
+                                                 estimated_target_T_source);
   if (!covariance) {
     LogError("Icp: Failed to get covariance.");
     return boost::none;
   }
-  return localization_common::PoseWithCovariance(estimated_source_T_target, *covariance);
+  return localization_common::PoseWithCovariance(estimated_target_T_source, *covariance);
 }
 
 template <typename PointType>
 boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointType>::RunDownsampledPointToPlaneICP(
   const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
   const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals, const double leaf_size,
-  const Eigen::Isometry3d& initial_source_T_target_estimate) {
+  const Eigen::Isometry3d& initial_target_T_source_estimate) {
   typename pcl::PointCloud<PointType>::Ptr downsampled_source_cloud_with_normals =
     DownsamplePointCloud<PointType>(source_cloud_with_normals, leaf_size);
   typename pcl::PointCloud<PointType>::Ptr downsampled_target_cloud_with_normals =
     DownsamplePointCloud<PointType>(target_cloud_with_normals, leaf_size);
   return RunPointToPlaneICP(downsampled_source_cloud_with_normals, downsampled_target_cloud_with_normals,
-                            initial_source_T_target_estimate);
+                            initial_target_T_source_estimate);
 }
 
 template <typename PointType>
 boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointType>::RunCoarseToFinePointToPlaneICP(
   const typename pcl::PointCloud<PointType>::Ptr source_cloud_with_normals,
   const typename pcl::PointCloud<PointType>::Ptr target_cloud_with_normals,
-  const Eigen::Isometry3d& initial_source_T_target_estimate) {
-  boost::optional<localization_common::PoseWithCovariance> estimated_source_T_target =
-    localization_common::PoseWithCovariance(initial_source_T_target_estimate, Eigen::Matrix<double, 6, 6>());
+  const Eigen::Isometry3d& initial_target_T_source_estimate) {
+  boost::optional<localization_common::PoseWithCovariance> estimated_target_T_source =
+    localization_common::PoseWithCovariance(initial_target_T_source_estimate, Eigen::Matrix<double, 6, 6>());
   for (int i = 0; i < params_.num_coarse_to_fine_levels; ++i) {
     // Final iteration and no downsampling enabled for last iteration
     if (i == params_.num_coarse_to_fine_levels - 1 && !params_.downsample_last_coarse_to_fine_iteration) {
-      estimated_source_T_target =
-        RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, estimated_source_T_target->pose);
+      estimated_target_T_source =
+        RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, estimated_target_T_source->pose);
     } else {  // Downsampled for other iterations
       const double leaf_size =
         static_cast<double>(params_.num_coarse_to_fine_levels - i) * params_.coarse_to_fine_final_leaf_size;
-      estimated_source_T_target = RunDownsampledPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
-                                                                leaf_size, estimated_source_T_target->pose);
+      estimated_target_T_source = RunDownsampledPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
+                                                                leaf_size, estimated_target_T_source->pose);
     }
-    if (!estimated_source_T_target) {
+    if (!estimated_target_T_source) {
       LogWarning("RunCoarseToFinePointToPlaneICP: Failed to get relative transform.");
       return boost::none;
     }
   }
-  return estimated_source_T_target;
+  return estimated_target_T_source;
 }
 
 template <typename PointType>
