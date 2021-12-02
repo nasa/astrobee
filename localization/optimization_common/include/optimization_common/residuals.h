@@ -33,99 +33,99 @@
 namespace optimization_common {
 class PointToPointError {
  public:
-  PointToPointError(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point)
-      : source_point_(source_point), target_point_(target_point) {}
+  PointToPointError(const Eigen::Vector3d& source_t_point, const Eigen::Vector3d& target_t_point)
+      : source_t_point_(source_t_point), target_t_point_(target_t_point) {}
 
   template <typename T>
-  bool operator()(const T* relative_transform_data, T* point_to_point_error) const {
-    const auto relative_transform = Isometry3<T>(relative_transform_data);
+  bool operator()(const T* target_T_source_data, T* point_to_point_error) const {
+    const auto target_T_source = Isometry3<T>(target_T_source_data);
     // Compute error
-    const Eigen::Matrix<T, 3, 1> transformed_source_point = relative_transform * source_point_.cast<T>();
-    point_to_point_error[0] = transformed_source_point[0] - target_point_[0];
-    point_to_point_error[1] = transformed_source_point[1] - target_point_[1];
-    point_to_point_error[2] = transformed_source_point[2] - target_point_[2];
+    const Eigen::Matrix<T, 3, 1> estimated_target_t_point = target_T_source * source_t_point_.cast<T>();
+    point_to_point_error[0] = estimated_target_t_point[0] - target_t_point_[0];
+    point_to_point_error[1] = estimated_target_t_point[1] - target_t_point_[1];
+    point_to_point_error[2] = estimated_target_t_point[2] - target_t_point_[2];
     return true;
   }
 
-  static void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
-                              Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) {
+  static void AddCostFunction(const Eigen::Vector3d& source_t_point, const Eigen::Vector3d& target_t_point,
+                              Eigen::Matrix<double, 6, 1>& target_T_source, ceres::Problem& problem) {
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* point_to_point_cost_function =
-      new ceres::AutoDiffCostFunction<PointToPointError, 3, 6>(new PointToPointError(source_point, target_point));
-    problem.AddResidualBlock(point_to_point_cost_function, huber_loss, relative_transform.data());
+      new ceres::AutoDiffCostFunction<PointToPointError, 3, 6>(new PointToPointError(source_t_point, target_t_point));
+    problem.AddResidualBlock(point_to_point_cost_function, huber_loss, target_T_source.data());
   }
 
  private:
-  Eigen::Vector3d source_point_;
-  Eigen::Vector3d target_point_;
+  Eigen::Vector3d source_t_point_;
+  Eigen::Vector3d target_t_point_;
 };
 
 class PointToPlaneError {
  public:
-  PointToPlaneError(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
+  PointToPlaneError(const Eigen::Vector3d& source_t_point, const Eigen::Vector3d& target_t_point,
                     const Eigen::Vector3d& target_normal)
-      : source_point_(source_point), target_point_(target_point), target_normal_(target_normal) {}
+      : source_t_point_(source_t_point), target_t_point_(target_t_point), target_normal_(target_normal) {}
 
   template <typename T>
-  bool operator()(const T* relative_transform_data, T* point_to_plane_error) const {
-    const auto relative_transform = Isometry3<T>(relative_transform_data);
+  bool operator()(const T* target_T_source_data, T* point_to_plane_error) const {
+    const auto target_T_source = Isometry3<T>(target_T_source_data);
     // Compute error
-    const Eigen::Matrix<T, 3, 1> transformed_source_point = relative_transform * source_point_.cast<T>();
-    const Eigen::Matrix<T, 3, 1> transformed_source_point_to_target_point =
-      transformed_source_point - target_point_.cast<T>();
-    point_to_plane_error[0] = transformed_source_point_to_target_point.dot(target_normal_.cast<T>());
+    const Eigen::Matrix<T, 3, 1> estimated_target_t_point = target_T_source * source_t_point_.cast<T>();
+    const Eigen::Matrix<T, 3, 1> target_F_point_t_estimated_point =
+      estimated_target_t_point - target_t_point_.cast<T>();
+    point_to_plane_error[0] = target_F_point_t_estimated_point.dot(target_normal_.cast<T>());
     return true;
   }
 
-  static void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
-                              const Eigen::Vector3d& target_normal, Eigen::Matrix<double, 6, 1>& relative_transform,
+  static void AddCostFunction(const Eigen::Vector3d& source_t_point, const Eigen::Vector3d& target_t_point,
+                              const Eigen::Vector3d& target_normal, Eigen::Matrix<double, 6, 1>& target_T_source,
                               ceres::Problem& problem) {
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* point_to_plane_cost_function = new ceres::AutoDiffCostFunction<PointToPlaneError, 1, 6>(
-      new PointToPlaneError(source_point, target_point, target_normal));
-    problem.AddResidualBlock(point_to_plane_cost_function, huber_loss, relative_transform.data());
+      new PointToPlaneError(source_t_point, target_t_point, target_normal));
+    problem.AddResidualBlock(point_to_plane_cost_function, huber_loss, target_T_source.data());
   }
 
  private:
-  Eigen::Vector3d source_point_;
-  Eigen::Vector3d target_point_;
+  Eigen::Vector3d source_t_point_;
+  Eigen::Vector3d target_t_point_;
   Eigen::Vector3d target_normal_;
 };
 
 class SymmetricPointToPlaneError {
  public:
-  SymmetricPointToPlaneError(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
+  SymmetricPointToPlaneError(const Eigen::Vector3d& source_t_point, const Eigen::Vector3d& target_t_point,
                              const Eigen::Vector3d& source_normal, const Eigen::Vector3d& target_normal)
-      : source_point_(source_point),
-        target_point_(target_point),
+      : source_t_point_(source_t_point),
+        target_t_point_(target_t_point),
         source_normal_(source_normal),
         target_normal_(target_normal) {}
 
   template <typename T>
-  bool operator()(const T* relative_transform_data, T* symmetric_point_to_plane_error) const {
-    const auto relative_transform = Isometry3<T>(relative_transform_data);
+  bool operator()(const T* target_T_source_data, T* symmetric_point_to_plane_error) const {
+    const auto target_T_source = Isometry3<T>(target_T_source_data);
     // Compute error
-    const Eigen::Matrix<T, 3, 1> transformed_source_point = relative_transform * source_point_.cast<T>();
-    const Eigen::Matrix<T, 3, 1> transformed_source_point_to_target_point =
-      transformed_source_point - target_point_.cast<T>();
-    symmetric_point_to_plane_error[0] = transformed_source_point_to_target_point.dot(source_normal_.cast<T>());
-    symmetric_point_to_plane_error[1] = transformed_source_point_to_target_point.dot(target_normal_.cast<T>());
+    const Eigen::Matrix<T, 3, 1> estimated_target_t_point = target_T_source * source_t_point_.cast<T>();
+    const Eigen::Matrix<T, 3, 1> target_F_point_t_estimated_point =
+      estimated_target_t_point - target_t_point_.cast<T>();
+    symmetric_point_to_plane_error[0] = target_F_point_t_estimated_point.dot(source_normal_.cast<T>());
+    symmetric_point_to_plane_error[1] = target_F_point_t_estimated_point.dot(target_normal_.cast<T>());
     return true;
   }
 
-  static void AddCostFunction(const Eigen::Vector3d& source_point, const Eigen::Vector3d& target_point,
+  static void AddCostFunction(const Eigen::Vector3d& source_t_point, const Eigen::Vector3d& target_t_point,
                               const Eigen::Vector3d& source_normal, const Eigen::Vector3d& target_normal,
-                              Eigen::Matrix<double, 6, 1>& relative_transform, ceres::Problem& problem) {
+                              Eigen::Matrix<double, 6, 1>& target_T_source, ceres::Problem& problem) {
     ceres::LossFunction* huber_loss = new ceres::HuberLoss(1.345);
     ceres::CostFunction* symmetric_point_to_plane_cost_function =
       new ceres::AutoDiffCostFunction<SymmetricPointToPlaneError, 2, 6>(
-        new SymmetricPointToPlaneError(source_point, target_point, source_normal, target_normal));
-    problem.AddResidualBlock(symmetric_point_to_plane_cost_function, huber_loss, relative_transform.data());
+        new SymmetricPointToPlaneError(source_t_point, target_t_point, source_normal, target_normal));
+    problem.AddResidualBlock(symmetric_point_to_plane_cost_function, huber_loss, target_T_source.data());
   }
 
  private:
-  Eigen::Vector3d source_point_;
-  Eigen::Vector3d target_point_;
+  Eigen::Vector3d source_t_point_;
+  Eigen::Vector3d target_t_point_;
   Eigen::Vector3d source_normal_;
   Eigen::Vector3d target_normal_;
 };
