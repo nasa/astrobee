@@ -33,9 +33,10 @@ PointCloudWithKnownCorrespondencesAligner::PointCloudWithKnownCorrespondencesAli
 
 Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
-  const Eigen::Isometry3d& initial_guess, const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
+  const Eigen::Isometry3d& initial_source_T_target_estimate,
+  const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
-  Eigen::Matrix<double, 6, 1> relative_transform = oc::VectorFromIsometry3d(initial_guess);
+  Eigen::Matrix<double, 6, 1> relative_transform = oc::VectorFromIsometry3d(initial_source_T_target_estimate);
   ceres::Problem problem;
   problem.AddParameterBlock(relative_transform.data(), 6);
   if (params_.use_symmetric_point_to_plane_cost) {
@@ -82,6 +83,7 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
 
 boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
   const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
+  const Eigen::Isometry3d& initial_source_T_target_estimate,
   const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
   if (params_.use_single_iteration_umeyama) {
@@ -96,7 +98,7 @@ boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligne
 
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
                                             ? RelativeTransformUmeyama(source_points, target_points)
-                                            : Eigen::Isometry3d::Identity();
+                                            : initial_source_T_target_estimate;
   const Eigen::Isometry3d relative_transform =
     Align(source_points, target_points, initial_guess, source_normals, target_normals);
   // TODO(rsoussan): Allow for covariances for point to plane and symmetric point to plane

@@ -28,7 +28,7 @@
 namespace lc = localization_common;
 namespace pc = point_cloud_common;
 
-/*TEST(PointToPlaneICPTester, NoisyInitialEstimateCubicPoints) {
+TEST(PointToPlaneICPTester, NoisyInitialEstimateCubicPoints) {
   const auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
   constexpr double translation_stddev = 0.01;
   constexpr double rotation_stddev = 0.01;
@@ -36,13 +36,15 @@ namespace pc = point_cloud_common;
   for (int i = 0; i < 50; ++i) {
     const auto source_T_points_and_normals = pc::CubicPoints();
     const auto source_T_target = lc::RandomIsometry3d();
+    const auto target_T_points_and_normals = lc::TransformPointsWithNormals(
+      source_T_points_and_normals.first, source_T_points_and_normals.second, source_T_target.inverse());
     const auto noisy_source_T_target = lc::AddNoiseToIsometry3d(source_T_target, translation_stddev, rotation_stddev);
-    const auto estimated_source_T_target =
-      aligner.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_source_T_target);
+    const auto estimated_source_T_target = aligner.ComputeRelativeTransform(
+      source_cloud_with_normals.first, target_cloud_with_normals.first, noisy_source_T_target);
     ASSERT_TRUE(estimated_source_T_target != boost::none);
     EXPECT_PRED2(lc::MatrixEquality<2>, estimated_source_T_target->pose.matrix(), source_T_target.matrix());
   }
-}*/
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
