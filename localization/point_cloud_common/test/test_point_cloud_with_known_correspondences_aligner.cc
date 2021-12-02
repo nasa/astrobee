@@ -30,8 +30,8 @@ namespace pc = point_cloud_common;
 
 TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointNoisyInitialEstimateCubicPoints) {
   const auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
   pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
     const auto source_T_points_and_normals = pc::CubicPoints();
@@ -48,8 +48,8 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointNoisyInitialEs
 
 TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointNoisyInitialEstimateRandomPoints) {
   const auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
   constexpr int num_points = 50;
   pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
@@ -68,8 +68,8 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointNoisyInitialEs
 TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPlaneNoisyInitialEstimateCubicPoints) {
   auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
   params.use_point_to_plane_cost = true;
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
   pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
     const auto source_T_points_and_normals = pc::CubicPoints();
@@ -88,8 +88,8 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPlaneNoisyInitialEs
 TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPlaneNoisyInitialEstimateRandomPoints) {
   auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
   params.use_point_to_plane_cost = true;
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
   constexpr int num_points = 50;
   pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
@@ -109,8 +109,8 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPlaneNoisyInitialEs
 TEST(PointCloudWithKnownCorrespondencesAlignerTester, SymmetricPointToPlaneNoisyInitialEstimateCubicPoints) {
   auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
   params.use_symmetric_point_to_plane_cost = true;
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
   pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
     const auto source_T_points_and_normals = pc::CubicPoints();
@@ -129,8 +129,8 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, SymmetricPointToPlaneNoisy
 TEST(PointCloudWithKnownCorrespondencesAlignerTester, SymmetricPointToPlaneNoisyInitialEstimateRandomPoints) {
   auto params = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
   params.use_symmetric_point_to_plane_cost = true;
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
+  constexpr double translation_stddev = 1.0;
+  constexpr double rotation_stddev = 1.0;
   constexpr int num_points = 50;
   pc::PointCloudWithKnownCorrespondencesAligner aligner(params);
   for (int i = 0; i < 50; ++i) {
