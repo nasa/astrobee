@@ -36,26 +36,27 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
   const Eigen::Isometry3d& initial_source_T_target_estimate,
   const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals,
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals) const {
-  Eigen::Matrix<double, 6, 1> relative_transform = oc::VectorFromIsometry3d(initial_source_T_target_estimate);
+  // PointToXErrors expect target_T_source
+  Eigen::Matrix<double, 6, 1> target_T_source = oc::VectorFromIsometry3d(initial_source_T_target_estimate.inverse());
   ceres::Problem problem;
-  problem.AddParameterBlock(relative_transform.data(), 6);
+  problem.AddParameterBlock(target_T_source.data(), 6);
   if (params_.use_symmetric_point_to_plane_cost) {
     if (!target_normals || !source_normals)
       LogFatal(
         "Align: Attempting to use symmetric point to plane cost without having valid source and target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
       oc::SymmetricPointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*source_normals)[i],
-                                                      (*target_normals)[i], relative_transform, problem);
+                                                      (*target_normals)[i], target_T_source, problem);
     }
   } else if (params_.use_point_to_plane_cost) {
     if (!target_normals) LogFatal("Align: Attempting to use point to plane cost without having valid target normals.");
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      oc::PointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*target_normals)[i],
-                                             relative_transform, problem);
+      oc::PointToPlaneError::AddCostFunction(source_points[i], target_points[i], (*target_normals)[i], target_T_source,
+                                             problem);
     }
   } else {
     for (int i = 0; i < static_cast<int>(source_points.size()) && i < params_.max_num_matches; ++i) {
-      oc::PointToPointError::AddCostFunction(source_points[i], target_points[i], relative_transform, problem);
+      oc::PointToPointError::AddCostFunction(source_points[i], target_points[i], target_T_source, problem);
     }
   }
 
@@ -78,7 +79,7 @@ Eigen::Isometry3d PointCloudWithKnownCorrespondencesAligner::Align(
     }
     oc::CheckResiduals(residual_size, problem);
   }
-  return oc::Isometry3d(relative_transform);
+  return oc::Isometry3d(target_T_source).inverse();
 }
 
 boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligner::ComputeRelativeTransform(
@@ -87,17 +88,18 @@ boost::optional<lc::PoseWithCovariance> PointCloudWithKnownCorrespondencesAligne
   const boost::optional<const std::vector<Eigen::Vector3d>&> target_normals,
   const Eigen::Isometry3d& initial_source_T_target_estimate) const {
   if (params_.use_single_iteration_umeyama) {
-    const Eigen::Isometry3d relative_transform = RelativeTransformUmeyama(source_points, target_points);
-    const auto covariance = PointToPointCovariance(source_points, relative_transform);
+    // Umeyama returns target_T_source, need to invert this
+    const Eigen::Isometry3d source_T_target_estimate = RelativeTransformUmeyama(source_points, target_points).inverse();
+    const auto covariance = PointToPointCovariance(source_points, source_T_target_estimate);
     if (!covariance) {
       LogError("ComputeRelativeTransform: Failed to get covariance.");
       return boost::none;
     }
-    return lc::PoseWithCovariance(relative_transform, *covariance);
+    return lc::PoseWithCovariance(source_T_target_estimate, *covariance);
   }
 
   const Eigen::Isometry3d initial_guess = params_.use_umeyama_initial_guess
-                                            ? RelativeTransformUmeyama(source_points, target_points)
+                                            ? RelativeTransformUmeyama(source_points, target_points).inverse()
                                             : initial_source_T_target_estimate;
   const Eigen::Isometry3d relative_transform =
     Align(source_points, target_points, initial_guess, source_normals, target_normals);
