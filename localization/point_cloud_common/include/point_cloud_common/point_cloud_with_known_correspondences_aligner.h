@@ -23,6 +23,9 @@
 
 #include <Eigen/Core>
 
+#include <ceres/ceres.h>
+#include <ceres/solver.h>
+
 #include <boost/optional.hpp>
 
 #include <vector>
@@ -32,7 +35,7 @@ class PointCloudWithKnownCorrespondencesAligner {
  public:
   explicit PointCloudWithKnownCorrespondencesAligner(const PointCloudWithKnownCorrespondencesAlignerParams& params);
 
-  Eigen::Isometry3d Align(
+  boost::optional<localization_common::PoseWithCovariance> Align(
     const std::vector<Eigen::Vector3d>& source_points, const std::vector<Eigen::Vector3d>& target_points,
     const Eigen::Isometry3d& initial_target_T_source_estimate,
     const boost::optional<const std::vector<Eigen::Vector3d>&> source_normals = boost::none,
@@ -49,6 +52,9 @@ class PointCloudWithKnownCorrespondencesAligner {
     const Eigen::Isometry3d& initial_target_T_source_estimate = Eigen::Isometry3d::Identity()) const;
 
  private:
+  boost::optional<localization_common::PoseCovariance> Covariance(const double* const target_T_source_data,
+                                                                  ceres::Problem& problem) const;
+
   PointCloudWithKnownCorrespondencesAlignerParams params_;
 };
 }  // namespace point_cloud_common
