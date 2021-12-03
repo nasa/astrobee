@@ -69,6 +69,27 @@ TEST(UtilitiesTester, FrameChangeRelativePose) {
   }
 }
 
+TEST(UtilitiesTester, FrameChangeRelativePoseWithRotation) {
+  const Eigen::Isometry3d a_F_b_T_c = lc::Isometry3d(Eigen::Vector3d(0, 0, 1), lc::RotationFromEulerAngles(90, 0, 0));
+  // Rotation about the same axis shouldn't change relative rotation
+  {
+    const Eigen::Isometry3d n_T_a = lc::Isometry3d(Eigen::Vector3d::Zero(), lc::RotationFromEulerAngles(90, 0, 0));
+    const auto n_F_b_T_c = lc::FrameChangeRelativePose(a_F_b_T_c, n_T_a);
+    EXPECT_PRED2(lc::MatrixEquality<6>, a_F_b_T_c.linear().matrix(), n_F_b_T_c.linear().matrix());
+  }
+  // Rotation should be the same as n_F_b_R_c * a_F_b_R_c * n_F_b_R_c.inv()
+  // The rotation a_F_b_R_c can be thought of as a_R_b * b_R_c*b_R_a,
+  // which rotates to b's position in frame a, applies the relative rotation from b to c, then
+  // subtracts the rotation from b to a.
+  // Thus a frame change n_R_a should be applied as n_R_a* a_R_b * b_R_c*b_R_a*a_R_n
+  {
+    const Eigen::Isometry3d n_T_a = lc::RandomIsometry3d();
+    const auto n_F_b_T_c = lc::FrameChangeRelativePose(a_F_b_T_c, n_T_a);
+    EXPECT_PRED2(lc::MatrixEquality<6>, n_T_a.linear() * a_F_b_T_c.linear() * (n_T_a.linear()).transpose(),
+                 n_F_b_T_c.linear());
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -164,10 +164,11 @@ Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordi
   return cartesian_coordinates;
 }
 
-Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll) {
-  const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw), Eigen::Vector3d::UnitZ());
-  const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch), Eigen::Vector3d::UnitY());
-  const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll), Eigen::Vector3d::UnitX());
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw_degrees, const double pitch_degrees,
+                                        const double roll_degrees) {
+  const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw_degrees), Eigen::Vector3d::UnitZ());
+  const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch_degrees), Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll_degrees), Eigen::Vector3d::UnitX());
   // For intrinsics euler angle convention, yaw, pitch, then roll in intrinsic body frame is equivalent to
   // roll, pitch, then yaw in extrinsic global frame
   const Eigen::Matrix3d rotation(roll_aa * pitch_aa * yaw_aa);
