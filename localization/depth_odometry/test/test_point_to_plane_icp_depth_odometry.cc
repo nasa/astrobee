@@ -17,6 +17,7 @@
  */
 
 #include <localization_common/logger.h>
+#include <point_cloud_common/test_utilities.h>
 
 #include <gtest/gtest.h>
 
