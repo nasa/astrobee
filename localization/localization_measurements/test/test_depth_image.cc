@@ -128,6 +128,26 @@ TEST(DepthImageTester, AccessSamePointUnfilteredAndInterpolated) {
     EXPECT_NEAR(p->z, 5 * 5.1, 1e-6);
     EXPECT_NEAR(p->intensity, 5 * 5.1, 1e-6);
   }
+  {
+    const auto p = depth_image.InterpolatePoint3D(5.5, 5.5);
+    ASSERT_TRUE(p != boost::none);
+    const auto p_55 = depth_image.UnfilteredPoint3D(5, 5);
+    const auto p_56 = depth_image.UnfilteredPoint3D(5, 6);
+    const auto p_65 = depth_image.UnfilteredPoint3D(6, 5);
+    const auto p_66 = depth_image.UnfilteredPoint3D(6, 6);
+    ASSERT_TRUE(p_55 != boost::none);
+    ASSERT_TRUE(p_56 != boost::none);
+    ASSERT_TRUE(p_65 != boost::none);
+    ASSERT_TRUE(p_66 != boost::none);
+    const double avg_x = (p_55->x + p_56->x + p_65->x + p_66->x) / 4.0;
+    EXPECT_NEAR(p->x, avg_x, 1e-6);
+    const double avg_y = (p_55->y + p_56->y + p_65->y + p_66->y) / 4.0;
+    EXPECT_NEAR(p->y, avg_y, 1e-6);
+    const double avg_z = (p_55->z + p_56->z + p_65->z + p_66->z) / 4.0;
+    EXPECT_NEAR(p->z, avg_z, 1e-6);
+    const double avg_intensity = (p_55->intensity + p_56->intensity + p_65->intensity + p_66->intensity) / 4.0;
+    EXPECT_NEAR(p->intensity, avg_intensity, 1e-6);
+  }
 }
 
 // Run all the tests that were declared with TEST()
