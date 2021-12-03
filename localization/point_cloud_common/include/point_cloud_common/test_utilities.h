@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
-#define POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
+#ifndef POINT_CLOUD_COMMON_TEST_UTILITIES_H_
+#define POINT_CLOUD_COMMON_TEST_UTILITIES_H_
 
 #include <ff_common/eigen_vectors.h>
 #include <point_cloud_common/point_to_plane_icp_params.h>
@@ -56,4 +56,4 @@ PointToPlaneICPParams DefaultPointToPlaneICPParams();
 
 PointCloudWithKnownCorrespondencesAlignerParams DefaultPointCloudWithKnownCorrespondencesAlignerParams();
 }  // namespace point_cloud_common
-#endif  // POINT_CLOUD_COMMON_TEST_UTILITIES_H_  // NOLINT
+#endif  // POINT_CLOUD_COMMON_TEST_UTILITIES_H_

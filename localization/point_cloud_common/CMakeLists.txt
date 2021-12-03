@@ -63,31 +63,34 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
+add_library(${PROJECT_NAME}_test_utilities
+  src/test_utilities.cc
+)
+add_dependencies(${PROJECT_NAME}_test_utilities ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_test_utilities ${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
+
 if(CATKIN_ENABLE_TESTING)
  find_package(rostest REQUIRED)
   add_rostest_gtest(test_point_cloud_common_utilities
     test/test_point_cloud_common_utilities.test
     test/test_point_cloud_common_utilities.cc
-    test/test_utilities.cc
   )
   target_link_libraries(test_point_cloud_common_utilities
-    ${PROJECT_NAME} ${catkin_LIBRARIES} gtsam 
+    ${PROJECT_NAME} ${PROJECT_NAME}_test_utilities ${catkin_LIBRARIES} gtsam 
   )
   add_rostest_gtest(test_point_to_plane_icp
     test/test_point_to_plane_icp.test
     test/test_point_to_plane_icp.cc
-    test/test_utilities.cc
   )
   target_link_libraries(test_point_to_plane_icp
-    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+    ${PROJECT_NAME} ${PROJECT_NAME}_test_utilities ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_point_cloud_with_known_correspondences_aligner
     test/test_point_cloud_with_known_correspondences_aligner.test
     test/test_point_cloud_with_known_correspondences_aligner.cc
-    test/test_utilities.cc
   )
   target_link_libraries(test_point_cloud_with_known_correspondences_aligner
-    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+    ${PROJECT_NAME} ${PROJECT_NAME}_test_utilities ${catkin_LIBRARIES} 
   )
 
 endif()

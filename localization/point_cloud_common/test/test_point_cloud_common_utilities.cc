@@ -16,11 +16,11 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/utilities.h>
+#include <point_cloud_common/test_utilities.h>
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>

@@ -16,9 +16,8 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
-
 #include <localization_common/test_utilities.h>
+#include <point_cloud_common/test_utilities.h>
 
 namespace point_cloud_common {
 namespace lc = localization_common;

@@ -16,12 +16,12 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner.h>
 #include <point_cloud_common/utilities.h>
+#include <point_cloud_common/test_utilities.h>
 
 #include <gtest/gtest.h>
 
