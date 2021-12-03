@@ -46,6 +46,29 @@ TEST(UtilitiesTester, EulerAngles) {
   }
 }
 
+TEST(UtilitiesTester, FrameChangeRelativePose) {
+  const Eigen::Isometry3d a_F_b_T_c = lc::Isometry3d(Eigen::Vector3d(0, 0, 1), Eigen::Matrix3d::Identity());
+  // Translation only shouldn't change anything
+  {
+    const Eigen::Isometry3d n_T_a = lc::Isometry3d(Eigen::Vector3d(1, 2, 3), Eigen::Matrix3d::Identity());
+    const auto n_F_b_T_c = lc::FrameChangeRelativePose(a_F_b_T_c, n_T_a);
+    EXPECT_PRED2(lc::MatrixEquality<6>, a_F_b_T_c.matrix(), n_F_b_T_c.matrix());
+  }
+  // Rotation should preserve zero relative rotation
+  {
+    const Eigen::Isometry3d n_T_a = lc::RandomIsometry3d();
+    const auto n_F_b_T_c = lc::FrameChangeRelativePose(a_F_b_T_c, n_T_a);
+    EXPECT_PRED2(lc::MatrixEquality<6>, a_F_b_T_c.linear().matrix(), n_F_b_T_c.linear().matrix());
+  }
+  // Frame change for translation component should be the same as rotating it
+  {
+    const Eigen::Isometry3d n_T_a = lc::RandomIsometry3d();
+    const auto n_F_b_T_c = lc::FrameChangeRelativePose(a_F_b_T_c, n_T_a);
+    EXPECT_PRED2(lc::MatrixEquality<6>, (n_T_a.linear() * a_F_b_T_c.translation()).matrix(),
+                 n_F_b_T_c.translation().matrix());
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
