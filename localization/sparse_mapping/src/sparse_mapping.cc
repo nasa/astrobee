@@ -231,7 +231,7 @@ void sparse_mapping::ReadNVM(std::string const& input_filename,
     f >> c[0] >> c[1] >> c[2] >> dist1 >> dist2;
     cid_to_filename->at(cid) = token;
 
-    // Solve for t .. which is part of the affine transform
+    // Solve for t, which is part of the affine transform
     Eigen::Matrix3d r = q.matrix();
     cid_to_cam_t_global->at(cid).linear() = r;
     cid_to_cam_t_global->at(cid).translation() = -r * c;
@@ -241,7 +241,7 @@ void sparse_mapping::ReadNVM(std::string const& input_filename,
   ptrdiff_t number_of_pid;
   f >> number_of_pid;
   if (number_of_pid < 1) {
-    LOG(FATAL) << "NVM file is missing points";
+    LOG(FATAL) << "The NVM file has no triangulated points.";
   }
 
   // Read the point
@@ -270,7 +270,7 @@ void sparse_mapping::ReadNVM(std::string const& input_filename,
     }
 
     if (!f.good())
-      LOG(FATAL) << "Unable to correctly read PID " << pid;
+      LOG(FATAL) << "Unable to correctly read PID: " << pid;
   }
 }
 

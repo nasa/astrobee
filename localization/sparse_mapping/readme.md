@@ -1,4 +1,4 @@
-\page sparsemapping Sparse Mapping
+\page sparsemapping Sparse mapping
 
 # Creation of sparse maps for robot localization
 
@@ -14,18 +14,34 @@ Maps are stored as protobuf files.
 
 ## ROS node
 
-The ROS node takes images and a map as input, and outputs visual features
-detected in the image and their 3D coordinates.
+The ROS node takes images and a map as input, and outputs visual
+features detected in the image and their 3D coordinates.
 
 ### Inputs
 
-* `/hw/cam_nav`: Camera images
-* The map file. See [build_map](build_map.md) at the bottom for its assumed location.
+* `/hw/cam_nav`: Camera images The map file. See the \subpage
+  map_building section (towards the bottom) for its assumed location
+  on the robot.
 
 ### Outputs
 
 * `/localization/mapped_landmarks/features`
 * `/localization/mapped_landmarks/registration`
+
+## The environment
+
+It will be convenient in this document to set these environmental
+variables, pointing to the source and build directories. They may need
+to be adjusted given your setup.
+
+    export ASTROBEE_SOURCE_PATH=$HOME/astrobee/src
+    export ASTROBEE_BUILD_PATH=$HOME/astrobee
+
+To access many of the localization tools, such as ``build_map``,
+``merge_maps``, etc., without specifying a full path, also consider
+setting:
+
+    export PATH=$ASTROBEE_BUILD_PATH/devel/lib/sparse_mapping:$PATH
 
 ## Tools and procedures
 
@@ -50,19 +66,21 @@ Usually the bags are acquired at a very high frame rate, and they are
 huge. A preliminary filtering of the bag images while still on the
 robot can be done with the command:
 
-    rosbag filter input.bag output.bag "(topic == '/hw/cam_nav') and (float(t.nsecs)/1e+9 <= 0.1)"
+    rosbag filter input.bag output.bag                           \
+      "(topic == '/hw/cam_nav') and (float(t.nsecs)/1e+9 <= 0.1)"
 
 Here, for every second of recorded data, we keep only the first tenth
 of a second. This number may need to be adjusted. Later, a further
 selection of the images can be done.
 
-### Copy the bag from the robot:
+### Copy the bag from the robot
 
 From the local machine, fetch the bag:
 
     rsync -avzP astrobee@10.42.0.32:/data/bagfile.bag .
 
-Here, the IP address of P4D was used, which may differ from your robot's IP address.
+Here, the IP address of P4D was used, which may differ from your
+robot's IP address.
 
 ### Merging bags
 
@@ -70,26 +88,26 @@ The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
 as follows:
 
-    astrobee_build/devel/lib/localization_node/merge_bags \
+    $ASTROBEE_BUILD_PATH/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
 ### Extracting images
 
 To extract images from a bag file:
 
-     extract_image_bag <bagfile.bag> -use_timestamp_as_image_name \
-       -image_topic /hw/cam_nav -output_directory <output dir>
+    $ASTROBEE_BUILD_PATH/devel/lib/localization_node/extract_image_bag \
+      <bagfile.bag> -use_timestamp_as_image_name                       \
+      -image_topic /hw/cam_nav -output_directory <output dir>
 
-The above assumes that the software was built with ROS on. This tool should
-exist in astrobee_build/native.
+The above assumes that the software was built with ROS on.
 
 Please check using 'rosbag info' the nav cam topic in the bag, as its
 name can change.
 
 ### Building a map
 
-The `build_map` tools aids in constructing a map. See
-[build_map](build_map.md) for further details.
+The ``build_map`` tools is used to construct a map. See \subpage
+map_building for further details.
 
 ### Visualization
 
@@ -135,7 +153,7 @@ collecting a subset of the images. (After clicking, a bug in OpenCV
 disables the arrow keys, then one can navigate with the "Ins" and
 "Del" keys on the numpad.)
 
-This tool can be invoked to just look at images, without any map being
+This tool can be invoked to look at just images, without any map being
 built. It can also delete images in this mode, with the 'Delete' and
 'x' keys, if invoked as:
 
@@ -144,7 +162,7 @@ built. It can also delete images in this mode, with the 'Delete' and
 ### Localize a single frame
 
 All the commands below assume that the environment was set up, 
-as specified in build_map.md.
+as specified in the \subpage map_building section.
 
 To test localization of a single frame, use the command:
 
@@ -187,19 +205,15 @@ This functionality is implemented in the localize_cams tool. Usage:
 
 Here we use values that are different from 
 
-    astrobee/config/localization.config 
+    $ASTROBEE_SOURCE_PATH/astrobee/config/localization.config 
 
 which are used for localization on the robot, since those are optimized
 for speed and here we want more accuracy.
 
 ### Testing localization using a bag 
 
-See: 
-
-    astrobee/tools/ekf_bag/readme.md
-
-for how to see how well a BRISK map with a vocabulary database does
-when localizing images from a bag.
+See the \subpage ekfbag page for how to study how well a BRISK map
+with a vocabulary database does when localizing images from a bag.
 
 ### Extract sub-maps
 
@@ -238,7 +252,7 @@ need to be rebuilt for the extracted submap using
     build_map -vocab_db
 
 
-#### Merge maps
+### Merge maps
 
 Given a set of SURF maps, they can be merged using the command:
 
@@ -246,8 +260,8 @@ Given a set of SURF maps, they can be merged using the command:
       -num_image_overlaps_at_endpoints 50
 
 It is very important to note that only maps with SURF features (see
-build_map.md) can be merged. If a map has BRISK features, it needs to
-be rebuilt with SURF features, as follows:
+\subpage map_building) can be merged. If a map has BRISK features, it
+needs to be rebuilt with SURF features, as follows:
 
       build_map -rebuild -histogram_equalization       \
         -rebuild_detector SURF -output_map <output map>
@@ -286,7 +300,7 @@ If the first of the two maps to merge is already registered, it may be
 desirable to keep that portion fixed during merging when bundle
 adjustment happens. That is accomplished with the flag -fix_first_map.
   
-#### How to build a map efficiently
+### How to build a map efficiently
 
 Often times map-building can take a long time, or it can fail. A
 cautious way of building a map is to build it in portions (perhaps on
@@ -323,12 +337,12 @@ maps using the command:
      images/*jpg -output_map <map file>
 
 examine them individually, merging them as appropriate, then
-performing bundle adjustment and registration as per build_map.md. 
-Only when a good enough map is obtained, a renamed copy of it 
-should be rebuilt with BRISK features and a vocabulary database
-to be used on the robot.
+performing bundle adjustment and registration as per the \subpage
+map_building section. Only when a good enough map is obtained, a
+renamed copy of it should be rebuilt with BRISK features and a
+vocabulary database to be used on the robot.
 
-#### Map strategy for the space station
+### Map strategy for the space station
 
 For the space station, there exists one large SURF map with many
 images, and a small BRISK map with fewer images. If new images are
@@ -348,7 +362,7 @@ for 80 of them localization failed. So, things will change as follows:
 
 The precise details are described in the next section.
 
-#### Growing a map when more images are acquired
+### Growing a map when more images are acquired
 
 Sometimes things in the desired environment change enough, or the
 lighting changes, and an existing map may no longer do as well in some
@@ -409,7 +423,7 @@ batch if they are not strictly necessary.
 
 The following Python code implements this:
 
-    python ~/astrobee/localization/sparse_mapping/tools/grow_map.py   \
+    python astrobee/src/localization/sparse_mapping/tools/grow_map.py \
       -histogram_equalization -small_map prev_brisk_vocab_hist.map    \
       -big_map curr_brisk_no_prune_hist.map -work_dir work            \
       -output_map curr_brisk_vocab_hist.map                           \
@@ -428,7 +442,7 @@ cohesiveness.
 Also note that the grow_map.py script takes a lot of other parameters
 on input that must be the same as in localization.config.
 
-#### Reducing the number of images in a map
+### Reducing the number of images in a map
 
 Sometimes a map has too many similar images. The tool reduce_map.py
 attempts to reduce their number without sacrificing the map quality.
@@ -439,10 +453,11 @@ need not have a vocab db.
 
 Usage:
 
-    python reduce_map.py -input_map <input map> -min_brisk_threshold <val> \
-           -default_brisk_threshold <val> -max_brisk_threshold <val>       \
-           -localization_error <val> -work_dir <work dir>                  \
-           -sample_rate <val> -histogram_equalization
+    python astrobee/src/localization/sparse_mapping/tools/reduce_map.py \
+      -input_map <input map> -min_brisk_threshold <val>                 \
+      -default_brisk_threshold <val> -max_brisk_threshold <val>         \
+      -localization_error <val> -work_dir <work dir>                    \
+      -sample_rate <val> -histogram_equalization
 
 The BRISK thresholds here must be as when the map was built (ideally
 like in localization.config). The -histogram_equalization flag is
@@ -477,9 +492,3 @@ Instead of taking images out of the map randomly, one can start with a
 reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
-
-
-\subpage map_building
-\subpage total_station
-\subpage granite_lab_registration
-\subpage using_faro
