@@ -184,6 +184,9 @@ Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
 }
 
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a) {
+  // Consider for example a sensor odometry measurement, sensor_time_0_T_sensor_time_1.
+  // To find the movement of the robot body given static body_T_sensor extrinsics,
+  // body_time_0_T_body_time_1 = body_T_sensor * sensor_time_0_T_sensor_time_1 * sensor_T_body
   return b_T_a * a_F_relative_pose * b_T_a.inverse();
 }
 

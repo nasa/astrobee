@@ -88,6 +88,18 @@ TEST(UtilitiesTester, FrameChangeRelativePoseWithRotation) {
     EXPECT_PRED2(lc::MatrixEquality<6>, n_T_a.linear() * a_F_b_T_c.linear() * (n_T_a.linear()).transpose(),
                  n_F_b_T_c.linear());
   }
+  // Rotation magnitude shouldn't be affected by frame change
+  for (int i = 0; i < 50; ++i) {
+    const Eigen::Isometry3d a_F_b_T_c = lc::RandomIsometry3d();
+    const Eigen::Isometry3d n_T_a = lc::RandomIsometry3d();
+    const auto n_F_b_T_c = lc::FrameChangeRelativePose(a_F_b_T_c, n_T_a);
+    // Sometimes axis can be flipped, take min angle distance so this doesn't matter
+    const double angle_a =
+      std::min(2 * M_PI - Eigen::AngleAxisd(a_F_b_T_c.linear()).angle(), Eigen::AngleAxisd(a_F_b_T_c.linear()).angle());
+    const double angle_b =
+      std::min(2 * M_PI - Eigen::AngleAxisd(n_F_b_T_c.linear()).angle(), Eigen::AngleAxisd(n_F_b_T_c.linear()).angle());
+    EXPECT_NEAR(angle_a, angle_b, 1e-6);
+  }
 }
 
 // Run all the tests that were declared with TEST()
