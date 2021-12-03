@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="depth_odometry" type="test_point_to_plane" test-name="test_point_to_plane" />
+  <test pkg="depth_odometry" type="test_point_to_plane_icp_depth_odometry" test-name="test_point_to_plane_icp_depth_odometry" />
 </launch>

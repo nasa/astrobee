@@ -73,6 +73,17 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
+if(CATKIN_ENABLE_TESTING)
+ find_package(rostest REQUIRED)
+  add_rostest_gtest(test_point_to_plane_icp_depth_odometry
+    test/test_point_to_plane_icp_depth_odometry.test
+    test/test_point_to_plane_icp_depth_odometry.cc
+  )
+  target_link_libraries(test_point_to_plane_icp_depth_odometry
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+endif()
+
 #############
 ## Install ##
 #############
