@@ -41,6 +41,51 @@ lm::DepthImage RampedDepthImage() {
   return lm::DepthImage(mat, cloud);
 }
 
+TEST(DepthImageTester, InvalidPoints) {
+  const auto depth_image = RampedDepthImage();
+  {
+    const auto p = depth_image.UnfilteredPoint3D(-1, 1);
+    ASSERT_TRUE(p == boost::none);
+  }
+  {
+    const auto p = depth_image.UnfilteredPoint3D(1, -1);
+    ASSERT_TRUE(p == boost::none);
+  }
+  {
+    const auto p = depth_image.UnfilteredPoint3D(100, 1);
+    ASSERT_TRUE(p == boost::none);
+  }
+  {
+    const auto p = depth_image.UnfilteredPoint3D(1, 100);
+    ASSERT_TRUE(p == boost::none);
+  }
+  {
+    auto invalid_cloud = depth_image.unfiltered_point_cloud()->makeShared();
+    pcl::PointXYZI invalid_point;
+    invalid_point.x = 0;
+    invalid_point.y = 0;
+    invalid_point.z = 0;
+    invalid_cloud->points[0] = invalid_point;
+    const lm::DepthImage invalid_depth_image(depth_image.image(), invalid_cloud);
+    {
+      const auto p = invalid_depth_image.InterpolatePoint3D(0.5, 0);
+      ASSERT_TRUE(p == boost::none);
+    }
+    {
+      const auto p = invalid_depth_image.InterpolatePoint3D(0.5, 0.5);
+      ASSERT_TRUE(p == boost::none);
+    }
+    {
+      const auto p = invalid_depth_image.InterpolatePoint3D(0, 0.5);
+      ASSERT_TRUE(p == boost::none);
+    }
+    {
+      const auto p = invalid_depth_image.InterpolatePoint3D(1.5, 1.5);
+      ASSERT_FALSE(p == boost::none);
+    }
+  }
+}
+
 TEST(DepthImageTester, AccessSamePointUnfilteredAndInterpolated) {
   const auto depth_image = RampedDepthImage();
   {

@@ -25,7 +25,7 @@ DepthImage::DepthImage(const cv::Mat& image, const pcl::PointCloud<pcl::PointXYZ
     : image_(image), unfiltered_point_cloud_(point_cloud) {}
 
 boost::optional<const pcl::PointXYZI&> DepthImage::UnfilteredPoint3D(const int col, const int row) const {
-  if (col >= image_.cols || row >= image_.rows) return boost::none;
+  if (col >= image_.cols || col < 0 || row >= image_.rows || row < 0) return boost::none;
   return unfiltered_point_cloud_->points[image_.cols * row + col];
 }
 boost::optional<const pcl::PointXYZI&> DepthImage::UnfilteredPoint3D(const double col, const double row) const {
