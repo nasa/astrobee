@@ -110,7 +110,7 @@ This tool has the following command-line options:
 
 This tool is used to import a map from the NVM format, which Theia
 exports to. These operations are done automatically by the
-``build_theia_map.py'' tool. This documentation is provided for
+``build_theia_map.py`` tool. This documentation is provided for
 reference only.
  
 An NVM map exported by Theia (or some other SfM tool) can be saved as
@@ -124,7 +124,8 @@ an Astrobee sparse map with the command::
 This assumes that the images were acquired with the nav camera of the
 robot given by $ASTROBEE_ROBOT and undistorted with the Astrobee
 program ``undistort_image``. The undistorted camera parameters to use
-should be as printed on the screen by ``undistort_image``.
+should be as printed on the screen (and saved to disk) by
+``undistort_image``.
 
 If desired to replace on importing the undistorted images with the
 original distorted ones, as it is usually expected of a sparse map,

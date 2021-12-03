@@ -4,9 +4,9 @@ Here we describe how to build a map.
 
 ## Summary
 
-1. Reduce the number of images.
+1. Set up the environment.
 
-2. Set up the environment.
+2. Reduce the number of images.
 
 3. Build the map.
 
@@ -15,6 +15,48 @@ Here we describe how to build a map.
 5. Register the map.
 
 # Detailed explanation
+
+## Setup the environment
+
+In the first step, one needs to set some environmental variables, as
+follows:
+
+    export ASTROBEE_SOURCE_PATH=$HOME/astrobee/src
+    export ASTROBEE_BUILD_PATH=$HOME/astrobee
+    export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
+    export ASTROBEE_ROBOT=p4d
+    export ASTROBEE_WORLD=granite
+
+The source and build paths need to be adjusted for your particular
+setup.
+
+Also consider setting:
+
+    export PATH=$ASTROBEE_BUILD_PATH/devel/lib/sparse_mapping:$PATH
+
+to have the ``build_map`` and other related tools in your path.
+
+Above, ``p4d`` is the robot being used to take pictures, and the world
+is the granite table. These may need to change, depending on your
+goals.
+
+Under the hood, the following configuration files will be read:
+
+    $ASTROBEE_CONFIG_DIR/cameras.config
+
+which contains the image width and height (the camera we use is
+the nav cam) and
+
+    $ASTROBEE_CONFIG_DIR/robots/$ASTROBEE_ROBOT.config
+
+having nav cam's intrinsics. If your camera is not the nav cam on p4d,
+and none of the other available config files apply, you can just
+temporarily modify the above files to reflect your camera's parameters
+(without checking in your changes).
+
+More details on these and other environmental variables can be found
+in the \subpage astrobee configuration documentation.
 
 ## Reduce the number of images
 
@@ -55,34 +97,6 @@ images, as then the map could be of poor quality. Hence, the robot
 should have some translation motion (in addition to any rotation) when
 the data is acquired.
 
-## Setup the environment
-
-In the first step, one needs to set some environmental variables, as
-follows:
-
-    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
-    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
-    export ASTROBEE_ROBOT=p4d
-    export ASTROBEE_WORLD=granite
-
-Here, `p4d` is the robot being used to take pictures, and the world is
-the granite table. These may need to change, depending on your
-goals. Under the hood, the following configuration files will be read:
-
-    $ASTROBEE_CONFIG_DIR/cameras.config
-
-which contains the image width and height (the camera we use is
-the nav cam) and
-
-    $ASTROBEE_CONFIG_DIR/robots/$ASTROBEE_ROBOT.config
-
-having nav cam's intrinsics. If your camera is not the nav cam on p4d,
-and none of the other available config files apply, you can just
-temporarily modify the above files to reflect your camera's parameters
-(without checking in your changes).
-
-More details on these and other environmental variables can be found
-in the \subpage astrobee configuration documentation.
 
 ## Building a map
 
@@ -156,11 +170,12 @@ consistently across multiple frames.
 
     build_map -bundle_adjustment -histogram_equalization
 
-  Adjust the initial transformations to minimize error with bundle adjustment.
+Adjust the initial transformations to minimize error with bundle
+adjustment.
 
-If the options: 
+If the options:
 
-    -first_ba_index and -last_ba_index 
+    -first_ba_index and -last_ba_index
 
 are specified, only cameras with indices between these (including both
 endpoints) will be optimized during bundle adjustment.
@@ -362,8 +377,8 @@ be visualized in the ISS as follows:
 
 Open two terminals, and in each one type:
 
-    export BUILD_PATH=$HOME/astrobee
-    source $BUILD_PATH/devel/setup.bash
+    export ASTROBEE_BUILD_PATH=$HOME/astrobee
+    source $ASTROBEE_BUILD_PATH/devel/setup.bash
 
 The Astrobee directory above must have ``src`` and ``devel``
 subdirectories, and needs to be adjusted given its location on your
@@ -375,8 +390,8 @@ In the first terminal start the simulator:
  
 In the second, run:
 
-    python $SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
-      $SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
+    python $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
+      $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
 
 Go back to the simulated ISS and examine the registration points.
 If the Rviz display looks too cluttered, most topics can be turned off.
@@ -412,9 +427,9 @@ Python command will refresh them.
 ### Registration in the MGTF
 
 A set of 10 registration points were measured in the MGTF with the
-Total Station. They are in the file
+\subpage total_station. They are in the file:
 
-    $SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
+    $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
 
 Two of these are on the back wall, and the rest are on the metal
 columns on the side walls, with four on each wall. Half of the points
@@ -430,7 +445,8 @@ be needed to identify them.
 A registered and bundle-adjusted map can be used to study how well it
 predicts the computed 3D locations for an independently acquired set
 of control points and 3D measurements. These are in the same format as
-for registration. The map is not modified in any way during this step.
+for registration. The map is not modified in any way during this step,
+The command is:
 
     build_map -verification <hugin files> <xyz files>
 
@@ -462,7 +478,7 @@ To test how the map may perform on the robot, do the following:
 
 ### Stage the feature counter utility (should be added to the install at one point):
 
-    scp $SOURCE_PATH/localization/marker_tracking/ros/tools/features_counter.py mlp:
+    scp $ASTROBEE_SOURCE_PATH/localization/marker_tracking/ros/tools/features_counter.py mlp:
 
 ### Launch the localization node on LLP
 
@@ -477,7 +493,8 @@ this robot will give wrong results for other users.
 Then launch localization:
 
     ssh llp
-    roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp nodes:=framestore,dds_ros_bridge,localization_node
+    roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp \
+      nodes:=framestore,dds_ros_bridge,localization_node
 
 ### Enable localization and the mapped landmark production (on MLP)
 
@@ -532,9 +549,9 @@ computations may differ.
 Set up the environment in every terminal that is used. Ensure that you
 use the correct robot name below.
 
-    source $BUILD_PATH/devel/setup.bash
-    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
-    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
+    source $ASTROBEE_BUILD_PATH/devel/setup.bash
+    export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
     export ASTROBEE_WORLD=iss
     export ASTROBEE_ROBOT=bumble # your robot's name may be different
     export ROS_MASTER_URI=http://127.0.0.1:11311/
@@ -545,9 +562,9 @@ Examine the localization configuration file:
 
 Sym link the map to test:
 
-    mkdir -p $SOURCE_PATH/astrobee/resources/maps
-    rm -fv $SOURCE_PATH/astrobee/resources/maps/iss.map
-    ln -s $(pwd)/mymap.map $SOURCE_PATH/astrobee/resources/maps/iss.map
+    mkdir -p $ASTROBEE_SOURCE_PATH/astrobee/resources/maps
+    rm -fv $ASTROBEE_SOURCE_PATH/astrobee/resources/maps/iss.map
+    ln -s $(pwd)/mymap.map $ASTROBEE_SOURCE_PATH/astrobee/resources/maps/iss.map
 
 Start the localization node:
 
