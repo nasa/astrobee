@@ -14,8 +14,8 @@ Maps are stored as protobuf files.
 
 ## ROS node
 
-The ROS node takes images and a map as input, and outputs visual features
-detected in the image and their 3D coordinates.
+The ROS node takes images and a map as input, and outputs visual
+features detected in the image and their 3D coordinates.
 
 ### Inputs
 
@@ -27,6 +27,21 @@ detected in the image and their 3D coordinates.
 
 * `/localization/mapped_landmarks/features`
 * `/localization/mapped_landmarks/registration`
+
+## The environment
+
+It will be convenient in this document to set these environmental
+variables, pointing to the source and build directories. They may need
+to be adjusted given your setup.
+
+    export ASTROBEE_SOURCE_PATH=$HOME/astrobee/src
+    export ASTROBEE_BUILD_PATH=$HOME/astrobee
+
+To access many of the localization tools, such as ``build_map``,
+``merge_maps``, etc., without specifying a full path, also consider
+setting:
+
+    export PATH=$ASTROBEE_BUILD_PATH/devel/lib/sparse_mapping:$PATH
 
 ## Tools and procedures
 
@@ -73,15 +88,15 @@ The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
 as follows:
 
-    astrobee/devel/lib/localization_node/merge_bags \
+    $ASTROBEE_BUILD_PATH/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
 ### Extracting images
 
 To extract images from a bag file:
 
-    astrobee/devel/lib/localization_node/extract_image_bag     \
-      <bagfile.bag> -use_timestamp_as_image_name               \
+    $ASTROBEE_BUILD_PATH/devel/lib/localization_node/extract_image_bag \
+      <bagfile.bag> -use_timestamp_as_image_name                       \
       -image_topic /hw/cam_nav -output_directory <output dir>
 
 The above assumes that the software was built with ROS on.
@@ -190,7 +205,7 @@ This functionality is implemented in the localize_cams tool. Usage:
 
 Here we use values that are different from 
 
-    astrobee/config/localization.config 
+    $ASTROBEE_SOURCE_PATH/astrobee/config/localization.config 
 
 which are used for localization on the robot, since those are optimized
 for speed and here we want more accuracy.
