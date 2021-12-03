@@ -73,6 +73,14 @@ if(CATKIN_ENABLE_TESTING)
     localization_measurements gtsam
   )
   find_package(rostest REQUIRED)
+  add_rostest_gtest(test_depth_image
+    test/test_depth_image.test
+    test/test_depth_image.cc
+  )
+  target_link_libraries(test_depth_image
+    localization_measurements gtsam
+  )
+  find_package(rostest REQUIRED)
   add_rostest_gtest(test_measurement_conversions
     test/test_measurement_conversions.test
     test/test_measurement_conversions.cc
