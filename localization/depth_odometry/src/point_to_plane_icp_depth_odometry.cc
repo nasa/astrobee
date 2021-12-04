@@ -27,7 +27,7 @@ namespace lm = localization_measurements;
 namespace pc = point_cloud_common;
 
 PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params)
-    : params_(params), icp_(params_.icp) {}
+    : params_(params), icp_(params.icp) {}
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
