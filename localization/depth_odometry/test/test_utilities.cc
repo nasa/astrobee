@@ -55,6 +55,19 @@ sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const lc::Time timestamp) {
   return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
 }
 
+sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const lc::Time timestamp,
+                                                    const sensor_msgs::PointCloud2ConstPtr old_msg,
+                                                    const Eigen::Isometry3d& new_T_old) {
+  pcl::PointCloud<pcl::PointXYZ> point_cloud;
+  pcl::fromROSMsg(*old_msg, point_cloud);
+  pcl::PointCloud<pcl::PointXYZ> transformed_cloud;
+  pcl::transformPointCloud(point_cloud, transformed_cloud, Eigen::Affine3d(new_T_old.matrix()));
+  sensor_msgs::PointCloud2 msg;
+  lc::TimeToHeader(timestamp, msg.header);
+  pcl::toROSMsg(transformed_cloud, msg);
+  return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
+}
+
 sensor_msgs::ImageConstPtr ImageMsg(const lc::Time timestamp) {
   cv_bridge::CvImage msg_bridge;
   msg_bridge.encoding = sensor_msgs::image_encodings::MONO8;

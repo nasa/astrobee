@@ -40,6 +40,10 @@ sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const localization_common::Time 
 
 sensor_msgs::ImageConstPtr ImageMsg(const localization_common::Time timestamp);
 
+sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const localization_common::Time timestamp,
+                                                    const sensor_msgs::PointCloud2ConstPtr old_msg,
+                                                    const Eigen::Isometry3d& transform);
+
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
 
 void DefaultDepthOdometryParams(DepthOdometryParams& params);
