@@ -24,5 +24,8 @@ namespace depth_odometry {
 localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
   const localization_common::Time timestamp);
 
-}
+localization_measurements::DepthImageMeasurement TransformDepthImageMeasurement(
+  const localization_measurements::DepthImageMeasurement& depth_image_measurement,
+  const localization_common::Time timestamp, const Eigen::Isometry3d& target_T_source);
+}  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_TEST_UTILITIES_H_ // NOLINT

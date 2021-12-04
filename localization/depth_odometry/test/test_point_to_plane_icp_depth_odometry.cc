@@ -18,13 +18,26 @@
 
 #include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 #include <point_cloud_common/test_utilities.h>
 
 #include <gtest/gtest.h>
 
 namespace dd = depth_odometry;
+namespace lc = localization_common;
+
 TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
-  const auto depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
+  const auto source_depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_depth_image_measurement =
+    dd::TransformDepthImageMeasurement(source_depth_image_measurement, 0.1, target_T_source);
+  /* const auto estimated_target_T_source =
+       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
+     ASSERT_TRUE(estimated_target_T_source != boost::none);
+     EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());*/
 }
 
 // Run all the tests that were declared with TEST()

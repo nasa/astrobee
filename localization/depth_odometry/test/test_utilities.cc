@@ -20,6 +20,8 @@
 #include <localization_common/test_utilities.h>
 #include <point_cloud_common/test_utilities.h>
 
+#include <pcl/common/transforms.h>
+
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -29,5 +31,14 @@ lm::DepthImageMeasurement DefaultDepthImageMeasurement(const lc::Time timestamp)
   const auto cubic_points = pc::CubicPoints();
   const auto point_cloud = pc::PointCloud<pcl::PointXYZI>(cubic_points.first);
   return lm::DepthImageMeasurement(cv::Mat(), point_cloud, timestamp);
+}
+
+lm::DepthImageMeasurement TransformDepthImageMeasurement(const lm::DepthImageMeasurement& depth_image_measurement,
+                                                         const lc::Time timestamp,
+                                                         const Eigen::Isometry3d& target_T_source) {
+  pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>());
+  pcl::transformPointCloud(*(depth_image_measurement.depth_image.unfiltered_point_cloud()), *transformed_cloud,
+                           Eigen::Affine3d(target_T_source.matrix()));
+  return lm::DepthImageMeasurement(depth_image_measurement.depth_image.image(), transformed_cloud, timestamp);
 }
 }  // namespace depth_odometry
