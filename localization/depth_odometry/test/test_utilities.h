@@ -30,5 +30,7 @@ localization_measurements::DepthImageMeasurement TransformDepthImageMeasurement(
   const localization_common::Time timestamp, const Eigen::Isometry3d& target_T_source);
 
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
+
+void DefaultDepthOdometryParams(DepthOdometryParams& params);
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_TEST_UTILITIES_H_ // NOLINT

@@ -46,6 +46,13 @@ lm::DepthImageMeasurement TransformDepthImageMeasurement(const lm::DepthImageMea
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams() {
   PointToPlaneICPDepthOdometryParams params;
   params.icp = pc::DefaultPointToPlaneICPParams();
+  DefaultDepthOdometryParams(params);
   return params;
+}
+
+void DefaultDepthOdometryParams(DepthOdometryParams& params) {
+  params.max_time_diff = 1.0;
+  params.position_covariance_threshold = 1.0;
+  params.orientation_covariance_threshold = 1.0;
 }
 }  // namespace depth_odometry
