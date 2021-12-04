@@ -19,9 +19,12 @@
 #include "test_utilities.h"  // NOLINT
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
 #include <localization_common/test_utilities.h>
+#include <localization_common/utilities.h>
 #include <point_cloud_common/test_utilities.h>
 
 #include <pcl/common/transforms.h>
+
+#include <cv_bridge/cv_bridge.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
@@ -41,6 +44,24 @@ lm::DepthImageMeasurement TransformDepthImageMeasurement(const lm::DepthImageMea
   pcl::transformPointCloud(*(depth_image_measurement.depth_image.unfiltered_point_cloud()), *transformed_cloud,
                            Eigen::Affine3d(target_T_source.matrix()));
   return lm::DepthImageMeasurement(depth_image_measurement.depth_image.image(), transformed_cloud, timestamp);
+}
+
+sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const lc::Time timestamp) {
+  const auto cubic_points = pc::CubicPoints();
+  const auto point_cloud = pc::PointCloud<pcl::PointXYZ>(cubic_points.first);
+  sensor_msgs::PointCloud2 msg;
+  lc::TimeToHeader(timestamp, msg.header);
+  pcl::toROSMsg(*point_cloud, msg);
+  return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
+}
+
+sensor_msgs::ImageConstPtr ImageMsg(const lc::Time timestamp) {
+  cv_bridge::CvImage msg_bridge;
+  msg_bridge.encoding = sensor_msgs::image_encodings::MONO8;
+  msg_bridge.image = cv::Mat(10, 10, CV_8UC1);
+  auto msg = msg_bridge.toImageMsg();
+  lc::TimeToHeader(timestamp, msg->header);
+  return sensor_msgs::ImageConstPtr(msg);
 }
 
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams() {

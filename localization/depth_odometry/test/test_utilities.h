@@ -19,7 +19,14 @@
 #define DEPTH_ODOMETRY_TEST_UTILITIES_H_  // NOLINT
 
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
+#include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <sensor_msgs/PointCloud2.h>
 
 namespace depth_odometry {
 localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
@@ -28,6 +35,10 @@ localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
 localization_measurements::DepthImageMeasurement TransformDepthImageMeasurement(
   const localization_measurements::DepthImageMeasurement& depth_image_measurement,
   const localization_common::Time timestamp, const Eigen::Isometry3d& target_T_source);
+
+sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const localization_common::Time timestamp);
+
+sensor_msgs::ImageConstPtr ImageMsg(const localization_common::Time timestamp);
 
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
 
