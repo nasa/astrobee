@@ -27,7 +27,11 @@
 namespace dd = depth_odometry;
 namespace lc = localization_common;
 
-TEST(DepthOdometryWrapperTester, A) {}
+TEST(DepthOdometryWrapperTester, A) {
+  const lc::Time source_timestamp = 0;
+  const auto points_msg = dd::CubicPointsMsg(source_timestamp);
+  const auto image_msg = dd::ImageMsg(source_timestamp);
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_TEST_UTILITIES_H_  // NOLINT
 
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
+#include <depth_odometry/depth_odometry_wrapper_params.h>
 #include <localization_common/time.h>
 #include <localization_measurements/depth_image_measurement.h>
 
@@ -47,5 +48,7 @@ sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const localization_common::T
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
 
 void DefaultDepthOdometryParams(DepthOdometryParams& params);
+
+DepthOdometryWrapperParams DefaultDepthOdometryWrapperParams();
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_TEST_UTILITIES_H_ // NOLINT

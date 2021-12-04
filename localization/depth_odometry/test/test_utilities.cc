@@ -89,4 +89,13 @@ void DefaultDepthOdometryParams(DepthOdometryParams& params) {
   params.position_covariance_threshold = 1.0;
   params.orientation_covariance_threshold = 1.0;
 }
+
+DepthOdometryWrapperParams DefaultDepthOdometryWrapperParams() {
+  DepthOdometryWrapperParams params;
+  params.max_image_and_point_cloud_time_diff = 0.01;
+  params.method = "icp";
+  params.body_T_haz_cam = Eigen::Isometry3d::Identity();
+  params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
+  return params;
+}
 }  // namespace depth_odometry
