@@ -27,7 +27,11 @@
 namespace dd = depth_odometry;
 namespace lc = localization_common;
 
-TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
+TEST(PointToPlaneICPDepthOdometryTester, PointToPlaneCubicPoints) {
+  auto params = dd::DefaultPointToPlaneICPDepthOdometryParams();
+  params.icp.search_radius = 1.0;
+  dd::PointToPlaneICPDepthOdometry icp_depth_odometry(params);
+
   const auto source_depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
   constexpr double translation_stddev = 0.01;
   constexpr double rotation_stddev = 0.01;
@@ -35,9 +39,52 @@ TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
     lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
   const auto target_depth_image_measurement =
     dd::TransformDepthImageMeasurement(source_depth_image_measurement, 0.1, target_T_source);
+  {
+    const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(source_depth_image_measurement);
+    ASSERT_TRUE(pose_with_covariance == boost::none);
+  }
+  const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
+  ASSERT_TRUE(pose_with_covariance != boost::none);
+  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+               target_T_source.inverse().matrix());
+}
+
+TEST(PointToPlaneICPDepthOdometryTester, SymmetricPointToPlaneCubicPoints) {
   auto params = dd::DefaultPointToPlaneICPDepthOdometryParams();
   params.icp.search_radius = 1.0;
+  params.icp.symmetric_objective = true;
   dd::PointToPlaneICPDepthOdometry icp_depth_odometry(params);
+
+  const auto source_depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_depth_image_measurement =
+    dd::TransformDepthImageMeasurement(source_depth_image_measurement, 0.1, target_T_source);
+  {
+    const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(source_depth_image_measurement);
+    ASSERT_TRUE(pose_with_covariance == boost::none);
+  }
+  const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
+  ASSERT_TRUE(pose_with_covariance != boost::none);
+  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+               target_T_source.inverse().matrix());
+}
+
+TEST(PointToPlaneICPDepthOdometryTester, CorrespondenceRejectorPointToPlaneCubicPoints) {
+  auto params = dd::DefaultPointToPlaneICPDepthOdometryParams();
+  params.icp.search_radius = 1.0;
+  params.icp.correspondence_rejector_surface_normal = true;
+  dd::PointToPlaneICPDepthOdometry icp_depth_odometry(params);
+
+  const auto source_depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_depth_image_measurement =
+    dd::TransformDepthImageMeasurement(source_depth_image_measurement, 0.1, target_T_source);
   {
     const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(source_depth_image_measurement);
     ASSERT_TRUE(pose_with_covariance == boost::none);
