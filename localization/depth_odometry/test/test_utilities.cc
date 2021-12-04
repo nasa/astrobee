@@ -17,18 +17,17 @@
  */
 
 #include "test_utilities.h"  // NOLINT
-#include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 #include <point_cloud_common/test_utilities.h>
 
-#include <gtest/gtest.h>
+namespace depth_odometry {
+namespace lc = localization_common;
+namespace lm = localization_measurements;
+namespace pc = point_cloud_common;
 
-namespace dd = depth_odometry;
-TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
-  const auto depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
+lm::DepthImageMeasurement DefaultDepthImageMeasurement(const lc::Time timestamp) {
+  const auto cubic_points = pc::CubicPoints();
+  const auto point_cloud = pc::PointCloud<pcl::PointXYZI>(cubic_points.first);
+  return lm::DepthImageMeasurement(cv::Mat(), point_cloud, timestamp);
 }
-
-// Run all the tests that were declared with TEST()
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+}  // namespace depth_odometry

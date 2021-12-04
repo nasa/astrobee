@@ -78,6 +78,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_point_to_plane_icp_depth_odometry
     test/test_point_to_plane_icp_depth_odometry.test
     test/test_point_to_plane_icp_depth_odometry.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_point_to_plane_icp_depth_odometry
     ${PROJECT_NAME} ${catkin_LIBRARIES} 

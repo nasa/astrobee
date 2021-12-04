@@ -15,20 +15,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef DEPTH_ODOMETRY_TEST_UTILITIES_H_  // NOLINT
+#define DEPTH_ODOMETRY_TEST_UTILITIES_H_  // NOLINT
 
-#include "test_utilities.h"  // NOLINT
-#include <localization_common/logger.h>
-#include <point_cloud_common/test_utilities.h>
+#include <localization_measurements/depth_image_measurement.h>
 
-#include <gtest/gtest.h>
+namespace depth_odometry {
+localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
+  const localization_common::Time timestamp);
 
-namespace dd = depth_odometry;
-TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
-  const auto depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
 }
-
-// Run all the tests that were declared with TEST()
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+#endif  // DEPTH_ODOMETRY_TEST_UTILITIES_H_ // NOLINT

@@ -80,14 +80,6 @@ std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> CubicPoint
   return std::make_pair(cubic_points, normals);
 }
 
-pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point) {
-  pcl::PointXYZ pcl_point;
-  pcl_point.x = point.x();
-  pcl_point.y = point.y();
-  pcl_point.z = point.z();
-  return pcl_point;
-}
-
 pcl::PointNormal PCLPointNormal(const Eigen::Vector3d& point, const Eigen::Vector3d& normal) {
   pcl::PointNormal pcl_point;
   pcl_point.x = point.x();
@@ -97,14 +89,6 @@ pcl::PointNormal PCLPointNormal(const Eigen::Vector3d& point, const Eigen::Vecto
   pcl_point.normal[1] = normal.y();
   pcl_point.normal[2] = normal.z();
   return pcl_point;
-}
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points) {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  for (const auto& point : points) {
-    cloud->points.emplace_back(PCLPoint(point));
-  }
-  return cloud;
 }
 
 pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<Eigen::Vector3d>& points,

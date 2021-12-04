@@ -47,7 +47,11 @@ pcl::PointXYZ PCLPoint(const Eigen::Vector3d& point);
 
 pcl::PointNormal PCLPointNormal(const Eigen::Vector3d& point, const Eigen::Vector3d& normal);
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points);
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points);
+
+template <typename PointType>
+PointType PCLPoint(const Eigen::Vector3d& point);
 
 pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<Eigen::Vector3d>& points,
                                                              const std::vector<Eigen::Vector3d>& normals);
@@ -55,5 +59,24 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<E
 PointToPlaneICPParams DefaultPointToPlaneICPParams();
 
 PointCloudWithKnownCorrespondencesAlignerParams DefaultPointCloudWithKnownCorrespondencesAlignerParams();
+
+// Implementation
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr PointCloud(const std::vector<Eigen::Vector3d>& points) {
+  typename pcl::PointCloud<PointType>::Ptr cloud(new pcl::PointCloud<PointType>());
+  for (const auto& point : points) {
+    cloud->points.emplace_back(PCLPoint<PointType>(point));
+  }
+  return cloud;
+}
+
+template <typename PointType>
+PointType PCLPoint(const Eigen::Vector3d& point) {
+  PointType pcl_point;
+  pcl_point.x = point.x();
+  pcl_point.y = point.y();
+  pcl_point.z = point.z();
+  return pcl_point;
+}
 }  // namespace point_cloud_common
 #endif  // POINT_CLOUD_COMMON_TEST_UTILITIES_H_
