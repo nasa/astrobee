@@ -35,7 +35,8 @@ TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
     lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
   const auto target_depth_image_measurement =
     dd::TransformDepthImageMeasurement(source_depth_image_measurement, 0.1, target_T_source);
-  const auto params = dd::DefaultPointToPlaneICPDepthOdometryParams();
+  auto params = dd::DefaultPointToPlaneICPDepthOdometryParams();
+  params.icp.search_radius = 1.0;
   dd::PointToPlaneICPDepthOdometry icp_depth_odometry(params);
   {
     const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(source_depth_image_measurement);
@@ -44,7 +45,7 @@ TEST(PointToPlaneICPDepthOdometryTester, CubicPoints) {
   const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
   EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
-               target_T_source.matrix());
+               target_T_source.inverse().matrix());
 }
 
 // Run all the tests that were declared with TEST()
