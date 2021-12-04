@@ -18,6 +18,7 @@
 #ifndef DEPTH_ODOMETRY_TEST_UTILITIES_H_  // NOLINT
 #define DEPTH_ODOMETRY_TEST_UTILITIES_H_  // NOLINT
 
+#include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
 #include <localization_measurements/depth_image_measurement.h>
 
 namespace depth_odometry {
@@ -27,5 +28,7 @@ localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
 localization_measurements::DepthImageMeasurement TransformDepthImageMeasurement(
   const localization_measurements::DepthImageMeasurement& depth_image_measurement,
   const localization_common::Time timestamp, const Eigen::Isometry3d& target_T_source);
+
+PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_TEST_UTILITIES_H_ // NOLINT

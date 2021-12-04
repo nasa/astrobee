@@ -69,6 +69,7 @@ add_library(${PROJECT_NAME}
   src/image_features_with_known_correspondences_aligner_depth_odometry.cc
   src/parameter_reader.cc
   src/point_to_plane_icp_depth_odometry.cc
+  src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)

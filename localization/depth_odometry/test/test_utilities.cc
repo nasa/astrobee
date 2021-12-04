@@ -17,6 +17,7 @@
  */
 
 #include "test_utilities.h"  // NOLINT
+#include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
 #include <localization_common/test_utilities.h>
 #include <point_cloud_common/test_utilities.h>
 
@@ -40,5 +41,11 @@ lm::DepthImageMeasurement TransformDepthImageMeasurement(const lm::DepthImageMea
   pcl::transformPointCloud(*(depth_image_measurement.depth_image.unfiltered_point_cloud()), *transformed_cloud,
                            Eigen::Affine3d(target_T_source.matrix()));
   return lm::DepthImageMeasurement(depth_image_measurement.depth_image.image(), transformed_cloud, timestamp);
+}
+
+PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams() {
+  PointToPlaneICPDepthOdometryParams params;
+  params.icp = pc::DefaultPointToPlaneICPParams();
+  return params;
 }
 }  // namespace depth_odometry

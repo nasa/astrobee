@@ -16,27 +16,33 @@
  * under the License.
  */
 
+#include <depth_odometry/pose_with_covariance_and_correspondences.h>
 #include <depth_odometry/utilities.h>
+#include <localization_common/utilities.h>
 
 namespace depth_odometry {
+namespace lc = localization_common;
+namespace mc = msg_conversions;
+
 ff_msgs::DepthOdometry DepthOdometryMsg(
   const PoseWithCovarianceAndCorrespondences& pose_with_covariance_and_correspondences,
-  const PoseWithCovariance& body_frame_pose_with_covariance) {
+  const lc::PoseWithCovariance& body_frame_pose_with_covariance) {
   ff_msgs::DepthOdometry depth_odometry_msg;
-  depth_odometry_msg.odometry = OdometryMsg(pose_with_covariance_and_correspondences.pose_with_covariance);
+  depth_odometry_msg.odometry =
+    OdometryMsg(pose_with_covariance_and_correspondences.pose_with_covariance, body_frame_pose_with_covariance);
   depth_odometry_msg.correspondences =
     CorrespondencesMsg(pose_with_covariance_and_correspondences.depth_correspondences);
   depth_odometry_msg.valid_image_points =
     pose_with_covariance_and_correspondences.depth_correspondences.valid_image_points;
-  depth_odometry_msg.valid_3d_points = pose_with_covariance_and_correspondences.depth_correspondences.valid_3d_points;
+  depth_odometry_msg.valid_points_3d = pose_with_covariance_and_correspondences.depth_correspondences.valid_3d_points;
   lc::TimeToHeader(pose_with_covariance_and_correspondences.target_time, depth_odometry_msg.header);
   lc::TimeToMsg(pose_with_covariance_and_correspondences.source_time, depth_odometry_msg.odometry.time_a);
   lc::TimeToMsg(pose_with_covariance_and_correspondences.target_time, depth_odometry_msg.odometry.time_b);
   return depth_odometry_msg;
 }
 
-ff_msgs::Odometry OdometryMsg(const PoseWithCovariance& sensor_frame_pose_with_covariance,
-                              const PoseWithCovariance& body_frame_pose_with_covariance) {
+ff_msgs::Odometry OdometryMsg(const lc::PoseWithCovariance& sensor_frame_pose_with_covariance,
+                              const lc::PoseWithCovariance& body_frame_pose_with_covariance) {
   ff_msgs::Odometry odometry_msg;
   mc::EigenPoseCovarianceToMsg(sensor_frame_pose_with_covariance.pose, sensor_frame_pose_with_covariance.covariance,
                                odometry_msg.sensor_F_a_T_b);
