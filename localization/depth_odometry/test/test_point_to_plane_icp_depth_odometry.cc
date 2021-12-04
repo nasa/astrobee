@@ -45,7 +45,7 @@ TEST(PointToPlaneICPDepthOdometryTester, PointToPlaneCubicPoints) {
   }
   const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+  EXPECT_PRED2(lc::MatrixEquality<4>, pose_with_covariance->pose_with_covariance.pose.matrix(),
                target_T_source.inverse().matrix());
 }
 
@@ -68,7 +68,7 @@ TEST(PointToPlaneICPDepthOdometryTester, SymmetricPointToPlaneCubicPoints) {
   }
   const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+  EXPECT_PRED2(lc::MatrixEquality<4>, pose_with_covariance->pose_with_covariance.pose.matrix(),
                target_T_source.inverse().matrix());
 }
 
@@ -91,7 +91,7 @@ TEST(PointToPlaneICPDepthOdometryTester, CorrespondenceRejectorPointToPlaneCubic
   }
   const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+  EXPECT_PRED2(lc::MatrixEquality<4>, pose_with_covariance->pose_with_covariance.pose.matrix(),
                target_T_source.inverse().matrix());
 }
 
@@ -113,7 +113,7 @@ TEST(PointToPlaneICPDepthOdometryTester, PointToPlane3MeasurementsCubicPoints) {
   }
   const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+  EXPECT_PRED2(lc::MatrixEquality<4>, pose_with_covariance->pose_with_covariance.pose.matrix(),
                target_T_source.inverse().matrix());
 
   // Add third measurement
@@ -123,7 +123,7 @@ TEST(PointToPlaneICPDepthOdometryTester, PointToPlane3MeasurementsCubicPoints) {
     dd::TransformDepthImageMeasurement(target_depth_image_measurement, 0.2, target2_T_target);
   const auto pose_with_covariance2 = icp_depth_odometry.DepthImageCallback(target2_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance2 != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance2->pose_with_covariance.pose.matrix(),
+  EXPECT_PRED2(lc::MatrixEquality<4>, pose_with_covariance2->pose_with_covariance.pose.matrix(),
                target2_T_target.inverse().matrix());
 }
 
