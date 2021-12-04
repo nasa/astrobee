@@ -95,6 +95,38 @@ TEST(PointToPlaneICPDepthOdometryTester, CorrespondenceRejectorPointToPlaneCubic
                target_T_source.inverse().matrix());
 }
 
+TEST(PointToPlaneICPDepthOdometryTester, PointToPlane3MeasurementsCubicPoints) {
+  auto params = dd::DefaultPointToPlaneICPDepthOdometryParams();
+  params.icp.search_radius = 1.0;
+  dd::PointToPlaneICPDepthOdometry icp_depth_odometry(params);
+
+  const auto source_depth_image_measurement = dd::DefaultDepthImageMeasurement(0);
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_depth_image_measurement =
+    dd::TransformDepthImageMeasurement(source_depth_image_measurement, 0.1, target_T_source);
+  {
+    const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(source_depth_image_measurement);
+    ASSERT_TRUE(pose_with_covariance == boost::none);
+  }
+  const auto pose_with_covariance = icp_depth_odometry.DepthImageCallback(target_depth_image_measurement);
+  ASSERT_TRUE(pose_with_covariance != boost::none);
+  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+               target_T_source.inverse().matrix());
+
+  // Add third measurement
+  const auto target2_T_target =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target2_depth_image_measurement =
+    dd::TransformDepthImageMeasurement(target_depth_image_measurement, 0.2, target2_T_target);
+  const auto pose_with_covariance2 = icp_depth_odometry.DepthImageCallback(target2_depth_image_measurement);
+  ASSERT_TRUE(pose_with_covariance2 != boost::none);
+  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance2->pose_with_covariance.pose.matrix(),
+               target2_T_target.inverse().matrix());
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
