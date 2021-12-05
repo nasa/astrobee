@@ -28,18 +28,36 @@ namespace dd = depth_odometry;
 namespace lc = localization_common;
 
 TEST(DepthOdometryWrapperTester, A) {
-  const lc::Time source_timestamp = 0;
-  const auto points_msg = dd::CubicPointsMsg(source_timestamp);
-  const auto image_msg = dd::ImageMsg(source_timestamp);
   const auto params = dd::DefaultDepthOdometryWrapperParams();
   dd::DepthOdometryWrapper depth_odometry_wrapper(params);
+  constexpr double translation_stddev = 0.01;
+  constexpr double rotation_stddev = 0.01;
+  // Add first measurement set
+  const lc::Time source_timestamp = 0;
+  const auto source_points_msg = dd::CubicPointsMsg(source_timestamp);
+  const auto source_image_msg = dd::ImageMsg(source_timestamp);
   {
-    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(points_msg);
+    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(source_points_msg);
     ASSERT_EQ(depth_odometry_msgs.size(), 0);
   }
   {
-    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(image_msg);
+    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(source_image_msg);
     ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  // Add second measurement set
+  const lc::Time target_timestamp = 0.1;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_points_msg = dd::TransformPointsMsg(target_timestamp, source_points_msg, target_T_source);
+  const auto target_image_msg = dd::ImageMsg(target_timestamp);
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(target_points_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(target_image_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 1);
+    // TODO(rsoussan): check msg result!
   }
 }
 
