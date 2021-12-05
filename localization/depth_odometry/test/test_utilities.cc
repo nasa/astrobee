@@ -48,10 +48,18 @@ lm::DepthImageMeasurement TransformDepthImageMeasurement(const lm::DepthImageMea
 
 sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const lc::Time timestamp) {
   const auto cubic_points = pc::CubicPoints();
-  const auto point_cloud = pc::PointCloud<pcl::PointXYZ>(cubic_points.first);
+  auto point_cloud = pc::PointCloud<pcl::PointXYZ>(cubic_points.first);
+  // DepthImageMeasurement expects a point cloud with a width and height to correlate with an intenisty image
+  // TODO(rsoussan): Replace with resize when pcl version is updated
+  // point_cloud->resize(20, 15);
+  pcl::PointCloud<pcl::PointXYZ> resized_point_cloud(20, 15);
+  int i = 0;
+  for (const auto& point : point_cloud->points) {
+    resized_point_cloud.points[i++] = point;
+  }
   sensor_msgs::PointCloud2 msg;
   lc::TimeToHeader(timestamp, msg.header);
-  pcl::toROSMsg(*point_cloud, msg);
+  pcl::toROSMsg(resized_point_cloud, msg);
   return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
 }
 
@@ -71,7 +79,7 @@ sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const lc::Time timestamp,
 sensor_msgs::ImageConstPtr ImageMsg(const lc::Time timestamp) {
   cv_bridge::CvImage msg_bridge;
   msg_bridge.encoding = sensor_msgs::image_encodings::MONO8;
-  msg_bridge.image = cv::Mat(10, 10, CV_8UC1);
+  msg_bridge.image = cv::Mat(15, 20, CV_8UC1);
   auto msg = msg_bridge.toImageMsg();
   lc::TimeToHeader(timestamp, msg->header);
   return sensor_msgs::ImageConstPtr(msg);
