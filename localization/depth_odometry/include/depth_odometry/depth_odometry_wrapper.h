@@ -37,10 +37,12 @@ namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
   DepthOdometryWrapper();
+  explicit DepthOdometryWrapper(const DepthOdometryWrapperParams& params);
   std::vector<ff_msgs::DepthOdometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
   std::vector<ff_msgs::DepthOdometry> ImageCallback(const sensor_msgs::ImageConstPtr& image_msg);
 
  private:
+  void Initialize(const DepthOdometryWrapperParams& params);
   std::vector<ff_msgs::DepthOdometry> ProcessDepthImageIfAvailable();
   std::unique_ptr<DepthOdometry> depth_odometry_;
   DepthOdometryWrapperParams params_;

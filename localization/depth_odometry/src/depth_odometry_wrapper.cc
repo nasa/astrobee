@@ -42,15 +42,19 @@ DepthOdometryWrapper::DepthOdometryWrapper() {
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  LoadDepthOdometryWrapperParams(config, params_);
+  DepthOdometryWrapperParams params;
+  LoadDepthOdometryWrapperParams(config, params);
+  Initialize(params);
+}
+
+DepthOdometryWrapper::DepthOdometryWrapper(const DepthOdometryWrapperParams& params) { Initialize(params); }
+
+void DepthOdometryWrapper::Initialize(const DepthOdometryWrapperParams& params) {
+  params_ = params;
   if (params_.method == "icp") {
-    PointToPlaneICPDepthOdometryParams params;
-    LoadPointToPlaneICPDepthOdometryParams(config, params);
-    depth_odometry_.reset(new PointToPlaneICPDepthOdometry(params));
+    depth_odometry_.reset(new PointToPlaneICPDepthOdometry(params.icp));
   } else if (params_.method == "image_feature") {
-    ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams params;
-    LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(config, params);
-    depth_odometry_.reset(new ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry(params));
+    depth_odometry_.reset(new ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry(params.image_features));
   } else {
     LogFatal("DepthOdometryWrapper: Invalid depth odometry method selected.");
   }

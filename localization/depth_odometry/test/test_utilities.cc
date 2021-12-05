@@ -96,6 +96,9 @@ DepthOdometryWrapperParams DefaultDepthOdometryWrapperParams() {
   params.method = "icp";
   params.body_T_haz_cam = Eigen::Isometry3d::Identity();
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
+  params.icp = DefaultPointToPlaneICPDepthOdometryParams();
+  // TODO(rsoussan): Fill this in!
+  // params.image_feature = ;
   return params;
 }
 }  // namespace depth_odometry

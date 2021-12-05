@@ -18,6 +18,9 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_WRAPPER_PARAMS_H_
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_WRAPPER_PARAMS_H_
 
+#include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
+#include <depth_odometry/image_features_with_known_correspondences_aligner_depth_odometry_params.h>
+
 #include <Eigen/Geometry>
 
 #include <string>
@@ -29,6 +32,8 @@ struct DepthOdometryWrapperParams {
   std::string method;
   Eigen::Isometry3d body_T_haz_cam;
   Eigen::Affine3d haz_cam_A_haz_depth;
+  PointToPlaneICPDepthOdometryParams icp;
+  ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams image_features;
 };
 }  // namespace depth_odometry
 

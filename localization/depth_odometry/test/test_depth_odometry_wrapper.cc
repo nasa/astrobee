@@ -31,6 +31,16 @@ TEST(DepthOdometryWrapperTester, A) {
   const lc::Time source_timestamp = 0;
   const auto points_msg = dd::CubicPointsMsg(source_timestamp);
   const auto image_msg = dd::ImageMsg(source_timestamp);
+  const auto params = dd::DefaultDepthOdometryWrapperParams();
+  dd::DepthOdometryWrapper depth_odometry_wrapper(params);
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(points_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(image_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
 }
 
 // Run all the tests that were declared with TEST()

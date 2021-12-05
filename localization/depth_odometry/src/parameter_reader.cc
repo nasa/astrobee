@@ -32,6 +32,8 @@ void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOd
   params.method = mc::LoadString(config, "depth_odometry_method");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
+  LoadPointToPlaneICPDepthOdometryParams(config, params.icp);
+  LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(config, params.image_features);
 }
 
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
