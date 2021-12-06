@@ -42,8 +42,10 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
 
 int AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image, const cv::Point2i& offset) {
   int num_markers = 0;
-  for (int row = 0; row < image.rows; row += row_spacing) {
-    for (int col = 0; col < image.cols; col += col_spacing) {
+  // Don't start at zero so all markers are candidates for matches
+  // End before edge to add some buffer to markers
+  for (int row = row_spacing; row < image.rows - row_spacing; row += row_spacing) {
+    for (int col = col_spacing; col < image.cols - col_spacing; col += col_spacing) {
       cv::drawMarker(image, offset + cv::Point2i(col, row), cv::Scalar(0), cv::MARKER_CROSS);
       ++num_markers;
     }

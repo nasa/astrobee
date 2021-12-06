@@ -35,7 +35,8 @@ namespace lc = localization_common;
 namespace vc = vision_common;
 
 TEST(FeatureDetectorAndMatcherTester, LKOpticalFlow) {
-  const auto params = vc::DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
+  auto params = vc::DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
+  params.good_features_to_track.max_corners = 10000000;
   vc::LKOpticalFlowFeatureDetectorAndMatcher lk_detector_and_matcher(params);
   const int row_spacing = 33;
   const int col_spacing = 33;
@@ -46,18 +47,12 @@ TEST(FeatureDetectorAndMatcherTester, LKOpticalFlow) {
   vc::AddMarkers(row_spacing, col_spacing, image_b, offset);
   vc::FeatureImage feature_image_a(image_a, *(lk_detector_and_matcher.detector()));
   vc::FeatureImage feature_image_b(image_b, *(lk_detector_and_matcher.detector()));
-  for (const auto& p : feature_image_a.feature_points()) {
-    cv::drawMarker(image_a, p, cv::Scalar(128), cv::MARKER_DIAMOND);
-  }
-  cv::imshow("image a", image_a);
-  // cv::imshow("image b", image_b);
-  cv::waitKey(0);
   const auto matches = lk_detector_and_matcher.Match(feature_image_a, feature_image_b);
   EXPECT_EQ(matches.size(), num_markers);
   for (const auto& match : matches) {
     const Eigen::Vector2d match_offset = match.target_point - match.source_point;
-    EXPECT_NEAR(match_offset.x(), offset.x, 1e-2);
-    EXPECT_NEAR(match_offset.y(), offset.y, 1e-2);
+    EXPECT_NEAR(match_offset.x(), offset.x, 1e-1);
+    EXPECT_NEAR(match_offset.y(), offset.y, 1e-1);
   }
 }
 
