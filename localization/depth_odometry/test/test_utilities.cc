@@ -40,10 +40,11 @@ lm::DepthImageMeasurement DefaultDepthImageMeasurement(const lc::Time timestamp)
 }
 
 lm::DepthImageMeasurement ImageFeatureDepthImageMeasurement(const lc::Time timestamp, const cv::Point2i& offset) {
-  const auto points = pc::RandomPoints(640 * 480);
-  const auto point_cloud = pc::PointCloud<pcl::PointXYZI>(points);
   int num_markers_added;
   const auto image = vc::MarkerImage(33, 33, num_markers_added, offset);
+  const int num_points = image.cols * image.rows;
+  const auto points = pc::RandomPoints(num_points);
+  const auto point_cloud = pc::PointCloud<pcl::PointXYZI>(points);
   return lm::DepthImageMeasurement(image, point_cloud, timestamp);
 }
 
@@ -68,7 +69,6 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
   const int cols = offset_image.cols;
   pcl::PointCloud<pcl::PointXYZI>::Ptr offset_and_transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   const int num_points = transformed_cloud->points.size();
-  // Points correlate to a 640x480 image
   // Points are in row order
   for (int i = 0; i < num_points; ++i) {
     const int row = i / cols;
