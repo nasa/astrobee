@@ -22,12 +22,14 @@
 #include <opencv2/imgproc.hpp>
 
 namespace cv {
+GoodFeaturesToTrackDetector::GoodFeaturesToTrackDetector(const vision_common::GoodFeaturesToTrackDetectorParams& params)
+    : params_(params) {}
 void GoodFeaturesToTrackDetector::detectAndCompute(cv::InputArray image, cv::InputArray mask,
                                                    std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors,
                                                    bool useProvidedKeypoints) {
   std::vector<cv::Point2f> features;
-  // TODO(rsoussan): make params for these!!!
-  cv::goodFeaturesToTrack(image, features, 100, 0.01, 20, mask, 3, false, 0.04);
+  cv::goodFeaturesToTrack(image, features, params_.max_corners, params_.quality_level, params_.min_distance, mask,
+                          params_.block_size, params_.use_harris_detector, params_.k);
   cv::KeyPoint::convert(features, keypoints);
 }
 }  // namespace cv

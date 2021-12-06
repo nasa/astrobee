@@ -20,12 +20,15 @@
 
 #include <config_reader/config_reader.h>
 #include <vision_common/brisk_feature_detector_and_matcher_params.h>
+#include <vision_common/good_features_to_track_detector_params.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 #include <vision_common/surf_feature_detector_and_matcher_params.h>
 
 namespace vision_common {
 void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                               BriskFeatureDetectorAndMatcherParams& params);
+void LoadGoodFeaturesToTrackDetectorParams(config_reader::ConfigReader& config,
+                                           GoodFeaturesToTrackDetectorParams& params);
 void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                                       LKOpticalFlowFeatureDetectorAndMatcherParams& params);
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,

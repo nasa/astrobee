@@ -31,6 +31,12 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
   params.min_eigen_threshold = 0.2;
   params.max_flow_distance = 50;
   params.max_backward_match_distance = 0.1;
+  params.good_features_to_track.max_corners = 100;
+  params.good_features_to_track.quality_level = 0.01;
+  params.good_features_to_track.min_distance = 20;
+  params.good_features_to_track.block_size = 3;
+  params.good_features_to_track.use_harris_detector = false;
+  params.good_features_to_track.k = 0.04;
   return params;
 }
 

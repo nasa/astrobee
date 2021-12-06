@@ -15,23 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef VISION_COMMON_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
-#define VISION_COMMON_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
-
-#include <vision_common/good_features_to_track_detector_params.h>
+#ifndef VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_PARAMS_H_
+#define VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_PARAMS_H_
 
 namespace vision_common {
-struct LKOpticalFlowFeatureDetectorAndMatcherParams {
-  int max_iterations;
-  double termination_epsilon;
-  int window_width;
-  int window_height;
-  int max_level;
-  double min_eigen_threshold;
-  double max_flow_distance;
-  double max_backward_match_distance;
-  GoodFeaturesToTrackDetectorParams good_features_to_track;
+struct GoodFeaturesToTrackDetectorParams {
+  int max_corners;
+  double quality_level;
+  double min_distance;
+  int block_size;
+  bool use_harris_detector;
+  double k;
 };
 }  // namespace vision_common
 
-#endif  // VISION_COMMON_LK_OPTICAL_FLOW_FEATURE_DETECTOR_AND_MATCHER_PARAMS_H_
+#endif  // VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_PARAMS_H_

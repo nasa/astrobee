@@ -18,6 +18,8 @@
 #ifndef VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
 #define VISION_COMMON_GOOD_FEATURES_TO_TRACK_DETECTOR_H_
 
+#include <vision_common/good_features_to_track_detector_params.h>
+
 #include <opencv2/features2d.hpp>
 
 #include <vector>
@@ -25,10 +27,13 @@
 namespace cv {
 class GoodFeaturesToTrackDetector : public cv::Feature2D {
  public:
-  GoodFeaturesToTrackDetector() {}
+  explicit GoodFeaturesToTrackDetector(const vision_common::GoodFeaturesToTrackDetectorParams& params);
   ~GoodFeaturesToTrackDetector() final {}
   void detectAndCompute(cv::InputArray image, cv::InputArray mask, std::vector<cv::KeyPoint>& keypoints,
                         cv::OutputArray descriptors, bool useProvidedKeypoints = false) final;
+
+ private:
+  vision_common::GoodFeaturesToTrackDetectorParams params_;
 };
 }  // namespace cv
 

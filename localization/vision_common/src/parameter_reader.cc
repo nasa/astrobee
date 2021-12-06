@@ -34,6 +34,16 @@ void LoadBriskFeatureDetectorAndMatcherParams(config_reader::ConfigReader& confi
   params.flann_multi_probe_level = mc::LoadInt(config, "brisk_flann_multi_probe_level");
 }
 
+void LoadGoodFeaturesToTrackDetectorParams(config_reader::ConfigReader& config,
+                                           GoodFeaturesToTrackDetectorParams& params) {
+  params.max_corners = mc::LoadInt(config, "lk_max_corners");
+  params.quality_level = mc::LoadDouble(config, "lk_quality_level");
+  params.min_distance = mc::LoadDouble(config, "lk_min_distance");
+  params.block_size = mc::LoadInt(config, "lk_block_size");
+  params.use_harris_detector = mc::LoadBool(config, "lk_use_harris_detector");
+  params.k = mc::LoadDouble(config, "lk_k");
+}
+
 void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,
                                                       LKOpticalFlowFeatureDetectorAndMatcherParams& params) {
   params.max_iterations = mc::LoadInt(config, "lk_max_iterations");
@@ -44,6 +54,7 @@ void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReade
   params.min_eigen_threshold = mc::LoadDouble(config, "lk_min_eigen_threshold");
   params.max_flow_distance = mc::LoadDouble(config, "lk_max_flow_distance");
   params.max_backward_match_distance = mc::LoadDouble(config, "lk_max_backward_match_distance");
+  LoadGoodFeaturesToTrackDetectorParams(config, params.good_features_to_track);
 }
 
 void LoadSurfFeatureDetectorAndMatcherParams(config_reader::ConfigReader& config,

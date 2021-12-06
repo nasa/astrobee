@@ -26,6 +26,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
 #include <gtest/gtest.h>
@@ -43,11 +44,14 @@ TEST(FeatureDetectorAndMatcherTester, LKOpticalFlow) {
   cv::Mat image_b(cv::Mat(cv::Size(640, 480), CV_8UC1, cv::Scalar(255)));
   const cv::Point2i offset(5, 5);
   vc::AddMarkers(row_spacing, col_spacing, image_b, offset);
-  // cv::imshow("image a", image_a);
-  // cv::imshow("image b", image_b);
-  // cv::waitKey(0);
   vc::FeatureImage feature_image_a(image_a, *(lk_detector_and_matcher.detector()));
   vc::FeatureImage feature_image_b(image_b, *(lk_detector_and_matcher.detector()));
+  for (const auto& p : feature_image_a.feature_points()) {
+    cv::drawMarker(image_a, p, cv::Scalar(128), cv::MARKER_DIAMOND);
+  }
+  cv::imshow("image a", image_a);
+  // cv::imshow("image b", image_b);
+  cv::waitKey(0);
   const auto matches = lk_detector_and_matcher.Match(feature_image_a, feature_image_b);
   EXPECT_EQ(matches.size(), num_markers);
   for (const auto& match : matches) {

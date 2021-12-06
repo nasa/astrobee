@@ -26,7 +26,7 @@ namespace vision_common {
 LKOpticalFlowFeatureDetectorAndMatcher::LKOpticalFlowFeatureDetectorAndMatcher(
   const LKOpticalFlowFeatureDetectorAndMatcherParams& params)
     : params_(params) {
-  detector_.reset(new cv::GoodFeaturesToTrackDetector());
+  detector_.reset(new cv::GoodFeaturesToTrackDetector(params_.good_features_to_track));
 }
 
 FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
