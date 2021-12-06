@@ -28,7 +28,8 @@ namespace dd = depth_odometry;
 namespace lc = localization_common;
 
 TEST(DepthOdometryWrapperTester, A) {
-  const auto params = dd::DefaultDepthOdometryWrapperParams();
+  auto params = dd::DefaultDepthOdometryWrapperParams();
+  params.icp.icp.search_radius = 1.0;
   dd::DepthOdometryWrapper depth_odometry_wrapper(params);
   constexpr double translation_stddev = 0.01;
   constexpr double rotation_stddev = 0.01;
