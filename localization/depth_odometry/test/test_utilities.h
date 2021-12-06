@@ -33,6 +33,9 @@ namespace depth_odometry {
 localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
   const localization_common::Time timestamp);
 
+localization_measurements::DepthImageMeasurement ImageFeatureDepthImageMeasurement(
+  const localization_common::Time timestamp, const cv::Point2i& offset = cv::Point2i(0, 0));
+
 localization_measurements::DepthImageMeasurement TransformDepthImageMeasurement(
   const localization_measurements::DepthImageMeasurement& depth_image_measurement,
   const localization_common::Time timestamp, const Eigen::Isometry3d& target_T_source);

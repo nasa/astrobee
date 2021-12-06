@@ -39,6 +39,14 @@ lm::DepthImageMeasurement DefaultDepthImageMeasurement(const lc::Time timestamp)
   return lm::DepthImageMeasurement(cv::Mat(), point_cloud, timestamp);
 }
 
+lm::DepthImageMeasurement ImageFeatureDepthImageMeasurement(const lc::Time timestamp, const cv::Point2i& offset) {
+  const auto points = pc::RandomPoints(640 * 480);
+  const auto point_cloud = pc::PointCloud<pcl::PointXYZI>(points);
+  int num_markers_added;
+  const auto image = vc::MarkerImage(33, 33, num_markers_added, offset);
+  return lm::DepthImageMeasurement(image, point_cloud, timestamp);
+}
+
 lm::DepthImageMeasurement TransformDepthImageMeasurement(const lm::DepthImageMeasurement& depth_image_measurement,
                                                          const lc::Time timestamp,
                                                          const Eigen::Isometry3d& target_T_source) {
