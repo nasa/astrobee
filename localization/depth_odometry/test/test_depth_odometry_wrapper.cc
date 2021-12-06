@@ -59,8 +59,14 @@ TEST(DepthOdometryWrapperTester, A) {
   {
     const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(target_image_msg);
     ASSERT_EQ(depth_odometry_msgs.size(), 1);
-    const auto sensor_F_pose = lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.sensor_F_a_T_b.pose));
-    EXPECT_PRED2(lc::MatrixEquality<4>, sensor_F_pose.matrix(), target_T_source.inverse().matrix());
+    const auto sensor_F_source_T_target =
+      lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.sensor_F_source_T_target.pose));
+    EXPECT_PRED2(lc::MatrixEquality<4>, sensor_F_source_T_target.matrix(), target_T_source.inverse().matrix());
+    const auto body_F_source_T_target =
+      lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.body_F_source_T_target.pose));
+    const Eigen::Isometry3d true_body_F_source_T_target =
+      params.body_T_haz_cam * target_T_source.inverse() * (params.body_T_haz_cam).inverse();
+    EXPECT_PRED2(lc::MatrixEquality<4>, body_F_source_T_target.matrix(), true_body_F_source_T_target.matrix());
   }
 }
 
