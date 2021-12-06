@@ -25,7 +25,7 @@
 namespace vision_common {
 LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
 
-void AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image,
-                const cv::Point2i& offset = cv::Point2i(0, 0));
+int AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image,
+               const cv::Point2i& offset = cv::Point2i(0, 0));
 }  // namespace vision_common
 #endif  // VISION_COMMON_TEST_UTILITIES_H_ // NOLINT

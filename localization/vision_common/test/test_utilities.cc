@@ -34,11 +34,14 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
   return params;
 }
 
-void AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image, const cv::Point2i& offset) {
+int AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image, const cv::Point2i& offset) {
+  int num_markers = 0;
   for (int row = 0; row < image.rows; row += row_spacing) {
     for (int col = 0; col < image.cols; col += col_spacing) {
-      cv::drawMarker(image, offset + cv::Point2i(row, col), cv::Scalar(255), cv::MARKER_CROSS);
+      cv::drawMarker(image, offset + cv::Point2i(col, row), cv::Scalar(0), cv::MARKER_CROSS);
+      ++num_markers;
     }
   }
+  return num_markers;
 }
 }  // namespace vision_common
