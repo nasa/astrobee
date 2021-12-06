@@ -21,6 +21,7 @@
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/test_utilities.h>
+#include <vision_common/test_utilities.h>
 
 #include <pcl/common/transforms.h>
 
@@ -30,6 +31,7 @@ namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace pc = point_cloud_common;
+namespace vc = vision_common;
 
 lm::DepthImageMeasurement DefaultDepthImageMeasurement(const lc::Time timestamp) {
   const auto cubic_points = pc::CubicPoints();
@@ -88,6 +90,22 @@ sensor_msgs::ImageConstPtr ImageMsg(const lc::Time timestamp) {
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams() {
   PointToPlaneICPDepthOdometryParams params;
   params.icp = pc::DefaultPointToPlaneICPParams();
+  DefaultDepthOdometryParams(params);
+  return params;
+}
+
+ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams
+DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams() {
+  ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams params;
+  params.aligner = pc::DefaultPointCloudWithKnownCorrespondencesAlignerParams();
+  params.lk_optical_flow_feature_detector_and_matcher = vc::DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
+  params.detector = "lk_optical_flow";
+  params.use_clahe = false;
+  params.clahe_grid_length = 8;
+  params.clahe_clip_limit = 40;
+  params.min_x_distance_to_border = 0;
+  params.min_y_distance_to_border = 0;
+  params.min_num_inliers = 0;
   DefaultDepthOdometryParams(params);
   return params;
 }

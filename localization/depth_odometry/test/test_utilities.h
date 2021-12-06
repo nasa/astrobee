@@ -47,6 +47,9 @@ sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const localization_common::T
 
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
 
+ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams
+DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams();
+
 void DefaultDepthOdometryParams(DepthOdometryParams& params);
 
 DepthOdometryWrapperParams DefaultDepthOdometryWrapperParams();

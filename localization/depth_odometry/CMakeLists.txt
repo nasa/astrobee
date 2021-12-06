@@ -89,7 +89,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_image_features_with_known_correspondences_aligner_depth_odometry.cc
     test/test_utilities.cc
   )
-  target_link_libraries(test_point_to_plane_icp_depth_odometry
+  target_link_libraries(test_image_features_with_known_correspondences_aligner_depth_odometry
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
 
