@@ -16,17 +16,25 @@
  * under the License.
  */
 
+#include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <vision_common/feature_image.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
+#include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 
 #include <gtest/gtest.h>
 
 namespace lc = localization_common;
 namespace vc = vision_common;
 
-// TEST(PointToPlaneICPTester, NoisyInitialEstimateCubicPoints) {
+TEST(FeatureDetectorAndMatcherTester, LKOpticalFlow) {
+  const auto params = vc::DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
+  vc::LKOpticalFlowFeatureDetectorAndMatcher lk_detector_and_matcher(params);
+  cv::Mat image_a;
+  vc::FeatureImage feature_image_a(image_a, *(lk_detector_and_matcher.detector()));
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

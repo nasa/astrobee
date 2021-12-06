@@ -65,6 +65,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_lk_optical_flow_feature_detector_and_matcher
     test/test_lk_optical_flow_feature_detector_and_matcher.test
     test/test_lk_optical_flow_feature_detector_and_matcher.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_lk_optical_flow_feature_detector_and_matcher
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
