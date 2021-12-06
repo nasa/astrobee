@@ -20,6 +20,7 @@
 #include <depth_odometry/depth_odometry_wrapper.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
+#include <localization_common/utilities.h>
 #include <point_cloud_common/test_utilities.h>
 
 #include <gtest/gtest.h>
@@ -58,7 +59,8 @@ TEST(DepthOdometryWrapperTester, A) {
   {
     const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(target_image_msg);
     ASSERT_EQ(depth_odometry_msgs.size(), 1);
-    // TODO(rsoussan): check msg result!
+    const auto sensor_F_pose = lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.sensor_F_a_T_b.pose));
+    EXPECT_PRED2(lc::MatrixEquality<2>, sensor_F_pose.matrix(), target_T_source.inverse().matrix());
   }
 }
 
