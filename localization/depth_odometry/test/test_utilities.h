@@ -40,6 +40,11 @@ localization_measurements::DepthImageMeasurement TransformDepthImageMeasurement(
   const localization_measurements::DepthImageMeasurement& depth_image_measurement,
   const localization_common::Time timestamp, const Eigen::Isometry3d& target_T_source);
 
+localization_measurements::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
+  const localization_common::Time timestamp,
+  const localization_measurements::DepthImageMeasurement& depth_image_measurement, const cv::Point2i& offset,
+  const Eigen::Isometry3d& target_T_source);
+
 sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const localization_common::Time timestamp);
 
 sensor_msgs::ImageConstPtr ImageMsg(const localization_common::Time timestamp);
