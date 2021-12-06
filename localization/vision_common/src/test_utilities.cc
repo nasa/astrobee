@@ -40,6 +40,12 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
   return params;
 }
 
+cv::Mat MarkerImage(const int row_spacing, const int col_spacing, int& num_markers_added, const cv::Point2i& offset) {
+  cv::Mat image(cv::Mat(cv::Size(640, 480), CV_8UC1, cv::Scalar(255)));
+  num_markers_added = AddMarkers(row_spacing, col_spacing, image, offset);
+  return image;
+}
+
 int AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image, const cv::Point2i& offset) {
   int num_markers = 0;
   // Don't start at zero so all markers are candidates for matches
