@@ -87,7 +87,6 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
     const int col = i - row * cols;
     const int new_row = row - offset.y;
     const int new_col = col - offset.x;
-    // std::cout << "i: " << i << ", row: " << row << ", col: " << col << std::endl;
     if (new_row >= rows || new_col >= cols || new_row < 0 || new_col < 0) {
       pcl::PointXYZI zero_point;
       zero_point.x = 0;
@@ -97,8 +96,6 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
       offset_and_transformed_cloud->points.emplace_back(zero_point);
     } else {
       const int new_point_index = new_row * cols + new_col;
-      // std::cout << "new row: " << new_row << ", new col: " << new_col << ", new index: " << new_point_index
-      << std::endl;
       offset_and_transformed_cloud->points.emplace_back(transformed_cloud->points[new_point_index]);
     }
   }
