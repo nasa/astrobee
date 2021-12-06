@@ -84,6 +84,15 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_point_to_plane_icp_depth_odometry
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
+  add_rostest_gtest(test_image_features_with_known_correspondences_aligner_depth_odometry
+    test/test_image_features_with_known_correspondences_aligner_depth_odometry.test
+    test/test_image_features_with_known_correspondences_aligner_depth_odometry.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_point_to_plane_icp_depth_odometry
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+
  find_package(rostest REQUIRED)
   add_rostest_gtest(test_depth_odometry_wrapper
     test/test_depth_odometry_wrapper.test
