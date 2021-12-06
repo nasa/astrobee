@@ -102,7 +102,7 @@ std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ProcessDepthImageIfAva
     auto sensor_F_source_T_target = depth_odometry_->DepthImageCallback(depth_image_measurement);
     if (sensor_F_source_T_target) {
       const lc::PoseWithCovariance body_F_source_T_target = lc::FrameChangeRelativePoseWithCovariance(
-        source_F_source_T_target.pose_with_covariance, params_.body_T_haz_cam);
+        sensor_F_source_T_target->pose_with_covariance, params_.body_T_haz_cam);
       ff_msgs::DepthOdometry depth_odometry_msg = DepthOdometryMsg(*sensor_F_source_T_target, body_F_source_T_target);
       depth_odometry_msgs.emplace_back(depth_odometry_msg);
     }
