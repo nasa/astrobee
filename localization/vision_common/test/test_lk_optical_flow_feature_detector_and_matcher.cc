@@ -24,6 +24,8 @@
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 
+#include <opencv2/core.hpp>
+
 #include <gtest/gtest.h>
 
 namespace lc = localization_common;
@@ -32,8 +34,23 @@ namespace vc = vision_common;
 TEST(FeatureDetectorAndMatcherTester, LKOpticalFlow) {
   const auto params = vc::DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher lk_detector_and_matcher(params);
-  cv::Mat image_a;
+  const int row_spacing = 10;
+  const int col_spacing = 10;
+  const int num_markers = 64 * 48;
+  cv::Mat image_a(cv::Mat::zeros(cv::Size(640, 480), CV_8UC1));
+  vc::AddMarkers(row_spacing, col_spacing, image_a);
+  cv::Mat image_b(cv::Mat::zeros(cv::Size(640, 480), CV_8UC1));
+  const cv::Point2i offset(5, 5);
+  vc::AddMarkers(row_spacing, col_spacing, image_b, offset);
   vc::FeatureImage feature_image_a(image_a, *(lk_detector_and_matcher.detector()));
+  vc::FeatureImage feature_image_b(image_b, *(lk_detector_and_matcher.detector()));
+  const auto matches = lk_detector_and_matcher.Match(feature_image_a, feature_image_b);
+  EXPECT_EQ(matches.size(), num_markers);
+  for (const auto& match : matches) {
+    const Eigen::Vector2d match_offset = match.target_point - match.source_point;
+    EXPECT_NEAR(match_offset.x(), offset.x, 1e-6);
+    EXPECT_NEAR(match_offset.y(), offset.y, 1e-6);
+  }
 }
 
 // Run all the tests that were declared with TEST()

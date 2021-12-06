@@ -18,6 +18,8 @@
 
 #include "test_utilities.h"  // NOLINT
 
+#include <opencv2/imgproc.hpp>
+
 namespace vision_common {
 LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetectorAndMatcherParams() {
   LKOpticalFlowFeatureDetectorAndMatcherParams params;
@@ -30,5 +32,13 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
   params.max_flow_distance = 50;
   params.max_backward_match_distance = 0.1;
   return params;
+}
+
+void AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image, const cv::Point2i& offset) {
+  for (int row = 0; row < image.rows; row += row_spacing) {
+    for (int col = 0; col < image.cols; col += col_spacing) {
+      cv::drawMarker(image, offset + cv::Point2i(row, col), cv::Scalar(255), cv::MARKER_CROSS);
+    }
+  }
 }
 }  // namespace vision_common

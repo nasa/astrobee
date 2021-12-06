@@ -20,7 +20,12 @@
 
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 
+#include <opencv2/core.hpp>
+
 namespace vision_common {
 LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
+
+void AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image,
+                const cv::Point2i& offset = cv::Point2i(0, 0));
 }  // namespace vision_common
 #endif  // VISION_COMMON_TEST_UTILITIES_H_ // NOLINT
