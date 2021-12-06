@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
+#include <vision_common/test_utilities.h>
 
 #include <opencv2/imgproc.hpp>
 

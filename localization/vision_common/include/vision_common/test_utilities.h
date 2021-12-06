@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef VISION_COMMON_TEST_UTILITIES_H_  // NOLINT
-#define VISION_COMMON_TEST_UTILITIES_H_  // NOLINT
+#ifndef VISION_COMMON_TEST_UTILITIES_H_
+#define VISION_COMMON_TEST_UTILITIES_H_
 
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 
@@ -28,4 +28,4 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
 int AddMarkers(const int row_spacing, const int col_spacing, cv::Mat& image,
                const cv::Point2i& offset = cv::Point2i(0, 0));
 }  // namespace vision_common
-#endif  // VISION_COMMON_TEST_UTILITIES_H_ // NOLINT
+#endif  // VISION_COMMON_TEST_UTILITIES_H_

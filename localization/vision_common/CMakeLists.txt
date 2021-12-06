@@ -56,6 +56,7 @@ add_library(${PROJECT_NAME}
   src/lk_optical_flow_feature_detector_and_matcher.cc
   src/parameter_reader.cc
   src/surf_feature_detector_and_matcher.cc
+  src/test_utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
@@ -65,7 +66,6 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_lk_optical_flow_feature_detector_and_matcher
     test/test_lk_optical_flow_feature_detector_and_matcher.test
     test/test_lk_optical_flow_feature_detector_and_matcher.cc
-    test/test_utilities.cc
   )
   target_link_libraries(test_lk_optical_flow_feature_detector_and_matcher
     ${PROJECT_NAME} ${catkin_LIBRARIES}  

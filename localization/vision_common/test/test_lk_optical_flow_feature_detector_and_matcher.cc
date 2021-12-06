@@ -16,13 +16,13 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <vision_common/feature_image.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <vision_common/test_utilities.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
