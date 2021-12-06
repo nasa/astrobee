@@ -29,11 +29,10 @@
 #include <vector>
 
 namespace depth_odometry {
-ff_msgs::DepthOdometry DepthOdometryMsg(
-  const PoseWithCovarianceAndCorrespondences& pose_with_covariance_and_correspondences,
-  const localization_common::PoseWithCovariance& body_frame_pose_with_covariance);
-ff_msgs::Odometry OdometryMsg(const localization_common::PoseWithCovariance& sensor_frame_pose_with_covariance,
-                              const localization_common::PoseWithCovariance& body_frame_pose_with_covariance);
+ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondences& sensor_F_source_T_target,
+                                        const localization_common::PoseWithCovariance& body_F_source_T_target);
+ff_msgs::Odometry OdometryMsg(const localization_common::PoseWithCovariance& sensor_F_source_T_target,
+                              const localization_common::PoseWithCovariance& body_F_source_T_target);
 std::vector<ff_msgs::DepthCorrespondence> CorrespondencesMsg(const DepthCorrespondences& depth_correspondences);
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_UTILITIES_H_

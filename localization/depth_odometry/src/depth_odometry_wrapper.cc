@@ -99,13 +99,11 @@ std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ProcessDepthImageIfAva
 
   std::vector<ff_msgs::DepthOdometry> depth_odometry_msgs;
   for (const auto& depth_image_measurement : depth_image_measurements) {
-    auto pose_with_covariance_and_correspondences = depth_odometry_->DepthImageCallback(depth_image_measurement);
-    if (pose_with_covariance_and_correspondences) {
-      const auto& pose_with_covariance = pose_with_covariance_and_correspondences->pose_with_covariance;
-      const lc::PoseWithCovariance body_frame_pose_with_covariance =
-        lc::FrameChangeRelativePoseWithCovariance(pose_with_covariance, params_.body_T_haz_cam);
-      ff_msgs::DepthOdometry depth_odometry_msg =
-        DepthOdometryMsg(*pose_with_covariance_and_correspondences, body_frame_pose_with_covariance);
+    auto sensor_F_source_T_target = depth_odometry_->DepthImageCallback(depth_image_measurement);
+    if (sensor_F_source_T_target) {
+      const lc::PoseWithCovariance body_F_source_T_target = lc::FrameChangeRelativePoseWithCovariance(
+        source_F_source_T_target.pose_with_covariance, params_.body_T_haz_cam);
+      ff_msgs::DepthOdometry depth_odometry_msg = DepthOdometryMsg(*sensor_F_source_T_target, body_F_source_T_target);
       depth_odometry_msgs.emplace_back(depth_odometry_msg);
     }
   }
