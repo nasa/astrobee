@@ -34,10 +34,14 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, A) {
   constexpr double translation_stddev = 0.01;
   constexpr double rotation_stddev = 0.01;
   const auto target_T_source =
-    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+    Eigen::Isometry3d::Identity();  // lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(),
+                                    // translation_stddev, rotation_stddev);
   const cv::Point2i offset(5, 5);
   const auto target_depth_image_measurement =
     dd::OffsetImageFeatureDepthImageMeasurement(0.1, source_depth_image_measurement, offset, target_T_source);
+  std::cout << "source image size: " << source_depth_image_measurement.depth_image.image().size << std::endl;
+  std::cout << "target image size: " << target_depth_image_measurement.depth_image.image().size << std::endl;
+
   {
     const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(source_depth_image_measurement);
     ASSERT_TRUE(pose_with_covariance == boost::none);

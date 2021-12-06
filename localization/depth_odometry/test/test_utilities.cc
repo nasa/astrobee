@@ -27,6 +27,8 @@
 
 #include <cv_bridge/cv_bridge.h>
 
+#include <vector>
+
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -39,11 +41,21 @@ lm::DepthImageMeasurement DefaultDepthImageMeasurement(const lc::Time timestamp)
   return lm::DepthImageMeasurement(cv::Mat(), point_cloud, timestamp);
 }
 
+std::vector<Eigen::Vector3d> RampedPoints(int cols, int rows) {
+  std::vector<Eigen::Vector3d> points;
+  for (int row = 0; row < rows; ++row) {
+    for (int col = 0; col < cols; ++col) {
+      points.emplace_back(Eigen::Vector3d(col, row, col));
+    }
+  }
+  return points;
+}
+
 lm::DepthImageMeasurement ImageFeatureDepthImageMeasurement(const lc::Time timestamp, const cv::Point2i& offset) {
   int num_markers_added;
   const auto image = vc::MarkerImage(33, 33, num_markers_added, offset);
   const int num_points = image.cols * image.rows;
-  const auto points = pc::RandomPoints(num_points);
+  const auto points = RampedPoints(image.cols, image.rows);
   const auto point_cloud = pc::PointCloud<pcl::PointXYZI>(points);
   return lm::DepthImageMeasurement(image, point_cloud, timestamp);
 }
@@ -73,10 +85,10 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
   for (int i = 0; i < num_points; ++i) {
     const int row = i / cols;
     const int col = i - row * cols;
-    const int new_row = row + offset.y;
-    const int new_col = col + offset.x;
+    const int new_row = row - offset.y;
+    const int new_col = col - offset.x;
     // std::cout << "i: " << i << ", row: " << row << ", col: " << col << std::endl;
-    if (new_row >= rows || new_col >= cols) {
+    if (new_row >= rows || new_col >= cols || new_row < 0 || new_col < 0) {
       pcl::PointXYZI zero_point;
       zero_point.x = 0;
       zero_point.y = 0;
@@ -85,8 +97,8 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
       offset_and_transformed_cloud->points.emplace_back(zero_point);
     } else {
       const int new_point_index = new_row * cols + new_col;
-      // std::cout << "new row: " << new_row << ", new col: " << new_col << ", new index: " << new_point_index <<
-      // std::endl;
+      // std::cout << "new row: " << new_row << ", new col: " << new_col << ", new index: " << new_point_index
+      << std::endl;
       offset_and_transformed_cloud->points.emplace_back(transformed_cloud->points[new_point_index]);
     }
   }

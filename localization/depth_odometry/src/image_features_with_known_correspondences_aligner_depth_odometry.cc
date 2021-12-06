@@ -89,10 +89,13 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   std::vector<Eigen::Vector3d> target_landmarks;
   std::vector<Eigen::Vector3d> source_normals;
   std::vector<Eigen::Vector3d> target_normals;
+  std::cout << "num matches: " << matches.size() << std::endl;
   for (int i = 0; i < static_cast<int>(matches.size()); ++i) {
     const auto& match = matches[i];
     const auto& source_image_point = match.source_point;
     const auto& target_image_point = match.target_point;
+    std::cout << "source image pt: " << std::endl << source_image_point.matrix() << std::endl;
+    std::cout << "target image pt: " << std::endl << target_image_point.matrix() << std::endl;
     if (!ValidImagePoint(source_image_point) || !ValidImagePoint(target_image_point)) continue;
     const auto source_point_3d = previous_depth_image_features_and_points_->depth_image().InterpolatePoint3D(
       source_image_point.x(), source_image_point.y());
@@ -101,7 +104,13 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     if (!Valid3dPoint(source_point_3d) || !Valid3dPoint(target_point_3d)) continue;
     const Eigen::Vector3d source_landmark = pc::Vector3d(*source_point_3d);
     const Eigen::Vector3d target_landmark = pc::Vector3d(*target_point_3d);
+    std::cout << "source landmark: " << std::endl << source_landmark.matrix() << std::endl;
+    std::cout << "target landmark: " << std::endl << target_landmark.matrix() << std::endl;
+    const auto diff = source_landmark - target_landmark;
+    std::cout << "diff: " << std::endl << diff.matrix() << std::endl;
+    if (diff.norm() > 0.01) std::cout << "large diff!!!" << std::endl;
     if (normals_required_) {
+      std::cout << "normals required!" << std::endl;
       const auto target_normal =
         latest_depth_image_features_and_points_->Normal(target_landmark, params_.aligner.normal_search_radius);
       if (!target_normal) continue;
