@@ -64,16 +64,18 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
                            Eigen::Affine3d(target_T_source.matrix()));
   int num_markers_added;
   const auto offset_image = vc::MarkerImage(33, 33, num_markers_added, offset);
+  const int rows = offset_image.rows;
+  const int cols = offset_image.cols;
   pcl::PointCloud<pcl::PointXYZI>::Ptr offset_and_transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   const int num_points = transformed_cloud->points.size();
   // Points correlate to a 640x480 image
   // Points are in row order
   for (int i = 0; i < num_points; ++i) {
-    const int row = i / 640;
-    const int col = i - row * 640;
+    const int row = i / rows;
+    const int col = i - row * cols;
     const int new_row = row + offset.y;
     const int new_col = col + offset.x;
-    if (new_row >= 480 || new_col >= 640) {
+    if (new_row >= rows || new_col >= cols) {
       pcl::PointXYZI zero_point;
       zero_point.x = 0;
       zero_point.y = 0;
@@ -81,7 +83,7 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
       zero_point.intensity = 0;
       offset_and_transformed_cloud->points.emplace_back(zero_point);
     } else {
-      const int new_point_index = new_row * 640 + new_col;
+      const int new_point_index = new_row * cols + new_col;
       offset_and_transformed_cloud->points.emplace_back(transformed_cloud->points[new_point_index]);
     }
   }
