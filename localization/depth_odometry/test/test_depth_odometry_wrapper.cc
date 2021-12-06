@@ -68,6 +68,28 @@ TEST(DepthOdometryWrapperTester, A) {
       params.body_T_haz_cam * target_T_source.inverse() * (params.body_T_haz_cam).inverse();
     EXPECT_PRED2(lc::MatrixEquality<4>, body_F_source_T_target.matrix(), true_body_F_source_T_target.matrix());
   }
+  // Add third measurement set
+  const lc::Time target_2_timestamp = 0.1;
+  const auto target_2_T_target =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_2_points_msg = dd::TransformPointsMsg(target_2_timestamp, target_points_msg, target_2_T_target);
+  const auto target_2_image_msg = dd::ImageMsg(target_2_timestamp);
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(target_2_points_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(target_2_image_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 1);
+    const auto sensor_F_target_T_target_2 =
+      lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.sensor_F_source_T_target.pose));
+    EXPECT_PRED2(lc::MatrixEquality<4>, sensor_F_target_T_target_2.matrix(), target_2_T_target.inverse().matrix());
+    const auto body_F_target_T_target_2 =
+      lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.body_F_source_T_target.pose));
+    const Eigen::Isometry3d true_body_F_target_T_target_2 =
+      params.body_T_haz_cam * target_2_T_target.inverse() * (params.body_T_haz_cam).inverse();
+    EXPECT_PRED2(lc::MatrixEquality<4>, body_F_target_T_target_2.matrix(), true_body_F_target_T_target_2.matrix());
+  }
 }
 
 // Run all the tests that were declared with TEST()
