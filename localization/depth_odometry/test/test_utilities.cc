@@ -64,7 +64,7 @@ lm::DepthImageMeasurement OffsetImageFeatureDepthImageMeasurement(
                            Eigen::Affine3d(target_T_source.matrix()));
   int num_markers_added;
   const auto offset_image = vc::MarkerImage(33, 33, num_markers_added, offset);
-  pcl::PointCloud<pcl::PointXYZI>::Ptr offset_and_transformed_cloud;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr offset_and_transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   const int num_points = transformed_cloud->points.size();
   // Points correlate to a 640x480 image
   // Points are in row order
