@@ -37,8 +37,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def l2_map(vector3ds):
-  return map(lambda (x, y, z): math.sqrt(x*x + y*y + z*z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
-
+    return [
+            math.sqrt(x_y_z[0] * x_y_z[0] + x_y_z[1] * x_y_z[1] + x_y_z[2] * x_y_z[2])
+            for x_y_z in zip(vector3ds.xs, vector3ds.ys, vector3ds.zs)
+        ]
 
 def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
                     imu_augmented_graph_localization_poses):
