@@ -53,14 +53,14 @@ void DepthOdometryAdder::AddDepthOdometry() {
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), point_cloud_topic)) {
       const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg = msg.instantiate<sensor_msgs::PointCloud2>();
-      const auto pose_msgs = depth_odometry_wrapper_.DepthCloudCallback(point_cloud_msg);
+      const auto pose_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
       for (const auto& pose_msg : pose_msgs) {
         const ros::Time timestamp = lc::RosTimeFromHeader(point_cloud_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, pose_msg);
       }
     } else if (string_ends_with(msg.getTopic(), image_topic)) {
       const sensor_msgs::ImageConstPtr& image_msg = msg.instantiate<sensor_msgs::Image>();
-      const auto pose_msgs = depth_odometry_wrapper_.DepthImageCallback(image_msg);
+      const auto pose_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
       for (const auto& pose_msg : pose_msgs) {
         const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, pose_msg);
