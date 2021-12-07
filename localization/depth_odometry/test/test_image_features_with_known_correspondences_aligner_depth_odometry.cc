@@ -148,6 +148,35 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, UmeyamaRam
   }
 }
 
+TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, UmeyamaInitialGeussRampedPoints) {
+  auto params = dd::DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams();
+  params.aligner.use_umeyama_initial_guess = true;
+  dd::ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry image_features_depth_odometry(params);
+  const auto source_depth_image_measurement = dd::ImageFeatureDepthImageMeasurement(0);
+  constexpr double translation_stddev = 1;
+  constexpr double rotation_stddev = 1;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const cv::Point2i offset(5, 5);
+  const auto target_depth_image_measurement =
+    dd::OffsetImageFeatureDepthImageMeasurement(0.1, source_depth_image_measurement, offset, target_T_source);
+  {
+    const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(source_depth_image_measurement);
+    ASSERT_TRUE(pose_with_covariance == boost::none);
+  }
+  const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(target_depth_image_measurement);
+  ASSERT_TRUE(pose_with_covariance != boost::none);
+  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
+               target_T_source.inverse().matrix());
+  const auto& correspondences = pose_with_covariance->depth_correspondences;
+  for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
+    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
+                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
+    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
+                 correspondences.target_3d_points[i].matrix());
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
