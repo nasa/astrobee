@@ -128,11 +128,11 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   // TODO(rsoussan): This isn't required with std:optional, remove when upgrade to c++17 and change normals
   // containers to be boost::optional types
   boost::optional<const std::vector<Eigen::Vector3d>&> source_normals_ref =
-    normals_required_ ? boost::optional<const std::vector<Eigen::Vector3d>&>(source_normals) : boost::none;
-  boost::optional<const std::vector<Eigen::Vector3d>&> target_normals_ref =
     normals_required_ && params_.aligner.use_symmetric_point_to_plane_cost
-      ? boost::optional<const std::vector<Eigen::Vector3d>&>(target_normals)
+      ? boost::optional<const std::vector<Eigen::Vector3d>&>(source_normals)
       : boost::none;
+  boost::optional<const std::vector<Eigen::Vector3d>&> target_normals_ref =
+    normals_required_ ? boost::optional<const std::vector<Eigen::Vector3d>&>(target_normals) : boost::none;
 
   const auto target_T_source =
     aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks, source_normals_ref, target_normals_ref);
