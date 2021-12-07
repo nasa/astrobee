@@ -54,10 +54,12 @@ void LoadPointCloudWithKnownCorrespondencesAlignerParams(config_reader::ConfigRe
   params.use_point_to_plane_cost = mc::LoadBool(config, "pcwkca_use_point_to_plane_cost");
   params.use_symmetric_point_to_plane_cost = mc::LoadBool(config, "pcwkca_use_symmetric_point_to_plane_cost");
   if (!mc::SingleBoolTrue({params.use_single_iteration_umeyama, params.use_point_to_plane_cost,
-                           params.use_symmetric_point_to_plane_cost}))
+                           params.use_symmetric_point_to_plane_cost}) &&
+      (params.use_single_iteration_umeyama || params.use_point_to_plane_cost ||
+       params.use_symmetric_point_to_plane_cost))
     LogFatal(
-      "LoadPointCloudWithKnownCorrespondencesAlignerParams: Single solver method must be enabled (either single "
-      "iteration umeyama, point to plane cost, or symmetric point to plane cost).");
+      "LoadPointCloudWithKnownCorrespondencesAlignerParams: Multiple solver methods enabled (only one of single "
+      "iteration umeyama, point to plane cost, and symmetric point to plane cost can be enabled).");
   params.verbose_optimization = mc::LoadBool(config, "pcwkca_verbose_optimization");
 }
 }  // namespace point_cloud_common
