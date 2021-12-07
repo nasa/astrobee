@@ -38,8 +38,8 @@ class ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry : public DepthOd
   bool ValidImagePoint(const Eigen::Vector2d& image_point) const;
   bool Valid3dPoint(const boost::optional<pcl::PointXYZI>& point) const;
 
-  point_cloud_common::PointCloudWithKnownCorrespondencesAligner aligner_;
   ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams params_;
+  point_cloud_common::PointCloudWithKnownCorrespondencesAligner aligner_;
   std::shared_ptr<DepthImageFeaturesAndPoints> previous_depth_image_features_and_points_;
   std::shared_ptr<DepthImageFeaturesAndPoints> latest_depth_image_features_and_points_;
   localization_common::Time previous_timestamp_;

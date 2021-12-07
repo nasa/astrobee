@@ -32,7 +32,7 @@ namespace vc = vision_common;
 
 ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry(
   const ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams& params)
-    : params_(params), aligner_(params_.aligner) {
+    : params_(params), aligner_(params.aligner) {
   if (params_.detector == "brisk") {
     feature_detector_and_matcher_.reset(
       new vc::BriskFeatureDetectorAndMatcher(params_.brisk_feature_detector_and_matcher));
