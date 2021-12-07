@@ -29,6 +29,8 @@
 
 #include <sensor_msgs/PointCloud2.h>
 
+#include <vector>
+
 namespace depth_odometry {
 localization_measurements::DepthImageMeasurement DefaultDepthImageMeasurement(
   const localization_common::Time timestamp);
@@ -45,13 +47,25 @@ localization_measurements::DepthImageMeasurement OffsetImageFeatureDepthImageMea
   const localization_measurements::DepthImageMeasurement& depth_image_measurement, const cv::Point2i& offset,
   const Eigen::Isometry3d& target_T_source);
 
+std::vector<Eigen::Vector3d> RampedPoints(int cols, int rows);
+
+sensor_msgs::PointCloud2ConstPtr RampedPointsMsg(const localization_common::Time timestamp);
+
 sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const localization_common::Time timestamp);
 
 sensor_msgs::ImageConstPtr ImageMsg(const localization_common::Time timestamp);
 
+sensor_msgs::ImageConstPtr MarkerImageMsg(const localization_common::Time timestamp,
+                                          const cv::Point2i& offset = cv::Point2i(0, 0));
+
 sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const localization_common::Time timestamp,
                                                     const sensor_msgs::PointCloud2ConstPtr old_msg,
                                                     const Eigen::Isometry3d& transform);
+
+sensor_msgs::PointCloud2ConstPtr OffsetAndTransformPointsMsg(const localization_common::Time timestamp,
+                                                             const sensor_msgs::PointCloud2ConstPtr old_msg,
+                                                             const cv::Point2i& offset,
+                                                             const Eigen::Isometry3d& target_T_source);
 
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams();
 

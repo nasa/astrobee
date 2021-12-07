@@ -119,6 +119,25 @@ sensor_msgs::PointCloud2ConstPtr CubicPointsMsg(const lc::Time timestamp) {
   return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
 }
 
+sensor_msgs::PointCloud2ConstPtr RampedPointsMsg(const lc::Time timestamp) {
+  const int cols = 640;
+  const int rows = 480;
+  const auto ramped_points = RampedPoints(cols, rows);
+  auto point_cloud = pc::PointCloud<pcl::PointXYZI>(ramped_points);
+  // DepthImageMeasurement expects a point cloud with a width and height to correlate with an intenisty image
+  // TODO(rsoussan): Replace with resize when pcl version is updated
+  // point_cloud->resize(cols, rows);
+  pcl::PointCloud<pcl::PointXYZI> resized_point_cloud(cols, rows);
+  int i = 0;
+  for (const auto& point : point_cloud->points) {
+    resized_point_cloud.points[i++] = point;
+  }
+  sensor_msgs::PointCloud2 msg;
+  lc::TimeToHeader(timestamp, msg.header);
+  pcl::toROSMsg(resized_point_cloud, msg);
+  return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
+}
+
 sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const lc::Time timestamp,
                                                     const sensor_msgs::PointCloud2ConstPtr old_msg,
                                                     const Eigen::Isometry3d& new_T_old) {
@@ -132,10 +151,58 @@ sensor_msgs::PointCloud2ConstPtr TransformPointsMsg(const lc::Time timestamp,
   return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
 }
 
+sensor_msgs::PointCloud2ConstPtr OffsetAndTransformPointsMsg(const lc::Time timestamp,
+                                                             const sensor_msgs::PointCloud2ConstPtr old_msg,
+                                                             const cv::Point2i& offset,
+                                                             const Eigen::Isometry3d& target_T_source) {
+  pcl::PointCloud<pcl::PointXYZI> old_point_cloud;
+  pcl::fromROSMsg(*old_msg, old_point_cloud);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>());
+  pcl::transformPointCloud(old_point_cloud, *transformed_cloud, Eigen::Affine3d(target_T_source.matrix()));
+  int num_markers_added;
+  const auto offset_image = vc::MarkerImage(33, 33, num_markers_added, offset);
+  const int rows = offset_image.rows;
+  const int cols = offset_image.cols;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr offset_and_transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>(cols, rows));
+  const int num_points = transformed_cloud->points.size();
+  // Points are in row order
+  for (int i = 0; i < num_points; ++i) {
+    const int row = i / cols;
+    const int col = i - row * cols;
+    const int new_row = row - offset.y;
+    const int new_col = col - offset.x;
+    if (new_row >= rows || new_col >= cols || new_row < 0 || new_col < 0) {
+      pcl::PointXYZI zero_point;
+      zero_point.x = 0;
+      zero_point.y = 0;
+      zero_point.z = 0;
+      zero_point.intensity = 0;
+      offset_and_transformed_cloud->points[i] = zero_point;
+    } else {
+      const int new_point_index = new_row * cols + new_col;
+      offset_and_transformed_cloud->points[i] = transformed_cloud->points[new_point_index];
+    }
+  }
+  sensor_msgs::PointCloud2 msg;
+  pcl::toROSMsg(*offset_and_transformed_cloud, msg);
+  lc::TimeToHeader(timestamp, msg.header);
+  return sensor_msgs::PointCloud2ConstPtr(new sensor_msgs::PointCloud2(msg));
+}
+
 sensor_msgs::ImageConstPtr ImageMsg(const lc::Time timestamp) {
   cv_bridge::CvImage msg_bridge;
   msg_bridge.encoding = sensor_msgs::image_encodings::MONO8;
   msg_bridge.image = cv::Mat(15, 20, CV_8UC1);
+  auto msg = msg_bridge.toImageMsg();
+  lc::TimeToHeader(timestamp, msg->header);
+  return sensor_msgs::ImageConstPtr(msg);
+}
+
+sensor_msgs::ImageConstPtr MarkerImageMsg(const lc::Time timestamp, const cv::Point2i& offset) {
+  cv_bridge::CvImage msg_bridge;
+  msg_bridge.encoding = sensor_msgs::image_encodings::MONO8;
+  int num_markers_added;
+  msg_bridge.image = vc::MarkerImage(33, 33, num_markers_added, offset);
   auto msg = msg_bridge.toImageMsg();
   lc::TimeToHeader(timestamp, msg->header);
   return sensor_msgs::ImageConstPtr(msg);
@@ -177,8 +244,7 @@ DepthOdometryWrapperParams DefaultDepthOdometryWrapperParams() {
   params.body_T_haz_cam = Eigen::Isometry3d::Identity();
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
   params.icp = DefaultPointToPlaneICPDepthOdometryParams();
-  // TODO(rsoussan): Fill this in!
-  // params.image_feature = ;
+  params.image_features = DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams();
   return params;
 }
 }  // namespace depth_odometry

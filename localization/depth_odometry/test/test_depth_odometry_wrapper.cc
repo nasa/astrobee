@@ -223,6 +223,72 @@ TEST(DepthOdometryWrapperTester, CorrespondenceRejectorSymmetricPointToPlaneICP)
   }
 }
 
+TEST(DepthOdometryWrapperTester, ImageFeatureAligner) {
+  auto params = dd::DefaultDepthOdometryWrapperParams();
+  params.method = "image_feature";
+  dd::DepthOdometryWrapper depth_odometry_wrapper(params);
+  constexpr double translation_stddev = 1;
+  constexpr double rotation_stddev = 1;
+  const cv::Point2i offset(5, 5);
+  // Add first measurement set
+  const lc::Time source_timestamp = 0;
+  const auto source_points_msg = dd::RampedPointsMsg(source_timestamp);
+  const auto source_image_msg = dd::MarkerImageMsg(source_timestamp);
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(source_points_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(source_image_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  // Add second measurement set
+  const lc::Time target_timestamp = 0.1;
+  const auto target_T_source =
+    lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+  const auto target_points_msg =
+    dd::OffsetAndTransformPointsMsg(target_timestamp, source_points_msg, offset, target_T_source);
+  const auto target_image_msg = dd::MarkerImageMsg(target_timestamp, offset);
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(target_points_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 0);
+  }
+  {
+    const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(target_image_msg);
+    ASSERT_EQ(depth_odometry_msgs.size(), 1);
+    const auto sensor_F_source_T_target =
+      lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.sensor_F_source_T_target.pose));
+    EXPECT_PRED2(lc::MatrixEquality<2>, sensor_F_source_T_target.matrix(), target_T_source.inverse().matrix());
+    const auto body_F_source_T_target =
+      lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.body_F_source_T_target.pose));
+    const Eigen::Isometry3d true_body_F_source_T_target =
+      params.body_T_haz_cam * target_T_source.inverse() * (params.body_T_haz_cam).inverse();
+    EXPECT_PRED2(lc::MatrixEquality<2>, body_F_source_T_target.matrix(), true_body_F_source_T_target.matrix());
+  }
+  // Add third measurement set
+  /*  const lc::Time target_2_timestamp = 0.1;
+    const auto target_2_T_target =
+      lc::AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+    const auto target_2_points_msg = dd::OffsetAndTransformPointsMsg(target_2_timestamp, target_points_msg, offset,
+    target_T_source); const auto target_2_image_msg = dd::MarkerImageMsg(target_2_timestamp, offset*2);
+    {
+      const auto depth_odometry_msgs = depth_odometry_wrapper.PointCloudCallback(target_2_points_msg);
+      ASSERT_EQ(depth_odometry_msgs.size(), 0);
+    }
+    {
+      const auto depth_odometry_msgs = depth_odometry_wrapper.ImageCallback(target_2_image_msg);
+      ASSERT_EQ(depth_odometry_msgs.size(), 1);
+      const auto sensor_F_target_T_target_2 =
+        lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.sensor_F_source_T_target.pose));
+      EXPECT_PRED2(lc::MatrixEquality<2>, sensor_F_target_T_target_2.matrix(), target_2_T_target.inverse().matrix());
+      const auto body_F_target_T_target_2 =
+        lc::EigenPose(lc::PoseFromMsg(depth_odometry_msgs[0].odometry.body_F_source_T_target.pose));
+      const Eigen::Isometry3d true_body_F_target_T_target_2 =
+        params.body_T_haz_cam * target_2_T_target.inverse() * (params.body_T_haz_cam).inverse();
+      EXPECT_PRED2(lc::MatrixEquality<2>, body_F_target_T_target_2.matrix(), true_body_F_target_T_target_2.matrix());
+    }*/
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
