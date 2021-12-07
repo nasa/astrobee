@@ -216,7 +216,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     // Record the desired intention. Use a lock.
     {
       const std::lock_guard<std::mutex> lock(sci_cam_image_lock);
-      if (action == "takeSinglePicture") {
+      if (action == "takePicture") {
         takeSinglePicture_ = true;
         continuousPictureTaking_ = false;
       } else if (action == "turnOnContinuousPictureTaking") {
