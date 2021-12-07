@@ -31,8 +31,10 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   po::options_description desc("Adds depth odometry relative poses to a new bag file.");
-  desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Bagfile")(
-    "config-path,c", po::value<std::string>()->required(), "Config path")(
+  desc.add_options()("help,h", "produce help message")(
+    "bagfile", po::value<std::string>()->required(),
+    "Input bagfile containing point cloud and image messages for a depth camera.")(
+    "config-path,c", po::value<std::string>()->required(), "Path to config directory.")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
@@ -41,14 +43,13 @@ int main(int argc, char** argv) {
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    if (vm.count("help") || (argc <= 1)) {
+      std::cout << desc << "\n";
+      return 1;
+    }
     po::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
-    return 1;
-  }
-
-  if (vm.count("help")) {
-    std::cout << desc << "\n";
     return 1;
   }
 
@@ -66,7 +67,8 @@ int main(int argc, char** argv) {
 
   boost::filesystem::path input_bag_path(input_bag);
   boost::filesystem::path output_bag_path =
-    input_bag_path.parent_path() / boost::filesystem::path(input_bag_path.stem().string() + "_with_depth_odometry.bag");
+    boost::filesystem::current_path() /
+    boost::filesystem::path(input_bag_path.stem().string() + "_with_depth_odometry.bag");
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
