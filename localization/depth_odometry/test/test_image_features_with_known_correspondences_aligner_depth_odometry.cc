@@ -27,7 +27,7 @@
 namespace dd = depth_odometry;
 namespace lc = localization_common;
 
-TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, A) {
+TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, RampedPoints) {
   auto params = dd::DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams();
   dd::ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry image_features_depth_odometry(params);
   const auto source_depth_image_measurement = dd::ImageFeatureDepthImageMeasurement(0);
@@ -46,6 +46,13 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, A) {
   ASSERT_TRUE(pose_with_covariance != boost::none);
   EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
                target_T_source.inverse().matrix());
+  const auto& correspondences = pose_with_covariance->depth_correspondences;
+  for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
+    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
+                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
+    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
+                 correspondences.target_3d_points[i].matrix());
+  }
 }
 
 // Run all the tests that were declared with TEST()
