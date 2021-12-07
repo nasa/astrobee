@@ -204,4 +204,58 @@ boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
   }
   return DepthImageMeasurement(intensities, depth_cloud_with_intensities, timestamp);
 }
+
+lc::PoseWithCovariance MakePoseWithCovariance(const geometry_msgs::PoseWithCovariance& msg) {
+  const Eigen::Isometry3d pose = lc::EigenPose(lc::PoseFromMsg(msg.pose));
+  lc::PoseCovariance covariance;
+  for (int i = 0; i < 36; ++i) {
+    const int row = i / 6;
+    const int col = i - row * 6;
+    covariance(col, row) = msg.covariance[i];
+  }
+  return lc::PoseWithCovariance(pose, covariance);
+}
+
+Odometry MakeOdometry(const ff_msgs::Odometry& msg) {
+  Odometry odometry;
+  odometry.source_time = lc::TimeFromRosTime(msg.source_time);
+  odometry.target_time = lc::TimeFromRosTime(msg.target_time);
+  odometry.sensor_F_source_T_target = MakePoseWithCovariance(msg.sensor_F_source_T_target);
+  odometry.body_F_source_T_target = MakePoseWithCovariance(msg.body_F_source_T_target);
+  return odometry;
+}
+
+DepthCorrespondences MakeDepthCorrespondences(const ff_msgs::DepthOdometry& msg) {
+  std::vector<Eigen::Vector2d> source_image_points;
+  std::vector<Eigen::Vector2d> target_image_points;
+  std::vector<Eigen::Vector3d> source_3d_points;
+  std::vector<Eigen::Vector3d> target_3d_points;
+  for (const auto& correspondence : msg.correspondences) {
+    if (msg.valid_image_points) {
+      const Eigen::Vector2d source_image_point =
+        mc::Vector2dFromMsg<Eigen::Vector2d, ff_msgs::ImagePoint>(correspondence.source_image_point);
+      const Eigen::Vector2d target_image_point =
+        mc::Vector2dFromMsg<Eigen::Vector2d, ff_msgs::ImagePoint>(correspondence.target_image_point);
+      source_image_points.emplace_back(source_image_point);
+      target_image_points.emplace_back(target_image_point);
+    }
+    const Eigen::Vector3d source_3d_point =
+      mc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(correspondence.source_3d_point);
+    const Eigen::Vector3d target_3d_point =
+      mc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(correspondence.target_3d_point);
+    source_3d_points.emplace_back(source_3d_point);
+    target_3d_points.emplace_back(target_3d_point);
+  }
+
+  if (msg.valid_image_points)
+    return DepthCorrespondences(source_image_points, target_image_points, source_3d_points, target_3d_points);
+  return DepthCorrespondences(source_3d_points, target_3d_points);
+}
+
+DepthOdometryMeasurement MakeDepthOdometryMeasurement(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  Odometry odometry = MakeOdometry(depth_odometry_msg.odometry);
+  DepthCorrespondences correspondences = MakeDepthCorrespondences(depth_odometry_msg);
+  const lc::Time timestamp = lc::TimeFromHeader(depth_odometry_msg.header);
+  return DepthOdometryMeasurement(odometry, correspondences, timestamp);
+}
 }  // namespace localization_measurements

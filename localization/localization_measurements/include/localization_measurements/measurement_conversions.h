@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
 #define LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
 
+#include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
@@ -26,6 +27,7 @@
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/depth_image_measurement.h>
+#include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/handrail_points_measurement.h>
@@ -46,6 +48,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace localization_measurements {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
@@ -85,6 +88,14 @@ sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<PointType>& clo
   cloud_msg.header.frame_id = frame;
   return cloud_msg;
 }
+
+localization_common::PoseWithCovariance MakePoseWithCovariance(const geometry_msgs::PoseWithCovariance& msg);
+
+Odometry MakeOdometry(const ff_msgs::Odometry& msg);
+
+DepthCorrespondences MakeDepthCorrespondences(const std::vector<ff_msgs::DepthCorrespondence>& msgs);
+
+DepthOdometryMeasurement MakeDepthOdometryMeasurement(const ff_msgs::DepthOdometry& depth_odometry_msg);
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_

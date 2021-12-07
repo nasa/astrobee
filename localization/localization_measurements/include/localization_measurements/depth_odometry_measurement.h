@@ -26,10 +26,11 @@
 
 namespace localization_measurements {
 struct DepthOdometryMeasurement : public Measurement {
+  DepthOdometryMeasurement(const Odometry& odometry, const DepthCorrespondences& correspondences,
+                           const localization_common::Time timestamp)
+      : Measurement(timestamp), odometry(odometry), correspondences(correspondences) {}
   Odometry odometry;
   DepthCorrespondences correspondences;
-  bool valid_image_points;
-  bool valid_points_3d;
 };
 }  // namespace localization_measurements
 
