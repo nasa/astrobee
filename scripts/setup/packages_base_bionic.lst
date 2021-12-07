@@ -75,6 +75,7 @@ ros-melodic-xmlrpcpp
 ros-melodic-mavlink
 ros-melodic-xacro
 ros-melodic-octomap
+ros-melodic-catkin
 libalvar2
 libdbow21
 libgtsam
@@ -125,3 +126,4 @@ libdecomputil-dev
 libjps3d-dev
 libopencv3.3.1
 libopencv-dev3.3.1
+python-catkin-tools

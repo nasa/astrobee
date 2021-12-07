@@ -43,6 +43,7 @@ GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_
     LogFatal("Failed to read config files.");
   }
   LoadGraphLocalizerNodeletParams(config, params_);
+  last_heartbeat_time_ = ros::Time::now();
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
@@ -263,8 +264,7 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock_tf =
     lc::PoseToTF(world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   // If the rate is higher than the sim time, prevent repeated timestamps
-  if (world_T_dock_tf.header.stamp == last_time_tf_dock_)
-    return;
+  if (world_T_dock_tf.header.stamp == last_time_tf_dock_) return;
   last_time_tf_dock_ = world_T_dock_tf.header.stamp;
   transform_pub_.sendTransform(world_T_dock_tf);
 }
@@ -275,8 +275,7 @@ void GraphLocalizerNodelet::PublishWorldTHandrailTF() {
   const auto world_T_handrail_tf = lc::PoseToTF(world_T_handrail->pose, "world", "handrail/body",
                                                 lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   // If the rate is higher than the sim time, prevent repeated timestamps
-  if (world_T_handrail_tf.header.stamp == last_time_tf_handrail_)
-    return;
+  if (world_T_handrail_tf.header.stamp == last_time_tf_handrail_) return;
   last_time_tf_handrail_ = world_T_handrail_tf.header.stamp;
   transform_pub_.sendTransform(world_T_handrail_tf);
 }
@@ -288,7 +287,9 @@ void GraphLocalizerNodelet::PublishReset() const {
 
 void GraphLocalizerNodelet::PublishHeartbeat() {
   heartbeat_.header.stamp = ros::Time::now();
+  if ((heartbeat_.header.stamp - last_heartbeat_time_).toSec() < 1.0) return;
   heartbeat_pub_.publish(heartbeat_);
+  last_heartbeat_time_ = heartbeat_.header.stamp;
 }
 
 void GraphLocalizerNodelet::PublishGraphMessages() {

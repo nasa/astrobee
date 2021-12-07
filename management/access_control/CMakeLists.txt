@@ -15,18 +15,42 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(access_control)
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  ff_msgs
+  nodelet
+  config_reader
+  ff_util
+)
 
 catkin_package(
   LIBRARIES access_control
-  DEPENDS roscpp ff_msgs nodelet
+  DEPENDS roscpp ff_msgs nodelet config_reader ff_util
 )
 
-create_library(TARGET access_control
-  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_msgs config_reader
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+# Declare C++ libraries
+add_library(access_control
+  src/access_control.cc
+)
+add_dependencies(access_control ${catkin_EXPORTED_TARGETS})
+target_link_libraries(access_control ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -36,8 +60,27 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_access_control
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

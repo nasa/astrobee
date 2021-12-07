@@ -15,42 +15,117 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(smart_dock)
 
-set(DEPS
-  rapidExtAstrobee
-)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
-set(LIBS
-  Qt4::QtXml
-  rapidIo
-  rapidExtAstrobee
-  ff_common)
+if (USE_DDS)
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+    nodelet
+    i2c
+    eps_driver
+    dds_msgs
+  )
 
-set(INCLUDES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${SORACORE_INCLUDE_DIRS}
-)
+  # System dependencies are found with CMake's conventions
+  find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options timer)
 
-create_library(TARGET smart_dock
-  LIBS ${LIBS} i2c eps_driver
-  INC ${INCLUDES}
-  DEPS ${DEPS}
-)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 
-create_tool_targets(DIR tools
-  LIBS ${LIBS} smart_dock config_reader
-  INC ${INCLUDES}
-  DEPS ${DEPS}
-)
+  if (USE_CTC)
+    set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)
+  else (USE_CTC)
+    set(SORACORE_ROOT_DIR /usr)
+  endif (USE_CTC)
 
-# Determine our module name
-get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+  set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
-install(CODE "execute_process(
-  COMMAND mkdir -p share/${MODULE_NAME}
-  COMMAND ln -s ../../bin/dds_ros_bridge share/${MODULE_NAME}
-  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-  OUTPUT_QUIET
-  ERROR_QUIET
-  )")
+  SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+  SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+  # just calls the normal one
+  find_package(Qt4 4.6.0 REQUIRED QtXml)
+  find_package(Miro REQUIRED)
+  find_package(RtiDds REQUIRED)
+  find_package(Soracore REQUIRED)
+  catkin_package(
+    LIBRARIES
+      signal_lights
+    CATKIN_DEPENDS
+      roscpp
+      nodelet
+      i2c
+      eps_driver
+      dds_msgs
+  )
+
+  ###########
+  ## Build ##
+  ###########
+
+  # Specify additional locations of header files
+  include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${RTIDDS_INCLUDE_DIR}
+    ${SORACORE_INCLUDE_DIRS}
+    ${MIRO_INCLUDE_DIR}
+    ${QT_INCLUDE_DIR}
+    ${QT_INCLUDE_DIR}/Qt
+  )
+
+
+  # Declare C++ libraries
+  add_library(smart_dock
+    src/smart_dock.cc
+    src/smart_dock_node.cc
+  )
+  target_compile_definitions(smart_dock PUBLIC ${RTIDDS_DEFINE_FLAGS})
+  add_dependencies(smart_dock ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(smart_dock rapidIo ${catkin_LIBRARIES})
+
+  ## Declare a C++ executable: smart_dock_service
+  add_executable(smart_dock_service tools/smart_dock_service.cc)
+  add_dependencies(smart_dock_service ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(smart_dock_service
+    smart_dock gflags ${catkin_LIBRARIES})
+
+  ## Declare a C++ executable: smart_dock_tool
+  add_executable(smart_dock_tool tools/smart_dock_tool.cc)
+  add_dependencies(smart_dock_tool ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(smart_dock_tool
+    smart_dock gflags ${catkin_LIBRARIES})
+
+  # Determine our module name
+  get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+  #############
+  ## Install ##
+  #############
+
+  # Mark libraries for installation
+  install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  )
+
+  # Install C++ executables
+  install(TARGETS smart_dock_service DESTINATION bin)
+  install(TARGETS smart_dock_tool DESTINATION bin)
+  install(CODE "execute_process(
+    COMMAND ln -s ../../bin/smart_dock_service share/${PROJECT_NAME}
+    COMMAND ln -s ../../bin/smart_dock_tool share/${PROJECT_NAME}
+    WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+    OUTPUT_QUIET
+    ERROR_QUIET
+    )")
+
+else (USE_DDS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
+endif (USE_DDS)

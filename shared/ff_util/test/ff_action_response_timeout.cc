@@ -29,7 +29,7 @@
 // Borrow the example from actionlib
 #include <actionlib/TwoIntsAction.h>
 
-// C++11 incliudes
+// C++ includes
 #include <functional>
 #include <memory>
 

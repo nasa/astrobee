@@ -16,6 +16,16 @@
   </maintainer>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>config_reader</build_depend>
+  <build_depend>camera</build_depend>
+  <build_depend>ekf</build_depend>
+  <build_depend>lk_optical_flow</build_depend>
+  <build_depend>localization_node</build_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>config_reader</run_depend>
+  <run_depend>camera</run_depend>
+  <run_depend>ekf</run_depend>
+  <run_depend>lk_optical_flow</run_depend>
+  <run_depend>localization_node</run_depend>
   <export></export>
 </package>

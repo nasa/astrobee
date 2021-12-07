@@ -1031,6 +1031,11 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
   int32_t err_;
   std::string err_msg_;
   std::string platform_name_;
+
+ public:
+  // This fixes the Eigen aligment issue
+  // http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 PLUGINLIB_EXPORT_CLASS(perch::PerchNodelet, nodelet::Nodelet);

@@ -18,9 +18,11 @@
   <build_depend>rospy</build_depend>
   <build_depend>ff_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>i2c</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>ff_msgs</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>i2c</run_depend>
   <export></export>
 </package>

@@ -605,8 +605,8 @@ void CloseLoop(sparse_mapping::SparseMap * s) {
                               &(s->cid_fid_to_pid_));
 }
 
-void BundleAdjust(bool fix_cameras,
-                  sparse_mapping::SparseMap * map) {
+void BundleAdjust(bool fix_all_cameras, sparse_mapping::SparseMap * map,
+                  std::set<int> const& fixed_cameras) {
   for (int i = 0; i < FLAGS_num_ba_passes; i++) {
     LOG(INFO) << "Beginning bundle adjustment, pass: " << i << ".\n";
 
@@ -619,16 +619,17 @@ void BundleAdjust(bool fix_cameras,
     options.max_num_iterations = FLAGS_max_num_iterations;
     options.minimizer_progress_to_stdout = true;
     ceres::Solver::Summary summary;
-    sparse_mapping::BundleAdjustment(map,
-                                     sparse_mapping::GetLossFunction(FLAGS_cost_function,
-                                                                     FLAGS_cost_function_threshold),
-                                     options, &summary,
+    ceres::LossFunction* loss = sparse_mapping::GetLossFunction(FLAGS_cost_function,
+                                                                FLAGS_cost_function_threshold);
+    sparse_mapping::BundleAdjustment(map, loss, options, &summary,
                                      FLAGS_first_ba_index, FLAGS_last_ba_index,
-                                     fix_cameras);
+                                     fix_all_cameras, fixed_cameras);
 
     LOG(INFO) << summary.FullReport() << "\n";
-    LOG(INFO) << "Starting Average Reprojection Error: " << summary.initial_cost / map->GetNumObservations();
-    LOG(INFO) << "Final Average Reprojection Error:    " << summary.final_cost / map->GetNumObservations();
+    LOG(INFO) << "Starting average reprojection error: "
+              << summary.initial_cost / map->GetNumObservations();
+    LOG(INFO) << "Final average reprojection error:    "
+              << summary.final_cost / map->GetNumObservations();
   }
 }
 
@@ -636,13 +637,15 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
                       ceres::LossFunction* loss,
                       const ceres::Solver::Options & options,
                       ceres::Solver::Summary* summary,
-                      int first, int last, bool fix_cameras) {
+                      int first, int last, bool fix_all_cameras,
+                      std::set<int> const& fixed_cameras) {
   sparse_mapping::BundleAdjust(s->pid_to_cid_fid_, s->cid_to_keypoint_map_,
                                s->camera_params_.GetFocalLength(), &(s->cid_to_cam_t_global_),
                                &(s->pid_to_xyz_),
                                s->user_pid_to_cid_fid_, s->user_cid_to_keypoint_map_,
                                &(s->user_pid_to_xyz_),
-                               loss, options, summary, first, last, fix_cameras);
+                               loss, options, summary, first, last, fix_all_cameras,
+                               fixed_cameras);
 
   // First do BA, and only afterwards remove outliers.
   if (!FLAGS_skip_filtering) {
@@ -655,14 +658,33 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
   // PrintTrackStats(s->pid_to_cid_fid_, "bundle adjustment and filtering");
 }
 
+// Check if the two arrays share elements
+bool haveSharedElements(std::vector<std::string> const& A, std::vector<std::string> const& B) {
+  std::set<std::string> setA;
+  for (size_t it = 0; it < A.size(); it++) setA.insert(A[it]);
+
+  for (size_t it = 0; it < B.size(); it++)
+    if (setA.find(B[it]) != setA.end())
+      return true;
+
+  return false;
+}
+
 // Load two maps, merge the second one onto the first one, and save the result.
 void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
                    int num_image_overlaps_at_endpoints,
-                   double outlier_factor, bool bundle_adjust) {
+                   double outlier_factor, bool bundle_adjust,
+                   bool fix_first_map) {
+  if (!bundle_adjust && fix_first_map) LOG(FATAL) << "Cannot fix first map if no bundle adjustment happens.";
+
   LOG(INFO) << "Appending " << mapIn << " to " << mapOut << std::endl;
 
   sparse_mapping::SparseMap A(mapOut);
   sparse_mapping::SparseMap B(mapIn);
+
+  // Sanity check before we do a lot of work
+  if (fix_first_map && haveSharedElements(A.cid_to_filename_, B.cid_to_filename_))
+    LOG(FATAL) << "Cannot fix the first map if it shares cameras with the second map.";
 
   // C starts as A, as SparseMap lacks an empty constructor
   sparse_mapping::SparseMap C(mapOut);
@@ -674,10 +696,23 @@ void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
                             mapOut,
                             &C);
 
-  // Bundle adjust the merged map.
+  // Bundle-adjust the merged map
   if (bundle_adjust) {
-    bool fix_cameras = false;
-    sparse_mapping::BundleAdjust(fix_cameras, &C);
+    bool fix_all_cameras = false;
+
+    std::set<int> fixed_cameras;
+
+    // Find in the list of images of the merged map the ones from the first map
+    if (fix_first_map) {
+      std::set<std::string> setA;
+      for (size_t it = 0; it < A.cid_to_filename_.size(); it++) setA.insert(A.cid_to_filename_[it]);
+
+      for (size_t it = 0; it < C.cid_to_filename_.size(); it++) {
+        if (setA.find(C.cid_to_filename_[it]) != setA.end()) fixed_cameras.insert(it);
+      }
+    }
+
+    sparse_mapping::BundleAdjust(fix_all_cameras, &C, fixed_cameras);
   }
 
   C.Save(mapOut);
@@ -918,7 +953,7 @@ void findMatchingTracks(sparse_mapping::SparseMap * A_in,
 
   // Match features. Must set num_subsequent_images to not try to
   // match images in same map, that was done when each map was built.
-  FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("num_subsequent_images", "0");
+  google::SetCommandLineOption("num_subsequent_images", "0");
   sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile(output_map),
                                 sparse_mapping::MatchesFile(output_map), &C);
 
@@ -2027,9 +2062,9 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
           << " (" << round((100.0*num_pts_behind_camera) / observations2[0].cols())
           << "%)";
 
-  sparse_mapping::BundleAdjust(observations2, camera_params.GetFocalLength(), &cameras,
-                               &pid_to_xyz, new ceres::CauchyLoss(0.5), options,
-                               &summary);
+  sparse_mapping::BundleAdjustSmallSet(observations2, camera_params.GetFocalLength(), &cameras,
+                                       &pid_to_xyz, new ceres::CauchyLoss(0.5), options,
+                                       &summary);
 
   if (!summary.IsSolutionUsable()) {
     LOG(ERROR) << cam_a_idx << " " << cam_b_idx << " | Failed to refine RT with bundle adjustment";

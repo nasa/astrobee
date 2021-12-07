@@ -20,6 +20,11 @@
   <depend>pluginlib</depend>
   <depend>actionlib</depend>
   <depend>tf</depend>
+  <depend>ff_util</depend>
+  <depend>choreographer</depend>
+  <depend>traj_opt_basic</depend>
+  <depend>traj_opt_pro</depend>
+  <depend>traj_opt_ros</depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>

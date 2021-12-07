@@ -33,9 +33,9 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "DataToDiskStateSupport.h"
-#include "DataTopicsListSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/DataToDiskStateSupport.h"
+#include "dds_msgs/DataTopicsListSupport.h"
 
 namespace ff {
 

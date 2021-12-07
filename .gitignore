@@ -70,7 +70,6 @@ arm_build_release
 arm_build_debug
 armhf
 build_native
-data
 doc/html
 doc/latex
 

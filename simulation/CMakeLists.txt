@@ -15,7 +15,29 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(astrobee_gazebo)
+
+if (ENABLE_GAZEBO)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  visualization_msgs
+  tf2
+  tf2_ros
+  tf2_eigen
+  tf2_msgs
+  gazebo_ros
+  sensor_msgs
+  ff_msgs
+  ff_hw_msgs
+  tf2_geometry_msgs
+  ff_util
+  gnc_autocode
+  camera
+)
 
 # Find packages
 find_package(gazebo REQUIRED)
@@ -62,477 +84,278 @@ catkin_package(
     sensor_msgs
     ff_msgs
     ff_hw_msgs
+    tf2_geometry_msgs
     ff_util
+    gnc_autocode
+    camera
 )
 
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+)
+
+link_directories(${GAZEBO_LIBRARY_DIRS})
+list(APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}")
+
 # Create reusable classes for models and plugins
-create_library(
-  DIR
-    src
-  TARGET
-    astrobee_gazebo
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    ff_nodelet
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(astrobee_gazebo
+  src/astrobee_gazebo.cc
+)
+add_dependencies(astrobee_gazebo ${catkin_EXPORTED_TARGETS})
+target_link_libraries(astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the EPS system
-create_library(
-  DIR
-    src/gazebo_model_plugin_eps
-  TARGET
-    gazebo_model_plugin_eps
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_eps
+  src/gazebo_model_plugin_eps/gazebo_model_plugin_eps.cc
+)
+add_dependencies(gazebo_model_plugin_eps ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_eps astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for aerodynamic drag
-create_library(
-  DIR
-    src/gazebo_model_plugin_drag
-  TARGET
-    gazebo_model_plugin_drag
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_model_plugin_drag
+  src/gazebo_model_plugin_drag/gazebo_model_plugin_drag.cc
+)
+add_dependencies(gazebo_model_plugin_drag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_drag astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the ground truth
-create_library(
-  DIR
-    src/gazebo_model_plugin_truth
-  TARGET
-    gazebo_model_plugin_truth
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_model_plugin_truth
+  src/gazebo_model_plugin_truth/gazebo_model_plugin_truth.cc
+)
+add_dependencies(gazebo_model_plugin_truth ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_truth astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the propulsion system
-create_library(
-  DIR
-    src/gazebo_model_plugin_pmc
-  TARGET
-    gazebo_model_plugin_pmc
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-    gnc_autocode
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_model_plugin_pmc
+  src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
+)
+add_dependencies(gazebo_model_plugin_pmc ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the perching arm
-create_library(
-  DIR
-    src/gazebo_model_plugin_perching_arm
-  TARGET
-    gazebo_model_plugin_perching_arm
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_model_plugin_perching_arm
+  src/gazebo_model_plugin_perching_arm/gazebo_model_plugin_perching_arm.cc
+)
+add_dependencies(gazebo_model_plugin_perching_arm ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_perching_arm astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
-# Create a model plugin for the flashlight
-create_library(
-  DIR
-    src/gazebo_model_plugin_flashlight
-  TARGET
-    gazebo_model_plugin_flashlight
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+# Create a model plugin for the front flashlight
+add_library(gazebo_model_plugin_flashlight
+  src/gazebo_model_plugin_flashlight/gazebo_model_plugin_flashlight.cc
+)
+add_dependencies(gazebo_model_plugin_flashlight ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_flashlight astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the laser
-create_library(
-  DIR
-    src/gazebo_model_plugin_laser
-  TARGET
-    gazebo_model_plugin_laser
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_laser
+  src/gazebo_model_plugin_laser/gazebo_model_plugin_laser.cc
+)
+add_dependencies(gazebo_model_plugin_laser ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_laser astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the LLP CPU mem monitor
-create_library(
-  DIR
-    src/gazebo_model_plugin_llp_cpu_mem_monitor
-  TARGET
-    gazebo_model_plugin_llp_cpu_mem_monitor
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_llp_cpu_mem_monitor
+  src/gazebo_model_plugin_llp_cpu_mem_monitor/gazebo_model_plugin_llp_cpu_mem_monitor.cc
+)
+add_dependencies(gazebo_model_plugin_llp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_llp_cpu_mem_monitor astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the LLP disk monitor
-create_library(
-  DIR
-    src/gazebo_model_plugin_llp_disk_monitor
-  TARGET
-    gazebo_model_plugin_llp_disk_monitor
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_llp_disk_monitor
+  src/gazebo_model_plugin_llp_disk_monitor/gazebo_model_plugin_llp_disk_monitor.cc
+)
+add_dependencies(gazebo_model_plugin_llp_disk_monitor ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_llp_disk_monitor astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the MLP CPU mem monitor
-create_library(
-  DIR
-    src/gazebo_model_plugin_mlp_cpu_mem_monitor
-  TARGET
-    gazebo_model_plugin_mlp_cpu_mem_monitor
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_mlp_cpu_mem_monitor
+  src/gazebo_model_plugin_mlp_cpu_mem_monitor/gazebo_model_plugin_mlp_cpu_mem_monitor.cc
+)
+add_dependencies(gazebo_model_plugin_mlp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_mlp_cpu_mem_monitor astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the MLP disk monitor
-create_library(
-  DIR
-    src/gazebo_model_plugin_mlp_disk_monitor
-  TARGET
-    gazebo_model_plugin_mlp_disk_monitor
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_mlp_disk_monitor
+  src/gazebo_model_plugin_mlp_disk_monitor/gazebo_model_plugin_mlp_disk_monitor.cc
+)
+add_dependencies(gazebo_model_plugin_mlp_disk_monitor ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_mlp_disk_monitor astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the speed camera
-create_library(
-  DIR
-    src/gazebo_model_plugin_speed_cam
-  TARGET
-    gazebo_model_plugin_speed_cam
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_speed_cam
+  src/gazebo_model_plugin_speed_cam/gazebo_model_plugin_speed_cam.cc
+)
+add_dependencies(gazebo_model_plugin_speed_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_speed_cam astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for the signal lights
-create_library(
-  DIR
-    src/gazebo_model_plugin_signal_lights
-  TARGET
-    gazebo_model_plugin_signal_lights
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
+add_library(gazebo_model_plugin_signal_lights
+  src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
+)
+add_dependencies(gazebo_model_plugin_signal_lights ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_signal_lights astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a sensor plugin for the IMU
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_imu
-  TARGET
-    gazebo_sensor_plugin_imu
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_sensor_plugin_imu
+  src/gazebo_sensor_plugin_imu/gazebo_sensor_plugin_imu.cc
+)
+add_dependencies(gazebo_sensor_plugin_imu ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a sensor plugin for the perch camera
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_perch_cam
-  TARGET
-    gazebo_sensor_plugin_perch_cam
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_sensor_plugin_perch_cam
+  src/gazebo_sensor_plugin_perch_cam/gazebo_sensor_plugin_perch_cam.cc
+)
+add_dependencies(gazebo_sensor_plugin_perch_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_perch_cam astrobee_gazebo
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a sensor plugin for the handrail detection algorithm
-#create_library(
-#  DIR
-#    src/gazebo_sensor_plugin_handrail_detect
-#  TARGET
-#    gazebo_sensor_plugin_handrail_detect
-#  LIBS
-#    ${GAZEBO_LIBRARIES}
-#    ${catkin_LIBRARIES}
-#    astrobee_gazebo
-#    camera
-#  INC
-#    ${GAZEBO_INCLUDE_DIRS}
-#    ${catkin_INCLUDE_DIRS}
-#    ${EIGEN3_INCLUDE_DIRS}
-#  DEPS
-#    ff_util
-#    ff_msgs
-#)
+# add_library(gazebo_sensor_plugin_handrail_detect
+#   src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
+# )
+# add_dependencies(gazebo_sensor_plugin_handrail_detect ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(gazebo_sensor_plugin_handrail_detect
+#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
+# )
 
 # Create a sensor plugin for the hazard camera
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_haz_cam
-  TARGET
-    gazebo_sensor_plugin_haz_cam
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_sensor_plugin_haz_cam
+  src/gazebo_sensor_plugin_haz_cam/gazebo_sensor_plugin_haz_cam.cc
+)
+add_dependencies(gazebo_sensor_plugin_haz_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_haz_cam
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a sensor plugin for the nav cam
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_nav_cam
-  TARGET
-    gazebo_sensor_plugin_nav_cam
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_msgs
+add_library(gazebo_sensor_plugin_nav_cam
+  src/gazebo_sensor_plugin_nav_cam/gazebo_sensor_plugin_nav_cam.cc
+)
+add_dependencies(gazebo_sensor_plugin_nav_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_nav_cam
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a sensor plugin for the dock cam
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_dock_cam
-  TARGET
-    gazebo_sensor_plugin_dock_cam
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
+add_library(gazebo_sensor_plugin_dock_cam
+  src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
+)
+add_dependencies(gazebo_sensor_plugin_dock_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_dock_cam
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a sensor plugin for the sci cam
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_sci_cam
-  TARGET
-    gazebo_sensor_plugin_sci_cam
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_msgs
+add_library(gazebo_sensor_plugin_sci_cam
+  src/gazebo_sensor_plugin_sci_cam/gazebo_sensor_plugin_sci_cam.cc
+)
+add_dependencies(gazebo_sensor_plugin_sci_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_sci_cam
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for sparse mapping
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_sparse_map
-  TARGET
-    gazebo_sensor_plugin_sparse_map
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-    camera
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_msgs
+add_library(gazebo_sensor_plugin_sparse_map
+  src/gazebo_sensor_plugin_sparse_map/gazebo_sensor_plugin_sparse_map.cc
+)
+add_dependencies(gazebo_sensor_plugin_sparse_map ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_sparse_map
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for AR localization
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_ar_tags
-  TARGET
-    gazebo_sensor_plugin_ar_tags
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-    camera
-    msg_conversions
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_msgs
+add_library(gazebo_sensor_plugin_ar_tags
+  src/gazebo_sensor_plugin_ar_tags/gazebo_sensor_plugin_ar_tags.cc
+)
+add_dependencies(gazebo_sensor_plugin_ar_tags ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_ar_tags
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
 # Create a model plugin for optical flow
-create_library(
-  DIR
-    src/gazebo_sensor_plugin_optical_flow
-  TARGET
-    gazebo_sensor_plugin_optical_flow
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-    camera
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_msgs
+add_library(gazebo_sensor_plugin_optical_flow
+  src/gazebo_sensor_plugin_optical_flow/gazebo_sensor_plugin_optical_flow.cc
+)
+add_dependencies(gazebo_sensor_plugin_optical_flow ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_sensor_plugin_optical_flow
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
-# Create a model plugin for sparse mapping
-create_library(
-  DIR
-    src/gazebo_world_plugin_speed
-  TARGET
-    gazebo_world_plugin_speed
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
+# Create a world plugin for speed
+add_library(gazebo_world_plugin_speed
+  src/gazebo_world_plugin_speed/gazebo_world_plugin_speed.cc
+)
+add_dependencies(gazebo_world_plugin_speed ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_world_plugin_speed
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
-
-# Create a model plugin for the client gui
-create_library(
-  DIR
-    src/gazebo_system_plugin_client
-  TARGET
-    gazebo_system_plugin_client
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
+# Create a system plugin for the client gui
+add_library(gazebo_system_plugin_client
+  src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
+)
+add_dependencies(gazebo_system_plugin_client ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_system_plugin_client
+  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
+#############
+## Install ##
+#############
 
-# Install our launch files
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
 
 # Also install some other resources
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper scripts/start_server scripts/common
+install(PROGRAMS scripts/perf_wrapper scripts/start_server scripts/common
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS scripts/spawn_model 
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+else (ENABLE_GAZEBO)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
+endif (ENABLE_GAZEBO)

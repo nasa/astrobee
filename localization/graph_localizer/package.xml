@@ -14,12 +14,26 @@
     Astrobee Flight Software
   </maintainer>
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>ff_msgs</build_depend>
   <build_depend>nodelet</build_depend>
-  <build_depend>roscpp</build_depend>
-  <run_depend>ff_msgs</run_depend>
+  <build_depend>camera</build_depend>
+  <build_depend>config_reader</build_depend>
+  <build_depend>ff_util</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>graph_optimizer</build_depend>
+  <build_depend>imu_integration</build_depend>
+  <build_depend>localization_common</build_depend>
+  <build_depend>localization_measurements</build_depend>
+  <build_depend>msg_conversions</build_depend>
   <run_depend>nodelet</run_depend>
-  <run_depend>roscpp</run_depend>
+  <run_depend>camera</run_depend>
+  <run_depend>config_reader</run_depend>
+  <run_depend>ff_util</run_depend>
+  <run_depend>ff_msgs</run_depend>
+  <run_depend>graph_optimizer</run_depend>
+  <run_depend>imu_integration</run_depend>
+  <run_depend>localization_common</run_depend>
+  <run_depend>localization_measurements</run_depend>
+  <run_depend>msg_conversions</run_depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>

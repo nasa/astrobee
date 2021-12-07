@@ -15,7 +15,7 @@ signaling, and sound. The flight software is hosted on each Astrobee's three int
 uses the open-source [Robot Operating System (ROS)](https://www.ros.org/) framework as message-passing
 middleware.  It provides a high-level [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) for controlling the robot and has multiple operating modes. It can execute a plan (command sequence), individual operator commands (teleoperation), or commands from guest science code running onboard Astrobee.
 
-The Astrobee Robot Software simulator, built using [ROS](https://www.ros.org/) and [Gazebo](http://gazebosim.org/), enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to [build maps for Astrobee localization](https://github.com/nasa/astrobee/tree/master/localization/sparse_mapping), along with many others.
+The Astrobee Robot Software simulator, built using [ROS](https://www.ros.org/) and [Gazebo](http://gazebosim.org/), enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to [build maps for Astrobee localization](https://nasa.github.io/astrobee/html/sparsemapping.html), along with many others.
 
 Released separately, the Astrobee ground data system (GDS) includes Astrobee control station software that communicates with Astrobee flight software via the Data Distribution Service (DDS) network protocol over the ISS Ku-IP space-to-ground link. The control station is written primarily in Java using the Eclipse RCP framework. Source code is in the [`astrobee_gds`](https://github.com/nasa/astrobee_gds) repository, or you can download the [binary release](https://software.nasa.gov/software/ARC-17994-1B).
 
@@ -31,7 +31,7 @@ The Astrobee Robot Software remains a work in progress. Please consult the
 ### Contributing
 
 The Astrobee Robot Software is open source, and we welcome contributions
-from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch.
+from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch. The code must follow the [Astrobee code style](https://nasa.github.io/astrobee/html/astrobee-code-style.html).
 For us to merge any pull requests, we must request that contributors sign and submit a
 [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
 due to NASA legal requirements. Thank you for your understanding.

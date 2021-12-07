@@ -33,9 +33,9 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "PayloadConfigSupport.h"
-#include "PayloadStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/PayloadConfigSupport.h"
+#include "dds_msgs/PayloadStateSupport.h"
 
 namespace ff {
 

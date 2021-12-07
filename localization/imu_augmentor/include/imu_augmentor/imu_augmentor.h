@@ -30,8 +30,8 @@ class ImuAugmentor : public imu_integration::ImuIntegrator {
  public:
   explicit ImuAugmentor(const ImuAugmentorParams& params);
 
-  boost::optional<localization_common::CombinedNavState> PimPredict(
-    const localization_common::CombinedNavState& combined_nav_state);
+  void PimPredict(const localization_common::CombinedNavState& latest_combined_nav_state,
+                  localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state);
 };
 }  // namespace imu_augmentor
 

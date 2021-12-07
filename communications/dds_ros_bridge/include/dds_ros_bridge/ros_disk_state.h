@@ -34,9 +34,9 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "DiskStateSupport.h"
-#include "DiskConfigSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/DiskStateSupport.h"
+#include "dds_msgs/DiskConfigSupport.h"
 
 namespace ff {
 
