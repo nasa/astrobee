@@ -59,6 +59,8 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, PointToPla
   auto params = dd::DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams();
   params.aligner.use_point_to_plane_cost = true;
   params.aligner.normal_search_radius = 3.0;
+  params.position_covariance_threshold = 10;
+  params.orientation_covariance_threshold = 10;
   dd::ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry image_features_depth_odometry(params);
   const auto source_depth_image_measurement = dd::ImageFeatureDepthImageMeasurement(0);
   constexpr double translation_stddev = 1;
