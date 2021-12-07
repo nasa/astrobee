@@ -258,6 +258,7 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_optical_flow_buffer_size = mc::LoadInt(config, "max_optical_flow_buffer_size");
   params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
   params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
+  params.max_depth_odometry_buffer_size = mc::LoadInt(config, "max_depth_odometry_buffer_size");
   params.max_dl_buffer_size = mc::LoadInt(config, "max_dl_buffer_size");
 }
 }  // namespace graph_localizer

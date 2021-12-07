@@ -71,6 +71,9 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   dl_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_HR_FEATURES, params_.max_dl_buffer_size,
                           &GraphLocalizerNodelet::DepthLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  depth_odometry_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odometry_buffer_size,
+                          &GraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
   of_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
                           &GraphLocalizerNodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
@@ -175,6 +178,14 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
   if (ValidVLMsg(*visual_landmarks_msg, params_.ar_tag_loc_adder_min_num_matches)) PublishARTagPose();
+}
+
+void GraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg) {
+  depth_odometry_timer_.HeaderDiff(depth_odometry_msg->header);
+  depth_odometry_timer_.VlogEveryN(100, 2);
+
+  if (!localizer_enabled()) return;
+  graph_localizer_wrapper_.DepthOdometryCallback(*depth_odometry_msg);
 }
 
 void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks::ConstPtr& depth_landmarks_msg) {
