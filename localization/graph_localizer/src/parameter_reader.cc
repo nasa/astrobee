@@ -40,6 +40,7 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
   LoadHandrailFactorAdderParams(config, params.handrail_adder);
+  LoadDepthOdometryFactorAdderParams(config, params.depth_odometry_adder);
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
@@ -82,6 +83,12 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+}
+
+void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, DepthOdometryFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "depth_odometry_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.noise_scale = mc::LoadDouble(config, "depth_odometry_adder_noise_scale");
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
