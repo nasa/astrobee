@@ -32,8 +32,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "FaultStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/FaultStateSupport.h"
 
 namespace ff {
 

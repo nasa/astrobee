@@ -195,3 +195,9 @@ TEST(camera_params, conversion) {
   EXPECT_NEAR(input[0], output2[0], 1e-6);
   EXPECT_NEAR(input[1], output2[1], 1e-6);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

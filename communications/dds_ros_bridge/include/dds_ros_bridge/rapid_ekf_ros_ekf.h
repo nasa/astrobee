@@ -32,11 +32,11 @@
 
 #include "ff_msgs/EkfState.h"
 
-#include "AstrobeeConstants.h"
+#include "dds_msgs/AstrobeeConstants.h"
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "EkfStateSupport.h"
+#include "dds_msgs/EkfStateSupport.h"
 
 #include "rapidDds/RapidConstants.h"
 

@@ -44,8 +44,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "CompressedFileSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/CompressedFileSupport.h"
 
 namespace ff {
 

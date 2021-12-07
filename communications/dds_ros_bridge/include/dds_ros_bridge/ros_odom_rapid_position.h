@@ -36,8 +36,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "EkfStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/EkfStateSupport.h"
 
 namespace ff {
 

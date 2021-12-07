@@ -25,19 +25,10 @@
 namespace mapper {
 
 MapperNodelet::MapperNodelet() :
-    ff_util::FreeFlyerNodelet(NODE_MAPPER), state_(IDLE), killed_(false) {
+    ff_util::FreeFlyerNodelet(NODE_MAPPER), state_(IDLE) {
 }
 
-MapperNodelet::~MapperNodelet() {
-  // Mark as thread as killed
-  killed_ = true;
-  // Notify all threads to ensure shutdown starts
-  semaphores_.collision_check.notify_one();
-  semaphores_.pcl.notify_one();
-  // Join threads once shutdown
-  h_octo_thread_.join();
-  h_collision_check_thread_.join();
-}
+MapperNodelet::~MapperNodelet() {}
 
 void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   listener_.reset(new tf2_ros::TransformListener(buffer_));
@@ -78,7 +69,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   clamping_threshold_max = cfg_.Get<double>("clamping_threshold_max");
   compression_max_dev = cfg_.Get<double>("traj_compression_max_dev");
   traj_resolution = cfg_.Get<double>("traj_compression_resolution");
-  tf_update_rate_ = cfg_.Get<double>("tf_update_rate");
+  octomap_update_rate_ = cfg_.Get<double>("octomap_update_rate");
   fading_memory_update_rate_ = cfg_.Get<double>("fading_memory_update_rate");
   use_haz_cam = cfg_.Get<bool>("use_haz_cam");
   use_perch_cam = cfg_.Get<bool>("use_perch_cam");
@@ -123,24 +114,13 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
 
-  // Threads
-  h_octo_thread_ = std::thread(&MapperNodelet::OctomappingTask, this);
-  h_collision_check_thread_ = std::thread(
-    &MapperNodelet::CollisionCheckTask, this);
-
   // Timers
+  timer_o_ = nh->createTimer(
+    ros::Duration(ros::Rate(octomap_update_rate_)),
+      &MapperNodelet::OctomappingTask, this, false, true);
   timer_f_ = nh->createTimer(
     ros::Duration(ros::Rate(fading_memory_update_rate_)),
       &MapperNodelet::FadeTask, this, false, true);
-  timer_h_ = nh->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::HazTfTask, this, false, true);
-  timer_p_ = nh->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::PerchTfTask, this, false, true);
-  timer_b_ = nh->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::BodyTfTask, this, false, true);
 
   // Subscribers
   std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;

@@ -33,9 +33,9 @@
 #include "sensor_msgs/BatteryState.h"
 #include "sensor_msgs/Temperature.h"
 
-#include "AstrobeeConstants.h"
-#include "EpsStateSupport.h"
-#include "EpsConfigSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/EpsStateSupport.h"
+#include "dds_msgs/EpsConfigSupport.h"
 
 #include "rapidUtil/RapidHelper.h"
 

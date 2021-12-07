@@ -94,22 +94,18 @@ struct ReprojectionError {
 };
 
 void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
-                  std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-                  double focal_length,
-                  std::vector<Eigen::Affine3d > * cid_to_cam_t_global,
-                  std::vector<Eigen::Vector3d> * pid_to_xyz,
+                  std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map, double focal_length,
+                  std::vector<Eigen::Affine3d>* cid_to_cam_t_global, std::vector<Eigen::Vector3d>* pid_to_xyz,
                   std::vector<std::map<int, int> > const& user_pid_to_cid_fid,
-                  std::vector<Eigen::Matrix2Xd > const& user_cid_to_keypoint_map,
-                  std::vector<Eigen::Vector3d> * user_pid_to_xyz,
-                  ceres::LossFunction * loss,
-                  ceres::Solver::Options const& options,
-                  ceres::Solver::Summary* summary,
-                  int first, int last, bool fix_cameras, bool fix_all_xyz) {
+                  std::vector<Eigen::Matrix2Xd> const& user_cid_to_keypoint_map,
+                  std::vector<Eigen::Vector3d>* user_pid_to_xyz, ceres::LossFunction* loss,
+                  ceres::Solver::Options const& options, ceres::Solver::Summary* summary, int first, int last,
+                  bool fix_all_cameras, std::set<int> const& fixed_cameras) {
   // Perform bundle adjustment. Keep fixed all cameras with cid
   // not within [first, last] and all xyz points which project only
   // onto fixed cameras.
 
-  // If provided, use user-set info.
+  // If provided, use user-set registration points in the second pass.
 
   // Allocate space for the angle axis representation of rotation
   std::vector<double> camera_aa_storage(3 * cid_to_cam_t_global->size());
@@ -127,7 +123,11 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
   // Ideally the block inside of the loop below must be a function call,
   // but the compiler does not handle that correctly with ceres.
   // So do this by changing where things are pointing.
-  for (int pass = 0; pass < 2; pass++) {
+
+  int num_passes = 1;
+  if (!user_pid_to_xyz->empty()) num_passes = 2;  // A second pass using control points
+
+  for (int pass = 0; pass < num_passes; pass++) {
     std::vector<std::map<int, int> > const * p_pid_to_cid_fid;
     std::vector<Eigen::Matrix2Xd >   const * p_cid_to_keypoint_map;
     std::vector<Eigen::Vector3d>           * p_pid_to_xyz;
@@ -166,12 +166,13 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                                  &p_pid_to_xyz->at(pid)[0],
                                  &focal_length);
 
-        if (fix_cameras || (cid_fid.first < first || cid_fid.first > last)) {
+        if (fix_all_cameras || (cid_fid.first < first || cid_fid.first > last) ||
+            fixed_cameras.find(cid_fid.first) != fixed_cameras.end()) {
           problem.SetParameterBlockConstant(&cid_to_cam_t_global->at(cid_fid.first).translation()[0]);
           problem.SetParameterBlockConstant(&camera_aa_storage[3 * cid_fid.first]);
         }
       }
-      if (fix_pid || pass == 1 || fix_all_xyz) {
+      if (fix_pid || pass == 1) {
         // Fix pids which don't project in cameras that are floated.
         // Also, must not float points given by the user, those are measurements
         // we are supposed to reference ourselves against, and floating
@@ -195,13 +196,14 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
   }
 }
 
-void BundleAdjust(std::vector<Eigen::Matrix2Xd> const& features_n,
-                  double focal_length,
-                  std::vector<Eigen::Affine3d> * cam_t_global_n,
-                  Eigen::Matrix3Xd * pid_to_xyz,
-                  ceres::LossFunction * loss,
-                  ceres::Solver::Options const& options,
-                  ceres::Solver::Summary * summary) {
+// This is a very specialized function
+void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
+                          double focal_length,
+                          std::vector<Eigen::Affine3d> * cam_t_global_n,
+                          Eigen::Matrix3Xd * pid_to_xyz,
+                          ceres::LossFunction * loss,
+                          ceres::Solver::Options const& options,
+                          ceres::Solver::Summary * summary) {
   CHECK(cam_t_global_n) << "Variable cam_t_global_n needs to be defined";
   CHECK(cam_t_global_n->size() == features_n.size())
     << "Variables features_n and cam_t_global_n need to agree on the number of cameras";

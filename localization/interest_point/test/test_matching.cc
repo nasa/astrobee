@@ -73,3 +73,9 @@ TEST_F(MatchingTest, ORGBRISK) {
   EXPECT_EQ(64, descriptor1.cols);
   EXPECT_LT(50u, matches.size());
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

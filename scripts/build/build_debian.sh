@@ -14,5 +14,6 @@ if [[ $* == *--config* ]]; then
 fi
 
 pushd $DIR/../..
-DEB_BUILD_OPTIONS="parallel=20" debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -us -uc $EXTRA_FLAGS
+export CMAKE_TOOLCHAIN_FILE=${DIR}/ubuntu_cross.cmake
+DEB_BUILD_OPTIONS="parallel=20" debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -e CMAKE_TOOLCHAIN_FILE -e CMAKE_PREFIX_PATH -us -uc $EXTRA_FLAGS 
 popd > /dev/null

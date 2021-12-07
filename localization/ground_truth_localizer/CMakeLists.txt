@@ -15,24 +15,74 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(ground_truth_localizer)
 
 if (USE_ROS)
+ 
+  ## Compile as C++14, supported in ROS Kinetic and newer
+  add_compile_options(-std=c++14)
 
-# include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
-catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} config_reader ff_nodelet localization_common 
-  INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} 
-  CATKIN_DEPENDS roscpp 
-  DEPENDS ff_msgs 
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+    nodelet
+    ff_msgs
+    ff_util
+    localization_common
+  )
+
+  # System dependencies are found with CMake's conventions
+  find_package(Eigen3 REQUIRED)
+
+  # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
+  catkin_package(
+    LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} 
+    INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} 
+    CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common
+  )
+
+  ###########
+  ## Build ##
+  ###########
+  # Specify additional locations of header files
+  include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+  )
+
+  # Declare C++ libraries
+  add_library(${PROJECT_NAME}
+    src/ground_truth_localizer_nodelet.cc
+    src/utilities.cc
+  )
+  add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${QT_LIBRARIES})
+
+
+  #############
+  ## Install ##
+  #############
+
+  # Mark libraries for installation
+  install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  )
+
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} config_reader ff_nodelet localization_common 
-  INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} 
-  DEPS ff_msgs
-)
+  # Mark launch files for installation
+  install(DIRECTORY launch/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+    PATTERN ".svn" EXCLUDE)
 
-install_launch_files()
-
+else (USE_ROS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
 endif (USE_ROS)
