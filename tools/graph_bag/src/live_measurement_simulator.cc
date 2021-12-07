@@ -34,6 +34,7 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
       kImageTopic_(params.image_topic),
       imu_buffer_(params.imu),
       flight_mode_buffer_(params.flight_mode),
+      depth_odometry_buffer_(params.depth_odometry),
       of_buffer_(params.of),
       vl_buffer_(params.vl),
       ar_buffer_(params.ar) {
@@ -107,6 +108,9 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   } else if (string_ends_with(msg.getTopic(), TOPIC_MOBILITY_FLIGHT_MODE)) {
     const ff_msgs::FlightModeConstPtr flight_mode = msg.instantiate<ff_msgs::FlightMode>();
     flight_mode_buffer_.BufferMessage(*flight_mode);
+  } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_ODOM)) {
+    const ff_msgs::DepthOdometryConstPtr depth_odometry = msg.instantiate<ff_msgs::DepthOdometry>();
+    depth_odometry_buffer_.BufferMessage(*depth_odometry);
   } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
     // Always use ar features until have data with dock cam images
     const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();
@@ -145,6 +149,9 @@ boost::optional<ff_msgs::FlightMode> LiveMeasurementSimulator::GetFlightModeMess
 }
 boost::optional<ff_msgs::Feature2dArray> LiveMeasurementSimulator::GetOFMessage(const lc::Time current_time) {
   return of_buffer_.GetMessage(current_time);
+}
+boost::optional<ff_msgs::DepthOdometry> LiveMeasurementSimulator::GetDepthOdometryMessage(const lc::Time current_time) {
+  return depth_odometry_buffer_.GetMessage(current_time);
 }
 boost::optional<ff_msgs::VisualLandmarks> LiveMeasurementSimulator::GetVLMessage(const lc::Time current_time) {
   return vl_buffer_.GetMessage(current_time);

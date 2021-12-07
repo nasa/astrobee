@@ -28,6 +28,10 @@ void GraphLocalizerSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray
   of_msg_buffer_.emplace_back(feature_array_msg);
 }
 
+void GraphLocalizerSimulator::BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  depth_odometry_msg_buffer_.emplace_back(depth_odometry_msg);
+}
+
 void GraphLocalizerSimulator::BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   vl_msg_buffer_.emplace_back(visual_landmarks_msg);
 }
