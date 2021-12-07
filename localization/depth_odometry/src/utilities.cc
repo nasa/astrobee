@@ -22,6 +22,7 @@
 
 namespace depth_odometry {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondences& sensor_F_source_T_target,
@@ -47,7 +48,7 @@ ff_msgs::Odometry OdometryMsg(const lc::PoseWithCovariance& sensor_F_source_T_ta
   return odometry_msg;
 }
 
-std::vector<ff_msgs::DepthCorrespondence> CorrespondencesMsg(const DepthCorrespondences& depth_correspondences) {
+std::vector<ff_msgs::DepthCorrespondence> CorrespondencesMsg(const lm::DepthCorrespondences& depth_correspondences) {
   std::vector<ff_msgs::DepthCorrespondence> correspondences_msg;
   int num_points = 0;
   if (depth_correspondences.valid_3d_points)

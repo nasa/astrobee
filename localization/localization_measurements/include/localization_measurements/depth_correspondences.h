@@ -15,14 +15,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_CORRESPONDENCES_H_
-#define DEPTH_ODOMETRY_DEPTH_CORRESPONDENCES_H_
+#ifndef LOCALIZATION_MEASUREMENTS_DEPTH_CORRESPONDENCES_H_
+#define LOCALIZATION_MEASUREMENTS_DEPTH_CORRESPONDENCES_H_
 
 #include <ff_common/eigen_vectors.h>
 
 #include <vector>
 
-namespace depth_odometry {
+namespace localization_measurements {
 struct DepthCorrespondences {
   DepthCorrespondences(const std::vector<Eigen::Vector2d>& source_image_points,
                        const std::vector<Eigen::Vector2d>& target_image_points,
@@ -49,6 +49,6 @@ struct DepthCorrespondences {
   std::vector<Eigen::Vector3d> source_3d_points;
   std::vector<Eigen::Vector3d> target_3d_points;
 };
-}  // namespace depth_odometry
+}  // namespace localization_measurements
 
-#endif  // DEPTH_ODOMETRY_DEPTH_CORRESPONDENCES_H_
+#endif  // LOCALIZATION_MEASUREMENTS_DEPTH_CORRESPONDENCES_H_

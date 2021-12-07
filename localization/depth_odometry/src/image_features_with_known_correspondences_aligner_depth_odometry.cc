@@ -150,7 +150,8 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   }
 
   return PoseWithCovarianceAndCorrespondences(
-    source_T_target, DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
+    source_T_target,
+    lm::DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
     previous_timestamp_, latest_timestamp_);
 }
 

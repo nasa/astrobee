@@ -18,13 +18,13 @@
 #ifndef DEPTH_ODOMETRY_UTILITIES_H_
 #define DEPTH_ODOMETRY_UTILITIES_H_
 
-#include <depth_odometry/depth_correspondences.h>
 #include <depth_odometry/pose_with_covariance_and_correspondences.h>
 #include <ff_msgs/DepthCorrespondence.h>
 #include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/Odometry.h>
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
+#include <localization_measurements/depth_correspondences.h>
 
 #include <vector>
 
@@ -33,6 +33,7 @@ ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondenc
                                         const localization_common::PoseWithCovariance& body_F_source_T_target);
 ff_msgs::Odometry OdometryMsg(const localization_common::PoseWithCovariance& sensor_F_source_T_target,
                               const localization_common::PoseWithCovariance& body_F_source_T_target);
-std::vector<ff_msgs::DepthCorrespondence> CorrespondencesMsg(const DepthCorrespondences& depth_correspondences);
+std::vector<ff_msgs::DepthCorrespondence> CorrespondencesMsg(
+  const localization_measurements::DepthCorrespondences& depth_correspondences);
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_UTILITIES_H_
