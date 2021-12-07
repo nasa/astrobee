@@ -40,7 +40,7 @@ class LocStates(poses.Poses):
         self.gyro_bias_covariances = vector3ds.Vector3ds()
 
     def add_loc_state(self, msg, bag_start_time=0):
-        self.add_pose(msg.pose, msg.header.stamp, bag_start_time)
+        self.add_pose_msg(msg.pose, msg.header.stamp, bag_start_time)
         if hasattr(msg, "num_detected_of_features"):
             self.num_detected_of_features.append(msg.num_detected_of_features)
         if hasattr(msg, "num_detected_ml_features"):
