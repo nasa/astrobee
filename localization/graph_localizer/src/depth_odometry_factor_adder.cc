@@ -43,15 +43,13 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
       const auto& sensor_t_point_source = depth_odometry_measurement.correspondences.source_3d_points[i];
       const auto& sensor_t_point_target = depth_odometry_measurement.correspondences.target_3d_points[i];
 
-      // check for outliers?
-      // scale noise based on error after transforming point?
+      const auto estimate_error =
+        sensor_t_point_source -
+        depth_odometry_measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
+      const auto estimate_error_norm = estimate_error.norm();
+      if (estimate_error_norm > params().point_to_point_error_threshold) continue;
       const auto points_between_factor_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(
-                 depth_odometry_measurement.odometry.body_F_source_T_target.covariance.block<3, 3>(0, 0) *
-                   params().noise_scale,
-                 false),
-               params().huber_k);
-
+        Robust(gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params().noise_scale), params().huber_k);
       gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(new gtsam::PointToPointBetweenFactor(
         sensor_t_point_source, sensor_t_point_target, params().body_T_sensor, points_between_factor_noise,
         source_key_info.UninitializedKey(), target_key_info.UninitializedKey()));

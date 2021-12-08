@@ -91,6 +91,7 @@ void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, Dep
   params.noise_scale = mc::LoadDouble(config, "depth_odometry_adder_noise_scale");
   params.use_points_between_factor = mc::LoadBool(config, "depth_odometry_adder_use_points_between_factor");
   params.body_T_sensor = lc::LoadTransform(config, "haz_cam_transform");
+  params.point_to_point_error_threshold = mc::LoadDouble(config, "depth_odometry_adder_point_to_point_error_threshold");
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
