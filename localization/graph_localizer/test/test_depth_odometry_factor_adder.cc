@@ -107,6 +107,19 @@ TEST(DepthOdometryFactorAdderTester, ValidPose) {
   }
 }
 
+TEST(DepthOdometryFactorAdderTester, InvalidPose) {
+  const auto params = DefaultParams();
+  gl::DepthOdometryFactorAdder factor_adder(params);
+  const lc::Time source_timestamp = 0;
+  const lc::Time target_timestamp = 0.1;
+  Eigen::Isometry3d relative_pose = Eigen::Isometry3d::Identity();
+  // Ensure translation is above threshold
+  relative_pose.translation() += Eigen::Vector3d(1.1, 0, 0) * params.pose_translation_norm_threshold;
+  const auto measurement = MeasurementFromPose(relative_pose, source_timestamp, target_timestamp);
+  const auto factors_to_add_vec = factor_adder.AddFactors(measurement);
+  ASSERT_EQ(factors_to_add_vec.size(), 0);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
