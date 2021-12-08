@@ -26,7 +26,7 @@ namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondences& sensor_F_source_T_target,
-                                        const lc::PoseWithCovariance& body_F_source_T_target) {
+                                        const lc::PoseWithCovariance& body_F_source_T_target, const double runtime) {
   ff_msgs::DepthOdometry depth_odometry_msg;
   depth_odometry_msg.odometry = OdometryMsg(sensor_F_source_T_target.pose_with_covariance, body_F_source_T_target);
   depth_odometry_msg.correspondences = CorrespondencesMsg(sensor_F_source_T_target.depth_correspondences);
@@ -35,6 +35,7 @@ ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondenc
   lc::TimeToHeader(sensor_F_source_T_target.target_time, depth_odometry_msg.header);
   lc::TimeToMsg(sensor_F_source_T_target.source_time, depth_odometry_msg.odometry.source_time);
   lc::TimeToMsg(sensor_F_source_T_target.target_time, depth_odometry_msg.odometry.target_time);
+  depth_odometry_msg.runtime = runtime;
   return depth_odometry_msg;
 }
 

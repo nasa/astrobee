@@ -30,7 +30,8 @@
 
 namespace depth_odometry {
 ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondences& sensor_F_source_T_target,
-                                        const localization_common::PoseWithCovariance& body_F_source_T_target);
+                                        const localization_common::PoseWithCovariance& body_F_source_T_target,
+                                        const double runtime);
 ff_msgs::Odometry OdometryMsg(const localization_common::PoseWithCovariance& sensor_F_source_T_target,
                               const localization_common::PoseWithCovariance& body_F_source_T_target);
 std::vector<ff_msgs::DepthCorrespondence> CorrespondencesMsg(

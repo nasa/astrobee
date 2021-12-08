@@ -21,3 +21,4 @@ ff_msgs/Odometry odometry
 ff_msgs/DepthCorrespondence[] correspondences
 bool valid_image_points
 bool valid_points_3d
+float32 runtime

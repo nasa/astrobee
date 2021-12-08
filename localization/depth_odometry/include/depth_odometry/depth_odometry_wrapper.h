@@ -23,6 +23,7 @@
 #include <ff_msgs/DepthOdometry.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
+#include <localization_common/timer.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -48,6 +49,7 @@ class DepthOdometryWrapper {
   DepthOdometryWrapperParams params_;
   localization_common::MeasurementBuffer<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;
   localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> image_buffer_;
+  localization_common::Timer timer_ = localization_common::Timer("Depth Odometry");
 };
 }  // namespace depth_odometry
 
