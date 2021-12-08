@@ -20,6 +20,7 @@
 #include <graph_localizer/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
+#include <localization_common/utilities.h>
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>
@@ -29,8 +30,8 @@
 
 namespace gl = graph_localizer;
 namespace lc = localization_common;
-namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
+
 TEST(PointToPointBetweenFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
     const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
@@ -54,6 +55,55 @@ TEST(PointToPointBetweenFactorTester, Jacobian) {
         boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
       world_T_body_source, world_T_body_target, 1e-5);
     EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H2.matrix(), H2.matrix());
+  }
+}
+
+TEST(PointToPointBetweenFactorTester, SamePointAndPoseError) {
+  for (int i = 0; i < 50; ++i) {
+    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_target = sensor_t_point_source;
+    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
+    const gtsam::Pose3 world_T_body_source = lc::RandomPose();
+    const gtsam::Pose3 world_T_body_target = world_T_body_source;
+    const auto noise = gtsam::noiseModel::Unit::Create(3);
+    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
+                                                  sym::P(0), sym::P(1));
+    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
+    EXPECT_PRED2(lc::MatrixEquality<6>, factor_error.matrix(), Eigen::Vector3d::Zero().matrix());
+  }
+}
+
+TEST(PointToPointBetweenFactorTester, DifferentPointIdentityPosesError) {
+  for (int i = 0; i < 50; ++i) {
+    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
+    const gtsam::Pose3 body_T_sensor = lc::GtPose(Eigen::Isometry3d::Identity());
+    const gtsam::Pose3 world_T_body_source = lc::GtPose(Eigen::Isometry3d::Identity());
+    const gtsam::Pose3 world_T_body_target = world_T_body_source;
+    const auto noise = gtsam::noiseModel::Unit::Create(3);
+    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
+                                                  sym::P(0), sym::P(1));
+    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
+    EXPECT_PRED2(lc::MatrixEquality<6>, factor_error.matrix(),
+                 (sensor_t_point_source - sensor_t_point_target).matrix());
+  }
+}
+
+TEST(PointToPointBetweenFactorTester, DifferentPointSamePoseError) {
+  for (int i = 0; i < 50; ++i) {
+    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
+    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
+    const gtsam::Pose3 world_T_body_source = lc::RandomPose();
+    const gtsam::Pose3 world_T_body_target = world_T_body_source;
+    const auto noise = gtsam::noiseModel::Unit::Create(3);
+    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
+                                                  sym::P(0), sym::P(1));
+    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
+    EXPECT_PRED2(
+      lc::MatrixEquality<6>, factor_error.matrix(),
+      (world_T_body_source.rotation() * body_T_sensor.rotation() * (sensor_t_point_source - sensor_t_point_target))
+        .matrix());
   }
 }
 
