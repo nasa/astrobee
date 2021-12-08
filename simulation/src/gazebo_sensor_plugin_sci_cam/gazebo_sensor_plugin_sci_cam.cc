@@ -161,30 +161,6 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     }
   }
 
-  // Out of string: "{"name": "turnOnContinuousPictureTaking"}"
-  // collect the part in the second set of quotes.
-  // Some honest json parsing could be used here.
-  std::string parseJsonStr(std::string const& json_str) {
-    size_t start = 0;
-    size_t colon_pos = json_str.find(":", start);
-    if (colon_pos == std::string::npos) {
-      return "";
-    }
-    size_t quote1_pos = json_str.find("\"", colon_pos + 1);
-    if (quote1_pos == std::string::npos) {
-      return "";
-    }
-    size_t quote2_pos = json_str.find("\"", quote1_pos + 1);
-
-    if (quote2_pos == std::string::npos) {
-      return "";
-    }
-
-    std::string parsed = json_str.substr(quote1_pos + 1, quote2_pos - quote1_pos - 1);
-
-    return parsed;
-  }
-
   // Called when a dds command is received. Process only guest science
   // sci cam control commands.
   void CmdCallback(ff_msgs::CommandStamped const& cmd) {
