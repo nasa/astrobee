@@ -141,6 +141,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_silu
     graph_localizer ${catkin_LIBRARIES}
   )
+  add_rostest_gtest(test_depth_odometry_factor_adder
+    test/test_depth_odometry_factor_adder.test
+    test/test_depth_odometry_factor_adder.cc
+  )
+  target_link_libraries(test_depth_odometry_factor_adder
+    graph_localizer ${catkin_LIBRARIES} 
+  )
 endif()
 
 #############
