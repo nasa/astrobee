@@ -27,6 +27,7 @@
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/linear/NoiseModel.h>
+#include <gtsam/slam/BetweenFactor.h>
 
 #include <gtest/gtest.h>
 
@@ -65,7 +66,8 @@ TEST(DepthOdometryFactorAdderTester, ValidPose) {
   gl::DepthOdometryFactorAdder factor_adder(params);
   const lc::Time source_timestamp = 0;
   const lc::Time target_timestamp = 0.1;
-  const auto measurement = MeasurementFromPose(Eigen::Isometry3d::Identity(), source_timestamp, target_timestamp);
+  const Eigen::Isometry3d relative_pose = Eigen::Isometry3d::Identity();
+  const auto measurement = MeasurementFromPose(relative_pose, source_timestamp, target_timestamp);
   const auto factors_to_add_vec = factor_adder.AddFactors(measurement);
   ASSERT_EQ(factors_to_add_vec.size(), 1);
   EXPECT_EQ(factors_to_add_vec[0].timestamp(), target_timestamp);
@@ -93,7 +95,16 @@ TEST(DepthOdometryFactorAdderTester, ValidPose) {
     }
   }
   // Check Factors
-  {}
+  {
+    const auto factor = dynamic_cast<const gtsam::BetweenFactor<gtsam::Pose3>*>(factor_to_add.factor.get());
+    ASSERT_TRUE(factor);
+    const auto& pose = factor->measured();
+    EXPECT_PRED2(lc::MatrixEquality<6>, pose.matrix(), relative_pose.matrix());
+    const auto& keys = factor->keys();
+    const auto& key_info = factor_to_add.key_infos[0];
+    EXPECT_EQ(keys[0], key_info.UninitializedKey());
+    EXPECT_EQ(keys[1], key_info.UninitializedKey());
+  }
 }
 
 // Run all the tests that were declared with TEST()
