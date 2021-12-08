@@ -28,6 +28,7 @@ struct DepthOdometryFactorAdderParams : public graph_optimizer::FactorAdderParam
   double noise_scale;
   bool use_points_between_factor;
   double point_to_point_error_threshold;
+  double pose_translation_norm_threhold;
   gtsam::Pose3 body_T_sensor;
 };
 }  // namespace graph_localizer

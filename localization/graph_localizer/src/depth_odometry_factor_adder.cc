@@ -61,6 +61,15 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
   } else {
     go::FactorsToAdd relative_pose_factors_to_add;
     relative_pose_factors_to_add.reserve(1);
+
+    const double translation_norm =
+      depth_odometry_measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
+    if (translation_norm > params().pose_translation_norm_threshold) {
+      LogDebug("AddFactors: Ignoring pose with large translation norm. Norm: "
+               << translation_norm << ", threshold: " << params().pose_translation_norm_threshold);
+      return factors_to_add_vector;
+    }
+
     const auto relative_pose_noise =
       Robust(gtsam::noiseModel::Gaussian::Covariance(
                depth_odometry_measurement.odometry.body_F_source_T_target.covariance * params().noise_scale, false),
