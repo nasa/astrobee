@@ -32,24 +32,11 @@ void DepthOdometryAdder::AddDepthOdometry() {
   const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                         static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
-  std::vector<std::string> topics;
-  topics.push_back(point_cloud_topic);
-  topics.push_back(std::string("/") + point_cloud_topic);
-  topics.push_back(TOPIC_SPARSE_MAPPING_POSE);
-  topics.push_back(std::string("/") + TOPIC_SPARSE_MAPPING_POSE);
-  topics.push_back(TOPIC_GRAPH_LOC_STATE);
-  topics.push_back(std::string("/") + TOPIC_GRAPH_LOC_STATE);
-  topics.push_back(TOPIC_GNC_EKF);
-  topics.push_back(std::string("/") + TOPIC_GNC_EKF);
-  topics.push_back("/tf");
-  topics.push_back("/tf_static");
   const std::string image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                   static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
-  topics.push_back(image_topic);
-  topics.push_back(std::string("/") + image_topic);
-  rosbag::View view(input_bag_, rosbag::TopicQuery(topics));
+  rosbag::View view(input_bag_);
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), point_cloud_topic)) {
       const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg = msg.instantiate<sensor_msgs::PointCloud2>();
