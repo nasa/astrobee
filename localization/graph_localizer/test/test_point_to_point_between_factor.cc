@@ -32,20 +32,29 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToPointBetweenFactorTester, Jacobian) {
-  /* for (int i = 0; i < 500; ++i) {
-     const gtsam::Point3 sensor_t_point = lc::RandomVector();
-     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
-     const gtsam::Pose3 world_T_body = lc::RandomPose();
-     const auto noise = gtsam::noiseModel::Unit::Create(1);
-     const gtsam::PointToPlaneFactor factor(sensor_t_point, world_T_handrail_plane, body_T_sensor, noise, sym::P(0));
-     gtsam::Matrix H;
-     const auto factor_error = factor.evaluateError(world_T_body, H);
-     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
-       boost::function<gtsam::Vector(const gtsam::Pose3&)>(
-         boost::bind(&gtsam::PointToPlaneFactor::evaluateError, factor, _1, boost::none)),
-       world_T_body, 1e-5);
-     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
-   }*/
+  for (int i = 0; i < 500; ++i) {
+    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
+    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
+    const gtsam::Pose3 world_T_body_source = lc::RandomPose();
+    const gtsam::Pose3 world_T_body_target = lc::RandomPose();
+    const auto noise = gtsam::noiseModel::Unit::Create(3);
+    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
+                                                  sym::P(0), sym::P(1));
+    gtsam::Matrix H1;
+    gtsam::Matrix H2;
+    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target, H1, H2);
+    const auto numerical_H1 = gtsam::numericalDerivative21<gtsam::Vector, gtsam::Pose3, gtsam::Pose3>(
+      boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
+        boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
+      world_T_body_source, world_T_body_target, 1e-5);
+    EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H1.matrix(), H1.matrix());
+    const auto numerical_H2 = gtsam::numericalDerivative22<gtsam::Vector, gtsam::Pose3, gtsam::Pose3>(
+      boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
+        boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
+      world_T_body_source, world_T_body_target, 1e-5);
+    EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H2.matrix(), H2.matrix());
+  }
 }
 
 // Run all the tests that were declared with TEST()
