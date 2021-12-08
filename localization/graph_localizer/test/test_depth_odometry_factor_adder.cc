@@ -16,11 +16,13 @@
  * under the License.
  */
 
+#include <graph_localizer/depth_odometry_factor_adder.h>
 #include <graph_localizer/point_to_point_between_factor.h>
 #include <graph_localizer/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/depth_odometry_measurement.h>
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>
@@ -29,82 +31,69 @@
 #include <gtest/gtest.h>
 
 namespace gl = graph_localizer;
+namespace go = graph_optimizer;
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 
-TEST(PointToPointBetweenFactorTester, Jacobian) {
-  for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
-    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
-    const gtsam::Pose3 world_T_body_source = lc::RandomPose();
-    const gtsam::Pose3 world_T_body_target = lc::RandomPose();
-    const auto noise = gtsam::noiseModel::Unit::Create(3);
-    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
-                                                  sym::P(0), sym::P(1));
-    gtsam::Matrix H1;
-    gtsam::Matrix H2;
-    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target, H1, H2);
-    const auto numerical_H1 = gtsam::numericalDerivative21<gtsam::Vector, gtsam::Pose3, gtsam::Pose3>(
-      boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
-        boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
-      world_T_body_source, world_T_body_target, 1e-5);
-    EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H1.matrix(), H1.matrix());
-    const auto numerical_H2 = gtsam::numericalDerivative22<gtsam::Vector, gtsam::Pose3, gtsam::Pose3>(
-      boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
-        boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
-      world_T_body_source, world_T_body_target, 1e-5);
-    EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H2.matrix(), H2.matrix());
-  }
+gl::DepthOdometryFactorAdderParams DefaultParams() {
+  gl::DepthOdometryFactorAdderParams params;
+  params.enabled = true;
+  params.huber_k = 1.345;
+  params.noise_scale = 1.0;
+  params.use_points_between_factor = false;
+  params.point_to_point_error_threshold = 10.0;
+  params.pose_translation_norm_threshold = 3.0;
+  params.body_T_sensor = lc::GtPose(Eigen::Isometry3d::Identity());
+  return params;
 }
 
-TEST(PointToPointBetweenFactorTester, SamePointAndPoseError) {
-  for (int i = 0; i < 50; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = sensor_t_point_source;
-    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
-    const gtsam::Pose3 world_T_body_source = lc::RandomPose();
-    const gtsam::Pose3 world_T_body_target = world_T_body_source;
-    const auto noise = gtsam::noiseModel::Unit::Create(3);
-    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
-                                                  sym::P(0), sym::P(1));
-    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
-    EXPECT_PRED2(lc::MatrixEquality<6>, factor_error.matrix(), Eigen::Vector3d::Zero().matrix());
-  }
+lm::DepthOdometryMeasurement MeasurementFromPose(const Eigen::Isometry3d& pose, const lc::Time source_time,
+                                                 const lc::Time target_time) {
+  lm::Odometry odometry;
+  odometry.source_time = source_time;
+  odometry.target_time = target_time;
+  odometry.sensor_F_source_T_target.pose = pose;
+  odometry.body_F_source_T_target.pose = pose;
+  std::vector<Eigen::Vector3d> empty_points;
+  lm::DepthCorrespondences correspondences(empty_points, empty_points);
+  return lm::DepthOdometryMeasurement(odometry, correspondences, target_time);
 }
 
-TEST(PointToPointBetweenFactorTester, DifferentPointIdentityPosesError) {
-  for (int i = 0; i < 50; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
-    const gtsam::Pose3 body_T_sensor = lc::GtPose(Eigen::Isometry3d::Identity());
-    const gtsam::Pose3 world_T_body_source = lc::GtPose(Eigen::Isometry3d::Identity());
-    const gtsam::Pose3 world_T_body_target = world_T_body_source;
-    const auto noise = gtsam::noiseModel::Unit::Create(3);
-    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
-                                                  sym::P(0), sym::P(1));
-    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
-    EXPECT_PRED2(lc::MatrixEquality<6>, factor_error.matrix(),
-                 (sensor_t_point_source - sensor_t_point_target).matrix());
+TEST(DepthOdometryFactorAdderTester, ValidPose) {
+  const auto params = DefaultParams();
+  gl::DepthOdometryFactorAdder factor_adder(params);
+  const lc::Time source_timestamp = 0;
+  const lc::Time target_timestamp = 0.1;
+  const auto measurement = MeasurementFromPose(Eigen::Isometry3d::Identity(), source_timestamp, target_timestamp);
+  const auto factors_to_add_vec = factor_adder.AddFactors(measurement);
+  ASSERT_EQ(factors_to_add_vec.size(), 1);
+  EXPECT_EQ(factors_to_add_vec[0].timestamp(), target_timestamp);
+  ASSERT_EQ(factors_to_add_vec[0].Get().size(), 1);
+  const auto& factor_to_add = factors_to_add_vec[0].Get()[0];
+  // Check Key Info
+  {
+    const auto& key_infos = factor_to_add.key_infos;
+    ASSERT_EQ(key_infos.size(), 2);
+    // Key Info Source
+    {
+      const auto& key_info = key_infos[0];
+      EXPECT_FALSE(key_info.is_static());
+      EXPECT_NEAR(key_info.timestamp(), source_timestamp, 1e-6);
+      EXPECT_EQ(key_info.UninitializedKey(), sym::P(0));
+      EXPECT_EQ(key_info.node_updater_type(), go::NodeUpdaterType::CombinedNavState);
+    }
+    // Key Info Target
+    {
+      const auto& key_info = key_infos[1];
+      EXPECT_FALSE(key_info.is_static());
+      EXPECT_NEAR(key_info.timestamp(), target_timestamp, 1e-6);
+      EXPECT_EQ(key_info.UninitializedKey(), sym::P(0));
+      EXPECT_EQ(key_info.node_updater_type(), go::NodeUpdaterType::CombinedNavState);
+    }
   }
-}
-
-TEST(PointToPointBetweenFactorTester, DifferentPointSamePoseError) {
-  for (int i = 0; i < 50; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
-    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
-    const gtsam::Pose3 world_T_body_source = lc::RandomPose();
-    const gtsam::Pose3 world_T_body_target = world_T_body_source;
-    const auto noise = gtsam::noiseModel::Unit::Create(3);
-    const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
-                                                  sym::P(0), sym::P(1));
-    const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
-    EXPECT_PRED2(
-      lc::MatrixEquality<6>, factor_error.matrix(),
-      (world_T_body_source.rotation() * body_T_sensor.rotation() * (sensor_t_point_source - sensor_t_point_target))
-        .matrix());
-  }
+  // Check Factors
+  {}
 }
 
 // Run all the tests that were declared with TEST()
