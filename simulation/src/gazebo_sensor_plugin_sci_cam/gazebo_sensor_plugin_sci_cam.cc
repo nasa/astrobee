@@ -22,6 +22,11 @@
 // FSW includes
 #include <config_reader/config_reader.h>
 
+// JSON includes
+#include <json/json.h>
+#include <json/value.h>
+#include <jsonloader/planio.h>
+
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
@@ -199,7 +204,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       return;
     }
 
-    std::string app_name   = cmd.args[0].s.data();
+    std::string app_name = cmd.args[0].s.data();
 
     // Process only sci cam commands
     if (app_name != "gov.nasa.arc.irg.astrobee.sci_cam_image") {
@@ -209,9 +214,20 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     std::string json_str = cmd.args[1].s.data();
     ROS_INFO_STREAM("Received command: " << json_str);
 
-    std::string action = parseJsonStr(json_str);
-    if (action == "")
+    // Convert string into a json object
+    Json::Value cmd_obj;
+    if (!jsonloader::LoadData(json_str, &cmd_obj)) {
+      ROS_ERROR_STREAM("Unable to convert command " << json_str << " to json.");
       return;
+    }
+
+    // Check to make sure command name exists
+    if (!cmd_obj.isMember("name") || !cmd_obj["name"].isString()) {
+      ROS_ERROR_STREAM(json_str << " doesn't contain name for the command.");
+      return;
+    }
+
+    std::string action = cmd_obj["name"].asString();
 
     // Record the desired intention. Use a lock.
     {
@@ -219,12 +235,19 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       if (action == "takePicture") {
         takeSinglePicture_ = true;
         continuousPictureTaking_ = false;
-      } else if (action == "turnOnContinuousPictureTaking") {
-        takeSinglePicture_ = false;
-        continuousPictureTaking_ = true;
-      } else if (action == "turnOffContinuousPictureTaking") {
-        takeSinglePicture_ = false;
-        continuousPictureTaking_ = false;
+      } else if (action == "setContinuousPictureTaking") {
+        if (cmd_obj.isMember("continuous") && cmd_obj["continuous"].isBool()) {
+          if (cmd_obj["continuous"].asBool()) {
+            takeSinglePicture_ = false;
+            continuousPictureTaking_ = true;
+          } else {
+            takeSinglePicture_ = false;
+            continuousPictureTaking_ = false;
+          }
+        } else {
+          ROS_ERROR_STREAM("Got set continuous picture taking command but it" <<
+                           " didn't contain the continuous argument.");
+        }
       } else {
         ROS_FATAL_STREAM("Unknown sci_cam command: " << action);
       }
