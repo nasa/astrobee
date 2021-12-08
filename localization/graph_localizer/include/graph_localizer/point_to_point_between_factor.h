@@ -60,8 +60,8 @@ class PointToPointBetweenFactor : public NoiseModelFactor2<Pose3, Pose3> {
   Vector evaluateError(const Pose3& world_T_body_source, const Pose3& world_T_body_target,
                        boost::optional<Matrix&> H1 = boost::none,
                        boost::optional<Matrix&> H2 = boost::none) const override {
-    world_t_point_source = world_T_body_source.transformFrom(body_T_sensor * sensor_t_point_source_, H1);
-    world_t_point_target = world_T_body_target.transformFrom(body_T_sensor * sensor_t_point_target_, H2);
+    const auto world_t_point_source = world_T_body_source.transformFrom(body_T_sensor_ * sensor_t_point_source_, H1);
+    const auto world_t_point_target = world_T_body_target.transformFrom(body_T_sensor_ * sensor_t_point_target_, H2);
     if (H2) *H2 = -1.0 * (*H2);
     return world_t_point_source - world_t_point_target;
   }
