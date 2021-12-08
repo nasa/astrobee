@@ -17,7 +17,7 @@
  */
 
 #include <graph_localizer/depth_odometry_factor_adder.h>
-#include <graph_localizer/loc_pose_factor.h>
+#include <graph_localizer/point_to_point_between_factor.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -33,23 +33,52 @@ DepthOdometryFactorAdder::DepthOdometryFactorAdder(const DepthOdometryFactorAdde
 std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
   const lm::DepthOdometryMeasurement& depth_odometry_measurement) {
   std::vector<go::FactorsToAdd> factors_to_add_vector;
-  go::FactorsToAdd relative_pose_factors_to_add;
-  relative_pose_factors_to_add.reserve(1);
-  const auto relative_pose_noise =
-    Robust(gtsam::noiseModel::Gaussian::Covariance(
-             depth_odometry_measurement.odometry.body_F_source_T_target.covariance * params().noise_scale, false),
-           params().huber_k);
-  const go::KeyInfo source_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
-                                    depth_odometry_measurement.odometry.source_time);
-  const go::KeyInfo target_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
-                                    depth_odometry_measurement.odometry.target_time);
-  gtsam::BetweenFactor<gtsam::Pose3>::shared_ptr relative_pose_factor(new gtsam::BetweenFactor<gtsam::Pose3>(
-    source_key_info.UninitializedKey(), target_key_info.UninitializedKey(),
-    lc::GtPose(depth_odometry_measurement.odometry.body_F_source_T_target.pose), relative_pose_noise));
-  relative_pose_factors_to_add.push_back({{source_key_info, target_key_info}, relative_pose_factor});
-  relative_pose_factors_to_add.SetTimestamp(depth_odometry_measurement.odometry.target_time);
-  LogDebug("AddFactors: Added 1 relative pose factor.");
-  factors_to_add_vector.emplace_back(relative_pose_factors_to_add);
+  if (params().use_points_between_factor) {
+    go::FactorsToAdd points_between_factors_to_add;
+    const go::KeyInfo source_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                                      depth_odometry_measurement.odometry.source_time);
+    const go::KeyInfo target_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                                      depth_odometry_measurement.odometry.target_time);
+    for (int i = 0; i < depth_odometry_measurement.correspondences.source_3d_points.size(); ++i) {
+      const auto& sensor_t_point_source = depth_odometry_measurement.correspondences.source_3d_points[i];
+      const auto& sensor_t_point_target = depth_odometry_measurement.correspondences.target_3d_points[i];
+
+      // check for outliers?
+      // scale noise based on error after transforming point?
+      const auto points_between_factor_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(
+                 depth_odometry_measurement.odometry.body_F_source_T_target.covariance.block<3, 3>(0, 0) *
+                   params().noise_scale,
+                 false),
+               params().huber_k);
+
+      gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(new gtsam::PointToPointBetweenFactor(
+        sensor_t_point_source, sensor_t_point_target, params().body_T_sensor, points_between_factor_noise,
+        source_key_info.UninitializedKey(), target_key_info.UninitializedKey()));
+      points_between_factors_to_add.push_back({{source_key_info, target_key_info}, points_between_factor});
+    }
+    points_between_factors_to_add.SetTimestamp(depth_odometry_measurement.odometry.target_time);
+    LogDebug("AddFactors: Added " << points_between_factors_to_add.size() << " points between factors.");
+    factors_to_add_vector.emplace_back(points_between_factors_to_add);
+  } else {
+    go::FactorsToAdd relative_pose_factors_to_add;
+    relative_pose_factors_to_add.reserve(1);
+    const auto relative_pose_noise =
+      Robust(gtsam::noiseModel::Gaussian::Covariance(
+               depth_odometry_measurement.odometry.body_F_source_T_target.covariance * params().noise_scale, false),
+             params().huber_k);
+    const go::KeyInfo source_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                                      depth_odometry_measurement.odometry.source_time);
+    const go::KeyInfo target_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                                      depth_odometry_measurement.odometry.target_time);
+    gtsam::BetweenFactor<gtsam::Pose3>::shared_ptr relative_pose_factor(new gtsam::BetweenFactor<gtsam::Pose3>(
+      source_key_info.UninitializedKey(), target_key_info.UninitializedKey(),
+      lc::GtPose(depth_odometry_measurement.odometry.body_F_source_T_target.pose), relative_pose_noise));
+    relative_pose_factors_to_add.push_back({{source_key_info, target_key_info}, relative_pose_factor});
+    relative_pose_factors_to_add.SetTimestamp(depth_odometry_measurement.odometry.target_time);
+    LogDebug("AddFactors: Added 1 relative pose factor.");
+    factors_to_add_vector.emplace_back(relative_pose_factors_to_add);
+  }
   return factors_to_add_vector;
 }
 }  // namespace graph_localizer
