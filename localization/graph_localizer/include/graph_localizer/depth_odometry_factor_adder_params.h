@@ -21,9 +21,13 @@
 
 #include <graph_optimizer/factor_adder_params.h>
 
+#include <gtsam/geometry/Pose3.h>
+
 namespace graph_localizer {
 struct DepthOdometryFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double noise_scale;
+  bool use_points_between_factor;
+  gtsam::Pose3 body_T_sensor;
 };
 }  // namespace graph_localizer
 
