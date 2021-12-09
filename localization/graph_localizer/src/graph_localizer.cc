@@ -23,6 +23,7 @@
 #include <graph_localizer/point_to_line_factor.h>
 #include <graph_localizer/point_to_line_segment_factor.h>
 #include <graph_localizer/point_to_plane_factor.h>
+#include <graph_localizer/point_to_point_between_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
 #include <graph_optimizer/utilities.h>
@@ -382,6 +383,7 @@ bool GraphLocalizer::ValidGraph() const {
     go::NumFactors<gtsam::PointToLineFactor>(graph_factors()) +
     go::NumFactors<gtsam::PointToLineSegmentFactor>(graph_factors()) +
     go::NumFactors<gtsam::PointToPlaneFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToPointBetweenFactor>(graph_factors()) +
     go::NumFactors<gtsam::PointToHandrailEndpointFactor>(graph_factors()) +
     go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
     go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
