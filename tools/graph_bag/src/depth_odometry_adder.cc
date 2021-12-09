@@ -25,8 +25,11 @@
 
 namespace graph_bag {
 namespace lc = localization_common;
-DepthOdometryAdder::DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name)
-    : input_bag_(input_bag_name, rosbag::bagmode::Read), output_bag_(output_bag_name, rosbag::bagmode::Write) {}
+DepthOdometryAdder::DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name,
+                                       const bool save_all_topics)
+    : input_bag_(input_bag_name, rosbag::bagmode::Read),
+      output_bag_(output_bag_name, rosbag::bagmode::Write),
+      save_all_topics_(save_all_topics) {}
 
 void DepthOdometryAdder::AddDepthOdometry() {
   const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
@@ -36,8 +39,26 @@ void DepthOdometryAdder::AddDepthOdometry() {
                                   static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
-  rosbag::View view(input_bag_);
-  for (const rosbag::MessageInstance msg : view) {
+  // Other localization specific topics
+  std::vector<std::string> topics;
+  topics.push_back(std::string("/") + point_cloud_topic);
+  topics.push_back(std::string("/") + image_topic);
+  topics.push_back(std::string("/") + TOPIC_SPARSE_MAPPING_POSE);
+  topics.push_back("/tf");
+  topics.push_back("/tf_static");
+  topics.push_back("/loc/ml/features");
+  topics.push_back("/loc/of/features");
+  topics.push_back("/loc/ar/features");
+  topics.push_back("/hw/imu");
+  topics.push_back("/mob/flight_mode");
+
+  // Use unique ptr since ternary initialization fails as view construction from another view is private
+  std::unique_ptr<rosbag::View> view;
+  if (save_all_topics_)
+    view.reset(new rosbag::View(input_bag_));
+  else
+    view.reset(new rosbag::View(input_bag_, rosbag::TopicQuery(topics)));
+  for (const rosbag::MessageInstance msg : *view) {
     if (string_ends_with(msg.getTopic(), point_cloud_topic)) {
       const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg = msg.instantiate<sensor_msgs::PointCloud2>();
       const auto pose_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
@@ -45,6 +66,7 @@ void DepthOdometryAdder::AddDepthOdometry() {
         const ros::Time timestamp = lc::RosTimeFromHeader(point_cloud_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, pose_msg);
       }
+      if (!save_all_topics_) continue;
     } else if (string_ends_with(msg.getTopic(), image_topic)) {
       const sensor_msgs::ImageConstPtr& image_msg = msg.instantiate<sensor_msgs::Image>();
       const auto pose_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
@@ -52,6 +74,7 @@ void DepthOdometryAdder::AddDepthOdometry() {
         const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, pose_msg);
       }
+      if (!save_all_topics_) continue;
     }
     output_bag_.write(msg.getTopic(), msg.getTime(), msg);
   }

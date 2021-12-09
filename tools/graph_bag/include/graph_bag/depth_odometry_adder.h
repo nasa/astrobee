@@ -28,13 +28,14 @@
 namespace graph_bag {
 class DepthOdometryAdder {
  public:
-  DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name);
+  DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name, const bool save_all_topics);
   void AddDepthOdometry();
 
  private:
   depth_odometry::DepthOdometryWrapper depth_odometry_wrapper_;
   rosbag::Bag input_bag_;
   rosbag::Bag output_bag_;
+  bool save_all_topics_;
 };
 }  // namespace graph_bag
 
