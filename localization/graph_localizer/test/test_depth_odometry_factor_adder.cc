@@ -45,6 +45,7 @@ gl::DepthOdometryFactorAdderParams DefaultParams() {
   params.use_points_between_factor = false;
   params.point_to_point_error_threshold = 10.0;
   params.pose_translation_norm_threshold = 3.0;
+  params.max_num_points_between_factors = 100;
   params.body_T_sensor = lc::GtPose(Eigen::Isometry3d::Identity());
   return params;
 }

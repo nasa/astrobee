@@ -94,6 +94,7 @@ void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, Dep
   params.point_to_point_error_threshold = mc::LoadDouble(config, "depth_odometry_adder_point_to_point_error_threshold");
   params.pose_translation_norm_threshold =
     mc::LoadDouble(config, "depth_odometry_adder_pose_translation_norm_threshold");
+  params.max_num_points_between_factors = mc::LoadDouble(config, "depth_odometry_adder_max_num_points_between_factors");
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {

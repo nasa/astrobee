@@ -39,7 +39,9 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
                                       depth_odometry_measurement.odometry.source_time);
     const go::KeyInfo target_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
                                       depth_odometry_measurement.odometry.target_time);
-    for (int i = 0; i < depth_odometry_measurement.correspondences.source_3d_points.size(); ++i) {
+    for (int i = 0; i < depth_odometry_measurement.correspondences.source_3d_points.size() &&
+                    points_between_factors_to_add.size() < params().max_num_points_between_factors;
+         ++i) {
       const auto& sensor_t_point_source = depth_odometry_measurement.correspondences.source_3d_points[i];
       const auto& sensor_t_point_target = depth_odometry_measurement.correspondences.target_3d_points[i];
 
