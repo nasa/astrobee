@@ -51,9 +51,9 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   localization_common::Averager num_vel_prior_factors_averager_ =
     localization_common::Averager("Num Vel Prior Factors");
   // Factor Error Averagers
-  localization_common::Averager depth_odom_rel_pose_averager_ =
+  localization_common::Averager depth_odom_rel_pose_error_averager_ =
     localization_common::Averager("Depth Odom Rel Pose Factor Error");
-  localization_common::Averager depth_odom_rel_point_averager_ =
+  localization_common::Averager depth_odom_rel_point_error_averager_ =
     localization_common::Averager("Depth Odom Rel Point Factor Error");
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
   localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");

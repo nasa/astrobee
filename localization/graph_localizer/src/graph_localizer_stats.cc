@@ -39,6 +39,8 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_marginal_factors_averager_);
   AddStatsAverager(num_factors_averager_);
   // AddStatsAverager(num_features_averager_);
+  AddStatsAverager(num_depth_odometry_rel_pose_factors_averager_);
+  AddStatsAverager(num_depth_odometry_rel_point_factors_averager_);
   AddStatsAverager(num_optical_flow_factors_averager_);
   AddStatsAverager(num_loc_pose_factors_averager_);
   AddStatsAverager(num_loc_proj_factors_averager_);
@@ -47,6 +49,8 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_standstill_between_factors_averager_);
   AddStatsAverager(num_vel_prior_factors_averager_);
 
+  AddErrorAverager(depth_odom_rel_pose_error_averager_);
+  AddErrorAverager(depth_odom_rel_point_error_averager_);
   AddErrorAverager(of_error_averager_);
   AddErrorAverager(loc_proj_error_averager_);
   AddErrorAverager(loc_pose_error_averager_);
@@ -137,8 +141,8 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
     }
   }
   total_error_averager_.Update(total_error);
-  depth_odom_rel_pose_averager_.Update(depth_odom_rel_pose_factor_error);
-  depth_odom_rel_point_averager_.Update(depth_odom_rel_point_factor_error);
+  depth_odom_rel_pose_error_averager_.Update(depth_odom_rel_pose_factor_error);
+  depth_odom_rel_point_error_averager_.Update(depth_odom_rel_point_factor_error);
   of_error_averager_.Update(optical_flow_factor_error);
   loc_proj_error_averager_.Update(loc_proj_error);
   loc_pose_error_averager_.Update(loc_pose_error);
