@@ -65,7 +65,10 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
     ImuCallback(imu_msg);
   }
   imu_msg_buffer_.clear();
-
+  for (const auto& depth_odometry_msg : depth_odometry_msg_buffer_) {
+    DepthOdometryCallback(depth_odometry_msg);
+  }
+  depth_odometry_msg_buffer_.clear();
   for (const auto& of_msg : of_msg_buffer_) {
     OpticalFlowCallback(of_msg);
   }
