@@ -1,4 +1,4 @@
-.git/
+# .git/
 scripts/docker/
 submodules/android/
 submodules/avionics/
