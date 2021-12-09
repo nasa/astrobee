@@ -66,6 +66,9 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
   topics.push_back(std::string("/") + TOPIC_LOCALIZATION_AR_FEATURES);
   topics.push_back(TOPIC_LOCALIZATION_AR_FEATURES);
 
+  topics.push_back(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM);
+  topics.push_back(TOPIC_LOCALIZATION_DEPTH_ODOM);
+
   topics.push_back(std::string("/") + TOPIC_MOBILITY_FLIGHT_MODE);
   topics.push_back(TOPIC_MOBILITY_FLIGHT_MODE);
 
