@@ -15,35 +15,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Cpu state message with timestamp.
+# State of a CPU load for a node.
 
-# Header with timestamp
-std_msgs/Header header
-
-# Machine name (llp, hlp, mlp, etc)
+# Node name
 string name
 
-# Load constants
-string NICE=nice
-string USER=user
-string SYS=sys
-string VIRT=virt
-string TOTAL=total
-
-# The available fields within the load values, mostly uses the constants
-# defined above.
-string[] load_fields
-
-# Average loads for all processors combined
-float32[] avg_loads
-
-# Temperature for a cpu (average of all thermal zones)
-float32 temp
-
-# Information for each processor
-# Size of the array specifies how many processors are on the board, whether
-# or not all of them are enabled.
-ff_msgs/CpuState[] cpus
-
-# Load usage of individual ROS nodes
-ff_msgs/CpuNodeState[] load_nodes
+# The load (in percentages) of the cpu
+float32 load 

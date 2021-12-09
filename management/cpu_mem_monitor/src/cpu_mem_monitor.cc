@@ -78,7 +78,7 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
                             true,
                             false);
 
-  // Timer for clearing the cpu load too high fault
+  // Timer for clearing the memory load too high fault
   clear_mem_load_fault_timer_ = nh->createTimer(
                               ros::Duration(clear_load_high_fault_timeout_sec_),
                               &CpuMemMonitor::ClearMemLoadHighFaultCallback,
@@ -86,8 +86,15 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
                               true,
                               false);
 
-  // Timer for checking cpu stats. Timer is not one shot and start it right away
-  stats_timer_ = nh->createTimer(ros::Duration(update_freq_hz_),
+  // Timer for updating PID values of interest nodes
+  pid_timer_ = nh->createTimer(ros::Duration(1 / update_pid_hz_),
+                               &CpuMemMonitor::GetPIDs,
+                               this,
+                               false,
+                               true);
+
+  // Timer for checking cpu and memory stats. Timer is not one shot and start it right away
+  stats_timer_ = nh->createTimer(ros::Duration(1 / update_freq_hz_),
                                  &CpuMemMonitor::PublishStatsCallback,
                                  this,
                                  false,
@@ -145,6 +152,7 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
     // Five load fields: nice, user, sys, virt, total
     cpu_state_msg_.cpus[i].loads.resize(5);
   }
+  cpu_state_msg_.load_nodes.resize(nodes_pid_.size());
 
   // Initialize the memory state message
   mem_state_msg_.name = monitor_host_;
@@ -165,8 +173,17 @@ bool CpuMemMonitor::ReadParams() {
   config_reader::ConfigReader::Table processor_config(&config_params_,
                                                       processor_name_.c_str());
 
+  // get udpate pid frequency
+  if (!processor_config.GetPosReal("update_pid_hz", &update_pid_hz_)) {
+    err_msg = "CPU monitor: Update PID frequency not specified for " +
+                                                                processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
   // get udpate stats frequency
-  if (!processor_config.GetInt("update_freq_hz", &update_freq_hz_)) {
+  if (!processor_config.GetPosReal("update_freq_hz", &update_freq_hz_)) {
     err_msg = "CPU monitor: Update frequency not specified for " +
                                                                 processor_name_;
     FF_ERROR(err_msg);
@@ -248,7 +265,7 @@ bool CpuMemMonitor::ReadParams() {
     }
     std::string name;
     if (node.GetStr("name", &name)) {
-      ROS_ERROR_STREAM("Read node " << name);
+      ROS_DEBUG_STREAM("Read node " << name);
       nodes_pid_.insert(std::pair<std::string, int>(name, 0));
     }
   }
@@ -293,7 +310,7 @@ void CpuMemMonitor::ClearMemLoadHighFaultCallback(ros::TimerEvent const& te) {
   load_fault_state_ = CLEARED;
 }
 
-int CpuMemMonitor::GetPIDs() {
+void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
   // Go through all the node list and get the PID
   XmlRpc::XmlRpcValue args, result, payload;
   std::map<std::string, int>::iterator it;
@@ -321,7 +338,7 @@ int CpuMemMonitor::GetPIDs() {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host_ +
                               " and not in the same cpu as manager " + monitor_host_ + ".";
-        FF_WARN(err_msg);
+        ROS_ERROR_STREAM(err_msg);
         continue;
       }
 
@@ -333,7 +350,7 @@ int CpuMemMonitor::GetPIDs() {
       if (!pipe) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Could not open rosnode process for node " + it->first;
-        FF_WARN(err_msg);
+        ROS_ERROR_STREAM(err_msg);
         continue;
       }
       while (fgets(buffer.data(), 128, pipe) != NULL) {
@@ -345,7 +362,7 @@ int CpuMemMonitor::GetPIDs() {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " +
                               it->first + "does not have a PID.";
-        FF_WARN(err_msg);
+        ROS_ERROR_STREAM(err_msg);
         continue;
       }
       pclose(pipe);
@@ -353,7 +370,7 @@ int CpuMemMonitor::GetPIDs() {
       it->second = std::stoi(pid);
     }
   }
-  return 0;
+  return;
 }
 
 int CpuMemMonitor::CollectCPUStats() {
@@ -362,6 +379,7 @@ int CpuMemMonitor::CollectCPUStats() {
            total, idle_all, system_all, virtual_all = 0;
   uint64_t total_period, user_period, nice_period, steal_period,
                 guest_period, system_all_period;
+  uint64_t total_period_all;
 
   uint32_t cpuid = 0;
   char buffer[256];
@@ -428,6 +446,7 @@ int CpuMemMonitor::CollectCPUStats() {
       total_period = 1;
 
     double totald = static_cast<double>(total_period);
+    if (i == 0) total_period_all = totald;
     load_cpus_[i].nice_percentage   = nice_period / totald * 100.0d;
     load_cpus_[i].user_percentage   = user_period / totald * 100.0d;
     load_cpus_[i].system_percentage = system_all_period / totald * 100.0d;
@@ -459,6 +478,56 @@ int CpuMemMonitor::CollectCPUStats() {
     cpu_state_msg_.cpus[i].loads[2] = load_cpus_[(i + 1)].system_percentage;
     cpu_state_msg_.cpus[i].loads[3] = load_cpus_[(i + 1)].virt_percentage;
     cpu_state_msg_.cpus[i].loads[4] = load_cpus_[(i + 1)].total_percentage;
+  }
+
+  // Go through all the node list and calculate cpu usage
+  uint64_t utime, stime;
+  double cpu_usage_node;
+  std::map<std::string, int>::iterator it;
+  std::map<std::string, uint64_t>::iterator it_load;
+  int i = -1;
+  for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
+    // Increment counter
+    i++;
+    // Look if PID is invalid
+    if (it->second <= 0)
+      continue;
+
+    // Get CPU useage for individual nodes
+    cpu_state_msg_.load_nodes[i].name = it->first;
+    FILE* file = fopen(("/proc/" + std::to_string(it->second) + "/stat").c_str(), "r");
+    if (!file) {
+      continue;
+    }
+    char buffer[256];
+    if (fgets(buffer, sizeof(buffer), file) == NULL) {
+      fprintf(stderr, "fgets screwed up\n");
+      break;
+    }
+
+    if (sscanf(buffer, "%*d %*s %*c %*d"                          // pid, command, state, ppid
+                       "%*d %*d %*d %*d %*u %*u %*u %*u %*u"
+                       "%lu %lu"                                  // usertime, systemtime
+                       "%*d %*d %*d %*d %*d %*d %*u"
+                       "%*u",                                    // virtual memory size in bytes
+                       &utime, &stime) != 2)
+        continue;
+    fclose(file);
+
+    // Get last measurement
+    if ((it_load = nodes_proc_time_.find(it->first)) == nodes_proc_time_.end()) {
+      nodes_proc_time_.insert(std::pair<std::string, int>(it->first, utime + stime));
+      continue;
+    }
+
+    // Calculate node cpu usage
+    cpu_usage_node = ncpus_ * static_cast<double>(utime + stime - it_load->second) * 100 / (total_period_all);
+
+    // Update parameters
+    it_load->second = utime + stime;
+
+    // Fill in message
+    cpu_state_msg_.load_nodes[i].load = cpu_usage_node;
   }
 
   // Get cpu temperature stats
@@ -557,14 +626,14 @@ int CpuMemMonitor::CollectMemStats() {
 
   mem_load_value_ = mem_state_msg_.ram_used / mem_state_msg_.ram_total * 1e+2;
 
-  // Go through all the node list and
+  // Go through all the node list and check memory usage
   int i = -1;
   std::map<std::string, int>::iterator it;
   for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
     // Increment counter
     i++;
     // Look if PID is invalid
-    if (it->second == -1)
+    if (it->second <= 0)
       continue;
     // Get Memory useage for individual nodes
     mem_state_msg_.nodes[i].name = it->first;
@@ -641,9 +710,6 @@ void CpuMemMonitor::AssertMemStats() {
 }
 
 void CpuMemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
-  // Get PIDs of the nodes to monitor
-  GetPIDs();
-
   // Get cpu stats
   if (CollectCPUStats() < 0) {
     ROS_FATAL("CPU node unable to get load stats!");
