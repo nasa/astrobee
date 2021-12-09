@@ -12,12 +12,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
     - name: Build code for Ubuntu 16
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
+      run: docker build . -f ./scripts/docker/astrobee_quick.Dockerfile
                           --build-arg UBUNTU_VERSION=16.04
                           --build-arg ROS_VERSION=kinetic
                           --build-arg PYTHON=''
@@ -35,12 +37,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
     - name: Build code for Ubuntu 18
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
+      run: docker build . -f ./scripts/docker/astrobee_quick.Dockerfile
                           --build-arg UBUNTU_VERSION=18.04
                           --build-arg ROS_VERSION=melodic
                           --build-arg PYTHON=3
@@ -58,12 +62,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
     - name: Build code for Ubuntu 20
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
+      run: docker build . -f ./scripts/docker/astrobee_quick.Dockerfile
                           --build-arg UBUNTU_VERSION=20.04
                           --build-arg ROS_VERSION=noetic
                           --build-arg PYTHON=3
