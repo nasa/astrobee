@@ -33,6 +33,9 @@
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
+#include <string>
+#include <vector>
+
 #include "depth_odometry_display.h"  // NOLINT
 #include "utilities.h"               // NOLINT
 
@@ -74,19 +77,16 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
                                                               this, SLOT(createCorrespondencesImage())));
 
   image_transport::ImageTransport image_transport(nh_);
-  const std::string image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+  const std::string image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                   static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
-    "/hw/depth_haz/extended/amplitude_int";
+                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
+                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
   image_sub_ = image_transport.subscribe(image_topic, 10, &DepthOdometryDisplay::imageCallback, this);
   const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                         static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
   point_cloud_sub_ = nh_.subscribe<sensor_msgs::PointCloud2>(
     point_cloud_topic, 10, &DepthOdometryDisplay::pointCloudCallback, this, ros::TransportHints().tcpNoDelay());
-  depth_odom_sub_ =
-    nh_.subscribe<ff_msgs::Odometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10, &DepthOdometryDisplay::depthOdomCallback, this,
-                                     ros::TransportHints().tcpNoDelay());
   correspondence_image_pub_ = image_transport.advertise("/depth_odom/correspondence_image", 1);
   projection_image_pub_ = image_transport.advertise("/depth_odom/projection_image", 1);
   source_correspondence_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("source_point_with_correspondence", 10);
@@ -114,19 +114,15 @@ void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2Cons
   point_cloud_buffer_.Add(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
 }
 
-void DepthOdometryDisplay::depthOdomCallback(const ff_msgs::OdometryConstPtr& depth_odom_msg) {
-  // TODO(rsoussan): Add better conversion from pose_msg to isometry3d
-  const auto pose = msg_conversions::ros_pose_to_eigen_transform(depth_odom_msg->sensor_F_a_T_b.pose);
-  const auto time = lc::TimeFromHeader(depth_odom_msg->header);
-  relative_pose_buffer_.Add(time, pose);
-}
 
-void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg) {
-  latest_correspondences_msg_ = correspondences_msg;
+void DepthOdometryDisplay::processMessage(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg) {
+  depth_odometry_buffer_.Add(lc::TimeFromHeader(depth_odometry_msg->header),
+                             lm::MakeDepthOdometryMeasurement(*depth_odometry_msg));
   createCorrespondencesImage();
   createProjectionImage();
 }
 
+// TODO(rsoussan): Move this to vision_common?
 cv::Point2f DepthOdometryDisplay::projectPoint(const Eigen::Vector3d& point_3d) {
   cv::Mat zero_r(cv::Mat::eye(3, 3, cv::DataType<double>::type));
   cv::Mat zero_t(cv::Mat::zeros(3, 1, cv::DataType<double>::type));
@@ -138,15 +134,15 @@ cv::Point2f DepthOdometryDisplay::projectPoint(const Eigen::Vector3d& point_3d) 
 }
 
 void DepthOdometryDisplay::createProjectionImage() {
-  if (!latest_correspondences_msg_) return;
-  const lc::Time source_time = lc::TimeFromRosTime(latest_correspondences_msg_->source_time);
-  const lc::Time target_time = lc::TimeFromRosTime(latest_correspondences_msg_->target_time);
+  const auto depth_odometry = depth_odometry_buffer_.GetLatest();
+  if (!depth_odometry) return;
+  if (!depth_odometry->correspondences.valid_image_points) return;
+
+  const lc::Time source_time = depth_odometry->odometry.source_time;
+  const lc::Time target_time = depth_odometry->odometry.target_time;
   const auto source_image_msg = img_buffer_.Get(source_time);
   const auto target_image_msg = img_buffer_.Get(target_time);
   if (!source_image_msg || !target_image_msg) return;
-
-  const auto source_T_target = relative_pose_buffer_.Get(target_time);
-  if (!source_T_target) return;
 
   auto source_image_measurement = lm::MakeImageMeasurement(*source_image_msg, sensor_msgs::image_encodings::RGB8);
   if (!source_image_measurement) return;
@@ -163,14 +159,16 @@ void DepthOdometryDisplay::createProjectionImage() {
   const int cols = target_image.cols;
   projection_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
-  for (const auto& correspondence : latest_correspondences_msg_->correspondences) {
+  const auto& correspondences = depth_odometry->correspondences;
+  for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
     const cv::Point2f source_image_point =
-      gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point), *camera_params_);
-    const Eigen::Vector3d target_3d_point = mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
-    const Eigen::Vector3d frame_changed_target_3d_point = *source_T_target * target_3d_point;
+      gb::Distort(correspondences.source_image_points[i], *camera_params_);
+    const Eigen::Vector3d& target_3d_point = correspondences.target_3d_points[i];
+    const Eigen::Vector3d frame_changed_target_3d_point =
+      depth_odometry->odometry.sensor_F_source_T_target.pose * target_3d_point;
     const auto projected_target_point = projectPoint(frame_changed_target_3d_point);
     const cv::Point2f target_image_point =
-      gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point), *camera_params_);
+      gb::Distort(correspondences.target_image_points[i], *camera_params_);
     cv::circle(source_image, source_image_point, 1 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
     cv::circle(source_image, projected_target_point, 1 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
     cv::line(source_image, target_image_point, source_image_point, cv::Scalar(0, 255, 0), 2, 8, 0);
@@ -183,18 +181,19 @@ void DepthOdometryDisplay::createProjectionImage() {
   // Account for time offset when erasing point cloud buffer
   point_cloud_buffer_.EraseUpTo(source_time - 0.05);
   img_buffer_.EraseUpTo(source_time);
+  depth_odometry_buffer_.EraseUpTo(source_time);
 }
 
 void DepthOdometryDisplay::createCorrespondencesImage() {
   clearDisplay();
-  if (!latest_correspondences_msg_) return;
-  const lc::Time source_time = lc::TimeFromRosTime(latest_correspondences_msg_->source_time);
-  const lc::Time target_time = lc::TimeFromRosTime(latest_correspondences_msg_->target_time);
+  const auto depth_odometry = depth_odometry_buffer_.GetLatest();
+  if (!depth_odometry) return;
+  if (!depth_odometry->correspondences.valid_image_points) return;
+  const lc::Time source_time = depth_odometry->odometry.source_time;
+  const lc::Time target_time = depth_odometry->odometry.target_time;
   const auto source_image_msg = img_buffer_.Get(source_time);
   const auto target_image_msg = img_buffer_.Get(target_time);
   if (!source_image_msg || !target_image_msg) return;
-  const auto source_T_target = relative_pose_buffer_.Get(target_time);
-  if (!source_T_target) return;
 
   auto source_image_measurement = lm::MakeImageMeasurement(*source_image_msg, sensor_msgs::image_encodings::RGB8);
   if (!source_image_measurement) return;
@@ -212,16 +211,16 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   const int cols = target_image.cols;
   correspondence_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
-  correspondence_index_slider_->setMaximum(latest_correspondences_msg_->correspondences.size() - 1);
+  correspondence_index_slider_->setMaximum(depth_odometry->correspondences.target_3d_points.size() - 1);
   const int correspondence_index = correspondence_index_slider_->getInt();
-  const auto correspondence = latest_correspondences_msg_->correspondences[correspondence_index];
   const cv::Point2f source_image_point =
-    gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.source_image_point), *camera_params_);
-  const Eigen::Vector3d target_3d_point = mc::VectorFromMsg<Eigen::Vector3d>(correspondence.target_3d_point);
-  const Eigen::Vector3d frame_changed_target_3d_point = *source_T_target * target_3d_point;
+    gb::Distort(depth_odometry->correspondences.source_image_points[correspondence_index], *camera_params_);
+  const Eigen::Vector3d& target_3d_point = depth_odometry->correspondences.target_3d_points[correspondence_index];
+  const Eigen::Vector3d frame_changed_target_3d_point =
+    depth_odometry->odometry.sensor_F_source_T_target.pose * target_3d_point;
   const auto projected_target_point = projectPoint(frame_changed_target_3d_point);
-  const cv::Point2f target_image_point =
-    gb::Distort(mc::Vector2dFromMsg<Eigen::Vector2d>(correspondence.target_image_point), *camera_params_);
+const cv::Point2f target_image_point =
+    gb::Distort(depth_odometry->correspondences.target_image_points[correspondence_index], *camera_params_);
   const cv::Point2f rectangle_offset(40, 40);
   cv::circle(source_image, source_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
   cv::rectangle(source_image, source_image_point - rectangle_offset, source_image_point + rectangle_offset,
@@ -233,22 +232,24 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   source_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   target_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());
-  // publishCorrespondencePoints(correspondence, source_time, target_time);
+  const Eigen::Vector3d& source_3d_point = depth_odometry->correspondences.source_3d_points[correspondence_index];
+  publishCorrespondencePoints(source_3d_point, target_3d_point, source_time, target_time);
 }
 
-void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
+void DepthOdometryDisplay::publishCorrespondencePoints(const Eigen::Vector3d& source_3d_point,
+                                                       const Eigen::Vector3d& target_3d_point,
                                                        const lc::Time source_time, const lc::Time target_time) {
   const auto source_point_cloud = point_cloud_buffer_.GetNearby(source_time, 0.05);
   const auto target_point_cloud = point_cloud_buffer_.GetNearby(target_time, 0.05);
   if (!source_point_cloud || !target_point_cloud) return;
   geometry_msgs::PointStamped source_3d_point_msg;
-  source_3d_point_msg.point = correspondence.source_3d_point;
+  mc::VectorToMsg(source_3d_point, source_3d_point_msg.point);
   source_3d_point_msg.header.stamp = ros::Time::now();
   source_3d_point_msg.header.frame_id = "haz_cam";
   source_correspondence_point_pub_.publish(source_3d_point_msg);
 
   geometry_msgs::PointStamped target_3d_point_msg;
-  target_3d_point_msg.point = correspondence.target_3d_point;
+  mc::VectorToMsg(target_3d_point, target_3d_point_msg.point);
   target_3d_point_msg.header.stamp = ros::Time::now();
   target_3d_point_msg.header.frame_id = "haz_cam";
   target_correspondence_point_pub_.publish(target_3d_point_msg);

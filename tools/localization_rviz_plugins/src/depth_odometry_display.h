@@ -22,11 +22,13 @@
 
 // Required for Qt
 #ifndef Q_MOC_RUN
+#include <QObject>
 #include <camera/camera_params.h>
-#include <ff_msgs/DepthCorrespondences.h>
-#include <ff_msgs/Odometry.h>
+#include <ff_msgs/DepthOdometry.h>
 #include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
+#include <localization_measurements/depth_odometry_measurement.h>
+#include <localization_measurements/measurement_conversions.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/core.hpp>
 #include <pcl/point_cloud.h>
@@ -44,7 +46,7 @@ class SceneNode;
 }
 
 namespace localization_rviz_plugins {
-class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCorrespondences> {
+class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdometry> {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
               DepthOdometryDisplay();
@@ -59,13 +61,13 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   void createCorrespondencesImage();
 
  private:
-  void processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg);
+  void processMessage(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg);
   void createProjectionImage();
   cv::Point2f projectPoint(const Eigen::Vector3d& point_3d);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
-  void depthOdomCallback(const ff_msgs::OdometryConstPtr& depth_odom_msg);
-  void publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
+  void publishCorrespondencePoints(const Eigen::Vector3d& source_3d_point,
+                                  const Eigen::Vector3d& target_3d_point,
                                    const localization_common::Time source_time,
                                    const localization_common::Time target_time);
   void clearDisplay();
@@ -74,16 +76,15 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
   cv::Mat intrinsics_;
   cv::Mat distortion_params_;
-  ff_msgs::DepthCorrespondences::ConstPtr latest_correspondences_msg_;
   image_transport::Subscriber image_sub_;
-  ros::Subscriber point_cloud_sub_, depth_odom_sub_;
+  ros::Subscriber point_cloud_sub_;
   ros::Publisher source_correspondence_point_pub_, target_correspondence_point_pub_;
   ros::Publisher source_point_cloud_pub_, target_point_cloud_pub_;
   image_transport::Publisher correspondence_image_pub_, projection_image_pub_;
   ros::NodeHandle nh_;
   localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> img_buffer_;
   localization_common::MeasurementBuffer<pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
-  localization_common::MeasurementBuffer<Eigen::Affine3d> relative_pose_buffer_;
+  localization_common::MeasurementBuffer<localization_measurements::DepthOdometryMeasurement> depth_odometry_buffer_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT

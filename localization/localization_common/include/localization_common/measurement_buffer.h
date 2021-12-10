@@ -35,6 +35,11 @@ class MeasurementBuffer {
     return measurement_it->second;
   }
 
+  boost::optional<MeasurementType> GetLatest() {
+    if (measurements_.empty()) return boost::none;
+    return measurements_.crbegin()->second;
+  }
+
   boost::optional<MeasurementType> GetNearby(const localization_common::Time time, const double tolerance) {
     const auto upper_bound_it = measurements_.lower_bound(time);
     if (upper_bound_it == measurements_.begin()) {
