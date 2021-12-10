@@ -29,18 +29,19 @@ class MeasurementBuffer {
  public:
   void Add(const Time time, const MeasurementType& measurement) { measurements_.emplace(time, measurement); }
 
-  boost::optional<MeasurementType> Get(const localization_common::Time time) {
+  boost::optional<const MeasurementType&> Get(const localization_common::Time time) const {
     const auto measurement_it = measurements_.find(time);
     if (measurement_it == measurements_.end()) return boost::none;
     return measurement_it->second;
   }
 
-  boost::optional<MeasurementType> GetLatest() {
+  boost::optional<const MeasurementType&> GetLatest() const {
     if (measurements_.empty()) return boost::none;
     return measurements_.crbegin()->second;
   }
 
-  boost::optional<MeasurementType> GetNearby(const localization_common::Time time, const double tolerance) {
+  boost::optional<const MeasurementType&> GetNearby(const localization_common::Time time,
+                                                    const double tolerance) const {
     const auto upper_bound_it = measurements_.lower_bound(time);
     if (upper_bound_it == measurements_.begin()) {
       if (ValidTime(upper_bound_it->first, time, tolerance)) {
@@ -79,13 +80,13 @@ class MeasurementBuffer {
     measurements_.erase(measurements_.begin(), measurement_it);
   }
 
-  const std::map<Time, MeasurementType>& measurements() { return measurements_; }
+  const std::map<Time, MeasurementType>& measurements() const { return measurements_; }
 
-  size_t size() { return measurements_.size(); }
+  size_t size() const { return measurements_.size(); }
 
  private:
-  bool ValidTime(const localization_common::Time time_a, const localization_common::Time time_b,
-                 const double tolerance) {
+  static bool ValidTime(const localization_common::Time time_a, const localization_common::Time time_b,
+                        const double tolerance) {
     return std::abs(time_a - time_b) <= tolerance;
   }
   std::map<Time, MeasurementType> measurements_;
