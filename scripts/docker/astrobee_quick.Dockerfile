@@ -1,6 +1,13 @@
-# This will set up an Astrobee melodic docker container using the non-NASA install instructions.
-# This image builds on top of the base melodic image building the code.
-# You must set the docker context to be the repository root directory
+# This will set up an Astrobee melodic docker container using the non-NASA
+# install instructions. This image builds on top of the base melodic image
+# building the code. You must set the docker context to be the repository root
+# directory
+#
+# This dockerfile is an alternative to `astrobee.Dockerfile`. It uses previous
+# docker image build artifacts to speed up the catkin build step. If, in the
+# future, you were to use a 'quick' astrobee's image as a build cache, be sure
+# to add `catkin clean --orphans` so you don't bloat the cache image down the
+# line.
 
 ARG UBUNTU_VERSION=16.04
 ARG REMOTE=astrobee
