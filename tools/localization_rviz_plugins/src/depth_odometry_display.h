@@ -58,16 +58,15 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdo
   void reset() final;
 
  private Q_SLOTS:  // NOLINT
-  void createCorrespondencesImage();
+  void createCorrespondencesImage(const localization_measurements::DepthOdometryMeasurement& depth_odometry);
 
  private:
   void processMessage(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg);
-  void createProjectionImage();
+  void createProjectionImage(const localization_measurements::DepthOdometryMeasurement& depth_odometry);
   cv::Point2f projectPoint(const Eigen::Vector3d& point_3d);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
-  void publishCorrespondencePoints(const Eigen::Vector3d& source_3d_point,
-                                  const Eigen::Vector3d& target_3d_point,
+  void publishCorrespondencePoints(const Eigen::Vector3d& source_3d_point, const Eigen::Vector3d& target_3d_point,
                                    const localization_common::Time source_time,
                                    const localization_common::Time target_time);
   void clearDisplay();
@@ -84,7 +83,6 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdo
   ros::NodeHandle nh_;
   localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> img_buffer_;
   localization_common::MeasurementBuffer<pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
-  localization_common::MeasurementBuffer<localization_measurements::DepthOdometryMeasurement> depth_odometry_buffer_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT
