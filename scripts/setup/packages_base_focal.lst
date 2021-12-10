@@ -101,6 +101,7 @@ libyaml-cpp-dev
 libusb-1.0-0-dev
 libvtk7-dev
 libpcl-dev
+libpcl-conversions-dev
 libboost-program-options-dev
 libboost-system-dev
 libboost-chrono-dev

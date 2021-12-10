@@ -103,6 +103,7 @@ libtinyxml-dev
 libyaml-cpp-dev
 libusb-1.0-0-dev
 libpcl-dev
+libpcl-conversions-dev
 libboost-program-options-dev
 libboost-signals-dev
 libboost-system-dev
