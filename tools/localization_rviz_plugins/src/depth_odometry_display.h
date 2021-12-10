@@ -58,7 +58,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdo
   void reset() final;
 
  private Q_SLOTS:  // NOLINT
-  void createCorrespondencesImage(const localization_measurements::DepthOdometryMeasurement& depth_odometry);
+  void createCorrespondenceDisplays();
 
  private:
   void processMessage(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg);
@@ -83,6 +83,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdo
   ros::NodeHandle nh_;
   localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> img_buffer_;
   localization_common::MeasurementBuffer<pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
+  boost::optional<localization_measurements::DepthOdometryMeasurement> latest_depth_odometry_measurement_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT
