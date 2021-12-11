@@ -507,7 +507,7 @@ int CpuMemMonitor::CollectCPUStats() {
 
     if (sscanf(buffer, "%*d %*s %*c %*d"                          // pid, command, state, ppid
                        "%*d %*d %*d %*d %*u %*u %*u %*u %*u"
-                       "%lu %lu"                                  // usertime, systemtime
+                       "%" SCNu64 " %" SCNu64                     // usertime, systemtime
                        "%*d %*d %*d %*d %*d %*d %*u"
                        "%*u",                                    // virtual memory size in bytes
                        &utime, &stime) != 2)
