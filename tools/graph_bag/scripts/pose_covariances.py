@@ -21,33 +21,32 @@ import vector3ds
 
 
 class PoseCovariances:
+    def __init__(self):
+        self.position = vector3ds.Vector3ds()
+        self.orientation = vector3ds.Vector3ds()
 
-  def __init__(self):
-    self.position = vector3ds.Vector3ds()
-    self.orientation = vector3ds.Vector3ds()
+    # Assumes 6x6 covariance matrix stored in row major order
+    # 0  1  2  3  4  5
+    # 6  7  8  9  10 11
+    # 12 13 14 15 16 17
+    # 18 19 20 21 22 23
+    # 24 25 26 27 28 29
+    # 30 31 32 33 34 35
+    # Then the position submatrix is
+    # 0  1  2
+    # 6  7  8
+    # 12 13 14
+    # And the orientation submatrix is
+    # 21 22 23
+    # 27 28 29
+    # 33 34 35
+    def add(self, covariance_vector):
+        x = covariance_vector[0]
+        y = covariance_vector[7]
+        z = covariance_vector[14]
+        self.position.add(x, y, z)
 
-  # Assumes 6x6 covariance matrix stored in row major order
-  # 0  1  2  3  4  5 
-  # 6  7  8  9  10 11
-  # 12 13 14 15 16 17 
-  # 18 19 20 21 22 23
-  # 24 25 26 27 28 29 
-  # 30 31 32 33 34 35
-  # Then the position submatrix is 
-  # 0  1  2  
-  # 6  7  8  
-  # 12 13 14 
-  # And the orientation submatrix is 
-  # 21 22 23
-  # 27 28 29 
-  # 33 34 35
-  def add(self, covariance_vector):
-    x = covariance_vector[0]
-    y = covariance_vector[7]
-    z = covariance_vector[14]
-    self.position.add(x,y,z)
-
-    rot_x = covariance_vector[21]
-    rot_y = covariance_vector[28]
-    rot_z = covariance_vector[35]
-    self.orientation.add(rot_x,rot_y,rot_z)
+        rot_x = covariance_vector[21]
+        rot_y = covariance_vector[28]
+        rot_z = covariance_vector[35]
+        self.orientation.add(rot_x, rot_y, rot_z)

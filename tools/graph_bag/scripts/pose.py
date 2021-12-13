@@ -17,13 +17,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 class Pose:
+    def __init__(self, orientation, position):
+        self.orientation = orientation
+        self.position = position
 
-  def __init__(self, orientation, position):
-    self.orientation = orientation
-    self.position = position
-
-  def __mul__(self, pose_b):
-    new_orientation = self.orientation*pose_b.orientation
-    new_position = self.orientation.apply(pose_b.position) + self.position 
-    return Pose(new_orientation, new_position) 
+    def __mul__(self, pose_b):
+        new_orientation = self.orientation * pose_b.orientation
+        new_position = self.orientation.apply(pose_b.position) + self.position
+        return Pose(new_orientation, new_position)
