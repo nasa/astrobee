@@ -32,7 +32,4 @@
   <run_depend>pcl_conversions</run_depend>
   <run_depend>pcl</run_depend>
   <run_depend>roscpp</run_depend>
-  <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
-  </export>
 </package>
