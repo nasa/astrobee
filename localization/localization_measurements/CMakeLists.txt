@@ -27,11 +27,11 @@ find_package(catkin2 REQUIRED COMPONENTS
   config_reader
   localization_common
   msg_conversions
-  pcl_conversions
   point_cloud_common
 )
 
 find_package(PCL REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
