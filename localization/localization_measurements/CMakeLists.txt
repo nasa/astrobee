@@ -37,8 +37,9 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES} 
-  INCLUDE_DIRS include ${PCL_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
   CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions point_cloud_common 
+  DEPENDS pcl_conversions
 )
 
 ###########
