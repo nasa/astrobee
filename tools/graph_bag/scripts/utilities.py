@@ -15,9 +15,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pose
-import poses
-
 import datetime
 import glob
 import os
@@ -25,6 +22,7 @@ import subprocess
 
 import numpy as np
 import pandas as pd
+import pose
 import poses
 import rosbag
 

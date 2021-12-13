@@ -17,12 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import numpy as np
 import orientations
 import pose
 import pose_covariances
-import vector3ds
-
-import numpy as np
 import scipy.spatial.transform
 import vector3ds
 
