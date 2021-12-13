@@ -21,6 +21,8 @@
 
 #include <localization_common/time.h>
 
+#include <boost/optional.hpp>
+
 #include <map>
 
 namespace localization_common {
