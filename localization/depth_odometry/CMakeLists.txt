@@ -43,10 +43,10 @@ find_package(Ceres REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 
 catkin_package(
-  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
+  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
   CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common point_cloud_common vision_common 
-  DEPENDS gtsam pcl pcl_conversions  
+  DEPENDS gtsam pcl 
 )
 
 ###########

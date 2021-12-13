@@ -57,7 +57,6 @@ if (USE_ROS)
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS} 
-    ${PCL_CONVERSIONS_INCLUDE_DIRS}
   )
 
   # Declare C++ libraries

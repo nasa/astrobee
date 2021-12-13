@@ -25,7 +25,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include <point_cloud_common/pcl_conversions.h>
 
 #include <sensor_msgs/PointCloud2.h>
 

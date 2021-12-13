@@ -29,7 +29,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/calib3d.hpp>
 #include <pcl/common/transforms.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include <point_cloud_common/pcl_conversions.h>
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
