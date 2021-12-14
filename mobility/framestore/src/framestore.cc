@@ -47,6 +47,10 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
 
  protected:
   void Initialize(ros::NodeHandle *nh) {
+    // Set custom config path
+    char *path;
+    if ((path = getenv("CUSTOM_CONFIG_DIR")) != NULL)
+      config_.SetPath(path);
     // Read the config
     config_.AddFile("transforms.config");
     if (!ReadParams())
