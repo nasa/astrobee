@@ -34,13 +34,13 @@ find_package(catkin2 REQUIRED COMPONENTS
 
 # Find OpenCV3
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV331 REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
 find_package(Ceres REQUIRED)
 
-find_package(PCL REQUIRED COMPONENTS common)
+find_package(PCL REQUIRED COMPONENTS common search)
 
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} 
@@ -72,7 +72,7 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 
 if(CATKIN_ENABLE_TESTING)
  find_package(rostest REQUIRED)

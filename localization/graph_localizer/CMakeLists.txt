@@ -80,7 +80,7 @@ add_library(${PROJECT_NAME}
   ${cc_files}
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 
 if(CATKIN_ENABLE_TESTING)

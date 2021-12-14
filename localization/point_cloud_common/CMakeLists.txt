@@ -33,7 +33,7 @@ find_package(Eigen3 REQUIRED)
 
 find_package(Ceres REQUIRED)
 
-find_package(PCL REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common features filters registration search)
 
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} 
@@ -62,7 +62,7 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} gtsam)
 
 if(CATKIN_ENABLE_TESTING)
  find_package(rostest REQUIRED)

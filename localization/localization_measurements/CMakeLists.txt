@@ -30,13 +30,17 @@ find_package(catkin2 REQUIRED COMPONENTS
   point_cloud_common
 )
 
-find_package(PCL REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES} 
+  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} 
   INCLUDE_DIRS include ${PCL_INCLUDE_DIRS} 
   CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions point_cloud_common 
 )
@@ -50,6 +54,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
 
