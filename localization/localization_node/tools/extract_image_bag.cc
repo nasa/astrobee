@@ -122,10 +122,11 @@ int main(int argc, char ** argv) {
       // Convert to an opencv image
       cv::Mat image;
       try {
-        image = cv_bridge::toCvShare(image_msg, "bgr8")->image;
+        // It is safer to copy the image from the temporary image_msg.
+        (cv_bridge::toCvShare(image_msg, "bgr8")->image).copyTo(image);
       } catch (cv_bridge::Exception const& e) {
         try {
-          image = cv_bridge::toCvShare(image_msg, "32FC1")->image;
+          (cv_bridge::toCvShare(image_msg, "32FC1")->image).copyTo(image);
         } catch (cv_bridge::Exception const& e) {
           LOG(ERROR) << "Unable to convert " << image_msg->encoding.c_str()
                      << " image to bgr8 or 32FC1";
