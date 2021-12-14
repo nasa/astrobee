@@ -30,6 +30,7 @@
   <!-- Remaining options -->
   <arg name="output" default="log" />         <!-- Output to screen or log   -->
   <arg name="ground_truth_localizer" default="false" /> <!-- Use Ground Truth Localizer      -->
+  <arg name="depth_odometry" default="false" /> <!-- Run depth odometry node -->
   <arg name="drivers" default="true" />       <!-- Should we launch drivers? -->
   <arg name="sim" default="local" />          <!-- SIM IP address            -->
   <arg name="llp" default="local" />          <!-- LLP IP address            -->
@@ -154,6 +155,7 @@
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
         <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" />
+        <arg name="depth_odometry" value="$(arg depth_odometry)" />
       </include>
 
       <!-- If we have specified a bag, then play it back into flight software-->
