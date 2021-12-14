@@ -55,11 +55,16 @@ add_library(framestore
 add_dependencies(framestore ${catkin_EXPORTED_TARGETS})
 target_link_libraries(framestore ${catkin_LIBRARIES})
 
-
 ## Declare a C++ executable: global_transforms
 add_executable(global_transforms tools/global_transforms.cc)
 add_dependencies(global_transforms ${catkin_EXPORTED_TARGETS})
 target_link_libraries(global_transforms
+  framestore gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: custom_transforms
+add_executable(custom_transforms tools/custom_transforms.cc)
+add_dependencies(custom_transforms ${catkin_EXPORTED_TARGETS})
+target_link_libraries(custom_transforms
   framestore gflags glog ${catkin_LIBRARIES})
 
 #############
