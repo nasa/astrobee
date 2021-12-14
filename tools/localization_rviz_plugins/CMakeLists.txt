@@ -64,6 +64,7 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
     src/pose_display.cc
     src/utilities.cc
     src/imu_augmentor_display.cc
+    src/slider_property.cc
     src/sparse_mapping_display.cc
   )
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})

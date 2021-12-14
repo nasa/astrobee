@@ -36,6 +36,7 @@ ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondenc
   lc::TimeToMsg(sensor_F_source_T_target.source_time, depth_odometry_msg.odometry.source_time);
   lc::TimeToMsg(sensor_F_source_T_target.target_time, depth_odometry_msg.odometry.target_time);
   depth_odometry_msg.runtime = runtime;
+  depth_odometry_msg.header.frame_id = "haz_cam";
   return depth_odometry_msg;
 }
 
