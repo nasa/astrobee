@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <vision_common/good_features_to_track_detector.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
@@ -32,6 +33,12 @@ LKOpticalFlowFeatureDetectorAndMatcher::LKOpticalFlowFeatureDetectorAndMatcher(
 
 FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
                                                              const FeatureImage& target_image) {
+  FeatureMatches matches;
+  if (source_image.feature_points().size() <= 0) {
+    LogDebug("Match: Too few feature points provided.");
+    return matches;
+  }
+
   const cv::TermCriteria termination_criteria(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
                                               params_.max_iterations, params_.termination_epsilon);
   const cv::Size window_size(params_.window_width, params_.window_height);
@@ -50,7 +57,6 @@ FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage&
                            termination_criteria, 0, params_.min_eigen_threshold);
 
   // Find matches between forward and backward passes
-  FeatureMatches matches;
   for (int i = 0; i < static_cast<int>(matched_forward_features.size()); ++i) {
     const auto& source_point = source_image.feature_points()[i];
     const auto& forward_point = matched_forward_features[i];
