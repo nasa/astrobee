@@ -60,18 +60,18 @@ namespace registration {
  * \ingroup registration
  */
 template <typename PointSource, typename PointTarget, typename Scalar = float>
-class TransformationEstimationSymmetricPointToPlaneLLS
+class TransformationEstimationSymmetricPointToPlaneLLS2
     : public TransformationEstimation<PointSource, PointTarget, Scalar> {
  public:
-  using Ptr = boost::shared_ptr<TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar> >;
+  using Ptr = boost::shared_ptr<TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar> >;
   using ConstPtr =
-    boost::shared_ptr<const TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar> >;
+    boost::shared_ptr<const TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar> >;
 
   using Matrix4 = typename TransformationEstimation<PointSource, PointTarget, Scalar>::Matrix4;
   using Vector6 = Eigen::Matrix<Scalar, 6, 1>;
 
-  TransformationEstimationSymmetricPointToPlaneLLS() : enforce_same_direction_normals_(true) {}
-  ~TransformationEstimationSymmetricPointToPlaneLLS() {}
+  TransformationEstimationSymmetricPointToPlaneLLS2() : enforce_same_direction_normals_(true) {}
+  ~TransformationEstimationSymmetricPointToPlaneLLS2() {}
 
   /** \brief Estimate a rigid rotation transformation between a source and a target point cloud using SVD.
    * \param[in] cloud_src the source point cloud dataset

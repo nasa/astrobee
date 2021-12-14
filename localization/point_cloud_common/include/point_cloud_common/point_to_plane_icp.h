@@ -24,7 +24,6 @@
 #include <localization_common/utilities.h>
 #include <point_cloud_common/icp_correspondences.h>
 #include <point_cloud_common/point_to_plane_icp_params.h>
-#include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <point_cloud_common/utilities.h>
 
 #include <boost/optional.hpp>
@@ -32,6 +31,8 @@
 // TODO(rsoussan): Switch back to this when PCL bug is fixed
 // #include <pcl/registration/correspondence_rejection_surface_normal.h>
 #include <point_cloud_common/correspondence_rejection_surface_normal2.h>
+// TODO(rsoussan): Remove this when PCL upgraded
+#include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
@@ -98,7 +99,7 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
 
   if (params_.symmetric_objective) {
     auto symmetric_transformation_estimation =
-      boost::make_shared<pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<PointType, PointType>>();
+      boost::make_shared<pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS2<PointType, PointType>>();
     symmetric_transformation_estimation->setEnforceSameDirectionNormals(params_.enforce_same_direction_normals);
     icp.transformation_estimation_ = symmetric_transformation_estimation;
   }

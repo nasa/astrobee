@@ -49,7 +49,7 @@ namespace registration {
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline void
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
   const pcl::PointCloud<PointSource>& cloud_src, const pcl::PointCloud<PointTarget>& cloud_tgt,
   Matrix4& transformation_matrix) const {
   const auto nr_points = cloud_src.size();
@@ -68,7 +68,7 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
 }
 
 template <typename PointSource, typename PointTarget, typename Scalar>
-void TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
+void TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
   const pcl::PointCloud<PointSource>& cloud_src, const std::vector<int>& indices_src,
   const pcl::PointCloud<PointTarget>& cloud_tgt, Matrix4& transformation_matrix) const {
   const auto nr_points = indices_src.size();
@@ -88,7 +88,7 @@ void TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, 
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline void
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
   const pcl::PointCloud<PointSource>& cloud_src, const std::vector<int>& indices_src,
   const pcl::PointCloud<PointTarget>& cloud_tgt, const std::vector<int>& indices_tgt,
   Matrix4& transformation_matrix) const {
@@ -109,7 +109,7 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline void
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
   const pcl::PointCloud<PointSource>& cloud_src, const pcl::PointCloud<PointTarget>& cloud_tgt,
   const pcl::Correspondences& correspondences, Matrix4& transformation_matrix) const {
   ConstCloudIterator<PointSource> source_it(cloud_src, correspondences, true);
@@ -119,7 +119,7 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline void
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::constructTransformationMatrix(
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::constructTransformationMatrix(
   const Vector6& parameters, Matrix4& transformation_matrix) const {
   // Construct the transformation matrix from rotation and translation
   const Eigen::AngleAxis<Scalar> rotation_z(parameters(2), Eigen::Matrix<Scalar, 3, 1>::UnitZ());
@@ -133,7 +133,7 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline void
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::estimateRigidTransformation(
   ConstCloudIterator<PointSource>& source_it, ConstCloudIterator<PointTarget>& target_it,
   Matrix4& transformation_matrix) const {
   using Matrix6 = Eigen::Matrix<Scalar, 6, 6>;
@@ -183,14 +183,14 @@ TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scala
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline void
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::setEnforceSameDirectionNormals(
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::setEnforceSameDirectionNormals(
   bool enforce_same_direction_normals) {
   enforce_same_direction_normals_ = enforce_same_direction_normals;
 }
 
 template <typename PointSource, typename PointTarget, typename Scalar>
 inline bool
-TransformationEstimationSymmetricPointToPlaneLLS<PointSource, PointTarget, Scalar>::getEnforceSameDirectionNormals() {
+TransformationEstimationSymmetricPointToPlaneLLS2<PointSource, PointTarget, Scalar>::getEnforceSameDirectionNormals() {
   return enforce_same_direction_normals_;
 }
 
