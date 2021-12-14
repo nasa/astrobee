@@ -27,6 +27,7 @@
 #include <OGRE/OgreSceneNode.h>
 
 #include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/PointStamped.h>
 #include <opencv2/calib3d.hpp>
 #include <pcl/common/transforms.h>
 #include <point_cloud_common/pcl_conversions.h>
