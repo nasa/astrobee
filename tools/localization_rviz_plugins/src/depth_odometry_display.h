@@ -58,11 +58,11 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdo
   void reset() final;
 
  private Q_SLOTS:  // NOLINT
-  void createCorrespondenceDisplays();
+  void createSingleCorrespondenceDisplays();
 
  private:
   void processMessage(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg);
-  void createProjectionImage(const localization_measurements::DepthOdometryMeasurement& depth_odometry);
+  void createProjectionAndOpticalFlowImage(const localization_measurements::DepthOdometryMeasurement& depth_odometry);
   cv::Point2f projectPoint(const Eigen::Vector3d& point_3d);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
@@ -79,7 +79,7 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthOdo
   ros::Subscriber point_cloud_sub_;
   ros::Publisher source_correspondence_point_pub_, target_correspondence_point_pub_;
   ros::Publisher source_point_cloud_pub_, target_point_cloud_pub_;
-  image_transport::Publisher correspondence_image_pub_, projection_image_pub_;
+  image_transport::Publisher single_correspondence_image_pub_, projection_and_optical_flow_image_pub_;
   ros::NodeHandle nh_;
   localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> img_buffer_;
   localization_common::MeasurementBuffer<pcl::PointCloud<pcl::PointXYZ>::Ptr> point_cloud_buffer_;
