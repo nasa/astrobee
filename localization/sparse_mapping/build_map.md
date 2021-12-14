@@ -56,7 +56,7 @@ temporarily modify the above files to reflect your camera's parameters
 (without checking in your changes).
 
 More details on these and other environmental variables can be found
-in the \subpage astrobee configuration documentation.
+in the \ref astrobee configuration documentation.
 
 ## Reduce the number of images
 
@@ -77,7 +77,7 @@ should inspect the images in the ``eog`` viewer, and delete redundant
 ones from it manually, using the Delete key.
 
 The images can also be inspected and deleted with ``nvm_visualize``, a
-tool included with this software. See \subpage sparsemapping for
+tool included with this software. See \ref sparsemapping for
 details.  This tool, unlike ``eog``, echoes each image name as it is
 displayed, which can be useful with image manipulation tasks.
 
@@ -123,7 +123,7 @@ before doing feature detection. It was shown to create maps that are
 more robust to illumination changes.
 
 In practice, the map is build in pieces, and then merged. Then the
-above process needs to be modified. See \subpage sparsemapping for the
+above process needs to be modified. See \ref sparsemapping for the
 procedure.
 
 ### Map building pipeline
@@ -212,7 +212,7 @@ would drift from each other.
 
 If it is desired to take out images from the map, it should happen at
 this stage, before the vocabulary database and pruning happens at the
-next step. See \subpage sparsemapping when it comes to such
+next step. See \ref sparsemapping when it comes to such
 operations, where the script grow_map.py is used.
 
 #### Vocabulary database
@@ -304,8 +304,8 @@ The xyz locations of the control points for the granite lab, the
 ISS and MGTF are mentioned below.
 
 If a set of world coordinates needs to be acquired, one can use the
-\subpage total_station. (Alternatively one can can try the 
-\subpage faro instrument but that is more technically involved.)
+\ref total_station. (Alternatively one can can try the
+\ref faro instrument but that is more technically involved.)
 
 Register the map with the command:
     
@@ -366,7 +366,7 @@ new image set.
 ### Registration in the granite lab
 
 See the xyz coordinates of the control points used for registration in
-the \subpage granite_lab_registration section.
+the \ref granite_lab_registration section.
 
 ### Registration on the ISS
 
@@ -427,7 +427,7 @@ Python command will refresh them.
 ### Registration in the MGTF
 
 A set of 10 registration points were measured in the MGTF with the
-\subpage total_station. They are in the file:
+\ref total_station. They are in the file:
 
     $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
 
@@ -590,7 +590,7 @@ and compared to the old ones via:
 
 ## Evaluating the map without running the localization node
 
-See the \subpage ekfbag page for how to run the ``sparse_map_eval``
+See the \ref ekfbag page for how to run the ``sparse_map_eval``
 tool that takes as inputs a bag and a BRISK map and prints the number
 of detected features.
 
