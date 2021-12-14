@@ -90,6 +90,9 @@ void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, Dep
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.noise_scale = mc::LoadDouble(config, "depth_odometry_adder_noise_scale");
   params.use_points_between_factor = mc::LoadBool(config, "depth_odometry_adder_use_points_between_factor");
+  params.position_covariance_threshold = mc::LoadDouble(config, "depth_odometry_adder_position_covariance_threshold");
+  params.orientation_covariance_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_orientation_covariance_threshold");
   params.body_T_sensor = lc::LoadTransform(config, "haz_cam_transform");
   params.point_to_point_error_threshold = mc::LoadDouble(config, "depth_odometry_adder_point_to_point_error_threshold");
   params.pose_translation_norm_threshold =

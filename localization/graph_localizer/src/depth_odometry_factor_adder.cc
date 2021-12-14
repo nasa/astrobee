@@ -33,6 +33,12 @@ DepthOdometryFactorAdder::DepthOdometryFactorAdder(const DepthOdometryFactorAdde
 std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
   const lm::DepthOdometryMeasurement& depth_odometry_measurement) {
   std::vector<go::FactorsToAdd> factors_to_add_vector;
+  if (!lc::PoseCovarianceSane(depth_odometry_measurement.odometry.sensor_F_source_T_target.covariance,
+                              params().position_covariance_threshold, params().orientation_covariance_threshold)) {
+    LogWarning("AddFactors: Sanity check failed - invalid covariance.");
+    return factors_to_add_vector;
+  }
+
   if (params().use_points_between_factor) {
     go::FactorsToAdd points_between_factors_to_add;
     const go::KeyInfo source_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,

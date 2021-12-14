@@ -27,6 +27,8 @@ namespace graph_localizer {
 struct DepthOdometryFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double noise_scale;
   bool use_points_between_factor;
+  double position_covariance_threshold;
+  double orientation_covariance_threshold;
   double point_to_point_error_threshold;
   double pose_translation_norm_threshold;
   int max_num_points_between_factors;
