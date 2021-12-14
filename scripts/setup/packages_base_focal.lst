@@ -124,3 +124,4 @@ libjps3d-dev
 libopencv3.3.1
 libopencv-dev3.3.1
 python3-catkin-tools
+python3-rosdep
