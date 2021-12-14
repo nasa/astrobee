@@ -17,6 +17,12 @@ provided by Astrobee flight software:
     source devel/setup.bash
     popd
 
+In case of a Zsh session, do
+
+    pushd $BUILD_PATH
+    source devel/setup.zsh
+    popd
+
 After this command has completed, you should be able to run `ros` commands from
 any directory in your Linux filesystem.
 

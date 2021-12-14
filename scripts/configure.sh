@@ -311,9 +311,16 @@ if [ $native_build == 1 ] ; then
     cmake_astrobee_path=`catkin locate -s`/cmake
     grep -qF ${cmake_astrobee_path} ~/.bashrc || {
       echo -e '\n' >> ~/.bashrc \ 
-      echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
+      echo 'if [[ ":$CMAKE_PbREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
     }
     source ~/.bashrc
+
+    if [[ -z "${ZSH_VERSION}" ]]; then
+        echo "Setting .zshrc with environment variables..."
+        echo '# Astrobee environment variables' >> ~/.zshrc
+        echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
+        echo 'if [[ ":$CMAKE_PbREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+    fi
 
     catkin profile add native
     catkin profile set native
