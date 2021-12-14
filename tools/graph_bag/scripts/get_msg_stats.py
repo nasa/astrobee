@@ -28,7 +28,7 @@ import numpy as np
 import rosbag
 
 
-def get_stats(bagfile, topic, field, use_size = False):
+def get_stats(bagfile, topic, field, use_size=False):
     with rosbag.Bag(bagfile, "r") as bag:
         vals = []
         for _, msg, _ in bag.read_messages([topic]):
@@ -43,9 +43,9 @@ def get_stats(bagfile, topic, field, use_size = False):
         max_val = np.max(vals)
         stddev_val = np.std(vals)
         print(("Mean " + field + ": " + str(mean_val)))
-        print(("Min " + field + ": " +  str(min_val)))
-        print(("Max " + field + ": " +  str(max_val)))
-        print(("Stddev " + field + ": " +  str(stddev_val)))
+        print(("Min " + field + ": " + str(min_val)))
+        print(("Max " + field + ": " + str(max_val)))
+        print(("Stddev " + field + ": " + str(stddev_val)))
 
 
 if __name__ == "__main__":
@@ -54,9 +54,17 @@ if __name__ == "__main__":
     )
     parser.add_argument("bagfile", help="Input bagfile containing desired topic.")
     parser.add_argument("topic", help="Topic in the bagfile to get stats for.")
-    parser.add_argument("field", help="Field of the message published on the provided topic to get stats for.")
-    parser.add_argument("--use-size", "-s", default=False, action="store_true",
-                    help="Get stats for the size of the provided field.")
+    parser.add_argument(
+        "field",
+        help="Field of the message published on the provided topic to get stats for.",
+    )
+    parser.add_argument(
+        "--use-size",
+        "-s",
+        default=False,
+        action="store_true",
+        help="Get stats for the size of the provided field.",
+    )
 
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
