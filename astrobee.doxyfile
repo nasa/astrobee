@@ -789,7 +789,7 @@ INPUT                  =  README.md \
                           astrobee \
                           simulation \
                           tools \
-                          description \
+                          description/description \
                           licenses.csv
 
 
