@@ -20,6 +20,7 @@
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
 
+#include <opencv2/core/types.hpp>
 #include <opencv2/video/tracking.hpp>
 
 namespace vision_common {
@@ -31,8 +32,8 @@ LKOpticalFlowFeatureDetectorAndMatcher::LKOpticalFlowFeatureDetectorAndMatcher(
 
 FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage& source_image,
                                                              const FeatureImage& target_image) {
-  const cv::TermCriteria termination_criteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, params_.max_iterations,
-                                              params_.termination_epsilon);
+  const cv::TermCriteria termination_criteria(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
+                                              params_.max_iterations, params_.termination_epsilon);
   const cv::Size window_size(params_.window_width, params_.window_height);
   // Perform forward and backward passes on detected features
   std::vector<cv::Point2f> matched_forward_features;
