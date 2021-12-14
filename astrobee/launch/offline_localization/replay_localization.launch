@@ -29,5 +29,5 @@
   <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
   <remap from="/gnc/ekf" to="/bag/gnc/ekf"/>
 
-  <node pkg="rosbag" type="play" name="player" output="screen" launch-prefix="$(arg terminal)" args="--clock $(arg bagfile) --topics /hw/imu /hw/cam_nav /mgt/img_sampler/nav_cam/image_record /mob/flight_mode /loc/ar/features $(arg image_feature_topics)" />
+  <node pkg="rosbag" type="play" name="player" output="screen" launch-prefix="$(arg terminal)" args="--clock $(arg bagfile) --topics /hw/imu /hw/cam_nav /mgt/img_sampler/nav_cam/image_record /mob/flight_mode /loc/ar/features /loc/depth/odom $(arg image_feature_topics)" />
 </launch>
