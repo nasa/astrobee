@@ -1,4 +1,4 @@
-# .git/
+# .git/ This entry was unignored for scripts/docker/astrobee_quick.Dockerfile to retain git history
 scripts/docker/
 submodules/android/
 submodules/avionics/
