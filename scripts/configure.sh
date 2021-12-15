@@ -314,12 +314,15 @@ if [ $native_build == 1 ] ; then
       echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
     }
     source ~/.bashrc
-
-    if [[ -z "${ZSH_VERSION}" ]]; then
+    
+    shell="$SHELL"
+    if [[ ${shell}  == *"zsh"* ]]; then
         echo "Setting .zshrc with environment variables..."
-        echo '# Astrobee environment variables' >> ~/.zshrc
-        echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
-        echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+        grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
+        grep -qF ${cmake_astrobee_path} ~/.zshrc || {
+            echo -e '\n' >> ~/.zshrc \ 
+            echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+        }
     fi
 
     catkin profile add native
