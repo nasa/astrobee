@@ -19,7 +19,7 @@ features detected in the image and their 3D coordinates.
 
 ### Inputs
 
-* `/hw/cam_nav`: Camera images The map file. See the \subpage
+* `/hw/cam_nav`: Camera images The map file. See the \ref
   map_building section (towards the bottom) for its assumed location
   on the robot.
 
@@ -106,7 +106,7 @@ name can change.
 
 ### Building a map
 
-The ``build_map`` tools is used to construct a map. See \subpage
+The ``build_map`` tools is used to construct a map. See \ref
 map_building for further details.
 
 ### Visualization
@@ -162,7 +162,7 @@ built. It can also delete images in this mode, with the 'Delete' and
 ### Localize a single frame
 
 All the commands below assume that the environment was set up, 
-as specified in the \subpage map_building section.
+as specified in the \ref map_building section.
 
 To test localization of a single frame, use the command:
 
@@ -212,7 +212,7 @@ for speed and here we want more accuracy.
 
 ### Testing localization using a bag 
 
-See the \subpage ekfbag page for how to study how well a BRISK map
+See the \ref ekfbag page for how to study how well a BRISK map
 with a vocabulary database does when localizing images from a bag.
 
 ### Extract sub-maps
@@ -260,7 +260,7 @@ Given a set of SURF maps, they can be merged using the command:
       -num_image_overlaps_at_endpoints 50
 
 It is very important to note that only maps with SURF features (see
-\subpage map_building) can be merged. If a map has BRISK features, it
+\ref map_building) can be merged. If a map has BRISK features, it
 needs to be rebuilt with SURF features, as follows:
 
       build_map -rebuild -histogram_equalization       \
@@ -337,7 +337,7 @@ maps using the command:
      images/*jpg -output_map <map file>
 
 examine them individually, merging them as appropriate, then
-performing bundle adjustment and registration as per the \subpage
+performing bundle adjustment and registration as per the \ref
 map_building section. Only when a good enough map is obtained, a
 renamed copy of it should be rebuilt with BRISK features and a
 vocabulary database to be used on the robot.
@@ -492,3 +492,9 @@ Instead of taking images out of the map randomly, one can start with a
 reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
+
+\subpage map_building
+\subpage total_station
+\subpage granite_lab_registration
+\subpage faro
+\subpage theia_map
