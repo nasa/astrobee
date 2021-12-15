@@ -58,7 +58,9 @@ lm::DepthOdometryMeasurement MeasurementFromPose(const Eigen::Isometry3d& pose, 
   odometry.source_time = source_time;
   odometry.target_time = target_time;
   odometry.sensor_F_source_T_target.pose = pose;
+  odometry.sensor_F_source_T_target.covariance = Eigen::Matrix<double, 6, 6>::Identity();
   odometry.body_F_source_T_target.pose = pose;
+  odometry.body_F_source_T_target.covariance = Eigen::Matrix<double, 6, 6>::Identity();
   std::vector<Eigen::Vector3d> empty_points;
   lm::DepthCorrespondences correspondences(empty_points, empty_points);
   return lm::DepthOdometryMeasurement(odometry, correspondences, target_time);
@@ -143,54 +145,74 @@ TEST(DepthOdometryFactorAdderTester, InvalidPose) {
 
 TEST(DepthOdometryFactorAdderTester, Points) {
   auto params = DefaultParams();
-  params.use_points_between_factor = true;
-  gl::DepthOdometryFactorAdder factor_adder(params);
-  const lc::Time source_timestamp = 0;
-  const lc::Time target_timestamp = 0.1;
-  const Eigen::Isometry3d relative_pose = lc::RandomIsometry3d();
-  auto measurement = MeasurementFromPose(relative_pose, source_timestamp, target_timestamp);
-  const int num_inliers = 2;
-  const int num_outliers = 2;
-  AddInlierAndOutlierPoints(num_inliers, num_outliers, params.point_to_point_error_threshold, measurement);
-  ASSERT_EQ(measurement.correspondences.source_3d_points.size(), num_inliers + num_outliers);
-  const auto factors_to_add_vec = factor_adder.AddFactors(measurement);
-  ASSERT_EQ(factors_to_add_vec.size(), 1);
-  EXPECT_EQ(factors_to_add_vec[0].timestamp(), target_timestamp);
-  ASSERT_EQ(factors_to_add_vec[0].Get().size(), num_inliers);
-  // Factor 0
-  {
-    const auto& factor_to_add = factors_to_add_vec[0].Get()[0];
-    // Check Key Info
+  for (int i = 0; i < 50; ++i) {
+    params.use_points_between_factor = true;
+    gl::DepthOdometryFactorAdder factor_adder(params);
+    const lc::Time source_timestamp = 0;
+    const lc::Time target_timestamp = 0.1;
+    const Eigen::Isometry3d relative_pose = lc::RandomIsometry3d();
+    auto measurement = MeasurementFromPose(relative_pose, source_timestamp, target_timestamp);
+    const int num_inliers = 2;
+    const int num_outliers = 2;
+    AddInlierAndOutlierPoints(num_inliers, num_outliers, params.point_to_point_error_threshold, measurement);
+    ASSERT_EQ(measurement.correspondences.source_3d_points.size(), num_inliers + num_outliers);
+    const auto factors_to_add_vec = factor_adder.AddFactors(measurement);
+    ASSERT_EQ(factors_to_add_vec.size(), 1);
+    EXPECT_EQ(factors_to_add_vec[0].timestamp(), target_timestamp);
+    ASSERT_EQ(factors_to_add_vec[0].Get().size(), num_inliers);
+    // Factor 0
     {
-      const auto& key_infos = factor_to_add.key_infos;
-      ASSERT_EQ(key_infos.size(), 2);
-      // Key Info Source
+      const auto& factor_to_add = factors_to_add_vec[0].Get()[0];
+      // Check Key Info
       {
-        const auto& key_info = key_infos[0];
-        EXPECT_FALSE(key_info.is_static());
-        EXPECT_NEAR(key_info.timestamp(), source_timestamp, 1e-6);
-        EXPECT_EQ(key_info.UninitializedKey(), sym::P(0));
-        EXPECT_EQ(key_info.node_updater_type(), go::NodeUpdaterType::CombinedNavState);
+        const auto& key_infos = factor_to_add.key_infos;
+        ASSERT_EQ(key_infos.size(), 2);
+        // Key Info Source
+        {
+          const auto& key_info = key_infos[0];
+          EXPECT_FALSE(key_info.is_static());
+          EXPECT_NEAR(key_info.timestamp(), source_timestamp, 1e-6);
+          EXPECT_EQ(key_info.UninitializedKey(), sym::P(0));
+          EXPECT_EQ(key_info.node_updater_type(), go::NodeUpdaterType::CombinedNavState);
+        }
+        // Key Info Target
+        {
+          const auto& key_info = key_infos[1];
+          EXPECT_FALSE(key_info.is_static());
+          EXPECT_NEAR(key_info.timestamp(), target_timestamp, 1e-6);
+          EXPECT_EQ(key_info.UninitializedKey(), sym::P(0));
+          EXPECT_EQ(key_info.node_updater_type(), go::NodeUpdaterType::CombinedNavState);
+        }
       }
-      // Key Info Target
+      // Check Factor
       {
-        const auto& key_info = key_infos[1];
-        EXPECT_FALSE(key_info.is_static());
-        EXPECT_NEAR(key_info.timestamp(), target_timestamp, 1e-6);
-        EXPECT_EQ(key_info.UninitializedKey(), sym::P(0));
-        EXPECT_EQ(key_info.node_updater_type(), go::NodeUpdaterType::CombinedNavState);
+        const auto factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor_to_add.factor.get());
+        ASSERT_TRUE(factor);
+        const auto& source_point = factor->sensor_t_point_source();
+        EXPECT_PRED2(lc::MatrixEquality<6>, source_point.matrix(),
+                     measurement.correspondences.source_3d_points[0].matrix());
+        const auto& target_point = factor->sensor_t_point_target();
+        EXPECT_PRED2(lc::MatrixEquality<6>, target_point.matrix(),
+                     measurement.correspondences.target_3d_points[0].matrix());
+        const auto& body_T_sensor = factor->body_T_sensor();
+        EXPECT_PRED2(lc::MatrixEquality<6>, body_T_sensor.matrix(), params.body_T_sensor.matrix());
+        const auto& keys = factor->keys();
+        const auto& key_info = factor_to_add.key_infos[0];
+        EXPECT_EQ(keys[0], key_info.UninitializedKey());
+        EXPECT_EQ(keys[1], key_info.UninitializedKey());
       }
     }
-    // Check Factor
+    // Factor 1
     {
+      const auto& factor_to_add = factors_to_add_vec[0].Get()[1];
       const auto factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor_to_add.factor.get());
       ASSERT_TRUE(factor);
       const auto& source_point = factor->sensor_t_point_source();
       EXPECT_PRED2(lc::MatrixEquality<6>, source_point.matrix(),
-                   measurement.correspondences.source_3d_points[0].matrix());
+                   measurement.correspondences.source_3d_points[1].matrix());
       const auto& target_point = factor->sensor_t_point_target();
       EXPECT_PRED2(lc::MatrixEquality<6>, target_point.matrix(),
-                   measurement.correspondences.target_3d_points[0].matrix());
+                   measurement.correspondences.target_3d_points[1].matrix());
       const auto& body_T_sensor = factor->body_T_sensor();
       EXPECT_PRED2(lc::MatrixEquality<6>, body_T_sensor.matrix(), params.body_T_sensor.matrix());
       const auto& keys = factor->keys();
@@ -198,24 +220,6 @@ TEST(DepthOdometryFactorAdderTester, Points) {
       EXPECT_EQ(keys[0], key_info.UninitializedKey());
       EXPECT_EQ(keys[1], key_info.UninitializedKey());
     }
-  }
-  // Factor 1
-  {
-    const auto& factor_to_add = factors_to_add_vec[0].Get()[1];
-    const auto factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor_to_add.factor.get());
-    ASSERT_TRUE(factor);
-    const auto& source_point = factor->sensor_t_point_source();
-    EXPECT_PRED2(lc::MatrixEquality<6>, source_point.matrix(),
-                 measurement.correspondences.source_3d_points[1].matrix());
-    const auto& target_point = factor->sensor_t_point_target();
-    EXPECT_PRED2(lc::MatrixEquality<6>, target_point.matrix(),
-                 measurement.correspondences.target_3d_points[1].matrix());
-    const auto& body_T_sensor = factor->body_T_sensor();
-    EXPECT_PRED2(lc::MatrixEquality<6>, body_T_sensor.matrix(), params.body_T_sensor.matrix());
-    const auto& keys = factor->keys();
-    const auto& key_info = factor_to_add.key_infos[0];
-    EXPECT_EQ(keys[0], key_info.UninitializedKey());
-    EXPECT_EQ(keys[1], key_info.UninitializedKey());
   }
 }
 

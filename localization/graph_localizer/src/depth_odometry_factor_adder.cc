@@ -48,13 +48,13 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
     for (int i = 0; i < depth_odometry_measurement.correspondences.source_3d_points.size() &&
                     points_between_factors_to_add.size() < params().max_num_points_between_factors;
          ++i) {
-      const auto& sensor_t_point_source = depth_odometry_measurement.correspondences.source_3d_points[i];
-      const auto& sensor_t_point_target = depth_odometry_measurement.correspondences.target_3d_points[i];
+      const Eigen::Vector3d& sensor_t_point_source = depth_odometry_measurement.correspondences.source_3d_points[i];
+      const Eigen::Vector3d& sensor_t_point_target = depth_odometry_measurement.correspondences.target_3d_points[i];
 
-      const auto estimate_error =
+      const Eigen::Vector3d estimate_error =
         sensor_t_point_source -
         depth_odometry_measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
-      const auto estimate_error_norm = estimate_error.norm();
+      const double estimate_error_norm = estimate_error.norm();
       if (estimate_error_norm > params().point_to_point_error_threshold) continue;
       const auto points_between_factor_noise =
         Robust(gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params().noise_scale), params().huber_k);
