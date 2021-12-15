@@ -33,7 +33,7 @@ find_package(Eigen3 REQUIRED)
 
 find_package(Ceres REQUIRED)
 
-find_package(PCL REQUIRED COMPONENTS common features filters registration search)
+find_package(PCL REQUIRED COMPONENTS common features filters octree search)
 
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} 

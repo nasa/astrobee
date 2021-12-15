@@ -30,7 +30,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   point_cloud_common
 )
 
-find_package(PCL REQUIRED COMPONENTS common)
+find_package(PCL REQUIRED COMPONENTS common features filters octree search)
 
 # Find OpenCV
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
