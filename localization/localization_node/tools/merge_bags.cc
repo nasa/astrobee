@@ -82,14 +82,37 @@ int main(int argc, char ** argv) {
     }
   }
 
+  // First reorder the bags so that they are merged in the order of
+  // advanced time.
+  std::cout << "Determining the order of bags in time." << std::endl;
+  std::map<double, std::string> time2bag;
+  for (int it = 1; it < argc; it++) {
+    std::string input_bag_file = argv[it];
+
+    // Get the topics from the input bag
+    std::vector<std::string> topics;
+    readTopicsInBag(input_bag_file, topics);
+
+    rosbag::Bag input_bag;
+    input_bag.open(input_bag_file, rosbag::bagmode::Read);
+
+    rosbag::View view(input_bag, rosbag::TopicQuery(topics));
+    for (rosbag::MessageInstance const m : view) {
+      time2bag[m.getTime().toSec()] = input_bag_file;
+      break;
+    }
+
+    input_bag.close();
+  }
+
   // Open the output bag
   std::cout << "Opening the output bag file: " << FLAGS_output_bag << "\n";
   rosbag::Bag output_bag;
   output_bag.open(FLAGS_output_bag, rosbag::bagmode::Write);
 
-  // Append the input bags
-  for (int it = 1; it < argc; it++) {
-    std::string input_bag_file = argv[it];
+  // Append the input bags chronologically.
+  for (auto it = time2bag.begin(); it != time2bag.end(); it++) {
+    std::string input_bag_file = it->second;
 
     std::cout << "Opening the input bag file: " << input_bag_file << "\n";
 

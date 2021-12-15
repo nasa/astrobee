@@ -18,15 +18,20 @@
 # under the License.
 
 # short help
-usage_string="$scriptname [-h] [-x <use ubuntu 16.04 image>]\
- [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]"
+usage_string="$0 usage:  [-h] [-x <use ubuntu 16.04 image>]\
+ [-b <use ubuntu 18.04 image>] [-f <use ubuntu 20.04 image>]\
+ [-r <download remote image>]"
 #[-t make_target]
+docs_url="https://nasa.github.io/astrobee/html/install-docker.html"
 
 usage()
 {
-    echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
+    echo "$usage_string"
+    echo "see: $docs_url"
 }
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+args="dds:=false robot:=sim_pub"
+tagrepo=astrobee
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -36,50 +41,49 @@ while [ "$1" != "" ]; do
                                         ;;
         -f | --focal )                  os="focal"
                                         ;;
-        -h | --help )           		usage
-                                		exit
-                                		;;
-        * )                     		usage
-                                		exit 1
+        -r | --remote )                 tagrepo=ghcr.io/nasa
+                                        ;;
+        --args )                        args+=" $2"
+                                        shift
+                                        ;;
+        -h | --help )                   usage
+                                        exit
+                                        ;;
+        * )                             usage
+                                        exit 1
     esac
     shift
 done
 
+if [ "$os" = "xenial" ]; then
+tag=astrobee:latest-ubuntu16.04
+elif [ "$os" = "bionic" ]; then
+tag=astrobee:latest-ubuntu18.04
+elif [ "$os" = "focal" ]; then
+tag=astrobee:latest-ubuntu20.04
+fi
+
+# check if local docker tag exists
+if [ "$tagrepo" = "astrobee" ] && [[ "$(docker images -q $tagrepo/$tag 2> /dev/null)" == "" ]]; then
+  echo "Tag $tagrepo/$tag not found locally, either build astrobee locally or use the --remote flag."
+  usage
+  exit 1
+fi
 
 rootdir=$(dirname "$(readlink -f "$0")")
 cd $rootdir
 
+# setup XServer for Docker
 XSOCK=/tmp/.X11-unix
 XAUTH=/tmp/.docker.xauth
 touch $XAUTH
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
-if [ "$os" = "xenial" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
         --volume=$XAUTH:$XAUTH:rw \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
-        --user="astrobee" \
         --gpus all \
-      astrobee/astrobee:latest-ubuntu16.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false robot:=sim_pub
-elif [ "$os" = "bionic" ]; then
-docker run -it --rm --name astrobee \
-        --volume=$XSOCK:$XSOCK:rw \
-        --volume=$XAUTH:$XAUTH:rw \
-        --env="XAUTHORITY=${XAUTH}" \
-        --env="DISPLAY" \
-        --user="astrobee" \
-      astrobee/astrobee:latest-ubuntu18.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false robot:=sim_pub
-elif [ "$os" = "focal" ]; then
-docker run -it --rm --name astrobee \
-        --volume=$XSOCK:$XSOCK:rw \
-        --volume=$XAUTH:$XAUTH:rw \
-        --env="XAUTHORITY=${XAUTH}" \
-        --env="DISPLAY" \
-        --user="astrobee" \
-      astrobee/astrobee:latest-ubuntu20.04 \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false robot:=sim_pub
-fi
+      $tagrepo/$tag \
+    /astrobee_init.sh roslaunch astrobee sim.launch $args

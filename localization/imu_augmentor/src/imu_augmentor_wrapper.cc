@@ -41,8 +41,16 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
     LogFatal("Failed to read config files.");
   }
 
-  ii::LoadImuIntegratorParams(config, params_);
-  params_.standstill_enabled = mc::LoadBool(config, "imu_augmentor_standstill");
+  ImuAugmentorParams params;
+  ii::LoadImuIntegratorParams(config, params);
+  params.standstill_enabled = mc::LoadBool(config, "imu_augmentor_standstill");
+  Initialize(params);
+}
+
+ImuAugmentorWrapper::ImuAugmentorWrapper(const ImuAugmentorParams& params) { Initialize(params); }
+
+void ImuAugmentorWrapper::Initialize(const ImuAugmentorParams& params) {
+  params_ = params;
   imu_augmentor_.reset(new ImuAugmentor(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
@@ -61,6 +69,8 @@ void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& l
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
+  // Reset imu augmented state so IMU data is added starting with the most recent combined nav state's biases
+  latest_imu_augmented_combined_nav_state_ = latest_combined_nav_state_;
   latest_loc_msg_ = loc_msg;
   standstill_ = loc_msg.standstill;
 }
@@ -83,7 +93,8 @@ void ImuAugmentorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_m
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
-  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) {
+  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_ ||
+      !latest_imu_augmented_combined_nav_state_) {
     LogError(
       "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
@@ -91,17 +102,24 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
 
   if (standstill()) {
     LogDebugEveryN(100, "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.");
-    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_combined_nav_state_,
+    const auto latest_timestamp = imu_augmentor_->LatestTime();
+    if (!latest_timestamp) {
+      LogError("LatestImuAugmentedCombinedNavStateAndCovariances: Failed to get latest timestamp.");
+      return boost::none;
+    }
+    const lc::CombinedNavState latest_timestamp_combined_nav_state(
+      latest_combined_nav_state_->nav_state(), latest_combined_nav_state_->bias(), *latest_timestamp);
+    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{latest_timestamp_combined_nav_state,
                                                                             *latest_covariances_};
   }
 
-  const auto latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
-  if (!latest_imu_augmented_combined_nav_state) {
+  imu_augmentor_->PimPredict(*latest_combined_nav_state_, *latest_imu_augmented_combined_nav_state_);
+  if (!latest_imu_augmented_combined_nav_state_) {
     LogError("LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.");
     return boost::none;
   }
   // TODO(rsoussan): propogate uncertainties from imu augmentor
-  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_imu_augmented_combined_nav_state,
+  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_imu_augmented_combined_nav_state_,
                                                                           *latest_covariances_};
 }
 

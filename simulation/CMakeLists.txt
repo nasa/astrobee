@@ -37,10 +37,15 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   gnc_autocode
   camera
+  jsonloader
 )
 
 # Find packages
 find_package(gazebo REQUIRED)
+
+# Find jsoncpp
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
+find_package(JsonCpp REQUIRED)
 
 # Add gazebo to the link directorries
 link_directories(${GAZEBO_LIBRARY_DIRS})
@@ -88,6 +93,7 @@ catkin_package(
     ff_util
     gnc_autocode
     camera
+    jsonloader
 )
 
 
@@ -100,6 +106,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
+  ${JSONCPP_INCLUDE_DIRS}
 )
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
@@ -350,7 +357,9 @@ install(DIRECTORY launch/
 
 # Also install some other resources
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper scripts/start_server scripts/common
+install(PROGRAMS scripts/perf_wrapper scripts/start_server scripts/common
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS scripts/spawn_model 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 else (ENABLE_GAZEBO)

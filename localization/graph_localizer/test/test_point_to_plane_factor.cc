@@ -16,9 +16,10 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
 #include <graph_localizer/point_to_plane_factor.h>
+#include <graph_localizer/test_utilities.h>
 #include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 #include <localization_measurements/plane.h>
 
 #include <gtsam/base/numericalDerivative.h>
@@ -28,14 +29,15 @@
 #include <gtest/gtest.h>
 
 namespace gl = graph_localizer;
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToPlaneFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = gl::RandomVector();
+    const gtsam::Point3 sensor_t_point = lc::RandomVector();
     const lm::Plane world_T_handrail_plane = gl::RandomPlane();
-    const gtsam::Pose3 body_T_sensor = gl::RandomPose();
-    const gtsam::Pose3 world_T_body = gl::RandomPose();
+    const gtsam::Pose3 body_T_sensor = lc::RandomPose();
+    const gtsam::Pose3 world_T_body = lc::RandomPose();
     const auto noise = gtsam::noiseModel::Unit::Create(1);
     const gtsam::PointToPlaneFactor factor(sensor_t_point, world_T_handrail_plane, body_T_sensor, noise, sym::P(0));
     gtsam::Matrix H;

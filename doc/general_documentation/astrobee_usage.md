@@ -3,6 +3,8 @@
 
 \subpage astrobee
 
+\subpage astrobee-code-style
+
 \subpage teleop
 
 \subpage release

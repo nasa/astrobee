@@ -282,9 +282,10 @@ TEST_P(SparseMapTest, MapExtractMerge) {
   bool skip_bundle_adjustment = false;
   int num_image_overlaps_at_endpoints = 10;
   double outlier_factor = 3;
+  bool fix_first_map = false;
   sparse_mapping::AppendMapFile(submap1_file, submap2_file,
                                 num_image_overlaps_at_endpoints, outlier_factor,
-                                !skip_bundle_adjustment);
+                                !skip_bundle_adjustment, fix_first_map);
 
   // Read the merged map, and check if we have 3 frames as expected
   LOG(INFO) << "Reading: " << submap1_file << std::endl;

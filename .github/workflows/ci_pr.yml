@@ -21,7 +21,7 @@ jobs:
                           --build-arg UBUNTU_VERSION=16.04
                           --build-arg ROS_VERSION=kinetic
                           --build-arg PYTHON=''
-                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
+                          --build-arg REMOTE=ghcr.io/nasa
                           -t astrobee/astrobee:latest-ubuntu16.04
 
     - name: Test code
@@ -44,7 +44,7 @@ jobs:
                           --build-arg UBUNTU_VERSION=18.04
                           --build-arg ROS_VERSION=melodic
                           --build-arg PYTHON=3
-                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
+                          --build-arg REMOTE=ghcr.io/nasa
                           -t astrobee/astrobee:latest-ubuntu18.04
 
     - name: Test code
@@ -67,7 +67,7 @@ jobs:
                           --build-arg UBUNTU_VERSION=20.04
                           --build-arg ROS_VERSION=noetic
                           --build-arg PYTHON=3
-                          --build-arg REMOTE=ghcr.io/${{ github.repository_owner }}
+                          --build-arg REMOTE=ghcr.io/nasa
                           -t astrobee/astrobee:latest-ubuntu20.04
 
     - name: Test code
