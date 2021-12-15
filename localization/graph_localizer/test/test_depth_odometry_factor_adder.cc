@@ -43,6 +43,8 @@ gl::DepthOdometryFactorAdderParams DefaultParams() {
   params.huber_k = 1.345;
   params.noise_scale = 1.0;
   params.use_points_between_factor = false;
+  params.position_covariance_threshold = 100;
+  params.orientation_covariance_threshold = 100;
   params.point_to_point_error_threshold = 10.0;
   params.pose_translation_norm_threshold = 3.0;
   params.max_num_points_between_factors = 100;
