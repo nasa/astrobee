@@ -47,8 +47,16 @@ if (USE_DDS)
   SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
   SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-  # just calls the normal one
-  find_package(Qt5Xml REQUIRED)
+  # find Qt version according to OS
+  find_program(LSB_RELEASE_EXEC lsb_release)
+  execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER_EQUAL "20.04")
+    find_package(Qt5Xml REQUIRED)
+  else ()
+    find_package(Qt4 4.6.0 REQUIRED QtXml)
+  endif ()
+
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
   find_package(Soracore REQUIRED)
