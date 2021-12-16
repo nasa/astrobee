@@ -29,7 +29,9 @@ libtinyxml2.6.2v5
 libpcl-common1.7
 libpcl-features1.7
 libpcl-filters1.7
+libpcl-kdtree1.7
 libpcl-octree1.7
+libpcl-sample-consensus1.7
 libpcl-search1.7
 libjson-c2
 libargtable2-0
