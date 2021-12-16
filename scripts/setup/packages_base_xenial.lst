@@ -27,6 +27,10 @@ libgmp10
 libusb-1.0-0
 libtinyxml2.6.2v5
 libpcl-common1.7
+libpcl-features1.7
+libpcl-filters1.7
+libpcl-octree1.7
+libpcl-search1.7
 libjson-c2
 libargtable2-0
 libboost-program-options1.58.0
