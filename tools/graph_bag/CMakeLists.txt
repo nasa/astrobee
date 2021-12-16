@@ -43,7 +43,7 @@ if (USE_ROS)
   find_package(GTSAM REQUIRED)
 
   catkin_package(
-    LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}
+    LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} 
     INCLUDE_DIRS include
     CATKIN_DEPENDS roscpp rosbag camera depth_odometry ff_util ff_msgs ff_common graph_localizer imu_augmentor imu_bias_tester lk_optical_flow localization_node 
   )
@@ -56,7 +56,6 @@ if (USE_ROS)
     include
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS} 
   )
 
   # Declare C++ libraries
