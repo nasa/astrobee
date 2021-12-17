@@ -16,8 +16,6 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
-
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <vision_common/camera_utilities.h>
@@ -25,6 +23,7 @@
 #include <vision_common/identity_distorter.h>
 #include <vision_common/rad_distorter.h>
 #include <vision_common/radtan_distorter.h>
+#include <vision_common/test_utilities.h>
 
 #include <gtest/gtest.h>
 

@@ -81,7 +81,7 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsFovDistorti
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
-    true_state_parameters.distortion = ca::RandomFovDistortion();
+    true_state_parameters.distortion = vc::RandomFovDistortion();
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
     ca::StateParameters calibrated_state_parameters;
@@ -116,7 +116,7 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadDistorti
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
-    true_state_parameters.distortion = ca::RandomRadDistortion();
+    true_state_parameters.distortion = vc::RandomRadDistortion();
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
     ca::StateParameters calibrated_state_parameters;
@@ -150,7 +150,7 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadTanDisto
     ca::StateParameters true_state_parameters;
     true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
     true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
-    true_state_parameters.distortion = ca::RandomRadTanDistortion();
+    true_state_parameters.distortion = vc::RandomRadTanDistortion();
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
     ca::StateParameters calibrated_state_parameters;

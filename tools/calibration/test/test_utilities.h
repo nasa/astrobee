@@ -24,6 +24,7 @@
 #include <calibration/utilities.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
+#include <vision_common/test_utilities.h>
 
 #include <vector>
 
@@ -48,9 +49,9 @@ std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int 
   std::vector<MatchSet> match_sets;
   match_sets.reserve(num_match_sets);
   for (int i = 0; i < num_match_sets; ++i) {
-    const auto correspondences = RegistrationCorrespondences<DISTORTER>(
-      RandomFrontFacingPose(), intrinsics,
-      TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
+    const auto correspondences = vision_common::RegistrationCorrespondences<DISTORTER>(
+      vision_common::RandomFrontFacingPose(), intrinsics,
+      vision_common::TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
     // Set inliers using correspondence point size since correspondence points with negative z are not
     // included in RegistrationCorrespondences
     std::vector<int> inliers(correspondences.correspondences().size());
@@ -67,15 +68,15 @@ std::vector<MatchSet> EvenlySpacedTargetMatchSets(const int num_pose_rows, const
                                                   const Eigen::Matrix3d& intrinsics,
                                                   const Eigen::VectorXd& distortion) {
   const std::vector<Eigen::Isometry3d> target_poses =
-    EvenlySpacedTargetPoses(num_pose_rows, num_pose_cols, num_pose_y_levels);
+    vision_common::EvenlySpacedTargetPoses(num_pose_rows, num_pose_cols, num_pose_y_levels);
   std::vector<MatchSet> match_sets;
   const int num_match_sets = target_poses.size();
   match_sets.reserve(num_match_sets);
   const std::vector<Eigen::Vector3d> target_points =
-    TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col);
+    vision_common::TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col);
   for (int i = 0; i < num_match_sets; ++i) {
     const auto correspondences =
-      RegistrationCorrespondences<DISTORTER>(target_poses[i], intrinsics, target_points, distortion);
+      vision_common::RegistrationCorrespondences<DISTORTER>(target_poses[i], intrinsics, target_points, distortion);
     // Set inliers using correspondence point size since correspondence points with negative z are not
     // included in RegistrationCorrespondences
     std::vector<int> inliers(correspondences.correspondences().size());

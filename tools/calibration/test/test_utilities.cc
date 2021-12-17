@@ -24,11 +24,12 @@
 
 namespace calibration {
 namespace lc = localization_common;
+namespace vc = vision_common;
 
 CameraTargetBasedIntrinsicsCalibratorParams DefaultCameraTargetBasedIntrinsicsCalibratorParams() {
   CameraTargetBasedIntrinsicsCalibratorParams params;
-  params.optimization = DefaultOptimizationParams();
-  params.reprojection_pose_estimate = DefaultReprojectionPoseEstimateParams();
+  params.optimization = vc::DefaultOptimizationParams();
+  params.reprojection_pose_estimate = vc::DefaultReprojectionPoseEstimateParams();
   params.calibrate_focal_lengths = true;
   params.calibrate_principal_points = true;
   params.calibrate_distortion = true;
