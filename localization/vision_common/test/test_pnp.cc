@@ -27,7 +27,6 @@
 
 #include <gtest/gtest.h>
 
-namespace ca = calibration;
 namespace lc = localization_common;
 namespace vc = vision_common;
 // TODO(rsoussan): Put back ransacpnp tests once pnp issues are resolved
@@ -40,7 +39,7 @@ namespace vc = vision_common;
   intrinsics(0, 2) = 500;
   intrinsics(1, 2) = 500;
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences(pose, intrinsics, ca::TargetPoints(2, 2));
+    const auto correspondences = vc::RegistrationCorrespondences(pose, intrinsics, vc::TargetPoints(2, 2));
     std::vector<cv::Point2d> image_points_cv;
     for (const auto& image_point : correspondences.correspondences().image_points) {
       image_points_cv.emplace_back(cv::Point2d(image_point.x(), image_point.y()));
@@ -55,9 +54,9 @@ namespace vc = vision_common;
     cv::eigen2cv(correspondences.intrinsics(), intrinsics_cv);
     cv::Mat rodrigues_rotation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
     cv::Mat translation_cv(3, 1, cv::DataType<double>::type, cv::Scalar(0));
-    ca::UndistortedPnP(image_points_cv, points_3d_cv, intrinsics_cv, cv::SOLVEPNP_ITERATIVE, rodrigues_rotation_cv,
+    vc::UndistortedPnP(image_points_cv, points_3d_cv, intrinsics_cv, cv::SOLVEPNP_ITERATIVE, rodrigues_rotation_cv,
                        translation_cv);
-    const Eigen::Isometry3d pose_estimate = ca::Isometry3d(rodrigues_rotation_cv, translation_cv);
+    const Eigen::Isometry3d pose_estimate = vc::Isometry3d(rodrigues_rotation_cv, translation_cv);
     LogError("true pose: " << std::endl << correspondences.camera_T_target().matrix());
     LogError("pnp pose: " << std::endl << pose_estimate.matrix());
     // TODO(rsoussan): Decrease tolerance once cv::solvePnP issues are resolved

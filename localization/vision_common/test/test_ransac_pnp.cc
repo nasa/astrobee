@@ -27,7 +27,6 @@
 
 #include <gtest/gtest.h>
 
-namespace ca = calibration;
 namespace lc = localization_common;
 namespace vc = vision_common;
 
