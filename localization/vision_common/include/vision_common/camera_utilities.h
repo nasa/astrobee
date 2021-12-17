@@ -15,18 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_CAMERA_UTILITIES_H_
-#define CALIBRATION_CAMERA_UTILITIES_H_
+#ifndef VISION_COMMON_CAMERA_UTILITIES_H_
+#define VISION_COMMON_CAMERA_UTILITIES_H_
 
-#include <calibration/pose_with_covariance_and_inliers.h>
-#include <calibration/ransac_pnp_params.h>
-#include <calibration/reprojection_pose_estimate_params.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/logger.h>
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/utilities.h>
 #include <optimization_common/residuals.h>
 #include <optimization_common/utilities.h>
+#include <vision_common/pose_with_covariance_and_inliers.h>
+#include <vision_common/ransac_pnp_params.h>
+#include <vision_common/reprojection_pose_estimate_params.h>
 
 #include <Eigen/Geometry>
 
@@ -47,7 +47,7 @@
 #include <utility>
 #include <vector>
 
-namespace calibration {
+namespace vision_common {
 Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics);
 
 template <typename DISTORTER>
@@ -336,5 +336,5 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimateWithInitia
   return ReprojectionPoseEstimateWithInitialEstimate<DISTORTER>(
     image_points, points_3d, focal_lengths, principal_points, distortion, params, initial_estimate, initial_inliers);
 }
-}  // namespace calibration
-#endif  // CALIBRATION_CAMERA_UTILITIES_H_
+}  // namespace vision_common
+#endif  // VISION_COMMON_CAMERA_UTILITIES_H_

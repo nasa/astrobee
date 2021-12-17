@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="calibration" type="test_ransac_pnp" test-name="test_ransac_pnp" />
+  <test pkg="vision_common" type="test_pnp" test-name="test_pnp" />
 </launch>

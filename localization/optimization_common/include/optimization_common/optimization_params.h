@@ -15,19 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
-#define CALIBRATION_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
+#ifndef OPTIMIZATION_COMMON_OPTIMIZATION_PARAMS_H_
+#define OPTIMIZATION_COMMON_OPTIMIZATION_PARAMS_H_
 
-#include <calibration/optimization_params.h>
-#include <calibration/ransac_pnp_params.h>
+#include <ceres/solver.h>
 
-namespace calibration {
-struct ReprojectionPoseEstimateParams {
-  OptimizationParams optimization;
-  RansacPnPParams ransac_pnp;
-  bool optimize_estimate;
-  double max_inlier_threshold;
+namespace optimization_common {
+struct OptimizationParams {
+  ceres::Solver::Options solver_options;
+  bool verbose;
+  double huber_loss;
 };
-}  // namespace calibration
+}  // namespace optimization_common
 
-#endif  // CALIBRATION_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
+#endif  // OPTIMIZATION_COMMON_OPTIMIZATION_PARAMS_H_

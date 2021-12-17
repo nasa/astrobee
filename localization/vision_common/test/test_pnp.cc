@@ -18,11 +18,10 @@
 
 #include "test_utilities.h"  // NOLINT
 
-#include <calibration/camera_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <optimization_common/identity_distorter.h>
-#include <optimization_common/utilities.h>
+#include <vision_common/camera_utilities.h>
+#include <vision_common/identity_distorter.h>
 
 #include <opencv2/calib3d/calib3d.hpp>
 
@@ -30,7 +29,7 @@
 
 namespace ca = calibration;
 namespace lc = localization_common;
-namespace oc = optimization_common;
+namespace vc = vision_common;
 // TODO(rsoussan): Put back ransacpnp tests once pnp issues are resolved
 /*TEST(RansacPnPTester, RansacPnP) {
   Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();

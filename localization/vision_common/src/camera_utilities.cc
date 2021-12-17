@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include <calibration/camera_utilities.h>
 #include <localization_common/utilities.h>
+#include <vision_common/camera_utilities.h>
 
 #include <opencv2/core/eigen.hpp>
 
@@ -25,7 +25,7 @@
 #include <random>
 #include <unordered_map>
 
-namespace calibration {
+namespace vision_common {
 namespace lc = localization_common;
 
 Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics) {
@@ -63,4 +63,4 @@ std::vector<int> RandomNIndices(const int num_possible_indices, const int num_sa
   }
   return sampled_indices;
 }
-}  // namespace calibration
+}  // namespace vision_common

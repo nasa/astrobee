@@ -18,11 +18,10 @@
 
 #include "test_utilities.h"  // NOLINT
 
-#include <calibration/camera_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <optimization_common/identity_distorter.h>
-#include <optimization_common/utilities.h>
+#include <vision_common/camera_utilities.h>
+#include <vision_common/identity_distorter.h>
 
 #include <opencv2/calib3d/calib3d.hpp>
 
@@ -30,23 +29,23 @@
 
 namespace ca = calibration;
 namespace lc = localization_common;
-namespace oc = optimization_common;
+namespace vc = vision_common;
 
 // TODO(rsoussan): Put back RansacPnP tests once pnp issues are resolved
 /*TEST(RansacPnPTester, EvenlySpacedTargetsIdentityDistortionWithNoise) {
-  const auto params = ca::DefaultRansacPnPParams();
+  const auto params = vc::DefaultRansacPnPParams();
   const int num_rows = 5;
   const int num_cols = 5;
   const int num_y_levels = 5;
-  const auto target_poses = ca::EvenlySpacedTargetPoses(num_rows, num_cols, num_y_levels);
-  const auto target_points = ca::TargetPoints(10, 10);
+  const auto target_poses = vc::EvenlySpacedTargetPoses(num_rows, num_cols, num_y_levels);
+  const auto target_points = vc::TargetPoints(10, 10);
   std::vector<int> initial_inliers(target_points.size());
   // Fill inliers with all indices
   std::iota(initial_inliers.begin(), initial_inliers.end(), 0);
   for (int i = 0; i < target_poses.size(); ++i) {
     const auto correspondences =
-      ca::RegistrationCorrespondences<oc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
-    const auto pose_estimate = ca::RansacPnP<oc::IdentityDistorter>(
+      vc::RegistrationCorrespondences<vc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
+    const auto pose_estimate = vc::RansacPnP<vc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
     ASSERT_TRUE(pose_estimate != boost::none);

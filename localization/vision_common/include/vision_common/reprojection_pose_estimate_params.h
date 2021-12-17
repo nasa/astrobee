@@ -15,22 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_POSE_WITH_COVARIANCE_AND_INLIERS_H_
-#define CALIBRATION_POSE_WITH_COVARIANCE_AND_INLIERS_H_
+#ifndef VISION_COMMON_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
+#define VISION_COMMON_REPROJECTION_POSE_ESTIMATE_PARAMS_H_
 
-#include <localization_common/pose_with_covariance.h>
+#include <optimization_common/optimization_params.h>
+#include <vision_common/ransac_pnp_params.h>
 
-#include <Eigen/Geometry>
-
-#include <vector>
-
-namespace calibration {
-struct PoseWithCovarianceAndInliers : public localization_common::PoseWithCovariance {
-  PoseWithCovarianceAndInliers(const Eigen::Isometry3d& pose, const localization_common::PoseCovariance& covariance,
-                               const std::vector<int>& inliers)
-      : PoseWithCovariance(pose, covariance), inliers(inliers) {}
-  std::vector<int> inliers;
+namespace vision_common {
+struct ReprojectionPoseEstimateParams {
+  optimization_common::OptimizationParams optimization;
+  RansacPnPParams ransac_pnp;
+  bool optimize_estimate;
+  double max_inlier_threshold;
 };
-}  // namespace calibration
+}  // namespace vision_common
 
-#endif  // CALIBRATION_POSE_WITH_COVARIANCE_AND_INLIERS_H_
+#endif  // VISION_COMMON_REPROJECTION_POSE_ESTIMATE_PARAMS_H_

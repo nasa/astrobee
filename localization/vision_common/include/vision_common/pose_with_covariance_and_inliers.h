@@ -15,19 +15,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_RANSAC_PNP_PARAMS_H_
-#define CALIBRATION_RANSAC_PNP_PARAMS_H_
+#ifndef VISION_COMMON_POSE_WITH_COVARIANCE_AND_INLIERS_H_
+#define VISION_COMMON_POSE_WITH_COVARIANCE_AND_INLIERS_H_
 
-#include <string>
+#include <localization_common/pose_with_covariance.h>
 
-namespace calibration {
-struct RansacPnPParams {
-  double max_inlier_threshold;
-  int num_iterations;
-  int min_num_inliers;
-  // TODO(rsoussan): Change this to cv::SolvePnPMethod when opencv version updated
-  int pnp_method;
+#include <Eigen/Geometry>
+
+#include <vector>
+
+namespace vision_common {
+struct PoseWithCovarianceAndInliers : public localization_common::PoseWithCovariance {
+  PoseWithCovarianceAndInliers(const Eigen::Isometry3d& pose, const localization_common::PoseCovariance& covariance,
+                               const std::vector<int>& inliers)
+      : PoseWithCovariance(pose, covariance), inliers(inliers) {}
+  std::vector<int> inliers;
 };
-}  // namespace calibration
+}  // namespace vision_common
 
-#endif  // CALIBRATION_RANSAC_PNP_PARAMS_H_
+#endif  // VISION_COMMON_POSE_WITH_COVARIANCE_AND_INLIERS_H_

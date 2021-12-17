@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="calibration" type="test_pnp" test-name="test_pnp" />
+  <test pkg="vision_common" type="test_reprojection_pose_estimate" test-name="test_reprojection_pose_estimate" />
 </launch>

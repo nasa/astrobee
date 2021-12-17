@@ -18,24 +18,23 @@
 
 #include "test_utilities.h"  // NOLINT
 
-#include <calibration/camera_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <optimization_common/identity_distorter.h>
-#include <optimization_common/utilities.h>
+#include <vision_common/camera_utilities.h>
+#include <vision_common/identity_distorter.h>
 
 #include <gtest/gtest.h>
 
-namespace ca = calibration;
 namespace lc = localization_common;
 namespace oc = optimization_common;
+namespace vc = vision_common;
 TEST(CameraUtilitiesTester, Inliers) {
-  const auto params = ca::DefaultReprojectionPoseEstimateParams();
+  const auto params = vc::DefaultReprojectionPoseEstimateParams();
   const double inlier_threshold = 3.0;
   const int num_desired_points = 20;
   for (int i = 0; i < 500; ++i) {
-    const auto correspondences = ca::RegistrationCorrespondences<oc::IdentityDistorter>(
-      ca::RandomFrontFacingPose(), lc::RandomIntrinsics(), ca::RandomFrontFacingPoints(num_desired_points));
+    const auto correspondences = vc::RegistrationCorrespondences<vc::IdentityDistorter>(
+      vc::RandomFrontFacingPose(), lc::RandomIntrinsics(), vc::RandomFrontFacingPoints(num_desired_points));
     const int num_points = static_cast<int>(correspondences.correspondences().size());
     std::vector<Eigen::Vector2d> noisy_image_points;
     std::unordered_set<int> noisy_point_indices;
@@ -55,7 +54,7 @@ TEST(CameraUtilitiesTester, Inliers) {
       }
     }
     std::vector<int> inliers;
-    const int num_inliers = ca::Inliers<oc::IdentityDistorter>(
+    const int num_inliers = vc::Inliers<vc::IdentityDistorter>(
       noisy_image_points, correspondences.correspondences().points_3d, correspondences.intrinsics(), Eigen::VectorXd(1),
       correspondences.camera_T_target(), inlier_threshold, inliers);
     ASSERT_EQ(num_points, inlier_point_indices.size() + noisy_point_indices.size());

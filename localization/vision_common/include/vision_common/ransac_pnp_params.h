@@ -15,17 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef CALIBRATION_OPTIMIZATION_PARAMS_H_
-#define CALIBRATION_OPTIMIZATION_PARAMS_H_
+#ifndef VISION_COMMON_RANSAC_PNP_PARAMS_H_
+#define VISION_COMMON_RANSAC_PNP_PARAMS_H_
 
-#include <ceres/solver.h>
+#include <string>
 
-namespace calibration {
-struct OptimizationParams {
-  ceres::Solver::Options solver_options;
-  bool verbose;
-  double huber_loss;
+namespace vision_common {
+struct RansacPnPParams {
+  double max_inlier_threshold;
+  int num_iterations;
+  int min_num_inliers;
+  // TODO(rsoussan): Change this to cv::SolvePnPMethod when opencv version updated
+  int pnp_method;
 };
-}  // namespace calibration
+}  // namespace vision_common
 
-#endif  // CALIBRATION_OPTIMIZATION_PARAMS_H_
+#endif  // VISION_COMMON_RANSAC_PNP_PARAMS_H_
