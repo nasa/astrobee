@@ -15,12 +15,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_IDENTITY_DISTORTER_H_
-#define OPTIMIZATION_COMMON_IDENTITY_DISTORTER_H_
+#ifndef VISION_COMMON_IDENTITY_DISTORTER_H_
+#define VISION_COMMON_IDENTITY_DISTORTER_H_
 
-#include <optimization_common/distorter.h>
+#include <vision_common/distorter.h>
 
-namespace optimization_common {
+namespace vision_common {
 // TODO(rsoussan): This actually takes 0 params but ceres needs at least 1 to form
 // valid parameter blocks.  Change to 0 when this is avoided.
 class IdentityDistorter : public Distorter<1, IdentityDistorter> {
@@ -44,6 +44,6 @@ class IdentityDistorter : public Distorter<1, IdentityDistorter> {
     return distorted_point;
   }
 };
-}  // namespace optimization_common
+}  // namespace vision_common
 
-#endif  // OPTIMIZATION_COMMON_IDENTITY_DISTORTER_H_
+#endif  // VISION_COMMON_IDENTITY_DISTORTER_H_

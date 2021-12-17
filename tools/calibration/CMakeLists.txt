@@ -27,6 +27,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   localization_common
   msg_conversions
   optimization_common
+  vision_common
 )
 
 # Find OpenCV3
@@ -40,7 +41,7 @@ find_package(Ceres REQUIRED)
 catkin_package(
   INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
-  CATKIN_DEPENDS camera localization_common msg_conversions optimization_common 
+  CATKIN_DEPENDS camera localization_common msg_conversions optimization_common vision_common 
 )
 
 ###########

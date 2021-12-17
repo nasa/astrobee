@@ -15,18 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_RAD_DISTORTER_H_
-#define OPTIMIZATION_COMMON_RAD_DISTORTER_H_
+#ifndef VISION_COMMON_RAD_DISTORTER_H_
+#define VISION_COMMON_RAD_DISTORTER_H_
 
-#include <optimization_common/distorter.h>
-#include <optimization_common/radtan_distorter.h>
-#include <optimization_common/utilities.h>
+#include <vision_common/distorter.h>
+#include <vision_common/radtan_distorter.h>
 
 #include <Eigen/Core>
 
 #include <opencv2/core/eigen.hpp>
 
-namespace optimization_common {
+namespace vision_common {
 class RadDistorter : public Distorter<2, RadDistorter> {
  public:
   using Distorter<2, RadDistorter>::Distort;
@@ -67,6 +66,6 @@ class RadDistorter : public Distorter<2, RadDistorter> {
 
   RadTanDistorter radtan_distorter_;
 };
-}  // namespace optimization_common
+}  // namespace vision_common
 
-#endif  // OPTIMIZATION_COMMON_RAD_DISTORTER_H_
+#endif  // VISION_COMMON_RAD_DISTORTER_H_

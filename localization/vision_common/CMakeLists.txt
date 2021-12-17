@@ -34,7 +34,7 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include 
-  LIBRARIES ${PROJECT_NAME} 
+  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES}  
   CATKIN_DEPENDS localization_common 
 )
 

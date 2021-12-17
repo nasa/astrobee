@@ -21,17 +21,17 @@
 #include <calibration/camera_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <optimization_common/fov_distorter.h>
-#include <optimization_common/identity_distorter.h>
-#include <optimization_common/rad_distorter.h>
-#include <optimization_common/radtan_distorter.h>
 #include <optimization_common/utilities.h>
+#include <vision_common/fov_distorter.h>
+#include <vision_common/identity_distorter.h>
+#include <vision_common/rad_distorter.h>
+#include <vision_common/radtan_distorter.h>
 
 #include <gtest/gtest.h>
 
 namespace ca = calibration;
 namespace lc = localization_common;
-namespace oc = optimization_common;
+namespace vc = vision_common;
 TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsIdentityDistortionWithNoise) {
   const auto params = ca::DefaultReprojectionPoseEstimateParams();
   const int num_rows = 5;
@@ -46,10 +46,10 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsIdentityDistortionWithNo
   const double initial_estimate_rotation_noise = 0.1;
   for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto correspondences =
-      ca::RegistrationCorrespondences<oc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
+      ca::RegistrationCorrespondences<vc::IdentityDistorter>(target_poses[i], lc::RandomIntrinsics(), target_points);
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
-    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::IdentityDistorter>(
+    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<vc::IdentityDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(1), params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
@@ -72,11 +72,11 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsFovDistortionWithNoise) 
   const double initial_estimate_rotation_noise = 0.1;
   for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto distortion = ca::RandomFovDistortion();
-    const auto correspondences = ca::RegistrationCorrespondences<oc::FovDistorter>(
+    const auto correspondences = ca::RegistrationCorrespondences<vc::FovDistorter>(
       target_poses[i], lc::RandomIntrinsics(), target_points, distortion);
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
-    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::FovDistorter>(
+    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<vc::FovDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
@@ -99,11 +99,11 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsRadDistortionWithNoise) 
   const double initial_estimate_rotation_noise = 0.1;
   for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto distortion = ca::RandomRadDistortion();
-    const auto correspondences = ca::RegistrationCorrespondences<oc::RadDistorter>(
+    const auto correspondences = ca::RegistrationCorrespondences<vc::RadDistorter>(
       target_poses[i], lc::RandomIntrinsics(), target_points, distortion);
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
-    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::RadDistorter>(
+    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<vc::RadDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
@@ -126,11 +126,11 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsRadTanDistortionWithNois
   const double initial_estimate_rotation_noise = 0.1;
   for (int i = 0; i < static_cast<int>(target_poses.size()); ++i) {
     const auto distortion = ca::RandomRadTanDistortion();
-    const auto correspondences = ca::RegistrationCorrespondences<oc::RadTanDistorter>(
+    const auto correspondences = ca::RegistrationCorrespondences<vc::RadTanDistorter>(
       target_poses[i], lc::RandomIntrinsics(), target_points, distortion);
     const Eigen::Isometry3d noisy_initial_estimate = lc::AddNoiseToIsometry3d(
       correspondences.camera_T_target(), initial_estimate_translation_noise, initial_estimate_rotation_noise);
-    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<oc::RadTanDistorter>(
+    const auto pose_estimate = ca::ReprojectionPoseEstimateWithInitialEstimate<vc::RadTanDistorter>(
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);

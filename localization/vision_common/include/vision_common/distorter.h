@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef OPTIMIZATION_COMMON_DISTORTER_H_
-#define OPTIMIZATION_COMMON_DISTORTER_H_
+#ifndef VISION_COMMON_DISTORTER_H_
+#define VISION_COMMON_DISTORTER_H_
 
 #include <Eigen/Core>
 
@@ -24,7 +24,7 @@
 
 #include <vector>
 
-namespace optimization_common {
+namespace vision_common {
 template <int NUM_PARAMS, typename DISTORTER>
 class Distorter {
  public:
@@ -50,6 +50,6 @@ class Distorter {
 
   static constexpr int kNumParams = NUM_PARAMS;
 };
-}  // namespace optimization_common
+}  // namespace vision_common
 
-#endif  // OPTIMIZATION_COMMON_DISTORTER_H_
+#endif  // VISION_COMMON_DISTORTER_H_
