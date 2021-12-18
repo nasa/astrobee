@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
@@ -35,6 +37,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
@@ -58,6 +62,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
