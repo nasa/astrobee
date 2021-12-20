@@ -125,6 +125,15 @@ def create_plots(output_file, csv_file, value_combos_file):
             pdf, csv_file, value_combos_file, "rel_imu_bias_tester_orientation_"
         )
 
+        # Depth Odometry RMSEs
+        create_plot(pdf, csv_file, value_combos_file, "depth_odometry_")
+        create_plot(pdf, csv_file, value_combos_file, "depth_odometry_orientation_")
+        create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_")
+        create_plot(
+            pdf, csv_file, value_combos_file, "rel_depth_odometry_orientation_"
+        )
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
