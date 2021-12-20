@@ -156,7 +156,7 @@ def make_all_value_combinations(value_ranges):
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 1
+    steps = 2
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))

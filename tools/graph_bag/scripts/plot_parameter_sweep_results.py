@@ -33,7 +33,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 def create_plot(pdf, csv_file, value_combos_file, prefix=""):
     dataframe = pd.read_csv(csv_file)
-    rmses = dataframe[prefix + "rmse"]
+    try:
+        rmses = dataframe[prefix + "rmse"]
+    except:
+        return
     x_axis_vals = []
     x_axis_label = ""
     if value_combos_file:
