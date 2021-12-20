@@ -32,4 +32,6 @@ This folder consists of various sensing algorithms which serve as input to local
 
 \subpage sparsemapping
 
+\subpage vision_common 
+
 \subpage vive_localization
