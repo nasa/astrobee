@@ -866,6 +866,17 @@ def create_plots(
                 sparse_mapping_poses, depth_odom_relative_poses, "Depth Odometry"
             )
             plot_poses(pdf, depth_odom_poses, sparse_mapping_poses, ar_tag_poses)
+            plot_loc_state_stats(
+                pdf,
+                depth_odom_poses,
+                sparse_mapping_poses,
+                output_csv_file,
+                "depth_odometry_",
+                0.01,
+                False,
+                rmse_rel_start_time=rmse_rel_start_time,
+                rmse_rel_end_time=rmse_rel_end_time,
+            )
             plot_covariances(
                 pdf,
                 depth_odom_relative_poses.times,

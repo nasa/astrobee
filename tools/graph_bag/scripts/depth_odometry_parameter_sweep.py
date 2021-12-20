@@ -72,6 +72,8 @@ def test_values(
         + output_bag
         + " -w "
         + world
+        + " -p "
+        + depth_odometry_config_prefix
     )
     os.system(run_command)
     output_pdf_file = os.path.join(new_output_dir, str(job_id) + "_output.pdf")
@@ -156,13 +158,13 @@ def make_all_value_combinations(value_ranges):
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 2
+    steps = 5 
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
     # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.linspace(0, 1, steps, endpoint=True))
-    value_names.append("lk_quality_level")
+    value_ranges.append(np.linspace(10, 100, steps, endpoint=True))
+    value_names.append("lk_max_corners")
 
     # q_gyro
     # .001 -> 2 deg

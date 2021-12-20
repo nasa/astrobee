@@ -28,7 +28,8 @@
 namespace graph_bag {
 class DepthOdometryAdder {
  public:
-  DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name, const bool save_all_topics);
+  DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name, const bool save_all_topics,
+                     const std::string& config_prefix = "localization/");
   void AddDepthOdometry();
 
  private:
