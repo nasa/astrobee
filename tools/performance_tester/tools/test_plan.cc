@@ -41,10 +41,6 @@
 #include <ctime>
 #include <cstdlib>
 
-// rosrun cpu_mem_monitor -startup_plan /home/mgouveia/ros_ws/astrobee_ops/gds/plans/startup.fplan -move_plan
-// /home/mgouveia/ros_ws/astrobee_ops/gds/plans/testing/granite_square.fplan -data_to_disk
-// /home/mgouveia/ros_ws/astrobee_ops/gds/ControlStationConfig/DataToDisk/MobNavDockSAMPLED.json
-
 // Gflags
 DEFINE_string(ns, "", "Robot namespace");
 
@@ -70,9 +66,9 @@ void PlanCallback(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "test_performance", ros::init_options::AnonymousName);
+  ros::init(argc, argv, "test_plan", ros::init_options::AnonymousName);
   // Gather some data from the command
-  google::SetUsageMessage("Usage: rosrun cpu_mem_monitor test_performance <opts>");
+  google::SetUsageMessage("Usage: rosrun performance_tester test_plan <opts>");
   google::SetVersionString("1.0.0");
   google::ParseCommandLineFlags(&argc, &argv, true);
   // Create a node handle
