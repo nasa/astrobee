@@ -875,7 +875,7 @@ def create_plots(
                 sparse_mapping_poses,
                 output_csv_file,
                 "depth_odometry_",
-                0.1,
+                0.01,
                 False,
                 rmse_rel_start_time=rmse_rel_start_time,
                 rmse_rel_end_time=rmse_rel_end_time,
