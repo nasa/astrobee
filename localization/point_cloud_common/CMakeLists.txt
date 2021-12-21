@@ -35,8 +35,10 @@ find_package(Ceres REQUIRED)
 
 find_package(PCL REQUIRED COMPONENTS common features filters octree search)
 
+find_package(pcl_conversions REQUIRED)
+
 catkin_package(
-  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} 
+  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES} 
   CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common msg_conversions optimization_common 
   DEPENDS gtsam pcl 
@@ -51,6 +53,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS} 
   ${EIGEN3_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
 

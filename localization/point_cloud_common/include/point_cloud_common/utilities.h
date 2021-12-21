@@ -33,6 +33,8 @@
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/search/impl/search.hpp>
 
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <vector>
 
 namespace point_cloud_common {
