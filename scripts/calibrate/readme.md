@@ -140,12 +140,16 @@ picoflexx section should be set to the correct value. This will cause
 the depth camera to run in L2 mode, and produce data on the "extended"
 topic.
 
-After calibration.launch is run, one should also invoke
+After calibration.launch is run, one should also start the pico_proxy
+node which will process the extended topic and produce the needed
+amplitude data.
+
+With the current default setup on the robot, this node should start
+automatically. If it did not, it can be run with the command:
 
   roslaunch $SOURCE_PATH/hardware/pico_driver/launch/pico_proxy.launch 
   
-which will process the extended topic and produce the needed amplitude
-data. Note that on the robot itself this file is stored at:
+ Note that on the robot itself this file is stored at:
 
  /opt/astrobee/share/pico_driver/launch/pico_proxy.launch
 
