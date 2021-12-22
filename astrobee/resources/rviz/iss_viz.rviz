@@ -475,7 +475,7 @@ Visualization Manager:
               Name: "DEBUG: SciCam"
               Normalize Range: true
               Queue Size: 2
-              Transport Hint: raw
+              Transport Hint: compressed
               Unreliable: false
               Value: false
             - Class: rviz/Image
