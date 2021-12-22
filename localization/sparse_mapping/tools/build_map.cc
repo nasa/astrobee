@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
 
   // It is important to get the robot name right
   std::cout << "ASTROBEE_ROBOT=" << getenv("ASTROBEE_ROBOT") << std::endl;
-  
+
   if (FLAGS_output_map == "")
     LOG(FATAL) << "Must specify the output map name.";
 
