@@ -51,6 +51,8 @@ void DepthOdometryAdder::AddDepthOdometry() {
   topics.push_back("/loc/ar/features");
   topics.push_back("/hw/imu");
   topics.push_back("/mob/flight_mode");
+  topics.push_back("/gnc/ekf");
+  topics.push_back("/graph_loc/state");
 
   // Use unique ptr since ternary initialization fails as view construction from another view is private
   std::unique_ptr<rosbag::View> view;

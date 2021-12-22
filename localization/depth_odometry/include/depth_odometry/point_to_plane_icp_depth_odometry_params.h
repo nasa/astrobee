@@ -24,6 +24,8 @@
 namespace depth_odometry {
 struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
   point_cloud_common::PointToPlaneICPParams icp;
+  bool downsample;
+  double downsample_leaf_size;
 };
 }  // namespace depth_odometry
 

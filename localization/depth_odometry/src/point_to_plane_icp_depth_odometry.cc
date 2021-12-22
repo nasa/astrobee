@@ -29,11 +29,21 @@ namespace pc = point_cloud_common;
 PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params)
     : params_(params), icp_(params.icp) {}
 
+pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::DownsampleAndFilterCloud(
+  const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) const {
+  if (params_.downsample) {
+    const auto downsampled_cloud = pc::DownsamplePointCloud<pcl::PointXYZI>(cloud, params_.downsample_leaf_size);
+    return pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(downsampled_cloud,
+                                                                                   params_.icp.search_radius);
+  }
+  return pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(cloud, params_.icp.search_radius);
+}
+
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
   if (!previous_point_cloud_with_normals_ && !latest_point_cloud_with_normals_) {
-    latest_point_cloud_with_normals_ = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
-      depth_image_measurement.depth_image.unfiltered_point_cloud(), params_.icp.search_radius);
+    latest_point_cloud_with_normals_ =
+      DownsampleAndFilterCloud(depth_image_measurement.depth_image.unfiltered_point_cloud());
     latest_timestamp_ = depth_image_measurement.timestamp;
     return boost::none;
   }
@@ -45,8 +55,8 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
 
   previous_point_cloud_with_normals_ = latest_point_cloud_with_normals_;
   previous_timestamp_ = latest_timestamp_;
-  latest_point_cloud_with_normals_ = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
-    depth_image_measurement.depth_image.unfiltered_point_cloud(), params_.icp.search_radius);
+  latest_point_cloud_with_normals_ =
+    DownsampleAndFilterCloud(depth_image_measurement.depth_image.unfiltered_point_cloud());
   latest_timestamp_ = timestamp;
 
   const double time_diff = latest_timestamp_ - previous_timestamp_;

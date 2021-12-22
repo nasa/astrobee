@@ -211,6 +211,8 @@ sensor_msgs::ImageConstPtr MarkerImageMsg(const lc::Time timestamp, const cv::Po
 PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams() {
   PointToPlaneICPDepthOdometryParams params;
   params.icp = pc::DefaultPointToPlaneICPParams();
+  params.downsample = false;
+  params.downsample_leaf_size = 0.02;
   DefaultDepthOdometryParams(params);
   return params;
 }
