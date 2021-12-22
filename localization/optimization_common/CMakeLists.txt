@@ -29,6 +29,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 
 # Non-linear optimizer
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Ceres REQUIRED)
 
 catkin_package(
