@@ -32,6 +32,8 @@ find_package(catkin2 REQUIRED COMPONENTS
 
 find_package(PCL REQUIRED COMPONENTS common features filters octree search)
 
+find_package(pcl_conversions REQUIRED)
+
 # Find OpenCV
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
@@ -40,7 +42,7 @@ find_package(OpenCV331 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} 
+  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${pcl_conversions_INCLUDE_DIRS}  
   INCLUDE_DIRS include ${PCL_INCLUDE_DIRS} 
   CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions point_cloud_common 
 )
@@ -56,6 +58,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
