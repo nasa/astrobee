@@ -1,0 +1,68 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+
+<!-- Runs sparse mapping matcher (localization_node) live using images       -->
+<!-- from the provided input bag.  Optionally records output to a given      -->
+<!-- ouput bagfile. Note this requires a sparse mapping map to be placed in  -->
+<!-- a astrobee/resources/maps/ directory and named iss.map or granite.map   -->
+<!-- depending on the world used.                                            -->
+
+<launch>
+  <!-- Command line arguments -->
+  <!-- Full path to input bagfile -->
+  <arg name="bagfile"/>             
+  <arg name="record" default="false" />
+  <!-- If record set to true, set output_bagfile to desired output -->
+  <group if="$(arg record)">
+    <arg name="output_bagfile"/>  
+  </group>
+  <arg name="robot" default="bumble" />
+  <arg name="world" default="iss" />
+
+
+  <!-- Set environment configs that are required to run nodes -->
+  <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+
+  <!-- Record output if required -->
+  <group if="$(arg record)">
+    <include file="$(find astrobee)/launch/offline_localization/record_localization.launch">
+      <arg name="terminal" value="terminator -x"/>
+      <arg name="output_bagfile" value="$(arg output_bagfile)"/>
+    </include>
+  </group>
+
+  <include file="$(find localization_node)/launch/localization_node.launch">
+    <arg name="terminal" value="terminator -x"/>
+  </include>
+
+  <!-- Play bagfile -->
+  <include file="$(find astrobee)/launch/offline_localization/replay_localization.launch">
+    <arg name="bagfile" value="$(arg bagfile)"/>
+    <arg name="terminal" value="terminator -x"/>
+    <arg name="image_features" value="false"/>
+  </include>
+
+  <!-- Service calls -->
+  <!-- Add 'wait' here so nodes are running before the service calls are made -->
+  <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" />
+</launch>
