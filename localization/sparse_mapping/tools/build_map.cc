@@ -453,6 +453,9 @@ int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  // It is important to get the robot name right
+  std::cout << "ASTROBEE_ROBOT=" << getenv("ASTROBEE_ROBOT") << std::endl;
+
   if (FLAGS_output_map == "")
     LOG(FATAL) << "Must specify the output map name.";
 
