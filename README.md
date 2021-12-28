@@ -42,6 +42,8 @@ due to NASA legal requirements. Thank you for your understanding.
 
 ["A Brief Guide to Astrobee’s Flight Software"](https://github.com/albee/a-brief-guide-to-astrobee/raw/master/a_brief_guide_to_astrobee_latest.pdf) is a good tutorial, with a particular emphasis on the advanced topic of modifying Astrobee's flight software to enable Guidance, Navigation, & Control (GN&C) research. (Note that most guest science can be implemented as an app that uses the [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) without modifying the flight software.)
 
+The ["Astrobee ROS Demo"](https://github.com/Pedro-Roque/astrobee_ros_demo) package provides a C++/Python interface to implement custom control methods in ROS.
+
 For more information, read [Astrobee-related publications](https://www.nasa.gov/content/research-publications-0).
 Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
 [software](https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf),

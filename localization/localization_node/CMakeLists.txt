@@ -56,6 +56,7 @@ catkin_package(
   	tf2
   	sparse_mapping
     msg_conversions
+    ff_util
 )
 
 
