@@ -16,17 +16,15 @@
  * under the License.
  */
 
-#include <ros/ros.h>
-
-#include <interactive_markers/interactive_marker_server.h>
-#include <interactive_markers/menu_handler.h>
-
-#include <tf2_ros/transform_listener.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_util/ff_names.h>
+
+#include <ros/ros.h>
+#include <interactive_markers/interactive_marker_server.h>
+#include <interactive_markers/menu_handler.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <string>
 
