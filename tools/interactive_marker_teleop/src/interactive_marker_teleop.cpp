@@ -150,6 +150,7 @@ void sendMobilityCommand(std::string command) {
 }
 
 void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
+  // TODO(jdekarske) This is a switch for adding a keepout zone check (see below)
   switch (feedback->event_type) {
     case visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT:
       switch (feedback->menu_entry_id) {
@@ -193,7 +194,7 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
       }
       break;
 
-      // TODO(jdekarske) check for keep out zones here
+      // TODO(jdekarske) check for keep out zones here and turn astrobee marker red if invalid
       // case visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE:
       //   ROS_INFO_STREAM(s.str() << ": pose changed"
       //                           << "\nposition = "
@@ -209,6 +210,7 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
       //                           << " time: " << feedback->header.stamp.sec << "sec, "
       //                           << feedback->header.stamp.nsec << " nsec");
       //   break;
+      // TODO(jdekarske) check for keep out zones here and turn astrobee marker red if invalid
   }
 }
 
