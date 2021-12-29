@@ -449,6 +449,18 @@ bool ConfigReader::Table::GetReal(int index, double *val, double min,
     (full_exp_ + '[' + std::to_string(index) + ']').c_str(), val, min, max);
 }
 
+bool ConfigReader::Table::IsNumber(const char *exp) {
+  if (!IsInit()) {
+    return false;
+  }
+
+  if (!config_->PutObjectOnLuaStack(exp, ref_)) {
+    return false;
+  }
+
+  return config_->IsNumber();
+}
+
 //====================================================================//
 ConfigReader::FileHeader::FileHeader(const FileHeader &fh) {
   filename_ = fh.filename_;
@@ -1094,6 +1106,12 @@ bool ConfigReader::ReadReal(const char *exp, double *val, double min,
     return false;
   }
   return true;
+}
+
+bool ConfigReader::IsNumber() {
+  // The function PutObjectOnLuaStack() must have been called before
+  // this, which would populate l_.
+  return lua_isnumber(l_, -1);
 }
 
 }  // namespace config_reader

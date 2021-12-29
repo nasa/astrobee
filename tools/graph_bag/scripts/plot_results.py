@@ -139,10 +139,25 @@ def add_graph_plots(
     plt.close()
 
     # Integrated Velocities
+    integrated_graph_localization_states = utilities.integrate_velocities(
+        graph_localization_states
+    )
+    plot_positions(
+        pdf, integrated_graph_localization_states, sparse_mapping_poses, ar_tag_poses
+    )
+
+
+# TODO(rsoussan): Use this for other pose plotting in this script
+def plot_poses(pdf, poses, sparse_mapping_poses, ar_tag_poses):
+    plot_positions(pdf, poses, sparse_mapping_poses, ar_tag_poses)
+    plot_orientations(pdf, poses, sparse_mapping_poses, ar_tag_poses)
+
+
+def plot_positions(pdf, position_poses, sparse_mapping_poses, ar_tag_poses):
     position_plotter = vector3d_plotter.Vector3dPlotter(
         "Time (s)",
         "Position (m)",
-        "Integrated Graph Velocities vs. Sparse Mapping Position",
+        position_poses.pose_type + " vs. Sparse Mapping Position",
         True,
     )
     position_plotter.add_pose_position(
@@ -160,12 +175,46 @@ def add_graph_plots(
             markeredgewidth=0.1,
             markersize=1.5,
         )
-
-    integrated_graph_localization_states = utilities.integrate_velocities(
-        graph_localization_states
-    )
-    position_plotter.add_pose_position(integrated_graph_localization_states)
+    position_plotter.add_pose_position(position_poses)
     position_plotter.plot(pdf)
+
+
+def plot_orientations(pdf, poses, sparse_mapping_poses, ar_tag_poses):
+    orientation_plotter = vector3d_plotter.Vector3dPlotter(
+        "Time (s)",
+        "Orientation (deg)",
+        poses.pose_type + " vs. Sparse Mapping Orientation",
+        True,
+    )
+    orientation_plotter.add_pose_orientation(
+        sparse_mapping_poses,
+        linestyle="None",
+        marker="o",
+        markeredgewidth=0.1,
+        markersize=1.5,
+    )
+    if ar_tag_poses.times:
+        orientation_plotter.add_pose_orientation(
+            ar_tag_poses,
+            linestyle="None",
+            marker="x",
+            markeredgewidth=0.1,
+            markersize=1.5,
+        )
+    orientation_plotter.add_pose_orientation(poses)
+    orientation_plotter.plot(pdf)
+
+
+def plot_covariances(pdf, times, covariances, name):
+    plt.figure()
+    title = name + " Covariance"
+    plt.plot(times, l2_map(covariances), "r", linewidth=0.5, label=title)
+    plt.title(title)
+    plt.xlabel("Time (s)")
+    plt.ylabel(title)
+    plt.legend(prop={"size": 6})
+    pdf.savefig()
+    plt.close()
 
 
 def plot_features(
@@ -700,6 +749,30 @@ def load_pose_msgs(vec_of_poses, bag, bag_start_time):
                 break
 
 
+def load_odometry_msgs(vec_of_poses, bag, bag_start_time):
+    topics = [poses.topic for poses in vec_of_poses]
+    for topic, msg, t in bag.read_messages(topics):
+        for poses in vec_of_poses:
+            if poses.topic == topic:
+                poses.add_msg_with_covariance(
+                    msg.odometry.body_F_source_T_target,
+                    msg.header.stamp,
+                    bag_start_time,
+                )
+                break
+
+
+def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
+    topics = [poses.topic for poses in vec_of_poses]
+    for topic, msg, t in bag.read_messages(topics):
+        for poses in vec_of_poses:
+            if poses.topic == topic:
+                poses.add_msg_with_covariance(
+                    msg.pose, msg.header.stamp, bag_start_time
+                )
+                break
+
+
 def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
     topics = [loc_states.topic for loc_states in vec_of_loc_states]
     for topic, msg, t in bag.read_messages(topics):
@@ -740,6 +813,9 @@ def create_plots(
     imu_bias_tester_poses = poses.Poses("Imu Bias Tester", "/imu_bias_tester/pose")
     vec_of_poses = [ar_tag_poses, imu_bias_tester_poses]
     load_pose_msgs(vec_of_poses, bag, bag_start_time)
+    has_depth_odom = has_topic(bag, "/loc/depth/odom")
+    depth_odom_relative_poses = poses.Poses("Depth Odom", "/loc/depth/odom")
+    load_odometry_msgs([depth_odom_relative_poses], bag, bag_start_time)
     groundtruth_vec_of_poses = [sparse_mapping_poses]
     load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
 
@@ -784,6 +860,23 @@ def create_plots(
         else:
             add_other_loc_plots(
                 pdf, graph_localization_states, graph_localization_states
+            )
+        if has_depth_odom:
+            depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(
+                sparse_mapping_poses, depth_odom_relative_poses, "Depth Odometry"
+            )
+            plot_poses(pdf, depth_odom_poses, sparse_mapping_poses, ar_tag_poses)
+            plot_covariances(
+                pdf,
+                depth_odom_relative_poses.times,
+                depth_odom_relative_poses.covariances.position,
+                "Depth Odometry Position",
+            )
+            plot_covariances(
+                pdf,
+                depth_odom_relative_poses.times,
+                depth_odom_relative_poses.covariances.orientation,
+                "Depth Odometry Orientation",
             )
         plot_loc_state_stats(
             pdf,

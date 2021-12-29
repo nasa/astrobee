@@ -1,3 +1,13 @@
+astrobee (0.16.0) testing; urgency=medium
+
+  * project compiles with catkin
+  * mapper performance improvement
+  * imu_augmentor performance improvement
+  * calibration improvements
+  * multiple other fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 02 Dec 2021 13:57:39 -0800
+
 astrobee (0.15.2) testing; urgency=medium
 
   * added python linters black and isort in the CI pipeline

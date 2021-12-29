@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  *
@@ -27,6 +26,8 @@ using PoseCovariance = Eigen::Matrix<double, 6, 6>;
 struct PoseWithCovariance {
   PoseWithCovariance(const Eigen::Isometry3d& pose, const PoseCovariance& covariance)
       : pose(pose), covariance(covariance) {}
+  PoseWithCovariance() {}
+
   Eigen::Isometry3d pose;
   PoseCovariance covariance;
 

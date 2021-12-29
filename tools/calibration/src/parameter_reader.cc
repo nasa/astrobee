@@ -24,6 +24,8 @@
 
 namespace calibration {
 namespace mc = msg_conversions;
+namespace oc = optimization_common;
+namespace vc = vision_common;
 
 void LoadRunCalibratorParams(config_reader::ConfigReader& config, RunCalibratorParams& params) {
   LoadCameraTargetBasedIntrinsicsCalibratorParams(config, params.camera_target_based_intrinsics_calibrator);
@@ -56,7 +58,8 @@ void LoadCameraTargetBasedIntrinsicsCalibratorParams(config_reader::ConfigReader
   params.image_size = Eigen::Vector2i(image_width, image_height);
 }
 
-void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params) {
+void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config,
+                                        vc::ReprojectionPoseEstimateParams& params) {
   LoadOptimizationParams(config, params.optimization, "reprojection_");
   LoadRansacPnPParams(config, params.ransac_pnp);
   params.optimize_estimate = mc::LoadBool(config, "reprojection_optimize_estimate");
@@ -85,14 +88,14 @@ void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Optio
   solver_options.parameter_tolerance = mc::LoadDouble(config, prefix + "parameter_tolerance");
 }
 
-void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params,
+void LoadOptimizationParams(config_reader::ConfigReader& config, oc::OptimizationParams& params,
                             const std::string& prefix) {
   LoadSolverOptions(config, params.solver_options, prefix);
   params.verbose = mc::LoadBool(config, prefix + "verbose_optimization");
   params.huber_loss = mc::LoadDouble(config, prefix + "huber_loss");
 }
 
-void LoadRansacPnPParams(config_reader::ConfigReader& config, RansacPnPParams& params) {
+void LoadRansacPnPParams(config_reader::ConfigReader& config, vc::RansacPnPParams& params) {
   params.max_inlier_threshold = mc::LoadDouble(config, "ransac_max_inlier_threshold");
   params.num_iterations = mc::LoadInt(config, "ransac_num_iterations");
   params.min_num_inliers = mc::LoadInt(config, "ransac_min_num_inliers");

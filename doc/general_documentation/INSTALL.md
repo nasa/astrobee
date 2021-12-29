@@ -102,6 +102,17 @@ of turning on and off options. To see which options are supported, simply run
     source ~/.bashrc
     popd
 
+In you run a Zsh session, then
+
+    pushd $ASTROBEE_WS
+    ./src/scripts/configure.sh -l -F -D
+    source ~/.zshrc
+    popd
+
+The configure script modifies your ``.bashrc``/``.zshrc`` to source ``setup.bash``/``setup.zsh`` for 
+the current ROS distribution and to set CMAKE_PREFIX_PATH. It is suggested
+to examine it and see if all changes were made correctly.
+
 If you want to explicitly specify the workspace and install directories, use
 instead:
 

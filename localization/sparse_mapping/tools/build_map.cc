@@ -67,7 +67,7 @@ DEFINE_bool(incremental_ba, false,
 DEFINE_bool(loop_closure, false,
             "Take a map where images start repeating, and close the loop.");
 DEFINE_bool(bundle_adjustment, false,
-              "Perform update output_nvm with bundle adjustment.");
+              "Perform bundle adjustment.");
 DEFINE_bool(rebuild, false,
               "Rebuild the map with BRISK features.");
 DEFINE_bool(rebuild_replace_camera, false,
@@ -452,6 +452,9 @@ void SaveXYZ() {
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  // It is important to get the robot name right
+  std::cout << "ASTROBEE_ROBOT=" << getenv("ASTROBEE_ROBOT") << std::endl;
 
   if (FLAGS_output_map == "")
     LOG(FATAL) << "Must specify the output map name.";

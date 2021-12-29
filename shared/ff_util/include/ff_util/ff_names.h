@@ -278,6 +278,7 @@
 #define SUBSYSTEM_LOCALIZATION                      "loc"
 
 #define NODE_HANDRAIL_DETECT                        "handrail_detect"
+#define NODE_DEPTH_ODOM                             "depth_odom"
 #define NODE_OPTICAL_FLOW                           "of"
 #define NODE_LOCALIZATION_MANAGER                   "localization_manager"
 #define NODE_AR_TAGS                                "ar_tags"
@@ -301,6 +302,7 @@
 #define TOPIC_LOCALIZATION_HR_IMAGE                 "loc/hr/image"
 #define TOPIC_LOCALIZATION_HR_CLOUD                 "loc/hr/cloud"
 #define TOPIC_LOCALIZATION_HR_MARKER                "loc/hr/marker"
+#define TOPIC_LOCALIZATION_DEPTH_ODOM               "loc/depth/odom"
 
 #define TOPIC_LOCALIZATION_OF_DEBUG                 "loc/of/debug_img"
 
@@ -400,6 +402,7 @@
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX             "/points"
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED    "/extended"
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE "/depth_image"
+#define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE "/amplitude_int"
 #define TOPIC_HARDWARE_NAME_HAZ_CAM                 "haz"
 #define TOPIC_HARDWARE_NAME_PERCH_CAM               "perch"
 #define TOPIC_HARDWARE_SPEED_CAM_CAMERA_IMAGE       "hw/speed_cam/camera_image"

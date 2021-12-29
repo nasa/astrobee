@@ -45,11 +45,16 @@
   separate directory is specified.
 */
 
-DEFINE_string(image_list, "", "The list of images to undistort, one per line. If not specified, "
-              "it is assumed they are passed in directly on the command line.");
+DEFINE_string(image_list, "", "A file having the list of images to undistort, one per line. "
+              "If not specified, it is assumed they are passed in directly on the command line.");
 
-DEFINE_string(output_directory, "", "If not specified, undistorted images will "
+DEFINE_string(output_directory, "", "Output directory. If not specified, undistorted images will "
               "saved in the same directory as the inputs.");
+
+DEFINE_string(output_list, "", "Save the undistorted images with names given in this list, "
+              "instead of using the output directory.");
+
+DEFINE_string(undistorted_intrinsics, "", "Save to this file the undistorted camera intrinsics.");
 
 DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their width "
               "being a multiple of this scale compared to the camera model.");
@@ -57,7 +62,7 @@ DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their 
 DEFINE_string(undistorted_crop_win, "",
               "After undistorting, apply a crop window of these dimensions "
               "centered at the undistorted image center. The adjusted "
-              "dimensions and optical center will be displayed below. "
+              "dimensions and optical center will be printed on screen. "
               "Specify as: 'crop_x crop_y'.");
 
 DEFINE_bool(save_bgr, false,
@@ -67,7 +72,7 @@ DEFINE_bool(histogram_equalization, false,
             "If true, do histogram equalization.");
 
 DEFINE_string(robot_camera, "nav_cam",
-              "Which of bot's cameras to use. Anything except nav_cam is experimental.");
+              "Which of bot's cameras to use. Tested with nav_cam and sci_cam.");
 
 int main(int argc, char ** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
@@ -86,6 +91,18 @@ int main(int argc, char ** argv) {
 
   if (images.empty())
       LOG(FATAL) << "Expecting at least one input image.";
+
+  std::vector<std::string> undist_images;
+  if (FLAGS_output_list != "") {
+    std::ifstream ifs(FLAGS_output_list);
+    std::string image;
+    while (ifs >> image)
+      undist_images.push_back(image);
+
+    if (undist_images.size() != images.size())
+      LOG(FATAL) << "There must be as many output undistorted "
+                 << "images as input distorted images.\n";
+  }
 
   // Read the camera
   config_reader::ConfigReader config;
@@ -243,7 +260,10 @@ int main(int argc, char ** argv) {
 
     // The output file name
     std::string undist_file;
-    if (!FLAGS_output_directory.empty()) {
+    if (!undist_images.empty()) {
+      // Was specified via a list
+      undist_file = undist_images[i];
+    } else if (!FLAGS_output_directory.empty()) {
       // A separate output directory was specified
       undist_file = FLAGS_output_directory + "/" + ff_common::basename(filename);
     } else {
@@ -272,15 +292,18 @@ int main(int argc, char ** argv) {
   std::cout << "Focal length:               " << focal_length               << "\n";
   std::cout << "Undistorted optical center: " << optical_center.transpose() << "\n";
 
-  if (!FLAGS_output_directory.empty()) {
-    std::string intrinsics_file = FLAGS_output_directory + "/undistorted_intrinsics.txt";
+  std::string intrinsics_file = FLAGS_undistorted_intrinsics;
+  if (intrinsics_file.empty() && !FLAGS_output_directory.empty())
+    intrinsics_file = FLAGS_output_directory + "/undistorted_intrinsics.txt";
+
+  if (!intrinsics_file.empty()) {
+    std::cout << "Writing: " << intrinsics_file << std::endl;
     std::ofstream ofs(intrinsics_file.c_str());
     ofs.precision(17);
     ofs << "# Unidistored width and height, focal length, undistorted optical center\n";
     ofs << undist_size.transpose() << " " << focal_length << " "
         << optical_center.transpose() << "\n";
     ofs.close();
-    std::cout << "Wrote: " << intrinsics_file << std::endl;
   }
 
   return 0;
