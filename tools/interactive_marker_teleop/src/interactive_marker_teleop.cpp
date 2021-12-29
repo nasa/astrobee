@@ -28,10 +28,7 @@
 
 #include <string>
 
-using visualization_msgs::InteractiveMarker;
-using visualization_msgs::InteractiveMarkerControl;
-using visualization_msgs::InteractiveMarkerFeedbackConstPtr;
-using visualization_msgs::Marker;
+namespace vm = visualization_msgs;
 
 std::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 interactive_markers::MenuHandler menu_handler;
@@ -42,8 +39,8 @@ ros::Subscriber ack_subscriber;
 tf2_ros::Buffer tfBuffer;
 std::shared_ptr<tf2_ros::TransformListener> tfListener;
 
-Marker makeMarker(const std::string marker_type) {
-  Marker marker;
+vm::Marker makeMarker(const std::string marker_type) {
+  vm::Marker marker;
 
   // make it yellowish and see through
   marker.color.r = 1.0;
@@ -56,18 +53,18 @@ Marker makeMarker(const std::string marker_type) {
 
   // return a different marker using meshes from astrobee_media
   if (marker_type == "cube") {
-    marker.type = Marker::CUBE;
+    marker.type = vm::Marker::CUBE;
     marker.scale.x = 0.3175;
     marker.scale.y = 0.3175;
     marker.scale.z = 0.3175;
   } else if (marker_type == "body") {
-    marker.type = Marker::MESH_RESOURCE;
+    marker.type = vm::Marker::MESH_RESOURCE;
     marker.mesh_resource = "package://astrobee_freeflyer/meshes/body.dae";
   } else if (marker_type == "pmc_left") {
-    marker.type = Marker::MESH_RESOURCE;
+    marker.type = vm::Marker::MESH_RESOURCE;
     marker.mesh_resource = "package://astrobee_freeflyer/meshes/pmc_skin_.dae";
   } else if (marker_type == "pmc_right") {
-    marker.type = Marker::MESH_RESOURCE;
+    marker.type = vm::Marker::MESH_RESOURCE;
     marker.mesh_resource = "package://astrobee_freeflyer/meshes/pmc_skin_.dae";
     marker.pose.orientation.z = 1.0;
   }
@@ -75,8 +72,8 @@ Marker makeMarker(const std::string marker_type) {
   return marker;
 }
 
-InteractiveMarkerControl& makeBoxControl(InteractiveMarker& msg) {
-  InteractiveMarkerControl control;
+vm::InteractiveMarkerControl& makeBoxControl(vm::InteractiveMarker& msg) {
+  vm::InteractiveMarkerControl control;
   control.always_visible = true;
   control.markers.push_back(makeMarker("body"));
   control.markers.push_back(makeMarker("pmc_left"));
@@ -149,10 +146,10 @@ void sendMobilityCommand(std::string command) {
   cmd_publisher.publish(cmd);
 }
 
-void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
+void processFeedback(const vm::InteractiveMarkerFeedbackConstPtr& feedback) {
   // TODO(jdekarske) This is a switch for adding a keepout zone check (see below)
   switch (feedback->event_type) {
-    case visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT:
+    case vm::InteractiveMarkerFeedback::MENU_SELECT:
       switch (feedback->menu_entry_id) {
         case 1:  // snap to astrobee
         {
@@ -195,7 +192,7 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
       break;
 
       // TODO(jdekarske) check for keep out zones here and turn astrobee marker red if invalid
-      // case visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE:
+      // case vm::InteractiveMarkerFeedback::POSE_UPDATE:
       //   ROS_INFO_STREAM(s.str() << ": pose changed"
       //                           << "\nposition = "
       //                           << feedback->pose.position.x
@@ -215,7 +212,7 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
 }
 
 void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position) {
-  InteractiveMarker int_marker;
+  vm::InteractiveMarker int_marker;
   int_marker.header.frame_id = "world";
   int_marker.pose = position;
   int_marker.scale = 1;
@@ -227,36 +224,36 @@ void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& po
   makeBoxControl(int_marker);
   int_marker.controls[0].interaction_mode = interaction_mode;
 
-  InteractiveMarkerControl control;
+  vm::InteractiveMarkerControl control;
 
   tf2::Quaternion control_orientation(1.0, 0.0, 0.0, 1.0);
   control_orientation.normalize();
   tf2::convert(control_orientation, control.orientation);
   control.name = "rotate_x";
-  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+  control.interaction_mode = vm::InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
   control.name = "move_x";
-  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+  control.interaction_mode = vm::InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
   control_orientation = tf2::Quaternion(0.0, 1.0, 0.0, 1.0);
   control_orientation.normalize();
   tf2::convert(control_orientation, control.orientation);
   control.name = "rotate_z";
-  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+  control.interaction_mode = vm::InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
   control.name = "move_z";
-  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+  control.interaction_mode = vm::InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
   control_orientation = tf2::Quaternion(0.0, 0.0, 1.0, 1.0);
   control_orientation.normalize();
   tf2::convert(control_orientation, control.orientation);
   control.name = "rotate_y";
-  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+  control.interaction_mode = vm::InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
   control.name = "move_y";
-  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+  control.interaction_mode = vm::InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
   server->insert(int_marker);
@@ -285,7 +282,7 @@ int main(int argc, char** argv) {
   // menu_handler.insert("Remove from plan", &processFeedback);
 
   geometry_msgs::Pose position;
-  make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
+  make6DofMarker(vm::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
   server->applyChanges();
 
   // publish and acknowledge command actions
