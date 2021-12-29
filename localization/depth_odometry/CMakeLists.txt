@@ -62,10 +62,7 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
-<<<<<<< HEAD
-=======
   ${pcl_conversions_INCLUDE_DIRS}
->>>>>>> 2ffae0b9b53b0c165732cc6058ea8ce3ca1c80e9
 )
 
 # Declare C++ libraries
