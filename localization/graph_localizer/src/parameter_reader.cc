@@ -40,6 +40,7 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
   LoadHandrailFactorAdderParams(config, params.handrail_adder);
+  LoadDepthOdometryFactorAdderParams(config, params.depth_odometry_adder);
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
@@ -82,6 +83,21 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+}
+
+void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, DepthOdometryFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "depth_odometry_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.noise_scale = mc::LoadDouble(config, "depth_odometry_adder_noise_scale");
+  params.use_points_between_factor = mc::LoadBool(config, "depth_odometry_adder_use_points_between_factor");
+  params.position_covariance_threshold = mc::LoadDouble(config, "depth_odometry_adder_position_covariance_threshold");
+  params.orientation_covariance_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_orientation_covariance_threshold");
+  params.body_T_sensor = lc::LoadTransform(config, "haz_cam_transform");
+  params.point_to_point_error_threshold = mc::LoadDouble(config, "depth_odometry_adder_point_to_point_error_threshold");
+  params.pose_translation_norm_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_pose_translation_norm_threshold");
+  params.max_num_points_between_factors = mc::LoadDouble(config, "depth_odometry_adder_max_num_points_between_factors");
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -251,6 +267,7 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_optical_flow_buffer_size = mc::LoadInt(config, "max_optical_flow_buffer_size");
   params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
   params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
+  params.max_depth_odometry_buffer_size = mc::LoadInt(config, "max_depth_odometry_buffer_size");
   params.max_dl_buffer_size = mc::LoadInt(config, "max_dl_buffer_size");
 }
 }  // namespace graph_localizer

@@ -23,6 +23,7 @@
 #include <graph_localizer/point_to_line_factor.h>
 #include <graph_localizer/point_to_line_segment_factor.h>
 #include <graph_localizer/point_to_plane_factor.h>
+#include <graph_localizer/point_to_point_between_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
 #include <graph_optimizer/utilities.h>
@@ -78,6 +79,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
+  depth_odometry_factor_adder_.reset(new DepthOdometryFactorAdder(params_.factor.depth_odometry_adder));
   handrail_factor_adder_.reset(new HandrailFactorAdder(params_.factor.handrail_adder));
   loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
@@ -303,8 +305,20 @@ void GraphLocalizer::AddHandrailMeasurement(const lm::HandrailPointsMeasurement&
   }
 
   if (params_.factor.handrail_adder.enabled) {
-    LogDebug("AddSparseMappingMeasurement: Adding handrail measurement.");
+    LogDebug("AddHandrailPointsMeasurement: Adding handrail measurement.");
     BufferFactors(handrail_factor_adder_->AddFactors(handrail_points_measurement));
+  }
+}
+
+void GraphLocalizer::AddDepthOdometryMeasurement(const lm::DepthOdometryMeasurement& depth_odometry_measurement) {
+  if (!MeasurementRecentEnough(depth_odometry_measurement.timestamp)) {
+    LogDebug("AddDepthOdometryMeasurement: Measurement too old - discarding.");
+    return;
+  }
+
+  if (params_.factor.depth_odometry_adder.enabled) {
+    LogDebug("AddDepthOdometryMeasurement: Adding depth odometry measurement.");
+    BufferFactors(depth_odometry_factor_adder_->AddFactors(depth_odometry_measurement));
   }
 }
 
@@ -369,6 +383,7 @@ bool GraphLocalizer::ValidGraph() const {
     go::NumFactors<gtsam::PointToLineFactor>(graph_factors()) +
     go::NumFactors<gtsam::PointToLineSegmentFactor>(graph_factors()) +
     go::NumFactors<gtsam::PointToPlaneFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToPointBetweenFactor>(graph_factors()) +
     go::NumFactors<gtsam::PointToHandrailEndpointFactor>(graph_factors()) +
     go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
     go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
