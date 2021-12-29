@@ -174,30 +174,6 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCorrespondenceRejectorRandomPoin
   }
 }
 
-TEST(PointToPlaneICPTester, NoisyInitialEstimateDownsampledRandomPoints) {
-  auto params = pc::DefaultPointToPlaneICPParams();
-  params.downsample = true;
-  params.downsample_leaf_size = 0.3;
-  constexpr double translation_stddev = 0.01;
-  constexpr double rotation_stddev = 0.01;
-  constexpr int num_points = 50;
-  pc::PointToPlaneICP<pcl::PointNormal> icp(params);
-  for (int i = 0; i < 50; ++i) {
-    const auto source_T_points_and_normals = pc::RandomPointsWithNormals(num_points);
-    const auto target_T_source = lc::RandomIsometry3d();
-    const auto source_cloud_with_normals =
-      pc::PointCloudWithNormals(source_T_points_and_normals.first, source_T_points_and_normals.second);
-    pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>());
-    pcl::transformPointCloudWithNormals(*source_cloud_with_normals, *target_cloud_with_normals,
-                                        Eigen::Affine3d(target_T_source.matrix()));
-    const auto noisy_target_T_source = lc::AddNoiseToIsometry3d(target_T_source, translation_stddev, rotation_stddev);
-    const auto estimated_target_T_source =
-      icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
-    ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
-  }
-}
-
 TEST(PointToPlaneICPTester, NoisyInitialEstimateCoarseToFineRandomPoints) {
   auto params = pc::DefaultPointToPlaneICPParams();
   params.coarse_to_fine = true;

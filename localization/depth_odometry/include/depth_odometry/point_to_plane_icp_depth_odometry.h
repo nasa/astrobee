@@ -32,6 +32,9 @@ class PointToPlaneICPDepthOdometry : public DepthOdometry {
   const PointToPlaneICPDepthOdometryParams& params() const { return params_; }
 
  private:
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr DownsampleAndFilterCloud(
+    const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) const;
+
   PointToPlaneICPDepthOdometryParams params_;
   point_cloud_common::PointToPlaneICP<pcl::PointXYZINormal> icp_;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr previous_point_cloud_with_normals_;

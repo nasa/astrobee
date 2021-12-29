@@ -42,8 +42,10 @@ find_package(Ceres REQUIRED)
 
 find_package(PCL REQUIRED COMPONENTS common search)
 
+find_package(pcl_conversions REQUIRED)
+
 catkin_package(
-  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} 
+  INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
   CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common localization_measurements msg_conversions optimization_common point_cloud_common vision_common 
   DEPENDS gtsam pcl 
@@ -60,6 +62,10 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+<<<<<<< HEAD
+=======
+  ${pcl_conversions_INCLUDE_DIRS}
+>>>>>>> 2ffae0b9b53b0c165732cc6058ea8ce3ca1c80e9
 )
 
 # Declare C++ libraries

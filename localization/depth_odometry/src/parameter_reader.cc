@@ -45,6 +45,8 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
                                             PointToPlaneICPDepthOdometryParams& params) {
   pc::LoadPointToPlaneICPParams(config, params.icp);
+  params.downsample = mc::LoadBool(config, "downsample");
+  params.downsample_leaf_size = mc::LoadDouble(config, "downsample_leaf_size");
   LoadDepthOdometryParams(config, params);
 }
 

@@ -34,6 +34,8 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
     rviz
   )
 
+  find_package(pcl_conversions REQUIRED)
+
   # For Qt
   set(CMAKE_AUTOMOC ON)
   find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
@@ -41,7 +43,7 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
 
  catkin_package(
    LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
-   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS}
+   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
    CATKIN_DEPENDS roscpp localization_common ff_util graph_localizer graph_bag rviz
  )
  
@@ -52,6 +54,7 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
   include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${pcl_conversions_INCLUDE_DIRS} 
     ${Qt5Core_INCLUDE_DIRS}
     ${Qt5Gui_INCLUDE_DIRS}
   )

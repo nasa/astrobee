@@ -82,9 +82,6 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
   if (params_.coarse_to_fine) {
     return RunCoarseToFinePointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
                                           initial_target_T_source_estimate);
-  } else if (params_.downsample) {
-    return RunDownsampledPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals,
-                                         params_.downsample_leaf_size, initial_target_T_source_estimate);
   } else {
     return RunPointToPlaneICP(source_cloud_with_normals, target_cloud_with_normals, initial_target_T_source_estimate);
   }
