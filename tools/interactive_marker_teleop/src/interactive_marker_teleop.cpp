@@ -160,7 +160,7 @@ void processFeedback(const InteractiveMarkerFeedbackConstPtr& feedback) {
           t = tfBuffer.lookupTransform("world", "body", ros::Time(0));
           // set marker pose
           geometry_msgs::Pose p;
-          p.position.x = t.transform.translation.x;  // Help! is there a better way to do this?
+          p.position.x = t.transform.translation.x;
           p.position.y = t.transform.translation.y;
           p.position.z = t.transform.translation.z;
           p.orientation = t.transform.rotation;
