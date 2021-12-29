@@ -20,9 +20,9 @@
 
 #include <calibration/run_calibrator_params.h>
 #include <calibration/camera_target_based_intrinsics_calibrator_params.h>
-#include <calibration/optimization_params.h>
-#include <calibration/reprojection_pose_estimate_params.h>
-#include <calibration/ransac_pnp_params.h>
+#include <optimization_common/optimization_params.h>
+#include <vision_common/reprojection_pose_estimate_params.h>
+#include <vision_common/ransac_pnp_params.h>
 
 #include <ceres/solver.h>
 
@@ -34,15 +34,16 @@ void LoadRunCalibratorParams(config_reader::ConfigReader& config, RunCalibratorP
 void LoadCameraTargetBasedIntrinsicsCalibratorParams(config_reader::ConfigReader& config,
                                                      CameraTargetBasedIntrinsicsCalibratorParams& params);
 
-void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config, ReprojectionPoseEstimateParams& params);
+void LoadReprojectionPoseEstimateParams(config_reader::ConfigReader& config,
+                                        vision_common::ReprojectionPoseEstimateParams& params);
 
-void LoadOptimizationParams(config_reader::ConfigReader& config, OptimizationParams& params,
+void LoadOptimizationParams(config_reader::ConfigReader& config, optimization_common::OptimizationParams& params,
                             const std::string& prefix = "");
 
 void LoadSolverOptions(config_reader::ConfigReader& config, ceres::Solver::Options& solver_options,
                        const std::string& prefix = "");
 
-void LoadRansacPnPParams(config_reader::ConfigReader& config, RansacPnPParams& params);
+void LoadRansacPnPParams(config_reader::ConfigReader& config, vision_common::RansacPnPParams& params);
 }  // namespace calibration
 
 #endif  // CALIBRATION_PARAMETER_READER_H_
