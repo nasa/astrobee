@@ -227,9 +227,9 @@ void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& po
 
   InteractiveMarkerControl control;
 
-  tf2::Quaternion orien(1.0, 0.0, 0.0, 1.0);
-  orien.normalize();
-  tf2::convert(orien, control.orientation);
+  tf2::Quaternion control_orientation(1.0, 0.0, 0.0, 1.0);
+  control_orientation.normalize();
+  tf2::convert(control_orientation, control.orientation);
   control.name = "rotate_x";
   control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
@@ -237,9 +237,9 @@ void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& po
   control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
-  orien = tf2::Quaternion(0.0, 1.0, 0.0, 1.0);
-  orien.normalize();
-  tf2::convert(orien, control.orientation);
+  control_orientation = tf2::Quaternion(0.0, 1.0, 0.0, 1.0);
+  control_orientation.normalize();
+  tf2::convert(control_orientation, control.orientation);
   control.name = "rotate_z";
   control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
@@ -247,9 +247,9 @@ void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& po
   control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
-  orien = tf2::Quaternion(0.0, 0.0, 1.0, 1.0);
-  orien.normalize();
-  tf2::convert(orien, control.orientation);
+  control_orientation = tf2::Quaternion(0.0, 0.0, 1.0, 1.0);
+  control_orientation.normalize();
+  tf2::convert(control_orientation, control.orientation);
   control.name = "rotate_y";
   control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
   int_marker.controls.push_back(control);
