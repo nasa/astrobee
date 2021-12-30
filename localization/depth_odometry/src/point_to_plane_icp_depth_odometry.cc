@@ -41,7 +41,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::Downsam
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
-  DepthImageCallbackWithEstimate(depth_image_measurement);
+  return DepthImageCallbackWithEstimate(depth_image_measurement);
 }
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallbackWithEstimate(
