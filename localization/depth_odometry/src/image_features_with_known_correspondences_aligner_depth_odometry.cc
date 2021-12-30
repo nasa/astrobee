@@ -51,23 +51,19 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ImageFeaturesWithKnow
 
   normals_required_ = params_.aligner.use_point_to_plane_cost || params_.aligner.use_symmetric_point_to_plane_cost;
 
-  constexpr bool refine_estimate = true;
-  if (refine_estimate) {
-    // TODO(rsoussan): Get params!!!
-    const auto p = PointToPlaneICPDepthOdometryParams();
-    point_to_plane_icp_depth_odometry_ = PointToPlaneICPDepthOdometry(p);
+  if (params_.refine_estimate) {
+    point_to_plane_icp_depth_odometry_ = PointToPlaneICPDepthOdometry(params_.point_to_plane_icp);
   }
 }
 
 boost::optional<PoseWithCovarianceAndCorrespondences>
 ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
-  static constexpr bool refine_estimate = true;
   if (!previous_depth_image_features_and_points_ && !latest_depth_image_features_and_points_) {
     latest_depth_image_features_and_points_.reset(new DepthImageFeaturesAndPoints(
       depth_image_measurement.depth_image, *(feature_detector_and_matcher_->detector()), clahe_, normals_required_));
     latest_timestamp_ = depth_image_measurement.timestamp;
-    if (refine_estimate) point_to_plane_icp_depth_odometry_->DepthImageCallback(depth_image_measurement);
+    if (params_.refine_estimate) point_to_plane_icp_depth_odometry_->DepthImageCallback(depth_image_measurement);
     return boost::none;
   }
   const lc::Time timestamp = depth_image_measurement.timestamp;
@@ -150,7 +146,7 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     return boost::none;
   }
 
-  if (refine_estimate) {
+  if (params_.refine_estimate) {
     return point_to_plane_icp_depth_odometry_->DepthImageCallbackWithEstimate(depth_image_measurement,
                                                                               target_T_source->pose);
   }

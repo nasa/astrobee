@@ -229,6 +229,7 @@ DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams() {
   params.min_x_distance_to_border = 0;
   params.min_y_distance_to_border = 0;
   params.min_num_inliers = 0;
+  params.refine_estimate = false;
   DefaultDepthOdometryParams(params);
   return params;
 }

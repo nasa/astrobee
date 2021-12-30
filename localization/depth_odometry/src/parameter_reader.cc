@@ -63,6 +63,8 @@ void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
   params.min_x_distance_to_border = mc::LoadDouble(config, "min_x_distance_to_border");
   params.min_y_distance_to_border = mc::LoadDouble(config, "min_y_distance_to_border");
   params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");
+  params.refine_estimate = mc::LoadBool(config, "refine_estimate");
+  if (params.refine_estimate) LoadPointToPlaneICPDepthOdometryParams(config, params.point_to_plane_icp);
   LoadDepthOdometryParams(config, params);
 }
 }  // namespace depth_odometry
