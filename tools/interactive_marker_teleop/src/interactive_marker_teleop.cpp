@@ -16,30 +16,40 @@
  * under the License.
  */
 
-#include <ff_msgs/CommandStamped.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_util/ff_names.h>
-
-#include <ros/ros.h>
-#include <interactive_markers/interactive_marker_server.h>
-#include <interactive_markers/menu_handler.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <interactive_marker_teleop.h>
 
 #include <string>
 
-namespace vm = visualization_msgs;
+InteractiveMarkerTeleop::InteractiveMarkerTeleop(ros::NodeHandle& nh) : nh(nh) {
+  // Start tf listener
+  tfListener = std::shared_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tfBuffer));
 
-std::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
-interactive_markers::MenuHandler menu_handler;
+  // Make the marker
+  server.reset(new interactive_markers::InteractiveMarkerServer("interactive_marker_teleop", "", false));
+  ros::Duration(0.1).sleep();
+  menu_handler.insert("Snap to Astrobee",
+                      std::bind(&InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1));
+  menu_handler.insert("Go to Position",
+                      std::bind(&InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1));
+  menu_handler.insert("Dock", std::bind(&InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1));
+  menu_handler.insert("Undock", std::bind(&InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1));
+  menu_handler.insert("Stop", std::bind(&InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1));
 
-ros::Publisher cmd_publisher;
-ros::Subscriber ack_subscriber;
+  // menu_handler.insert("Add to plan", &InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1);  //
+  // TODO(jdekarske) would be cool to add a new marker for each station menu_handler.insert("Remove from plan",
+  // &InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1);
 
-tf2_ros::Buffer tfBuffer;
-std::shared_ptr<tf2_ros::TransformListener> tfListener;
+  geometry_msgs::Pose position;
+  make6DofMarker(vm::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
+  server->applyChanges();
 
-vm::Marker makeMarker(const std::string marker_type) {
+  // publish and acknowledge command actions
+  cmd_publisher = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
+  // ack_subscriber = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback); // TODO(jdekarske) status goes in the marker
+  // text
+}
+
+vm::Marker InteractiveMarkerTeleop::makeMarker(const std::string marker_type) {
   vm::Marker marker;
 
   // make it yellowish and see through
@@ -72,7 +82,7 @@ vm::Marker makeMarker(const std::string marker_type) {
   return marker;
 }
 
-vm::InteractiveMarkerControl& makeBoxControl(vm::InteractiveMarker& msg) {
+vm::InteractiveMarkerControl& InteractiveMarkerTeleop::makeBoxControl(vm::InteractiveMarker& msg) {
   vm::InteractiveMarkerControl control;
   control.always_visible = true;
   control.markers.push_back(makeMarker("body"));
@@ -83,7 +93,7 @@ vm::InteractiveMarkerControl& makeBoxControl(vm::InteractiveMarker& msg) {
   return msg.controls.back();
 }
 
-void sendMobilityCommand(std::string command, const geometry_msgs::Pose& desired_pose) {
+void InteractiveMarkerTeleop::sendMobilityCommand(std::string command, const geometry_msgs::Pose& desired_pose) {
   if (command == ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
     // Make ros command message to send to the executive. see `simple_move.cc`
     ff_msgs::CommandStamped move_cmd;
@@ -129,7 +139,7 @@ void sendMobilityCommand(std::string command, const geometry_msgs::Pose& desired
   }
 }
 
-void sendMobilityCommand(std::string command) {
+void InteractiveMarkerTeleop::sendMobilityCommand(std::string command) {
   ff_msgs::CommandStamped cmd;
   cmd.header.stamp = ros::Time::now();
   cmd.subsys_name = "Astrobee";
@@ -146,7 +156,7 @@ void sendMobilityCommand(std::string command) {
   cmd_publisher.publish(cmd);
 }
 
-void processFeedback(const vm::InteractiveMarkerFeedbackConstPtr& feedback) {
+void InteractiveMarkerTeleop::processFeedback(const vm::InteractiveMarkerFeedbackConstPtr& feedback) {
   // TODO(jdekarske) This is a switch for adding a keepout zone check (see below)
   switch (feedback->event_type) {
     case vm::InteractiveMarkerFeedback::MENU_SELECT:
@@ -211,7 +221,7 @@ void processFeedback(const vm::InteractiveMarkerFeedbackConstPtr& feedback) {
   }
 }
 
-void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position) {
+void InteractiveMarkerTeleop::make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position) {
   vm::InteractiveMarker int_marker;
   int_marker.header.frame_id = "world";
   int_marker.pose = position;
@@ -257,7 +267,8 @@ void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& po
   int_marker.controls.push_back(control);
 
   server->insert(int_marker);
-  server->setCallback(int_marker.name, &processFeedback);
+  server->setCallback(int_marker.name,
+                      std::bind(&InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1));
   menu_handler.apply(*server, int_marker.name);
 }
 
@@ -265,32 +276,9 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "interactive_marker_teleop");
   ros::NodeHandle nh;
 
-  // Start tf listener
-  tfListener = std::shared_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tfBuffer));
-
-  // Make the marker
-  server.reset(new interactive_markers::InteractiveMarkerServer("interactive_marker_teleop", "", false));
-  ros::Duration(0.1).sleep();
-  menu_handler.insert("Snap to Astrobee", &processFeedback);
-  menu_handler.insert("Go to Position", &processFeedback);
-  menu_handler.insert("Dock", &processFeedback);
-  menu_handler.insert("Undock", &processFeedback);
-  menu_handler.insert("Stop", &processFeedback);
-
-  // menu_handler.insert("Add to plan", &processFeedback);  // TODO(jdekarske) would be cool to add a new marker for
-  // each station
-  // menu_handler.insert("Remove from plan", &processFeedback);
-
-  geometry_msgs::Pose position;
-  make6DofMarker(vm::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
-  server->applyChanges();
-
-  // publish and acknowledge command actions
-  cmd_publisher = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
-  // ack_subscriber = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback); // TODO(jdekarske) status goes in the marker
-  // text
+  InteractiveMarkerTeleop teleop(nh);
 
   ros::spin();
 
-  server.reset();
+  return 0;
 }
