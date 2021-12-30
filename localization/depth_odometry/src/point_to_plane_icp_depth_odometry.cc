@@ -41,6 +41,12 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::Downsam
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
+  DepthImageCallbackWithEstimate(depth_image_measurement);
+}
+
+boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallbackWithEstimate(
+  const localization_measurements::DepthImageMeasurement& depth_image_measurement,
+  const boost::optional<Eigen::Isometry3d&> target_T_source_initial_estimate) {
   if (!previous_point_cloud_with_normals_ && !latest_point_cloud_with_normals_) {
     latest_point_cloud_with_normals_ =
       DownsampleAndFilterCloud(depth_image_measurement.depth_image.unfiltered_point_cloud());
@@ -64,11 +70,21 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     LogWarning("DepthImageCallback: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
-  const auto target_T_source =
+
+  if (target_T_source_initial_estimate) {
+    pcl::transformPointCloudWithNormals(*previous_point_cloud_with_normals_, *previous_point_cloud_with_normals_,
+                                        target_T_source_initial_estimate->matrix());
+  }
+  auto target_T_source =
     icp_.ComputeRelativeTransform(previous_point_cloud_with_normals_, latest_point_cloud_with_normals_);
   if (!target_T_source) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
+  }
+
+  if (target_T_source_initial_estimate) {
+    target_T_source->pose = target_T_source->pose * *target_T_source_initial_estimate;
+    // TODO(rsoussan): Frame change covariance!
   }
 
   const auto source_T_target = lc::InvertPoseWithCovariance(*target_T_source);
