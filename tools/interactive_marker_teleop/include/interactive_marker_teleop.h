@@ -50,14 +50,14 @@ class InteractiveMarkerTeleop {
  private:
   ros::NodeHandle nh;
 
-  std::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
-  interactive_markers::MenuHandler menu_handler;
+  std::shared_ptr<interactive_markers::InteractiveMarkerServer> server_;
+  interactive_markers::MenuHandler menu_handler_;
 
-  ros::Publisher cmd_publisher;
-  ros::Subscriber ack_subscriber;
+  ros::Publisher cmd_publisher_;
+  ros::Subscriber ack_subscriber_;
 
-  tf2_ros::Buffer tfBuffer;
-  std::shared_ptr<tf2_ros::TransformListener> tfListener;
+  tf2_ros::Buffer tfBuffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tfListener_;
 };
 
 #endif  // INTERACTIVE_MARKER_TELEOP_H_
