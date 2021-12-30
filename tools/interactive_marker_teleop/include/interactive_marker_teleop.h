@@ -43,9 +43,11 @@ class InteractiveMarkerTeleop {
 
   void sendMobilityCommand(std::string command);
 
+  void snapMarkerToAstrobee();
+
   void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
 
-  void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position);
+  void make6DofMarker(unsigned int interaction_mode);
 
  private:
   ros::NodeHandle nh;

@@ -41,10 +41,10 @@ InteractiveMarkerTeleop::InteractiveMarkerTeleop(ros::NodeHandle& nh) : nh(nh) {
   // TODO(jdekarske) would be cool to add a new marker for each station menu_handler_.insert("Remove from plan",
   // &InteractiveMarkerTeleop::processFeedback, this, std::placeholders::_1);
 
-  geometry_msgs::Pose position;
-  make6DofMarker(vm::InteractiveMarkerControl::MOVE_ROTATE_3D, position);
+  make6DofMarker(vm::InteractiveMarkerControl::MOVE_ROTATE_3D);
   server_->applyChanges();
 
+  snapMarkerToAstrobee();
   // publish and acknowledge command actions
   cmd_publisher_ = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
   // ack_subscriber_ = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback); // TODO(jdekarske) status goes in the
@@ -158,6 +158,20 @@ void InteractiveMarkerTeleop::sendMobilityCommand(std::string command) {
   cmd_publisher_.publish(cmd);
 }
 
+void InteractiveMarkerTeleop::snapMarkerToAstrobee() {
+  // get astrobee position
+  geometry_msgs::TransformStamped t;
+  t = tfBuffer_.lookupTransform("world", "body", ros::Time(0));
+  // set marker pose
+  geometry_msgs::Pose p;
+  p.position.x = t.transform.translation.x;
+  p.position.y = t.transform.translation.y;
+  p.position.z = t.transform.translation.z;
+  p.orientation = t.transform.rotation;
+  server_->setPose("astrobee_teleop", p);
+  server_->applyChanges();
+}
+
 void InteractiveMarkerTeleop::processFeedback(const vm::InteractiveMarkerFeedbackConstPtr& feedback) {
   // TODO(jdekarske) This is a switch for adding a keepout zone check (see below)
   switch (feedback->event_type) {
@@ -165,17 +179,7 @@ void InteractiveMarkerTeleop::processFeedback(const vm::InteractiveMarkerFeedbac
       switch (feedback->menu_entry_id) {
         case 1:  // snap to astrobee
         {
-          // get astrobee position
-          geometry_msgs::TransformStamped t;
-          t = tfBuffer_.lookupTransform("world", "body", ros::Time(0));
-          // set marker pose
-          geometry_msgs::Pose p;
-          p.position.x = t.transform.translation.x;
-          p.position.y = t.transform.translation.y;
-          p.position.z = t.transform.translation.z;
-          p.orientation = t.transform.rotation;
-          server_->setPose("astrobee_teleop", p);
-          server_->applyChanges();
+          snapMarkerToAstrobee();
           break;
         }
         case 2:  // move to desired position
@@ -223,10 +227,9 @@ void InteractiveMarkerTeleop::processFeedback(const vm::InteractiveMarkerFeedbac
   }
 }
 
-void InteractiveMarkerTeleop::make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position) {
+void InteractiveMarkerTeleop::make6DofMarker(unsigned int interaction_mode) {
   vm::InteractiveMarker int_marker;
   int_marker.header.frame_id = "world";
-  int_marker.pose = position;
   int_marker.scale = 1;
 
   int_marker.name = "astrobee_teleop";
