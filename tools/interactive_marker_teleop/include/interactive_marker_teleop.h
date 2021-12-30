@@ -31,21 +31,19 @@
 
 #include <string>
 
-namespace vm = visualization_msgs;
-
 class InteractiveMarkerTeleop {
  public:
   explicit InteractiveMarkerTeleop(ros::NodeHandle& nh);
 
-  vm::Marker makeMarker(const std::string marker_type);
+  visualization_msgs::Marker makeMarker(const std::string marker_type);
 
-  vm::InteractiveMarkerControl& makeBoxControl(vm::InteractiveMarker& msg);
+  visualization_msgs::InteractiveMarkerControl& makeBoxControl(visualization_msgs::InteractiveMarker& msg);
 
   void sendMobilityCommand(std::string command, const geometry_msgs::Pose& desired_pose);
 
   void sendMobilityCommand(std::string command);
 
-  void processFeedback(const vm::InteractiveMarkerFeedbackConstPtr& feedback);
+  void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
 
   void make6DofMarker(unsigned int interaction_mode, const geometry_msgs::Pose& position);
 

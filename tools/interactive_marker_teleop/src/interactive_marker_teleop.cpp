@@ -20,6 +20,8 @@
 
 #include <string>
 
+namespace vm = visualization_msgs;
+
 InteractiveMarkerTeleop::InteractiveMarkerTeleop(ros::NodeHandle& nh) : nh(nh) {
   // Start tf listener
   tfListener = std::shared_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tfBuffer));
