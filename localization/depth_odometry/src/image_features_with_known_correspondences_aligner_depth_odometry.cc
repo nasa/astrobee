@@ -50,15 +50,24 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ImageFeaturesWithKnow
     clahe_ = cv::createCLAHE(params_.clahe_clip_limit, cv::Size(params_.clahe_grid_length, params_.clahe_grid_length));
 
   normals_required_ = params_.aligner.use_point_to_plane_cost || params_.aligner.use_symmetric_point_to_plane_cost;
+
+  constexpr bool refine_estimate = true;
+  if (refine_estimate) {
+    // TODO(rsoussan): Get params!!!
+    const auto p = PointToPlaneICPDepthOdometryParams();
+    point_to_plane_icp_depth_odometry_ = PointToPlaneICPDepthOdometry(p);
+  }
 }
 
 boost::optional<PoseWithCovarianceAndCorrespondences>
 ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
+  static constexpr bool refine_estimate = true;
   if (!previous_depth_image_features_and_points_ && !latest_depth_image_features_and_points_) {
     latest_depth_image_features_and_points_.reset(new DepthImageFeaturesAndPoints(
       depth_image_measurement.depth_image, *(feature_detector_and_matcher_->detector()), clahe_, normals_required_));
     latest_timestamp_ = depth_image_measurement.timestamp;
+    if (refine_estimate) point_to_plane_icp_depth_odometry_->DepthImageCallback(depth_image_measurement);
     return boost::none;
   }
   const lc::Time timestamp = depth_image_measurement.timestamp;
@@ -134,11 +143,16 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   boost::optional<const std::vector<Eigen::Vector3d>&> target_normals_ref =
     normals_required_ ? boost::optional<const std::vector<Eigen::Vector3d>&>(target_normals) : boost::none;
 
-  const auto target_T_source =
+  auto target_T_source =
     aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks, source_normals_ref, target_normals_ref);
   if (!target_T_source) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
+  }
+
+  if (refine_estimate) {
+    return point_to_plane_icp_depth_odometry_->DepthImageCallbackWithEstimate(depth_image_measurement,
+                                                                              target_T_source->pose);
   }
 
   const auto source_T_target = lc::InvertPoseWithCovariance(*target_T_source);
