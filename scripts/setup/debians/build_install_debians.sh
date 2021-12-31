@@ -118,7 +118,7 @@ cd ${DEBIAN_LOC}
 sudo dpkg -i libopenmvg*_amd64.deb || exit 1
 
 REQUIRED_PKG="rti-dev"
-PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG 2>/dev/null|grep "install ok installed"|true)
+PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG 2>&1 | grep "install ok installed" || true)
 echo Checking for $REQUIRED_PKG: $PKG_OK
 if [ "install ok installed" = "$PKG_OK" ]; then
   echo "$REQUIRED_PKG exists. Setting up miro and soracore."
