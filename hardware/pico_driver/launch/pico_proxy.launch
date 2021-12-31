@@ -15,12 +15,14 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <arg name="topic" default="/hw/depth_haz/extended"/>
-  <arg name="topic_type" default="extended"/>
-  <arg name="amplitude_factor" default="100.0"/>
-  <node name="pico_proxy" pkg="pico_driver" type="pico_proxy" output="screen">
-    <param name="topic" type="string" value="$(arg topic)"/>
-    <param name="topic_type" type="string" value="$(arg topic_type)"/>
-    <param name="amplitude_factor" type="double" value="$(arg amplitude_factor)"/>
-  </node>
+  <param name="topic" type="str" value="/hw/depth_haz/extended" />
+  <param name="topic_type" type="str" value="extended" />
+  <param name="amplitude_factor" type="double" value="100.0" />
+  <arg name="name" default="pico_proxy" />
+  <arg name="manager" default="" />
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="name" value="$(arg name)" />
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="class" value="pico_proxy/PicoProxyNodelet" />
+  </include>
 </launch>

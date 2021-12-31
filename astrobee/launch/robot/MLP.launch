@@ -400,7 +400,19 @@
      <arg name="default" value="true" />
    </include>
 
-  <include file="$(find pico_driver)/launch/pico_proxy.launch" />
+   <param name="topic" type="str" value="/hw/depth_haz/extended" />
+   <param name="topic_type" type="str" value="extended" />
+   <param name="amplitude_factor" type="double" value="100.0" />
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="pico_proxy/PicoProxyNodelet" />
+     <arg name="name" value="pico_proxy" />
+     <arg name="manager" value="mlp_depth_cam" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
 
    <!-- Monitors -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">

@@ -59,8 +59,9 @@ add_library(pico_driver
 add_dependencies(pico_driver ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pico_driver ${royale_LIBRARIES} ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
 
-## Declare a C++ executable: bag_to_csv
-add_executable(pico_proxy tools/pico_proxy.cc)
+add_library(pico_proxy
+  src/pico_proxy.cc
+)
 add_dependencies(pico_proxy ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pico_proxy
   pico_driver gflags glog ${catkin_LIBRARIES})
