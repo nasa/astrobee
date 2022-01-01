@@ -27,6 +27,7 @@ import os
 import average_results
 import config_creator
 import numpy as np
+import parameter_sweep_utilities 
 import plot_parameter_sweep_results
 import utilities
 
@@ -102,18 +103,6 @@ def test_values_helper(zipped_vals):
     return test_values(*zipped_vals)
 
 
-def concat_results(job_ids, directory):
-    results_csv_files = []
-    for job_id in job_ids:
-        results_csv_files.append(
-            os.path.join(directory, str(job_id), "depth_odom_stats.csv")
-        )
-    # Results are written in job id order
-    combined_results = average_results.combined_results(results_csv_files)
-    combined_results_file = os.path.join(directory, "param_sweep_combined_results.csv")
-    combined_results.to_csv(combined_results_file, index=False)
-
-
 def parameter_sweep(
     all_value_combos,
     value_names,
@@ -148,11 +137,7 @@ def parameter_sweep(
             )
         ),
     )
-    concat_results(job_ids, output_dir)
-
-
-def make_all_value_combinations(value_ranges):
-    return list(itertools.product(*value_ranges))
+    parameter_sweep_utilities.concat_results(job_ids, output_dir, "depth_odom_stats.csv")
 
 
 def make_value_ranges():
@@ -176,13 +161,6 @@ def make_value_ranges():
     return value_ranges, value_names
 
 
-def save_values(value_names, values, filename, output_dir):
-    with open(os.path.join(output_dir, filename), "w") as values_file:
-        writer = csv.writer(values_file)
-        writer.writerow(value_names)
-        writer.writerows(values)
-
-
 def make_values_and_parameter_sweep(
     output_dir,
     bag_file,
@@ -197,10 +175,10 @@ def make_values_and_parameter_sweep(
     print(("Output directory for results is {}".format(output_dir)))
 
     value_ranges, value_names = make_value_ranges()
-    save_values(value_names, value_ranges, "individual_value_ranges.csv", output_dir)
+    parameter_sweep_utilities.save_values(value_names, value_ranges, "individual_value_ranges.csv", output_dir)
 
-    all_value_combos = make_all_value_combinations(value_ranges)
-    save_values(value_names, all_value_combos, "all_value_combos.csv", output_dir)
+    all_value_combos = parameter_sweep_utilities.make_all_value_combinations(value_ranges)
+    parameter_sweep_utilities.save_values(value_names, all_value_combos, "all_value_combos.csv", output_dir)
 
     parameter_sweep(
         all_value_combos,
