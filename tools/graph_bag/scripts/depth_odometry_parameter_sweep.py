@@ -16,6 +16,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Runs a parameter sweep for depth odometry using the provided bagfile.
+Parameters to sweep on are set in the make_value_ranges function.
+All combinations of provided parameters are used for the sweep and the results
+are plotted for various RMSEs. 
+"""
+
 
 import argparse
 import csv
@@ -143,21 +150,10 @@ def parameter_sweep(
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 5 
+    steps = 10 
 
-    # tune num smart factors
-    # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-    # value_names.append('accel_bias_sigma')
     value_ranges.append(np.linspace(10, 100, steps, endpoint=True))
     value_names.append("lk_max_corners")
-
-    # q_gyro
-    # .001 -> 2 deg
-    # q_gyro_degrees_range = np.logspace(-3, .3, steps, endpoint=True)
-    # q_gyro_squared_rads_range = [math.radians(deg)**2 for deg in q_gyro_degrees_range]
-    # value_ranges.append(q_gyro_squared_rads_range)
-    # value_names.append('q_gyro')
-
     return value_ranges, value_names
 
 
@@ -202,7 +198,9 @@ def make_values_and_parameter_sweep(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("bag_file", help="Full path to bagfile.")
     parser.add_argument("config_path", help="Full path to config path.")
     parser.add_argument("robot_config", help="Relative path to robot config.")

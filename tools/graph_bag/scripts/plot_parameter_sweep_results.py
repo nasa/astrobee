@@ -100,6 +100,7 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=""):
     plt.close()
 
 
+# TODO(rsoussan): Make this more generic, don't hardcode each RMSE type
 def create_plots(output_file, csv_file, value_combos_file):
     with PdfPages(output_file) as pdf:
         # Graph RMSEs
