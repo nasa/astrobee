@@ -195,10 +195,16 @@ def make_values_and_parameter_sweep(
     print(("Output directory for results is {}".format(output_dir)))
 
     value_ranges, value_names = make_value_ranges()
-    parameter_sweep_utilities.save_values(value_names, value_ranges, "individual_value_ranges.csv", output_dir)
+    parameter_sweep_utilities.save_values(
+        value_names, value_ranges, "individual_value_ranges.csv", output_dir
+    )
 
-    all_value_combos = parameter_sweep_utilities.make_all_value_combinations(value_ranges)
-    parameter_sweep_utilities.save_values(value_names, all_value_combos, "all_value_combos.csv", output_dir)
+    all_value_combos = parameter_sweep_utilities.make_all_value_combinations(
+        value_ranges
+    )
+    parameter_sweep_utilities.save_values(
+        value_names, all_value_combos, "all_value_combos.csv", output_dir
+    )
 
     parameter_sweep(
         all_value_combos,

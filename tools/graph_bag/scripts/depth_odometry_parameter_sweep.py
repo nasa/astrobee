@@ -34,7 +34,7 @@ import os
 import average_results
 import config_creator
 import numpy as np
-import parameter_sweep_utilities 
+import parameter_sweep_utilities
 import plot_parameter_sweep_results
 import utilities
 
@@ -62,9 +62,14 @@ def test_values(
     depth_odometry_config_filepath = os.path.join(
         config_path, "config", "localization/depth_odometry.config"
     )
-    new_depth_odometry_config_filepath = os.path.join(new_output_dir, "depth_odometry.config")
+    new_depth_odometry_config_filepath = os.path.join(
+        new_output_dir, "depth_odometry.config"
+    )
     config_creator.make_config(
-        values, value_names, depth_odometry_config_filepath, new_depth_odometry_config_filepath
+        values,
+        value_names,
+        depth_odometry_config_filepath,
+        new_depth_odometry_config_filepath,
     )
     output_bag = os.path.join(new_output_dir, "results.bag")
     output_stats_file = os.path.join(new_output_dir, "depth_odom_stats.csv")
@@ -144,13 +149,15 @@ def parameter_sweep(
             )
         ),
     )
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "depth_odom_stats.csv")
+    parameter_sweep_utilities.concat_results(
+        job_ids, output_dir, "depth_odom_stats.csv"
+    )
 
 
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 10 
+    steps = 10
 
     value_ranges.append(np.linspace(10, 100, steps, endpoint=True))
     value_names.append("lk_max_corners")
@@ -171,10 +178,16 @@ def make_values_and_parameter_sweep(
     print(("Output directory for results is {}".format(output_dir)))
 
     value_ranges, value_names = make_value_ranges()
-    parameter_sweep_utilities.save_values(value_names, value_ranges, "individual_value_ranges.csv", output_dir)
+    parameter_sweep_utilities.save_values(
+        value_names, value_ranges, "individual_value_ranges.csv", output_dir
+    )
 
-    all_value_combos = parameter_sweep_utilities.make_all_value_combinations(value_ranges)
-    parameter_sweep_utilities.save_values(value_names, all_value_combos, "all_value_combos.csv", output_dir)
+    all_value_combos = parameter_sweep_utilities.make_all_value_combinations(
+        value_ranges
+    )
+    parameter_sweep_utilities.save_values(
+        value_names, all_value_combos, "all_value_combos.csv", output_dir
+    )
 
     parameter_sweep(
         all_value_combos,

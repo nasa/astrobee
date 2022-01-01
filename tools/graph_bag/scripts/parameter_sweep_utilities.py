@@ -27,9 +27,7 @@ import average_results
 def concat_results(job_ids, directory, stats_filename):
     results_csv_files = []
     for job_id in job_ids:
-        results_csv_files.append(
-            os.path.join(directory, str(job_id), stats_filename)
-        )
+        results_csv_files.append(os.path.join(directory, str(job_id), stats_filename))
     # Results are written in job id order
     combined_results = average_results.combined_results(results_csv_files)
     combined_results_file = os.path.join(directory, "param_sweep_combined_results.csv")
