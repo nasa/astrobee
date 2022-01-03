@@ -122,6 +122,10 @@ void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud);
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
                                                               const double leaf_size);
+
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr BilateralFilterOrganizedCloud(
+  const typename pcl::PointCloud<PointType>::Ptr cloud, const double sigma_s, const double sigma_r);
 template <typename PointType>
 void FilterCorrespondences(const typename pcl::PointCloud<PointType>& input_cloud,
                            const typename pcl::PointCloud<PointType>& target_cloud,
@@ -176,22 +180,23 @@ void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud) {
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
                                                               const double leaf_size) {
+  pcl::VoxelGrid<PointType> voxel_grid;
+  voxel_grid.setInputCloud(cloud);
+  voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
   typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
-  // TODO(rsoussan): Add this as bool option for organized
-  // TODO(rsoussan): Move this somewhere else! Not a downsamping method!
-  if (true) {
-    typename pcl::FastBilateralFilter<PointType> bilateral_filter;
-    bilateral_filter.setInputCloud(cloud);
-    // TODO(rsoussan): Add these as params
-    bilateral_filter.setSigmaS(5);
-    bilateral_filter.setSigmaR(0.005f);
-    bilateral_filter.filter(*downsampled_cloud);
-  } else {
-    pcl::VoxelGrid<PointType> voxel_grid;
-    voxel_grid.setInputCloud(cloud);
-    voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
-    voxel_grid.filter(*downsampled_cloud);
-  }
+  voxel_grid.filter(*downsampled_cloud);
+  return downsampled_cloud;
+}
+
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr BilateralFilterOrganizedCloud(
+  const typename pcl::PointCloud<PointType>::Ptr cloud, const double sigma_s, const double sigma_r) {
+  typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
+  typename pcl::FastBilateralFilter<PointType> bilateral_filter;
+  bilateral_filter.setInputCloud(cloud);
+  bilateral_filter.setSigmaS(sigma_s);
+  bilateral_filter.setSigmaR(sigma_r);
+  bilateral_filter.filter(*downsampled_cloud);
   return downsampled_cloud;
 }
 
