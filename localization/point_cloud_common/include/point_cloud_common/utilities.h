@@ -232,9 +232,9 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
   typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(search_radius);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-  ne.compute(*cloud_normals);
-  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
+  pcl::PointCloud<pcl::Normal> cloud_normals;
+  ne.compute(cloud_normals);
+  pcl::concatenateFields(*cloud, cloud_normals, cloud_with_normals);
 }
 
 template <typename PointType, typename PointWithNormalType>
@@ -246,9 +246,9 @@ void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr clo
   ne.setMaxDepthChangeFactor(max_depth_change_factor);
   ne.setNormalSmoothingSize(normal_smoothing_size);
   ne.setInputCloud(cloud);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-  ne.compute(*cloud_normals);
-  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
+  pcl::PointCloud<pcl::Normal> cloud_normals;
+  ne.compute(cloud_normals);
+  pcl::concatenateFields(*cloud, cloud_normals, cloud_with_normals);
 }
 
 template <typename PointType, typename PointWithNormalType>
