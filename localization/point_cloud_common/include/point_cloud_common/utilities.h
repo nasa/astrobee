@@ -24,6 +24,7 @@
 #include <gtsam/geometry/Point3.h>
 
 #include <pcl/features/fpfh.h>
+#include <pcl/features/integral_image_normal.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/impl/normal_3d.hpp>
 #include <pcl/filters/fast_bilateral.h>
@@ -221,13 +222,23 @@ typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
 template <typename PointType, typename PointWithNormalType>
 void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const double search_radius,
                      typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
-  typename pcl::NormalEstimation<PointType, pcl::Normal> ne;
-  ne.setInputCloud(cloud);
-  typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
-  ne.setSearchMethod(tree);
-  ne.setRadiusSearch(search_radius);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-  ne.compute(*cloud_normals);
+  // TODO(rsoussan): Add Option for this
+  if (true) {
+    typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
+    ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
+    ne.setMaxDepthChangeFactor(0.02f);
+    ne.setNormalSmoothingSize(10.0f);
+    ne.setInputCloud(cloud);
+    ne.compute(*cloud_normals);
+  } else {
+    typename pcl::NormalEstimation<PointType, pcl::Normal> ne;
+    ne.setInputCloud(cloud);
+    typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+    ne.setSearchMethod(tree);
+    ne.setRadiusSearch(search_radius);
+    ne.compute(*cloud_normals);
+  }
   pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
 }
 
