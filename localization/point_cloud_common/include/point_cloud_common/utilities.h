@@ -43,6 +43,11 @@ template <typename PointType, typename PointWithNormalType>
 void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const double search_radius,
                      pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
 
+template <typename PointType, typename PointWithNormalType>
+void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
+                              const double max_depth_change_factor, const double normal_smoothing_size,
+                              pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
+
 Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                          const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud);
 
@@ -222,23 +227,27 @@ typename pcl::PointCloud<PointType>::Ptr FilteredPointCloud(
 template <typename PointType, typename PointWithNormalType>
 void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const double search_radius,
                      typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
+  typename pcl::NormalEstimation<PointType, pcl::Normal> ne;
+  ne.setInputCloud(cloud);
+  typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+  ne.setSearchMethod(tree);
+  ne.setRadiusSearch(search_radius);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-  // TODO(rsoussan): Add Option for this
-  if (true) {
-    typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
-    ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
-    ne.setMaxDepthChangeFactor(0.02f);
-    ne.setNormalSmoothingSize(10.0f);
-    ne.setInputCloud(cloud);
-    ne.compute(*cloud_normals);
-  } else {
-    typename pcl::NormalEstimation<PointType, pcl::Normal> ne;
-    ne.setInputCloud(cloud);
-    typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
-    ne.setSearchMethod(tree);
-    ne.setRadiusSearch(search_radius);
-    ne.compute(*cloud_normals);
-  }
+  ne.compute(*cloud_normals);
+  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
+}
+
+template <typename PointType, typename PointWithNormalType>
+void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
+                              const double max_depth_change_factor, const double normal_smoothing_size,
+                              typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
+  typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
+  ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
+  ne.setMaxDepthChangeFactor(max_depth_change_factor);
+  ne.setNormalSmoothingSize(normal_smoothing_size);
+  ne.setInputCloud(cloud);
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+  ne.compute(*cloud_normals);
   pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
 }
 
