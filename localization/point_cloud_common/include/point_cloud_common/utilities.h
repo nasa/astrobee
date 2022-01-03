@@ -26,6 +26,8 @@
 #include <pcl/features/fpfh.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/impl/normal_3d.hpp>
+#include <pcl/filters/fast_bilateral.h>
+#include <pcl/filters/impl/fast_bilateral.hpp>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/point_cloud.h>
@@ -169,10 +171,21 @@ template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
                                                               const double leaf_size) {
   typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
-  pcl::VoxelGrid<PointType> voxel_grid;
-  voxel_grid.setInputCloud(cloud);
-  voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
-  voxel_grid.filter(*downsampled_cloud);
+  // TODO(rsoussan): Add this as bool option for organized
+  // TODO(rsoussan): Move this somewhere else! Not a downsamping method!
+  if (true) {
+    typename pcl::FastBilateralFilter<PointType> bilateral_filter;
+    bilateral_filter.setInputCloud(cloud);
+    // TODO(rsoussan): Add these as params
+    bilateral_filter.setSigmaS(5);
+    bilateral_filter.setSigmaR(0.005f);
+    bilateral_filter.filter(*downsampled_cloud);
+  } else {
+    pcl::VoxelGrid<PointType> voxel_grid;
+    voxel_grid.setInputCloud(cloud);
+    voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
+    voxel_grid.filter(*downsampled_cloud);
+  }
   return downsampled_cloud;
 }
 
