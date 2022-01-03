@@ -26,8 +26,10 @@ class LocStates(poses.Poses):
         super(LocStates, self).__init__(loc_type, topic)
         self.num_detected_of_features = []
         self.num_detected_ml_features = []
+        self.num_detected_sm_features = []
         self.num_of_factors = []
         self.num_ml_projection_factors = []
+        self.num_sm_projection_factors = []
         self.accelerations = vector3ds.Vector3ds()
         self.velocities = vector3ds.Vector3ds()
         self.angular_velocities = vector3ds.Vector3ds()
@@ -45,10 +47,14 @@ class LocStates(poses.Poses):
             self.num_detected_of_features.append(msg.num_detected_of_features)
         if hasattr(msg, "num_detected_ml_features"):
             self.num_detected_ml_features.append(msg.num_detected_ml_features)
+        if hasattr(msg, 'num_detected_sm_features'):
+            self.num_detected_sm_features.append(msg.num_detected_sm_features)
         if hasattr(msg, "num_of_factors"):
             self.num_of_factors.append(msg.num_of_factors)
         if hasattr(msg, "num_ml_projection_factors"):
             self.num_ml_projection_factors.append(msg.num_ml_projection_factors)
+        if hasattr(msg, 'num_sm_projection_factors'):
+            self.num_sm_projection_factors.append(msg.num_sm_projection_factors)
         if hasattr(msg, "accel"):
             self.accelerations.add_vector3d(msg.accel)
         self.velocities.add_vector3d(msg.velocity)

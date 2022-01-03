@@ -192,6 +192,29 @@ def plot_features(
 
 def add_feature_count_plots(pdf, graph_localization_states):
     plt.figure()
+    plot_features(graph_localization_states.num_detected_sm_features,
+                  graph_localization_states.times,
+                  'Det. SM',
+                  'b',
+                  marker='o',
+                  markeredgewidth=0.1,
+                  markersize=1.5)
+    plot_features(graph_localization_states.num_sm_projection_factors,
+                  graph_localization_states.times,
+                  'SM Proj Factors',
+                  'r',
+                  marker='x',
+                  markeredgewidth=0.1,
+                  markersize=1.5)
+    plt.xlabel('Time (s)')
+    plt.ylabel('SM Feature Counts')
+    plt.title('SM Feature Counts')
+    plt.legend(prop={'size': 6})
+    plt.ylim(ymin=-1)
+    pdf.savefig()
+    plt.close()
+
+    plt.figure()
     plot_features(
         graph_localization_states.num_detected_ml_features,
         graph_localization_states.times,

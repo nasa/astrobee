@@ -22,7 +22,7 @@ import os
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default="")
-      parser.add_argument('--gt-path', default=None)
+    parser.add_argument('--gt-path', default=None)
     args = parser.parse_args()
 
     # Find bagfiles with bag prefix in current directory, fail if none found
