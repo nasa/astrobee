@@ -13,5 +13,5 @@
 	shallow = true
 [submodule "submodules/vision_msgs"]
 	path = submodules/vision_msgs
+  branch = kinetic-devel
 	url = https://github.com/ros-perception/vision_msgs.git
-	branch = kinetic-devel
