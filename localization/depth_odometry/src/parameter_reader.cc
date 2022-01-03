@@ -47,6 +47,11 @@ void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
   pc::LoadPointToPlaneICPParams(config, params.icp);
   params.downsample = mc::LoadBool(config, "downsample");
   params.downsample_leaf_size = mc::LoadDouble(config, "downsample_leaf_size");
+  params.use_organized_methods = mc::LoadBool(config, "use_organized_methods");
+  params.max_depth_change_factor = mc::LoadDouble(config, "max_depth_change_factor");
+  params.normal_smoothing_size = mc::LoadDouble(config, "normal_smoothing_size");
+  params.bins_per_axis = mc::LoadInt(config, "bins_per_axis");
+  params.num_samples = mc::LoadInt(config, "num_samples");
   LoadDepthOdometryParams(config, params);
 }
 

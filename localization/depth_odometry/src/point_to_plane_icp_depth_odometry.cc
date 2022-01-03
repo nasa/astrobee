@@ -31,20 +31,15 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
 
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::DownsampleAndFilterCloud(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) const {
-  // TODO(rsoussan): Make this and other vals params!
-  if (true) {
+  if (params_.use_organized_methods) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>(*cloud));
     pc::ReplaceZerosWithNans(*filtered_cloud);
     pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>());
-    // Values taken from pcl tutorial
-    constexpr double max_depth_change_factor = 0.02;
-    constexpr double normal_smoothing_size = 10.0;
     pc::EstimateOrganizedNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
-      filtered_cloud, max_depth_change_factor, normal_smoothing_size, *filtered_cloud_with_normals);
+      filtered_cloud, params_.max_depth_change_factor, params_.normal_smoothing_size, *filtered_cloud_with_normals);
     pc::RemoveInvalidAndZeroPoints(*filtered_cloud_with_normals);
-    constexpr int bins_per_axis = 8;
-    constexpr int num_samples = 500;
-    pc::NormalSpaceSubsampling<pcl::PointXYZINormal>(filtered_cloud_with_normals, bins_per_axis, num_samples);
+    pc::NormalSpaceSubsampling<pcl::PointXYZINormal>(filtered_cloud_with_normals, params_.bins_per_axis,
+                                                     params_.num_samples);
     return filtered_cloud_with_normals;
   } else {
     if (params_.downsample) {

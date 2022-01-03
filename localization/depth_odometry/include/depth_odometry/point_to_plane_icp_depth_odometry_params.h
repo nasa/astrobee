@@ -26,6 +26,14 @@ struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
   point_cloud_common::PointToPlaneICPParams icp;
   bool downsample;
   double downsample_leaf_size;
+  // Organized options
+  bool use_organized_methods;
+  // Organized normal estimation
+  double max_depth_change_factor;
+  double normal_smoothing_size;
+  // Organized sampling
+  int bins_per_axis;
+  int num_samples;
 };
 }  // namespace depth_odometry
 
