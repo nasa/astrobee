@@ -36,6 +36,7 @@
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/search/impl/search.hpp>
 
+#include <limits>
 #include <vector>
 
 namespace point_cloud_common {
@@ -108,6 +109,9 @@ bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
 }
 
 template <typename PointXYZType>
+bool NonzeroPointXYZ(const PointXYZType& point);
+
+template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point);
 
 template <typename PointNormalType>
@@ -118,6 +122,11 @@ bool ValidIntensity(const PointIntensityType& point);
 
 template <typename PointType>
 void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud);
+
+// Some pcl functions expect invalid points to be labeled with nans while
+// some sensors label invalid points with all zeros.
+template <typename PointType>
+void ReplaceZerosWithNans(typename pcl::PointCloud<PointType>& cloud);
 
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
@@ -141,9 +150,15 @@ typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals
 
 // Implementation
 template <typename PointXYZType>
+bool NonzeroPointXYZ(const PointXYZType& point) {
+  bool nonzero_point = !ApproxZero(point.x) || !ApproxZero(point.y) || !ApproxZero(point.z);
+  return nonzero_point;
+}
+
+template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point) {
   const bool finite_point = pcl_isfinite(point.x) && pcl_isfinite(point.y) && pcl_isfinite(point.z);
-  const bool nonzero_point = !ApproxZero(point.x) || !ApproxZero(point.y) || !ApproxZero(point.z);
+  const bool nonzero_point = NonzeroPointXYZ(point);
   return finite_point && nonzero_point;
 }
 
@@ -175,6 +190,20 @@ void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud) {
   cloud.height = 1;
   cloud.width = static_cast<uint32_t>(new_index);
   cloud.is_dense = true;
+}
+
+template <typename PointType>
+void ReplaceZerosWithNans(typename pcl::PointCloud<PointType>& cloud) {
+  for (auto& point : cloud.points) {
+    const bool nonzero_point = NonzeroPoint(point);
+    if (nonzero_point) {
+      continue;
+    } else {
+      point.x = std::numeric_limits<double>::quiet_NaN();
+      point.y = std::numeric_limits<double>::quiet_NaN();
+      point.z = std::numeric_limits<double>::quiet_NaN();
+    }
+  }
 }
 
 template <typename PointType>
