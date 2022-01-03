@@ -27,6 +27,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   config_reader
   localization_common
   msg_conversions
+  vision_msgs
 )
 
 
@@ -36,7 +37,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
-  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions
+  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions vision_msgs
 )
 
 ###########
