@@ -29,6 +29,7 @@
 #include <pcl/features/impl/normal_3d.hpp>
 #include <pcl/filters/fast_bilateral.h>
 #include <pcl/filters/impl/fast_bilateral.hpp>
+#include <pcl/filters/normal_space.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/point_cloud.h>
@@ -48,6 +49,10 @@ template <typename PointType, typename PointWithNormalType>
 void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
                               const double max_depth_change_factor, const double normal_smoothing_size,
                               pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
+
+template <typename PointType>
+void NormalSpaceSubsampling(typename pcl::PointCloud<PointType>::Ptr cloud, const int bins_per_axis,
+                            const int num_samples);
 
 Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                          const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud);
@@ -195,7 +200,7 @@ void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud) {
 template <typename PointType>
 void ReplaceZerosWithNans(typename pcl::PointCloud<PointType>& cloud) {
   for (auto& point : cloud.points) {
-    const bool nonzero_point = NonzeroPoint(point);
+    const bool nonzero_point = NonzeroPointXYZ(point);
     if (nonzero_point) {
       continue;
     } else {
@@ -283,6 +288,17 @@ void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr clo
   pcl::PointCloud<pcl::Normal> cloud_normals;
   ne.compute(cloud_normals);
   pcl::concatenateFields(*cloud, cloud_normals, cloud_with_normals);
+}
+
+template <typename PointType>
+void NormalSpaceSubsampling(typename pcl::PointCloud<PointType>::Ptr cloud, const int bins_per_axis,
+                            const int num_samples) {
+  typename pcl::NormalSpaceSampling<PointType, PointType> normal_space_sampling;
+  normal_space_sampling.setInputCloud(cloud);
+  normal_space_sampling.setNormals(cloud);
+  normal_space_sampling.setBins(bins_per_axis, bins_per_axis, bins_per_axis);
+  normal_space_sampling.setSample(num_samples);
+  normal_space_sampling.filter(*cloud);
 }
 
 template <typename PointType, typename PointWithNormalType>
