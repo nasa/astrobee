@@ -99,15 +99,15 @@ def ConvertToNumber(value):
 
 def main():
     if len(sys.argv) < 4:
-        print "Incorrect nmuber of arguments! Please restart with path to " \
+        print(("Incorrect nmuber of arguments! Please restart with path to " \
                 + "the FMECA csv file, the path to the config files, and the " \
-                + "path to the shared file."
+                + "path to the shared file."))
         return
 
     try:
         file = open(sys.argv[1], 'r')
     except IOError:
-        print "Couldn't open file " + sys.argv[1]
+        print(("Couldn't open file " + sys.argv[1]))
         return
 
     lines = file.readlines()
@@ -251,8 +251,8 @@ def main():
             # dictionary is keyed on the subsystem name, the second dictionary
             # is keyed on the node name and the list is a list of faults for the
             # node
-            if fault_table.has_key(subsystem): 
-                if fault_table[subsystem].has_key(node_name):
+            if subsystem in fault_table: 
+                if node_name in fault_table[subsystem]:
                     fault_table[subsystem][node_name].append(fault_entry)
                 else: # Node isn't in the dictionary
                     fault_table[subsystem][node_name] = [fault_entry]
@@ -294,42 +294,42 @@ def main():
                     index = index + 1
 
                 if id_index == -1:
-                    print  "Could not find fault id column!"
+                    print("Could not find fault id column!")
                     break
                 if subsystem_index == -1:
-                    print "Could not find subsystem column!"
+                    print("Could not find subsystem column!")
                     break
                 if description_index == -1:
-                    print "Could not find failure mechanism column!"
+                    print("Could not find failure mechanism column!")
                     break
                 if warning_index == -1:
-                    print "Could not find warning column!"
+                    print("Could not find warning column!")
                     break
                 if blocking_index == -1:
-                    print "Could not find blocking column!"
+                    print("Could not find blocking column!")
                     break
                 if node_index == -1:
-                    print "Could not find node name column!"
+                    print("Could not find node name column!")
                     break
                 if response_index == -1:
-                    print "Could not find response command column!"
+                    print("Could not find response command column!")
                     break
                 if args_index == -1:
-                    print "Could not find response command arguments column!"
+                    print("Could not find response command arguments column!")
                     break
                 if key_index == -1:
-                    print "Could not find key column!"
+                    print("Could not find key column!")
                     break
                 if timeout_index == -1:
-                    print "Could not find heartbeat timeout column!"
+                    print("Could not find heartbeat timeout column!")
                     break
                 if misses_index == -1:
-                    print "Could not find heartbeat timeout column!"
+                    print("Could not find heartbeat timeout column!")
                     break
 
 
     if titles_read == False: 
-        print "Could not find row with column headers!"
+        print("Could not find row with column headers!")
     else:
         fc_file = open(faults_config_file_name, 'w')
         ftc_file = open(fault_table_config_file_name, 'w')
@@ -341,9 +341,9 @@ def main():
         line = line + "require \"management/fault_functions\"\n\n"
         ftc_file.write(line + "subsystems={\n")
         smf_file.write(line)
-        for subsys_key in fault_table.keys():
+        for subsys_key in list(fault_table.keys()):
             ftc_file.write("  {name=\"" + subsys_key + "\", nodes={\n")
-            for nodes_key in fault_table[subsys_key].keys():
+            for nodes_key in list(fault_table[subsys_key].keys()):
                 if (nodes_key == "sys_monitor"):
                     sm_entry_added = False
                     for fault in fault_table[subsys_key][nodes_key]:
@@ -466,7 +466,7 @@ def main():
         list_faults = list(faults_not_added)
         list_faults[last_comma] = '!'
         faults_not_added = ''.join(list_faults)
-        print faults_not_added
+        print(faults_not_added)
 
 if __name__ == '__main__':
     main()

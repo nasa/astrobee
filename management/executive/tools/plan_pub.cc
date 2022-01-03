@@ -45,7 +45,6 @@
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
-namespace flags = FREEFLYER_GFLAGS_NAMESPACE;
 
 bool ValidateCompression(const char* name, std::string const &value) {
   if (value == "none" || value == "gzip" || value == "deflate")
@@ -109,11 +108,11 @@ int main(int argc, char** argv) {
 
   ros::Time::waitForValid();
 
-  if (!flags::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
+  if (!google::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
     std::cerr << "Failed to register compression flag validator." << std::endl;
     return -1;
   }
-  flags::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc <= 1) {
     std::cerr << "error: must provide at least one file to send as a plan"
@@ -151,8 +150,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  std::cout << "data processed" << std::endl;
-
   // Copy the data into a CompressedFile (because char and 'unsigned' char)
   // are totally different.
   // NOTE: I also tried setting the msg to 'int8', but ROS made it 'signed',
@@ -162,7 +159,6 @@ int main(int argc, char** argv) {
     cf.file.push_back(static_cast<unsigned char>(c));
   }
 
-  std::cout << "copied to ros" << std::endl;
 
   plan_pub_time = ros::Time::now();
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;

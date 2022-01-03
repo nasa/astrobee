@@ -31,9 +31,9 @@
 
 #include "ff_msgs/CompressedFile.h"
 
-#include "AstrobeeConstants.h"
-#include "CompressedFile.h"
-#include "CompressedFileSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/CompressedFile.h"
+#include "dds_msgs/CompressedFileSupport.h"
 
 namespace ff {
 

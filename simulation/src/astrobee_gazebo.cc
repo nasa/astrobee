@@ -44,7 +44,7 @@ void FreeFlyerPlugin::SetParentFrame(std::string const& parent) {
 }
 
 // Load function
-void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name) {
+void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::string const& plugin_name) {
   robot_name_ = robot_name;
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -60,7 +60,7 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name) {
   // Assign special node handles that use custom callback queues to avoid
   // Gazebo locking up heartbeats from being sent to the system monitor.
   nh_ff_ = ros::NodeHandle(robot_name_);
-  Setup(nh_ff_, nh_ff_);
+  Setup(nh_ff_, nh_ff_, plugin_name);
 
   // If we have a frame then defer chainloading until we receive them
   timer_ = nh_.createTimer(ros::Duration(5.0),
@@ -123,8 +123,17 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   std::string ns = model_->GetName();
   if (ns == "bsharp")
     ns = "/";
+
+  // Read plugin custom name if specified
+  std::string plugin_name = "";
+  if (sdf->HasElement("plugin_name"))
+    plugin_name = sdf->Get<std::string>("plugin_name");
+  // Read plugin custom frame if specified
+  if (sdf->HasElement("plugin_frame"))
+    plugin_frame_ = sdf->Get<std::string>("plugin_frame");
+
   // Initialize the FreeFlyerPlugin
-  InitializePlugin(ns);
+  InitializePlugin(ns, plugin_name);
 
   // Now load the rest of the plugin
   LoadCallback(&nh_, model_, sdf_);
@@ -195,8 +204,16 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   if (ns == "bsharp")
     ns = "/";
 
+  // Read plugin custom name if specified
+  std::string plugin_name = "";
+  if (sdf->HasElement("plugin_name"))
+    plugin_name = sdf->Get<std::string>("plugin_name");
+  // Read plugin custom frame if specified
+  if (sdf->HasElement("plugin_frame"))
+    plugin_frame_ = sdf->Get<std::string>("plugin_frame");
+
   // Initialize the FreeFlyerPlugin
-  InitializePlugin(ns);
+  InitializePlugin(ns, plugin_name);
 
   // Now load the rest of the plugin
   LoadCallback(&nh_, sensor_, sdf_);
@@ -377,56 +394,6 @@ void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & msg) 
              camera->LensDistortion()->GetP1(),
              camera->LensDistortion()->GetP2()};
     #endif
-  } else {
-    msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
-  }
-}
-
-void FillCameraInfo(rendering::WideAngleCameraPtr camera, sensor_msgs::CameraInfo & msg) {
-  msg.width = camera->ImageWidth();
-  msg.height = camera->ImageHeight();
-
-  double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
-  double focal_length = camera->Lens()->F();
-  if (camera->Lens()->ScaleToHFOV()) {
-    float param = hfov/2/camera->Lens()->C2() + camera->Lens()->C3();
-    focal_length = 1.0f/(camera->Lens()->C1()*param);
-  }
-  focal_length *= msg.width/2.;
-
-  double optical_center_x = msg.width/2.0;
-  double optical_center_y = msg.height/2.0;
-
-  // Intrinsics matrix
-  msg.K = {focal_length, 0, optical_center_x,
-           0, focal_length, optical_center_y,
-           0, 0, 1};
-
-  // Projection matrix. We won't use this, but initalize it to something.
-  msg.P = {1, 0, 0, 0,
-           0, 1, 0, 0,
-           0, 0, 1, 0};
-
-  // Rotation matrix. We won't use it.
-  msg.R = {1, 0, 0,
-           0, 1, 0,
-           0, 0, 1};
-
-  rendering::DistortionPtr dPtr = camera->LensDistortion();
-
-  // sensor_msgs::CameraInfo can manage only a few distortion
-  // models. Here we assume plumb_bob just to pass along the
-  // coefficients. Out of all the simulated cameras, nav_cam is
-  // fisheye, which uses only K1, and all others have zero
-  // distortion. Hence this code was not tested in the most general
-  // setting.
-  msg.distortion_model = "plumb_bob";
-  if (dPtr) {
-    msg.D = {camera->Lens()->C1(),
-             camera->Lens()->C2(),
-             camera->Lens()->C3(),
-             0.0,
-             0.0};
   } else {
     msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
   }

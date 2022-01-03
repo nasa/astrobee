@@ -146,4 +146,41 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
   // Add gravity correction to measurement to offset negatively measured gravity
   return (uncorrected_accelerometer_measurement + imu_F_gravity);
 }
+
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation) {
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.translation() = translation;
+  pose.linear() = rotation;
+  return pose;
+}
+
+double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
+
+double Rad2Deg(const double radians) { return 180.0 / M_PI * radians; }
+
+Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordinates) {
+  Eigen::Vector3d cartesian_coordinates;
+  cartesian_coordinates.x() = cylindrical_coordinates[0] * std::cos(Deg2Rad(cylindrical_coordinates[1]));
+  cartesian_coordinates.y() = cylindrical_coordinates[0] * std::sin(Deg2Rad(cylindrical_coordinates[1]));
+  cartesian_coordinates.z() = cylindrical_coordinates[2];
+  return cartesian_coordinates;
+}
+
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll) {
+  const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw), Eigen::Vector3d::UnitZ());
+  const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch), Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll), Eigen::Vector3d::UnitX());
+  // For intrinsics euler angle convention, yaw, pitch, then roll in intrinsic body frame is equivalent to
+  // roll, pitch, then yaw in extrinsic global frame
+  const Eigen::Matrix3d rotation(roll_aa * pitch_aa * yaw_aa);
+  return rotation;
+}
+
+Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics) {
+  return Eigen::Vector2d(intrinsics(0, 0), intrinsics(1, 1));
+}
+
+Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
+  return Eigen::Vector2d(intrinsics(0, 2), intrinsics(1, 2));
+}
 }  // namespace localization_common

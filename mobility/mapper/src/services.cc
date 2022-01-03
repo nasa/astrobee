@@ -23,39 +23,51 @@
 namespace mapper {
 
 // Update resolution of the map
-bool MapperNodelet::UpdateResolution(ff_msgs::SetFloat::Request &req,
+bool MapperNodelet::SetResolution(ff_msgs::SetFloat::Request &req,
                                      ff_msgs::SetFloat::Response &res) {
-  mutexes_.octomap.lock();
   globals_.octomap.SetResolution(req.data);
-  mutexes_.octomap.unlock();
+  res.success = true;
+  return true;
+}
+// Update resolution of the map
+bool MapperNodelet::GetResolution(ff_msgs::GetFloat::Request &req,
+                                     ff_msgs::GetFloat::Response &res) {
+  res.data = globals_.octomap.GetResolution();
   res.success = true;
   return true;
 }
 
 // Update map memory time
-bool MapperNodelet::UpdateMemoryTime(ff_msgs::SetFloat::Request &req,
+bool MapperNodelet::SetMemoryTime(ff_msgs::SetFloat::Request &req,
                                      ff_msgs::SetFloat::Response &res) {
-  mutexes_.octomap.lock();
-  globals_.octomap.SetMemory(req.data);
-  mutexes_.octomap.unlock();
+  globals_.octomap.SetMemoryTime(req.data);
+  res.success = true;
+  return true;
+}
+// Update map memory time
+bool MapperNodelet::GetMemoryTime(ff_msgs::GetFloat::Request &req,
+                                     ff_msgs::GetFloat::Response &res) {
+  res.data = globals_.octomap.GetMemoryTime();
   res.success = true;
   return true;
 }
 
-bool MapperNodelet::MapInflation(ff_msgs::SetFloat::Request &req,
+bool MapperNodelet::SetCollisionDistance(ff_msgs::SetFloat::Request &req,
                                  ff_msgs::SetFloat::Response &res) {
-  mutexes_.octomap.lock();
-  globals_.octomap.SetMapInflation(req.data);
-  mutexes_.octomap.unlock();
+  globals_.octomap.SetMapInflation(req.data + cfg_.Get<double>("robot_radius"));
+  res.success = true;
+  return true;
+}
+bool MapperNodelet::GetMapInflation(ff_msgs::GetFloat::Request &req,
+                                 ff_msgs::GetFloat::Response &res) {
+  res.data = globals_.octomap.GetMapInflation();
   res.success = true;
   return true;
 }
 
 bool MapperNodelet::ResetMap(std_srvs::Trigger::Request &req,
                              std_srvs::Trigger::Response &res) {
-  mutexes_.octomap.lock();
   globals_.octomap.ResetMap();
-  mutexes_.octomap.unlock();
   res.success = true;
   res.message = "Map has been reset!";
   return true;
@@ -66,9 +78,7 @@ bool MapperNodelet::GetFreeMapCallback(ff_msgs::GetMap::Request &req,
   visualization_msgs::MarkerArray om, fm;
   sensor_msgs::PointCloud2 oc, fc;
 
-  mutexes_.octomap.lock();
   globals_.octomap.InflatedVisMarkers(&om, &fm, &oc, &fc);
-  mutexes_.octomap.unlock();
 
   res.points = fc;
   res.resolution = globals_.octomap.GetResolution();
@@ -81,9 +91,7 @@ bool MapperNodelet::GetObstacleMapCallback(ff_msgs::GetMap::Request &req,
   visualization_msgs::MarkerArray om, fm;
   sensor_msgs::PointCloud2 oc, fc;
 
-  mutexes_.octomap.lock();
   globals_.octomap.InflatedVisMarkers(&om, &fm, &oc, &fc);
-  mutexes_.octomap.unlock();
 
   res.points = oc;
   res.resolution = globals_.octomap.GetResolution();

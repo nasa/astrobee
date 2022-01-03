@@ -122,3 +122,9 @@ TEST(reprojection, affine_estimation) {
   EXPECT_NEAR(A.translation()[1], S[1], 1e-3);
   EXPECT_NEAR(A.translation()[2], S[2], 1e-3);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

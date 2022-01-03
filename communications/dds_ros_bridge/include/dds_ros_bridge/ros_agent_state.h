@@ -35,9 +35,9 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeAgentStateSupport.h"
-#include "AstrobeeConstants.h"
-#include "MobilitySettingsStateSupport.h"
+#include "dds_msgs/AstrobeeAgentStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/MobilitySettingsStateSupport.h"
 
 namespace ff {
 

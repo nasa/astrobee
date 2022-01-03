@@ -61,6 +61,7 @@
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
+#include "dds_ros_bridge/ros_zones_rapid_compressed_file.h"
 
 #include "ff_msgs/SetRate.h"
 
@@ -174,6 +175,9 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   bool BuildStringToTextMessage(const std::string& name);
   bool BuildTelemetryToRapid(const std::string& sub_topic,
                              const std::string& name);
+  bool BuildZonesToRapidCompressedFile(const std::string& sub_topic,
+                                       const std::string& zones_srv,
+                                       const std::string& name);
 
   /**
    * Build Rapid subscribers to Ros publishers

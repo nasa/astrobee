@@ -13,63 +13,9 @@ yet implemented.
 
 The \ref mapper node can be divided in the following tasks:
 
-* `Trajectory Validator` - Validates planned trajectories based on keep-in and
-  keep-out zones.
 * `Octomapper` - Maps Astrobee's surroundings using an octomap (octree-based map);
 * `Sentinel` - Checks for imminent collisions and notifies the controller if an
   imminent collision has been detected;
-
-## Trajectory Validator
-
-The keep-in and keep-out zones describe safe and unsafe areas for flight
-respectively. Each zone is a cuboid in 3-space, and is fully-defined by the
-coordinates of two diagonally opposite vertices. The union of all keep-in zones
-minus the union of all keep-out zones describes the free space in which safe
-flight can occur. The default zones are provided as JSON formatted files with
-suffix `.json` in the `astrobee/gds_config` directory.
-
-An example of a keep-in and keep-out zone JSON file might look like this:
-
-	{
-    "timestamp" : "1475516840",
-    "zones":
-    [
-    {
-      "name" : "keepout",
-      "safe" : false,
-      "sequence" : [ [ -1.0, -0.3, -3, -0.6, 1.0, 3.0 ], [ 0.5, -0.3, -3, 1.0, 1.0, 3.0 ] ]
-    },
-    {
-      "name" : "keepin",
-      "safe" : true,
-      "sequence" : [ [ -1.5, -1.5, 0, 1.5, 1.5, 3.0 ] ]
-    }
-    ]
-	}
-
-Note that the "sequence" field takes an array of 6-vectors, and not just a
-single 6-vector. Each element of this array represents a zone, with each vector
-denoting the two coordinates that fully-define the cuboid.
-
-At any point while running the robot, the operator can load and parse a JSON file:
-
-    `rosrun executive zones_pub -compression none <file_name>.json`
-
-Or manually through the `SetZones` service call on the ROS namespace `~/mob/set_zones`.
-Please refer to the definition of \ref ff_msgs_SetZones for more information on
-how to update zones using a ROS service call.
-
-The resulting data structure is serialized into a binary file. If the option `zone_overwrite`
-in `mobility/choreographer.config` is activated (default), it will overwrite the current
-`<world>.bin` file containing the default set of zones at start-up. 
-
-The \ref mapper node publishes
-[visualization_msgs::MarkerArrays](http://docs.ros.org/kinetic/api/visualization_msgs/html/msg/MarkerArray.html)
-on the namespace `~/mob/mapper/zones`. When listened to in rviz, these marker
-arrays render keep-in and keep-out zones as semi-transparent green and red
-cuboids. The two example zones should be rendered as shown below:
-
-![alt text](../images/mobility/zones.png "How the RVIZ user interface draws zones")
 
 ## Octomapper
 
@@ -151,7 +97,8 @@ The Octomapper takes the following paramers as inputs (defined in mapper.config)
 * `min_range (meters)` - Minimum reliable range of the depth camera.
 * `memory_time (seconds)` - How long the octomap remembers the fading memory
 map. It remembers forever when this variable is <= 0.
-* `inflate_radius (meters)` - Radial inflation size of the octomap.
+* `robot_radius (meters)` - Radius of the robot considered in the planner.
+* `collision_distance (meters)` - Minimum distance margin to maintain away from obstacles.
 * `cam_fov (radians)` - Camera horizontal field-of-view. The octomap will only
 update the map in the volume within the fov of the depth cam.
 * `cam_aspect_ratio` - Depth camera's width divided by height. Used for c

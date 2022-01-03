@@ -151,3 +151,9 @@ TEST_F(RotationFactorAdderTester, CorrectOptimization) {
   ASSERT_TRUE(optimized_world_T_body_1.equals(world_T_body_1, 1e-6));
   ASSERT_TRUE(optimized_world_T_body_2.equals(world_T_body_2, 1e-6));
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

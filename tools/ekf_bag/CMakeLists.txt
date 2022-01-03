@@ -15,18 +15,89 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(ekf_bag)
 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  config_reader
+  camera
+  ekf
+  lk_optical_flow
+  localization_node
+)
+
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
+
 catkin_package(
-  CATKIN_DEPENDS roscpp
+  INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp config_reader camera ekf lk_optical_flow localization_node
 )
 
-create_library(TARGET ekf_bag 
-  LIBS ekf lk_optical_flow localization_node sparse_mapping interest_point camera ff_common config_reader ${OpenCV_LIBRARIES} ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS ekf_bag
-  INC ${catkin_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(ekf_bag
+  src/ekf_bag.cc
+  src/ekf_bag_csv.cc
+  src/tracked_features.cc
 )
+add_dependencies(ekf_bag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ekf_bag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(bag_to_csv tools/bag_to_csv.cc)
+add_dependencies(bag_to_csv ${catkin_EXPORTED_TARGETS})
+target_link_libraries(bag_to_csv
+  ekf_bag gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(sparse_map_bag tools/sparse_map_bag.cc)
+add_dependencies(sparse_map_bag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sparse_map_bag
+  ekf_bag gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+# Install C++ executables
+install(TARGETS bag_to_csv DESTINATION bin)
+install(TARGETS sparse_map_bag DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/bag_to_csv share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/sparse_map_bag share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")

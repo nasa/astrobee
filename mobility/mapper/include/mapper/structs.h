@@ -59,18 +59,6 @@ struct GlobalVariables {
   std::queue<StampedPcl> pcl_queue;
 };
 
-struct MutexStruct {
-  std::mutex sampled_traj;
-  std::mutex tf;
-  std::mutex octomap;
-  std::mutex point_cloud;
-};
-
-struct SemaphoreStruct {
-  std::condition_variable pcl;
-  std::condition_variable collision_check;
-};
-
 }  // namespace mapper
 
 #endif  // MAPPER_STRUCTS_H_

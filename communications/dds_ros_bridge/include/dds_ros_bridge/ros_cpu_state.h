@@ -32,9 +32,9 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "CpuConfigSupport.h"
-#include "CpuStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/CpuConfigSupport.h"
+#include "dds_msgs/CpuStateSupport.h"
 
 namespace ff {
 

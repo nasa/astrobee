@@ -35,9 +35,13 @@ OctoClass::OctoClass(const double resolution) {
 
 OctoClass::OctoClass() {}
 
-void OctoClass::SetMemory(const double memory) {
+void OctoClass::SetMemoryTime(const double memory) {
   memory_time_ = memory;
   ROS_DEBUG("Fading memory time: %f seconds", memory_time_);
+}
+
+double OctoClass::GetMemoryTime() {
+  return memory_time_;
 }
 
 void OctoClass::SetMaxRange(const double max_range) {
@@ -79,6 +83,10 @@ void OctoClass::SetResolution(const double resolution_in) {
   ROS_DEBUG("Map resolution: %f meters", resolution_);
 }
 
+double OctoClass::GetResolution() {
+  return resolution_;
+}
+
 void OctoClass::SetMapInflation(const double inflate_radius) {
   inflate_radius_ = inflate_radius;
   ResetMap();
@@ -100,6 +108,10 @@ void OctoClass::SetMapInflation(const double inflate_radius) {
       }
     }
   }
+}
+
+double OctoClass::GetMapInflation() {
+  return inflate_radius_;
 }
 
 void OctoClass::SetCamFrustum(const double fov,

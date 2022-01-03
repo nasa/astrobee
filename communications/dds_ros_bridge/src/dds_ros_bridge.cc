@@ -658,6 +658,29 @@ bool DdsRosBridge::BuildTelemetryToRapid(const std::string& sub_topic,
   return true;
 }
 
+bool DdsRosBridge::BuildZonesToRapidCompressedFile(const std::string& sub_topic,
+                                                   const std::string& zones_srv,
+                                                   const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr zones_to_compressed_file(
+                                new ff::RosZonesToRapidCompressedFile(sub_topic,
+                                                                      zones_srv,
+                                                                      pub_topic,
+                                                                      nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = zones_to_compressed_file;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
 bool DdsRosBridge::BuildCommandToCommand(const std::string& pub_topic,
                                          const std::string& name) {
   std::string sub_topic;
@@ -1359,6 +1382,13 @@ bool DdsRosBridge::ReadParams() {
 
   // ros_telemetry_rapid_telemetry => RTRT
   if (!BuildTelemetryToRapid(TOPIC_MANAGEMENT_CAMERA_STATE, "RTRT")) {
+    return false;
+  }
+
+  // ros_zones_rapid_compressed_file => RZRCF
+  if (!BuildZonesToRapidCompressedFile(TOPIC_MOBILITY_ZONES,
+                                       SERVICE_MOBILITY_GET_ZONES,
+                                       "RZRCF")) {
     return false;
   }
 

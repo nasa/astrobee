@@ -68,7 +68,7 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
 
  protected:
   // Initialize the plugin
-  void InitializePlugin(std::string const& robot_name);
+  void InitializePlugin(std::string const& robot_name, std::string const& plugin_name);
 
   // Some plugins might want the world as the parent frame
   void SetParentFrame(std::string const& parent);
@@ -188,7 +188,6 @@ Eigen::Affine3d SensorToWorld(gazebo::math::Pose const& world_pose,
 
 // Read the camera info
 void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & info_msg);
-void FillCameraInfo(rendering::WideAngleCameraPtr camera, sensor_msgs::CameraInfo & info_msg);
 
 }  // namespace gazebo
 

@@ -28,11 +28,11 @@
 #include <string>
 #include <map>
 
-#include "AstrobeeConstants.h"
+#include "dds_msgs/AstrobeeConstants.h"
 
 #include "ff_common/init.h"
 
-#include "DockStateSupport.h"
+#include "dds_msgs/DockStateSupport.h"
 
 #include "knDds/DdsEntitiesFactory.h"
 #include "knDds/DdsEntitiesFactorySvc.h"

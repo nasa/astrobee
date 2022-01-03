@@ -53,6 +53,7 @@
 
 // Service messages
 #include <ff_msgs/SetFloat.h>
+#include <ff_msgs/GetFloat.h>
 
 // General messages
 #include <std_msgs/Empty.h>
@@ -120,16 +121,25 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
 
   // Services (see services.cpp for implementation) -----------------
   // Update resolution of the map
-  bool UpdateResolution(ff_msgs::SetFloat::Request &req,
+  bool SetResolution(ff_msgs::SetFloat::Request &req,
                         ff_msgs::SetFloat::Response &res);
+  // Update resolution of the map
+  bool GetResolution(ff_msgs::GetFloat::Request &req,
+                        ff_msgs::GetFloat::Response &res);
 
   // Update map memory time
-  bool UpdateMemoryTime(ff_msgs::SetFloat::Request &req,
+  bool SetMemoryTime(ff_msgs::SetFloat::Request &req,
                         ff_msgs::SetFloat::Response &res);
+  // Update map memory time
+  bool GetMemoryTime(ff_msgs::GetFloat::Request &req,
+                        ff_msgs::GetFloat::Response &res);
 
-  // Update map inflation
-  bool MapInflation(ff_msgs::SetFloat::Request &req,
+  // Update collision distance
+  bool SetCollisionDistance(ff_msgs::SetFloat::Request &req,
                     ff_msgs::SetFloat::Response &res);
+  // Update collision distance
+  bool GetMapInflation(ff_msgs::GetFloat::Request &req,
+                    ff_msgs::GetFloat::Response &res);
 
   // Reset the map
   bool ResetMap(std_srvs::Trigger::Request &req,
@@ -147,16 +157,11 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   // Thread for fading memory of the octomap
   void FadeTask(ros::TimerEvent const& event);
 
-  // Threads for constantly updating the tfTree values
-  void HazTfTask(ros::TimerEvent const& event);
-  void PerchTfTask(ros::TimerEvent const& event);
-  void BodyTfTask(ros::TimerEvent const& event);
-
-  // Thread for collision checking
+  // Collision checking
   void CollisionCheckTask();
 
-  // Thread for getting pcl data and populating the octomap
-  void OctomappingTask();
+  // Timer for getting pcl data and populating the octomap
+  void OctomappingTask(ros::TimerEvent const& event);
 
   // Initialize fault management
   void InitFault(std::string const& msg);
@@ -164,33 +169,31 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
  private:
   // Declare global variables (structures defined in structs.h)
   GlobalVariables globals_;
-  MutexStruct mutexes_;
-  SemaphoreStruct semaphores_;
 
-  // Thread variables
-  std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
+  // Timer variables
+  ros::Timer timer_o_;  // Octomapping Task
+  ros::Timer timer_d_;  // Diagnostics
+  ros::Timer timer_f_;  // Fade Task
 
   // Subscriber variables
   ros::Subscriber haz_sub_, perch_sub_, segment_sub_, reset_sub_;
 
   // Octomap services
-  ros::ServiceServer resolution_srv_, memory_time_srv_;
-  ros::ServiceServer map_inflation_srv_, reset_map_srv_;
+  ros::ServiceServer set_resolution_srv_, set_memory_time_srv_, set_collision_distance_srv_;
+  ros::ServiceServer get_resolution_srv_, get_memory_time_srv_, get_collision_distance_srv_;
+  ros::ServiceServer reset_map_srv_;
 
-  // Thread rates (hz)
-  double tf_update_rate_, fading_memory_update_rate_;
-
-  // // Path planning services
-  // ros::ServiceServer RRT_srv, octoRRT_srv, PRM_srv, graph_srv, Astar_srv;
-  ros::ServiceServer newTraj_srv;
+  // Timer rates (hz)
+  double octomap_update_rate_, tf_update_rate_, fading_memory_update_rate_;
 
   // Trajectory validation variables -----------------------------
   State state_;                                       // State of the mapper (structure defined in struct.h)
   ff_util::Segment segment_;                          // Segment
+
+  // Services
   ros::ServiceServer get_free_map_srv_;               // Get free map service
   ros::ServiceServer get_obstacle_map_srv_;           // Set obstacle map service
-  ros::Timer timer_d_, timer_f_, timer_h_, timer_p_, timer_b_;  // Diagnostics
-  std::atomic<bool> killed_;
+
   ff_util::ConfigServer cfg_;                         // Config server
 
   // TF2

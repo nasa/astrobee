@@ -21,17 +21,24 @@
 
 std_msgs/Header header
 
-# No faults are occurring in system
-uint8 FUNCTIONAL  = 0
-# Faults are occurring in the system which may or may not leave the robot
-# functional
-uint8 FAULT       = 1
-# A fault has occurred that indirectly affects the motion of the robot
-uint8 BLOCKED     = 2
-
 # Not sent to the ground, only used by the executive to determine what commands
 # to accept.
 uint8 state
+# System starting up
+uint8 STARTING_UP           = 0
+# No faults are occurring in system
+uint8 FUNCTIONAL            = 1
+# Faults are occurring in the system which may or may not leave the robot
+# functional
+uint8 FAULT                 = 2
+# A fault has occurred that indirectly affects the motion of the robot
+uint8 BLOCKED               = 3
+# Recovering from nodes dying on startup
+uint8 RELOADING_NODELETS    = 4
+
+# A human readable version of the state - only really used for when nodes die on
+# startup and need to be restarted.
+string hr_state
 
 # Faults occurring in the astrobee system, can only send 32 faults down
 ff_msgs/Fault[] faults

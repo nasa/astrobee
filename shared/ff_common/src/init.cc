@@ -40,7 +40,7 @@ namespace ff_common {
       google::InitGoogleLogging((*argv)[0]);
       logging_initialized = true;
     }
-    FREEFLYER_GFLAGS_NAMESPACE::ParseCommandLineFlags(argc, argv, true);
+    google::ParseCommandLineFlags(argc, argv, true);
   }
 
   // ros nodelets get commandline arguments in this form...
@@ -57,7 +57,7 @@ namespace ff_common {
     if (main_thread) {
       InitFreeFlyerApplication(&argc, &casted_argv);
     } else {
-      FREEFLYER_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &casted_argv, true);
+      google::ParseCommandLineFlags(&argc, &casted_argv, true);
     }
     free(argv);
   }

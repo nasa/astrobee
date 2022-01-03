@@ -1,5 +1,28 @@
 # Releases
 
+## Release 0.15.2
+
+  * added python linters black and isort in the CI pipeline
+  * added perching arm reconnect service
+  * added nav and dock cam bayer image output option
+  * added code to report time for llp, mlp, hlp
+  * added end of motion check 
+
+## Release 0.15.1
+
+  * Separated config files for DDS communications to avoid conflict
+  * Increased plan name length
+  * Pico proxy was added to the MLP launch file
+  * System monitor now attempts to reload nodelets that die on startup
+  * Other fixes/software and documentation improvements
+
+## Release 0.15.0
+
+  * Perching functional
+  * Ubuntu 20 compatibility
+  * Added astrobee to astrobee coms
+  * Various other fixes/software improvements
+
 ## Release 0.14.3
 
   * Rotation fallback fix

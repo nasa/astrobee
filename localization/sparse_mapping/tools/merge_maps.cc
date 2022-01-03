@@ -59,6 +59,10 @@ DEFINE_double(outlier_factor, 3.0,
 DEFINE_bool(skip_bundle_adjustment, false,
             "If true, do not bundle adjust the merged map.");
 
+DEFINE_bool(fix_first_map, false,
+            "If true and bundle adjustment is not skipped, keep the first map fixed "
+            "when bundle adjustment takes place.");
+
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -80,6 +84,9 @@ int main(int argc, char** argv) {
   if (FLAGS_num_image_overlaps_at_endpoints <= 0)
     LOG(FATAL) << "Must have num_image_overlaps_at_endpoints > 0.";
 
+  if (FLAGS_fix_first_map && argc != 3)
+    LOG(FATAL) << "Keeping the first map fixed works only when there are two input maps.";
+
   // The merged map starts as the first map.
   {
     sparse_mapping::SparseMap A(argv[1]);
@@ -92,7 +99,8 @@ int main(int argc, char** argv) {
     sparse_mapping::AppendMapFile(FLAGS_output_map, argv[i],
                                   FLAGS_num_image_overlaps_at_endpoints,
                                   FLAGS_outlier_factor,
-                                  !FLAGS_skip_bundle_adjustment);
+                                  !FLAGS_skip_bundle_adjustment,
+                                  FLAGS_fix_first_map);
   }
 
   google::protobuf::ShutdownProtobufLibrary();

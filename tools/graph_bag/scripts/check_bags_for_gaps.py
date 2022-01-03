@@ -15,24 +15,25 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import utilities
-
 import argparse
 import os
 import sys
 
 import rosbag
+import utilities
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('bagfile')
-  parser.add_argument('topic')
-  parser.add_argument('-m', '--max-time-diff', type=float, default=0.5)
-  # Use header or received time
-  parser.add_argument('-r', '--use-receive-time', action='store_true')
-  args = parser.parse_args()
-  if not os.path.isfile(args.bagfile):
-    print('Bag file ' + args.bagfile + ' does not exist.')
-    sys.exit()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("bagfile")
+    parser.add_argument("topic")
+    parser.add_argument("-m", "--max-time-diff", type=float, default=0.5)
+    # Use header or received time
+    parser.add_argument("-r", "--use-receive-time", action="store_true")
+    args = parser.parse_args()
+    if not os.path.isfile(args.bagfile):
+        print(("Bag file " + args.bagfile + " does not exist."))
+        sys.exit()
 
-  utilities.get_topic_rates(args.bagfile, args.topic, args.max_time_diff, not args.use_receive_time, True)
+    utilities.get_topic_rates(
+        args.bagfile, args.topic, args.max_time_diff, not args.use_receive_time, True
+    )
