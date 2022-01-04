@@ -49,6 +49,21 @@ void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
   params.downsample = mc::LoadBool(config, "downsample");
   params.downsample_leaf_size = mc::LoadDouble(config, "downsample_leaf_size");
   params.use_organized_normal_estimation = mc::LoadBool(config, "use_organized_normal_estimation");
+  const std::string normal_estimation_method_name = mc::LoadString(config, "organized_normal_method");
+  if (normal_estimation_method_name == "avg_3d_gradient") {
+    params.normal_estimation_method =
+      pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod::AVERAGE_3D_GRADIENT;
+  } else if (normal_estimation_method_name == "covariance") {
+    params.normal_estimation_method =
+      pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod::COVARIANCE_MATRIX;
+  } else if (normal_estimation_method_name == "avg_depth_change") {
+    params.normal_estimation_method =
+      pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod::AVERAGE_DEPTH_CHANGE;
+  } else {
+    LogFatal("LoadPointToPlaneICPDepthOdometryParams: Invalid normal estimation method provided.");
+  }
+  params.normal_smoothing_size = mc::LoadDouble(config, "normal_smoothing_size");
+  params.use_depth_dependent_smoothing = mc::LoadBool(config, "use_depth_dependent_smoothing");
   params.max_depth_change_factor = mc::LoadDouble(config, "max_depth_change_factor");
   params.normal_smoothing_size = mc::LoadDouble(config, "normal_smoothing_size");
   params.use_normal_space_sampling = mc::LoadBool(config, "use_normal_space_sampling");

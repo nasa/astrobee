@@ -48,9 +48,11 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
                      pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
 
 template <typename PointType, typename PointWithNormalType>
-void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
-                              const double max_depth_change_factor, const double normal_smoothing_size,
-                              pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
+void EstimateOrganizedNormals(
+  const typename pcl::PointCloud<PointType>::Ptr cloud,
+  const typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal>::NormalEstimationMethod method,
+  const bool depth_dependent_smoothing, const double max_depth_change_factor, const double normal_smoothing_size,
+  pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
 
 template <typename PointType>
 void NormalSpaceSubsampling(typename pcl::PointCloud<PointType>::Ptr cloud, const int bins_per_axis,
@@ -279,13 +281,16 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
 }
 
 template <typename PointType, typename PointWithNormalType>
-void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
-                              const double max_depth_change_factor, const double normal_smoothing_size,
-                              typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
+void EstimateOrganizedNormals(
+  const typename pcl::PointCloud<PointType>::Ptr cloud,
+  const typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal>::NormalEstimationMethod method,
+  const bool depth_dependent_smoothing, const double max_depth_change_factor, const double normal_smoothing_size,
+  typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
   typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
-  ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
+  ne.setNormalEstimationMethod(method);
   ne.setMaxDepthChangeFactor(max_depth_change_factor);
   ne.setNormalSmoothingSize(normal_smoothing_size);
+  ne.setDepthDependentSmoothing(depth_dependent_smoothing);
   ne.setInputCloud(cloud);
   // Avoids issue where even though organized neighbor isn't used by normal estimation
   // it attempts to estimate the camera intrinsics and sometimes fails
