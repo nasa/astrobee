@@ -31,11 +31,10 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
 
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::DownsampleAndFilterCloud(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) const {
-  pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals;
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>());
   if (params_.use_organized_normal_estimation) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>(*cloud));
     pc::ReplaceZerosWithNans(*filtered_cloud);
-    pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>());
     pc::EstimateOrganizedNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
       filtered_cloud, params_.max_depth_change_factor, params_.normal_smoothing_size, params_.intrinsics_matrix,
       *filtered_cloud_with_normals);
