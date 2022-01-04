@@ -27,11 +27,11 @@ Create and activate the environment:
 
 Run the following command to install some packages and GCC 11:
 
-  conda install -c conda-forge cmake                \
-     gcc_linux-64==11.1.0 gxx_linux-64==11.1.0      \
-     lapack blas eigen==3.3.7 suitesparse rapidjson \
-     glog gflags rocksdb OpenImageIO                \
-     ceres-solver=1.14.0=h0948850_10 
+    conda install -c conda-forge cmake                \
+      gcc_linux-64==11.1.0 gxx_linux-64==11.1.0       \
+      lapack blas eigen==3.3.7 suitesparse rapidjson  \
+      glog gflags rocksdb OpenImageIO                 \
+      ceres-solver=1.14.0=h0948850_10
  
 The Ceres package can be quite particular about the version of Eigen
 it uses, and some versions of Ceres are not built with suitesparse
@@ -40,13 +40,13 @@ care is needed with choosing the versions of the packages.
 
 # Fetch and build Theia
 
-  git clone git@github.com:sweeneychris/TheiaSfM.git
-  cd TheiaSfM
-  git checkout d2112f1 # this version was tested
+    git clone git@github.com:sweeneychris/TheiaSfM.git
+    cd TheiaSfM
+    git checkout d2112f1 # this version was tested
 
 Edit the file:
 
-  applications/CMakeLists.txt
+    applications/CMakeLists.txt
 
 and comment out all the lines regarding OpenGL, GLEW, GLUT, and 
 view_reconstruction. That visualizer logic is not easy to compile
@@ -56,10 +56,10 @@ Run ``which cmake`` to ensure its version in the ``theia`` environemnt
 installed earlier is used. Otherwise run again ``conda activate
 theia``.  Do:
 
-  mkdir build
-  cd build
-  cmake ..
-  make -j 20
+    mkdir build
+    cd build
+    cmake ..
+    make -j 20
 
 This will create the executables ``build_reconstruction`` and
 ``export_to_nvm_file`` in the ``bin`` subdirectory of ``build``. That
@@ -75,15 +75,15 @@ one should ensure that the ``env`` command has no mentions of conda.
 Set the environment. The following lines should be adjusted as needed,
 especially the robot name:
 
-  export ASTROBEE_SOURCE_PATH=$HOME/projects/astrobee/src
-  source $ASTROBEE_SOURCE_PATH/../devel/setup.bash
-  export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
-  export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
-  export ASTROBEE_WORLD=iss
-  export ASTROBEE_ROBOT=bumble
+    export ASTROBEE_SOURCE_PATH=$HOME/projects/astrobee/src
+    source $ASTROBEE_SOURCE_PATH/../devel/setup.bash
+    export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
+    export ASTROBEE_WORLD=iss
+    export ASTROBEE_ROBOT=bumble
 
-  python $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/tools/build_theia_map.py \
-     --output_map theia.map --work_dir theia_work --image_list image_list.txt
+    python $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/tools/build_theia_map.py \
+       --output_map theia.map --work_dir theia_work --image_list image_list.txt
 
 This will take care of preparing everything Theia needs, will run it,
 and will export the resulting map to Astrobee's expected format. This
@@ -92,19 +92,19 @@ documentation. The work directory can be deleted later.
 
 This tool has the following command-line options:
 
-  --theia_flags: The flags to pass to Theia. If not specified, use
-    localization/sparse_mapping/theia_flags.txt in the Astrobee repo.
-  --image_list: The list of distorted (original) nav cam images to
-    use, one per line.
-  --output_map: The resulting output map.
-  --skip_rebuilding: Do not rebuild the map after importing it from 
-    Theia.
-  --work_dir: A temporary work directory to be deleted by the user
-    later.
-  --keep_undistorted_images: Do not replace the undistorted images 
-    Theia used with the original distorted ones in the sparse map
-    imported from Theia. This is for testing purposes.
-  --help: Show this help message and exit.
+    --theia_flags: The flags to pass to Theia. If not specified, use
+      localization/sparse_mapping/theia_flags.txt in the Astrobee repo.
+    --image_list: The list of distorted (original) nav cam images to
+      use, one per line.
+    --output_map: The resulting output map.
+    --skip_rebuilding: Do not rebuild the map after importing it from
+      Theia.
+    --work_dir: A temporary work directory to be deleted by the user
+      later.
+    --keep_undistorted_images: Do not replace the undistorted images
+      Theia used with the original distorted ones in the sparse map
+      imported from Theia. This is for testing purposes.
+    --help: Show this help message and exit.
 
 # Auxiliary import_map tool
 
@@ -114,7 +114,7 @@ exports to. These operations are done automatically by the
 reference only.
  
 An NVM map exported by Theia (or some other SfM tool) can be saved as
-an Astrobee sparse map with the command::
+an Astrobee sparse map with the command:
 
     astrobee/devel/lib/sparse_mapping/import_map                             \
       -undistorted_camera_params "wid_x wid_y focal_len opt_ctr_x opt_ctr_y" \
@@ -129,7 +129,7 @@ should be as printed on the screen (and saved to disk) by
 
 If desired to replace on importing the undistorted images with the
 original distorted ones, as it is usually expected of a sparse map,
-the above command should be called instead as::
+the above command should be called instead as:
   
     astrobee/devel/lib/sparse_mapping/import_map \
       -undistorted_images_list undist_list.txt   \
