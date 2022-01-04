@@ -27,11 +27,12 @@ struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
   bool downsample;
   double downsample_leaf_size;
   // Organized options
-  bool use_organized_methods;
+  bool use_organized_normal_estimation;
   // Organized normal estimation
   double max_depth_change_factor;
   double normal_smoothing_size;
-  // Organized sampling
+  // Normal space sampling
+  bool use_normal_space_sampling;
   int bins_per_axis;
   int num_samples;
 };

@@ -31,24 +31,30 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
 
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::DownsampleAndFilterCloud(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) const {
-  if (params_.use_organized_methods) {
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals;
+  if (params_.use_organized_normal_estimation) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>(*cloud));
     pc::ReplaceZerosWithNans(*filtered_cloud);
     pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>());
     pc::EstimateOrganizedNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
       filtered_cloud, params_.max_depth_change_factor, params_.normal_smoothing_size, *filtered_cloud_with_normals);
     pc::RemoveInvalidAndZeroPoints(*filtered_cloud_with_normals);
-    pc::NormalSpaceSubsampling<pcl::PointXYZINormal>(filtered_cloud_with_normals, params_.bins_per_axis,
-                                                     params_.num_samples);
-    return filtered_cloud_with_normals;
   } else {
+    // Only downsample if not doing organized normal estimation
     if (params_.downsample) {
       const auto downsampled_cloud = pc::DownsamplePointCloud<pcl::PointXYZI>(cloud, params_.downsample_leaf_size);
-      return pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(downsampled_cloud,
-                                                                                     params_.icp.search_radius);
+      filtered_cloud_with_normals = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+        downsampled_cloud, params_.icp.search_radius);
+    } else {
+      filtered_cloud_with_normals =
+        pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(cloud, params_.icp.search_radius);
     }
-    return pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(cloud, params_.icp.search_radius);
   }
+  if (params_.use_normal_space_sampling) {
+    pc::NormalSpaceSubsampling<pcl::PointXYZINormal>(filtered_cloud_with_normals, params_.bins_per_axis,
+                                                     params_.num_samples);
+  }
+  return filtered_cloud_with_normals;
 }
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
