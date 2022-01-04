@@ -77,7 +77,7 @@ class Topic:
         # Print the histogram with percentage y-axis
         num_bins = 100
         heights, bins = np.histogram(self.t_diff, num_bins)
-        percent = [float(i) / sum(heights) * 100 for i in heights]
+        percent = [float(j) / sum(heights) * 100 for j in heights]
         ax[i, 1].bar(bins[:-1], percent, width=bins[1] - bins[0], align="edge")
         ax[i, 1].set_xlabel("Time(s)")
         ax[i, 1].set_ylabel("Percentage(%)")
