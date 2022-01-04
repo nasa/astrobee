@@ -55,10 +55,7 @@ void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
   params.bins_per_axis = mc::LoadInt(config, "bins_per_axis");
   params.num_samples = mc::LoadInt(config, "num_samples");
   const camera::CameraParameters cam_params(&config, "haz_cam");
-  const Eigen::Matrix3d intrinsics_matrix = cam_params.GetIntrinsicMatrix<camera::DISTORTED>();
-  params.projection_matrix = Eigen::Matrix<double, 3, 4>::Zero();
-  params.projection_matrix(2, 3) = 1.0;
-  params.projection_matrix.block<3, 3>(0, 0) = intrinsics_matrix;
+  params.intrinsics_matrix = cam_params.GetIntrinsicMatrix<camera::DISTORTED>();
   LoadDepthOdometryParams(config, params);
 }
 
