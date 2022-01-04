@@ -31,7 +31,6 @@ struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
   // Organized normal estimation
   double max_depth_change_factor;
   double normal_smoothing_size;
-  Eigen::Matrix3d intrinsics_matrix;
   // Normal space sampling
   bool use_normal_space_sampling;
   int bins_per_axis;

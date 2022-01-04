@@ -50,7 +50,6 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
 template <typename PointType, typename PointWithNormalType>
 void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
                               const double max_depth_change_factor, const double normal_smoothing_size,
-                              const Eigen::Matrix3d& intrinsics_matrix,
                               pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
 
 template <typename PointType>
@@ -282,16 +281,16 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
 template <typename PointType, typename PointWithNormalType>
 void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
                               const double max_depth_change_factor, const double normal_smoothing_size,
-                              const Eigen::Matrix3d& intrinsics_matrix,
                               typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
   typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
   ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
   ne.setMaxDepthChangeFactor(max_depth_change_factor);
   ne.setNormalSmoothingSize(normal_smoothing_size);
   ne.setInputCloud(cloud);
+  // Avoids issue where even though organized neighbor isn't used by normal estimation
+  // it attempts to estimate the camera intrinsics and sometimes fails
   typename pcl::search::OrganizedNeighbor2<PointType>::Ptr organized_neighbor(
     new pcl::search::OrganizedNeighbor2<PointType>());
-  organized_neighbor->setIntrinsicsMatrix(intrinsics_matrix);
   ne.setSearchMethod(organized_neighbor);
   pcl::PointCloud<pcl::Normal> cloud_normals;
   ne.compute(cloud_normals);
