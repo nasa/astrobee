@@ -31,6 +31,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   rosbag
   ff_common
   ff_msgs
+  ff_util
   nodelet
   config_reader
 )
@@ -52,6 +53,7 @@ catkin_package(
     rosbag
     ff_common
     ff_msgs
+    ff_util
     nodelet
     config_reader
 )
@@ -71,6 +73,7 @@ include_directories(
 add_library(camera
   src/camera_model.cc
   src/camera_params.cc
+  src/undistorter_nodelet.cc
 )
 add_dependencies(camera ${catkin_EXPORTED_TARGETS})
 target_link_libraries(camera ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
