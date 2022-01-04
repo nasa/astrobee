@@ -23,6 +23,7 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
+  camera
   ff_util
   localization_common 
   localization_measurements 

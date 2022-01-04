@@ -35,6 +35,7 @@ struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
   bool use_normal_space_sampling;
   int bins_per_axis;
   int num_samples;
+  Eigen::Matrix<double, 3, 4> projection_matrix;
 };
 }  // namespace depth_odometry
 

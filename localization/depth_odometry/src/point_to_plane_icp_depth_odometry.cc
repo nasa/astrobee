@@ -37,7 +37,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::Downsam
     pc::ReplaceZerosWithNans(*filtered_cloud);
     pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>());
     pc::EstimateOrganizedNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
-      filtered_cloud, params_.max_depth_change_factor, params_.normal_smoothing_size, *filtered_cloud_with_normals);
+      filtered_cloud, params_.max_depth_change_factor, params_.normal_smoothing_size, params_.projection_matrix,
+      *filtered_cloud_with_normals);
     pc::RemoveInvalidAndZeroPoints(*filtered_cloud_with_normals);
   } else {
     // Only downsample if not doing organized normal estimation

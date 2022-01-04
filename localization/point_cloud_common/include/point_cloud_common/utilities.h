@@ -19,6 +19,7 @@
 #define POINT_CLOUD_COMMON_UTILITIES_H_
 
 #include <localization_common/logger.h>
+#include <point_cloud_common/organized_neighbor.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
@@ -48,6 +49,7 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
 template <typename PointType, typename PointWithNormalType>
 void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
                               const double max_depth_change_factor, const double normal_smoothing_size,
+                              const Eigen::Matrix<double, 3, 4>& projection_matrix,
                               pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
 
 template <typename PointType>
@@ -279,12 +281,17 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
 template <typename PointType, typename PointWithNormalType>
 void EstimateOrganizedNormals(const typename pcl::PointCloud<PointType>::Ptr cloud,
                               const double max_depth_change_factor, const double normal_smoothing_size,
+                              const Eigen::Matrix<double, 3, 4>& projection_matrix,
                               typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
   typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
   ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
   ne.setMaxDepthChangeFactor(max_depth_change_factor);
   ne.setNormalSmoothingSize(normal_smoothing_size);
   ne.setInputCloud(cloud);
+  typename point_cloud_common::OrganizedNeighbor<PointType>::Ptr organized_neighbor(
+    new point_cloud_common::OrganizedNeighbor<PointType>());
+  organized_neighbor->setProjectionMatrix(projection_matrix);
+  ne.setSearchMethod(organized_neighbor);
   pcl::PointCloud<pcl::Normal> cloud_normals;
   ne.compute(cloud_normals);
   pcl::concatenateFields(*cloud, cloud_normals, cloud_with_normals);
