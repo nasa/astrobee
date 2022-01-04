@@ -63,6 +63,5 @@
   </include>
 
   <!-- Service calls -->
-  <!-- Add 'wait' here so nodes are running before the service calls are made -->
-  <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" />
+  <node pkg="rosservice" type="rosservice" name="enable_localization" launch-prefix="$(find astrobee)/launch/offline_localization/enable_localization" args="" />
 </launch>
