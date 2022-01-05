@@ -21,6 +21,7 @@
 namespace point_cloud_common {
 struct PointToPlaneICPParams {
   double search_radius;
+  bool use_fitness_threshold_rejection;
   double fitness_threshold;
   int max_iterations;
   bool symmetric_objective;

@@ -103,6 +103,7 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloudWithNormals(const std::vector<E
 PointToPlaneICPParams DefaultPointToPlaneICPParams() {
   PointToPlaneICPParams params;
   params.search_radius = 0.03;
+  params.use_fitness_threshold_rejection = false;
   params.fitness_threshold = 1;
   params.max_iterations = 10;
   params.symmetric_objective = false;

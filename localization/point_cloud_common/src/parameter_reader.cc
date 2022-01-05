@@ -24,6 +24,7 @@ namespace point_cloud_common {
 namespace mc = msg_conversions;
 
 void LoadPointToPlaneICPParams(config_reader::ConfigReader& config, PointToPlaneICPParams& params) {
+  params.use_fitness_threshold_rejection = mc::LoadBool(config, "use_fitness_threshold_rejection");
   params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
   params.search_radius = mc::LoadDouble(config, "search_radius");
   params.max_iterations = mc::LoadInt(config, "max_iterations");

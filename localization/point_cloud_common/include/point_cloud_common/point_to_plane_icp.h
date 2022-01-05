@@ -130,10 +130,12 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
     return boost::none;
   }
 
-  const double fitness_score = icp.getFitnessScore();
-  if (fitness_score > params_.fitness_threshold) {
-    LogError("Icp: Fitness score too large: " << fitness_score << ".");
-    return boost::none;
+  if (params_.use_fitness_threshold_rejection) {
+    const double fitness_score = icp.getFitnessScore();
+    if (fitness_score > params_.fitness_threshold) {
+      LogError("Icp: Fitness score too large: " << fitness_score << ".");
+      return boost::none;
+    }
   }
 
   const Eigen::Isometry3d estimated_target_T_source(
