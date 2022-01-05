@@ -39,8 +39,13 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::Downsam
       filtered_cloud, params_.normal_estimation_method, params_.use_depth_dependent_smoothing,
       params_.max_depth_change_factor, params_.normal_smoothing_size, *filtered_cloud_with_normals);
     pc::RemoveInvalidAndZeroPoints(*filtered_cloud_with_normals);
+    // Downsample after estimating organized normals since organized normal estimation applies some smoothing and is
+    // fast enough to use before downsampling (and more accurate before downsampling)
+    if (params_.downsample) {
+      filtered_cloud_with_normals =
+        pc::DownsamplePointCloud<pcl::PointXYZINormal>(filtered_cloud_with_normals, params_.downsample_leaf_size);
+    }
   } else {
-    // Only downsample if not doing organized normal estimation
     if (params_.downsample) {
       const auto downsampled_cloud = pc::DownsamplePointCloud<pcl::PointXYZI>(cloud, params_.downsample_leaf_size);
       filtered_cloud_with_normals = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
