@@ -32,6 +32,9 @@ void LoadPointToPlaneICPParams(config_reader::ConfigReader& config, PointToPlane
   params.correspondence_rejector_surface_normal = mc::LoadBool(config, "correspondence_rejector_surface_normal");
   params.correspondence_rejector_surface_normal_threshold =
     mc::LoadDouble(config, "correspondence_rejector_surface_normal_threshold");
+  params.correspondence_rejector_median_distance = mc::LoadBool(config, "correspondence_rejector_median_distance");
+  params.correspondence_rejector_median_distance_factor =
+    mc::LoadDouble(config, "correspondence_rejector_median_distance_factor");
   params.coarse_to_fine = mc::LoadBool(config, "coarse_to_fine");
   params.num_coarse_to_fine_levels = mc::LoadInt(config, "num_coarse_to_fine_levels");
   params.coarse_to_fine_final_leaf_size = mc::LoadDouble(config, "coarse_to_fine_final_leaf_size");

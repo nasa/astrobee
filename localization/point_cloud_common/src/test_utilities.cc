@@ -109,6 +109,7 @@ PointToPlaneICPParams DefaultPointToPlaneICPParams() {
   params.enforce_same_direction_normals = false;
   params.correspondence_rejector_surface_normal = false;
   params.correspondence_rejector_surface_normal_threshold = 0.75;
+  params.correspondence_rejector_median_distance = false;
   params.coarse_to_fine = false;
   params.num_coarse_to_fine_levels = 2;
   params.coarse_to_fine_final_leaf_size = 0.02;
