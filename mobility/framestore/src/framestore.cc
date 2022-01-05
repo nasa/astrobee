@@ -42,11 +42,16 @@ namespace mobility {
 
 class FrameStore : public ff_util::FreeFlyerNodelet {
  public:
-  FrameStore() : ff_util::FreeFlyerNodelet(NODE_FRAMESTORE, true) {}
+  FrameStore() : ff_util::FreeFlyerNodelet() {}
   ~FrameStore() {}
 
  protected:
   void Initialize(ros::NodeHandle *nh) {
+    // Set custom config path
+    char *path;
+    if ((path = getenv("CUSTOM_CONFIG_DIR")) != NULL) {
+      config_.SetPath(path);
+    }
     // Read the config
     config_.AddFile("transforms.config");
     if (!ReadParams())

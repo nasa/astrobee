@@ -4,7 +4,7 @@
 
 ARG UBUNTU_VERSION=16.04
 ARG REMOTE=astrobee
-FROM ${REMOTE}/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
+FROM ${REMOTE}/astrobee:latest-base-ubuntu${UBUNTU_VERSION}
 
 ARG ROS_VERSION=kinetic
 
