@@ -26,7 +26,9 @@ libpcl-common1.10
 libpcl-features1.10
 libpcl-filters1.10
 libpcl-kdtree1.10
+libpcl-keypoints1.10
 libpcl-octree1.10
+libpcl-registration1.10
 libpcl-sample-consensus1.10
 libpcl-search1.10
 libjson-c4
