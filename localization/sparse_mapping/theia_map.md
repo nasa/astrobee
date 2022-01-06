@@ -60,7 +60,7 @@ and is not needed.
 Run ``which cmake`` to ensure its version in the ``theia`` environemnt
 installed earlier is used. Otherwise run again:
 
-    conda activate theia``  
+    conda activate theia
 
 Do:
 
@@ -171,6 +171,8 @@ GB of RAM.
 The obtained map can be examined with ``nvm_visualize``, as described
 in \ref sparsemapping.
 
+The work directory can be deleted later.
+
 # Command line options
 
 This tool has the following command-line options:
@@ -192,7 +194,7 @@ This tool has the following command-line options:
 # Next steps
 
 This map will need to be registered and visualized as described in
-\ref map_building. The work directory can be deleted later.
+\ref map_building.
 
 That page also has information for how the map can be rebuilt to use
 BRISK features, and how it can be validated for localization by
