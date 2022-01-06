@@ -109,6 +109,9 @@ name can change.
 The ``build_map`` tools is used to construct a map. See \ref
 map_building for further details.
 
+See \ref theia_map for how to build a map with the external
+Theia package and import it into Astrobee.
+
 ### Visualization
 
 To visualize a map, or just a list of images, use the command:
