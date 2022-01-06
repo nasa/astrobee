@@ -95,6 +95,11 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+install(TARGETS pico_proxy
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark nodelet_plugin for installation
 install(FILES nodelet_plugins.xml
@@ -102,10 +107,8 @@ install(FILES nodelet_plugins.xml
 )
 
 # Install C++ executables
-install(TARGETS pico_proxy DESTINATION bin)
 install(TARGETS pico_tool DESTINATION bin)
 install(CODE "execute_process(
-  COMMAND ln -s ../../bin/pico_proxy share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/pico_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
   OUTPUT_QUIET
