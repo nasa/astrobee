@@ -217,7 +217,7 @@ PointToPlaneICPDepthOdometryParams DefaultPointToPlaneICPDepthOdometryParams() {
   params.max_depth_change_factor = 0.02;
   params.normal_smoothing_size = 10.0;
   params.use_normal_space_sampling = false;
-  params.bins_per_axisi = 15;
+  params.bins_per_axis = 15;
   params.num_samples = 3300;
   DefaultDepthOdometryParams(params);
   return params;
