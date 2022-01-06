@@ -19,6 +19,8 @@ conda toolset does not require root access and creates a set of
 consistent libraries at a custom location in your home directory,
 which are largely independent of your particular Linux system.
 
+For the record, the instructions below were tested on Ubuntu 18.04.
+
 Fetch and install ``conda`` from:
 
     https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
