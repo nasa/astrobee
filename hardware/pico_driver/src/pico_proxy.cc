@@ -50,7 +50,7 @@ namespace pico_proxy {
 
 class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
  public:
-  PicoProxyNodelet() : ff_util::FreeFlyerNodelet() {}
+  PicoProxyNodelet() : ff_util::FreeFlyerNodelet(false) {}
   ~PicoProxyNodelet() {}
 
  protected:
@@ -65,18 +65,17 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
 
     ROS_INFO_STREAM("Listening on topic " << topic);
     ROS_INFO_STREAM("Using amplitude factor " << amplitude_factor_);
-    ros::Subscriber sub;
     if (topic_type == "extended") {
       pub_d_ = nh->advertise<sensor_msgs::Image>(topic + "/distance/", 1);
       pub_a_ = nh->advertise<sensor_msgs::Image>(topic + "/amplitude/", 1);
       pub_i_ = nh->advertise<sensor_msgs::Image>(topic + "/intensity/", 1);
       pub_c_ = nh->advertise<sensor_msgs::Image>(topic + "/noise/", 1);
       pub_a_int_ = nh->advertise<sensor_msgs::Image>(topic + "/amplitude_int/", 1);
-      sub = nh->subscribe(topic, 1, &PicoProxyNodelet::ExtendedCallback, this);
+      sub_ = nh->subscribe(topic, 1, &PicoProxyNodelet::ExtendedCallback, this);
     } else if (topic_type == "depth_image") {
       pub_d_ = nh->advertise<sensor_msgs::Image>(topic + "/distance", 1);
       pub_c_ = nh->advertise<sensor_msgs::Image>(topic + "/confidence", 1);
-      sub = nh->subscribe(topic, 1, &PicoProxyNodelet::DepthImageCallback, this);
+      sub_ = nh->subscribe(topic, 1, &PicoProxyNodelet::DepthImageCallback, this);
     } else {
       ROS_FATAL("Unsupported type (must be \"extended\" or \"depth_image\")");
     }
@@ -169,6 +168,8 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
   ros::Publisher pub_a_;
   ros::Publisher pub_i_;
   ros::Publisher pub_c_;
+  // Subscriber
+  ros::Subscriber sub_;
 
   ros::Publisher pub_a_int_;
 
