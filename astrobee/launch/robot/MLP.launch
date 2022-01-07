@@ -39,7 +39,7 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
-          name="mlp_mapper" output="$(arg output)"/>
+          name="mlp_mapper" output="$(arg output)" launch-prefix="nice -n 10"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_management" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
