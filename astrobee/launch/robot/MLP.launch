@@ -26,7 +26,6 @@
   <arg name="dds" default="true"/>               <!-- Should DDS be started     -->
   <arg name="output" default="log"/>             <!-- Where nodes should log    -->
   <arg name="ground_truth_localizer" default="false"/>   <!-- Runs ground_truth localizer -->
-  <arg name="depth_odometry" default="false"/>   <!-- Runs depth odometry node -->
 
   <!-- Setup nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
@@ -87,18 +86,16 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
-  <group if="$(arg depth_odometry)">
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="depth_odometry/DepthOdometryNodelet" />
-      <arg name="name" value="depth_odometry_nodelet" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-  </group>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="depth_odometry/DepthOdometryNodelet" />
+    <arg name="name" value="depth_odometry_nodelet" />
+    <arg name="manager" value="mlp_vision" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
   <!-- Run ground_truth_localizer, otherwise run graph localizer -->
   <group unless="$(arg ground_truth_localizer)">
