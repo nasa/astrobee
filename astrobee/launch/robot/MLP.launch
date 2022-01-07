@@ -400,9 +400,6 @@
      <arg name="default" value="true" />
    </include>
 
-   <param name="topic" type="str" value="/hw/depth_haz/extended" />
-   <param name="topic_type" type="str" value="extended" />
-   <param name="amplitude_factor" type="double" value="100.0" />
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="pico_proxy/PicoProxyNodelet" />
      <arg name="name" value="pico_proxy" />

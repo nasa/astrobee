@@ -56,29 +56,89 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
  protected:
   void Initialize(ros::NodeHandle *nh) {
     std::string topic, topic_type;
-    if (!ros::param::get("topic", topic))
-      ROS_FATAL("You need to pass a topic to the pico proxy");
-    if (!ros::param::get("topic_type", topic_type))
-      ROS_FATAL("You need to pass a topic type to the pico proxy");
-    if (!ros::param::get("amplitude_factor", amplitude_factor_))
-      ROS_FATAL("You need to pass the amplitude factor to the pico proxy");
+    topic = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
+    config_name_ = GetName();
+    // Read the camera name
+    if (config_name_.find("haz") != std::string::npos) {
+        topic += TOPIC_HARDWARE_NAME_HAZ_CAM;
+    } else if (config_name_.find("perch") != std::string::npos) {
+        topic += TOPIC_HARDWARE_NAME_PERCH_CAM;
+    } else {
+      NODELET_FATAL("You need to pass a camera name to the pico proxy nodelet name");
+    }
 
-    ROS_INFO_STREAM("Listening on topic " << topic);
-    ROS_INFO_STREAM("Using amplitude factor " << amplitude_factor_);
-    if (topic_type == "extended") {
+    // Read the topic type
+    if (config_name_.find("extended") != std::string::npos) {
+      topic += TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED;
+
+      // Read config file for amplitude factor
+      config_.AddFile("cameras.config");
+      if (!ReadParams())
+        return;
+
       pub_d_ = nh->advertise<sensor_msgs::Image>(topic + "/distance/", 1);
       pub_a_ = nh->advertise<sensor_msgs::Image>(topic + "/amplitude/", 1);
       pub_i_ = nh->advertise<sensor_msgs::Image>(topic + "/intensity/", 1);
       pub_c_ = nh->advertise<sensor_msgs::Image>(topic + "/noise/", 1);
       pub_a_int_ = nh->advertise<sensor_msgs::Image>(topic + "/amplitude_int/", 1);
       sub_ = nh->subscribe(topic, 1, &PicoProxyNodelet::ExtendedCallback, this);
-    } else if (topic_type == "depth_image") {
+
+    } else if (config_name_.find("depth_image") != std::string::npos) {
+      topic += TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE;
+
       pub_d_ = nh->advertise<sensor_msgs::Image>(topic + "/distance", 1);
       pub_c_ = nh->advertise<sensor_msgs::Image>(topic + "/confidence", 1);
       sub_ = nh->subscribe(topic, 1, &PicoProxyNodelet::DepthImageCallback, this);
+
     } else {
-      ROS_FATAL("Unsupported type (must be \"extended\" or \"depth_image\")");
+      NODELET_FATAL("The pico proxy nodelet name must have extended or depth_image");
     }
+  }
+
+  bool ReadParams(void) {
+    // Read the config file
+    if (!config_.ReadFiles()) {
+      NODELET_FATAL("Failed to read config files.");
+      return false;
+    }
+    // Try and open the config file
+    config_reader::ConfigReader::Table pconfig;
+    if (!config_.GetTable("picoflexx", &pconfig)) {
+      NODELET_FATAL("Picoflexx config not found in LUA.");
+      return false;
+    }
+    // Read the device information from the config table
+    config_reader::ConfigReader::Table devices;
+    if (!pconfig.GetTable("devices", &devices)) {
+      NODELET_FATAL("Lua:Could get devices item in config file");
+    }
+
+    for (int i = 0; i < devices.GetSize(); i++) {
+      // Get the device info
+      config_reader::ConfigReader::Table device_info;
+      if (!devices.GetTable(i + 1, &device_info)) {
+        NODELET_FATAL("Lua:Could get row in table table");
+        continue;
+      }
+
+      // Get the parameters
+      std::string name;
+      if (!device_info.GetStr("name", &name)) {
+        NODELET_FATAL("Lua:Could not find row 'name' in table");
+        continue;
+      }
+
+      if (config_name_.find(name) == std::string::npos)
+        continue;
+
+      // Query the amplitude factor
+      if (!device_info.GetReal("amplitude_factor", &amplitude_factor_)) {
+        NODELET_FATAL("Lua:Could not find row 'amplitude_factor' in table");
+        return true;
+      }
+    }
+    NODELET_FATAL("You need to pass the amplitude factor to the pico proxy");
+    return false;
   }
 
   struct null_deleter {
@@ -163,6 +223,10 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
   }
 
  private:
+  // Configs
+  config_reader::ConfigReader config_;
+  std::string config_name_;
+
   // Publishers
   ros::Publisher pub_d_;
   ros::Publisher pub_a_;
