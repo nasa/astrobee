@@ -19,6 +19,8 @@ conda toolset does not require root access and creates a set of
 consistent libraries at a custom location in your home directory,
 which are largely independent of your particular Linux system.
 
+For the record, the instructions below were tested on Ubuntu 18.04.
+
 Fetch and install ``conda`` from:
 
     https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
@@ -153,7 +155,7 @@ such rotations.
 
 Put the selected images in a list:
 
-  ls image_dir/*jpg > image_list.txt
+    ls image_dir/*jpg > image_list.txt
  
 # Run the Astrobee wrapper around the Theia tools
 
@@ -230,8 +232,8 @@ the above command should be called instead as:
       -distorted_images_list dist_list.txt       \
       -input_map map.nvm -output_map map.map
 
-Here, the files undist_list.txt and dist_list.txt must have one image
-per line and be in one-to-one correspondence. It is important that
-both undistorted and distorted images be specified, as the former are
-needed to look up camera poses and other data in the .nvm file before
-being replaced with the distorted ones.
+Here, the files ``undist_list.txt`` and ``dist_list.txt`` must have
+one image per line and be in one-to-one correspondence. It is
+important that both undistorted and distorted images be specified, as
+the former are needed to look up camera poses and other data in the
+.nvm file before being replaced with the distorted ones.
