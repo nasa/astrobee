@@ -29,7 +29,6 @@
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/registration/ia_ransac.h>
 #include <pcl/search/impl/search.hpp>
-#include <pcl/search/impl/organized.hpp>
 #include <pcl/search/impl/kdtree.hpp>
 
 namespace point_cloud_common {

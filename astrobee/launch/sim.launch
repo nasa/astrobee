@@ -34,7 +34,6 @@
   <arg name="rec" default="" />                 <!-- Record local data       -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
   <arg name="ground_truth_localizer" default="false" />  <!-- Use Ground Truth Localizer      -->
-  <arg name="depth_odometry" default="false" />  <!-- Run depth odometry node-->
 
   <!-- General options -->
   <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
@@ -159,7 +158,6 @@
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
       <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
-      <arg name="depth_odometry" value="$(arg depth_odometry)" /> <!-- Run depth odometry node -->
     </include>
   </group>
 

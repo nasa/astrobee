@@ -48,8 +48,7 @@ void LoadLKOpticalFlowFeatureDetectorAndMatcherParams(config_reader::ConfigReade
                                                       LKOpticalFlowFeatureDetectorAndMatcherParams& params) {
   params.max_iterations = mc::LoadInt(config, "lk_max_iterations");
   params.termination_epsilon = mc::LoadDouble(config, "lk_termination_epsilon");
-  params.window_width = mc::LoadInt(config, "lk_window_width");
-  params.window_height = mc::LoadInt(config, "lk_window_height");
+  params.window_length = mc::LoadInt(config, "lk_window_length");
   params.max_level = mc::LoadInt(config, "lk_max_level");
   params.min_eigen_threshold = mc::LoadDouble(config, "lk_min_eigen_threshold");
   params.max_flow_distance = mc::LoadDouble(config, "lk_max_flow_distance");

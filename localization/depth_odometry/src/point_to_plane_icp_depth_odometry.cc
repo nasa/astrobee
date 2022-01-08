@@ -31,16 +31,45 @@ PointToPlaneICPDepthOdometry::PointToPlaneICPDepthOdometry(const PointToPlaneICP
 
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr PointToPlaneICPDepthOdometry::DownsampleAndFilterCloud(
   const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) const {
-  if (params_.downsample) {
-    const auto downsampled_cloud = pc::DownsamplePointCloud<pcl::PointXYZI>(cloud, params_.downsample_leaf_size);
-    return pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(downsampled_cloud,
-                                                                                   params_.icp.search_radius);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr filtered_cloud_with_normals(new pcl::PointCloud<pcl::PointXYZINormal>());
+  if (params_.use_organized_normal_estimation) {
+    pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>(*cloud));
+    pc::ReplaceZerosWithNans(*filtered_cloud);
+    pc::EstimateOrganizedNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+      filtered_cloud, params_.normal_estimation_method, params_.use_depth_dependent_smoothing,
+      params_.max_depth_change_factor, params_.normal_smoothing_size, *filtered_cloud_with_normals);
+    pc::RemoveInvalidAndZeroPoints(*filtered_cloud_with_normals);
+    // Downsample after estimating organized normals since organized normal estimation applies some smoothing and is
+    // fast enough to use before downsampling (and more accurate before downsampling)
+    if (params_.downsample) {
+      filtered_cloud_with_normals =
+        pc::DownsamplePointCloud<pcl::PointXYZINormal>(filtered_cloud_with_normals, params_.downsample_leaf_size);
+    }
+  } else {
+    if (params_.downsample) {
+      const auto downsampled_cloud = pc::DownsamplePointCloud<pcl::PointXYZI>(cloud, params_.downsample_leaf_size);
+      filtered_cloud_with_normals = pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(
+        downsampled_cloud, params_.icp.search_radius);
+    } else {
+      filtered_cloud_with_normals =
+        pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(cloud, params_.icp.search_radius);
+    }
   }
-  return pc::FilteredPointCloudWithNormals<pcl::PointXYZI, pcl::PointXYZINormal>(cloud, params_.icp.search_radius);
+  if (params_.use_normal_space_sampling) {
+    pc::NormalSpaceSubsampling<pcl::PointXYZINormal>(filtered_cloud_with_normals, params_.bins_per_axis,
+                                                     params_.num_samples);
+  }
+  return filtered_cloud_with_normals;
 }
 
 boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
+  return DepthImageCallbackWithEstimate(depth_image_measurement);
+}
+
+boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdometry::DepthImageCallbackWithEstimate(
+  const localization_measurements::DepthImageMeasurement& depth_image_measurement,
+  const boost::optional<Eigen::Isometry3d&> target_T_source_initial_estimate) {
   if (!previous_point_cloud_with_normals_ && !latest_point_cloud_with_normals_) {
     latest_point_cloud_with_normals_ =
       DownsampleAndFilterCloud(depth_image_measurement.depth_image.unfiltered_point_cloud());
@@ -64,11 +93,21 @@ boost::optional<PoseWithCovarianceAndCorrespondences> PointToPlaneICPDepthOdomet
     LogWarning("DepthImageCallback: Time difference too large, time diff: " << time_diff);
     return boost::none;
   }
-  const auto target_T_source =
+
+  if (target_T_source_initial_estimate) {
+    pcl::transformPointCloudWithNormals(*previous_point_cloud_with_normals_, *previous_point_cloud_with_normals_,
+                                        target_T_source_initial_estimate->matrix());
+  }
+  auto target_T_source =
     icp_.ComputeRelativeTransform(previous_point_cloud_with_normals_, latest_point_cloud_with_normals_);
   if (!target_T_source) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
+  }
+
+  if (target_T_source_initial_estimate) {
+    target_T_source->pose = target_T_source->pose * *target_T_source_initial_estimate;
+    // TODO(rsoussan): Frame change covariance!
   }
 
   const auto source_T_target = lc::InvertPoseWithCovariance(*target_T_source);

@@ -19,13 +19,19 @@
 #define POINT_CLOUD_COMMON_UTILITIES_H_
 
 #include <localization_common/logger.h>
+#include <point_cloud_common/organized_neighbor2.h>
+#include <point_cloud_common/organized_neighbor2_impl.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
 
 #include <pcl/features/fpfh.h>
+#include <pcl/features/integral_image_normal.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/impl/normal_3d.hpp>
+#include <pcl/filters/fast_bilateral.h>
+#include <pcl/filters/impl/fast_bilateral.hpp>
+#include <pcl/filters/normal_space.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/point_cloud.h>
@@ -33,12 +39,24 @@
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/search/impl/search.hpp>
 
+#include <limits>
 #include <vector>
 
 namespace point_cloud_common {
 template <typename PointType, typename PointWithNormalType>
 void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const double search_radius,
                      pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
+
+template <typename PointType, typename PointWithNormalType>
+void EstimateOrganizedNormals(
+  const typename pcl::PointCloud<PointType>::Ptr cloud,
+  const typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal>::NormalEstimationMethod method,
+  const bool depth_dependent_smoothing, const double max_depth_change_factor, const double normal_smoothing_size,
+  pcl::PointCloud<PointWithNormalType>& cloud_with_normals);
+
+template <typename PointType>
+void NormalSpaceSubsampling(typename pcl::PointCloud<PointType>::Ptr cloud, const int bins_per_axis,
+                            const int num_samples);
 
 Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr source_cloud,
                          const pcl::PointCloud<pcl::PointXYZINormal>::Ptr target_cloud);
@@ -100,6 +118,9 @@ bool ApproxZero(const Type& point, const double epsilon = 1e-5) {
 }
 
 template <typename PointXYZType>
+bool NonzeroPointXYZ(const PointXYZType& point);
+
+template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point);
 
 template <typename PointNormalType>
@@ -111,9 +132,18 @@ bool ValidIntensity(const PointIntensityType& point);
 template <typename PointType>
 void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud);
 
+// Some pcl functions expect invalid points to be labeled with nans while
+// some sensors label invalid points with all zeros.
+template <typename PointType>
+void ReplaceZerosWithNans(typename pcl::PointCloud<PointType>& cloud);
+
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
                                                               const double leaf_size);
+
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr BilateralFilterOrganizedCloud(
+  const typename pcl::PointCloud<PointType>::Ptr cloud, const double sigma_s, const double sigma_r);
 template <typename PointType>
 void FilterCorrespondences(const typename pcl::PointCloud<PointType>& input_cloud,
                            const typename pcl::PointCloud<PointType>& target_cloud,
@@ -129,9 +159,15 @@ typename pcl::PointCloud<PointWithNormalType>::Ptr FilteredPointCloudWithNormals
 
 // Implementation
 template <typename PointXYZType>
+bool NonzeroPointXYZ(const PointXYZType& point) {
+  bool nonzero_point = !ApproxZero(point.x) || !ApproxZero(point.y) || !ApproxZero(point.z);
+  return nonzero_point;
+}
+
+template <typename PointXYZType>
 bool ValidPointXYZ(const PointXYZType& point) {
   const bool finite_point = pcl_isfinite(point.x) && pcl_isfinite(point.y) && pcl_isfinite(point.z);
-  const bool nonzero_point = !ApproxZero(point.x) || !ApproxZero(point.y) || !ApproxZero(point.z);
+  const bool nonzero_point = NonzeroPointXYZ(point);
   return finite_point && nonzero_point;
 }
 
@@ -166,13 +202,39 @@ void RemoveInvalidAndZeroPoints(pcl::PointCloud<PointType>& cloud) {
 }
 
 template <typename PointType>
+void ReplaceZerosWithNans(typename pcl::PointCloud<PointType>& cloud) {
+  for (auto& point : cloud.points) {
+    const bool nonzero_point = NonzeroPointXYZ(point);
+    if (nonzero_point) {
+      continue;
+    } else {
+      point.x = std::numeric_limits<double>::quiet_NaN();
+      point.y = std::numeric_limits<double>::quiet_NaN();
+      point.z = std::numeric_limits<double>::quiet_NaN();
+    }
+  }
+}
+
+template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
                                                               const double leaf_size) {
-  typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
   pcl::VoxelGrid<PointType> voxel_grid;
   voxel_grid.setInputCloud(cloud);
   voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
+  typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
   voxel_grid.filter(*downsampled_cloud);
+  return downsampled_cloud;
+}
+
+template <typename PointType>
+typename pcl::PointCloud<PointType>::Ptr BilateralFilterOrganizedCloud(
+  const typename pcl::PointCloud<PointType>::Ptr cloud, const double sigma_s, const double sigma_r) {
+  typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
+  typename pcl::FastBilateralFilter<PointType> bilateral_filter;
+  bilateral_filter.setInputCloud(cloud);
+  bilateral_filter.setSigmaS(sigma_s);
+  bilateral_filter.setSigmaR(sigma_r);
+  bilateral_filter.filter(*downsampled_cloud);
   return downsampled_cloud;
 }
 
@@ -213,9 +275,42 @@ void EstimateNormals(const typename pcl::PointCloud<PointType>::Ptr cloud, const
   typename pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(search_radius);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-  ne.compute(*cloud_normals);
-  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
+  pcl::PointCloud<pcl::Normal> cloud_normals;
+  ne.compute(cloud_normals);
+  pcl::concatenateFields(*cloud, cloud_normals, cloud_with_normals);
+}
+
+template <typename PointType, typename PointWithNormalType>
+void EstimateOrganizedNormals(
+  const typename pcl::PointCloud<PointType>::Ptr cloud,
+  const typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal>::NormalEstimationMethod method,
+  const bool depth_dependent_smoothing, const double max_depth_change_factor, const double normal_smoothing_size,
+  typename pcl::PointCloud<PointWithNormalType>& cloud_with_normals) {
+  typename pcl::IntegralImageNormalEstimation<PointType, pcl::Normal> ne;
+  ne.setNormalEstimationMethod(method);
+  ne.setMaxDepthChangeFactor(max_depth_change_factor);
+  ne.setNormalSmoothingSize(normal_smoothing_size);
+  ne.setDepthDependentSmoothing(depth_dependent_smoothing);
+  ne.setInputCloud(cloud);
+  // Avoids issue where even though organized neighbor isn't used by normal estimation
+  // it attempts to estimate the camera intrinsics and sometimes fails
+  typename pcl::search::OrganizedNeighbor2<PointType>::Ptr organized_neighbor(
+    new pcl::search::OrganizedNeighbor2<PointType>());
+  ne.setSearchMethod(organized_neighbor);
+  pcl::PointCloud<pcl::Normal> cloud_normals;
+  ne.compute(cloud_normals);
+  pcl::concatenateFields(*cloud, cloud_normals, cloud_with_normals);
+}
+
+template <typename PointType>
+void NormalSpaceSubsampling(typename pcl::PointCloud<PointType>::Ptr cloud, const int bins_per_axis,
+                            const int num_samples) {
+  typename pcl::NormalSpaceSampling<PointType, PointType> normal_space_sampling;
+  normal_space_sampling.setInputCloud(cloud);
+  normal_space_sampling.setNormals(cloud);
+  normal_space_sampling.setBins(bins_per_axis, bins_per_axis, bins_per_axis);
+  normal_space_sampling.setSample(num_samples);
+  normal_space_sampling.filter(*cloud);
 }
 
 template <typename PointType, typename PointWithNormalType>

@@ -35,6 +35,7 @@
 #include <point_cloud_common/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/registration/correspondence_rejection_median_distance.h>
 #include <pcl/registration/icp.h>
 
 #include <vector>
@@ -111,6 +112,13 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
     icp.addCorrespondenceRejector(correspondence_rejector_surface_normal);
   }
 
+  if (params_.correspondence_rejector_median_distance) {
+    pcl::registration::CorrespondenceRejectorMedianDistance::Ptr correspondence_rejector_median_distance(
+      new pcl::registration::CorrespondenceRejectorMedianDistance());
+    correspondence_rejector_median_distance->setMedianFactor(params_.correspondence_rejector_median_distance_factor);
+    icp.addCorrespondenceRejector(correspondence_rejector_median_distance);
+  }
+
   icp.setInputSource(source_cloud_with_normals);
   icp.setInputTarget(target_cloud_with_normals);
   icp.setMaximumIterations(params_.max_iterations);
@@ -122,10 +130,12 @@ boost::optional<localization_common::PoseWithCovariance> PointToPlaneICP<PointTy
     return boost::none;
   }
 
-  const double fitness_score = icp.getFitnessScore();
-  if (fitness_score > params_.fitness_threshold) {
-    LogError("Icp: Fitness score too large: " << fitness_score << ".");
-    return boost::none;
+  if (params_.use_fitness_threshold_rejection) {
+    const double fitness_score = icp.getFitnessScore();
+    if (fitness_score > params_.fitness_threshold) {
+      LogError("Icp: Fitness score too large: " << fitness_score << ".");
+      return boost::none;
+    }
   }
 
   const Eigen::Isometry3d estimated_target_T_source(
