@@ -51,3 +51,8 @@ for further details and usage instructions.
 Creates groundtruth in parallel for a set of bagfiles.
 See 'rosrun graph\_bag groundtruth\_sweep.py -h'
 for further details and usage instructions.
+
+## depth\_odometry\_parameter\_sweep.py
+Runs a parameter sweep for depth odometry on a bagfile and plots the results.
+See 'rosrun depth\_odometry\_parameter\_sweep.py -h'
+for further details and usage instructions.

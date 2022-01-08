@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <camera/camera_params.h>
 #include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <msg_conversions/msg_conversions.h>
@@ -47,6 +48,27 @@ void LoadPointToPlaneICPDepthOdometryParams(config_reader::ConfigReader& config,
   pc::LoadPointToPlaneICPParams(config, params.icp);
   params.downsample = mc::LoadBool(config, "downsample");
   params.downsample_leaf_size = mc::LoadDouble(config, "downsample_leaf_size");
+  params.use_organized_normal_estimation = mc::LoadBool(config, "use_organized_normal_estimation");
+  const std::string normal_estimation_method_name = mc::LoadString(config, "organized_normal_method");
+  if (normal_estimation_method_name == "avg_3d_gradient") {
+    params.normal_estimation_method =
+      pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod::AVERAGE_3D_GRADIENT;
+  } else if (normal_estimation_method_name == "covariance") {
+    params.normal_estimation_method =
+      pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod::COVARIANCE_MATRIX;
+  } else if (normal_estimation_method_name == "avg_depth_change") {
+    params.normal_estimation_method =
+      pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod::AVERAGE_DEPTH_CHANGE;
+  } else {
+    LogFatal("LoadPointToPlaneICPDepthOdometryParams: Invalid normal estimation method provided.");
+  }
+  params.normal_smoothing_size = mc::LoadDouble(config, "normal_smoothing_size");
+  params.use_depth_dependent_smoothing = mc::LoadBool(config, "use_depth_dependent_smoothing");
+  params.max_depth_change_factor = mc::LoadDouble(config, "max_depth_change_factor");
+  params.normal_smoothing_size = mc::LoadDouble(config, "normal_smoothing_size");
+  params.use_normal_space_sampling = mc::LoadBool(config, "use_normal_space_sampling");
+  params.bins_per_axis = mc::LoadInt(config, "bins_per_axis");
+  params.num_samples = mc::LoadInt(config, "num_samples");
   LoadDepthOdometryParams(config, params);
 }
 
@@ -63,6 +85,8 @@ void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
   params.min_x_distance_to_border = mc::LoadDouble(config, "min_x_distance_to_border");
   params.min_y_distance_to_border = mc::LoadDouble(config, "min_y_distance_to_border");
   params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");
+  params.refine_estimate = mc::LoadBool(config, "refine_estimate");
+  if (params.refine_estimate) LoadPointToPlaneICPDepthOdometryParams(config, params.point_to_plane_icp);
   LoadDepthOdometryParams(config, params);
 }
 }  // namespace depth_odometry

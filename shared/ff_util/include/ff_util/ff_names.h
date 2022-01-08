@@ -307,6 +307,7 @@
 #define TOPIC_LOCALIZATION_OF_DEBUG                 "loc/of/debug_img"
 
 #define SERVICE_LOCALIZATION_OF_ENABLE              "loc/of/enable"
+#define SERVICE_LOCALIZATION_DO_ENABLE              "loc/do/enable"
 #define SERVICE_LOCALIZATION_AR_ENABLE              "loc/ar/enable"
 #define SERVICE_LOCALIZATION_ML_ENABLE              "loc/ml/enable"
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"

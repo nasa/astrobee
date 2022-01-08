@@ -32,12 +32,13 @@
 
 #include <sensor_msgs/PointCloud2.h>
 
+#include <string>
 #include <vector>
 
 namespace depth_odometry {
 class DepthOdometryWrapper {
  public:
-  DepthOdometryWrapper();
+  explicit DepthOdometryWrapper(const std::string& path_prefix = "localization/");
   explicit DepthOdometryWrapper(const DepthOdometryWrapperParams& params);
   std::vector<ff_msgs::DepthOdometry> PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
   std::vector<ff_msgs::DepthOdometry> ImageCallback(const sensor_msgs::ImageConstPtr& image_msg);

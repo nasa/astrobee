@@ -28,7 +28,10 @@ class PointToPlaneICPDepthOdometry : public DepthOdometry {
  public:
   explicit PointToPlaneICPDepthOdometry(const PointToPlaneICPDepthOdometryParams& params);
   boost::optional<PoseWithCovarianceAndCorrespondences> DepthImageCallback(
-    const localization_measurements::DepthImageMeasurement& depth_image) final;
+    const localization_measurements::DepthImageMeasurement& depth_image_measurement) final;
+  boost::optional<PoseWithCovarianceAndCorrespondences> DepthImageCallbackWithEstimate(
+    const localization_measurements::DepthImageMeasurement& depth_image_measurement,
+    const boost::optional<Eigen::Isometry3d&> target_T_source_initial_estimate = boost::none);
   const PointToPlaneICPDepthOdometryParams& params() const { return params_; }
 
  private:

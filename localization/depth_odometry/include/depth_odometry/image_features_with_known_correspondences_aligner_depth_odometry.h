@@ -21,6 +21,7 @@
 #include <depth_odometry/depth_image_features_and_points.h>
 #include <depth_odometry/depth_odometry.h>
 #include <depth_odometry/image_features_with_known_correspondences_aligner_depth_odometry_params.h>
+#include <depth_odometry/point_to_plane_icp_depth_odometry.h>
 #include <depth_odometry/pose_with_covariance_and_correspondences.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner.h>
 #include <vision_common/feature_detector_and_matcher.h>
@@ -47,6 +48,7 @@ class ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry : public DepthOd
   std::unique_ptr<vision_common::FeatureDetectorAndMatcher> feature_detector_and_matcher_;
   cv::Ptr<cv::CLAHE> clahe_;
   bool normals_required_;
+  boost::optional<PointToPlaneICPDepthOdometry> point_to_plane_icp_depth_odometry_;
 };
 }  // namespace depth_odometry
 

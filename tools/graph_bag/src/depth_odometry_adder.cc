@@ -26,10 +26,11 @@
 namespace graph_bag {
 namespace lc = localization_common;
 DepthOdometryAdder::DepthOdometryAdder(const std::string& input_bag_name, const std::string& output_bag_name,
-                                       const bool save_all_topics)
+                                       const bool save_all_topics, const std::string& config_prefix)
     : input_bag_(input_bag_name, rosbag::bagmode::Read),
       output_bag_(output_bag_name, rosbag::bagmode::Write),
-      save_all_topics_(save_all_topics) {}
+      save_all_topics_(save_all_topics),
+      depth_odometry_wrapper_(config_prefix) {}
 
 void DepthOdometryAdder::AddDepthOdometry() {
   const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
