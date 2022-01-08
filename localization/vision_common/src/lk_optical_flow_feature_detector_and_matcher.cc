@@ -41,7 +41,7 @@ FeatureMatches LKOpticalFlowFeatureDetectorAndMatcher::Match(const FeatureImage&
 
   const cv::TermCriteria termination_criteria(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
                                               params_.max_iterations, params_.termination_epsilon);
-  const cv::Size window_size(params_.window_width, params_.window_height);
+  const cv::Size window_size(params_.window_length, params_.window_length);
   // Perform forward and backward passes on detected features
   std::vector<cv::Point2f> matched_forward_features;
   std::vector<uchar> forward_status;

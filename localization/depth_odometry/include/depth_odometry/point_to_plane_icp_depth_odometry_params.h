@@ -21,11 +21,23 @@
 #include <depth_odometry/depth_odometry_params.h>
 #include <point_cloud_common/point_to_plane_icp_params.h>
 
+#include <pcl/features/integral_image_normal.h>
+
 namespace depth_odometry {
 struct PointToPlaneICPDepthOdometryParams : public DepthOdometryParams {
   point_cloud_common::PointToPlaneICPParams icp;
   bool downsample;
   double downsample_leaf_size;
+  // Organized normal estimation
+  bool use_organized_normal_estimation;
+  pcl::IntegralImageNormalEstimation<pcl::PointXYZI, pcl::Normal>::NormalEstimationMethod normal_estimation_method;
+  bool use_depth_dependent_smoothing;
+  double max_depth_change_factor;
+  double normal_smoothing_size;
+  // Normal space sampling
+  bool use_normal_space_sampling;
+  int bins_per_axis;
+  int num_samples;
 };
 }  // namespace depth_odometry
 

@@ -16,6 +16,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Runs a parameter sweep for depth odometry using the provided bagfile.
+Parameters to sweep on are set in the make_value_ranges function.
+All combinations of provided parameters are used for the sweep and the results
+are plotted for various RMSEs. 
+"""
+
 
 import argparse
 import csv
@@ -32,7 +39,7 @@ import plot_parameter_sweep_results
 import utilities
 
 
-# Run graph localizer with values.
+# Run depth odometry with values.
 # Add traceback so errors are forwarded, otherwise
 # some errors are suppressed due to the multiprocessing
 # library call
@@ -43,53 +50,47 @@ def test_values(
     value_names,
     output_dir,
     bag_file,
-    map_file,
-    image_topic,
     config_path,
     robot_config,
     world,
-    use_image_features,
     groundtruth_bagfile,
     rmse_rel_start_time,
     rmse_rel_end_time,
 ):
     new_output_dir = os.path.join(output_dir, str(job_id))
     os.mkdir(new_output_dir)
-    graph_config_filepath = os.path.join(
-        config_path, "config", "graph_localizer.config"
+    depth_odometry_config_filepath = os.path.join(
+        config_path, "config", "localization/depth_odometry.config"
     )
-    new_graph_config_filepath = os.path.join(new_output_dir, "graph_localizer.config")
+    new_depth_odometry_config_filepath = os.path.join(
+        new_output_dir, "depth_odometry.config"
+    )
     config_creator.make_config(
-        values, value_names, graph_config_filepath, new_graph_config_filepath
+        values,
+        value_names,
+        depth_odometry_config_filepath,
+        new_depth_odometry_config_filepath,
     )
     output_bag = os.path.join(new_output_dir, "results.bag")
-    output_stats_file = os.path.join(new_output_dir, "graph_stats.csv")
-    graph_config_prefix = new_output_dir + "/"
+    output_stats_file = os.path.join(new_output_dir, "depth_odom_stats.csv")
+    depth_odometry_config_prefix = new_output_dir + "/"
     run_command = (
-        "rosrun graph_bag run_graph_bag "
+        "rosrun graph_bag run_depth_odometry_adder "
         + bag_file
         + " "
-        + map_file
-        + " "
         + config_path
-        + " -o "
-        + output_bag
-        + " -s "
-        + output_stats_file
         + " -r "
         + robot_config
+        + " -o "
+        + output_bag
         + " -w "
         + world
-        + " -g "
-        + graph_config_prefix
-        + " -f "
-        + str(use_image_features)
+        + " -p "
+        + depth_odometry_config_prefix
     )
-    if image_topic is not None:
-        run_command += " -i " + image_topic
     os.system(run_command)
     output_pdf_file = os.path.join(new_output_dir, str(job_id) + "_output.pdf")
-    output_csv_file = os.path.join(new_output_dir, "graph_stats.csv")
+    output_csv_file = os.path.join(new_output_dir, "depth_odom_stats.csv")
     plot_command = (
         "rosrun graph_bag plot_results_main.py "
         + output_bag
@@ -119,12 +120,9 @@ def parameter_sweep(
     value_names,
     output_dir,
     bag_file,
-    map_file,
-    image_topic,
     config_path,
     robot_config,
     world,
-    use_image_features,
     groundtruth_bagfile,
     rmse_rel_start_time=0,
     rmse_rel_end_time=-1,
@@ -142,19 +140,18 @@ def parameter_sweep(
                 itertools.repeat(value_names),
                 itertools.repeat(output_dir),
                 itertools.repeat(bag_file),
-                itertools.repeat(map_file),
-                itertools.repeat(image_topic),
                 itertools.repeat(config_path),
                 itertools.repeat(robot_config),
                 itertools.repeat(world),
-                itertools.repeat(use_image_features),
                 itertools.repeat(groundtruth_bagfile),
                 itertools.repeat(rmse_rel_start_time),
                 itertools.repeat(rmse_rel_end_time),
             )
         ),
     )
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "graph_stats.csv")
+    parameter_sweep_utilities.concat_results(
+        job_ids, output_dir, "depth_odom_stats.csv"
+    )
 
 
 def make_value_ranges():
@@ -162,31 +159,17 @@ def make_value_ranges():
     value_names = []
     steps = 10
 
-    # tune num smart factors
-    # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-    # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.linspace(0, 500, steps, endpoint=True))
-    value_names.append("smart_projection_adder_feature_track_min_separation")
-
-    # q_gyro
-    # .001 -> 2 deg
-    # q_gyro_degrees_range = np.logspace(-3, .3, steps, endpoint=True)
-    # q_gyro_squared_rads_range = [math.radians(deg)**2 for deg in q_gyro_degrees_range]
-    # value_ranges.append(q_gyro_squared_rads_range)
-    # value_names.append('q_gyro')
-
+    value_ranges.append(np.linspace(10, 100, steps, endpoint=True))
+    value_names.append("lk_max_corners")
     return value_ranges, value_names
 
 
 def make_values_and_parameter_sweep(
     output_dir,
     bag_file,
-    map_file,
-    image_topic,
     config_path,
     robot_config,
     world,
-    use_image_features,
     groundtruth_bagfile,
     rmse_rel_start_time=0,
     rmse_rel_end_time=-1,
@@ -211,12 +194,9 @@ def make_values_and_parameter_sweep(
         value_names,
         output_dir,
         bag_file,
-        map_file,
-        image_topic,
         config_path,
         robot_config,
         world,
-        use_image_features,
         groundtruth_bagfile,
         rmse_rel_start_time,
         rmse_rel_end_time,
@@ -231,20 +211,13 @@ def make_values_and_parameter_sweep(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("bag_file", help="Full path to bagfile.")
-    parser.add_argument("map_file", help="Full path to map file.")
-    parser.add_argument("image_topic", help="Image topic.")
     parser.add_argument("config_path", help="Full path to config path.")
     parser.add_argument("robot_config", help="Relative path to robot config.")
     parser.add_argument("world", help="World being used.")
-    parser.add_argument(
-        "--generate-image-features",
-        dest="use_image_features",
-        action="store_false",
-        help="Use image features msgs from bagfile or generate features from images.",
-    )
-
     parser.add_argument("-g", "--groundtruth-bagfile", default=None)
     parser.add_argument(
         "--directory",
@@ -259,11 +232,8 @@ if __name__ == "__main__":
     make_values_and_parameter_sweep(
         args.directory,
         args.bag_file,
-        args.map_file,
-        args.image_topic,
         args.config_path,
         args.robot_config,
         args.world,
-        args.use_image_features,
         args.groundtruth_bagfile,
     )

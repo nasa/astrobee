@@ -31,8 +31,7 @@ LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetector
   LKOpticalFlowFeatureDetectorAndMatcherParams params;
   params.max_iterations = 10;
   params.termination_epsilon = 0.03;
-  params.window_width = 10;
-  params.window_height = 10;
+  params.window_length = 10;
   params.max_level = 3;
   params.min_eigen_threshold = 0.2;
   params.max_flow_distance = 50;

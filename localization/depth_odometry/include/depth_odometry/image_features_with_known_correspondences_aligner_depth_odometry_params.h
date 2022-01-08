@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_IMAGE_FEATURES_WITH_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
 
 #include <depth_odometry/depth_odometry_params.h>
+#include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner_params.h>
 #include <vision_common/brisk_feature_detector_and_matcher_params.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
@@ -41,6 +42,8 @@ struct ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams : public 
   double min_x_distance_to_border;
   double min_y_distance_to_border;
   int min_num_inliers;
+  bool refine_estimate;
+  PointToPlaneICPDepthOdometryParams point_to_plane_icp;
 };
 }  // namespace depth_odometry
 
