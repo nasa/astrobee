@@ -15,10 +15,9 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <param name="topic" type="str" value="/hw/depth_haz/extended" />
-  <param name="topic_type" type="str" value="extended" />
-  <param name="amplitude_factor" type="double" value="100.0" />
-  <arg name="name" default="pico_proxy" />
+  <arg name="camera" default="haz" />
+  <arg name="camera_type" default="extended" />
+  <arg name="name" default="pico_proxy_$(arg camera)_$(arg camera_type)" />
   <arg name="manager" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="name" value="$(arg name)" />
