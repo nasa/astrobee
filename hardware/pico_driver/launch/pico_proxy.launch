@@ -17,7 +17,7 @@
 <launch>
   <arg name="camera" default="haz" />
   <arg name="camera_type" default="extended" />
-  <arg name="name" default="pico_proxy_$(arg camera)_$(arg camera_type)" />
+  <arg name="name" default="pico_proxy_$(arg camera)_cam_$(arg camera_type)" />
   <arg name="manager" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="name" value="$(arg name)" />

@@ -399,7 +399,7 @@
 
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="pico_proxy/PicoProxyNodelet" />
-     <arg name="name" value="pico_proxy_haz_extended" />
+     <arg name="name" value="pico_proxy_haz_cam_extended" />
      <arg name="manager" value="mlp_depth_cam" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />

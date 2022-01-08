@@ -132,12 +132,10 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
         continue;
 
       // Query the amplitude factor
-      if (!device_info.GetReal("amplitude_factor", &amplitude_factor_)) {
-        NODELET_FATAL("Lua:Could not find row 'amplitude_factor' in table");
+      if (device_info.GetReal("amplitude_factor", &amplitude_factor_))
         return true;
-      }
     }
-    NODELET_FATAL("You need to pass the amplitude factor to the pico proxy");
+    NODELET_FATAL("You need to pass the amplitude factor to camera parameters");
     return false;
   }
 
