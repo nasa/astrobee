@@ -56,13 +56,6 @@ Eigen::Matrix<T, 3, 3> Intrinsics(const T* intrinsics_data);
 template <typename T>
 Eigen::Matrix<T, 3, 3> Intrinsics(const T* focal_lengths, const T* principal_points);
 
-template <typename T>
-Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolute_point,
-                                           const Eigen::Matrix<T, 3, 3>& intrinsics);
-template <typename T>
-Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
-                                           const Eigen::Matrix<T, 3, 3>& intrinsics);
-
 void AddParameterBlock(const int num_parameters, double* const parameters, ceres::Problem& problem,
                        const bool set_constant = false);
 
@@ -126,31 +119,6 @@ Eigen::Matrix<T, 3, 3> Intrinsics(const T* focal_lengths, const T* principal_poi
   intrinsics(0, 2) = principal_points[0];
   intrinsics(1, 2) = principal_points[1];
   return intrinsics;
-}
-
-template <typename T>
-Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolute_point,
-                                           const Eigen::Matrix<T, 3, 3>& intrinsics) {
-  const T& f_x = intrinsics(0, 0);
-  const T& f_y = intrinsics(1, 1);
-  const T& p_x = intrinsics(0, 2);
-  const T& p_y = intrinsics(1, 2);
-
-  const T& x = absolute_point[0];
-  const T& y = absolute_point[1];
-  const T relative_x = (x - p_x) / f_x;
-  const T relative_y = (y - p_y) / f_y;
-  return Eigen::Matrix<T, 2, 1>(relative_x, relative_y);
-}
-
-template <typename T>
-Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
-                                           const Eigen::Matrix<T, 3, 3>& intrinsics) {
-  const T& f_x = intrinsics(0, 0);
-  const T& f_y = intrinsics(1, 1);
-  const T& p_x = intrinsics(0, 2);
-  const T& p_y = intrinsics(1, 2);
-  return Eigen::Matrix<T, 2, 1>(relative_point[0] * f_x + p_x, relative_point[1] * f_y + p_y);
 }
 }  // namespace optimization_common
 

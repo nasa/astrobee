@@ -40,7 +40,8 @@ int main(int argc, char** argv) {
   bool use_image_features;
   std::string graph_config_path_prefix;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
-  desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
+  desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
+                                                       "Input bagfile")(
     "map-file", po::value<std::string>()->required(), "Map file")("config-path,c", po::value<std::string>()->required(),
                                                                   "Config path")(
     "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
@@ -60,14 +61,13 @@ int main(int argc, char** argv) {
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    if (vm.count("help") || (argc <= 1)) {
+      std::cout << desc << "\n";
+      return 1;
+    }
     po::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
-    return 1;
-  }
-
-  if (vm.count("help")) {
-    std::cout << desc << "\n";
     return 1;
   }
 

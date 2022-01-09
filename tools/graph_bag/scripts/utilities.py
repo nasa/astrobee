@@ -22,6 +22,7 @@ import subprocess
 
 import numpy as np
 import pandas as pd
+import pose
 import poses
 import rosbag
 
@@ -149,6 +150,24 @@ def get_topic_rates(
             print(("Stddev time diff: " + str(stddev_time_diff)))
 
 
+def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name):
+    starting_relative_time = relative_poses.times[0]
+    np_times = np.array(absolute_poses.times)
+    closest_index = np.argmin(np.abs(np_times - starting_relative_time))
+    start_pose = absolute_poses.pose(closest_index)
+    new_pose = start_pose
+    new_poses_list = [start_pose]
+    new_poses_times = [absolute_poses.times[closest_index]]
+    for index in range(len(relative_poses.times)):
+        relative_pose = relative_poses.pose(index)
+        new_pose = new_pose * relative_pose
+        new_poses_list.append(new_pose)
+        new_poses_times.append(relative_poses.times[index])
+    new_poses = poses.Poses(name, "")
+    new_poses.init_from_poses(new_poses_list, new_poses_times)
+    return new_poses
+
+
 def integrate_velocities(localization_states):
     delta_times = [
         j - i
@@ -156,46 +175,69 @@ def integrate_velocities(localization_states):
     ]
     # Make sure times are same length as velocities, ignore last velocity
     delta_times.append(0)
-    integrated_positions = poses.Poses("Integrated Graph Velocities", "")
     # TODO(rsoussan): Integrate angular velocities?
     # TODO(rsoussan): central difference instead?
     x_increments = [
         velocity * delta_t
         for velocity, delta_t in zip(localization_states.velocities.xs, delta_times)
     ]
-    cumulative_x_increments = np.cumsum(x_increments)
-    integrated_positions.positions.xs = [
-        localization_states.positions.xs[0] + cumulative_x_increment
-        for cumulative_x_increment in cumulative_x_increments
-    ]
     y_increments = [
         velocity * delta_t
         for velocity, delta_t in zip(localization_states.velocities.ys, delta_times)
-    ]
-    cumulative_y_increments = np.cumsum(y_increments)
-    integrated_positions.positions.ys = [
-        localization_states.positions.ys[0] + cumulative_y_increment
-        for cumulative_y_increment in cumulative_y_increments
     ]
     z_increments = [
         velocity * delta_t
         for velocity, delta_t in zip(localization_states.velocities.zs, delta_times)
     ]
+
+    return add_increments_to_absolute_pose(
+        x_increments,
+        y_increments,
+        z_increments,
+        localization_states.positions.xs[0],
+        localization_states.positions.ys[0],
+        localization_states.positions.zs[0],
+        localization_states.times,
+        "Integrated Graph Velocities",
+    )
+
+
+def add_increments_to_absolute_pose(
+    x_increments,
+    y_increments,
+    z_increments,
+    starting_x,
+    starting_y,
+    starting_z,
+    times,
+    poses_name="Increment Poses",
+):
+    integrated_positions = poses.Poses(poses_name, "")
+    cumulative_x_increments = np.cumsum(x_increments)
+    integrated_positions.positions.xs = [
+        starting_x + cumulative_x_increment
+        for cumulative_x_increment in cumulative_x_increments
+    ]
+    cumulative_y_increments = np.cumsum(y_increments)
+    integrated_positions.positions.ys = [
+        starting_y + cumulative_y_increment
+        for cumulative_y_increment in cumulative_y_increments
+    ]
     cumulative_z_increments = np.cumsum(z_increments)
     integrated_positions.positions.zs = [
-        localization_states.positions.zs[0] + cumulative_z_increment
+        starting_z + cumulative_z_increment
         for cumulative_z_increment in cumulative_z_increments
     ]
 
     # Add start positions
-    integrated_positions.positions.xs.insert(0, localization_states.positions.xs[0])
-    integrated_positions.positions.ys.insert(0, localization_states.positions.ys[0])
-    integrated_positions.positions.zs.insert(0, localization_states.positions.zs[0])
+    integrated_positions.positions.xs.insert(0, starting_x)
+    integrated_positions.positions.ys.insert(0, starting_y)
+    integrated_positions.positions.zs.insert(0, starting_z)
 
     # Remove last elements (no timestamp for these)
     del integrated_positions.positions.xs[-1]
     del integrated_positions.positions.ys[-1]
     del integrated_positions.positions.zs[-1]
 
-    integrated_positions.times = localization_states.times
+    integrated_positions.times = times
     return integrated_positions

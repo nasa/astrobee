@@ -35,7 +35,17 @@ if (USE_DDS)
   set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
-  find_package(Qt4 4.6.0 REQUIRED QtXml)
+
+  # find Qt version according to OS
+  find_program(LSB_RELEASE_EXEC lsb_release)
+  execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+    find_package(Qt5Xml REQUIRED)
+  else ()
+    find_package(Qt4 4.6.0 REQUIRED QtXml)
+  endif ()
+
 
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
