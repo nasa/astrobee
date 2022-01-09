@@ -1,3 +1,9 @@
+libgtsam (4.1.0-2) unstable; urgency=medium
+
+  * Compatible with ubuntu 18.
+
+ -- Ryan Soussan <nospam@nospam.org>  Tue, 15 May 2021 13:05:46 -0700
+
 libgtsam (4.1.0-1) unstable; urgency=medium
 
   * Initial release.

@@ -1,7 +1,7 @@
 Source: libdbow2
 Priority: optional
 Maintainer: Brian Coltin <nospam@nospam.org>
-Build-Depends: debhelper (>=9), cmake (>=3.5), ros-kinetic-opencv3 (>=3.3.1-5), libboost-dev (>=1.58), libdbowdlib-dev (>=0.1)
+Build-Depends: debhelper (>=9), cmake (>=3.5), libboost-dev (>=1.58), libdbowdlib-dev (>=0.1)
 Standards-Version: 3.9.7
 Section: libs
 Homepage: https://github.com/dorian3d/DBoW2

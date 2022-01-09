@@ -1,3 +1,9 @@
+libjps3d (0.1-2) unstable; urgency=medium
+
+  * Compatible with ubuntu 18, upgraded dependencies.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 15 May 2021 13:05:46 -0700
+
 libjps3d (0.1-1) unstable; urgency=medium
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
