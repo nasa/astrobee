@@ -496,22 +496,24 @@ Then launch localization:
     roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp \
       nodes:=framestore,dds_ros_bridge,localization_node
 
+### Play the bags (on MLP)
+
+    cd /data/bags/directory_of_bags
+    export ROS_MASTER_URI=http://llp:11311
+    rosbag play --clock --loop *.bag                       \
+      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
+      /loc/ml/features:=/loc/ml/old_features               \
+      /loc/ml/registration:=/loc/ml/old_registration
+
 ### Enable localization and the mapped landmark production (on MLP)
+
+This must happen after the bags start playing:
 
     export ROS_MASTER_URI=http://llp:11311
     rosservice call /loc/ml/enable true
 
 If this command returns an error saying that the service is not
 available, wait a little and try again.
-
-### Play the bags (on MLP)
-
-    cd /data/bags/directory_of_bags
-    export ROS_MASTER_URI=http://llp:11311
-    rosbag play --loop *.bag                               \
-      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
-      /loc/ml/features:=/loc/ml/old_features               \
-      /loc/ml/registration:=/loc/ml/old_registration
 
 It is important to check the topics that were recorded to the bag. If
 the nav camera was recorded on /mgt/img_sampler/nav_cam/image_record
@@ -546,6 +548,8 @@ run things on the robot, but use instead a local machine. This should
 result on similar results as on the robot, but the speed of
 computations may differ.
 
+### Preparation
+
 Set up the environment in every terminal that is used. Ensure that you
 use the correct robot name below.
 
@@ -566,19 +570,49 @@ Sym link the map to test:
     rm -fv $ASTROBEE_SOURCE_PATH/astrobee/resources/maps/iss.map
     ln -s $(pwd)/mymap.map $ASTROBEE_SOURCE_PATH/astrobee/resources/maps/iss.map
 
-Start the localization node:
+### Start localization
 
-    roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
-      nodes:=framestore,localization_node robot:=$ASTROBEE_ROBOT
+    roslaunch astrobee astrobee.launch mlp:=local llp:=disabled  \
+      nodes:=framestore,localization_node robot:=$ASTROBEE_ROBOT \
+      output:=screen
 
 Note how we specify the robot name at the end. 
 
-Enable localization:
+### Play the bag
+
+As above, one must play a bag with the ``--clock`` option, while
+redirecting the existing /loc topics, and ensure that the images are
+published on /hw/cam_nav:
+
+    rosbag play --clock mybag.bag                          \
+      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
+      /loc/ml/features:=/loc/ml/old_features               \
+      /loc/ml/registration:=/loc/ml/old_registration
+
+### Enable localization
+
+Run:
 
     rosservice call /loc/ml/enable true
 
-Then, as above, one must play a bag while redirecting the existing
-/loc topics, and ensure that the images are published on /hw/cam_nav.
+If this fails, try again in a little while.
+
+### Alternative approach
+
+The steps of launching localization, playing the bag, and enabling
+localization can also be run from a launch file, as follows:
+
+    roslaunch $ASTROBEE_SOURCE_PATH/astrobee/launch/offline_localization/sparse_mapping_matching_from_bag.launch \
+       bagfile:=$(pwd)/mybag.bag \
+       robot:=$ASTROBEE_ROBOT    \
+       output:=screen
+
+It is very important that an absolute path to the bag be used,
+otherwise this command will fail. Errors about failing to start the
+rosservice to enable localization can be ignored, as that service will
+be started until it succeeds.
+
+### Examining the results
 
 The poses of the newly localized camera images can be displayed as:
 
