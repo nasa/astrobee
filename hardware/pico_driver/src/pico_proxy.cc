@@ -39,10 +39,6 @@
 #include <string>
 #include <map>
 
-
-// Layer extraction
-std::vector <cv::Mat> layers(4);
-
 /**
  * \ingroup hardware
  */
@@ -148,17 +144,17 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
     cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(
       sensor_msgs::ImageConstPtr(&msg->raw, null_deleter()),
       sensor_msgs::image_encodings::TYPE_32FC4);
-    cv::split(cv_ptr->image, layers);
+    cv::split(cv_ptr->image, layers_);
 
     // Keep the same timestamp as the original data
     std_msgs::Header header;
     header.stamp =  msg->header.stamp;
     header.frame_id = msg->header.frame_id;
 
-    cv_bridge::CvImage d(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
-    cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[1]);
-    cv_bridge::CvImage i(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
-    cv_bridge::CvImage n(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[3]);
+    cv_bridge::CvImage d(header, sensor_msgs::image_encodings::TYPE_32FC1, layers_[0]);
+    cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_32FC1, layers_[1]);
+    cv_bridge::CvImage i(header, sensor_msgs::image_encodings::TYPE_32FC1, layers_[2]);
+    cv_bridge::CvImage n(header, sensor_msgs::image_encodings::TYPE_32FC1, layers_[3]);
 
     // Kalibr cannot handle float images. Hence, we need to create an
     // integer version of the amplitude topic (while keeping the
@@ -171,7 +167,7 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
     // experimentation. Casting to uint8 was not enough.  This will need
     // a deeper study. If the amplitude image looks too saturated or too
     // dark, a different amplitude factor can be set when launching this.
-    layers[1].convertTo(img_int_, CV_16UC1, amplitude_factor_, 0);
+    layers_[1].convertTo(img_int_, CV_16UC1, amplitude_factor_, 0);
     cv_bridge::CvImage a_int(header, sensor_msgs::image_encodings::MONO16, img_int_);
 
     // Publish individual images
@@ -236,6 +232,7 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
   ros::Publisher pub_a_int_;
 
   // Layer extraction
+  std::vector <cv::Mat> layers_ = std::vector<cv::Mat>(4);
   cv::Mat img_int_;
 
   // Depth and confidence matrices
