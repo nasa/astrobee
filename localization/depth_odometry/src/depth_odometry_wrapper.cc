@@ -33,12 +33,12 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-DepthOdometryWrapper::DepthOdometryWrapper() {
+DepthOdometryWrapper::DepthOdometryWrapper(const std::string& config_prefix) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
-  config.AddFile("localization/depth_odometry.config");
+  config.AddFile((config_prefix + "depth_odometry.config").c_str());
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }

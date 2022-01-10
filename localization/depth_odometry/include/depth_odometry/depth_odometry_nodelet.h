@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
 
 #include <depth_odometry/depth_odometry_wrapper.h>
+#include <ff_msgs/SetBool.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <image_transport/image_transport.h>
@@ -38,11 +39,14 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
   void SubscribeAndAdvertise(ros::NodeHandle* nh);
   void PointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
   void ImageCallback(const sensor_msgs::ImageConstPtr& image_msg);
+  bool EnableService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);
 
   DepthOdometryWrapper depth_odometry_wrapper_;
   image_transport::Subscriber image_sub_;
   ros::Subscriber point_cloud_sub_;
   ros::Publisher depth_odometry_pub_;
+  ros::ServiceServer enable_srv_;
+  bool enabled_;
 };
 }  // namespace depth_odometry
 

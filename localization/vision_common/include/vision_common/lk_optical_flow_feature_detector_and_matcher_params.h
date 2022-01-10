@@ -24,8 +24,7 @@ namespace vision_common {
 struct LKOpticalFlowFeatureDetectorAndMatcherParams {
   int max_iterations;
   double termination_epsilon;
-  int window_width;
-  int window_height;
+  int window_length;
   int max_level;
   double min_eigen_threshold;
   double max_flow_distance;

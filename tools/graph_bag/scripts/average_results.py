@@ -25,7 +25,7 @@ import utilities
 
 
 def combined_results(csv_files):
-    dataframes = [pd.read_csv(file) for file in csv_files]
+    dataframes = [pd.read_csv(file, header=None) for file in csv_files]
     if not dataframes:
         print("Failed to create dataframes")
         exit()
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         "directory", help="Full path to directory where results files are."
     )
     args = parser.parse_args()
-    results_csv_files = utilities.get_files(args.directory, "*stats.csv")
+    results_csv_files = utilities.get_files_recursive(args.directory, "*stats.csv")
     if not results_csv_files:
         print("Failed to find stats.csv files")
         exit()

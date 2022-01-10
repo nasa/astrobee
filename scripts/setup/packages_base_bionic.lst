@@ -28,7 +28,9 @@ libpcl-common1.8
 libpcl-features1.8
 libpcl-filters1.8
 libpcl-kdtree1.8
+libpcl-keypoints1.8
 libpcl-octree1.8
+libpcl-registration1.8
 libpcl-sample-consensus1.8
 libpcl-search1.8
 libjson-c3

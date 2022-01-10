@@ -33,7 +33,7 @@ find_package(Eigen3 REQUIRED)
 
 find_package(Ceres REQUIRED)
 
-find_package(PCL REQUIRED COMPONENTS common features filters octree search)
+find_package(PCL REQUIRED COMPONENTS common features filters octree registration search)
 
 find_package(pcl_conversions REQUIRED)
 
