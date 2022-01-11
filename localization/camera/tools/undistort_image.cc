@@ -128,17 +128,51 @@ int main(int argc, char ** argv) {
   cv::Mat floating_remap, fixed_map, interp_map;
   cam_params.GenerateRemapMaps(&floating_remap, FLAGS_scale);
 
-  // Deal with the fact that this map may request pixels from the
-  // image that are out of bounds. Hence we will need to grow the
-  // image before interpolating into it.
+  // We have to conform to the OpenCV API, which says:
+  // undist_image(x, y) = dist_image(floating_remap(x, y)).
 
-  // Find the expanded image bounds
+  // If floating_remap(x, y) is out of dist_image bounds, the above
+  // should return a black pixel, yet a straightforward application of
+  // this formula will result in a segfault.
+
+  // The solution is to grow dist_image by padding it with black pixels
+  // so that the above API succeeds.
+
+  // This can have the following problem though. floating_remap(x, y)
+  // can be huge for unreasonable distortion. So tame it. We only
+  // want to know that if this falls outside the image bounds, a black
+  // pixel is assigned to undist_image(x, y), so if it falls too
+  // much outside the image just assign it to a closer pixel outside
+  // the image.
+  float max_extra = 100.0f;  // the furthest floating_remap(x, y) can deviate
+
+  // The image dimensions
+  Eigen::Vector2i dims(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
+                       round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
+  int img_cols = dims[0], img_rows = dims[1];
+
   cv::Vec2f start = floating_remap.at<cv::Vec2f>(0, 0);
-  double min_x = start[0], max_x = start[0];
-  double min_y = start[1], max_y = start[1];
+  double min_x = 0.0, max_x = 0.0, min_y = 0.0, max_y = 0.0;  // will change very soon
   for (int col = 0; col < floating_remap.cols; col++) {
     for (int row = 0; row < floating_remap.rows; row++) {
       cv::Vec2f pix = floating_remap.at<cv::Vec2f>(row, col);
+
+      // Tame floating_remap
+      pix[0] = std::max(pix[0], -max_extra);
+      pix[0] = std::min(pix[0], img_cols + max_extra);
+      pix[1] = std::max(pix[1], -max_extra);
+      pix[1] = std::min(pix[1], img_rows + max_extra);
+      floating_remap.at<cv::Vec2f>(row, col) = pix;
+
+      if (col == 0 && row == 0) {
+        // initialize with the potentially adjusted value of pix.
+        min_x = pix[0];
+        max_x = pix[0];
+        min_y = pix[1];
+        max_y = pix[1];
+      }
+
+      // Find the expanded (but tamed) image bounds
       if (pix[0] < min_x)
         min_x = pix[0];
       if (pix[0] > max_x)
@@ -149,13 +183,10 @@ int main(int argc, char ** argv) {
         max_y = pix[1];
     }
   }
+
+  // Convert the bounds to int
   min_x = floor(min_x); max_x = ceil(max_x);
   min_y = floor(min_y); max_y = ceil(max_y);
-
-  // The image dimensions
-  Eigen::Vector2i dims(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
-                       round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
-  int img_cols = dims[0], img_rows = dims[1];
 
   // Ensure that the expanded image is not smaller than the old one,
   // to make the logic simpler
@@ -210,19 +241,23 @@ int main(int argc, char ** argv) {
     if (undist_size[0] % 2 != 0 || undist_size[1] % 2 != 0 )
       LOG(FATAL) << "The undistorted image dimensions must be even.";
 
-    int startx = (undist_size[0] - widx)/2;
-    int starty = (undist_size[1] - widy)/2;
-
-    cropROI = cv::Rect(startx, starty, widx, widy);
-    if (cropROI.empty())
-      LOG(FATAL) << "Empty crop region.";
-    std::cout << "Crop region: " << cropROI << std::endl;
+    // Ensure that the crop window is within the image bounds
+    int startx = std::max((undist_size[0] - widx)/2, 0);
+    int starty = std::max((undist_size[1] - widy)/2, 0);
+    widx = std::min(widx, undist_size[0] - startx);
+    widy = std::min(widy, undist_size[1] - starty);
 
     // Update these quantities
     undist_size[0]     = widx;
     undist_size[1]     = widy;
     optical_center[0] -= startx;
     optical_center[1] -= starty;
+
+    cropROI = cv::Rect(startx, starty, widx, widy);
+    if (cropROI.empty())
+      LOG(FATAL) << "Empty crop region.";
+
+    std::cout << "Undistorted crop region: " << cropROI << std::endl;
   }
 
   for (size_t i = 0; i < images.size(); i++) {
