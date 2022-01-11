@@ -38,7 +38,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 
 catkin_package(
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} 
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} gtsam 
   CATKIN_DEPENDS
     nodelet
     ff_util
@@ -66,8 +66,28 @@ add_library(${PROJECT_NAME}
   src/imu_augmentor_wrapper.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${GTSAM_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_imu_augmentor
+    test/test_imu_augmentor.test
+    test/test_imu_augmentor.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_imu_augmentor
+    imu_augmentor ${catkin_LIBRARIES} 
+  )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_imu_augmentor_wrapper
+    test/test_imu_augmentor_wrapper.test
+    test/test_imu_augmentor_wrapper.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_imu_augmentor_wrapper
+    imu_augmentor ${catkin_LIBRARIES} 
+  )
+endif()
 
 #############
 ## Install ##

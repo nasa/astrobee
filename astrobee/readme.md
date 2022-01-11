@@ -131,6 +131,9 @@ connection to the LLP (in case it is absent from the test rig):
 
     `roslaunch astrobee spawn.launch world:=iss ns:=bumble`
 
+See more details in \ref running-the-sim for how to run the robot in
+simulation.
+
 4. Do a processor-in-the-loop simulation
 
     `roslaunch astrobee sim.launch llp:=10.42.0.10 mlp:=10.42.0.11`

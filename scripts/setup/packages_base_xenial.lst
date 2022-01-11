@@ -27,6 +27,14 @@ libgmp10
 libusb-1.0-0
 libtinyxml2.6.2v5
 libpcl-common1.7
+libpcl-features1.7
+libpcl-filters1.7
+libpcl-kdtree1.7
+libpcl-keypoints1.7
+libpcl-octree1.7
+libpcl-registration1.7
+libpcl-sample-consensus1.7
+libpcl-search1.7
 libjson-c2
 libargtable2-0
 libboost-program-options1.58.0
@@ -101,6 +109,7 @@ libtinyxml-dev
 libyaml-cpp-dev
 libusb-1.0-0-dev
 libpcl-dev
+libpcl-conversions-dev
 libboost-program-options-dev
 libboost-signals-dev
 libboost-system-dev

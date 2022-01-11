@@ -35,6 +35,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
                                         LiveMeasurementSimulatorParams& params) {
   LoadMessageBufferParams("imu", config, params.imu);
   LoadMessageBufferParams("flight_mode", config, params.flight_mode);
+  LoadMessageBufferParams("depth_odometry", config, params.depth_odometry);
   LoadMessageBufferParams("of", config, params.of);
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);

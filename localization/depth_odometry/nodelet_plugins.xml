@@ -1,0 +1,11 @@
+<library path="lib/libdepth_odometry">
+  <class name="depth_odometry/DepthOdometryNodelet"
+	 type="depth_odometry::DepthOdometryNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps depth_odometry 
+    </description>
+  </class>
+</library>
+
+

@@ -14,6 +14,7 @@ Available docker files:
 
 - `astrobee_base.Dockerfile` - Contains installation of all astrobee dependencies the Ubuntu + ROS setup.
 - `astrobee.Dockerfile` - Builds the astrobee FSW code on top of astrobee_base.
+- `astrobee_quick.Dockerfile` - Builds the astrobee FSW code using a previous astrobee image as a build cache. This dramatically speeds up build times for small changes.
 
 The Docker files accept the following version args (note that they must match up):
 
@@ -25,12 +26,17 @@ If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"`
 If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
 If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
 
+The Docker files also accept args to use local or container registry images.
+
+- `REMOTE` - The repository where the dockerfile should derive its base. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
+- `REMOTE_CACHED` - (Only for `astrobee_quick.dockerfile`, defaults to `${REMOTE}`). The repository for the build cache image. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 
 ## Building the docker images
 
 To build the docker images, run:
     
     ./build.sh
+
 The build script will automatically detect the current Ubuntu OS version and define the docker files variables
 `UBUNTU_VERSION`, `ROS_VERSION`, and `PYTHON`. If a specific version is desired, the option --xenial, --bionic,
 and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
@@ -40,8 +46,14 @@ and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respective
 To run the docker container:
 
     ./run.sh
+
 It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
 --xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
+To add arguments to the launch file in addition to `dds:=false robot:=sim_pub` you can do instead:
+
+    ./run.sh --args "rviz:=true sviz:=true"
+
+*Note: You have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
 
 To open another terminal inside the docker container:
 

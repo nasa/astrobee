@@ -26,6 +26,7 @@
   <build_depend>tf2</build_depend>
   <build_depend>sparse_mapping</build_depend>
   <build_depend>msg_conversions</build_depend>
+  <build_depend>ff_util</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>std_msgs</run_depend>
@@ -38,6 +39,7 @@
   <run_depend>tf2</run_depend>
   <run_depend>sparse_mapping</run_depend>
   <run_depend>msg_conversions</run_depend>
+  <run_depend>ff_util</run_depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>

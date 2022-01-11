@@ -32,7 +32,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 )
 
 # Find OpenCV3
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV 3.3.1 REQUIRED)
 
 catkin_package(
   LIBRARIES image_sampler

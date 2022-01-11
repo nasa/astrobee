@@ -26,6 +26,7 @@
 #include <vector>
 #include <limits>
 #include <string>
+#include <set>
 
 namespace camera {
   class CameraModel;
@@ -69,8 +70,8 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                   ceres::Solver::Options const& options,
                   ceres::Solver::Summary* summary,
                   int first = 0, int last = std::numeric_limits<int>::max(),
-                  bool fix_cameras = false, bool fix_all_xyz = false);
-
+                  bool fix_cameras = false,
+                  std::set<int> const& fixed_cameras = std::set<int>());
 
 /**
  * Perform bundle adjustment.
@@ -79,15 +80,14 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
  * meant to be used to do 2 or 3 camera refinements however it can do
  * N cameras just fine.
  *
-
  **/
-void BundleAdjust(std::vector<Eigen::Matrix2Xd> const& features_n,
-                  double focal_length,
-                  std::vector<Eigen::Affine3d> * cam_t_global_n,
-                  Eigen::Matrix3Xd * pid_to_xyz,
-                  ceres::LossFunction * loss,
-                  ceres::Solver::Options const& options,
-                  ceres::Solver::Summary * summary);
+void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
+                          double focal_length,
+                          std::vector<Eigen::Affine3d> * cam_t_global_n,
+                          Eigen::Matrix3Xd * pid_to_xyz,
+                          ceres::LossFunction * loss,
+                          ceres::Solver::Options const& options,
+                          ceres::Solver::Summary * summary);
 
 // Random integer between min (inclusive) and max (exclusive)
 int RandomInt(int min, int max);

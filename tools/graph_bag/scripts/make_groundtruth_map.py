@@ -35,24 +35,27 @@ import utilities
 def create_groundtruth(
     bagfile, base_surf_map, maps_directory, map_name, world, robot_name
 ):
-    os.mkdir("gt_images")
-    gt_images = os.path.abspath("gt_images")
+    gt_images_dir = "gt_images_" + utilities.basename(bagfile)
+    os.mkdir(gt_images_dir)
+    gt_images = os.path.abspath(gt_images_dir)
     extract_images_command = (
         "rosrun localization_node extract_image_bag "
         + bagfile
-        + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory gt_images"
+        + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory "
+        + gt_images
     )
     utilities.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
+    all_gt_images = os.path.join(gt_images, "*.jpg")
     select_images_command = (
-        "rosrun sparse_mapping select_images -density_factor 1.4 gt_images/*.jpg"
+        "rosrun sparse_mapping select_images -density_factor 1.4 " + all_gt_images
     )
     utilities.run_command_and_save_output(select_images_command, "select_images.txt")
 
     # Set environment variables
     home = os.path.expanduser("~")
     robot_config_file = os.path.join("config/robots", robot_name + ".config")
-    astrobee_path = os.path.join(home, "astrobee/astrobee")
+    astrobee_path = os.path.join(home, "astrobee/src/astrobee")
     os.environ["ASTROBEE_RESOURCE_DIR"] = os.path.join(astrobee_path, "resources")
     os.environ["ASTROBEE_CONFIG_DIR"] = os.path.join(astrobee_path, "config")
     os.environ["ASTROBEE_ROBOT"] = os.path.join(
@@ -63,7 +66,9 @@ def create_groundtruth(
     # Build groundtruth
     groundtruth_map = map_name + ".map"
     build_map_command = (
-        "rosrun sparse_mapping build_map gt_images/*jpg -output_map "
+        "rosrun sparse_mapping build_map "
+        + all_gt_images
+        + " -output_map "
         + groundtruth_map
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100"
     )
@@ -85,7 +90,8 @@ def create_groundtruth(
     # Link maps directory since conversion to BRISK map needs
     # image files to appear to be in correct relative path
     os.symlink(maps_directory, "maps")
-    os.symlink(gt_images, "maps/gt_images")
+    maps_gt_images = os.path.join("maps", gt_images_dir)
+    os.symlink(gt_images, maps_gt_images)
 
     # Convert SURF to BRISK map
     # Get full path to output file to avoid permission errors when running
@@ -114,7 +120,7 @@ def create_groundtruth(
     utilities.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
 
     # Remove simlinks
-    os.unlink("maps/gt_images")
+    os.unlink(maps_gt_images)
     os.unlink("maps")
 
 
