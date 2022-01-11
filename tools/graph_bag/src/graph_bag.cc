@@ -112,6 +112,10 @@ void GraphBag::Run() {
         SaveMsg(*imu_augmented_loc_msg, TOPIC_GNC_EKF, results_bag_);
       }
     }
+    const auto depth_odometry_msg = live_measurement_simulator_->GetDepthOdometryMessage(current_time);
+    if (depth_odometry_msg) {
+      graph_localizer_simulator_->BufferDepthOdometryMsg(*depth_odometry_msg);
+    }
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
       graph_localizer_simulator_->BufferOpticalFlowMsg(*of_msg);

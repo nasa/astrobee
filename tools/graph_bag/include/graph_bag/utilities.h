@@ -46,7 +46,7 @@ boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(
   const sensor_msgs::ImageConstPtr& image_msg, const graph_localizer::FeatureTrackIdMap& feature_tracks,
   const camera::CameraParameters& camera_params, const std::vector<const SmartFactor*>& smart_factors = {});
 
-cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params);
+cv::Point2f Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params);
 
 std::vector<const SmartFactor*> SmartFactors(const graph_localizer::GraphLocalizer& graph);
 

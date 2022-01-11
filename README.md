@@ -15,7 +15,7 @@ signaling, and sound. The flight software is hosted on each Astrobee's three int
 uses the open-source [Robot Operating System (ROS)](https://www.ros.org/) framework as message-passing
 middleware.  It provides a high-level [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) for controlling the robot and has multiple operating modes. It can execute a plan (command sequence), individual operator commands (teleoperation), or commands from guest science code running onboard Astrobee.
 
-The Astrobee Robot Software simulator, built using [ROS](https://www.ros.org/) and [Gazebo](http://gazebosim.org/), enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to [build maps for Astrobee localization](https://github.com/nasa/astrobee/tree/master/localization/sparse_mapping), along with many others.
+The Astrobee Robot Software simulator, built using [ROS](https://www.ros.org/) and [Gazebo](http://gazebosim.org/), enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to [build maps for Astrobee localization](https://nasa.github.io/astrobee/html/sparsemapping.html), along with many others.
 
 Released separately, the Astrobee ground data system (GDS) includes Astrobee control station software that communicates with Astrobee flight software via the Data Distribution Service (DDS) network protocol over the ISS Ku-IP space-to-ground link. The control station is written primarily in Java using the Eclipse RCP framework. Source code is in the [`astrobee_gds`](https://github.com/nasa/astrobee_gds) repository, or you can download the [binary release](https://software.nasa.gov/software/ARC-17994-1B).
 
@@ -41,6 +41,8 @@ due to NASA legal requirements. Thank you for your understanding.
 [Extensive documentation is auto-generated from the contents of this repository.](https://nasa.github.io/astrobee/documentation.html)
 
 ["A Brief Guide to Astrobee’s Flight Software"](https://github.com/albee/a-brief-guide-to-astrobee/raw/master/a_brief_guide_to_astrobee_latest.pdf) is a good tutorial, with a particular emphasis on the advanced topic of modifying Astrobee's flight software to enable Guidance, Navigation, & Control (GN&C) research. (Note that most guest science can be implemented as an app that uses the [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) without modifying the flight software.)
+
+The ["Astrobee ROS Demo"](https://github.com/Pedro-Roque/astrobee_ros_demo) package provides a C++/Python interface to implement custom control methods in ROS.
 
 For more information, read [Astrobee-related publications](https://www.nasa.gov/content/research-publications-0).
 Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),

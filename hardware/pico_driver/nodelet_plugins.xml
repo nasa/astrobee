@@ -1,5 +1,12 @@
-<library path="lib/libpico_driver">
-  <class name="pico_driver/PicoDriverNodelet" type="pico_driver::PicoDriverNodelet" base_class_type="nodelet::Nodelet">
-    <description>Nodelet for pico_driver::PicoDriverNodelet</description>
-  </class>
-</library>
+<class_libraries>
+  <library path="lib/libpico_driver">
+    <class name="pico_driver/PicoDriverNodelet" type="pico_driver::PicoDriverNodelet" base_class_type="nodelet::Nodelet">
+      <description>Nodelet for pico_driver::PicoDriverNodelet</description>
+    </class>
+  </library>
+  <library path="lib/libpico_proxy">
+    <class name="pico_proxy/PicoProxyNodelet" type="pico_proxy::PicoProxyNodelet" base_class_type="nodelet::Nodelet">
+      <description>Nodelet for pico_proxy::PicoProxyNodelet</description>
+    </class>
+  </library>
+</class_libraries>

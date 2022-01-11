@@ -24,16 +24,16 @@
 #include <localization_common/image_correspondences.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-#include <optimization_common/fov_distorter.h>
-#include <optimization_common/rad_distorter.h>
-#include <optimization_common/radtan_distorter.h>
+#include <vision_common/fov_distorter.h>
+#include <vision_common/rad_distorter.h>
+#include <vision_common/radtan_distorter.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 namespace ca = calibration;
 namespace lc = localization_common;
-namespace oc = optimization_common;
+namespace vc = vision_common;
 namespace po = boost::program_options;
 
 lc::ImageCorrespondences LoadTargetMatches(const std::string& match_file) {
@@ -128,8 +128,9 @@ int main(int argc, char** argv) {
   std::string world;
   std::string output_file;
   po::options_description desc("Calibrates camera intrinsics using target detections.");
-  desc.add_options()("help", "produce help message")("corners-directory", po::value<std::string>()->required(),
-                                                     "Directory containing target detections to use for calibration.")(
+  desc.add_options()("help,h", "produce help message")(
+    "corners-directory", po::value<std::string>()->required(),
+    "Directory containing target detections to use for calibration.")(
     "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
@@ -141,14 +142,13 @@ int main(int argc, char** argv) {
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    if (vm.count("help") || (argc <= 1)) {
+      std::cout << desc << "\n";
+      return 1;
+    }
     po::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
-    return 1;
-  }
-
-  if (vm.count("help")) {
-    std::cout << desc << "\n";
     return 1;
   }
 
@@ -180,11 +180,11 @@ int main(int argc, char** argv) {
     LoadAllTargetMatches(corners_directory, params.camera_target_based_intrinsics_calibrator.max_num_match_sets);
   LogInfo("Number of target match sets: " << target_matches.size());
   if (params.distortion_type == "fov") {
-    Calibrate<oc::FovDistorter>(params, target_matches, output_file);
+    Calibrate<vc::FovDistorter>(params, target_matches, output_file);
   } else if (params.distortion_type == "rad") {
-    Calibrate<oc::RadDistorter>(params, target_matches, output_file);
+    Calibrate<vc::RadDistorter>(params, target_matches, output_file);
   } else if (params.distortion_type == "radtan") {
-    Calibrate<oc::RadTanDistorter>(params, target_matches, output_file);
+    Calibrate<vc::RadTanDistorter>(params, target_matches, output_file);
   } else {
     LogFatal("Invalid distortion type provided.");
   }

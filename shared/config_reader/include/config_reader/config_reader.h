@@ -88,6 +88,7 @@ class ConfigReader {
     bool GetReal(int index, float *val, float min, float max);
     bool GetReal(const char *exp, double *val, double min, double max);
     bool GetReal(int index, double *val, double min, double max);
+    bool IsNumber(const char *exp);
     ConfigReader *Config() { return config_; }
 
    private:
@@ -164,7 +165,7 @@ class ConfigReader {
   bool ReadInt(const char *exp, int *val, int min, int max);
   bool ReadReal(const char *exp, float *val, float min, float max);
   bool ReadReal(const char *exp, double *val, double min, double max);
-
+  bool IsNumber();
 
   std::vector<FileHeader> files_;  // list of config files to load
   lua_State * l_;  // lua interpreter (valid between readFiles() and clear())

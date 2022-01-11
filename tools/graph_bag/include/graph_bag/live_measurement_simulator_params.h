@@ -26,6 +26,7 @@ namespace graph_bag {
 struct LiveMeasurementSimulatorParams {
   MessageBufferParams imu;
   MessageBufferParams flight_mode;
+  MessageBufferParams depth_odometry;
   MessageBufferParams of;
   MessageBufferParams vl;
   MessageBufferParams ar;

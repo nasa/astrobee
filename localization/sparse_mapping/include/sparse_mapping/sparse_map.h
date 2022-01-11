@@ -305,6 +305,9 @@ struct SparseMap {
   SparseMap();
   SparseMap(SparseMap &);
   SparseMap& operator=(const SparseMap&);
+
+  // Reorder the images in the map and the rest of the data accordingly
+  void reorderMap(std::map<int, int> const& old_cid_to_new_cid);
 };
 }  // namespace sparse_mapping
 
