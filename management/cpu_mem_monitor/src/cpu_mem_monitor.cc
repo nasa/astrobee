@@ -108,7 +108,7 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   ros::master::execute("lookupNode", args, result, payload, true);
   monitor_host_ = getHostfromURI(result[2]);
   if (monitor_host_.empty()) {
-    ROS_ERROR_STREAM("URI of the memory monitor not valid");
+    FF_ERROR("URI of the memory monitor not valid");
     return;
   }
 
@@ -260,12 +260,12 @@ bool CpuMemMonitor::ReadParams() {
   for (int i = 0; i < nodes.GetSize(); i++) {
     config_reader::ConfigReader::Table node;
     if (!nodes.GetTable(i + 1, &node)) {
-      ROS_ERROR("Could not get node table");
+      FF_ERROR("Could not get node table");
       return false;
     }
     std::string name;
     if (node.GetStr("name", &name)) {
-      ROS_DEBUG_STREAM("Read node " << name);
+      NODELET_DEBUG_STREAM("Read node " << name);
       nodes_pid_.insert(std::pair<std::string, int>(name, 0));
     }
   }
@@ -338,7 +338,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host_ +
                               " and not in the same cpu as manager " + monitor_host_ + ".";
-        ROS_ERROR_STREAM(err_msg);
+        FF_ERROR(err_msg);
         continue;
       }
 
@@ -350,7 +350,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       if (!pipe) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Could not open rosnode process for node " + it->first;
-        ROS_ERROR_STREAM(err_msg);
+        FF_ERROR(err_msg);
         continue;
       }
       while (fgets(buffer.data(), 128, pipe) != NULL) {
@@ -362,7 +362,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " +
                               it->first + "does not have a PID.";
-        ROS_ERROR_STREAM(err_msg);
+        FF_ERROR(err_msg);
         continue;
       }
       pclose(pipe);
@@ -485,10 +485,8 @@ int CpuMemMonitor::CollectCPUStats() {
   double cpu_usage_node;
   std::map<std::string, int>::iterator it;
   std::map<std::string, uint64_t>::iterator it_load;
-  int i = -1;
-  for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
-    // Increment counter
-    i++;
+  int i;
+  for ( i = 0, it = nodes_pid_.begin(); it != nodes_pid_.end(); i++, it++ ) {
     // Look if PID is invalid
     if (it->second <= 0)
       continue;
@@ -712,7 +710,7 @@ void CpuMemMonitor::AssertMemStats() {
 void CpuMemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   // Get cpu stats
   if (CollectCPUStats() < 0) {
-    ROS_FATAL("CPU node unable to get load stats!");
+    NODELET_FATAL("CPU node unable to get load stats!");
     return;
   }
   // Assert cpu stats
@@ -723,7 +721,7 @@ void CpuMemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
 
   // Collect Memory stats
   if (CollectMemStats() < 0) {
-    ROS_FATAL("Memory node unable to get load stats!");
+    NODELET_FATAL("Memory node unable to get load stats!");
     return;
   }
   // Assert memory stats
