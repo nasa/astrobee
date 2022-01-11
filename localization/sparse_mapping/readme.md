@@ -157,8 +157,8 @@ disables the arrow keys, then one can navigate with the "Ins" and
 "Del" keys on the numpad.)
 
 This tool can be invoked to look at just images, without any map being
-built. It can also delete images in this mode, with the 'Delete' and
-'x' keys, if invoked as:
+built. It can also delete images in this mode, with the 'x' key, if
+invoked as:
 
     nvm_visualize -enable_image_deletion <image dir>/*jpg
 
