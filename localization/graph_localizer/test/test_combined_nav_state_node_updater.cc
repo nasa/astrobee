@@ -22,6 +22,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/imu_measurement.h>
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>
@@ -33,6 +34,7 @@
 namespace gl = graph_localizer;
 namespace go = graph_optimizer;
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 
 gl::CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams() {
@@ -118,14 +120,31 @@ gl::DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams() {
 TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
   auto params = DefaultGraphLocalizerParams();
   // Use depth odometry factor adder since it can add relative pose factors
-  params.factor.depth_odometry_adder = DefaultDepthOdometryFactorAdderParams;
+  params.factor.depth_odometry_adder = DefaultDepthOdometryFactorAdderParams();
   constexpr int kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
   gl::GraphLocalizer graph_localizer(params);
-  // TODO(rsoussan): buffer imu measurements (zero acceleration, increasing timestamp)
-  // TODO(rsoussan): add rel depth odom measurements (enable relative pose, use these for simplicity!!!) (get rel pose
-  // by integrating constant velocity for time diff)
-  // TODO(rsoussan): do both of these in for loop!!!!
+  constexpr int kNumIterations = 100;
+  constexpr double kTimeDiff = 0.1;
+  lc::Time time = 0.0;
+  const Eigen::Vector3d relative_translation = kTimeDiff * params.graph_initializer.global_V_body_start;
+  // Don't need correspondences for this
+  const std::vector<Eigen::Vector3d> zero_vector;
+  const lm::DepthCorrespondences correspondences(zero_vector, zero_vector);
+  for (int i = 0; i < kNumIterations; ++i) {
+    time += kTimeDiff;
+    const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
+    graph_localizer.AddImuMeasurement(zero_imu_measurement);
+    const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
+    const lc::PoseWithCovariance source_T_target(relative_pose, lc::PoseCovariance::Identity());
+    lm::Odometry odometry;
+    odometry.source_time = time - kTimeDiff;
+    odometry.target_time = time;
+    odometry.sensor_F_source_T_target = source_T_target;
+    odometry.body_F_source_T_target = source_T_target;
+    const lm::DepthOdometryMeasurement constant_velocity_measurement(odometry, correspondences, time);
+    graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
+  }
   // TODO(rsoussan): check num factors in graph?
   // TODO(rsoussan): check each graph factor pose after optimization! make sure they are correct!!!
 }
