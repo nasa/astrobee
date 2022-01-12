@@ -76,6 +76,7 @@ gl::CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams()
 gl::GraphInitializerParams DefaultGraphInitializerParams() {
   gl::GraphInitializerParams params;
   params.global_T_body_start = gtsam::Pose3::identity();
+  params.global_V_body_start = gtsam::Velocity3::Zero();
   params.num_bias_estimation_measurements = 1;
   params.start_time = 0;
   params.initial_imu_bias = gtsam::imuBias::ConstantBias();
@@ -100,8 +101,33 @@ gl::GraphLocalizerParams DefaultGraphLocalizerParams() {
   return params;
 }
 
+gl::DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams() {
+  gl::DepthOdometryFactorAdderParams params;
+  params.noise_scale = 1.0;
+  params.use_points_between_factor = false;
+  params.position_covariance_threshold = 100;
+  params.orientation_covariance_threshold = 100;
+  params.point_to_point_error_threshold = 100;
+  params.pose_translation_norm_threshold = 100;
+  params.max_num_points_between_factors = 100;
+  params.body_T_sensor = gtsam::Pose3::identity();
+  params.enabled = true;
+  return params;
+}
+
 TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
-  gl::GraphLocalizer graph_localizer(DefaultGraphLocalizerParams());
+  auto params = DefaultGraphLocalizerParams();
+  // Use depth odometry factor adder since it can add relative pose factors
+  params.factor.depth_odometry_adder = DefaultDepthOdometryFactorAdderParams;
+  constexpr int kInitialVelocity = 0.1;
+  params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
+  gl::GraphLocalizer graph_localizer(params);
+  // TODO(rsoussan): buffer imu measurements (zero acceleration, increasing timestamp)
+  // TODO(rsoussan): add rel depth odom measurements (enable relative pose, use these for simplicity!!!) (get rel pose
+  // by integrating constant velocity for time diff)
+  // TODO(rsoussan): do both of these in for loop!!!!
+  // TODO(rsoussan): check num factors in graph?
+  // TODO(rsoussan): check each graph factor pose after optimization! make sure they are correct!!!
 }
 
 // Run all the tests that were declared with TEST()

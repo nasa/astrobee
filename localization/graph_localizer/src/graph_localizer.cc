@@ -57,13 +57,17 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       feature_tracker_(new FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
       params_(params) {
+  // TODO(rsoussan): Add this param to imu integrator, set on construction
   latest_imu_integrator_->SetFanSpeedMode(params_.initial_fan_speed_mode);
+  InitializeNodeUpdaters();
+  InitializeFactorAdders();
+  InitializeGraphActionCompleters();
+}
 
-  // Initialize Node Updaters
-  // Assumes zero initial velocity
-  const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
-                                                 gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
-                                                 params_.graph_initializer.start_time);
+void GraphLocalizer::InitializeNodeUpdaters() {
+  const lc::CombinedNavState global_N_body_start(
+    params_.graph_initializer.global_T_body_start, params_.graph_initializer.global_V_body_start,
+    params_.graph_initializer.initial_imu_bias, params_.graph_initializer.start_time);
   params_.combined_nav_state_node_updater.global_N_body_start = global_N_body_start;
   combined_nav_state_node_updater_.reset(
     new CombinedNavStateNodeUpdater(params_.combined_nav_state_node_updater, latest_imu_integrator_, shared_values()));
@@ -73,10 +77,11 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   dynamic_cast<GraphLocalizerStats*>(graph_stats())
     ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
-  feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params.feature_point_node_updater, shared_values()));
+  feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params_.feature_point_node_updater, shared_values()));
   AddNodeUpdater(feature_point_node_updater_);
+}
 
-  // Initialize Factor Adders
+void GraphLocalizer::InitializeFactorAdders() {
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
   depth_odometry_factor_adder_.reset(new DepthOdometryFactorAdder(params_.factor.depth_odometry_adder));
@@ -90,8 +95,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
+}
 
-  // Initialize Graph Action Completers
+void GraphLocalizer::InitializeGraphActionCompleters() {
   ar_tag_loc_graph_action_completer_.reset(
     new LocGraphActionCompleter(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor,
                                 combined_nav_state_node_updater_->shared_graph_values()));
