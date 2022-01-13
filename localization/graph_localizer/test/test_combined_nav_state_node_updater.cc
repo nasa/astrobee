@@ -121,7 +121,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
   auto params = DefaultGraphLocalizerParams();
   // Use depth odometry factor adder since it can add relative pose factors
   params.factor.depth_odometry_adder = DefaultDepthOdometryFactorAdderParams();
-  constexpr int kInitialVelocity = 0.1;
+  constexpr double kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
   gl::GraphLocalizer graph_localizer(params);
   constexpr int kNumIterations = 100;
@@ -132,6 +132,10 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
   const std::vector<Eigen::Vector3d> zero_vector;
   const lm::DepthCorrespondences correspondences(zero_vector, zero_vector);
   Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
+  // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
+  // measurement is added
+  const lm::ImuMeasurement initial_zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
+  graph_localizer.AddImuMeasurement(initial_zero_imu_measurement);
   for (int i = 0; i < kNumIterations; ++i) {
     time += kTimeDiff;
     const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
@@ -146,19 +150,11 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
     odometry.body_F_source_T_target = source_T_target;
     const lm::DepthOdometryMeasurement constant_velocity_measurement(odometry, correspondences, time);
     graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
-    // Check states before updating
-    {
-      const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
-      ASSERT_TRUE(latest_combined_nav_state != boost::none);
-      EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
-    }
     graph_localizer.Update();
-    // Check states again after updating
-    {
-      const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
-      ASSERT_TRUE(latest_combined_nav_state != boost::none);
-      EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
-    }
+    const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+    ASSERT_TRUE(latest_combined_nav_state != boost::none);
+    EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
+    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
   }
 }
 
@@ -199,6 +195,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAcceleration) {
     graph_localizer.Update();
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
+    EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
     EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
   }
 }
