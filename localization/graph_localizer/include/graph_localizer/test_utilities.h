@@ -19,9 +19,26 @@
 #ifndef GRAPH_LOCALIZER_TEST_UTILITIES_H_
 #define GRAPH_LOCALIZER_TEST_UTILITIES_H_
 
+#include <graph_optimizer/graph_optimizer_params.h>
+#include <graph_localizer/combined_nav_state_graph_values_params.h>
+#include <graph_localizer/depth_odometry_factor_adder_params.h>
+#include <graph_localizer/graph_initializer_params.h>
+#include <graph_localizer/graph_localizer_params.h>
 #include <localization_measurements/plane.h>
 
 namespace graph_localizer {
 localization_measurements::Plane RandomPlane();
+
+CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams();
+
+graph_optimizer::GraphOptimizerParams DefaultGraphOptimizerParams();
+
+CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams();
+
+GraphInitializerParams DefaultGraphInitializerParams();
+
+GraphLocalizerParams DefaultGraphLocalizerParams();
+
+DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams();
 }  // namespace graph_localizer
 #endif  // GRAPH_LOCALIZER_TEST_UTILITIES_H_
