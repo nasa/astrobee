@@ -169,11 +169,13 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationConstantAngularVeloc
     time += kTimeDiff;
     const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
     graph_localizer.AddImuMeasurement(imu_measurement);
+    const Eigen::Matrix3d relative_orientation =
+      (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
     const Eigen::Vector3d relative_translation =
       velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
     velocity += bias_corrected_acceleration * kTimeDiff;
-    const Eigen::Matrix3d relative_orientation =
-      (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
+    // Put velocity in new body frame after integrating accelerations
+    velocity = relative_orientation.transpose() * velocity;
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
     current_pose = current_pose * relative_pose;
     const lc::Time source_time = time - kTimeDiff;
