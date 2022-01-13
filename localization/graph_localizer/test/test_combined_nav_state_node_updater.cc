@@ -118,9 +118,9 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationNonZeroBias) {
   lc::Time time = 0.0;
   Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
   Eigen::Vector3d velocity = params.graph_initializer.global_V_body_start;
-  // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
+  // Add initial zero imu value so the imu integrator has more than one measurement when the subsequent
   // measurement is added
-  const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
+  const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
   graph_localizer.AddImuMeasurement(zero_imu_measurement);
   for (int i = 0; i < kNumIterations; ++i) {
     time += kTimeDiff;
