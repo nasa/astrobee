@@ -26,18 +26,15 @@ find_package(catkin2 REQUIRED COMPONENTS
 	localization_common
 )
 
-# Find OpenCV
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV331 REQUIRED)
-
 find_package(Eigen3 REQUIRED)
 
 # Non-linear optimizer
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Ceres REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include 
-  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} 
+  LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} 
   CATKIN_DEPENDS localization_common 
 )
 
@@ -51,7 +48,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -59,7 +55,7 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES}) 
 
 #############
 ## Install ##

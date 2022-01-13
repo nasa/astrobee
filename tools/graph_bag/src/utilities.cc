@@ -96,10 +96,10 @@ boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(const sensor_msgs
   return feature_track_image->toImageMsg();
 }
 
-cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params) {
+cv::Point2f Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params) {
   Eigen::Vector2d distorted_point;
   params.Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted_point, &distorted_point);
-  return cv::Point(distorted_point.x(), distorted_point.y());
+  return cv::Point2f(distorted_point.x(), distorted_point.y());
 }
 
 std::vector<const SmartFactor*> SmartFactors(const graph_localizer::GraphLocalizer& graph) {

@@ -4,6 +4,8 @@ This folder consists of various sensing algorithms which serve as input to local
 
 \subpage camera
 
+\subpage depthodometry 
+
 \subpage graphlocalizer
 
 \subpage graphoptimizer
@@ -28,8 +30,14 @@ This folder consists of various sensing algorithms which serve as input to local
 
 \subpage opticalflow
 
+\subpage optimizationcommon 
+
+\subpage pointcloudcommon 
+
 \subpage markertracking
 
 \subpage sparsemapping
+
+\subpage visioncommon 
 
 \subpage vive_localization

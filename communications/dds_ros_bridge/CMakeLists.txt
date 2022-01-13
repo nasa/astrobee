@@ -49,8 +49,16 @@ set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-# just calls the normal one
-find_package(Qt4 4.6.0 REQUIRED QtXml)
+# find Qt version according to OS
+find_program(LSB_RELEASE_EXEC lsb_release)
+execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+  find_package(Qt5Xml REQUIRED)
+else ()
+  find_package(Qt4 4.6.0 REQUIRED QtXml)
+endif ()
+
 find_package(Miro REQUIRED)
 find_package(RtiDds REQUIRED)
 find_package(Soracore REQUIRED)
@@ -88,15 +96,22 @@ add_library(dds_ros_bridge
 )
 target_compile_definitions(dds_ros_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(dds_ros_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
-
+if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+  target_link_libraries(dds_ros_bridge rapidIo Qt5::Xml ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+else ()
+  target_link_libraries(dds_ros_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+endif ()
 
 add_library(astrobee_astrobee_bridge
   src/astrobee_astrobee_bridge.cc
 )
 target_compile_definitions(astrobee_astrobee_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(astrobee_astrobee_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(astrobee_astrobee_bridge Qt4::QtXml rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+  target_link_libraries(astrobee_astrobee_bridge Qt5::Xml rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+else ()
+  target_link_libraries(astrobee_astrobee_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+endif ()
 
 
 #############

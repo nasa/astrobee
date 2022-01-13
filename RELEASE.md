@@ -1,5 +1,11 @@
 # Releases
 
+## Release 0.16.1
+
+  * depth odometry
+  * better performance evaluation
+  * multiple other fixes and improvements
+
 ## Release 0.16.0
 
   * project compiles with catkin

@@ -20,6 +20,7 @@
 #define GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_H_
 
 #include <ff_common/utils.h>
+#include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/VisualLandmarks.h>
@@ -51,6 +52,7 @@ class LiveMeasurementSimulator {
   boost::optional<sensor_msgs::ImageConstPtr> GetImageMessage(const localization_common::Time current_time);
   boost::optional<sensor_msgs::Imu> GetImuMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::Feature2dArray> GetOFMessage(const localization_common::Time current_time);
+  boost::optional<ff_msgs::DepthOdometry> GetDepthOdometryMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetVLMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetARMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::FlightMode> GetFlightModeMessage(const localization_common::Time current_time);
@@ -70,6 +72,7 @@ class LiveMeasurementSimulator {
   boost::optional<rosbag::View::iterator> view_it_;
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
   MessageBuffer<sensor_msgs::Imu> imu_buffer_;
+  MessageBuffer<ff_msgs::DepthOdometry> depth_odometry_buffer_;
   MessageBuffer<ff_msgs::FlightMode> flight_mode_buffer_;
   MessageBuffer<ff_msgs::Feature2dArray> of_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> vl_buffer_;

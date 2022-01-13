@@ -18,9 +18,9 @@
 #ifndef CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
 #define CALIBRATION_CAMERA_TARGET_BASED_INTRINSICS_CALIBRATOR_PARAMS_H_
 
-#include <calibration/optimization_params.h>
-#include <calibration/reprojection_pose_estimate_params.h>
 #include <camera/camera_params.h>
+#include <optimization_common/optimization_params.h>
+#include <vision_common/reprojection_pose_estimate_params.h>
 
 #include <Eigen/Core>
 
@@ -29,8 +29,8 @@
 
 namespace calibration {
 struct CameraTargetBasedIntrinsicsCalibratorParams {
-  OptimizationParams optimization;
-  ReprojectionPoseEstimateParams reprojection_pose_estimate;
+  optimization_common::OptimizationParams optimization;
+  vision_common::ReprojectionPoseEstimateParams reprojection_pose_estimate;
   bool calibrate_focal_lengths;
   bool calibrate_principal_points;
   bool calibrate_distortion;

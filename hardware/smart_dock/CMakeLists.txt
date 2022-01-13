@@ -47,8 +47,16 @@ if (USE_DDS)
   SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
   SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-  # just calls the normal one
-  find_package(Qt4 4.6.0 REQUIRED QtXml)
+  # find Qt version according to OS
+  find_program(LSB_RELEASE_EXEC lsb_release)
+  execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+    find_package(Qt5Xml REQUIRED)
+  else ()
+    find_package(Qt4 4.6.0 REQUIRED QtXml)
+  endif ()
+
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
   find_package(Soracore REQUIRED)
@@ -86,8 +94,11 @@ if (USE_DDS)
   )
   target_compile_definitions(smart_dock PUBLIC ${RTIDDS_DEFINE_FLAGS})
   add_dependencies(smart_dock ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(smart_dock rapidIo ${catkin_LIBRARIES})
-
+  if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+    target_link_libraries(smart_dock rapidIo Qt5::Xml ${catkin_LIBRARIES})
+  else ()
+    target_link_libraries(smart_dock rapidIo ${catkin_LIBRARIES})
+  endif ()
   ## Declare a C++ executable: smart_dock_service
   add_executable(smart_dock_service tools/smart_dock_service.cc)
   add_dependencies(smart_dock_service ${catkin_EXPORTED_TARGETS})
