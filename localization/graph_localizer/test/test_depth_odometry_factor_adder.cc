@@ -199,6 +199,7 @@ TEST(DepthOdometryFactorAdderTester, Points) {
 TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
   auto params = gl::DefaultGraphLocalizerParams();
   params.factor.depth_odometry_adder = gl::DefaultDepthOdometryFactorAdderParams();
+  params.factor.depth_odometry_adder.use_points_between_factor = true;
   constexpr double kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
   gl::GraphLocalizer graph_localizer(params);
@@ -206,9 +207,6 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
   constexpr double kTimeDiff = 0.1;
   lc::Time time = 0.0;
   const Eigen::Vector3d relative_translation = kTimeDiff * params.graph_initializer.global_V_body_start;
-  // Don't need correspondences for this
-  const std::vector<Eigen::Vector3d> zero_vector;
-  const lm::DepthCorrespondences correspondences(zero_vector, zero_vector);
   Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
   // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
   // measurement is added
@@ -220,13 +218,12 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
     graph_localizer.AddImuMeasurement(zero_imu_measurement);
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
     current_pose = current_pose * relative_pose;
-    const lc::PoseWithCovariance source_T_target(relative_pose, lc::PoseCovariance::Identity());
-    lm::Odometry odometry;
-    odometry.source_time = time - kTimeDiff;
-    odometry.target_time = time;
-    odometry.sensor_F_source_T_target = source_T_target;
-    odometry.body_F_source_T_target = source_T_target;
-    const lm::DepthOdometryMeasurement constant_velocity_measurement(odometry, correspondences, time);
+    const lc::Time source_time = time - kTimeDiff;
+    const lc::Time target_time = time;
+    lm::DepthOdometryMeasurement constant_velocity_measurement =
+      gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
+    const int num_inliers = 20;
+    AddInlierAndOutlierPoints(num_inliers, 0, 0, constant_velocity_measurement);
     graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
     graph_localizer.Update();
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();

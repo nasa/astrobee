@@ -41,9 +41,6 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
   constexpr double kTimeDiff = 0.1;
   lc::Time time = 0.0;
   const Eigen::Vector3d relative_translation = kTimeDiff * params.graph_initializer.global_V_body_start;
-  // Don't need correspondences for this
-  const std::vector<Eigen::Vector3d> zero_vector;
-  const lm::DepthCorrespondences correspondences(zero_vector, zero_vector);
   Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
   // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
   // measurement is added
@@ -76,9 +73,6 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAcceleration) {
   constexpr int kNumIterations = 100;
   constexpr double kTimeDiff = 0.1;
   lc::Time time = 0.0;
-  // Don't need correspondences for this
-  const std::vector<Eigen::Vector3d> zero_vector;
-  const lm::DepthCorrespondences correspondences(zero_vector, zero_vector);
   Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
   const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
   Eigen::Vector3d velocity = params.graph_initializer.global_V_body_start;
