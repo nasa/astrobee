@@ -59,8 +59,9 @@ add_library(pico_driver
 add_dependencies(pico_driver ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pico_driver ${royale_LIBRARIES} ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
 
-## Declare a C++ executable: bag_to_csv
-add_executable(pico_proxy tools/pico_proxy.cc)
+add_library(pico_proxy
+  src/pico_proxy.cc
+)
 add_dependencies(pico_proxy ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pico_proxy
   pico_driver gflags glog ${catkin_LIBRARIES})
@@ -94,6 +95,11 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+install(TARGETS pico_proxy
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark nodelet_plugin for installation
 install(FILES nodelet_plugins.xml
@@ -101,10 +107,8 @@ install(FILES nodelet_plugins.xml
 )
 
 # Install C++ executables
-install(TARGETS pico_proxy DESTINATION bin)
 install(TARGETS pico_tool DESTINATION bin)
 install(CODE "execute_process(
-  COMMAND ln -s ../../bin/pico_proxy share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/pico_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
   OUTPUT_QUIET

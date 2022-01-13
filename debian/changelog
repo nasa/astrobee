@@ -1,3 +1,11 @@
+astrobee (0.16.1) testing; urgency=medium
+
+  * depth odometry
+  * better performance evaluation
+  * multiple other fixes and improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 12 Jan 2022 14:55:11 -0800
+
 astrobee (0.16.0) testing; urgency=medium
 
   * project compiles with catkin

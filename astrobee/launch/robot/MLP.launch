@@ -38,7 +38,7 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
-          name="mlp_mapper" output="$(arg output)"/>
+          name="mlp_mapper" output="$(arg output)" launch-prefix="nice -n 10"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_management" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
@@ -80,6 +80,16 @@
     <arg name="class" value="handrail_detect/HandrailDetect" />
     <arg name="name" value="handrail_detect" />
     <arg name="manager" value="mlp_depth_cam" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="depth_odometry/DepthOdometryNodelet" />
+    <arg name="name" value="depth_odometry_nodelet" />
+    <arg name="manager" value="mlp_vision" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
     <arg name="extra" value="$(arg extra)" />
@@ -387,7 +397,16 @@
      <arg name="default" value="true" />
    </include>
 
-  <include file="$(find pico_driver)/launch/pico_proxy.launch" />
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="pico_proxy/PicoProxyNodelet" />
+     <arg name="name" value="pico_proxy_haz_cam_extended" />
+     <arg name="manager" value="mlp_depth_cam" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
 
    <!-- Monitors -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">

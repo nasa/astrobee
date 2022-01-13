@@ -3,6 +3,8 @@
 This directory contains tools that are useful for debugging,
 but are not run on the robot.
 
+\subpage calibration
+
 \subpage ekfbag
 
 \subpage ekfvideo
@@ -22,3 +24,7 @@ but are not run on the robot.
 \subpage visualeyez
 
 \subpage dds_profile
+
+\subpage interactive_marker_teleop
+
+\subpage performance_tester

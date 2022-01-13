@@ -36,6 +36,10 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
   localization_common::Averager num_factors_averager_ = localization_common::Averager("Num Factors");
   localization_common::Averager num_features_averager_ = localization_common::Averager("Num Features");
+  localization_common::Averager num_depth_odometry_rel_pose_factors_averager_ =
+    localization_common::Averager("Num Depth Odometry Rel Pose Factors");
+  localization_common::Averager num_depth_odometry_rel_point_factors_averager_ =
+    localization_common::Averager("Num Depth Odometry Rel Point Factors");
   localization_common::Averager num_optical_flow_factors_averager_ =
     localization_common::Averager("Num Optical Flow Factors");
   localization_common::Averager num_loc_proj_factors_averager_ = localization_common::Averager("Num Loc Proj Factors");
@@ -47,6 +51,10 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   localization_common::Averager num_vel_prior_factors_averager_ =
     localization_common::Averager("Num Vel Prior Factors");
   // Factor Error Averagers
+  localization_common::Averager depth_odom_rel_pose_error_averager_ =
+    localization_common::Averager("Depth Odom Rel Pose Factor Error");
+  localization_common::Averager depth_odom_rel_point_error_averager_ =
+    localization_common::Averager("Depth Odom Rel Point Factor Error");
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
   localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");
   localization_common::Averager loc_pose_error_averager_ = localization_common::Averager("Loc Pose Factor Error");
