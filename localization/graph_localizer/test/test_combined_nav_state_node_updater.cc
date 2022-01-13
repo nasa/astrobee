@@ -124,7 +124,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationNonZeroBias) {
   graph_localizer.AddImuMeasurement(zero_imu_measurement);
   for (int i = 0; i < kNumIterations; ++i) {
     time += kTimeDiff;
-    const lm::ImuMeasurement imu_measurement(acceleration, Eigen::Vector3d::Zero(), time);
+    const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
     graph_localizer.AddImuMeasurement(imu_measurement);
     const Eigen::Vector3d relative_translation =
       velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
