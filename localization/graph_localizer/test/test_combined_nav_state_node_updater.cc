@@ -101,6 +101,49 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAcceleration) {
   }
 }
 
+TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationNonZeroBias) {
+  const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
+  const Eigen::Vector3d angular_velocity(0.04, 0.05, 0.06);
+  const Eigen::Vector3d acceleration_bias = 0.5 * acceleration;
+  const Eigen::Vector3d angular_velocity_bias = angular_velocity;
+  const Eigen::Vector3d bias_corrected_acceleration = acceleration - acceleration_bias;
+  const Eigen::Vector3d bias_corrected_angular_velocity = angular_velocity - angular_velocity_bias;
+  auto params = gl::DefaultGraphLocalizerParams();
+  params.graph_initializer.initial_imu_bias = gtsam::imuBias::ConstantBias(acceleration_bias, angular_velocity_bias);
+  // Use depth odometry factor adder since it can add relative pose factors
+  params.factor.depth_odometry_adder = gl::DefaultDepthOdometryFactorAdderParams();
+  gl::GraphLocalizer graph_localizer(params);
+  constexpr int kNumIterations = 100;
+  constexpr double kTimeDiff = 0.1;
+  lc::Time time = 0.0;
+  Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
+  Eigen::Vector3d velocity = params.graph_initializer.global_V_body_start;
+  // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
+  // measurement is added
+  const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
+  graph_localizer.AddImuMeasurement(zero_imu_measurement);
+  for (int i = 0; i < kNumIterations; ++i) {
+    time += kTimeDiff;
+    const lm::ImuMeasurement imu_measurement(acceleration, Eigen::Vector3d::Zero(), time);
+    graph_localizer.AddImuMeasurement(imu_measurement);
+    const Eigen::Vector3d relative_translation =
+      velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
+    velocity += bias_corrected_acceleration * kTimeDiff;
+    const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
+    current_pose = current_pose * relative_pose;
+    const lc::Time source_time = time - kTimeDiff;
+    const lc::Time target_time = time;
+    const lm::DepthOdometryMeasurement constant_acceleration_measurement =
+      gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
+    graph_localizer.AddDepthOdometryMeasurement(constant_acceleration_measurement);
+    graph_localizer.Update();
+    const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+    ASSERT_TRUE(latest_combined_nav_state != boost::none);
+    EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
+    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
