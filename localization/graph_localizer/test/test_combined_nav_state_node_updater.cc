@@ -131,11 +131,13 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
   // Don't need correspondences for this
   const std::vector<Eigen::Vector3d> zero_vector;
   const lm::DepthCorrespondences correspondences(zero_vector, zero_vector);
+  Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
   for (int i = 0; i < kNumIterations; ++i) {
     time += kTimeDiff;
     const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
     graph_localizer.AddImuMeasurement(zero_imu_measurement);
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
+    current_pose = current_pose * relative_pose;
     const lc::PoseWithCovariance source_T_target(relative_pose, lc::PoseCovariance::Identity());
     lm::Odometry odometry;
     odometry.source_time = time - kTimeDiff;
@@ -144,9 +146,20 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
     odometry.body_F_source_T_target = source_T_target;
     const lm::DepthOdometryMeasurement constant_velocity_measurement(odometry, correspondences, time);
     graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
+    // Check states before updating
+    {
+      const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+      ASSERT_TRUE(latest_combined_nav_state != boost::none);
+      EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    }
+    graph_localizer.Update();
+    // Check states again after updating
+    {
+      const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+      ASSERT_TRUE(latest_combined_nav_state != boost::none);
+      EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    }
   }
-  // TODO(rsoussan): check num factors in graph?
-  // TODO(rsoussan): check each graph factor pose after optimization! make sure they are correct!!!
 }
 
 // Run all the tests that were declared with TEST()
