@@ -200,6 +200,7 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
   auto params = gl::DefaultGraphLocalizerParams();
   params.factor.depth_odometry_adder = gl::DefaultDepthOdometryFactorAdderParams();
   params.factor.depth_odometry_adder.use_points_between_factor = true;
+  params.factor.depth_odometry_adder.body_T_sensor = lc::RandomPose();
   constexpr double kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
   gl::GraphLocalizer graph_localizer(params);
@@ -220,8 +221,9 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
     current_pose = current_pose * relative_pose;
     const lc::Time source_time = time - kTimeDiff;
     const lc::Time target_time = time;
-    lm::DepthOdometryMeasurement constant_velocity_measurement =
-      gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
+    lm::DepthOdometryMeasurement constant_velocity_measurement = gl::DepthOdometryMeasurementFromPose(
+      lc::FrameChangeRelativePose(relative_pose, lc::EigenPose(params.factor.depth_odometry_adder.body_T_sensor)),
+      source_time, target_time);
     const int num_inliers = 20;
     AddInlierAndOutlierPoints(num_inliers, 0, 0, constant_velocity_measurement);
     graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
