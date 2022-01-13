@@ -24,10 +24,15 @@
 #include <graph_localizer/depth_odometry_factor_adder_params.h>
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_localizer_params.h>
+#include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/plane.h>
 
 namespace graph_localizer {
 localization_measurements::Plane RandomPlane();
+
+localization_measurements::DepthOdometryMeasurement DepthOdometryMeasurementFromPose(
+  const Eigen::Isometry3d& pose, const localization_common::Time source_time,
+  const localization_common::Time target_time);
 
 CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams();
 

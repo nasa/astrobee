@@ -22,12 +22,27 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace go = graph_optimizer;
 
 localization_measurements::Plane RandomPlane() {
   gtsam::Point3 point = lc::RandomVector();
   gtsam::Vector3 normal = lc::RandomVector().normalized();
   return localization_measurements::Plane(point, normal);
+}
+
+lm::DepthOdometryMeasurement DepthOdometryMeasurementFromPose(const Eigen::Isometry3d& pose, const lc::Time source_time,
+                                                              const lc::Time target_time) {
+  lm::Odometry odometry;
+  odometry.source_time = source_time;
+  odometry.target_time = target_time;
+  odometry.sensor_F_source_T_target.pose = pose;
+  odometry.sensor_F_source_T_target.covariance = Eigen::Matrix<double, 6, 6>::Identity();
+  odometry.body_F_source_T_target.pose = pose;
+  odometry.body_F_source_T_target.covariance = Eigen::Matrix<double, 6, 6>::Identity();
+  std::vector<Eigen::Vector3d> empty_points;
+  lm::DepthCorrespondences correspondences(empty_points, empty_points);
+  return lm::DepthOdometryMeasurement(odometry, correspondences, target_time);
 }
 
 CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams() {
@@ -98,12 +113,14 @@ GraphLocalizerParams DefaultGraphLocalizerParams() {
 
 DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams() {
   DepthOdometryFactorAdderParams params;
+  params.enabled = true;
+  params.huber_k = 1.345;
   params.noise_scale = 1.0;
   params.use_points_between_factor = false;
   params.position_covariance_threshold = 100;
   params.orientation_covariance_threshold = 100;
-  params.point_to_point_error_threshold = 100;
-  params.pose_translation_norm_threshold = 100;
+  params.point_to_point_error_threshold = 100.0;
+  params.pose_translation_norm_threshold = 100.0;
   params.max_num_points_between_factors = 100;
   params.body_T_sensor = gtsam::Pose3::identity();
   params.enabled = true;

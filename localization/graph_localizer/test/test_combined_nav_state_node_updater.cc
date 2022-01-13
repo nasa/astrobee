@@ -55,13 +55,10 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
     graph_localizer.AddImuMeasurement(zero_imu_measurement);
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
     current_pose = current_pose * relative_pose;
-    const lc::PoseWithCovariance source_T_target(relative_pose, lc::PoseCovariance::Identity());
-    lm::Odometry odometry;
-    odometry.source_time = time - kTimeDiff;
-    odometry.target_time = time;
-    odometry.sensor_F_source_T_target = source_T_target;
-    odometry.body_F_source_T_target = source_T_target;
-    const lm::DepthOdometryMeasurement constant_velocity_measurement(odometry, correspondences, time);
+    const lc::Time source_time = time - kTimeDiff;
+    const lc::Time target_time = time;
+    const lm::DepthOdometryMeasurement constant_velocity_measurement =
+      gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
     graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
     graph_localizer.Update();
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
@@ -97,14 +94,11 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAcceleration) {
     velocity += acceleration * kTimeDiff;
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
     current_pose = current_pose * relative_pose;
-    const lc::PoseWithCovariance source_T_target(relative_pose, lc::PoseCovariance::Identity());
-    lm::Odometry odometry;
-    odometry.source_time = time - kTimeDiff;
-    odometry.target_time = time;
-    odometry.sensor_F_source_T_target = source_T_target;
-    odometry.body_F_source_T_target = source_T_target;
-    const lm::DepthOdometryMeasurement constant_velocity_measurement(odometry, correspondences, time);
-    graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
+    const lc::Time source_time = time - kTimeDiff;
+    const lc::Time target_time = time;
+    const lm::DepthOdometryMeasurement constant_acceleration_measurement =
+      gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
+    graph_localizer.AddDepthOdometryMeasurement(constant_acceleration_measurement);
     graph_localizer.Update();
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
