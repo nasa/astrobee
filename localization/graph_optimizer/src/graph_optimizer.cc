@@ -351,6 +351,8 @@ const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { retur
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
+const int GraphOptimizer::num_factors() const { return graph_.size(); }
+
 const boost::optional<gtsam::Marginals>& GraphOptimizer::marginals() const { return marginals_; }
 
 std::shared_ptr<gtsam::Values> GraphOptimizer::shared_values() { return values_; }

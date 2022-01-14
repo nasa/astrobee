@@ -244,6 +244,20 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
       ASSERT_TRUE(latest_timestamp != boost::none);
       EXPECT_NEAR(*latest_timestamp, time, 1e-6);
     }
+    // Check corect factors are in graph
+    {
+      // i + 1 factors for each relative pose factor and imu factor and 3 prior factors for pose, velocity, and bias
+      const int num_relative_factors = std::min(30, i + 1);
+      const int num_prior_factors = 3;
+      // Max 30 relative pose and imu factors due to sliding graph size
+      EXPECT_EQ(graph_localizer.num_factors(), 2 * num_relative_factors + num_prior_factors);
+      const auto imu_factors = graph_localizer.Factors<gtsam::CombinedImuFactor>();
+      EXPECT_EQ(imu_factors.size(), num_relative_factors);
+      const auto rel_pose_factors = graph_localizer.Factors<gtsam::BetweenFactor<gtsam::Pose3>>();
+      EXPECT_EQ(rel_pose_factors.size(), num_relative_factors);
+      // check num prior factors!
+      // make sure priors are on correct nodes!
+    }
   }
 }
 
