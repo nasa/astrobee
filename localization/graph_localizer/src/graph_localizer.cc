@@ -448,6 +448,10 @@ const CombinedNavStateGraphValues& GraphLocalizer::combined_nav_state_graph_valu
   return combined_nav_state_node_updater_->graph_values();
 }
 
+const CombinedNavStateNodeUpdater& GraphLocalizer::combined_nav_state_node_updater() const {
+  return *combined_nav_state_node_updater_;
+}
+
 const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
 
 int GraphLocalizer::NumFeatures() const { return feature_point_node_updater_->NumFeatures(); }

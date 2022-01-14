@@ -199,7 +199,7 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
   constexpr double kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
   gl::GraphLocalizer graph_localizer(params);
-  constexpr int kNumIterations = 3;  // 100;
+  constexpr int kNumIterations = 100;
   constexpr double kTimeDiff = 0.1;
   const int max_num_states_in_sliding_window =
     params.combined_nav_state_node_updater.graph_values.ideal_duration / kTimeDiff;
@@ -233,6 +233,17 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
     const int total_states_added = i + 2;
     EXPECT_EQ(graph_localizer.combined_nav_state_graph_values().NumStates(),
               std::min(total_states_added, max_num_states_in_sliding_window));
+    const auto& combined_nav_state_node_updater = graph_localizer.combined_nav_state_node_updater();
+    // Check latest and oldest timestamps
+    {
+      const auto oldest_timestamp = combined_nav_state_node_updater.OldestTimestamp();
+      ASSERT_TRUE(oldest_timestamp != boost::none);
+      EXPECT_NEAR(*oldest_timestamp,
+                  std::max(0.0, time - params.combined_nav_state_node_updater.graph_values.ideal_duration), 1e-6);
+      const auto latest_timestamp = combined_nav_state_node_updater.LatestTimestamp();
+      ASSERT_TRUE(latest_timestamp != boost::none);
+      EXPECT_NEAR(*latest_timestamp, time, 1e-6);
+    }
   }
 }
 

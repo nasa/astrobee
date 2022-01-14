@@ -122,6 +122,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
 
+  const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
+
  private:
   void InitializeNodeUpdaters();
   void InitializeFactorAdders();
