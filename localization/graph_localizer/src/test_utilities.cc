@@ -57,6 +57,7 @@ go::GraphOptimizerParams DefaultGraphOptimizerParams() {
   go::GraphOptimizerParams params;
   params.verbose = false;
   params.fatal_failures = false;
+  params.log_on_destruction = false;
   params.print_factor_info = false;
   params.use_ceres_params = false;
   params.max_iterations = 4;

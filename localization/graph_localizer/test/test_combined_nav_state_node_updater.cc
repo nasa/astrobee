@@ -24,11 +24,14 @@
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 
+#include <gtsam/inference/Symbol.h>
+
 #include <gtest/gtest.h>
 
 namespace gl = graph_localizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace sym = gtsam::symbol_shorthand;
 
 TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
   auto params = gl::DefaultGraphLocalizerParams();
@@ -255,8 +258,18 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
       EXPECT_EQ(imu_factors.size(), num_relative_factors);
       const auto rel_pose_factors = graph_localizer.Factors<gtsam::BetweenFactor<gtsam::Pose3>>();
       EXPECT_EQ(rel_pose_factors.size(), num_relative_factors);
-      // check num prior factors!
-      // make sure priors are on correct nodes!
+      // Check priors
+      const auto oldest_key_index = graph_localizer.combined_nav_state_graph_values().OldestCombinedNavStateKeyIndex();
+      ASSERT_TRUE(oldest_key_index != boost::none);
+      const auto pose_prior_factors = graph_localizer.Factors<gtsam::PriorFactor<gtsam::Pose3>>();
+      ASSERT_EQ(pose_prior_factors.size(), 1);
+      EXPECT_EQ(sym::P(*oldest_key_index), pose_prior_factors[0]->keys()[0]);
+      const auto velocity_prior_factors = graph_localizer.Factors<gtsam::PriorFactor<gtsam::Velocity3>>();
+      ASSERT_EQ(velocity_prior_factors.size(), 1);
+      EXPECT_EQ(sym::V(*oldest_key_index), velocity_prior_factors[0]->keys()[0]);
+      const auto imu_bias_prior_factors = graph_localizer.Factors<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>();
+      ASSERT_EQ(imu_bias_prior_factors.size(), 1);
+      EXPECT_EQ(sym::B(*oldest_key_index), imu_bias_prior_factors[0]->keys()[0]);
     }
   }
 }
