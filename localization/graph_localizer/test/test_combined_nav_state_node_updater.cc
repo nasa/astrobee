@@ -210,13 +210,15 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
   // measurement is added
   const lm::ImuMeasurement initial_zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
   graph_localizer.AddImuMeasurement(initial_zero_imu_measurement);
+  lc::Time last_time = 0;
   for (int i = 0; i < kNumIterations; ++i) {
+    last_time = time;
     time += kTimeDiff;
     const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
     graph_localizer.AddImuMeasurement(zero_imu_measurement);
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
     current_pose = current_pose * relative_pose;
-    const lc::Time source_time = time - kTimeDiff;
+    const lc::Time source_time = last_time;
     const lc::Time target_time = time;
     const lm::DepthOdometryMeasurement constant_velocity_measurement =
       gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
@@ -229,8 +231,6 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
     // Check num states, ensure window is sliding properly
     // i + 2 since graph is initialized with a starting state and i = 0 also adds a state
     const int total_states_added = i + 2;
-    LogError("total_states_added: " << total_states_added << ", num states in graph: "
-                                    << graph_localizer.combined_nav_state_graph_values().NumStates());
     EXPECT_EQ(graph_localizer.combined_nav_state_graph_values().NumStates(),
               std::min(total_states_added, max_num_states_in_sliding_window));
   }
