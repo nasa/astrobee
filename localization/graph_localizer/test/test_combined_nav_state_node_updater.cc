@@ -197,16 +197,20 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationConstantAngularVeloc
 TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
   auto params = gl::DefaultGraphLocalizerParams();
   params.combined_nav_state_node_updater.graph_values.max_num_states = 1000000;
+  // Add 1e-5 to avoid float comparison issues when sliding window.
+  // In practice, latest_timestamp - ideal_duration shouldn't be identical to a node timestamp
+  // and these float comparisons aren't an issue.  Only an issue in tests.
+  const double ideal_duration = 3.0;
+  params.combined_nav_state_node_updater.graph_values.ideal_duration = ideal_duration + 1e-5;
   // Use depth odometry factor adder since it can add relative pose factors
   params.factor.depth_odometry_adder = gl::DefaultDepthOdometryFactorAdderParams();
   constexpr double kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
   gl::GraphLocalizer graph_localizer(params);
-  constexpr int kNumIterations = 30;  // 100;
+  constexpr int kNumIterations = 100;
   constexpr double kTimeDiff = 0.1;
   // Add 1 for initial state
-  const int max_num_states_in_sliding_window =
-    params.combined_nav_state_node_updater.graph_values.ideal_duration / kTimeDiff + 1;
+  const int max_num_states_in_sliding_window = ideal_duration / kTimeDiff + 1;
   lc::Time time = 0.0;
   const Eigen::Vector3d relative_translation = kTimeDiff * params.graph_initializer.global_V_body_start;
   Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
@@ -216,7 +220,6 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
   graph_localizer.AddImuMeasurement(initial_zero_imu_measurement);
   lc::Time last_time = 0;
   for (int i = 0; i < kNumIterations; ++i) {
-    LogError("new it!: " << i);
     last_time = time;
     time += kTimeDiff;
     const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
@@ -230,18 +233,6 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
     graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
     graph_localizer.Update();
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
-    // tmp print
-    {
-      const auto& combined_nav_state_node_updater = graph_localizer.combined_nav_state_node_updater();
-      const auto oldest_timestamp = combined_nav_state_node_updater.OldestTimestamp();
-      const auto latest_timestamp = combined_nav_state_node_updater.LatestTimestamp();
-      LogError("graph num states: " << graph_localizer.combined_nav_state_graph_values().NumStates());
-      LogError("graph duration: " << graph_localizer.combined_nav_state_graph_values().Duration());
-      LogError("graph latest timestamp: " << *latest_timestamp);
-      LogError("graph oldest timestamp: " << *oldest_timestamp);
-      LogError("time: " << time);
-    }
-
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
     EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
@@ -251,8 +242,7 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
     EXPECT_EQ(graph_localizer.combined_nav_state_graph_values().NumStates(),
               std::min(total_states_added, max_num_states_in_sliding_window));
     const auto& combined_nav_state_node_updater = graph_localizer.combined_nav_state_node_updater();
-    const lc::Time expected_oldest_timestamp =
-      std::max(0.0, time - params.combined_nav_state_node_updater.graph_values.ideal_duration);
+    const lc::Time expected_oldest_timestamp = std::max(0.0, time - ideal_duration);
     // Check latest and oldest timestamps
     {
       const auto oldest_timestamp = combined_nav_state_node_updater.OldestTimestamp();
