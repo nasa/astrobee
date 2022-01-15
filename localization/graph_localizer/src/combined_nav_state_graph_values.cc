@@ -41,6 +41,14 @@ CombinedNavStateGraphValues::CombinedNavStateGraphValues(const CombinedNavStateG
 
 const CombinedNavStateGraphValuesParams& CombinedNavStateGraphValues::params() const { return params_; }
 
+std::vector<lc::Time> CombinedNavStateGraphValues::Timestamps() const {
+  std::vector<lc::Time> timestamps;
+  for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
+    timestamps.emplace_back(timestamp_key_index_pair.first);
+  }
+  return timestamps;
+}
+
 boost::optional<lc::CombinedNavState> CombinedNavStateGraphValues::LatestCombinedNavState() const {
   if (Empty()) {
     LogError("LatestCombinedNavState: No combined nav states available.");
