@@ -288,6 +288,116 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
   }
 }
 
+TEST(CombinedNavStateNodeUpdaterTester, SplitExistingFactor) {
+  auto params = gl::DefaultGraphLocalizerParams();
+  params.combined_nav_state_node_updater.graph_values.max_num_states = 1000000;
+  constexpr double kInitialVelocity = 0.1;
+  params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
+  // Use depth odometry factor adder since it can add relative pose factors
+  params.factor.depth_odometry_adder = gl::DefaultDepthOdometryFactorAdderParams();
+  gl::GraphLocalizer graph_localizer(params);
+  const auto& combined_nav_state_node_updater = graph_localizer.combined_nav_state_node_updater();
+  constexpr double kTimeDiff = 0.1;
+  const lc::Time oldest_time = 0.0;
+  Eigen::Isometry3d initial_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
+  // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
+  // measurement is added
+  const lm::ImuMeasurement initial_zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), oldest_time);
+  graph_localizer.AddImuMeasurement(initial_zero_imu_measurement);
+  const lc::Time latest_time = kTimeDiff;
+  const Eigen::Vector3d latest_relative_translation = latest_time * params.graph_initializer.global_V_body_start;
+  const Eigen::Isometry3d latest_relative_pose =
+    lc::Isometry3d(latest_relative_translation, Eigen::Matrix3d::Identity());
+  const Eigen::Isometry3d latest_pose = initial_pose * latest_relative_pose;
+  // Add latest measurement
+  {
+    const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), latest_time);
+    graph_localizer.AddImuMeasurement(zero_imu_measurement);
+    const lc::Time source_time = oldest_time;
+    const lc::Time target_time = latest_time;
+    const lm::DepthOdometryMeasurement constant_velocity_measurement =
+      gl::DepthOdometryMeasurementFromPose(latest_relative_pose, source_time, target_time);
+    graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
+    graph_localizer.Update();
+    EXPECT_EQ(graph_localizer.combined_nav_state_graph_values().NumStates(), 2);
+    const auto oldest_timestamp = combined_nav_state_node_updater.OldestTimestamp();
+    ASSERT_TRUE(oldest_timestamp != boost::none);
+    EXPECT_NEAR(*oldest_timestamp, oldest_time, 1e-6);
+    const auto latest_timestamp = combined_nav_state_node_updater.LatestTimestamp();
+    ASSERT_TRUE(latest_timestamp != boost::none);
+    EXPECT_NEAR(*latest_timestamp, latest_time, 1e-6);
+    const auto imu_factors = graph_localizer.Factors<gtsam::CombinedImuFactor>();
+    ASSERT_EQ(imu_factors.size(), 1);
+    const auto pose_key_1 = imu_factors[0]->key1();
+    const auto key_1_time = graph_localizer.combined_nav_state_graph_values().Timestamp(sym::P, pose_key_1);
+    ASSERT_TRUE(key_1_time != boost::none);
+    EXPECT_NEAR(*key_1_time, oldest_time, 1e-6);
+    const auto pose_key_2 = imu_factors[0]->key3();
+    const auto key_2_time = graph_localizer.combined_nav_state_graph_values().Timestamp(sym::P, pose_key_2);
+    ASSERT_TRUE(key_2_time != boost::none);
+    EXPECT_NEAR(*key_2_time, latest_time, 1e-6);
+    const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+    ASSERT_TRUE(latest_combined_nav_state != boost::none);
+    EXPECT_NEAR(latest_combined_nav_state->timestamp(), latest_time, 1e-6);
+    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), latest_pose.matrix()));
+  }
+  // Add measurement between initial and latest times
+  {
+    const lc::Time middle_time = kTimeDiff / 2.0;
+    const Eigen::Vector3d middle_relative_translation = middle_time * params.graph_initializer.global_V_body_start;
+    const Eigen::Isometry3d middle_relative_pose =
+      lc::Isometry3d(middle_relative_translation, Eigen::Matrix3d::Identity());
+    const Eigen::Isometry3d middle_pose = initial_pose * middle_relative_pose;
+    const lc::Time source_time = oldest_time;
+    const lc::Time target_time = middle_time;
+    const lm::DepthOdometryMeasurement constant_velocity_measurement =
+      gl::DepthOdometryMeasurementFromPose(middle_relative_pose, source_time, target_time);
+    graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
+    graph_localizer.Update();
+    EXPECT_EQ(graph_localizer.combined_nav_state_graph_values().NumStates(), 3);
+    const auto oldest_timestamp = combined_nav_state_node_updater.OldestTimestamp();
+    ASSERT_TRUE(oldest_timestamp != boost::none);
+    EXPECT_NEAR(*oldest_timestamp, oldest_time, 1e-6);
+    const auto latest_timestamp = combined_nav_state_node_updater.LatestTimestamp();
+    ASSERT_TRUE(latest_timestamp != boost::none);
+    EXPECT_NEAR(*latest_timestamp, latest_time, 1e-6);
+    const auto imu_factors = graph_localizer.Factors<gtsam::CombinedImuFactor>();
+    ASSERT_EQ(imu_factors.size(), 2);
+    // Check middle imu factor
+    {
+      const auto& middle_imu_factor = imu_factors[0];
+      const auto pose_key_1 = middle_imu_factor->key1();
+      const auto key_1_time = graph_localizer.combined_nav_state_graph_values().Timestamp(sym::P, pose_key_1);
+      ASSERT_TRUE(key_1_time != boost::none);
+      EXPECT_NEAR(*key_1_time, oldest_time, 1e-6);
+      const auto pose_key_2 = middle_imu_factor->key3();
+      const auto key_2_time = graph_localizer.combined_nav_state_graph_values().Timestamp(sym::P, pose_key_2);
+      ASSERT_TRUE(key_2_time != boost::none);
+      EXPECT_NEAR(*key_2_time, middle_time, 1e-6);
+      const auto middle_combined_nav_state = graph_localizer.GetCombinedNavState(middle_time);
+      ASSERT_TRUE(middle_combined_nav_state != boost::none);
+      EXPECT_NEAR(middle_combined_nav_state->timestamp(), middle_time, 1e-6);
+      EXPECT_TRUE(lc::MatrixEquality<5>(middle_combined_nav_state->pose().matrix(), middle_pose.matrix()));
+    }
+    // Check latest imu factor
+    {
+      const auto& latest_imu_factor = imu_factors[1];
+      const auto pose_key_1 = latest_imu_factor->key1();
+      const auto key_1_time = graph_localizer.combined_nav_state_graph_values().Timestamp(sym::P, pose_key_1);
+      ASSERT_TRUE(key_1_time != boost::none);
+      EXPECT_NEAR(*key_1_time, middle_time, 1e-6);
+      const auto pose_key_2 = latest_imu_factor->key3();
+      const auto key_2_time = graph_localizer.combined_nav_state_graph_values().Timestamp(sym::P, pose_key_2);
+      ASSERT_TRUE(key_2_time != boost::none);
+      EXPECT_NEAR(*key_2_time, latest_time, 1e-6);
+      const auto latest_combined_nav_state = graph_localizer.GetCombinedNavState(latest_time);
+      ASSERT_TRUE(latest_combined_nav_state != boost::none);
+      EXPECT_NEAR(latest_combined_nav_state->timestamp(), latest_time, 1e-6);
+      EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), latest_pose.matrix()));
+    }
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

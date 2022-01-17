@@ -210,6 +210,14 @@ boost::optional<lc::Time> CombinedNavStateGraphValues::Timestamp(const int key_i
   return boost::none;
 }
 
+boost::optional<lc::Time> CombinedNavStateGraphValues::Timestamp(
+  graph_optimizer::KeyCreatorFunction key_creator_function, const gtsam::Key key) const {
+  for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
+    if (key_creator_function(timestamp_key_index_pair.second) == key) return timestamp_key_index_pair.first;
+  }
+  return boost::none;
+}
+
 boost::optional<int> CombinedNavStateGraphValues::LatestCombinedNavStateKeyIndex() const {
   if (Empty()) {
     LogError("LatestCombinedNavStateKeyIndex: No combined nav states available.");

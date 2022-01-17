@@ -110,6 +110,9 @@ class CombinedNavStateGraphValues : public graph_optimizer::GraphValues {
 
   std::vector<localization_common::Time> Timestamps() const;
 
+  boost::optional<localization_common::Time> Timestamp(graph_optimizer::KeyCreatorFunction key_creator_function,
+                                                       const gtsam::Key key) const;
+
  private:
   // Removes keys from timestamp_key_index_map, values from values
   bool RemoveCombinedNavState(const localization_common::Time timestamp);
