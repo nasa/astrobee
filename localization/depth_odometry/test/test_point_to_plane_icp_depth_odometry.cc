@@ -47,6 +47,11 @@ TEST(PointToPlaneICPDepthOdometryTester, PointToPlaneCubicPoints) {
   ASSERT_TRUE(pose_with_covariance != boost::none);
   EXPECT_PRED2(lc::MatrixEquality<4>, pose_with_covariance->pose_with_covariance.pose.matrix(),
                target_T_source.inverse().matrix());
+  const auto& correspondences = pose_with_covariance->depth_correspondences;
+  for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
+    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
+                 correspondences.target_3d_points[i].matrix());
+  }
 }
 
 TEST(PointToPlaneICPDepthOdometryTester, PointToPlaneDownsampledCubicPoints) {
