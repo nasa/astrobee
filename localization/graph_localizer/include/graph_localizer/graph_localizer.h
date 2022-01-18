@@ -122,7 +122,12 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
 
+  const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
+
  private:
+  void InitializeNodeUpdaters();
+  void InitializeFactorAdders();
+  void InitializeGraphActionCompleters();
   void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                 const boost::optional<gtsam::Marginals>& marginals) final;
 
