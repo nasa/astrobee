@@ -25,6 +25,7 @@ namespace mc = msg_conversions;
 void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params) {
   params.verbose = mc::LoadBool(config, "verbose");
   params.fatal_failures = mc::LoadBool(config, "fatal_failures");
+  params.log_on_destruction = mc::LoadBool(config, "log_on_destruction");
   params.print_factor_info = mc::LoadBool(config, "print_factor_info");
   params.use_ceres_params = mc::LoadBool(config, "use_ceres_params");
   params.max_iterations = mc::LoadInt(config, "max_iterations");
