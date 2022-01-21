@@ -105,6 +105,16 @@ TEST(UtilitiesTester, PrincipalPointProjection) {
   }
 }
 
+TEST(UtilitiesTester, Backprojection) {
+  for (int i = 0; i < 50; ++i) {
+    const auto cam_t_point = vc::RandomFrontFacingPoint();
+    const auto intrinsics = lc::RandomIntrinsics();
+    const auto projected_point = vc::Project(cam_t_point, intrinsics);
+    const auto backprojected_point = vc::Backproject(projected_point, intrinsics, cam_t_point.z());
+    EXPECT_TRUE(lc::MatrixEquality<6>(cam_t_point.matrix(), backprojected_point.matrix()));
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
