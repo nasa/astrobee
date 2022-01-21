@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME}
   src/parameter_reader.cc
   src/surf_feature_detector_and_matcher.cc
   src/test_utilities.cc
+  src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

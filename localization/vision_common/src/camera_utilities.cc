@@ -28,20 +28,6 @@
 namespace vision_common {
 namespace lc = localization_common;
 
-Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics) {
-  return (intrinsics * cam_t_point).hnormalized();
-}
-
-Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv) {
-  Eigen::Vector3d translation;
-  cv::cv2eigen(translation_cv, translation);
-  Eigen::Matrix3d rotation;
-  cv::Mat rotation_cv;
-  cv::Rodrigues(rodrigues_rotation_cv, rotation_cv);
-  cv::cv2eigen(rotation_cv, rotation);
-  return lc::Isometry3d(translation, rotation);
-}
-
 void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, const std::vector<cv::Point3d>& points_3d,
                     const cv::Mat& intrinsics, const int pnp_method, cv::Mat& rotation, cv::Mat& translation) {
   cv::Mat zero_distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));

@@ -18,7 +18,10 @@
 #ifndef VISION_COMMON_UTILITIES_H_
 #define VISION_COMMON_UTILITIES_H_
 
-#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/opencv.hpp>
 
 namespace vision_common {
 template <typename T>
@@ -27,6 +30,20 @@ Eigen::Matrix<T, 2, 1> RelativeCoordinates(const Eigen::Matrix<T, 2, 1>& absolut
 template <typename T>
 Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
                                            const Eigen::Matrix<T, 3, 3>& intrinsics);
+
+Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth);
+
+Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
+
+Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
+
+Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics);
+
+template <typename DISTORTER>
+Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
+                                      const Eigen::VectorXd& distortion_params);
+
+Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
 // Implementation
 template <typename T>
@@ -52,6 +69,14 @@ Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relativ
   const T& p_x = intrinsics(0, 2);
   const T& p_y = intrinsics(1, 2);
   return Eigen::Matrix<T, 2, 1>(relative_point[0] * f_x + p_x, relative_point[1] * f_y + p_y);
+}
+
+template <typename DISTORTER>
+Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
+                                      const Eigen::VectorXd& distortion_params) {
+  const Eigen::Vector2d undistorted_image_point = Project(cam_t_point, intrinsics);
+  const DISTORTER distorter;
+  return distorter.Distort(distortion_params, intrinsics, undistorted_image_point);
 }
 }  // namespace vision_common
 

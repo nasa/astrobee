@@ -105,7 +105,7 @@ RegistrationCorrespondences<DISTORTER>::RegistrationCorrespondences(
     const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
     if (camera_t_target_point.z() <= 0) continue;
     const Eigen::Vector2d image_point =
-      Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics_, distortion);
+      ProjectWithDistortion<DISTORTER>(camera_t_target_point, intrinsics_, distortion);
     correspondences_.AddCorrespondence(image_point, target_t_target_point);
   }
 }

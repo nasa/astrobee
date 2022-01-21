@@ -27,6 +27,7 @@
 #include <vision_common/pose_with_covariance_and_inliers.h>
 #include <vision_common/ransac_pnp_params.h>
 #include <vision_common/reprojection_pose_estimate_params.h>
+#include <vision_common/utilities.h>
 
 #include <Eigen/Geometry>
 
@@ -48,15 +49,6 @@
 #include <vector>
 
 namespace vision_common {
-Eigen::Vector2d Project3dPointToImageSpace(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics);
-
-template <typename DISTORTER>
-Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
-                                                         const Eigen::Matrix3d& intrinsics,
-                                                         const Eigen::VectorXd& distortion_params);
-
-Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
-
 void UndistortedPnP(const std::vector<cv::Point2d>& undistorted_image_points, const std::vector<cv::Point3d>& points_3d,
                     const cv::Mat& intrinsics, const int pnp_method, cv::Mat& rotation, cv::Mat& translation);
 
@@ -107,15 +99,6 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimateWithInitia
   const Eigen::Isometry3d& initial_estimate, const std::vector<int>& initial_inliers);
 
 template <typename DISTORTER>
-Eigen::Vector2d Project3dPointToImageSpaceWithDistortion(const Eigen::Vector3d& cam_t_point,
-                                                         const Eigen::Matrix3d& intrinsics,
-                                                         const Eigen::VectorXd& distortion_params) {
-  const Eigen::Vector2d undistorted_image_point = Project3dPointToImageSpace(cam_t_point, intrinsics);
-  const DISTORTER distorter;
-  return distorter.Distort(distortion_params, intrinsics, undistorted_image_point);
-}
-
-template <typename DISTORTER>
 int Inliers(const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
             const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion,
             const Eigen::Isometry3d& pose_estimate, const double max_inlier_threshold,
@@ -126,7 +109,7 @@ int Inliers(const std::vector<Eigen::Vector2d>& image_points, const std::vector<
     const Eigen::Vector3d& point_3d = points_3d[i];
     const Eigen::Vector3d transformed_point_3d = pose_estimate * point_3d;
     const Eigen::Vector2d projected_image_point =
-      Project3dPointToImageSpaceWithDistortion<DISTORTER>(transformed_point_3d, intrinsics, distortion);
+      ProjectWithDistortion<DISTORTER>(transformed_point_3d, intrinsics, distortion);
     const Eigen::Vector2d error = (image_point - projected_image_point);
     const double error_norm = error.norm();
     if (error_norm <= max_inlier_threshold) {
@@ -320,8 +303,8 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimate(const std
                                                                        const Eigen::Matrix3d& intrinsics,
                                                                        const Eigen::VectorXd& distortion,
                                                                        const ReprojectionPoseEstimateParams& params) {
-  const auto focal_lengths = localization_common::FocalLengths(intrinsics);
-  const auto principal_points = localization_common::PrincipalPoints(intrinsics);
+  const auto focal_lengths = FocalLengths(intrinsics);
+  const auto principal_points = PrincipalPoints(intrinsics);
   return ReprojectionPoseEstimate<DISTORTER>(image_points, points_3d, focal_lengths, principal_points, distortion,
                                              params);
 }
@@ -331,8 +314,8 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimateWithInitia
   const std::vector<Eigen::Vector2d>& image_points, const std::vector<Eigen::Vector3d>& points_3d,
   const Eigen::Matrix3d& intrinsics, const Eigen::VectorXd& distortion, const ReprojectionPoseEstimateParams& params,
   const Eigen::Isometry3d& initial_estimate, const std::vector<int>& initial_inliers) {
-  const auto focal_lengths = localization_common::FocalLengths(intrinsics);
-  const auto principal_points = localization_common::PrincipalPoints(intrinsics);
+  const auto focal_lengths = FocalLengths(intrinsics);
+  const auto principal_points = PrincipalPoints(intrinsics);
   return ReprojectionPoseEstimateWithInitialEstimate<DISTORTER>(
     image_points, points_3d, focal_lengths, principal_points, distortion, params, initial_estimate, initial_inliers);
 }
