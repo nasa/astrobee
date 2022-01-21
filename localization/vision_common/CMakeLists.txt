@@ -101,6 +101,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_pose_estimation
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
+  add_rostest_gtest(test_utilities
+    test/test_utilities.test
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_utilities
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
 
 endif()
 

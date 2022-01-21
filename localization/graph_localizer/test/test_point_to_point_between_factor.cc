@@ -34,8 +34,8 @@ namespace sym = gtsam::symbol_shorthand;
 
 TEST(PointToPointBetweenFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_source = lc::RandomPoint3d();
+    const gtsam::Point3 sensor_t_point_target = lc::RandomPoint3d();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body_source = lc::RandomPose();
     const gtsam::Pose3 world_T_body_target = lc::RandomPose();
@@ -60,7 +60,7 @@ TEST(PointToPointBetweenFactorTester, Jacobian) {
 
 TEST(PointToPointBetweenFactorTester, SamePointAndPoseError) {
   for (int i = 0; i < 50; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_source = lc::RandomPoint3d();
     const gtsam::Point3 sensor_t_point_target = sensor_t_point_source;
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body_source = lc::RandomPose();
@@ -75,8 +75,8 @@ TEST(PointToPointBetweenFactorTester, SamePointAndPoseError) {
 
 TEST(PointToPointBetweenFactorTester, DifferentPointIdentityPosesError) {
   for (int i = 0; i < 50; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_source = lc::RandomPoint3d();
+    const gtsam::Point3 sensor_t_point_target = lc::RandomPoint3d();
     const gtsam::Pose3 body_T_sensor = lc::GtPose(Eigen::Isometry3d::Identity());
     const gtsam::Pose3 world_T_body_source = lc::GtPose(Eigen::Isometry3d::Identity());
     const gtsam::Pose3 world_T_body_target = world_T_body_source;
@@ -91,8 +91,8 @@ TEST(PointToPointBetweenFactorTester, DifferentPointIdentityPosesError) {
 
 TEST(PointToPointBetweenFactorTester, DifferentPointSamePoseError) {
   for (int i = 0; i < 50; ++i) {
-    const gtsam::Point3 sensor_t_point_source = lc::RandomVector();
-    const gtsam::Point3 sensor_t_point_target = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point_source = lc::RandomPoint3d();
+    const gtsam::Point3 sensor_t_point_target = lc::RandomPoint3d();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body_source = lc::RandomPose();
     const gtsam::Pose3 world_T_body_target = world_T_body_source;

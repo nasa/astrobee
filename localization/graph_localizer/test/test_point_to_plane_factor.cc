@@ -34,7 +34,7 @@ namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToPlaneFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point = lc::RandomPoint3d();
     const lm::Plane world_T_handrail_plane = gl::RandomPlane();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body = lc::RandomPose();

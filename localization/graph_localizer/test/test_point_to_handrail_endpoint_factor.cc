@@ -30,9 +30,9 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToHandrailEndpointFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = lc::RandomVector();
-    const gtsam::Point3 world_t_handrail_endpoint_a = lc::RandomVector();
-    const gtsam::Point3 world_t_handrail_endpoint_b = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point = lc::RandomPoint3d();
+    const gtsam::Point3 world_t_handrail_endpoint_a = lc::RandomPoint3d();
+    const gtsam::Point3 world_t_handrail_endpoint_b = lc::RandomPoint3d();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body = lc::RandomPose();
     // Ignore case where sensor point is directly between two endpoints as this leads to a known

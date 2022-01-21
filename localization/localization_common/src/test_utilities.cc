@@ -48,16 +48,17 @@ bool RandomBool() { return RandomDouble(0, 1) < 0.5; }
 
 double Noise(const double stddev) { return RandomGaussianDouble(0.0, stddev); }
 
-Eigen::Vector3d RandomVector() {
-  // Eigen::Vector3 is constrained to [-1, 1]
-  return RandomDouble() * Eigen::Vector3d::Random();
-}
+Eigen::Vector3d RandomVector3d() { return RandomVector<3>(); }
+
+Eigen::Vector3d RandomPoint3d() { return RandomVector<3>(); }
+
+Eigen::Vector2d RandomVector2d() { return RandomVector<2>(); }
 
 gtsam::Pose3 RandomPose() {
   std::random_device dev;
   std::mt19937 rng(dev());
   gtsam::Rot3 rot = gtsam::Rot3::Random(rng);
-  gtsam::Point3 trans = RandomVector();
+  gtsam::Point3 trans = RandomVector<3>();
   return gtsam::Pose3(rot, trans);
 }
 

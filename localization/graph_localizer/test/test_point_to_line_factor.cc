@@ -30,7 +30,7 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToLineFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point = lc::RandomPoint3d();
     const gtsam::Pose3 world_T_line = lc::RandomPose();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body = lc::RandomPose();

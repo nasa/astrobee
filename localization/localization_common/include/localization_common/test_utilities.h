@@ -49,7 +49,14 @@ bool RandomBool();
 double Noise(const double stddev);
 
 // Each index ranges from [-100, 100]
-Eigen::Vector3d RandomVector();
+template <int Dim>
+Eigen::Matrix<double, Dim, 1> RandomVector();
+
+Eigen::Vector3d RandomVector3d();
+
+Eigen::Vector3d RandomPoint3d();
+
+Eigen::Vector2d RandomVector2d();
 
 // Translation ranges from [-100, 100]
 // Rotation spans all possible rotations
@@ -73,6 +80,13 @@ Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& 
 // ASSERT_PRED2.
 template <int TolerancePower = 6>
 bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs);
+
+// Implementation
+template <int Dim>
+Eigen::Matrix<double, Dim, 1> RandomVector() {
+  // Eigen::Matrix::Random() is constrained to [-1, 1]
+  return RandomDouble() * Eigen::Matrix<double, Dim, 1>::Random();
+}
 
 template <int N>
 Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev) {

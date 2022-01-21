@@ -41,9 +41,9 @@ double PointToPlaneError(const gtsam::Point3& point_1, const gtsam::Point3& poin
 
 TEST(UtilitiesTester, PointToPlaneJacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 point_1 = lc::RandomVector();
-    const gtsam::Point3 point_2 = lc::RandomVector();
-    const gtsam::Vector3 normal_2 = lc::RandomVector();
+    const gtsam::Point3 point_1 = lc::RandomPoint3d();
+    const gtsam::Point3 point_2 = lc::RandomPoint3d();
+    const gtsam::Vector3 normal_2 = lc::RandomVector3d();
     const gtsam::Pose3 relative_transform = lc::RandomPose();
     const gtsam::Matrix H = pc::PointToPlaneJacobian(point_1, normal_2, relative_transform);
     const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Pose3>(
@@ -60,8 +60,8 @@ gtsam::Vector3 PointToPointError(const gtsam::Point3& point_1, const gtsam::Poin
 
 TEST(UtilitiesTester, PointToPointJacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 point_1 = lc::RandomVector();
-    const gtsam::Point3 point_2 = lc::RandomVector();
+    const gtsam::Point3 point_1 = lc::RandomPoint3d();
+    const gtsam::Point3 point_2 = lc::RandomPoint3d();
     const gtsam::Pose3 relative_transform = lc::RandomPose();
     const gtsam::Matrix H = pc::PointToPointJacobian(point_1, relative_transform);
     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(

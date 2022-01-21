@@ -42,13 +42,13 @@ namespace sym = gtsam::symbol_shorthand;
 void AddInlierAndOutlierPoints(const int num_inliers, const int num_outliers,
                                const double point_to_point_error_threshold, lm::DepthOdometryMeasurement& measurement) {
   for (int i = 0; i < num_inliers; ++i) {
-    const Eigen::Vector3d source_point = lc::RandomVector();
+    const Eigen::Vector3d source_point = lc::RandomPoint3d();
     const Eigen::Vector3d target_point = measurement.odometry.sensor_F_source_T_target.pose.inverse() * source_point;
     measurement.correspondences.source_3d_points.emplace_back(source_point);
     measurement.correspondences.target_3d_points.emplace_back(target_point);
   }
   for (int i = 0; i < num_outliers; ++i) {
-    const Eigen::Vector3d source_point = lc::RandomVector();
+    const Eigen::Vector3d source_point = lc::RandomPoint3d();
     const Eigen::Vector3d noise(1.1 * point_to_point_error_threshold, 0, 0);
     const Eigen::Vector3d target_point =
       measurement.odometry.sensor_F_source_T_target.pose.inverse() * (source_point + noise);
