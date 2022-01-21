@@ -63,30 +63,30 @@ TEST(UtilitiesTester, IdentityProjection) {
 
 TEST(UtilitiesTester, FocalLengthProjection) {
   Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
-  const double focal_length = 500;
-  const Eigen::Vector2d focal_lengths(focal_length, focal_length);
+  const Eigen::Vector2d focal_lengths(500, 505);
   vc::SetFocalLengths(focal_lengths, intrinsics);
   {
     const Eigen::Vector3d cam_t_point(1, 1, 1);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() * focal_length));
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths)));
   }
   {
     const Eigen::Vector3d cam_t_point(1, 1, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() * focal_length / cam_t_point.z()));
+    EXPECT_TRUE(
+      lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths) / cam_t_point.z()));
   }
   {
     const Eigen::Vector3d cam_t_point(4, 4, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() * focal_length / cam_t_point.z()));
+    EXPECT_TRUE(
+      lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths) / cam_t_point.z()));
   }
 }
 
 TEST(UtilitiesTester, PrincipalPointProjection) {
   Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
-  const double principal_point = 50;
-  const Eigen::Vector2d principal_points(principal_point, principal_point);
+  const Eigen::Vector2d principal_points(50, 53.5);
   vc::SetPrincipalPoints(principal_points, intrinsics);
   {
     const Eigen::Vector3d cam_t_point(1, 1, 1);
