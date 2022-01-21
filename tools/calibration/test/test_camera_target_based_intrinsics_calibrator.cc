@@ -26,6 +26,7 @@
 #include <vision_common/fov_distorter.h>
 #include <vision_common/rad_distorter.h>
 #include <vision_common/radtan_distorter.h>
+#include <vision_common/utilities.h>
 
 #include <gtest/gtest.h>
 
@@ -47,8 +48,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsIdentityDis
   for (int i = 0; i < 10; ++i) {
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
-    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
-    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.focal_lengths = vc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = vc::PrincipalPoints(intrinsics);
     true_state_parameters.distortion = Eigen::VectorXd(1);
     true_state_parameters.distortion[0] = 0.0;
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
@@ -79,8 +80,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsFovDistorti
   for (int i = 0; i < 10; ++i) {
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
-    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
-    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.focal_lengths = vc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = vc::PrincipalPoints(intrinsics);
     true_state_parameters.distortion = vc::RandomFovDistortion();
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
@@ -114,8 +115,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadDistorti
   for (int i = 0; i < 10; ++i) {
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
-    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
-    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.focal_lengths = vc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = vc::PrincipalPoints(intrinsics);
     true_state_parameters.distortion = vc::RandomRadDistortion();
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
@@ -148,8 +149,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadTanDisto
   for (int i = 0; i < 10; ++i) {
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     ca::StateParameters true_state_parameters;
-    true_state_parameters.focal_lengths = lc::FocalLengths(intrinsics);
-    true_state_parameters.principal_points = lc::PrincipalPoints(intrinsics);
+    true_state_parameters.focal_lengths = vc::FocalLengths(intrinsics);
+    true_state_parameters.principal_points = vc::PrincipalPoints(intrinsics);
     true_state_parameters.distortion = vc::RandomRadTanDistortion();
     const auto noisy_state_parameters = ca::AddNoiseToStateParameters(true_state_parameters, focal_lengths_stddev,
                                                                       principal_points_stddev, distortion_stddev);
