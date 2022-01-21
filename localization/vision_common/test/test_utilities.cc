@@ -27,8 +27,7 @@ namespace vc = vision_common;
 TEST(UtilitiesTester, FocalLengths) {
   Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
   const Eigen::Vector2d focal_lengths = lc::RandomVector2d();
-  intrinsics(0, 0) = focal_lengths[0];
-  intrinsics(1, 1) = focal_lengths[1];
+  vc::SetFocalLengths(focal_lengths, intrinsics);
   const auto test_focal_lengths = vc::FocalLengths(intrinsics);
   EXPECT_NEAR(test_focal_lengths[0], focal_lengths[0], 1e-6);
   EXPECT_NEAR(test_focal_lengths[1], focal_lengths[1], 1e-6);
@@ -37,8 +36,7 @@ TEST(UtilitiesTester, FocalLengths) {
 TEST(UtilitiesTester, PrincipalPoints) {
   Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
   const Eigen::Vector2d principal_points = lc::RandomVector2d();
-  intrinsics(0, 2) = principal_points[0];
-  intrinsics(1, 2) = principal_points[1];
+  vc::SetPrincipalPoints(principal_points, intrinsics);
   const auto test_principal_points = vc::PrincipalPoints(intrinsics);
   EXPECT_NEAR(test_principal_points[0], principal_points[0], 1e-6);
   EXPECT_NEAR(test_principal_points[1], principal_points[1], 1e-6);
@@ -64,21 +62,24 @@ TEST(UtilitiesTester, IdentityProjection) {
 }
 
 TEST(UtilitiesTester, FocalLengthProjection) {
-  const Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
+  Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
+  const double focal_length = 500;
+  const Eigen::Vector2d focal_lengths(focal_length, focal_length);
+  vc::SetFocalLengths(focal_lengths, intrinsics);
   {
     const Eigen::Vector3d cam_t_point(1, 1, 1);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, Eigen::Vector2d(1, 1)));
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() * focal_length));
   }
   {
     const Eigen::Vector3d cam_t_point(1, 1, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, Eigen::Vector2d(0.5, 0.5)));
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() * focal_length / cam_t_point.z()));
   }
   {
     const Eigen::Vector3d cam_t_point(4, 4, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, Eigen::Vector2d(2, 2)));
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() * focal_length / cam_t_point.z()));
   }
 }
 

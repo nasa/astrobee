@@ -31,6 +31,10 @@
 #include <vector>
 
 namespace vision_common {
+void SetFocalLengths(const Eigen::Vector2d& focal_lengths, Eigen::Matrix3d& intrinsics);
+
+void SetPrincipalPoints(const Eigen::Vector2d& principal_points, Eigen::Matrix3d& intrinsics);
+
 LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
 
 cv::Mat MarkerImage(const int row_spacing, const int col_spacing, int& num_markers_added,

@@ -27,6 +27,16 @@
 namespace vision_common {
 namespace lc = localization_common;
 
+void SetFocalLengths(const Eigen::Vector2d& focal_lengths, Eigen::Matrix3d& intrinsics) {
+  intrinsics(0, 0) = focal_lengths[0];
+  intrinsics(1, 1) = focal_lengths[1];
+}
+
+void SetPrincipalPoints(const Eigen::Vector2d& principal_points, Eigen::Matrix3d& intrinsics) {
+  intrinsics(0, 2) = principal_points[0];
+  intrinsics(1, 2) = principal_points[1];
+}
+
 LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetectorAndMatcherParams() {
   LKOpticalFlowFeatureDetectorAndMatcherParams params;
   params.max_iterations = 10;
