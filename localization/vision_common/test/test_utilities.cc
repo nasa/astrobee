@@ -83,6 +83,28 @@ TEST(UtilitiesTester, FocalLengthProjection) {
   }
 }
 
+TEST(UtilitiesTester, PrincipalPointProjection) {
+  Eigen::Matrix3d intrinsics = Eigen::Matrix3d::Identity();
+  const double principal_point = 50;
+  const Eigen::Vector2d principal_points(principal_point, principal_point);
+  vc::SetPrincipalPoints(principal_points, intrinsics);
+  {
+    const Eigen::Vector3d cam_t_point(1, 1, 1);
+    const auto projected_point = vc::Project(cam_t_point, intrinsics);
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() + principal_points));
+  }
+  {
+    const Eigen::Vector3d cam_t_point(1, 1, 2);
+    const auto projected_point = vc::Project(cam_t_point, intrinsics);
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() / cam_t_point.z() + principal_points));
+  }
+  {
+    const Eigen::Vector3d cam_t_point(4, 4, 2);
+    const auto projected_point = vc::Project(cam_t_point, intrinsics);
+    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() / cam_t_point.z() + principal_points));
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
