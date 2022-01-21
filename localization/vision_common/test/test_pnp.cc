@@ -18,8 +18,8 @@
 
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <vision_common/camera_utilities.h>
 #include <vision_common/identity_distorter.h>
+#include <vision_common/pose_estimation.h>
 #include <vision_common/test_utilities.h>
 
 #include <opencv2/calib3d/calib3d.hpp>

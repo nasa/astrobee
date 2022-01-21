@@ -52,10 +52,10 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/brisk_feature_detector_and_matcher.cc
-  src/camera_utilities.cc
   src/good_features_to_track_detector.cc
   src/lk_optical_flow_feature_detector_and_matcher.cc
   src/parameter_reader.cc
+  src/pose_estimation.cc
   src/surf_feature_detector_and_matcher.cc
   src/test_utilities.cc
   src/utilities.cc
@@ -94,11 +94,11 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_pnp
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
-  add_rostest_gtest(test_camera_utilities
-    test/test_camera_utilities.test
-    test/test_camera_utilities.cc
+  add_rostest_gtest(test_pose_estimation
+    test/test_pose_estimation.test
+    test/test_pose_estimation.cc
   )
-  target_link_libraries(test_camera_utilities
+  target_link_libraries(test_pose_estimation
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
 

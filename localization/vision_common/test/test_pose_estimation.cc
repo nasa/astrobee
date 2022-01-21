@@ -18,8 +18,8 @@
 
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <vision_common/camera_utilities.h>
 #include <vision_common/identity_distorter.h>
+#include <vision_common/pose_estimation.h>
 #include <vision_common/test_utilities.h>
 
 #include <gtest/gtest.h>
@@ -27,7 +27,7 @@
 namespace lc = localization_common;
 namespace oc = optimization_common;
 namespace vc = vision_common;
-TEST(CameraUtilitiesTester, Inliers) {
+TEST(PoseEstimationTester, Inliers) {
   const auto params = vc::DefaultReprojectionPoseEstimateParams();
   const double inlier_threshold = 3.0;
   const int num_desired_points = 20;

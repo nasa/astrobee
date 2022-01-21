@@ -21,8 +21,8 @@
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 #include <optimization_common/optimization_params.h>
-#include <vision_common/camera_utilities.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <vision_common/pose_estimation.h>
 #include <vision_common/ransac_pnp_params.h>
 #include <vision_common/reprojection_pose_estimate_params.h>
 

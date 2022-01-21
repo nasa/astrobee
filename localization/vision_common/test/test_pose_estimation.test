@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="vision_common" type="test_camera_utilities" test-name="test_camera_utilities" />
+  <test pkg="vision_common" type="test_pose_estimation" test-name="test_pose_estimation" />
 </launch>

@@ -17,7 +17,7 @@
  */
 
 #include <localization_common/utilities.h>
-#include <vision_common/camera_utilities.h>
+#include <vision_common/pose_estimation.h>
 
 #include <opencv2/core/eigen.hpp>
 

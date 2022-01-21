@@ -22,7 +22,7 @@
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 #include <optimization_common/utilities.h>
-#include <vision_common/camera_utilities.h>
+#include <vision_common/pose_estimation.h>
 
 #include <Eigen/Geometry>
 

@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef VISION_COMMON_CAMERA_UTILITIES_H_
-#define VISION_COMMON_CAMERA_UTILITIES_H_
+#ifndef VISION_COMMON_POSE_ESTIMATION_H_
+#define VISION_COMMON_POSE_ESTIMATION_H_
 
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/logger.h>
@@ -320,4 +320,4 @@ boost::optional<PoseWithCovarianceAndInliers> ReprojectionPoseEstimateWithInitia
     image_points, points_3d, focal_lengths, principal_points, distortion, params, initial_estimate, initial_inliers);
 }
 }  // namespace vision_common
-#endif  // VISION_COMMON_CAMERA_UTILITIES_H_
+#endif  // VISION_COMMON_POSE_ESTIMATION_H_
