@@ -20,6 +20,8 @@
 
 #include <Eigen/Geometry>
 
+#include <gtsam/base/Matrix.h>
+
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -31,13 +33,15 @@ template <typename T>
 Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relative_point,
                                            const Eigen::Matrix<T, 3, 3>& intrinsics);
 
-Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth);
+Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth,
+                            boost::optional<gtsam::Matrix&> d_backprojected_point_d_inverse_depth = boost::none);
 
 Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
 
 Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
 
-Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics);
+Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
+                        boost::optional<gtsam::Matrix&> d_projected_point_d_cam_t_point = boost::none);
 
 template <typename DISTORTER>
 Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,

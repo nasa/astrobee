@@ -26,6 +26,9 @@ find_package(catkin2 REQUIRED COMPONENTS
   localization_common optimization_common 
 )
 
+# Find GTSAM
+find_package(GTSAM REQUIRED)
+
 # Find OpenCV3
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
@@ -34,7 +37,7 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include 
-  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES}  
+  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${GTSAM_LIBRARIES} gtsam 
   CATKIN_DEPENDS localization_common optimization_common 
 )
 
@@ -45,6 +48,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${GTSAM_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
 )
@@ -61,7 +65,7 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} gtsam ${OpenCV_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)

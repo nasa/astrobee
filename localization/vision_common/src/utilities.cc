@@ -22,7 +22,8 @@
 namespace vision_common {
 namespace lc = localization_common;
 
-Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth) {
+Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth,
+                            boost::optional<gtsam::Matrix&> d_backprojected_point_d_inverse_depth) {
   Eigen::Vector3d point_3d(0, 0, depth);
   point_3d.head<2>() = depth * RelativeCoordinates(measurement, intrinsics);
   return point_3d;
@@ -36,7 +37,8 @@ Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
   return Eigen::Vector2d(intrinsics(0, 2), intrinsics(1, 2));
 }
 
-Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics) {
+Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
+                        boost::optional<gtsam::Matrix&> d_projected_point_d_cam_t_point) {
   return (intrinsics * cam_t_point).hnormalized();
 }
 
