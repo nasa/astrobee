@@ -132,6 +132,22 @@ TEST(UtilitiesTester, Backprojection) {
   }
 }
 
+TEST(UtilitiesTester, BackprojectJacobian) {
+  for (int i = 0; i < 500; ++i) {
+    const gtsam::Point2 measurement = lc::RandomVector<2>();
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+    const double z = lc::RandomPositiveDouble();
+    const auto noise = gtsam::noiseModel::Unit::Create(3);
+    gtsam::Matrix H;
+    const auto backprojection = vc::Backproject(measurement, intrinsics, z, H);
+    const auto numerical_H = gtsam::numericalDerivative11<Eigen::Vector3d, double>(
+      boost::function<Eigen::Vector3d(const double)>(
+        boost::bind(&vc::Backproject, measurement, intrinsics, _1, boost::none)),
+      z, 1e-5);
+    EXPECT_TRUE(lc::MatrixEquality<6>(numerical_H.matrix(), H.matrix()));
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

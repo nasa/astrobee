@@ -34,7 +34,7 @@ Eigen::Matrix<T, 2, 1> AbsoluteCoordinates(const Eigen::Matrix<T, 2, 1>& relativ
                                            const Eigen::Matrix<T, 3, 3>& intrinsics);
 
 Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth,
-                            boost::optional<gtsam::Matrix&> d_backprojected_point_d_inverse_depth = boost::none);
+                            gtsam::OptionalJacobian<3, 1> d_backprojected_point_d_inverse_depth = boost::none);
 
 Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
 

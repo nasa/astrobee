@@ -23,7 +23,11 @@ namespace vision_common {
 namespace lc = localization_common;
 
 Eigen::Vector3d Backproject(const Eigen::Vector2d& measurement, const Eigen::Matrix3d& intrinsics, const double depth,
-                            boost::optional<gtsam::Matrix&> d_backprojected_point_d_inverse_depth) {
+                            gtsam::OptionalJacobian<3, 1> d_backprojected_point_d_inverse_depth) {
+  if (d_backprojected_point_d_inverse_depth) {
+    *d_backprojected_point_d_inverse_depth << (measurement.x() - intrinsics(0, 2)) / intrinsics(0, 0),
+      (measurement.y() - intrinsics(1, 2)) / intrinsics(1, 1), 1;
+  }
   Eigen::Vector3d point_3d(0, 0, depth);
   point_3d.head<2>() = depth * RelativeCoordinates(measurement, intrinsics);
   return point_3d;
