@@ -41,7 +41,7 @@ Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
 Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
 
 Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
-                        boost::optional<gtsam::Matrix&> d_projected_point_d_cam_t_point = boost::none);
+                        gtsam::OptionalJacobian<2, 3> d_projected_point_d_cam_t_point = boost::none);
 
 template <typename DISTORTER>
 Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
