@@ -20,6 +20,9 @@
 #include <localization_common/test_utilities.h>
 #include <vision_common/test_utilities.h>
 
+#include <gtsam/base/numericalDerivative.h>
+#include <gtsam/linear/NoiseModel.h>
+
 #include <gtest/gtest.h>
 
 namespace lc = localization_common;
@@ -102,6 +105,20 @@ TEST(UtilitiesTester, PrincipalPointProjection) {
     const Eigen::Vector3d cam_t_point(4, 4, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
     EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() / cam_t_point.z() + principal_points));
+  }
+}
+
+TEST(UtilitiesTester, ProjectionJacobian) {
+  for (int i = 0; i < 500; ++i) {
+    const gtsam::Point3 cam_t_point = lc::RandomPoint3d();
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+    const auto noise = gtsam::noiseModel::Unit::Create(2);
+    gtsam::Matrix H;
+    const auto projection = vc::Project(cam_t_point, intrinsics, H);
+    const auto numerical_H = gtsam::numericalDerivative11<Eigen::Vector2d, Eigen::Vector3d>(
+      boost::function<Eigen::Vector2d(const Eigen::Vector3d&)>(boost::bind(&vc::Project, _1, intrinsics, boost::none)),
+      cam_t_point, 1e-5);
+    EXPECT_TRUE(lc::MatrixEquality<6>(numerical_H.matrix(), H.matrix()));
   }
 }
 

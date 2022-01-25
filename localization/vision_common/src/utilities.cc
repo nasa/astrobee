@@ -39,6 +39,11 @@ Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
 
 Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3d& intrinsics,
                         boost::optional<gtsam::Matrix&> d_projected_point_d_cam_t_point) {
+  if (d_projected_point_d_cam_t_point) {
+    const double pz_2 = cam_t_point.z() * cam_t_point.z();
+    *d_projected_point_d_cam_t_point << intrinsics(0, 0), intrinsics(0, 1), intrinsics(0, 2) - pz_2, 0,
+      intrinsics(1, 1), intrinsics(1, 2) - pz_2;
+  }
   return (intrinsics * cam_t_point).hnormalized();
 }
 
