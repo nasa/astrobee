@@ -39,6 +39,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   localization_common
   localization_measurements
   msg_conversions
+  vision_common
 )
 
 # Find OpenCV
@@ -59,6 +60,7 @@ catkin_package(
     localization_common
     localization_measurements
     msg_conversions
+    vision_common
 )
 
 ###########

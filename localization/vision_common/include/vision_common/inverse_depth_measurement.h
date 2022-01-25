@@ -16,13 +16,10 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_INVERSE_DEPTH_MEASUREMENT_H_
-#define GRAPH_LOCALIZER_INVERSE_DEPTH_MEASUREMENT_H_
+#ifndef VISION_COMMON_INVERSE_DEPTH_MEASUREMENT_H_
+#define VISION_COMMON_INVERSE_DEPTH_MEASUREMENT_H_
 
-#include <gtsam/base/Vector.h>
-#include <gtsam/base/VectorSpace.h>
-
-namespace gtsam {
+namespace vision_common {
 
 /**
  * Optimizable inverse depth parameterization for a landmark point using a (u,v)
@@ -31,7 +28,7 @@ namespace gtsam {
  * point to a 3d point.
  */
 
-class InverseDepthMeasurement : public : Vector1 {
+class InverseDepthMeasurement {
   InverseDepthMeasurement(const double inverse_depth, const Eigen::Vector2d& image_coordinates,
                           const Eigen::Matrix3d& intrinsics, const Pose3& body_T_sensor)
       : Vector1(inverse_depth),
@@ -42,8 +39,8 @@ class InverseDepthMeasurement : public : Vector1 {
   Eigen::Vector3d Backproject() const { return vision_common::Backproject(image_coordinates_, intrinsics_, depth()); }
 
   Eigen::Vector2d Project(const gtsam::Pose3& world_T_source, const gtsam::Pose3& world_T_target,
-                          boost::optional<Matrix&> d_projected_point_d_world_T_target = boost::none,
                           boost::optional<Matrix&> d_projected_point_d_world_T_source = boost::none,
+                          boost::optional<Matrix&> d_projected_point_d_world_T_target = boost::none,
                           boost::optional<Matrix&> d_projected_point_d_inverse_depth = boost::none) {
     // projected_point = (project(target_T_source*backproject(inverse_depth)))
     // call backproject(inverse_depth) = source_t_point
@@ -98,6 +95,6 @@ class InverseDepthMeasurement : public : Vector1 {
   Pose3 body_T_sensor_;
 }
 
-}  // namespace gtsam
+}  // namespace vision_common
 
-#endif  // GRAPH_LOCALIZER_INVERSE_DEPTH_MEASUREMENT_H_
+#endif  // VISION_COMMON_INVERSE_DEPTH_MEASUREMENT_H_

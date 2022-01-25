@@ -19,7 +19,7 @@
 #ifndef GRAPH_LOCALIZER_INVERSE_DEPTH_PROJECTION_FACTOR_H_
 #define GRAPH_LOCALIZER_INVERSE_DEPTH_PROJECTION_FACTOR_H_
 
-#include <graph_localizer/inverse_depth_measurement.h>
+#include <vision_common/inverse_depth_measurement.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
@@ -34,7 +34,7 @@ namespace gtsam {
  * calibration is known and the landmark point is represented using the inverse depth parameterization.
  * Adapted from gtsam GenericProjectionFactor.
  */
-class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, Pose3, InverseDepthMeasurement> {
+class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_common::InverseDepthMeasurement, Pose3> {
  protected:
   // Keep a copy of measurement and calibration for I/O
   Point2 measured_;  ///< 2D measurement
@@ -47,7 +47,7 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, Pose3, Inve
 
  public:
   /// shorthand for base class type
-  typedef NoiseModelFactor3<Pose3, Pose3, InverseDepthMeasurement> Base;
+  typedef NoiseModelFactor3<Pose3, vision_common::InverseDepthMeasurement, Pose3> Base;
 
   /// shorthand for a smart pointer to a factor
   typedef boost::shared_ptr<InverseDepthFactor> shared_ptr;
@@ -60,15 +60,13 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, Pose3, Inve
    * @param measured is the 2 dimensional location of point in image (the
    * measurement)
    * @param model is the standard deviation
-   * @param poseKey is the index of the camera
-   * @param pointKey is the index of the landmark
-   * @param K shared pointer to the constant calibration
-   * @param body_P_sensor is the transform from body to sensor frame (default
-   * identity)
+   * @param sourcePoseKey is the index of the source camera
+   * @param inverseDepthMeasurementKey is the index of the inverse depth measurement
+   * @param targetPoseKey is the index of the target camera
    */
-  InverseDepthProjectionFactor(const Point2& measured, const SharedNoiseModel& model, Key poseKey,
-                               Key inverseDepthCameraPoseKey, Key inverseDepthMeasurementKey)
-      : Base(model, poseKey, inverseDepthCameraPoseKey, inverseDepthMeasurementKey),
+  InverseDepthProjectionFactor(const Point2& measured, const SharedNoiseModel& model, Key sourcePoseKey,
+                               Key inverseDepthMeasurementKey, Key targetPoseKey)
+      : Base(model, sourcePoseKey, inverseDepthMeasurementKey, targetPoseKey),
         measured_(measured),
         throwCheirality_(false),
         verboseCheirality_(false) {}
@@ -78,20 +76,18 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, Pose3, Inve
    * @param measured is the 2 dimensional location of point in image (the
    * measurement)
    * @param model is the standard deviation
-   * @param poseKey is the index of the camera
-   * @param pointKey is the index of the landmark
-   * @param K shared pointer to the constant calibration
+   * @param sourcePoseKey is the index of the source camera
+   * @param inverseDepthMeasurementKey is the index of the inverse depth measurement
+   * @param targetPoseKey is the index of the target camera
    * @param throwCheirality determines whether Cheirality exceptions are
    * rethrown
    * @param verboseCheirality determines whether exceptions are printed for
    * Cheirality
-   * @param body_P_sensor is the transform from body to sensor frame  (default
-   * identity)
    */
-  InverseDepthProjectionFactor(const Point2& measured, const SharedNoiseModel& model, Key poseKey,
-                               Key inverseDepthCameraPoseKey, Key inverseDepthMeasurementKey, bool throwCheirality,
+  InverseDepthProjectionFactor(const Point2& measured, const SharedNoiseModel& model, Key sourcePoseKey,
+                               Key inverseDepthCameraPoseKey, Key targetPoseKey, bool throwCheirality,
                                bool verboseCheirality)
-      : Base(model, poseKey, inverseDepthCameraPoseKey, inverseDepthMeasurementKey),
+      : Base(model, sourcePoseKey, inverseDepthCameraPoseKey, targetPoseKey),
         measured_(measured),
         throwCheirality_(throwCheirality),
         verboseCheirality_(verboseCheirality) {}
@@ -122,15 +118,20 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, Pose3, Inve
   }
 
   /// Evaluate error h(x)-z and optionally derivatives
-  Vector evaluateError(const Pose3& pose, const Pose3& inverseDepthCameraPose,
-                       const InverseDepthMeasurement& inverseDepthMeasurement,
-                       boost::optional<Matrix&> H1 = boost::none, boost::optional<Matrix&> H2 = boost::none,
-                       boost::optional<Matrix&> H3 = boost::none) const {
+  Vector evaluateError(const Pose3& world_T_source,
+                       const vision_common::InverseDepthMeasurement& inverseDepthMeasurement,
+                       const Pose3& world_T_target,
+                       boost::optional<Matrix&> d_projected_point_d_world_T_source = boost::none,
+                       boost::optional<Matrix&> d_projected_point_d_inverse_depth = boost::none,
+                       boost::optional<Matrix&> d_projected_point_d_world_T_target = boost::none) const {
     try {
-      return inverseDepthMeasurement.Project(inverseDepthCameraPose, pose, H1, H2) - measured_;
+      return inverseDepthMeasurement.Project(world_T_source, world_T_target, d_projected_point_d_world_T_source,
+                                             d_projected_point_d_world_T_target, d_projected_point_d_inverse_depth) -
+             measured_;
     } catch (CheiralityException& e) {
-      if (H0) *H0 = Matrix::Zero(2, 6);
-      if (H1) *H1 = Matrix::Zero(2, 1);
+      if (d_projected_point_d_world_T_source) *d_projected_point_d_world_T_source = Matrix::Zero(2, 6);
+      if (d_projected_point_d_world_T_target) *d_projected_point_d_world_T_target = Matrix::Zero(2, 6);
+      if (d_projected_point_d_inverse_depth) *d_projected_point_d_inverse_depth = Matrix::Zero(2, 1);
       if (verboseCheirality_)
         std::cout << e.what() << ": Landmark moved behind camera " << DefaultKeyFormatter(this->key()) << std::endl;
       if (throwCheirality_) throw CheiralityException(this->key());
