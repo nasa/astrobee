@@ -57,9 +57,9 @@ class InverseDepthMeasurement {
     if (d_projected_point_d_world_T_source_body || d_projected_point_d_world_T_target_body ||
         d_projected_point_d_inverse_depth) {
       // Jacobian Calculations:
-      // projected_point = (project(target_T_source_sensor*backproject(inverse_depth)))
-      // call backproject(inverse_depth) = source_t_point
-      // call target_T_source_sensor* source_t_point = target_t_point
+      // projected_point = (project(target_sensor_T_source_sensor*backproject(inverse_depth)))
+      // call backproject(inverse_depth) = source_sensor_t_point
+      // call target_sensor_T_source_sensor* source_sensor_t_point = target_sensor_t_point
       // Pose Jacobians:
       // d_projected_point_d_world_T_source_body = d_projected_point_d_target_sensor_t_point *
       // d_target_sensor_t_point_d_world_T_source_sensor * d_world_T_source_sensor_d_world_T_source_body
@@ -144,16 +144,17 @@ class InverseDepthMeasurement {
       world_T_source_body.compose(body_T_sensor_, d_world_T_source_sensor_d_world_T_source_body);
     const gtsam::Pose3 world_T_target_sensor =
       world_T_target_body.compose(body_T_sensor_, d_world_T_target_sensor_d_world_T_target_body);
-    const Eigen::Vector3d source_t_point = Backproject(d_source_sensor_t_point_d_inverse_depth);
-    const gtsam::Pose3 target_T_world = world_T_target_sensor.inverse(d_target_sensor_T_world_d_world_T_target_sensor);
-    const gtsam::Pose3 target_T_source_sensor =
-      target_T_world.compose(world_T_source_sensor, d_target_sensor_T_source_sensor_d_target_sensor_T_world,
-                             d_target_sensor_T_source_sensor_d_world_T_source_sensor);
-    const Eigen::Vector3d target_t_point =
-      target_T_source_sensor.transformFrom(source_t_point, d_target_sensor_t_point_d_target_sensor_T_source_sensor,
-                                           d_target_sensor_t_point_d_source_sensor_t_point);
-    if (target_t_point.z() < 0) return boost::none;
-    return vision_common::Project(target_t_point, intrinsics_, d_projected_point_d_target_sensor_t_point);
+    const Eigen::Vector3d source_sensor_t_point = Backproject(d_source_sensor_t_point_d_inverse_depth);
+    const gtsam::Pose3 target_sensor_T_world =
+      world_T_target_sensor.inverse(d_target_sensor_T_world_d_world_T_target_sensor);
+    const gtsam::Pose3 target_sensor_T_source_sensor =
+      target_sensor_T_world.compose(world_T_source_sensor, d_target_sensor_T_source_sensor_d_target_sensor_T_world,
+                                    d_target_sensor_T_source_sensor_d_world_T_source_sensor);
+    const Eigen::Vector3d target_sensor_t_point = target_sensor_T_source_sensor.transformFrom(
+      source_sensor_t_point, d_target_sensor_t_point_d_target_sensor_T_source_sensor,
+      d_target_sensor_t_point_d_source_sensor_t_point);
+    if (target_sensor_t_point.z() < 0) return boost::none;
+    return vision_common::Project(target_sensor_t_point, intrinsics_, d_projected_point_d_target_sensor_t_point);
   }
 
   Eigen::Vector2d image_coordinates_;
