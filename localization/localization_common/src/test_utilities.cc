@@ -91,6 +91,10 @@ Eigen::Matrix3d RandomIntrinsics() {
   return intrinsics;
 }
 
+Eigen::Isometry3d RandomIdentityCenteredIsometry3d(const double translation_stddev, const double rotation_stddev) {
+  return AddNoiseToIsometry3d(Eigen::Isometry3d::Identity(), translation_stddev, rotation_stddev);
+}
+
 Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
                                        const double rotation_stddev) {
   const double mean = 0.0;

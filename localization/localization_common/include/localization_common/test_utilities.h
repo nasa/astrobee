@@ -71,6 +71,9 @@ Eigen::Affine3d RandomAffine3d();
 // Focal lengths and principal points selected from [0.1, 1000]
 Eigen::Matrix3d RandomIntrinsics();
 
+// Adds noise to identity Isometry3d
+Eigen::Isometry3d RandomIdentityCenteredIsometry3d(const double translation_stddev, const double rotation_stddev);
+
 Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
                                        const double rotation_stddev);
 
