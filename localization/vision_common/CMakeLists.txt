@@ -69,6 +69,13 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} gtsam ${OpenCV_LIBRARI
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  add_rostest_gtest(test_inverse_depth_measurement
+    test/test_inverse_depth_measurement.test
+    test/test_inverse_depth_measurement.cc
+  )
+  target_link_libraries(test_inverse_depth_measurement
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
   add_rostest_gtest(test_lk_optical_flow_feature_detector_and_matcher
     test/test_lk_optical_flow_feature_detector_and_matcher.test
     test/test_lk_optical_flow_feature_detector_and_matcher.cc
@@ -76,7 +83,6 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_lk_optical_flow_feature_detector_and_matcher
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_ransac_pnp
     test/test_ransac_pnp.test
     test/test_ransac_pnp.cc
