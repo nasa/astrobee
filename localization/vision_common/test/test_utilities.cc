@@ -124,7 +124,7 @@ TEST(UtilitiesTester, ProjectionJacobian) {
 
 TEST(UtilitiesTester, Backprojection) {
   for (int i = 0; i < 50; ++i) {
-    const auto cam_t_point = vc::RandomFrontFacingPoint();
+    const auto cam_t_point = lc::RandomFrontFacingPoint();
     const auto intrinsics = lc::RandomIntrinsics();
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
     const auto backprojected_point = vc::Backproject(projected_point, intrinsics, cam_t_point.z());

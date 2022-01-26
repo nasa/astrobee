@@ -31,8 +31,8 @@ namespace vc = vision_common;
 
 TEST(InverseDepthMeasurementTester, Backproject) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 cam_t_measurement = vc::RandomFrontFacingPoint();
-    const gtsam::Pose3 body_T_cam = lc::GtPose(vc::RandomFrontFacingPose());
+    const gtsam::Point3 cam_t_measurement = lc::RandomFrontFacingPoint();
+    const gtsam::Pose3 body_T_cam = lc::GtPose(lc::RandomFrontFacingPose());
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     const auto source_measurement = vc::Project(cam_t_measurement, intrinsics);
     vc::InverseDepthMeasurement inverse_depth_measurement(1.0 / cam_t_measurement.z(), source_measurement, intrinsics,

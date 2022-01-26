@@ -21,6 +21,8 @@
 
 #include <gtsam/geometry/Pose3.h>
 
+#include <vector>
+
 namespace localization_common {
 class Sampler {
  public:
@@ -74,6 +76,23 @@ Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const doub
 
 template <int N>
 Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev);
+
+// Samples in cylindrical coordinates for pose translation to keep pose in view frustrum.
+// Samples z using scaled rho value to prevent large z vals with small rho values
+// that may move the pose out of the view frustrum.
+Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_max, const double phi_min,
+                                        const double phi_max, const double z_rho_scale, const double yaw_min,
+                                        const double yaw_max, const double pitch_min, const double pitch_max,
+                                        const double roll_min, const double roll_max);
+
+Eigen::Isometry3d RandomFrontFacingPose();
+
+std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
+
+Eigen::Vector3d RandomFrontFacingPoint();
+
+Eigen::Vector3d RandomFrontFacingPoint(const double rho_min, const double rho_max, const double phi_min,
+                                       const double phi_max, const double z_rho_scale);
 
 // Template on tolerance power so this can be used with gtest's ASSERT_PRED2.
 // If pass tolerance as argument, this is no longer a binary function and valid for usage with

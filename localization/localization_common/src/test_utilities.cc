@@ -107,4 +107,63 @@ Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const doub
   Eigen::Isometry3d pose_noise = Isometry3d(translation_noise, rotation_noise);
   return pose * pose_noise;
 }
+
+Eigen::Isometry3d RandomFrontFacingPose() {
+  static constexpr double rho_min = 1.0;
+  static constexpr double rho_max = 3.0;
+  static constexpr double phi_min = -25.0;
+  static constexpr double phi_max = 25.0;
+  static constexpr double z_rho_scale = 0.5;
+
+  // Pitch acts like yaw since z axis points outwards in camera frame
+  static constexpr double yaw_min = -10.0;
+  static constexpr double yaw_max = 10.0;
+  static constexpr double pitch_min = -45;
+  static constexpr double pitch_max = 45;
+  static constexpr double roll_min = -10;
+  static constexpr double roll_max = 10;
+
+  return RandomFrontFacingPose(rho_min, rho_max, phi_min, phi_max, z_rho_scale, yaw_min, yaw_max, pitch_min, pitch_max,
+                               roll_min, roll_max);
+}
+
+Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_max, const double phi_min,
+                                        const double phi_max, const double z_rho_scale, const double yaw_min,
+                                        const double yaw_max, const double pitch_min, const double pitch_max,
+                                        const double roll_min, const double roll_max) {
+  const Eigen::Vector3d translation = RandomFrontFacingPoint(rho_min, rho_max, phi_min, phi_max, z_rho_scale);
+  const double yaw = RandomDouble(yaw_min, yaw_max);
+  const double pitch = RandomDouble(pitch_min, pitch_max);
+  const double roll = RandomDouble(roll_min, roll_max);
+  const Eigen::Matrix3d rotation = RotationFromEulerAngles(yaw, pitch, roll);
+  return Isometry3d(translation, rotation);
+}
+
+std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points) {
+  std::vector<Eigen::Vector3d> points;
+  for (int i = 0; i < num_points; ++i) {
+    points.emplace_back(RandomFrontFacingPoint());
+  }
+  return points;
+}
+
+Eigen::Vector3d RandomFrontFacingPoint() {
+  static constexpr double rho_min = 1.0;
+  static constexpr double rho_max = 3.0;
+  static constexpr double phi_min = -25.0;
+  static constexpr double phi_max = 25.0;
+  static constexpr double z_rho_scale = 0.5;
+  return RandomFrontFacingPoint(rho_min, rho_max, phi_min, phi_max, z_rho_scale);
+}
+
+Eigen::Vector3d RandomFrontFacingPoint(const double rho_min, const double rho_max, const double phi_min,
+                                       const double phi_max, const double z_rho_scale) {
+  const double rho = RandomDouble(rho_min, rho_max);
+  const double phi = RandomDouble(phi_min, phi_max);
+  const double z = RandomDouble(-1.0 * z_rho_scale * rho, z_rho_scale * rho);
+  // Z and x are swapped so z defines distance from camera rather than height
+  const Eigen::Vector3d tmp = CylindricalToCartesian(Eigen::Vector3d(rho, phi, z));
+  const Eigen::Vector3d random_point(tmp.z(), tmp.y(), tmp.x());
+  return random_point;
+}
 }  // namespace localization_common

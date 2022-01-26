@@ -33,7 +33,7 @@ TEST(PoseEstimationTester, Inliers) {
   const int num_desired_points = 20;
   for (int i = 0; i < 500; ++i) {
     const auto correspondences = vc::RegistrationCorrespondences<vc::IdentityDistorter>(
-      vc::RandomFrontFacingPose(), lc::RandomIntrinsics(), vc::RandomFrontFacingPoints(num_desired_points));
+      lc::RandomFrontFacingPose(), lc::RandomIntrinsics(), lc::RandomFrontFacingPoints(num_desired_points));
     const int num_points = static_cast<int>(correspondences.correspondences().size());
     std::vector<Eigen::Vector2d> noisy_image_points;
     std::unordered_set<int> noisy_point_indices;
