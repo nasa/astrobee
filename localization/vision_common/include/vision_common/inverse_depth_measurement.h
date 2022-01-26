@@ -21,6 +21,8 @@
 
 #include <vision_common/utilities.h>
 
+#include <gtsam/base/Lie.h>
+#include <gtsam/base/Manifold.h>
 #include <gtsam/base/Matrix.h>
 #include <gtsam/geometry/Pose3.h>
 
@@ -35,6 +37,9 @@ namespace vision_common {
 
 class InverseDepthMeasurement {
  public:
+  // Required for gtsam optimization
+  enum { dimension = 1 };
+
   InverseDepthMeasurement(const double inverse_depth, const Eigen::Vector2d& image_coordinates,
                           const Eigen::Matrix3d& intrinsics, const gtsam::Pose3& body_T_sensor)
       : inverse_depth_(inverse_depth),
@@ -130,6 +135,21 @@ class InverseDepthMeasurement {
 
   double inverse_depth() const { return inverse_depth_; }
 
+  // Required operations for using as state parameter with gtsam
+  inline size_t dim() const { return dimension; }
+
+  static size_t Dim() { return dimension; }
+
+  // Boxplus
+  inline InverseDepthMeasurement retract(const gtsam::Vector& d) const {
+    return InverseDepthMeasurement(inverse_depth_ + d(0), image_coordinates_, intrinsics_, body_T_sensor_);
+  }
+
+  // Boxminus
+  gtsam::Vector1 localCoordinates(const InverseDepthMeasurement& T2) const {
+    return T2.inverse_depth() - inverse_depth();
+  }
+
  private:
   // Intermediate call to optionally fill required jacobians.  Allows for code reuse whether the jacobians are need or
   // not.
@@ -166,6 +186,12 @@ class InverseDepthMeasurement {
   gtsam::Pose3 body_T_sensor_;
   double inverse_depth_;
 };
+
+template <>
+struct gtsam::traits<InverseDepthMeasurement> : public gtsam::internal::Manifold<InverseDepthMeasurement> {};
+
+template <>
+struct gtsam::traits<const InverseDepthMeasurement> : public gtsam::internal::Manifold<InverseDepthMeasurement> {};
 }  // namespace vision_common
 
 #endif  // VISION_COMMON_INVERSE_DEPTH_MEASUREMENT_H_
