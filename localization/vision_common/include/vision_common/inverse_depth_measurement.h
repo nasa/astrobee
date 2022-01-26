@@ -53,7 +53,7 @@ class InverseDepthMeasurement {
     const gtsam::Pose3& world_T_source_body, const gtsam::Pose3& world_T_target_body,
     boost::optional<gtsam::Matrix&> d_projected_point_d_world_T_source_body = boost::none,
     boost::optional<gtsam::Matrix&> d_projected_point_d_world_T_target_body = boost::none,
-    boost::optional<gtsam::Matrix&> d_projected_point_d_inverse_depth = boost::none) {
+    boost::optional<gtsam::Matrix&> d_projected_point_d_inverse_depth = boost::none) const {
     if (d_projected_point_d_world_T_source_body || d_projected_point_d_world_T_target_body ||
         d_projected_point_d_inverse_depth) {
       // Jacobian Calculations:
@@ -139,7 +139,7 @@ class InverseDepthMeasurement {
     boost::optional<gtsam::Matrix&> d_target_sensor_T_source_sensor_d_world_T_source_sensor = boost::none,
     boost::optional<gtsam::Matrix&> d_target_sensor_t_point_d_target_sensor_T_source_sensor = boost::none,
     boost::optional<gtsam::Matrix&> d_target_sensor_t_point_d_source_sensor_t_point = boost::none,
-    boost::optional<gtsam::Matrix&> d_projected_point_d_target_sensor_t_point = boost::none) {
+    boost::optional<gtsam::Matrix&> d_projected_point_d_target_sensor_t_point = boost::none) const {
     const gtsam::Pose3 world_T_source_sensor =
       world_T_source_body.compose(body_T_sensor_, d_world_T_source_sensor_d_world_T_source_body);
     const gtsam::Pose3 world_T_target_sensor =

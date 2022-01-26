@@ -29,6 +29,18 @@
 namespace lc = localization_common;
 namespace vc = vision_common;
 
+Eigen::Vector2d ProjectInverseDepthJacobianHelper(double inverse_depth, const Eigen::Vector2d& source_measurement,
+                                                  const gtsam::Pose3& body_T_cam,
+                                                  const gtsam::Pose3& world_T_source_body,
+                                                  const gtsam::Pose3& world_T_target_body,
+                                                  const Eigen::Matrix3d& intrinsics) {
+  const vc::InverseDepthMeasurement inverse_depth_measurement(inverse_depth, source_measurement, intrinsics,
+                                                              body_T_cam);
+  const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
+  // Assumes no cheirality errors occur
+  return *projected_target_measurement;
+}
+
 TEST(InverseDepthMeasurementTester, Backproject) {
   for (int i = 0; i < 50; ++i) {
     const gtsam::Point3 cam_t_measurement = lc::RandomFrontFacingPoint();
@@ -86,19 +98,36 @@ TEST(InverseDepthMeasurementTester, InvalidProject) {
   EXPECT_TRUE(projected_target_measurement == boost::none);
 }
 
-/*TEST(InverseDepthMeasurementTester, ProjectJacobian) {
+TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
+  constexpr double translation_stddev = 0.05;
+  constexpr double rotation_stddev = 1;
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 cam_t_point = lc::RandomPoint3d();
+    const gtsam::Point3 source_cam_t_measurement = lc::RandomFrontFacingPoint();
+    const gtsam::Pose3 body_T_cam = lc::RandomPose();
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
-    const auto noise = gtsam::noiseModel::Unit::Create(2);
-    gtsam::Matrix H;
-    const auto projection = vc::Project(cam_t_point, intrinsics, H);
-    const auto numerical_H = gtsam::numericalDerivative11<Eigen::Vector2d, Eigen::Vector3d>(
-      boost::function<Eigen::Vector2d(const Eigen::Vector3d&)>(boost::bind(&vc::Project, _1, intrinsics, boost::none)),
-      cam_t_point, 1e-5);
-    EXPECT_TRUE(lc::MatrixEquality<6>(numerical_H.matrix(), H.matrix()));
+    const auto source_measurement = vc::Project(source_cam_t_measurement, intrinsics);
+    const double inverse_depth = 1.0 / source_cam_t_measurement.z();
+    vc::InverseDepthMeasurement inverse_depth_measurement(inverse_depth, source_measurement, intrinsics, body_T_cam);
+    // Make sure point is still likely to project into target camera frame
+    const gtsam::Pose3 source_cam_T_target_cam =
+      lc::GtPose(lc::RandomIdentityCenteredIsometry3d(translation_stddev, rotation_stddev));
+    const gtsam::Pose3 world_T_source_body = lc::RandomPose();
+    const gtsam::Pose3 world_T_target_body =
+      world_T_source_body * body_T_cam * source_cam_T_target_cam * body_T_cam.inverse();
+    gtsam::Matrix d_projected_point_d_inverse_depth;
+    const auto projected_target_measurement = inverse_depth_measurement.Project(
+      world_T_source_body, world_T_target_body, boost::none, boost::none, d_projected_point_d_inverse_depth);
+    // Shouldn't occur very often it at all since there is small difference between the source and target cam frames
+    if (!projected_target_measurement) continue;
+    const auto numerical_d_projected_point_d_inverse_depth = gtsam::numericalDerivative11<Eigen::Vector2d, double>(
+      boost::function<Eigen::Vector2d(const double)>(boost::bind(&ProjectInverseDepthJacobianHelper, _1,
+                                                                 source_measurement, body_T_cam, world_T_source_body,
+                                                                 world_T_target_body, intrinsics)),
+      inverse_depth);
+    EXPECT_TRUE(lc::MatrixEquality<5>(numerical_d_projected_point_d_inverse_depth.matrix(),
+                                      d_projected_point_d_inverse_depth.matrix()));
   }
-}*/
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
