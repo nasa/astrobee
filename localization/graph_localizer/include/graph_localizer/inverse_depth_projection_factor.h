@@ -32,28 +32,17 @@ namespace gtsam {
 /**
  * Non-linear factor for a constraint derived from a 2D measurement. The
  * calibration is known and the landmark point is represented using the inverse depth parameterization.
- * Adapted from gtsam GenericProjectionFactor.
  */
 class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_common::InverseDepthMeasurement, Pose3> {
  protected:
-  // Keep a copy of measurement and calibration for I/O
-  Point2 measured_;  ///< 2D measurement
-
-  // verbosity handling for Cheirality Exceptions
-  bool throwCheirality_;    ///< If true, rethrows Cheirality exceptions (default:
-                            ///< false)
-  bool verboseCheirality_;  ///< If true, prints text for Cheirality exceptions
-                            ///< (default: false)
+  Point2 measured_;
+  bool verboseCheirality_;
 
  public:
-  /// shorthand for base class type
   typedef NoiseModelFactor3<Pose3, vision_common::InverseDepthMeasurement, Pose3> Base;
-
-  /// shorthand for a smart pointer to a factor
   typedef boost::shared_ptr<InverseDepthFactor> shared_ptr;
 
-  /// Default constructor
-  InverseDepthProjectionFactor() : measured_(0, 0), throwCheirality_(false), verboseCheirality_(false) {}
+  InverseDepthProjectionFactor() : measured_(0, 0), verboseCheirality_(false) {}
 
   /**
    * Constructor
@@ -68,7 +57,6 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
                                Key inverseDepthMeasurementKey, Key targetPoseKey)
       : Base(model, sourcePoseKey, inverseDepthMeasurementKey, targetPoseKey),
         measured_(measured),
-        throwCheirality_(false),
         verboseCheirality_(false) {}
 
   /**
@@ -79,20 +67,15 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
    * @param sourcePoseKey is the index of the source camera
    * @param inverseDepthMeasurementKey is the index of the inverse depth measurement
    * @param targetPoseKey is the index of the target camera
-   * @param throwCheirality determines whether Cheirality exceptions are
-   * rethrown
    * @param verboseCheirality determines whether exceptions are printed for
    * Cheirality
    */
   InverseDepthProjectionFactor(const Point2& measured, const SharedNoiseModel& model, Key sourcePoseKey,
-                               Key inverseDepthCameraPoseKey, Key targetPoseKey, bool throwCheirality,
-                               bool verboseCheirality)
+                               Key inverseDepthCameraPoseKey, Key targetPoseKey, bool verboseCheirality)
       : Base(model, sourcePoseKey, inverseDepthCameraPoseKey, targetPoseKey),
         measured_(measured),
-        throwCheirality_(throwCheirality),
         verboseCheirality_(verboseCheirality) {}
 
-  /** Virtual destructor */
   virtual ~InverseDepthProjectionFactor() {}
 
   /// @return a deep copy of this factor
@@ -111,7 +94,6 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
     Base::print("", keyFormatter);
   }
 
-  /// equals
   virtual bool equals(const NonlinearFactor& p, double tol = 1e-9) const {
     const This* e = dynamic_cast<const This*>(&p);
     return e && Base::equals(p, tol) && traits<Point2>::Equals(this->measured_, e->measured_, tol);
@@ -124,29 +106,23 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
                        boost::optional<Matrix&> d_projected_point_d_world_T_source = boost::none,
                        boost::optional<Matrix&> d_projected_point_d_inverse_depth = boost::none,
                        boost::optional<Matrix&> d_projected_point_d_world_T_target = boost::none) const {
-    try {
-      return inverseDepthMeasurement.Project(world_T_source, world_T_target, d_projected_point_d_world_T_source,
-                                             d_projected_point_d_world_T_target, d_projected_point_d_inverse_depth) -
-             measured_;
-    } catch (CheiralityException& e) {
+    const auto projected_measurement =
+      inverseDepthMeasurement.Project(world_T_source, world_T_target, d_projected_point_d_world_T_source,
+                                      d_projected_point_d_world_T_target, d_projected_point_d_inverse_depth);
+    if (!projected_measurement) {
       if (d_projected_point_d_world_T_source) *d_projected_point_d_world_T_source = Matrix::Zero(2, 6);
       if (d_projected_point_d_world_T_target) *d_projected_point_d_world_T_target = Matrix::Zero(2, 6);
       if (d_projected_point_d_inverse_depth) *d_projected_point_d_inverse_depth = Matrix::Zero(2, 1);
       if (verboseCheirality_)
         std::cout << e.what() << ": Landmark moved behind camera " << DefaultKeyFormatter(this->key()) << std::endl;
-      if (throwCheirality_) throw CheiralityException(this->key());
+      return Vector2::Constant(0.0);
     }
-    return Vector2::Constant(0.0);
+    return projected_measurement - measured_;
   }
 
-  /** return the measurement */
   const Point2& measured() const { return measured_; }
 
-  /** return verbosity */
   inline bool verboseCheirality() const { return verboseCheirality_; }
-
-  /** return flag for throwing cheirality exceptions */
-  inline bool throwCheirality() const { return throwCheirality_; }
 
  private:
   /// Serialization function
@@ -155,7 +131,6 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
     ar& BOOST_SERIALIZATION_NVP(measured_);
-    ar& BOOST_SERIALIZATION_NVP(throwCheirality_);
     ar& BOOST_SERIALIZATION_NVP(verboseCheirality_);
   }
 
