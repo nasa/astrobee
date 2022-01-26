@@ -36,7 +36,9 @@ class InverseDepthMeasurement {
         intrinsics_(intrinsics),
         body_T_sensor_(body_T_sensor) {}
 
-  Eigen::Vector3d Backproject() const { return vision_common::Backproject(image_coordinates_, intrinsics_, depth()); }
+  Eigen::Vector3d Backproject(boost::optional<Matrix&> d_backprojected_point_d_inverse_depth = boost::none) const {
+    return vision_common::Backproject(image_coordinates_, intrinsics_, depth(), d_projected_point_d_world_T_source);
+  }
 
   boost::optional<Eigen::Vector2d> Project(const gtsam::Pose3& world_T_source, const gtsam::Pose3& world_T_target,
                                            boost::optional<Matrix&> d_projected_point_d_world_T_source = boost::none,
