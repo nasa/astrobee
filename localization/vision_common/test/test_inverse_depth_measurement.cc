@@ -68,6 +68,24 @@ TEST(InverseDepthMeasurementTester, Project) {
   }
 }
 
+TEST(InverseDepthMeasurementTester, InvalidProject) {
+  const gtsam::Point3 source_cam_t_measurement = lc::RandomFrontFacingPoint();
+  const gtsam::Pose3 body_T_cam = lc::RandomPose();
+  const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+  const auto source_measurement = vc::Project(source_cam_t_measurement, intrinsics);
+  vc::InverseDepthMeasurement inverse_depth_measurement(1.0 / source_cam_t_measurement.z(), source_measurement,
+                                                        intrinsics, body_T_cam);
+  // Move target camera frame in front of measurement point, ensures that point is behind target frame and projection
+  // should fail
+  const gtsam::Pose3 source_cam_T_target_cam =
+    lc::GtPose(lc::Isometry3d(Eigen::Vector3d(0, 0, source_cam_t_measurement.z() + 1), Eigen::Matrix3d::Identity()));
+  const gtsam::Pose3 world_T_source_body = lc::RandomPose();
+  const gtsam::Pose3 world_T_target_body =
+    world_T_source_body * body_T_cam * source_cam_T_target_cam * body_T_cam.inverse();
+  const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
+  EXPECT_TRUE(projected_target_measurement == boost::none);
+}
+
 /*TEST(InverseDepthMeasurementTester, ProjectJacobian) {
   for (int i = 0; i < 500; ++i) {
     const gtsam::Point3 cam_t_point = lc::RandomPoint3d();
