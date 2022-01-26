@@ -21,6 +21,8 @@
 
 #include <gtsam/geometry/Pose3.h>
 
+#include <gtest/gtest.h>
+
 #include <vector>
 
 namespace localization_common {
@@ -129,4 +131,16 @@ bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
   return lhs.isApprox(rhs, tolerance);
 }
 }  // namespace localization_common
+
+// Add GTEST like MACROS with no namespace so these mirror GTEST calls
+template <int TolerancePower = 6>
+void EXPECT_MATRIX_NEAR(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
+  EXPECT_PRED2(localization_common::MatrixEquality<TolerancePower>, lhs, rhs);
+}
+
+template <int TolerancePower = 6, typename MatrixTypeLhs, typename MatrixTypeRhs>
+void EXPECT_MATRIX_TYPE_NEAR(const MatrixTypeLhs& lhs, const MatrixTypeRhs& rhs) {
+  EXPECT_MATRIX_NEAR<TolerancePower>(lhs.matrix(), rhs.matrix());
+}
+
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_

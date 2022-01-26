@@ -124,8 +124,7 @@ TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
                                                                  source_measurement, body_T_cam, world_T_source_body,
                                                                  world_T_target_body, intrinsics)),
       inverse_depth);
-    EXPECT_TRUE(lc::MatrixEquality<5>(numerical_d_projected_point_d_inverse_depth.matrix(),
-                                      d_projected_point_d_inverse_depth.matrix()));
+    EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_projected_point_d_inverse_depth, d_projected_point_d_inverse_depth);
   }
 }
 
