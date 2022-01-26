@@ -29,6 +29,14 @@
 namespace lc = localization_common;
 namespace vc = vision_common;
 
+Eigen::Vector2d ProjectPoseJacobianHelper(const vc::InverseDepthMeasurement& inverse_depth_measurement,
+                                          const gtsam::Pose3& world_T_source_body,
+                                          const gtsam::Pose3& world_T_target_body) {
+  const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
+  // Assumes no cheirality errors occur
+  return *projected_target_measurement;
+}
+
 Eigen::Vector2d ProjectInverseDepthJacobianHelper(double inverse_depth, const Eigen::Vector2d& source_measurement,
                                                   const gtsam::Pose3& body_T_cam,
                                                   const gtsam::Pose3& world_T_source_body,
@@ -37,8 +45,7 @@ Eigen::Vector2d ProjectInverseDepthJacobianHelper(double inverse_depth, const Ei
   const vc::InverseDepthMeasurement inverse_depth_measurement(inverse_depth, source_measurement, intrinsics,
                                                               body_T_cam);
   const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
-  // Assumes no cheirality errors occur
-  return *projected_target_measurement;
+  return ProjectPoseJacobianHelper(inverse_depth_measurement, world_T_source_body, world_T_target_body);
 }
 
 TEST(InverseDepthMeasurementTester, Backproject) {
@@ -115,16 +122,42 @@ TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
     const gtsam::Pose3 world_T_target_body =
       world_T_source_body * body_T_cam * source_cam_T_target_cam * body_T_cam.inverse();
     gtsam::Matrix d_projected_point_d_inverse_depth;
+    gtsam::Matrix d_projected_point_d_world_T_source_body;
+    gtsam::Matrix d_projected_point_d_world_T_target_body;
     const auto projected_target_measurement = inverse_depth_measurement.Project(
-      world_T_source_body, world_T_target_body, boost::none, boost::none, d_projected_point_d_inverse_depth);
+      world_T_source_body, world_T_target_body, d_projected_point_d_world_T_source_body,
+      d_projected_point_d_world_T_target_body, d_projected_point_d_inverse_depth);
     // Shouldn't occur very often it at all since there is small difference between the source and target cam frames
-    if (!projected_target_measurement) continue;
-    const auto numerical_d_projected_point_d_inverse_depth = gtsam::numericalDerivative11<Eigen::Vector2d, double>(
-      boost::function<Eigen::Vector2d(const double)>(boost::bind(&ProjectInverseDepthJacobianHelper, _1,
-                                                                 source_measurement, body_T_cam, world_T_source_body,
-                                                                 world_T_target_body, intrinsics)),
-      inverse_depth);
-    EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_projected_point_d_inverse_depth, d_projected_point_d_inverse_depth);
+    ASSERT_TRUE(projected_target_measurement != boost::none);
+    // Inverse depth Jacobian
+    {
+      const auto numerical_d_projected_point_d_inverse_depth = gtsam::numericalDerivative11<Eigen::Vector2d, double>(
+        boost::function<Eigen::Vector2d(const double)>(boost::bind(&ProjectInverseDepthJacobianHelper, _1,
+                                                                   source_measurement, body_T_cam, world_T_source_body,
+                                                                   world_T_target_body, intrinsics)),
+        inverse_depth);
+      EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_projected_point_d_inverse_depth, d_projected_point_d_inverse_depth);
+    }
+    // world_T_source_body Jacobian
+    {
+      const auto numerical_d_projected_point_d_world_T_source_body =
+        gtsam::numericalDerivative11<Eigen::Vector2d, gtsam::Pose3>(
+          boost::function<Eigen::Vector2d(const gtsam::Pose3&)>(
+            boost::bind(&ProjectPoseJacobianHelper, inverse_depth_measurement, _1, world_T_target_body)),
+          world_T_source_body);
+      EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_projected_point_d_world_T_source_body,
+                                 d_projected_point_d_world_T_source_body);
+    }
+    // world_T_target_body Jacobian
+    {
+      const auto numerical_d_projected_point_d_world_T_target_body =
+        gtsam::numericalDerivative11<Eigen::Vector2d, gtsam::Pose3>(
+          boost::function<Eigen::Vector2d(const gtsam::Pose3&)>(
+            boost::bind(&ProjectPoseJacobianHelper, inverse_depth_measurement, world_T_source_body, _1)),
+          world_T_target_body);
+      EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_projected_point_d_world_T_target_body,
+                                 d_projected_point_d_world_T_target_body);
+    }
   }
 }
 
