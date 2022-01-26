@@ -43,9 +43,8 @@ class InverseDepthMeasurement {
         body_T_sensor_(body_T_sensor) {}
 
   // Returns sensor_t_point
-  Eigen::Vector3d Backproject(
-    boost::optional<gtsam::Matrix&> d_backprojected_point_d_inverse_depth = boost::none) const {
-    return vision_common::Backproject(image_coordinates_, intrinsics_, depth(), d_backprojected_point_d_inverse_depth);
+  Eigen::Vector3d Backproject(boost::optional<gtsam::Matrix&> d_backprojected_point_d_depth = boost::none) const {
+    return vision_common::Backproject(image_coordinates_, intrinsics_, depth(), d_backprojected_point_d_depth);
   }
 
   // Computes measurement projection in sensor frame of the provided target pose.
@@ -64,7 +63,8 @@ class InverseDepthMeasurement {
       // d_projected_point_d_world_T_source_body = d_projected_point_d_target_sensor_t_point *
       // d_target_sensor_t_point_d_world_T_source_sensor * d_world_T_source_sensor_d_world_T_source_body
       // d_projected_point_d_world_T_target_body = d_projected_point_d_target_sensor_t_point *
-      // d_target_sensor_t_point_d_world_T_target_sensor * d_world_T_target_sensor_d_world_T_target_body where
+      // d_target_sensor_t_point_d_world_T_target_sensor * d_world_T_target_sensor_d_world_T_target_body
+      // where:
       // d_target_sensor_t_point_d_world_T_source_sensor = d_target_sensor_t_point_d_target_sensor_T_source_sensor *
       // d_target_sensor_T_source_sensor_d_world_T_source_sensor d_target_sensor_t_point_d_world_T_target_sensor =
       // d_target_sensor_t_point_d_target_sensor_T_source_sensor *
@@ -72,11 +72,14 @@ class InverseDepthMeasurement {
       // = d_target_sensor_T_source_sensor_d_target_sensor_T_world * d_target_sensor_T_world_d_world_T_target_sensor
       // Inverse Depth Jacobian:
       // d_projected_point_d_inverse_depth = d_projected_point_d_target_sensor_t_point *
-      // d_target_sensor_t_point_d_inverse_depth where d_target_sensor_t_point_d_inverse_depth =
-      // d_target_sensor_t_point_d_source_sensor_t_point * d_source_sensor_t_point_d_inverse_depth
+      // d_target_sensor_t_point_d_depth * d_depth_d_inverse_depth
+      // where:
+      // d_target_sensor_t_point_d_depth =
+      // d_target_sensor_t_point_d_source_sensor_t_point * d_source_sensor_t_point_d_depth
+      // d_depth_d_inverse_depth = -1/(inverse_depth^2)
 
       // Intermediate Jacobians
-      gtsam::Matrix d_source_sensor_t_point_d_inverse_depth;
+      gtsam::Matrix d_source_sensor_t_point_d_depth;
       gtsam::Matrix d_target_sensor_T_world_d_world_T_target_sensor;
       gtsam::Matrix d_target_sensor_T_source_sensor_d_world_T_source_sensor;
       gtsam::Matrix d_target_sensor_T_source_sensor_d_target_sensor_T_world;
@@ -88,7 +91,7 @@ class InverseDepthMeasurement {
       const auto projeced_point =
         ProjectHelper(world_T_source_body, world_T_target_body, d_world_T_source_sensor_d_world_T_source_body,
                       d_world_T_target_sensor_d_world_T_target_body, d_target_sensor_T_world_d_world_T_target_sensor,
-                      d_source_sensor_t_point_d_inverse_depth, d_target_sensor_T_source_sensor_d_target_sensor_T_world,
+                      d_source_sensor_t_point_d_depth, d_target_sensor_T_source_sensor_d_target_sensor_T_world,
                       d_target_sensor_T_source_sensor_d_world_T_source_sensor,
                       d_target_sensor_t_point_d_target_sensor_T_source_sensor,
                       d_target_sensor_t_point_d_source_sensor_t_point, d_projected_point_d_target_sensor_t_point);
@@ -110,11 +113,12 @@ class InverseDepthMeasurement {
                                                    d_target_sensor_t_point_d_world_T_target_sensor *
                                                    d_world_T_target_sensor_d_world_T_target_body;
       // Final inverse depth Jacobian
-      const gtsam::Matrix d_target_sensor_t_point_d_inverse_depth =
-        d_target_sensor_t_point_d_source_sensor_t_point * d_source_sensor_t_point_d_inverse_depth;
+      const double d_depth_d_inverse_depth = -1.0 / (inverse_depth_ * inverse_depth_);
+      const gtsam::Matrix d_target_sensor_t_point_d_depth =
+        d_target_sensor_t_point_d_source_sensor_t_point * d_source_sensor_t_point_d_depth;
       if (d_projected_point_d_inverse_depth)
         *d_projected_point_d_inverse_depth =
-          d_projected_point_d_target_sensor_t_point * d_target_sensor_t_point_d_inverse_depth;
+          d_projected_point_d_target_sensor_t_point * d_target_sensor_t_point_d_depth * d_depth_d_inverse_depth;
       return projeced_point;
     }
 
@@ -134,7 +138,7 @@ class InverseDepthMeasurement {
     boost::optional<gtsam::Matrix&> d_world_T_source_sensor_d_world_T_source_body = boost::none,
     boost::optional<gtsam::Matrix&> d_world_T_target_sensor_d_world_T_target_body = boost::none,
     boost::optional<gtsam::Matrix&> d_target_sensor_T_world_d_world_T_target_sensor = boost::none,
-    boost::optional<gtsam::Matrix&> d_source_sensor_t_point_d_inverse_depth = boost::none,
+    boost::optional<gtsam::Matrix&> d_source_sensor_t_point_d_depth = boost::none,
     boost::optional<gtsam::Matrix&> d_target_sensor_T_source_sensor_d_target_sensor_T_world = boost::none,
     boost::optional<gtsam::Matrix&> d_target_sensor_T_source_sensor_d_world_T_source_sensor = boost::none,
     boost::optional<gtsam::Matrix&> d_target_sensor_t_point_d_target_sensor_T_source_sensor = boost::none,
@@ -144,7 +148,7 @@ class InverseDepthMeasurement {
       world_T_source_body.compose(body_T_sensor_, d_world_T_source_sensor_d_world_T_source_body);
     const gtsam::Pose3 world_T_target_sensor =
       world_T_target_body.compose(body_T_sensor_, d_world_T_target_sensor_d_world_T_target_body);
-    const Eigen::Vector3d source_sensor_t_point = Backproject(d_source_sensor_t_point_d_inverse_depth);
+    const Eigen::Vector3d source_sensor_t_point = Backproject(d_source_sensor_t_point_d_depth);
     const gtsam::Pose3 target_sensor_T_world =
       world_T_target_sensor.inverse(d_target_sensor_T_world_d_world_T_target_sensor);
     const gtsam::Pose3 target_sensor_T_source_sensor =
