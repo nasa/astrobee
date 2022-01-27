@@ -47,7 +47,7 @@ Eigen::Vector2d ProjectInverseDepthJacobianHelper(double inverse_depth, const Ei
   return ProjectPoseJacobianHelper(inverse_depth_measurement, world_T_source_body, world_T_target_body);
 }*/
 
-TEST(InverseDepthMeasurementTester, Project) {
+TEST(InverseDepthProjectionFactorTester, Project) {
   constexpr double translation_stddev = 0.05;
   constexpr double rotation_stddev = 1;
   for (int i = 0; i < 50; ++i) {
@@ -63,10 +63,6 @@ TEST(InverseDepthMeasurementTester, Project) {
     const gtsam::Pose3 world_T_source_body = lc::RandomPose();
     const gtsam::Pose3 world_T_target_body =
       world_T_source_body * body_T_cam * source_cam_T_target_cam * body_T_cam.inverse();
-    const auto projected_target_measurement =
-      inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
-    // Shouldn't occur very often it at all since there is small difference between the source and target cam frames
-    if (!projected_target_measurement) continue;
     const gtsam::Point3 target_cam_t_measurement = source_cam_T_target_cam.inverse() * source_cam_t_measurement;
     const auto target_measurement = vc::Project(target_cam_t_measurement, intrinsics);
     const auto new_target_measurement = lc::RandomPoint2d();
@@ -78,7 +74,7 @@ TEST(InverseDepthMeasurementTester, Project) {
   }
 }
 
-/*TEST(InverseDepthMeasurementTester, InvalidProject) {
+TEST(InverseDepthProjectionFactorTester, InvalidProject) {
   const gtsam::Point3 source_cam_t_measurement = lc::RandomFrontFacingPoint();
   const gtsam::Pose3 body_T_cam = lc::RandomPose();
   const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
@@ -92,11 +88,22 @@ TEST(InverseDepthMeasurementTester, Project) {
   const gtsam::Pose3 world_T_source_body = lc::RandomPose();
   const gtsam::Pose3 world_T_target_body =
     world_T_source_body * body_T_cam * source_cam_T_target_cam * body_T_cam.inverse();
-  const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
-  EXPECT_TRUE(projected_target_measurement == boost::none);
+  const auto new_target_measurement = lc::RandomPoint2d();
+  const auto noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector2(1, 1));
+  const gtsam::InverseDepthProjectionFactor factor(new_target_measurement, noise, 1, 2, 3);
+  gtsam::Matrix d_projected_point_d_inverse_depth;
+  gtsam::Matrix d_projected_point_d_world_T_source_body;
+  gtsam::Matrix d_projected_point_d_world_T_target_body;
+  const auto error = factor.evaluateError(world_T_source_body, inverse_depth_measurement, world_T_target_body,
+                                          d_projected_point_d_world_T_source_body, d_projected_point_d_inverse_depth,
+                                          d_projected_point_d_world_T_target_body);
+  EXPECT_MATRIX_TYPE_NEAR<6>(error, Eigen::Vector2d::Zero());
+  EXPECT_MATRIX_TYPE_NEAR<6>(d_projected_point_d_inverse_depth, Eigen::Matrix<double, 2, 1>::Zero());
+  EXPECT_MATRIX_TYPE_NEAR<6>(d_projected_point_d_world_T_source_body, Eigen::Matrix<double, 2, 6>::Zero());
+  EXPECT_MATRIX_TYPE_NEAR<6>(d_projected_point_d_world_T_target_body, Eigen::Matrix<double, 2, 6>::Zero());
 }
 
-TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
+/*TEST(InverseDepthProjectionFactorTester, ProjectInverseDepthJacobian) {
   constexpr double translation_stddev = 0.05;
   constexpr double rotation_stddev = 1;
   for (int i = 0; i < 500; ++i) {
@@ -152,7 +159,7 @@ TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
   }
 }
 
-TEST(InverseDepthMeasurementTester, ManifoldOperations) {
+TEST(InverseDepthProjectionFactorTester, ManifoldOperations) {
   for (int i = 0; i < 50; ++i) {
     const double starting_inverse_depth = lc::RandomDouble();
     vc::InverseDepthMeasurement inverse_depth_measurement(starting_inverse_depth, Eigen::Vector2d(), Eigen::Matrix3d(),
