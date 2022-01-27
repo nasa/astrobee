@@ -54,6 +54,8 @@ Eigen::Vector3d RandomPoint3d() { return RandomVector<3>(); }
 
 Eigen::Vector2d RandomVector2d() { return RandomVector<2>(); }
 
+Eigen::Vector2d RandomPoint2d() { return RandomVector<2>(); }
+
 gtsam::Pose3 RandomPose() {
   std::random_device dev;
   std::mt19937 rng(dev());

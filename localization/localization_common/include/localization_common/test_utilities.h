@@ -62,6 +62,8 @@ Eigen::Vector3d RandomPoint3d();
 
 Eigen::Vector2d RandomVector2d();
 
+Eigen::Vector2d RandomPoint2d();
+
 // Translation ranges from [-100, 100]
 // Rotation spans all possible rotations
 gtsam::Pose3 RandomPose();

@@ -40,7 +40,8 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
 
  public:
   typedef NoiseModelFactor3<Pose3, vision_common::InverseDepthMeasurement, Pose3> Base;
-  typedef boost::shared_ptr<InverseDepthFactor> shared_ptr;
+  typedef boost::shared_ptr<InverseDepthProjectionFactor> shared_ptr;
+  typedef InverseDepthProjectionFactor This;
 
   InverseDepthProjectionFactor() : measured_(0, 0), verboseCheirality_(false) {}
 
@@ -88,13 +89,13 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
    * @param s optional string naming the factor
    * @param keyFormatter optional formatter useful for printing Symbols
    */
-  void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const {
+  void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const override {
     std::cout << s << "InverseDepthProjectionFactor, z = ";
     traits<Point2>::Print(measured_);
     Base::print("", keyFormatter);
   }
 
-  virtual bool equals(const NonlinearFactor& p, double tol = 1e-9) const {
+  bool equals(const NonlinearFactor& p, double tol = 1e-9) const override {
     const This* e = dynamic_cast<const This*>(&p);
     return e && Base::equals(p, tol) && traits<Point2>::Equals(this->measured_, e->measured_, tol);
   }
@@ -105,7 +106,7 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
                        const Pose3& world_T_target,
                        boost::optional<Matrix&> d_projected_point_d_world_T_source = boost::none,
                        boost::optional<Matrix&> d_projected_point_d_inverse_depth = boost::none,
-                       boost::optional<Matrix&> d_projected_point_d_world_T_target = boost::none) const {
+                       boost::optional<Matrix&> d_projected_point_d_world_T_target = boost::none) const override {
     const auto projected_measurement =
       inverseDepthMeasurement.Project(world_T_source, world_T_target, d_projected_point_d_world_T_source,
                                       d_projected_point_d_world_T_target, d_projected_point_d_inverse_depth);
@@ -114,10 +115,10 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
       if (d_projected_point_d_world_T_target) *d_projected_point_d_world_T_target = Matrix::Zero(2, 6);
       if (d_projected_point_d_inverse_depth) *d_projected_point_d_inverse_depth = Matrix::Zero(2, 1);
       if (verboseCheirality_)
-        std::cout << e.what() << ": Landmark moved behind camera " << DefaultKeyFormatter(this->key()) << std::endl;
+        std::cout << "Landmark moved behind camera " << DefaultKeyFormatter(this->key2()) << std::endl;
       return Vector2::Constant(0.0);
     }
-    return projected_measurement - measured_;
+    return *projected_measurement - measured_;
   }
 
   const Point2& measured() const { return measured_; }
@@ -139,6 +140,7 @@ class InverseDepthProjectionFactor : public NoiseModelFactor3<Pose3, vision_comm
 };
 
 /// traits
+template <>
 struct traits<InverseDepthProjectionFactor> : public Testable<InverseDepthProjectionFactor> {};
 
 }  // namespace gtsam
