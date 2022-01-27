@@ -125,6 +125,8 @@ Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& 
   return noisy_vector;
 }
 
+// Deprecated
+// TODO(rsoussan): Replace usage of this in test code with EXPECT_MATRIX_NEAR macro
 template <int TolerancePower>
 bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
   constexpr double tolerance = std::pow(10, -1.0 * TolerancePower);
@@ -135,7 +137,7 @@ bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
   return lhs.isApprox(rhs, tolerance);
 }
 
-// TODO(rsoussan): remove this and replace other version with this!
+// TODO(rsoussan): Rename to MatrixEquality when other version removed
 bool MatrixEquality2(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs, const double tolerance) {
   // Seperately check for zero matrices since isApprox fails for these
   if (lhs.isZero(tolerance) || rhs.isZero(tolerance)) {

@@ -175,19 +175,23 @@ TEST(InverseDepthProjectionFactorTester, Optimization) {
                   (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
       EXPECT_MATRIX_NEAR(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key), 1e-6);
     }
-    // Noisy world_T_source_body
+    // Noisy inverse depth
     {
       gtsam::NonlinearFactorGraph graph;
       graph.add(factor);
       gtsam::Values values;
-      const gtsam::Pose3 noisy_world_T_source_body = lc::AddNoiseToPose(world_T_source_body, 0.1, 0.1);
-      values.insert(world_T_source_body_key, noisy_world_T_source_body);
-      values.insert(inverse_depth_measurement_key, inverse_depth_measurement);
+      values.insert(world_T_source_body_key, world_T_source_body);
+      // Make sure inverse depth is still positive but starts with a lot of noise
+      const double noisy_inverse_depth =
+        inverse_depth + lc::RandomDouble(-1.0 * inverse_depth + 1e-6, 2.0 * inverse_depth);
+      const auto noisy_inverse_depth_measurement =
+        vc::InverseDepthMeasurement(noisy_inverse_depth, source_measurement, intrinsics, body_T_cam);
+      values.insert(inverse_depth_measurement_key, noisy_inverse_depth_measurement);
       values.insert(world_T_target_body_key, world_T_target_body);
       // Set non noisy values constant
-      gtsam::NonlinearEquality1<vc::InverseDepthMeasurement> inverse_depth_measurement_equality_factor(
-        inverse_depth_measurement, inverse_depth_measurement_key);
-      graph.add(inverse_depth_measurement_equality_factor);
+      gtsam::NonlinearEquality1<gtsam::Pose3> world_T_source_body_equality_factor(world_T_source_body,
+                                                                                  world_T_source_body_key);
+      graph.add(world_T_source_body_equality_factor);
       gtsam::NonlinearEquality1<gtsam::Pose3> world_T_target_body_equality_factor(world_T_target_body,
                                                                                   world_T_target_body_key);
       graph.add(world_T_target_body_equality_factor);
@@ -197,6 +201,32 @@ TEST(InverseDepthProjectionFactorTester, Optimization) {
                   (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
       EXPECT_MATRIX_NEAR(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key), 1e-6);
     }
+
+    /* // Noisy world_T_source_body
+     {
+       gtsam::NonlinearFactorGraph graph;
+       graph.add(factor);
+       gtsam::Values values;
+       const gtsam::Pose3 noisy_world_T_source_body = lc::AddNoiseToPose(world_T_source_body, 1, 1);
+       LogError("noisy pose: " << std::endl << noisy_world_T_source_body.matrix());
+       values.insert(world_T_source_body_key, noisy_world_T_source_body);
+       values.insert(inverse_depth_measurement_key, inverse_depth_measurement);
+       values.insert(world_T_target_body_key, world_T_target_body);
+       // Set non noisy values constant
+       gtsam::NonlinearEquality1<vc::InverseDepthMeasurement> inverse_depth_measurement_equality_factor(
+         inverse_depth_measurement, inverse_depth_measurement_key);
+       graph.add(inverse_depth_measurement_equality_factor);
+       gtsam::NonlinearEquality1<gtsam::Pose3> world_T_target_body_equality_factor(world_T_target_body,
+                                                                                   world_T_target_body_key);
+       graph.add(world_T_target_body_equality_factor);
+       const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
+       LogError("optimized pose: " << std::endl << result.at<gtsam::Pose3>(world_T_source_body_key).matrix());
+       LogError("true pose: " << std::endl << world_T_source_body.matrix());
+       EXPECT_MATRIX_NEAR(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key), 1e-6);
+       EXPECT_NEAR(inverse_depth,
+                   (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
+       EXPECT_MATRIX_NEAR(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key), 1e-6);
+     }*/
   }
 }
 
