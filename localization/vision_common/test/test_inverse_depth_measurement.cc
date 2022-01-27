@@ -23,6 +23,8 @@
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/linear/NoiseModel.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtest/gtest.h>
 
@@ -47,6 +49,23 @@ Eigen::Vector2d ProjectInverseDepthJacobianHelper(double inverse_depth, const Ei
   const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
   return ProjectPoseJacobianHelper(inverse_depth_measurement, world_T_source_body, world_T_target_body);
 }
+
+namespace gtsam {
+class SimpleInverseDepthFactor : public NoiseModelFactor1<vc::InverseDepthMeasurement> {
+ public:
+  SimpleInverseDepthFactor(const double true_inverse_depth, const SharedNoiseModel& model, const Key key)
+      : NoiseModelFactor1<vc::InverseDepthMeasurement>(model, key), true_inverse_depth_(true_inverse_depth) {}
+  virtual ~SimpleInverseDepthFactor() {}
+  Vector evaluateError(const vc::InverseDepthMeasurement& inverse_depth_measurement,
+                       boost::optional<Matrix&> H = boost::none) const override {
+    if (H) *H = gtsam::Matrix1::Identity();
+    return gtsam::Vector1(inverse_depth_measurement.inverse_depth() - true_inverse_depth_);
+  }
+
+ private:
+  double true_inverse_depth_;
+};
+}  // namespace gtsam
 
 TEST(InverseDepthMeasurementTester, Backproject) {
   for (int i = 0; i < 50; ++i) {
@@ -158,6 +177,24 @@ TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
       EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_projected_point_d_world_T_target_body,
                                  d_projected_point_d_world_T_target_body);
     }
+  }
+}
+
+TEST(InverseDepthMeasurementTester, ManifoldOperations) {
+  for (int i = 0; i < 50; ++i) {
+    const double starting_inverse_depth = lc::RandomDouble();
+    vc::InverseDepthMeasurement inverse_depth_measurement(starting_inverse_depth, Eigen::Vector2d(), Eigen::Matrix3d(),
+                                                          gtsam::Pose3());
+    const double true_inverse_depth = lc::RandomDouble();
+    const gtsam::Key key(1);
+    const auto noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector1(0.0001));
+    gtsam::SimpleInverseDepthFactor factor(true_inverse_depth, noise, key);
+    gtsam::NonlinearFactorGraph graph;
+    graph.add(factor);
+    gtsam::Values values;
+    values.insert(key, inverse_depth_measurement);
+    const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
+    EXPECT_NEAR(true_inverse_depth, (values.at<vc::InverseDepthMeasurement>(key)).inverse_depth(), 1e-6);
   }
 }
 

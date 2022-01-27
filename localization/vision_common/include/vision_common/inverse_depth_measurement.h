@@ -26,6 +26,8 @@
 #include <gtsam/base/Matrix.h>
 #include <gtsam/geometry/Pose3.h>
 
+#include <string>
+
 namespace vision_common {
 
 /**
@@ -147,7 +149,17 @@ class InverseDepthMeasurement {
 
   // Boxminus
   gtsam::Vector1 localCoordinates(const InverseDepthMeasurement& T2) const {
-    return T2.inverse_depth() - inverse_depth();
+    return gtsam::Vector1(T2.inverse_depth() - inverse_depth());
+  }
+
+  void print(const std::string& s = std::string()) const {
+    std::cout << "inverse depth: " << inverse_depth_ << std::endl;
+  }
+
+  bool equals(const InverseDepthMeasurement& s, double tol = 1e-9) const {
+    return intrinsics_.isApprox(s.intrinsics_, tol) && body_T_sensor_.equals(s.body_T_sensor_, 1e-9) &&
+           std::abs(inverse_depth_ - s.inverse_depth_) < 1e-9 &&
+           image_coordinates_.isApprox(s.image_coordinates_, 1e-9);
   }
 
  private:
@@ -186,12 +198,16 @@ class InverseDepthMeasurement {
   gtsam::Pose3 body_T_sensor_;
   double inverse_depth_;
 };
-
-template <>
-struct gtsam::traits<InverseDepthMeasurement> : public gtsam::internal::Manifold<InverseDepthMeasurement> {};
-
-template <>
-struct gtsam::traits<const InverseDepthMeasurement> : public gtsam::internal::Manifold<InverseDepthMeasurement> {};
 }  // namespace vision_common
+
+namespace gtsam {
+template <>
+struct traits<vision_common::InverseDepthMeasurement>
+    : public internal::Manifold<vision_common::InverseDepthMeasurement> {};
+
+template <>
+struct traits<const vision_common::InverseDepthMeasurement>
+    : public internal::Manifold<vision_common::InverseDepthMeasurement> {};
+}  // namespace gtsam
 
 #endif  // VISION_COMMON_INVERSE_DEPTH_MEASUREMENT_H_
