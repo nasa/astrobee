@@ -124,7 +124,7 @@ TEST(InverseDepthMeasurementTester, InvalidProject) {
   EXPECT_TRUE(projected_target_measurement == boost::none);
 }
 
-TEST(InverseDepthMeasurementTester, ProjectInverseDepthJacobian) {
+TEST(InverseDepthMeasurementTester, ProjectJacobians) {
   constexpr double translation_stddev = 0.05;
   constexpr double rotation_stddev = 1;
   for (int i = 0; i < 500; ++i) {
