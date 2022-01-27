@@ -23,29 +23,13 @@
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/linear/NoiseModel.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtest/gtest.h>
 
 namespace lc = localization_common;
 namespace vc = vision_common;
-/*Eigen::Vector2d ProjectPoseJacobianHelper(const vc::InverseDepthMeasurement& inverse_depth_measurement,
-                                          const gtsam::Pose3& world_T_source_body,
-                                          const gtsam::Pose3& world_T_target_body) {
-  const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
-  // Assumes no cheirality errors occur
-  return *projected_target_measurement;
-}
-
-Eigen::Vector2d ProjectInverseDepthJacobianHelper(double inverse_depth, const Eigen::Vector2d& source_measurement,
-                                                  const gtsam::Pose3& body_T_cam,
-                                                  const gtsam::Pose3& world_T_source_body,
-                                                  const gtsam::Pose3& world_T_target_body,
-                                                  const Eigen::Matrix3d& intrinsics) {
-  const vc::InverseDepthMeasurement inverse_depth_measurement(inverse_depth, source_measurement, intrinsics,
-                                                              body_T_cam);
-  const auto projected_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
-  return ProjectPoseJacobianHelper(inverse_depth_measurement, world_T_source_body, world_T_target_body);
-}*/
 
 TEST(InverseDepthProjectionFactorTester, EvaluateError) {
   constexpr double translation_stddev = 0.05;
@@ -152,23 +136,46 @@ TEST(InverseDepthProjectionFactorTester, Jacobians) {
   }
 }
 
-/*TEST(InverseDepthProjectionFactorTester, ManifoldOperations) {
-  for (int i = 0; i < 50; ++i) {
-    const double starting_inverse_depth = lc::RandomDouble();
-    vc::InverseDepthMeasurement inverse_depth_measurement(starting_inverse_depth, Eigen::Vector2d(), Eigen::Matrix3d(),
-                                                          gtsam::Pose3());
-    const double true_inverse_depth = lc::RandomDouble();
-    const gtsam::Key key(1);
-    const auto noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector1(0.0001));
-    gtsam::SimpleInverseDepthFactor factor(true_inverse_depth, noise, key);
-    gtsam::NonlinearFactorGraph graph;
-    graph.add(factor);
-    gtsam::Values values;
-    values.insert(key, inverse_depth_measurement);
-    const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
-    EXPECT_NEAR(true_inverse_depth, (result.at<vc::InverseDepthMeasurement>(key)).inverse_depth(), 1e-6);
+TEST(InverseDepthProjectionFactorTester, Optimization) {
+  constexpr double translation_stddev = 0.05;
+  constexpr double rotation_stddev = 1;
+  for (int i = 0; i < 500; ++i) {
+    const gtsam::Point3 source_cam_t_measurement = lc::RandomFrontFacingPoint();
+    const gtsam::Pose3 body_T_cam = lc::RandomPose();
+    const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
+    const auto source_measurement = vc::Project(source_cam_t_measurement, intrinsics);
+    const double inverse_depth = 1.0 / source_cam_t_measurement.z();
+    vc::InverseDepthMeasurement inverse_depth_measurement(inverse_depth, source_measurement, intrinsics, body_T_cam);
+    // Make sure point is still likely to project into target camera frame
+    const gtsam::Pose3 source_cam_T_target_cam =
+      lc::GtPose(lc::RandomIdentityCenteredIsometry3d(translation_stddev, rotation_stddev));
+    const gtsam::Pose3 world_T_source_body = lc::RandomPose();
+    const gtsam::Pose3 world_T_target_body =
+      world_T_source_body * body_T_cam * source_cam_T_target_cam * body_T_cam.inverse();
+    const auto perfect_target_measurement = inverse_depth_measurement.Project(world_T_source_body, world_T_target_body);
+    ASSERT_TRUE(perfect_target_measurement != boost::none);
+    const auto noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector2(1e-6, 1e-6));
+    const gtsam::Key world_T_source_body_key = 1;
+    const gtsam::Key inverse_depth_measurement_key = 2;
+    const gtsam::Key world_T_target_body_key = 3;
+    const gtsam::InverseDepthProjectionFactor factor(*perfect_target_measurement, noise, world_T_source_body_key,
+                                                     inverse_depth_measurement_key, world_T_target_body_key);
+    // No noise
+    {
+      gtsam::NonlinearFactorGraph graph;
+      graph.add(factor);
+      gtsam::Values values;
+      values.insert(world_T_source_body_key, world_T_source_body);
+      values.insert(inverse_depth_measurement_key, inverse_depth_measurement);
+      values.insert(world_T_target_body_key, world_T_target_body);
+      const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
+      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key));
+      EXPECT_NEAR(inverse_depth,
+                  (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
+      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key));
+    }
   }
-}*/
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
