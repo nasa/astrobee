@@ -55,7 +55,7 @@ TEST(InverseDepthProjectionFactorTester, EvaluateError) {
     const gtsam::InverseDepthProjectionFactor factor(new_target_measurement, noise, 1, 2, 3);
     const auto error = factor.evaluateError(world_T_source_body, inverse_depth_measurement, world_T_target_body);
     const Eigen::Vector2d expected_error = target_measurement - new_target_measurement;
-    EXPECT_MATRIX_TYPE_NEAR<6>(error, expected_error);
+    EXPECT_MATRIX_NEAR(error, expected_error, 1e-6);
   }
 }
 
@@ -82,10 +82,10 @@ TEST(InverseDepthProjectionFactorTester, InvalidError) {
   const auto error =
     factor.evaluateError(world_T_source_body, inverse_depth_measurement, world_T_target_body,
                          d_error_d_world_T_source_body, d_error_d_inverse_depth, d_error_d_world_T_target_body);
-  EXPECT_MATRIX_TYPE_NEAR<6>(error, Eigen::Vector2d::Zero());
-  EXPECT_MATRIX_TYPE_NEAR<6>(d_error_d_inverse_depth, Eigen::Matrix<double, 2, 1>::Zero());
-  EXPECT_MATRIX_TYPE_NEAR<6>(d_error_d_world_T_source_body, Eigen::Matrix<double, 2, 6>::Zero());
-  EXPECT_MATRIX_TYPE_NEAR<6>(d_error_d_world_T_target_body, Eigen::Matrix<double, 2, 6>::Zero());
+  EXPECT_MATRIX_NEAR(error, Eigen::Vector2d::Zero(), 1e-6);
+  EXPECT_MATRIX_NEAR(d_error_d_inverse_depth, (Eigen::Matrix<double, 2, 1>::Zero()), 1e-6);
+  EXPECT_MATRIX_NEAR(d_error_d_world_T_source_body, (Eigen::Matrix<double, 2, 6>::Zero()), 1e-6);
+  EXPECT_MATRIX_NEAR(d_error_d_world_T_target_body, (Eigen::Matrix<double, 2, 6>::Zero()), 1e-6);
 }
 
 TEST(InverseDepthProjectionFactorTester, Jacobians) {
@@ -119,21 +119,21 @@ TEST(InverseDepthProjectionFactorTester, Jacobians) {
           boost::bind(&gtsam::InverseDepthProjectionFactor::evaluateError, factor, _1, _2, _3, boost::none, boost::none,
                       boost::none)),
         world_T_source_body, inverse_depth_measurement, world_T_target_body);
-    EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_error_d_world_T_source_body, d_error_d_world_T_source_body);
+    EXPECT_MATRIX_NEAR(numerical_d_error_d_world_T_source_body, d_error_d_world_T_source_body, 1e-6);
     const auto numerical_d_error_d_inverse_depth =
       gtsam::numericalDerivative32<Eigen::Vector2d, gtsam::Pose3, vc::InverseDepthMeasurement, gtsam::Pose3>(
         boost::function<Eigen::Vector2d(const gtsam::Pose3&, const vc::InverseDepthMeasurement&, const gtsam::Pose3&)>(
           boost::bind(&gtsam::InverseDepthProjectionFactor::evaluateError, factor, _1, _2, _3, boost::none, boost::none,
                       boost::none)),
         world_T_source_body, inverse_depth_measurement, world_T_target_body);
-    EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_error_d_inverse_depth, d_error_d_inverse_depth);
+    EXPECT_MATRIX_NEAR(numerical_d_error_d_inverse_depth, d_error_d_inverse_depth, 1e-6);
     const auto numerical_d_error_d_world_T_target_body =
       gtsam::numericalDerivative33<Eigen::Vector2d, gtsam::Pose3, vc::InverseDepthMeasurement, gtsam::Pose3>(
         boost::function<Eigen::Vector2d(const gtsam::Pose3&, const vc::InverseDepthMeasurement&, const gtsam::Pose3&)>(
           boost::bind(&gtsam::InverseDepthProjectionFactor::evaluateError, factor, _1, _2, _3, boost::none, boost::none,
                       boost::none)),
         world_T_source_body, inverse_depth_measurement, world_T_target_body);
-    EXPECT_MATRIX_TYPE_NEAR<6>(numerical_d_error_d_world_T_target_body, d_error_d_world_T_target_body);
+    EXPECT_MATRIX_NEAR(numerical_d_error_d_world_T_target_body, d_error_d_world_T_target_body, 1e-6);
   }
 }
 
@@ -170,10 +170,10 @@ TEST(InverseDepthProjectionFactorTester, Optimization) {
       values.insert(inverse_depth_measurement_key, inverse_depth_measurement);
       values.insert(world_T_target_body_key, world_T_target_body);
       const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
-      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key));
+      EXPECT_MATRIX_NEAR(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key), 1e-6);
       EXPECT_NEAR(inverse_depth,
                   (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
-      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key));
+      EXPECT_MATRIX_NEAR(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key), 1e-6);
     }
     // Noisy world_T_source_body
     {
@@ -192,10 +192,10 @@ TEST(InverseDepthProjectionFactorTester, Optimization) {
                                                                                   world_T_target_body_key);
       graph.add(world_T_target_body_equality_factor);
       const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
-      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key));
+      EXPECT_MATRIX_NEAR(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key), 1e-6);
       EXPECT_NEAR(inverse_depth,
                   (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
-      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key));
+      EXPECT_MATRIX_NEAR(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key), 1e-6);
     }
   }
 }

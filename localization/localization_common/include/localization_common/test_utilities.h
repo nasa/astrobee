@@ -134,17 +134,22 @@ bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
   }
   return lhs.isApprox(rhs, tolerance);
 }
+
+// TODO(rsoussan): remove this and replace other version with this!
+bool MatrixEquality2(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs, const double tolerance) {
+  // Seperately check for zero matrices since isApprox fails for these
+  if (lhs.isZero(tolerance) || rhs.isZero(tolerance)) {
+    return lhs.isZero(tolerance) && rhs.isZero(tolerance);
+  }
+  return lhs.isApprox(rhs, tolerance);
+}
 }  // namespace localization_common
 
 // Add GTEST like MACROS with no namespace so these mirror GTEST calls
-template <int TolerancePower = 6>
-void EXPECT_MATRIX_NEAR(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
-  EXPECT_PRED2(localization_common::MatrixEquality<TolerancePower>, lhs, rhs);
-}
-
-template <int TolerancePower = 6, typename MatrixTypeLhs, typename MatrixTypeRhs>
-void EXPECT_MATRIX_TYPE_NEAR(const MatrixTypeLhs& lhs, const MatrixTypeRhs& rhs) {
-  EXPECT_MATRIX_NEAR<TolerancePower>(lhs.matrix(), rhs.matrix());
-}
+// clang-format off
+#define EXPECT_MATRIX_NEAR(lhs, rhs, tol) \
+  do { \
+    EXPECT_PRED3(localization_common::MatrixEquality2, lhs.matrix(), rhs.matrix(), tol); \
+  } while (0)
 
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_
