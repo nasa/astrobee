@@ -81,6 +81,8 @@ Eigen::Isometry3d RandomIdentityCenteredIsometry3d(const double translation_stdd
 Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const double translation_stddev,
                                        const double rotation_stddev);
 
+gtsam::Pose3 AddNoiseToPose(const gtsam::Pose3& pose, const double translation_stddev, const double rotation_stddev);
+
 template <int N>
 Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& vector, const double noise_stddev);
 

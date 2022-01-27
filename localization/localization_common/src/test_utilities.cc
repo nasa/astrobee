@@ -114,6 +114,10 @@ Eigen::Isometry3d AddNoiseToIsometry3d(const Eigen::Isometry3d& pose, const doub
   return pose * pose_noise;
 }
 
+gtsam::Pose3 AddNoiseToPose(const gtsam::Pose3& pose, const double translation_stddev, const double rotation_stddev) {
+  return GtPose(AddNoiseToIsometry3d(EigenPose(pose), translation_stddev, rotation_stddev));
+}
+
 Eigen::Isometry3d RandomFrontFacingPose() {
   static constexpr double rho_min = 1.0;
   static constexpr double rho_max = 3.0;

@@ -24,6 +24,7 @@
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/NonlinearEquality.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtest/gtest.h>
@@ -168,6 +169,28 @@ TEST(InverseDepthProjectionFactorTester, Optimization) {
       values.insert(world_T_source_body_key, world_T_source_body);
       values.insert(inverse_depth_measurement_key, inverse_depth_measurement);
       values.insert(world_T_target_body_key, world_T_target_body);
+      const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
+      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key));
+      EXPECT_NEAR(inverse_depth,
+                  (result.at<vc::InverseDepthMeasurement>(inverse_depth_measurement_key)).inverse_depth(), 1e-6);
+      EXPECT_MATRIX_TYPE_NEAR<6>(world_T_target_body, result.at<gtsam::Pose3>(world_T_target_body_key));
+    }
+    // Noisy world_T_source_body
+    {
+      gtsam::NonlinearFactorGraph graph;
+      graph.add(factor);
+      gtsam::Values values;
+      const gtsam::Pose3 noisy_world_T_source_body = lc::AddNoiseToPose(world_T_source_body, 0.1, 0.1);
+      values.insert(world_T_source_body_key, noisy_world_T_source_body);
+      values.insert(inverse_depth_measurement_key, inverse_depth_measurement);
+      values.insert(world_T_target_body_key, world_T_target_body);
+      // Set non noisy values constant
+      gtsam::NonlinearEquality1<vc::InverseDepthMeasurement> inverse_depth_measurement_equality_factor(
+        inverse_depth_measurement, inverse_depth_measurement_key);
+      graph.add(inverse_depth_measurement_equality_factor);
+      gtsam::NonlinearEquality1<gtsam::Pose3> world_T_target_body_equality_factor(world_T_target_body,
+                                                                                  world_T_target_body_key);
+      graph.add(world_T_target_body_equality_factor);
       const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
       EXPECT_MATRIX_TYPE_NEAR<6>(world_T_source_body, result.at<gtsam::Pose3>(world_T_source_body_key));
       EXPECT_NEAR(inverse_depth,
