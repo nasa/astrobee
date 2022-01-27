@@ -194,7 +194,7 @@ TEST(InverseDepthMeasurementTester, ManifoldOperations) {
     gtsam::Values values;
     values.insert(key, inverse_depth_measurement);
     const auto result = gtsam::LevenbergMarquardtOptimizer(graph, values).optimize();
-    EXPECT_NEAR(true_inverse_depth, (values.at<vc::InverseDepthMeasurement>(key)).inverse_depth(), 1e-6);
+    EXPECT_NEAR(true_inverse_depth, (result.at<vc::InverseDepthMeasurement>(key)).inverse_depth(), 1e-6);
   }
 }
 
