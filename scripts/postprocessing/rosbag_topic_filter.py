@@ -37,11 +37,11 @@ Specify multiple --accept or --reject arguments on the command line to add multi
 patterns to the accept or reject list.
 
 Examples:
-  rosbag_topic_filter.py in.bag -r "/gs/gs_manager/*" out.bag
-    Filters out rosjava messages produced by Guest Science Manager with malformed
-    message definitions that break many rosbag API operations, including the
-    command-line utilities 'rosbag filter' and 'rosbag check'.
-  rosbag_topic_filter.py in.bag -a "/mgt/sys_monitor/time_sync" out.bag
+  rosbag_topic_filter.py in.bag -r "/gs/gs_manager/*" -r /hw/cam_sci/compressed out.bag
+    Filters out rosjava messages produced by Guest Science Manager and SciCamImage APKs
+    that have incomplete message definitions that break many rosbag API operations,
+    including the command-line utilities 'rosbag filter' and 'rosbag check'.
+  rosbag_topic_filter.py in.bag -a /mgt/sys_monitor/time_sync out.bag
     Keep only a specific message of interest for data analysis so downstream script
     can run much faster on a smaller bag.
 """
