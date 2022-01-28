@@ -66,10 +66,14 @@ def is_special(fnmatch_pattern):
 
 def topic_filter(verbose, inbag_path, accept_patterns, reject_patterns, outbag_path):
     with rosbag.Bag(inbag_path, "r") as inbag:
-        if all([not is_special(p) for p in accept_patterns]) and not reject_patterns:
+        if (
+            accept_patterns
+            and not reject_patterns
+            and all([not is_special(p) for p in accept_patterns])
+        ):
             # if the accept patterns are just a list of plain topics and there
-            # are no reject patterns, there's no need to do a slow pass through
-            # the whole bag just to extract what topics it contains
+            # are no reject patterns, there's no need to do an extra slow pass
+            # through the whole bag just to extract what topics it contains
             accept_topics = accept_patterns
         else:
             all_topics = inbag.get_type_and_topic_info()[1].keys()
