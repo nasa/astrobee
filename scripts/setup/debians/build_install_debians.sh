@@ -52,20 +52,22 @@ if [ "$DIST" != "xenial" ]; then
   cp ${DEBIAN_LOC}/files/dbow2_rules ${DEBIAN_LOC}/dbow2/rules
   cp ${DEBIAN_LOC}/files/dbow2_control ${DEBIAN_LOC}/dbow2/control
   cp ${DEBIAN_LOC}/files/dbow2_changelog ${DEBIAN_LOC}/dbow2/changelog
-  # gtsam
-  cp ${DEBIAN_LOC}/files/gtsam_changelog ${DEBIAN_LOC}/gtsam/changelog
 fi
 
 if [ "$DIST" = "bionic" ]; then
   echo "Ubuntu 18 detected"
    # jps3d
   sudo apt-get install -y libvtk6.3 libboost-filesystem1.62.0 libboost-system1.62.0
-  cp ${DEBIAN_LOC}/files/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
+  cp ${DEBIAN_LOC}/files/jps3d_bionic_changelog ${DEBIAN_LOC}/jps3d/changelog
+  # gtsam
+  cp ${DEBIAN_LOC}/files/gtsam_bionic_changelog ${DEBIAN_LOC}/gtsam/changelog
 elif [ "$DIST" = "focal" ]; then
   echo "Ubuntu 20 detected"
   #jps3d
   sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
-  cp ${DEBIAN_LOC}/files/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
+  cp ${DEBIAN_LOC}/files/jps3d_focal_changelog ${DEBIAN_LOC}/jps3d/
+  # gtsam
+  cp ${DEBIAN_LOC}/files/gtsam_focal_changelog ${DEBIAN_LOC}/gtsam/changelog
 fi
 
 # alvar
