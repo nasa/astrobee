@@ -138,3 +138,15 @@ if [ "install ok installed" = "$PKG_OK" ]; then
   sudo dpkg -i libsoracore*_amd64.deb || exit 1
 
 fi
+
+# Rename debians
+if [ "$DIST" = "xenial" ]; then
+  echo "Renaming xenial"
+  for file in *.deb; do mv "$file" "${file%.deb}_xenial.deb"; done;
+elif [ "$DIST" = "bionic" ]; then
+  echo "Renaming bionic"
+  for file in *.deb; do mv "$file" "${file%.deb}_bionic.deb"; done;
+elif [ "$DIST" = "focal" ]; then
+  echo "Renaming focal"
+  for file in *.deb; do mv "$file" "${file%.deb}_focal.deb"; done;
+fi
