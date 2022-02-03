@@ -111,7 +111,7 @@ void MapperNodelet::CollisionCheckTask() {
   ros::Duration solver_time = ros::Time::now() - time_now;
 }
 
-void MapperNodelet::OctomappingTask(ros::TimerEvent const& event) {
+void MapperNodelet::OctomappingTask() {
   pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
   // If there are no pcl point clounds
