@@ -5,7 +5,8 @@ These Python utilities enable us to process logged
 `/hw/depth_haz/extended` topic and split the data to regenerate both
 point cloud messages normally logged on the `/hw/depth_haz/points` topic
 and amplitude image messages logged on the
-`/hw/depth_haz/extended/amplitude_int` topic.
+`/hw/depth_haz/extended/amplitude_int` topic. (Those are the
+HazCam-specific topics; to use  PerchCam, specify `--cam=perch`.)
 
 As a result, once these tools are fully validated, we will no longer
 need to log the latter two topics, providing a major savings in data
@@ -24,14 +25,14 @@ experience shows can be significant.
 Using these tools is a two-step process:
 
 1. Prep once for each Pico Flexx serial number: Using a prior bag that
-   contains all three Pico message types, extract and save xyz
-   coefficients that are required to recover point clouds from extended
-   messages. Optionally, you can also use the prior bag to do a dry run
-   of the split operation and check the quality of the reconstructed
-   data.
+   contains point clouds, extract and save xyz coefficients that are
+   required to recover point clouds from extended messages. Optionally,
+   if the prior bag contains all three Pico message types, you can also
+   use it to do a dry run of the split operation and check the quality
+   of the reconstructed data.
 
-2. Production: A single command performs the split operation, writing a new bag
-   with the recovered point clouds and amplitude images.
+2. Production: A single command performs the split operation, writing a
+   new bag with the recovered point clouds and amplitude images.
 
 This usage example shows how to do the prep:
 
@@ -56,8 +57,10 @@ Using the pico_write_xyz_coeff.py script, the xyz coefficients are
 effectively derived from the camera intrinsic parameters stored in the
 camera firmware. These parameters are unique to each Pico Flexx serial
 number and calibrated at the factory. By convention, when saving the
-coefficients, the output file name should document which robot and
-which camera (haz or perch) the coefficients are for.
+coefficients, the output file name should document which robot and which
+camera (haz or perch) the coefficients are for. During reconstruction,
+be careful to use the correct coefficients file for your robot and
+camera.
 
 The method we are using to recover the coefficients requires a bag of
 sample data recorded from the sensor, and it can only produce
