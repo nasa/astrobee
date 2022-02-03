@@ -37,7 +37,7 @@ if [ "$DIST" != "xenial" ]; then
   sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
   cd ${DEBIAN_LOC}
   ./build_opencv.sh || exit 1
-  cd ${DEBIAN_LOC}/libopencv
+  mv ${DEBIAN_LOC}/libopencv/libopencv*_amd64.deb .
   sudo dpkg -i libopencv*_amd64.deb || exit 1
 
   # alvar
@@ -140,13 +140,4 @@ if [ "install ok installed" = "$PKG_OK" ]; then
 fi
 
 # Rename debians
-if [ "$DIST" = "xenial" ]; then
-  echo "Renaming xenial"
-  for file in *.deb; do mv "$file" "${file%.deb}_xenial.deb"; done;
-elif [ "$DIST" = "bionic" ]; then
-  echo "Renaming bionic"
-  for file in *.deb; do mv "$file" "${file%.deb}_bionic.deb"; done;
-elif [ "$DIST" = "focal" ]; then
-  echo "Renaming focal"
-  for file in *.deb; do mv "$file" "${file%.deb}_focal.deb"; done;
-fi
+for file in *.deb; do mv "$file" "${file%.deb}_${DIST}.deb"; done;
