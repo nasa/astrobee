@@ -20,6 +20,18 @@ save up to 6.9 GB (33%). These savings impact not just storage space on
 the Astrobee MLP but also CPU load required to log the data, which
 experience shows can be significant.
 
+## System requirements and installation
+
+So far, these tools were tested only under Ubuntu 18.04 and Python 2.7
+on the host astrobeast.ndc.nasa.gov. This host already had the necessary
+dependencies pre-installed by the admins in the ARC-TI Systems Group,
+so no installation steps were needed, other than checking out the scripts
+from the repository.
+
+Some minor changes would probably be needed to support Python 3.x. If
+the tools will be used on other hosts that aren't pre-configured, this
+section should be expanded to document how to install the dependencies.
+
 ## Usage
 
 Using these tools is a two-step process:

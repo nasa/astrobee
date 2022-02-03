@@ -67,7 +67,7 @@ def check_points_msgs(
 
         k_logger.info("checked %5d points messages", k_logger.count + 1)
 
-    logging.info("Summary over all %d points messages:", k_logger.count + 1)
+    logging.info("Summary over all %d points messages:", k_logger.count)
     logging.info(" Error max (um): %.3f", np.max(err_max_log) * 1e6)
     logging.info(" Mean error RMS (um): %.3f", np.mean(err_rms_log) * 1e6)
 
