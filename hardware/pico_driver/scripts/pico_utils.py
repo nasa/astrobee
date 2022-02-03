@@ -76,6 +76,10 @@ def get_amp_topic(cam):
     return AMP_TOPIC_TMPL.format(cam=cam)
 
 
+def rms(v):
+    return np.sqrt(np.mean(v * v))
+
+
 class PrintEveryK:
     """
     Acts a bit like a logger, but prints the message only one out of
@@ -426,7 +430,7 @@ def check_xyz_error(xyz1, xyz2, i):
     valid = ~np.isnan(xyz1)
     err = xyz2[valid] - xyz1[valid]
     err_max = np.max(np.abs(err))
-    err_rms = np.std(err)
+    err_rms = rms(err)
 
     logging.debug("%5d Error max (um): %.3f", i, err_max * 1e6)
     logging.debug("%5d Error RMS (um): %.3f", i, err_rms * 1e6)
