@@ -16,12 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <!-- Start the entire simulation stack -->
-  <include file="$(find astrobee)/launch/sim.launch">
-    <arg name="dds" value="false"/>
-    <arg name="robot" value="sim_pub"/>
-    <arg name="pose" default="10.5 -8.5 4.5 0 0 0 1" />
-  </include>
-
-  <test pkg="choreographer" type="test_obstacle" test-name="test_obstacle" />
+  <test pkg="graph_localizer" type="test_combined_nav_state_node_updater" test-name="test_combined_nav_state_node_updater" />
 </launch>

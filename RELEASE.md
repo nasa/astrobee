@@ -1,5 +1,10 @@
 # Releases
 
+## Release 0.16.2
+
+  * Performance improvements
+  * Small bug fixes
+
 ## Release 0.16.1
 
   * depth odometry
