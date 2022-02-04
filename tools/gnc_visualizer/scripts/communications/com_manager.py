@@ -93,12 +93,12 @@ class ComManager:
                 partition_name, given_peer, domain, public_ip
             ):
                 # Print result
-                print >>sys.stderr, (
+                print >> sys.stderr, (
                     self.config.get_all_warnings() + self.config.get_all_info()
                 )
             else:
                 # Print result and exit
-                print >>sys.stderr, (
+                print >> sys.stderr, (
                     self.config.get_all_errors()
                     + self.config.get_all_warnings()
                     + self.config.get_all_info()

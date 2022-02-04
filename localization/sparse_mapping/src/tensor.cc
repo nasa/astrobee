@@ -89,6 +89,9 @@ DEFINE_int32(first_ba_index, 0,
 DEFINE_int32(last_ba_index, std::numeric_limits<int>::max(),
              "Vary only cameras ending with this index during bundle adjustment.");
 
+DEFINE_bool(silent_matching, false,
+            "Do not print a lot of verbose info when matching.");
+
 namespace sparse_mapping {
 // Two minor and local utility functions
 std::string print_vec(double a) {
@@ -169,8 +172,7 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
   // Do a check and verify that we meet our minimum before the
   // essential matrix fitting.
   if (static_cast<int32_t>(matches.size()) < FLAGS_min_valid) {
-    LOG(INFO) << i << " " << j
-            << " | Failed to find enough matches " << matches.size();
+    if (!FLAGS_silent_matching) LOG(INFO) << i << " " << j << " | Failed to find enough matches " << matches.size();
     return;
   }
 
@@ -184,13 +186,13 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
                                   compute_rays_angle, rays_angle);
 
   if (static_cast<int32_t>(inlier_matches.size()) < FLAGS_min_valid) {
-    LOG(INFO) << i << " " << j
-            << " | Failed to find enough inlier matches " << inlier_matches.size();
+    if (!FLAGS_silent_matching)
+      LOG(INFO) << i << " " << j << " | Failed to find enough inlier matches "
+                << inlier_matches.size();
     return;
   }
 
-  LOG(INFO) << i << " " << j
-            << " success " << inlier_matches.size();
+  if (!FLAGS_silent_matching) LOG(INFO) << i << " " << j << " success " << inlier_matches.size();
 
   std::vector<openMVG::matching::IndMatch> mvg_matches;
   for (std::vector<cv::DMatch>::value_type const& match : inlier_matches)
@@ -243,12 +245,12 @@ void MatchFeatures(const std::string & essential_file,
       std::sort(indices.begin(), indices.end());
 
       // Print what is going on. May need to remove this later.
-      LOG(INFO) << "Matching image " << s->cid_to_filename_[cid] << " with: ";
+      if (!FLAGS_silent_matching) LOG(INFO) << "Matching image " << s->cid_to_filename_[cid] << " with: ";
       for (size_t j = 0; j < indices.size(); j++) {
         // Keep only subsequent images
-        LOG(INFO) << s->cid_to_filename_[indices[j]];
+        if (!FLAGS_silent_matching) LOG(INFO) << s->cid_to_filename_[indices[j]];
       }
-      LOG(INFO) << "\n\n";
+      if (!FLAGS_silent_matching) LOG(INFO) << "\n\n";
     } else {
       // No matches in the db, or no db was provided.
       if ( s->cid_to_cid_.find(cid) != s->cid_to_cid_.end() ) {

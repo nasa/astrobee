@@ -148,6 +148,14 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_depth_odometry_factor_adder
     graph_localizer ${catkin_LIBRARIES} 
   )
+  add_rostest_gtest(test_combined_nav_state_node_updater
+    test/test_combined_nav_state_node_updater.test
+    test/test_combined_nav_state_node_updater.cc
+  )
+  target_link_libraries(test_combined_nav_state_node_updater
+    graph_localizer ${catkin_LIBRARIES} 
+  )
+
 endif()
 
 #############

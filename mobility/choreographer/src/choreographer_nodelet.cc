@@ -1267,7 +1267,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   void CResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     ff_msgs::ControlResultConstPtr const& result) {
     // Check if it reached the endpoint
-      if (flight_mode_.tolerance_pos_endpoint > 0.0 &&
+      if (fsm_.GetState() == STATE::CONTROLLING && flight_mode_.tolerance_pos_endpoint > 0.0 &&
           pos_error_ > flight_mode_.tolerance_pos_endpoint) {
         // If tolerance is present more that the allowable time
         NODELET_DEBUG_STREAM("Endpoint position tolerance violated");
