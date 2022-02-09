@@ -37,7 +37,6 @@ class TimestampedObjects {
   TimestampedObjects();
 
   // Assumes objects indices have corresponding timestamps in timestamps vectors and each timestamp is unique.
-  // TODO(rsoussan): test this!
   TimestampedObjects(const std::vector<T>& objects, const std::vector<localization_common>& timestamps);
 
   bool Add(const localization_common::Time timestamp, const T& object);
