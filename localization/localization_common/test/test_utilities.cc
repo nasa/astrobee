@@ -102,6 +102,36 @@ TEST(UtilitiesTester, FrameChangeRelativePoseWithRotation) {
   }
 }
 
+TEST(UtilitiesTester, InterpolatePoses) {
+  const auto t1 = lc::RandomVector();
+  const auto t2 = lc::RandomVector();
+  const auto rot1 = lc::RotationFromEulerAngles(0, 0, 0);
+  const auto rot2 = lc::RotationFromEulerAngles(180, 0, 0);
+  const auto pose1 = Isometry3d(t1, rot1);
+  const auto pose2 = Isometry3d(t2, rot2);
+
+  // 0 alpha
+  {
+    const auto interpolated_pose = lc::Interpolate(pose1, pose2, 0);
+    EXPECT_MATRIX_NEAR(interpolated_pose, pose1, 1e-6);
+  }
+
+  // 1 alpha
+  {
+    const auto interpolated_pose = lc::Interpolate(pose1, pose2, 1);
+    EXPECT_MATRIX_NEAR(interpolated_pose, pose2, 1e-6);
+  }
+
+  // 0.5 alpha
+  {
+    const auto interpolated_pose = lc::Interpolate(pose1, pose2, 0.5);
+    const auto expected_translation = (t1 + t2) * 0.5;
+    const auto expected_rotation = lc::RotationFromEulerAngles(90);
+    const auto expected_pose = Isometry3d(expected_translation, expected_rotation);
+    EXPECT_MATRIX_NEAR(interpolated_pose, expected_pose, 1e-6);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
