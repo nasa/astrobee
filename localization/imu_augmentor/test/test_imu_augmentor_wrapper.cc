@@ -93,12 +93,11 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
   EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
   const double expected_velocity_i = acceleration_i() * TotalDuration();
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.velocity().matrix(), expected_velocity.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state->first.velocity(), expected_velocity, 1e-6);
   // x = 1/2*a*t^2
   const double expected_position_i = acceleration_i() * 0.5 * std::pow(TotalDuration(), 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.pose().translation().matrix(),
-               expected_position.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state->first.pose().translation(), expected_position, 1e-6);
 }
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithHalfwayBias) {
@@ -112,12 +111,11 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithHalfwayBias) {
 
   ASSERT_TRUE(imu_augmented_state != boost::none);
   EXPECT_NEAR(imu_augmented_state->first.timestamp(), TotalDuration(), 1e-6);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.velocity().matrix(),
-               halfway_state_with_bias.velocity().matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state->first.velocity(), halfway_state_with_bias.velocity(), 1e-6);
   const gtsam::Point3 expected_translation =
     halfway_state_with_bias.pose().translation() +
     halfway_state_with_bias.velocity() * num_measurements() / 2 * time_increment();
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.pose().translation().matrix(), expected_translation);
+  EXPECT_MATRIX_NEAR(imu_augmented_state->first.pose().translation(), expected_translation, 1e-6);
 }
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
@@ -136,12 +134,11 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
     // Expect half the acceleration for the last three quarters of the imu msgs
     const double expected_velocity_i = acceleration_i() / 2 * TotalDuration() * 0.75;
     const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-    ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.velocity().matrix(), expected_velocity.matrix());
+    EXPECT_MATRIX_NEAR(imu_augmented_state->first.velocity(), expected_velocity, 1e-6);
     // x = 1/2*a*t^2
     const double expected_position_i = acceleration_i() / 2.0 * 0.5 * std::pow(TotalDuration() * 0.75, 2);
     const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-    ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.pose().translation().matrix(),
-                 expected_position.matrix());
+    EXPECT_MATRIX_NEAR(imu_augmented_state->first.pose().translation(), expected_position, 1e-6);
   }
 
   {
@@ -157,15 +154,14 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsTieredBiases) {
     const gtsam::Vector3 expected_velocity =
       state_c_quarter_bias_half_time_initial_pose_and_velocity.velocity() +
       gtsam::Vector3(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-    ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.velocity().matrix(), expected_velocity.matrix());
+    EXPECT_MATRIX_NEAR(imu_augmented_state->first.velocity(), expected_velocity, 1e-6);
     // x = x_0 + v_0*t + 1/2*a*t^2
     const double expected_position_i = acceleration_i() * 0.75 * 0.5 * std::pow(TotalDuration() * 0.5, 2);
     const gtsam::Vector3 expected_position =
       state_c_quarter_bias_half_time_initial_pose_and_velocity.pose().translation() +
       state_c_quarter_bias_half_time_initial_pose_and_velocity.velocity() * TotalDuration() * 0.5 +
       gtsam::Vector3(expected_position_i, expected_position_i, expected_position_i);
-    ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state->first.pose().translation().matrix(),
-                 expected_position.matrix());
+    EXPECT_MATRIX_NEAR(imu_augmented_state->first.pose().translation(), expected_position, 1e-6);
   }
 }
 

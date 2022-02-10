@@ -30,7 +30,7 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToLineFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point = lc::RandomPoint3d();
     const gtsam::Pose3 world_T_line = lc::RandomPose();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body = lc::RandomPose();
@@ -41,8 +41,8 @@ TEST(PointToLineFactorTester, Jacobian) {
     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
       boost::function<gtsam::Vector(const gtsam::Pose3&)>(
         boost::bind(&gtsam::PointToLineFactor::evaluateError, factor, _1, boost::none)),
-      world_T_body, 1e-5);
-    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+      world_T_body);
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 

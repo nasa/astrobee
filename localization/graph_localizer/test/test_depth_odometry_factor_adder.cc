@@ -42,13 +42,13 @@ namespace sym = gtsam::symbol_shorthand;
 void AddInlierAndOutlierPoints(const int num_inliers, const int num_outliers,
                                const double point_to_point_error_threshold, lm::DepthOdometryMeasurement& measurement) {
   for (int i = 0; i < num_inliers; ++i) {
-    const Eigen::Vector3d source_point = lc::RandomVector();
+    const Eigen::Vector3d source_point = lc::RandomPoint3d();
     const Eigen::Vector3d target_point = measurement.odometry.sensor_F_source_T_target.pose.inverse() * source_point;
     measurement.correspondences.source_3d_points.emplace_back(source_point);
     measurement.correspondences.target_3d_points.emplace_back(target_point);
   }
   for (int i = 0; i < num_outliers; ++i) {
-    const Eigen::Vector3d source_point = lc::RandomVector();
+    const Eigen::Vector3d source_point = lc::RandomPoint3d();
     const Eigen::Vector3d noise(1.1 * point_to_point_error_threshold, 0, 0);
     const Eigen::Vector3d target_point =
       measurement.odometry.sensor_F_source_T_target.pose.inverse() * (source_point + noise);
@@ -95,7 +95,7 @@ TEST(DepthOdometryFactorAdderTester, ValidPose) {
     const auto factor = dynamic_cast<const gtsam::BetweenFactor<gtsam::Pose3>*>(factor_to_add.factor.get());
     ASSERT_TRUE(factor);
     const auto& pose = factor->measured();
-    EXPECT_PRED2(lc::MatrixEquality<6>, pose.matrix(), relative_pose.matrix());
+    EXPECT_MATRIX_NEAR(pose, relative_pose, 1e-6);
     const auto& keys = factor->keys();
     const auto& key_info = factor_to_add.key_infos[0];
     EXPECT_EQ(keys[0], key_info.UninitializedKey());
@@ -162,13 +162,11 @@ TEST(DepthOdometryFactorAdderTester, Points) {
         const auto factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor_to_add.factor.get());
         ASSERT_TRUE(factor);
         const auto& source_point = factor->sensor_t_point_source();
-        EXPECT_PRED2(lc::MatrixEquality<6>, source_point.matrix(),
-                     measurement.correspondences.source_3d_points[0].matrix());
+        EXPECT_MATRIX_NEAR(source_point, measurement.correspondences.source_3d_points[0], 1e-6);
         const auto& target_point = factor->sensor_t_point_target();
-        EXPECT_PRED2(lc::MatrixEquality<6>, target_point.matrix(),
-                     measurement.correspondences.target_3d_points[0].matrix());
+        EXPECT_MATRIX_NEAR(target_point, measurement.correspondences.target_3d_points[0], 1e-6);
         const auto& body_T_sensor = factor->body_T_sensor();
-        EXPECT_PRED2(lc::MatrixEquality<6>, body_T_sensor.matrix(), params.body_T_sensor.matrix());
+        EXPECT_MATRIX_NEAR(body_T_sensor, params.body_T_sensor, 1e-6);
         const auto& keys = factor->keys();
         const auto& key_info = factor_to_add.key_infos[0];
         EXPECT_EQ(keys[0], key_info.UninitializedKey());
@@ -181,13 +179,11 @@ TEST(DepthOdometryFactorAdderTester, Points) {
       const auto factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor_to_add.factor.get());
       ASSERT_TRUE(factor);
       const auto& source_point = factor->sensor_t_point_source();
-      EXPECT_PRED2(lc::MatrixEquality<6>, source_point.matrix(),
-                   measurement.correspondences.source_3d_points[1].matrix());
+      EXPECT_MATRIX_NEAR(source_point, measurement.correspondences.source_3d_points[1], 1e-6);
       const auto& target_point = factor->sensor_t_point_target();
-      EXPECT_PRED2(lc::MatrixEquality<6>, target_point.matrix(),
-                   measurement.correspondences.target_3d_points[1].matrix());
+      EXPECT_MATRIX_NEAR(target_point, measurement.correspondences.target_3d_points[1], 1e-6);
       const auto& body_T_sensor = factor->body_T_sensor();
-      EXPECT_PRED2(lc::MatrixEquality<6>, body_T_sensor.matrix(), params.body_T_sensor.matrix());
+      EXPECT_MATRIX_NEAR(body_T_sensor, params.body_T_sensor, 1e-6);
       const auto& keys = factor->keys();
       const auto& key_info = factor_to_add.key_infos[0];
       EXPECT_EQ(keys[0], key_info.UninitializedKey());
@@ -231,7 +227,7 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
   }
 }
 

@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="vision_common" type="test_camera_utilities" test-name="test_camera_utilities" />
+  <test pkg="graph_localizer" type="test_inverse_depth_projection_factor" test-name="test_inverse_depth_projection_factor" />
 </launch>
