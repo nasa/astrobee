@@ -47,7 +47,7 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCubicPoints) {
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
   }
 }
 
@@ -69,7 +69,7 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateRandomPoints) {
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
   }
 }
 
@@ -91,14 +91,14 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateRandomPointsCorrespondencesTest)
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
     const auto correspondences = icp.correspondences();
     ASSERT_TRUE(correspondences != boost::none);
     for (int i = 0; i < correspondences->size(); ++i) {
       const auto& source_point = correspondences->source_points[i];
       const auto& target_point = correspondences->target_points[i];
       const Eigen::Vector3d transformed_source_point = estimated_target_T_source->pose * source_point;
-      EXPECT_PRED2(lc::MatrixEquality<2>, target_point.matrix(), transformed_source_point.matrix());
+      EXPECT_MATRIX_NEAR(target_point, transformed_source_point, 1e-2);
     }
   }
 }
@@ -122,7 +122,7 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateSymmetricCostCubicPoints) {
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
   }
 }
 
@@ -146,7 +146,7 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateSymmetricCostRandomPoints) {
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
   }
 }
 
@@ -170,7 +170,7 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCorrespondenceRejectorRandomPoin
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
   }
 }
 
@@ -196,7 +196,7 @@ TEST(PointToPlaneICPTester, NoisyInitialEstimateCoarseToFineRandomPoints) {
     const auto estimated_target_T_source =
       icp.ComputeRelativeTransform(source_cloud_with_normals, target_cloud_with_normals, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<2>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-2);
   }
 }
 

@@ -125,10 +125,6 @@ Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordi
 // Uses Euler Angles in intrinsic ypr representation in degrees
 Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
 
-Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics);
-
-Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics);
-
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a);
 
 Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(

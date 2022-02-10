@@ -168,14 +168,6 @@ Eigen::Matrix3d RotationFromEulerAngles(const double yaw_degrees, const double p
   return rotation;
 }
 
-Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics) {
-  return Eigen::Vector2d(intrinsics(0, 0), intrinsics(1, 1));
-}
-
-Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
-  return Eigen::Vector2d(intrinsics(0, 2), intrinsics(1, 2));
-}
-
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a) {
   // Consider for example a sensor odometry measurement, sensor_time_0_T_sensor_time_1.
   // To find the movement of the robot body given static body_T_sensor extrinsics,
