@@ -85,6 +85,13 @@ install(TARGETS ${PROJECT_NAME}
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  add_rostest_gtest(test_timestamped_set
+    test/test_timestamped_set.test
+    test/test_timestamped_set.cc
+  )
+  target_link_libraries(test_timestamped_set
+    ${PROJECT_NAME}  
+  )
   add_rostest_gtest(test_utilities_localization_common
     test/test_utilities.test
     test/test_utilities.cc
