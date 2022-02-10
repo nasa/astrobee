@@ -45,8 +45,8 @@ TEST(PointToPlaneFactorTester, Jacobian) {
     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
       boost::function<gtsam::Vector(const gtsam::Pose3&)>(
         boost::bind(&gtsam::PointToPlaneFactor::evaluateError, factor, _1, boost::none)),
-      world_T_body, 1e-5);
-    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+      world_T_body);
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 

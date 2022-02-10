@@ -47,7 +47,7 @@ namespace vc = vision_common;
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(), params);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_PRED2(lc::MatrixEquality<2>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    EXPECT_MATRIX_NEAR(pose_estimate->pose, correspondences.camera_T_target(), 1e-6);
     ASSERT_TRUE(pose_estimate->inliers.size() == correspondences.correspondences().size());
   }
 }*/

@@ -50,7 +50,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsIdentityDistortionWithNo
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), Eigen::VectorXd(1), params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_PRED2(lc::MatrixEquality<4>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    EXPECT_MATRIX_NEAR(pose_estimate->pose, correspondences.camera_T_target(), 1e-4);
     ASSERT_TRUE(pose_estimate->inliers.size() == target_points.size());
   }
 }
@@ -77,7 +77,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsFovDistortionWithNoise) 
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_PRED2(lc::MatrixEquality<4>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    EXPECT_MATRIX_NEAR(pose_estimate->pose, correspondences.camera_T_target(), 1e-4);
     ASSERT_TRUE(pose_estimate->inliers.size() == target_points.size());
   }
 }
@@ -104,7 +104,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsRadDistortionWithNoise) 
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_PRED2(lc::MatrixEquality<4>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    EXPECT_MATRIX_NEAR(pose_estimate->pose, correspondences.camera_T_target(), 1e-4);
     ASSERT_TRUE(pose_estimate->inliers.size() == target_points.size());
   }
 }
@@ -131,7 +131,7 @@ TEST(ReprojectionPoseEstimateTester, EvenlySpacedTargetsRadTanDistortionWithNois
       correspondences.correspondences().image_points, correspondences.correspondences().points_3d,
       correspondences.intrinsics(), distortion, params, noisy_initial_estimate, initial_inliers);
     ASSERT_TRUE(pose_estimate != boost::none);
-    ASSERT_PRED2(lc::MatrixEquality<4>, pose_estimate->pose.matrix(), correspondences.camera_T_target().matrix());
+    EXPECT_MATRIX_NEAR(pose_estimate->pose, correspondences.camera_T_target(), 1e-4);
     ASSERT_TRUE(pose_estimate->inliers.size() == target_points.size());
   }
 }

@@ -103,11 +103,7 @@ Eigen::Vector3d RandomFrontFacingPoint();
 Eigen::Vector3d RandomFrontFacingPoint(const double rho_min, const double rho_max, const double phi_min,
                                        const double phi_max, const double z_rho_scale);
 
-// Template on tolerance power so this can be used with gtest's ASSERT_PRED2.
-// If pass tolerance as argument, this is no longer a binary function and valid for usage with
-// ASSERT_PRED2.
-template <int TolerancePower = 6>
-bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs);
+bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs, const double tolerance);
 
 // Implementation
 template <int Dim>
@@ -124,34 +120,13 @@ Eigen::Matrix<double, N, 1> AddNoiseToVector(const Eigen::Matrix<double, N, 1>& 
   }
   return noisy_vector;
 }
-
-// Deprecated
-// TODO(rsoussan): Replace usage of this in test code with EXPECT_MATRIX_NEAR macro
-template <int TolerancePower>
-bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs) {
-  constexpr double tolerance = std::pow(10, -1.0 * TolerancePower);
-  // Seperately check for zero matrices since isApprox fails for these
-  if (lhs.isZero(tolerance) || rhs.isZero(tolerance)) {
-    return lhs.isZero(tolerance) && rhs.isZero(tolerance);
-  }
-  return lhs.isApprox(rhs, tolerance);
-}
-
-// TODO(rsoussan): Rename to MatrixEquality when other version removed
-bool MatrixEquality2(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs, const double tolerance) {
-  // Seperately check for zero matrices since isApprox fails for these
-  if (lhs.isZero(tolerance) || rhs.isZero(tolerance)) {
-    return lhs.isZero(tolerance) && rhs.isZero(tolerance);
-  }
-  return lhs.isApprox(rhs, tolerance);
-}
 }  // namespace localization_common
 
 // Add GTEST like MACROS with no namespace so these mirror GTEST calls
 // clang-format off
 #define EXPECT_MATRIX_NEAR(lhs, rhs, tol) \
   do { \
-    EXPECT_PRED3(localization_common::MatrixEquality2, lhs.matrix(), rhs.matrix(), tol); \
+    EXPECT_PRED3(localization_common::MatrixEquality, lhs.matrix(), rhs.matrix(), tol); \
   } while (0)
 
 #endif  // LOCALIZATION_COMMON_TEST_UTILITIES_H_

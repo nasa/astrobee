@@ -49,12 +49,12 @@ TEST(PointToPointBetweenFactorTester, Jacobian) {
       boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
         boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
       world_T_body_source, world_T_body_target, 1e-5);
-    EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H1.matrix(), H1.matrix());
+    EXPECT_MATRIX_NEAR(numerical_H1, H1, 1e-6);
     const auto numerical_H2 = gtsam::numericalDerivative22<gtsam::Vector, gtsam::Pose3, gtsam::Pose3>(
       boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
         boost::bind(&gtsam::PointToPointBetweenFactor::evaluateError, factor, _1, _2, boost::none, boost::none)),
       world_T_body_source, world_T_body_target, 1e-5);
-    EXPECT_PRED2(lc::MatrixEquality<6>, numerical_H2.matrix(), H2.matrix());
+    EXPECT_MATRIX_NEAR(numerical_H2, H2, 1e-6);
   }
 }
 
@@ -69,7 +69,7 @@ TEST(PointToPointBetweenFactorTester, SamePointAndPoseError) {
     const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
                                                   sym::P(0), sym::P(1));
     const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
-    EXPECT_PRED2(lc::MatrixEquality<6>, factor_error.matrix(), Eigen::Vector3d::Zero().matrix());
+    EXPECT_MATRIX_NEAR(factor_error, Eigen::Vector3d::Zero(), 1e-6);
   }
 }
 
@@ -84,8 +84,7 @@ TEST(PointToPointBetweenFactorTester, DifferentPointIdentityPosesError) {
     const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
                                                   sym::P(0), sym::P(1));
     const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
-    EXPECT_PRED2(lc::MatrixEquality<6>, factor_error.matrix(),
-                 (sensor_t_point_source - sensor_t_point_target).matrix());
+    EXPECT_MATRIX_NEAR(factor_error, (sensor_t_point_source - sensor_t_point_target), 1e-6);
   }
 }
 
@@ -100,10 +99,10 @@ TEST(PointToPointBetweenFactorTester, DifferentPointSamePoseError) {
     const gtsam::PointToPointBetweenFactor factor(sensor_t_point_source, sensor_t_point_target, body_T_sensor, noise,
                                                   sym::P(0), sym::P(1));
     const auto factor_error = factor.evaluateError(world_T_body_source, world_T_body_target);
-    EXPECT_PRED2(
-      lc::MatrixEquality<6>, factor_error.matrix(),
-      (world_T_body_source.rotation() * body_T_sensor.rotation() * (sensor_t_point_source - sensor_t_point_target))
-        .matrix());
+    EXPECT_MATRIX_NEAR(
+      factor_error,
+      (world_T_body_source.rotation() * body_T_sensor.rotation() * (sensor_t_point_source - sensor_t_point_target)),
+      1e-6);
   }
 }
 

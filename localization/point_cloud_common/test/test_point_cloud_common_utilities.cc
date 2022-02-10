@@ -49,7 +49,7 @@ TEST(UtilitiesTester, PointToPlaneJacobian) {
     const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Pose3>(
       boost::function<double(const gtsam::Pose3&)>(boost::bind(&PointToPlaneError, point_1, point_2, normal_2, _1)),
       relative_transform, 1e-5);
-    EXPECT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 
@@ -67,7 +67,7 @@ TEST(UtilitiesTester, PointToPointJacobian) {
     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       boost::function<gtsam::Vector3(const gtsam::Pose3&)>(boost::bind(&PointToPointError, point_1, point_2, _1)),
       relative_transform, 1e-5);
-    EXPECT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 
@@ -802,7 +802,7 @@ TEST(UmeyamaTester, PerfectEstimate) {
     const auto b_T_a = lc::RandomIsometry3d();
     const auto b_T_points = lc::Transform(a_T_points, b_T_a);
     const auto estimated_b_T_a = pc::RelativeTransformUmeyama(a_T_points, b_T_points);
-    EXPECT_PRED2(lc::MatrixEquality<6>, estimated_b_T_a.matrix(), b_T_a.matrix());
+    EXPECT_MATRIX_NEAR(estimated_b_T_a, b_T_a, 1e-6);
   }
 }
 

@@ -50,17 +50,17 @@ TEST(UtilitiesTester, IdentityProjection) {
   {
     const Eigen::Vector3d cam_t_point(1, 1, 1);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, Eigen::Vector2d(1, 1)));
+    EXPECT_MATRIX_NEAR(projected_point, Eigen::Vector2d(1, 1), 1e-6);
   }
   {
     const Eigen::Vector3d cam_t_point(1, 1, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, Eigen::Vector2d(0.5, 0.5)));
+    EXPECT_MATRIX_NEAR(projected_point, Eigen::Vector2d(0.5, 0.5), 1e-6);
   }
   {
     const Eigen::Vector3d cam_t_point(4, 4, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, Eigen::Vector2d(2, 2)));
+    EXPECT_MATRIX_NEAR(projected_point, Eigen::Vector2d(2, 2), 1e-6);
   }
 }
 
@@ -71,19 +71,17 @@ TEST(UtilitiesTester, FocalLengthProjection) {
   {
     const Eigen::Vector3d cam_t_point(1, 1, 1);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths)));
+    EXPECT_MATRIX_NEAR(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths), 1e-6);
   }
   {
     const Eigen::Vector3d cam_t_point(1, 1, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(
-      lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths) / cam_t_point.z()));
+    EXPECT_MATRIX_NEAR(projected_point, (cam_t_point.head<2>().cwiseProduct(focal_lengths) / cam_t_point.z()), 1e-6);
   }
   {
     const Eigen::Vector3d cam_t_point(4, 4, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(
-      lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>().cwiseProduct(focal_lengths) / cam_t_point.z()));
+    EXPECT_MATRIX_NEAR(projected_point, (cam_t_point.head<2>().cwiseProduct(focal_lengths) / cam_t_point.z()), 1e-6);
   }
 }
 
@@ -94,17 +92,17 @@ TEST(UtilitiesTester, PrincipalPointProjection) {
   {
     const Eigen::Vector3d cam_t_point(1, 1, 1);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() + principal_points));
+    EXPECT_MATRIX_NEAR(projected_point, (cam_t_point.head<2>() + principal_points), 1e-6);
   }
   {
     const Eigen::Vector3d cam_t_point(1, 1, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() / cam_t_point.z() + principal_points));
+    EXPECT_MATRIX_NEAR(projected_point, (cam_t_point.head<2>() / cam_t_point.z() + principal_points), 1e-6);
   }
   {
     const Eigen::Vector3d cam_t_point(4, 4, 2);
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
-    EXPECT_TRUE(lc::MatrixEquality<6>(projected_point, cam_t_point.head<2>() / cam_t_point.z() + principal_points));
+    EXPECT_MATRIX_NEAR(projected_point, (cam_t_point.head<2>() / cam_t_point.z() + principal_points), 1e-6);
   }
 }
 
@@ -118,7 +116,7 @@ TEST(UtilitiesTester, ProjectionJacobian) {
     const auto numerical_H = gtsam::numericalDerivative11<Eigen::Vector2d, Eigen::Vector3d>(
       boost::function<Eigen::Vector2d(const Eigen::Vector3d&)>(boost::bind(&vc::Project, _1, intrinsics, boost::none)),
       cam_t_point, 1e-5);
-    EXPECT_TRUE(lc::MatrixEquality<6>(numerical_H.matrix(), H.matrix()));
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 
@@ -128,7 +126,7 @@ TEST(UtilitiesTester, Backprojection) {
     const auto intrinsics = lc::RandomIntrinsics();
     const auto projected_point = vc::Project(cam_t_point, intrinsics);
     const auto backprojected_point = vc::Backproject(projected_point, intrinsics, cam_t_point.z());
-    EXPECT_TRUE(lc::MatrixEquality<6>(cam_t_point.matrix(), backprojected_point.matrix()));
+    EXPECT_MATRIX_NEAR(cam_t_point, backprojected_point, 1e-6);
   }
 }
 
@@ -144,7 +142,7 @@ TEST(UtilitiesTester, BackprojectJacobian) {
       boost::function<Eigen::Vector3d(const double)>(
         boost::bind(&vc::Backproject, measurement, intrinsics, _1, boost::none)),
       z, 1e-5);
-    EXPECT_TRUE(lc::MatrixEquality<6>(numerical_H.matrix(), H.matrix()));
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 

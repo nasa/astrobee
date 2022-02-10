@@ -176,4 +176,12 @@ Eigen::Vector3d RandomFrontFacingPoint(const double rho_min, const double rho_ma
   const Eigen::Vector3d random_point(tmp.z(), tmp.y(), tmp.x());
   return random_point;
 }
+
+bool MatrixEquality(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs, const double tolerance) {
+  // Seperately check for zero matrices since isApprox fails for these
+  if (lhs.isZero(tolerance) || rhs.isZero(tolerance)) {
+    return lhs.isZero(tolerance) && rhs.isZero(tolerance);
+  }
+  return lhs.isApprox(rhs, tolerance);
+}
 }  // namespace localization_common

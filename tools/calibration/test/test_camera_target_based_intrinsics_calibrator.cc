@@ -60,10 +60,8 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsIdentityDis
     ca::CameraTargetBasedIntrinsicsCalibrator<vc::IdentityDistorter> calibrator(params);
     ca::StateParametersCovariances covariances;
     ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
-                 calibrated_state_parameters.focal_lengths.matrix());
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
-                 calibrated_state_parameters.principal_points.matrix());
+    EXPECT_MATRIX_NEAR(true_state_parameters.focal_lengths, calibrated_state_parameters.focal_lengths, 1e-2);
+    EXPECT_MATRIX_NEAR(true_state_parameters.principal_points, calibrated_state_parameters.principal_points, 1e-2);
   }
 }
 
@@ -92,13 +90,11 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsFovDistorti
     ca::CameraTargetBasedIntrinsicsCalibrator<vc::FovDistorter> calibrator(params);
     ca::StateParametersCovariances covariances;
     ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
-                 calibrated_state_parameters.focal_lengths.matrix());
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
-                 calibrated_state_parameters.principal_points.matrix());
+    EXPECT_MATRIX_NEAR(true_state_parameters.focal_lengths, calibrated_state_parameters.focal_lengths, 1e-2);
+    EXPECT_MATRIX_NEAR(true_state_parameters.principal_points, calibrated_state_parameters.principal_points, 1e-2);
     // Use absolute value for Fov distortion comparison since positive and negative values have same meaning
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.cwiseAbs().matrix(),
-                 calibrated_state_parameters.distortion.cwiseAbs().matrix());
+    EXPECT_MATRIX_NEAR(true_state_parameters.distortion.cwiseAbs(), calibrated_state_parameters.distortion.cwiseAbs(),
+                       1e-2);
   }
 }
 
@@ -127,12 +123,9 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadDistorti
     ca::CameraTargetBasedIntrinsicsCalibrator<vc::RadDistorter> calibrator(params);
     ca::StateParametersCovariances covariances;
     ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
-                 calibrated_state_parameters.focal_lengths.matrix());
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
-                 calibrated_state_parameters.principal_points.matrix());
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.matrix(),
-                 calibrated_state_parameters.distortion.matrix());
+    EXPECT_MATRIX_NEAR(true_state_parameters.focal_lengths, calibrated_state_parameters.focal_lengths, 1e-2);
+    EXPECT_MATRIX_NEAR(true_state_parameters.principal_points, calibrated_state_parameters.principal_points, 1e-2);
+    EXPECT_MATRIX_NEAR(true_state_parameters.distortion, calibrated_state_parameters.distortion, 1e-2);
   }
 }
 
@@ -161,12 +154,9 @@ TEST(CameraTargetBasedIntrinsicsCalibratorTester, EvenlySpacedTargetsRadTanDisto
     ca::CameraTargetBasedIntrinsicsCalibrator<vc::RadTanDistorter> calibrator(params);
     ca::StateParametersCovariances covariances;
     ASSERT_TRUE(calibrator.Calibrate(match_sets, noisy_state_parameters, calibrated_state_parameters, covariances));
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.focal_lengths.matrix(),
-                 calibrated_state_parameters.focal_lengths.matrix());
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.principal_points.matrix(),
-                 calibrated_state_parameters.principal_points.matrix());
-    ASSERT_PRED2(lc::MatrixEquality<2>, true_state_parameters.distortion.matrix(),
-                 calibrated_state_parameters.distortion.matrix());
+    EXPECT_MATRIX_NEAR(true_state_parameters.focal_lengths, calibrated_state_parameters.focal_lengths, 1e-2);
+    EXPECT_MATRIX_NEAR(true_state_parameters.principal_points, calibrated_state_parameters.principal_points, 1e-2);
+    EXPECT_MATRIX_NEAR(true_state_parameters.distortion, calibrated_state_parameters.distortion, 1e-2);
   }
 }
 // TODO(rsoussan): Add test with EstimateTargetPoseAndCalibrateIntrinsics once pnp issues are resolved
