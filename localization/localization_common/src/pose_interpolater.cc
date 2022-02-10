@@ -16,19 +16,19 @@
  * under the License.
  */
 
-#include <localization_common/pose_interpolator.h>
+#include <localization_common/pose_interpolater.h>
 #include <localization_common/utilities.h>
 
 namespace localization_common {
-PoseInterpolator::PoseInterpolator(const std::vector<Eigen::Isometry3d>& poses, const std::vector<Time>& timestamps)
+PoseInterpolater::PoseInterpolater(const std::vector<Time>& timestamps, const std::vector<Eigen::Isometry3d>& poses)
     : TimestampedSet<Eigen::Isometry3d>(timestamps, poses) {}
 
-boost::optional<Eigen::Isometry3d> PoseInterpolator::Interpolate(const Time timestamp) const {
+boost::optional<Eigen::Isometry3d> PoseInterpolater::Interpolate(const Time timestamp) const {
   const auto lower_and_upper_bound = LowerAndUpperBound(timestamp);
   // Check if equal timestamp exists
   if (lower_and_upper_bound.second && lower_and_upper_bound.second->timestamp == timestamp)
     return lower_and_upper_bound.second->value;
-  if (!lower_and_upper_bound.first && !lower_and_upper_bound.second) {
+  if (!lower_and_upper_bound.first || !lower_and_upper_bound.second) {
     LogDebug("Interpolate: Failed to get lower and upper bound timestamps for query timestamp " << timestamp << ".");
     return boost::none;
   }
