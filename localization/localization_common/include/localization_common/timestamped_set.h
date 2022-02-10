@@ -45,7 +45,7 @@ class TimestampedSet {
   TimestampedSet();
 
   // Assumes values indices have corresponding timestamps in timestamps vectors and each timestamp is unique.
-  TimestampedSet(const std::vector<T>& values, const std::vector<Time>& timestamps);
+  TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values);
 
   bool Add(const Time timestamp, const T& value);
 
@@ -92,7 +92,7 @@ template <typename T>
 TimestampedSet<T>::TimestampedSet() {}
 
 template <typename T>
-TimestampedSet<T>::TimestampedSet(const std::vector<T>& values, const std::vector<Time>& timestamps) {
+TimestampedSet<T>::TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values) {
   for (int i = 0; i < values.size(); ++i) {
     Add(timestamps[i], values[i]);
   }

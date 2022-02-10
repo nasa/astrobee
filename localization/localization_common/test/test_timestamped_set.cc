@@ -26,6 +26,20 @@
 
 namespace lc = localization_common;
 
+TEST(TimestampedSetTester, Constructor) {
+  std::vector<double> values{0.1, 1.1, 2.1};
+  std::vector<lc::Time> timestamps{5.2, 7.1, 11.3};
+  lc::TimestampedSet<double> timestamped_set(timestamps, values);
+  EXPECT_EQ(timestamped_set.size(), values.size());
+  for (int i = 0; i < timestamps.size(); ++i) {
+    ASSERT_TRUE(timestamped_set.Contains(timestamps[i]));
+    const auto value = timestamped_set.Get(timestamps[i]);
+    ASSERT_TRUE(value != boost::none);
+    EXPECT_EQ(value->value, values[i]);
+    EXPECT_EQ(value->timestamp, timestamps[i]);
+  }
+}
+
 TEST(TimestampedSetTester, AddRemoveContainsEmptySize) {
   lc::TimestampedSet<double> timestamped_set;
   EXPECT_EQ(timestamped_set.size(), 0);
