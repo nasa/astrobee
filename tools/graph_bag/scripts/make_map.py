@@ -128,7 +128,7 @@ def make_map(bagfile,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("bagfile", help="Input bagfile to generate map for.")
     parser.add_argument(
         "-b",
