@@ -138,7 +138,7 @@ if __name__ == "__main__":
         "Optional existing map to merge new bag map into.  Should largely overlap area covered in input bagfile.",
     )
     parser.add_argument(
-        "-m",
+        "-d",
         "--maps-directory",
         default=None,
         help=
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                         default="map_creation_output")
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
-    parser.add_argument("-m", "--map-name", default="bag_map")
+    parser.add_argument("-n", "--map-name", default="bag_map")
 
     args = parser.parse_args()
     if (args.base_surf_map or args.maps_directory
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     if not os.path.isfile(args.bagfile):
         print("Bag file " + args.bagfile + " does not exist.")
         sys.exit()
-    if arg.base_surf_map and not os.path.isfile(args.base_surf_map):
+    if args.base_surf_map and not os.path.isfile(args.base_surf_map):
         print("Base surf map " + args.base_surf_map + " does not exist.")
         sys.exit()
     if args.maps_directory and not os.path.isdir(args.maps_directory):
