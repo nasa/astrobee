@@ -33,6 +33,7 @@ def make_map(bagfile,
              map_name,
              world,
              robot_name,
+             histogram_equalization,
              base_surf_map=None,
              maps_directory=None):
     merge_with_base_map = base_surf_map is not None and maps_directory is not None
@@ -69,8 +70,10 @@ def make_map(bagfile,
     build_map_command = (
         "rosrun sparse_mapping build_map " + all_bag_images + " -output_map " +
         bag_surf_map +
-        " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100"
+        " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -num_subsequent_images 100"
     )
+    if histogram_equalization:
+        build_map_command += " -histogram_equalization"
     utilities.run_command_and_save_output(build_map_command, "build_map.txt")
 
     if merge_with_base_map:
@@ -102,8 +105,10 @@ def make_map(bagfile,
     if merge_with_base_map:
         os.chdir("maps")
     rebuild_map_command = (
-        "rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map "
-        + bag_brisk_map_full_path)
+        "rosrun sparse_mapping build_map -rebuild -output_map " +
+        bag_brisk_map_full_path)
+    if histogram_equalization:
+        rebuild_map_command += " -histogram_equalization"
     utilities.run_command_and_save_output(rebuild_map_command,
                                           rebuild_output_file)
     # Use bag_path since relative commands would now be wrt maps directory simlink
@@ -150,6 +155,14 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
     parser.add_argument("-n", "--map-name", default="bag_map")
+    parser.add_argument(
+        '--no-histogram_equalization',
+        dest='histogram_equalization',
+        action='store_false',
+        help=
+        "Do not apply histrogram equalization during map creation.  Default behavior uses histogram equalization."
+    )
+    parser.set_defaults(histogram_equalization=True)
 
     args = parser.parse_args()
     if (args.base_surf_map or args.maps_directory
@@ -182,4 +195,4 @@ if __name__ == "__main__":
     os.chdir(args.output_directory)
 
     make_map(bagfile, args.map_name, args.world, args.robot_name,
-             base_surf_map, maps_directory)
+             args.histogram_equalization, base_surf_map, maps_directory)

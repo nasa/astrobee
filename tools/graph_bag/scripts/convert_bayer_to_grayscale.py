@@ -45,7 +45,6 @@ if __name__ == "__main__":
                         "--gray-image-topic",
                         default="/mgt/img_sampler/nav_cam/image_record",
                         help="Output gray image topic.")
-    parser.set_defaults(adaptive=True)
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
