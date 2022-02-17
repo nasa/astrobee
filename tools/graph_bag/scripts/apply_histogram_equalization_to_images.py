@@ -43,6 +43,7 @@ if __name__ == "__main__":
                         default="/mgt/img_sampler/nav_cam/image_record",
                         help="Image topic in bagfile.")
     parser.add_argument(
+        '-n',
         '--non-adaptive',
         dest='adaptive',
         action='store_false',
@@ -73,7 +74,6 @@ if __name__ == "__main__":
             equalized_image_msg = bridge.cv2_to_imgmsg(equalized_image,
                                                        encoding="mono8")
             equalized_image_msg.header = msg.header
-            output_bag.write(args.topic, equalized_image_msg,
-                             msg.header.stamp)
+            output_bag.write(args.topic, equalized_image_msg, msg.header.stamp)
 
     output_bag.close()

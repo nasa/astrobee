@@ -154,8 +154,9 @@ if __name__ == "__main__":
                         default="map_creation_output")
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
-    parser.add_argument("-n", "--map-name", default="bag_map")
+    parser.add_argument("-m", "--map-name", default="bag_map")
     parser.add_argument(
+        '-n',
         '--no-histogram_equalization',
         dest='histogram_equalization',
         action='store_false',
