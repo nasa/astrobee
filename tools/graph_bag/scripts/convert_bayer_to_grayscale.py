@@ -45,6 +45,12 @@ if __name__ == "__main__":
                         "--gray-image-topic",
                         default="/mgt/img_sampler/nav_cam/image_record",
                         help="Output gray image topic.")
+    parser.add_argument(
+        "-s",
+        "--save-all-topics",
+        dest="save_all_topics",
+        action="store_true",
+        help="Save all topics from input bagfile to output bagfile.")
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
@@ -53,17 +59,22 @@ if __name__ == "__main__":
     output_bag_name = os.path.splitext(args.bagfile)[0] + "_gray.bag"
     output_bag = rosbag.Bag(output_bag_name, 'w')
     bridge = CvBridge()
+    topics = None if args.save_all_topics else [args.bayer_image_topic]
 
     with rosbag.Bag(args.bagfile, "r") as bag:
-        for _, msg, _ in bag.read_messages([args.bayer_image_topic]):
-            try:
-                image = bridge.imgmsg_to_cv2(msg, "mono8")
-            except CvBridgeError, e:
-                print(e)
-            gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
-            gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
-            gray_image_msg.header = msg.header
-            output_bag.write(args.gray_image_topic, gray_image_msg,
-                             msg.header.stamp)
+        for topic, msg, t in bag.read_messages(topics):
+            if topic == args.bayer_image_topic:
+                try:
+                    image = bridge.imgmsg_to_cv2(msg, "mono8")
+                except CvBridgeError, e:
+                    print(e)
+                gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
+                gray_image_msg = bridge.cv2_to_imgmsg(gray_image,
+                                                      encoding="mono8")
+                gray_image_msg.header = msg.header
+                output_bag.write(args.gray_image_topic, gray_image_msg,
+                                 msg.header.stamp)
+            else:
+                output_bag.write(topic, msg, t)
 
     output_bag.close()
