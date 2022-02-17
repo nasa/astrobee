@@ -72,8 +72,7 @@ if __name__ == "__main__":
                 gray_image_msg = bridge.cv2_to_imgmsg(gray_image,
                                                       encoding="mono8")
                 gray_image_msg.header = msg.header
-                output_bag.write(args.gray_image_topic, gray_image_msg,
-                                 msg.header.stamp)
+                output_bag.write(args.gray_image_topic, gray_image_msg, t)
             else:
                 output_bag.write(topic, msg, t)
 
