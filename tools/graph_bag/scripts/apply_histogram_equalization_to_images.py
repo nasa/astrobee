@@ -35,37 +35,41 @@ import cv2
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("bagfile", help="Input bagfile with grayscale images.")
-    parser.add_argument("-t",
-                        "--topic",
-                        default="/mgt/img_sampler/nav_cam/image_record",
-                        help="Image topic in bagfile.")
     parser.add_argument(
-        '-n',
-        '--non-adaptive',
-        dest='adaptive',
-        action='store_false',
-        help=
-        "Changes equalization approach from adaptive (CLAHE) to non-adaptive (normal histrogram equalization). Default approach is CLAHE."
+        "-t",
+        "--topic",
+        default="/mgt/img_sampler/nav_cam/image_record",
+        help="Image topic in bagfile.",
+    )
+    parser.add_argument(
+        "-n",
+        "--non-adaptive",
+        dest="adaptive",
+        action="store_false",
+        help="Changes equalization approach from adaptive (CLAHE) to non-adaptive (normal histrogram equalization). Default approach is CLAHE.",
     )
     parser.add_argument(
         "-s",
         "--save-all-topics",
         dest="save_all_topics",
         action="store_true",
-        help="Save all topics from input bagfile to output bagfile.")
+        help="Save all topics from input bagfile to output bagfile.",
+    )
     parser.set_defaults(adaptive=True)
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    output_bag_name = os.path.splitext(
-        args.bagfile)[0] + "_clahe.bag" if args.adaptive else os.path.splitext(
-            args.bagfile)[0] + "_hist_equalized.bag"
-    output_bag = rosbag.Bag(output_bag_name, 'w')
+    output_bag_name = (
+        os.path.splitext(args.bagfile)[0] + "_clahe.bag"
+        if args.adaptive
+        else os.path.splitext(args.bagfile)[0] + "_hist_equalized.bag"
+    )
+    output_bag = rosbag.Bag(output_bag_name, "w")
     bridge = CvBridge()
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     topics = None if args.save_all_topics else [args.topic]
@@ -77,10 +81,12 @@ if __name__ == "__main__":
                     image = bridge.imgmsg_to_cv2(msg, "mono8")
                 except (CvBridgeError) as e:
                     print(e)
-                equalized_image = clahe.apply(
-                    image) if args.adaptive else cv2.equalizeHist(image)
-                equalized_image_msg = bridge.cv2_to_imgmsg(equalized_image,
-                                                           encoding="mono8")
+                equalized_image = (
+                    clahe.apply(image) if args.adaptive else cv2.equalizeHist(image)
+                )
+                equalized_image_msg = bridge.cv2_to_imgmsg(
+                    equalized_image, encoding="mono8"
+                )
                 equalized_image_msg.header = msg.header
                 output_bag.write(args.topic, equalized_image_msg, t)
             else:

@@ -34,30 +34,35 @@ import cv2
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("bagfile", help="Input bagfile with bayer images.")
-    parser.add_argument("-b",
-                        "--bayer-image-topic",
-                        default="/hw/cam_nav_bayer",
-                        help="Bayer image topic name.")
-    parser.add_argument("-g",
-                        "--gray-image-topic",
-                        default="/mgt/img_sampler/nav_cam/image_record",
-                        help="Output gray image topic.")
+    parser.add_argument(
+        "-b",
+        "--bayer-image-topic",
+        default="/hw/cam_nav_bayer",
+        help="Bayer image topic name.",
+    )
+    parser.add_argument(
+        "-g",
+        "--gray-image-topic",
+        default="/mgt/img_sampler/nav_cam/image_record",
+        help="Output gray image topic.",
+    )
     parser.add_argument(
         "-s",
         "--save-all-topics",
         dest="save_all_topics",
         action="store_true",
-        help="Save all topics from input bagfile to output bagfile.")
+        help="Save all topics from input bagfile to output bagfile.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
     output_bag_name = os.path.splitext(args.bagfile)[0] + "_gray.bag"
-    output_bag = rosbag.Bag(output_bag_name, 'w')
+    output_bag = rosbag.Bag(output_bag_name, "w")
     bridge = CvBridge()
     topics = None if args.save_all_topics else [args.bayer_image_topic]
 
@@ -69,8 +74,7 @@ if __name__ == "__main__":
                 except (CvBridgeError) as e:
                     print(e)
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
-                gray_image_msg = bridge.cv2_to_imgmsg(gray_image,
-                                                      encoding="mono8")
+                gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
                 gray_image_msg.header = msg.header
                 output_bag.write(args.gray_image_topic, gray_image_msg, t)
             else:
