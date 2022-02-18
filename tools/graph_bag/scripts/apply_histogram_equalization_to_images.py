@@ -75,7 +75,7 @@ if __name__ == "__main__":
             if topic == args.topic:
                 try:
                     image = bridge.imgmsg_to_cv2(msg, "mono8")
-                except CvBridgeError, e:
+                except (CvBridgeError) as e:
                     print(e)
                 equalized_image = clahe.apply(
                     image) if args.adaptive else cv2.equalizeHist(image)

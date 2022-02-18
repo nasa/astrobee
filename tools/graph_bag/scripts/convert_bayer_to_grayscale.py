@@ -66,7 +66,7 @@ if __name__ == "__main__":
             if topic == args.bayer_image_topic:
                 try:
                     image = bridge.imgmsg_to_cv2(msg, "mono8")
-                except CvBridgeError, e:
+                except (CvBridgeError) as e:
                     print(e)
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
                 gray_image_msg = bridge.cv2_to_imgmsg(gray_image,
