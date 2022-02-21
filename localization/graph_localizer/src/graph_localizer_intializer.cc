@@ -58,6 +58,8 @@ void GraphLocalizerInitializer::SetBiases(const gtsam::imuBias::ConstantBias& im
 void GraphLocalizerInitializer::SetStartPose(const lm::TimestampedPose& timestamped_pose) {
   params_.graph_initializer.start_time = timestamped_pose.time;
   params_.graph_initializer.global_T_body_start = timestamped_pose.pose;
+  // Assumes zero initial velocity
+  params_.graph_initializer.global_V_body_start = gtsam::Velocity3::Zero();
   has_start_pose_ = true;
   RemoveGravityFromBiasIfPossibleAndNecessary();
 }

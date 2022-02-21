@@ -25,7 +25,7 @@ namespace lc = localization_common;
 std::vector<Eigen::Vector3d> RandomPoints(const int num_points) {
   std::vector<Eigen::Vector3d> points;
   for (int i = 0; i < num_points; ++i) {
-    points.emplace_back(lc::RandomVector());
+    points.emplace_back(lc::RandomPoint3d());
   }
   return points;
 }
@@ -51,8 +51,8 @@ std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> RandomPoin
   std::vector<Eigen::Vector3d> points;
   std::vector<Eigen::Vector3d> normals;
   for (int i = 0; i < num_points; ++i) {
-    points.emplace_back(lc::RandomVector());
-    normals.emplace_back(lc::RandomVector().normalized());
+    points.emplace_back(lc::RandomPoint3d());
+    normals.emplace_back(lc::RandomVector3d().normalized());
   }
   return std::make_pair(points, normals);
 }

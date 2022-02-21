@@ -617,7 +617,11 @@ int main(int argc, char** argv) {
       cid = num_images - 1;  // The 'End' key was pressed, go to the last image
     }
 
-    if ((ret =='x' || ret == 255) && FLAGS_enable_image_deletion) {
+    // Note that the 'Delete' key is not used, because in some
+    // situations, due to some quirk, certain window events can send a
+    // signal the viewer interprets as this key, and images are
+    // deleted then when not intended.
+    if (ret =='x' && FLAGS_enable_image_deletion) {
       deleteImageFromDiskAndMap(map, imfile);
       num_images = map.GetNumFrames();  // update the number of images
       if (num_images == 0) {

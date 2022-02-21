@@ -35,7 +35,7 @@ TEST(SE3LocalParameterizationTester, SE3Plus) {
     Eigen::Matrix<double, 6, 1> updated_pose_vector;
     se3_plus(pose_vector.data(), delta_vector.data(), updated_pose_vector.data());
     const Eigen::Isometry3d updated_pose_again = oc::Isometry3d(updated_pose_vector);
-    ASSERT_PRED2(lc::MatrixEquality<6>, updated_pose.matrix(), updated_pose_again.matrix());
+    EXPECT_MATRIX_NEAR(updated_pose, updated_pose_again, 1e-6);
   }
 }
 

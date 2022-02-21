@@ -45,3 +45,5 @@ float32 temp
 # or not all of them are enabled.
 ff_msgs/CpuState[] cpus
 
+# Load usage of individual ROS nodes
+ff_msgs/CpuNodeState[] load_nodes

@@ -51,11 +51,11 @@ com_manager = com.ComManager()
 def quat_to_eulers(quat):
     return [
         atan2(
-            2 * (quat.w * quat.x + quat.y * quat.z), 1 - 2 * (quat.x ** 2 + quat.y ** 2)
+            2 * (quat.w * quat.x + quat.y * quat.z), 1 - 2 * (quat.x**2 + quat.y**2)
         ),
         asin(2 * (quat.w * quat.y - quat.z * quat.x)),
         atan2(
-            2 * (quat.w * quat.z + quat.x * quat.y), 1 - 2 * (quat.y ** 2 + quat.z ** 2)
+            2 * (quat.w * quat.z + quat.x * quat.y), 1 - 2 * (quat.y**2 + quat.z**2)
         ),
     ]
 
@@ -797,7 +797,7 @@ def main():
         if args.com_method in (com.DDS_COM, com.ROS_COM):
             com_method = args.com_method
         else:
-            print >>sys.stderr, "Invalid communication method. Must be dds or ros"
+            print >> sys.stderr, "Invalid communication method. Must be dds or ros"
             return
 
     launch_command = None
@@ -806,7 +806,7 @@ def main():
     if com_method == com.DDS_COM and (
         args.launch_command != None or args.disable_pmcs or args.plan != None
     ):
-        print >>sys.stderr, (
+        print >> sys.stderr, (
             "\n###\n"
             + "\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) "
             + 'will not be processed when using DDS mode. You may use "--comm ros" or do not include this '
@@ -820,7 +820,7 @@ def main():
         or args.public_ip != None
         or args.domain != None
     ):
-        print >>sys.stderr, (
+        print >> sys.stderr, (
             "\n###\n"
             + "\nAdditional arguments (--use_ip --robot_name --public_ip) "
             + 'will not be processed when using ROS mode. You may include "--comm dds" '
@@ -831,7 +831,7 @@ def main():
         if args.launch_command == None:
             args.launch_command = []
         if len(args.launch_command) > 1:
-            print >>sys.stderr, "Can only specify one launch command."
+            print >> sys.stderr, "Can only specify one launch command."
             return
         if len(args.launch_command) == 1:
             launch_command = args.launch_command[0]
