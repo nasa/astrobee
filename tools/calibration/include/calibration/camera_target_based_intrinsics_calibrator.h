@@ -28,6 +28,7 @@
 #include <optimization_common/residuals.h>
 #include <optimization_common/se3_local_parameterization.h>
 #include <optimization_common/utilities.h>
+#include <vision_common/pose_estimation.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -80,7 +81,7 @@ bool CameraTargetBasedIntrinsicsCalibrator<DISTORTER>::EstimateInitialTargetPose
   const Eigen::Matrix3d initial_intrinsics =
     optimization_common::Intrinsics(initial_state_parameters.focal_lengths, initial_state_parameters.principal_points);
   for (const auto& correspondences : correspondences_set) {
-    const auto camera_T_target = ReprojectionPoseEstimate<DISTORTER>(
+    const auto camera_T_target = vision_common::ReprojectionPoseEstimate<DISTORTER>(
       correspondences.image_points, correspondences.points_3d, initial_state_parameters.focal_lengths,
       initial_state_parameters.principal_points, initial_state_parameters.distortion,
       params_.reprojection_pose_estimate);

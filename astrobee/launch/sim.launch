@@ -65,12 +65,15 @@
        name="pose"
        default="0 0 -0.7 0 0 0 1" />                         <!-- granite: perch position -->
 
-  <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
-
   <!-- Multi-robot simulation -->
   <arg name="honey" default="false" />          <!-- Insert a honey robot    -->
   <arg name="bumble" default="false" />         <!-- Insert a bumble robot   -->
   <arg name="queen" default="false" />          <!-- Insert a queen robot    -->
+
+  <arg name="honey_pose" default="" />          <!-- Use to overide honey's pose  -->
+  <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
+  <arg name="queen_pose" default="" />          <!-- Use to overide queen's pose  -->
+
 
   <!-- Make sure all environment variables are set for controller -->
   <!-- Override the robot and world environment variables all the time. The -->
@@ -168,7 +171,10 @@
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="honey" />                <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging -->
-      <arg name="pose" value="11 -7 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg if="$(eval arg('honey_pose') == '')" 
+           name="pose"  value="11 -7 4.8 0 0 0 1" />   <!-- Initial robot pose -->
+      <arg unless="$(eval arg('honey_pose') == '')" 
+           name="pose"  value="$(arg honey_pose)" /> 
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
       <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
@@ -209,7 +215,10 @@
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="queen" />                <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging   -->
-      <arg name="pose" value="11 -10 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg if="$(eval arg('queen_pose') == '')" 
+           name="pose"  value="11 -10 4.8 0 0 0 1" />   <!-- Initial robot pose -->
+      <arg unless="$(eval arg('queen_pose') == '')" 
+           name="pose"  value="$(arg queen_pose)" /> 
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
       <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->

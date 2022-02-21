@@ -23,6 +23,7 @@
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/feature_point_node_updater.h>
+#include <graph_localizer/depth_odometry_factor_adder.h>
 #include <graph_localizer/handrail_factor_adder.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_localizer_stats.h>
@@ -40,6 +41,7 @@
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
+#include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/handrail_points_measurement.h>
@@ -93,6 +95,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
+  void AddDepthOdometryMeasurement(
+    const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement);
   bool DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
@@ -118,7 +122,12 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
 
+  const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
+
  private:
+  void InitializeNodeUpdaters();
+  void InitializeFactorAdders();
+  void InitializeGraphActionCompleters();
   void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                 const boost::optional<gtsam::Marginals>& marginals) final;
 
@@ -153,6 +162,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   // Factor Adders
   std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
+  std::shared_ptr<DepthOdometryFactorAdder> depth_odometry_factor_adder_;
   std::shared_ptr<HandrailFactorAdder> handrail_factor_adder_;
   std::shared_ptr<LocFactorAdder> loc_factor_adder_;
   std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;

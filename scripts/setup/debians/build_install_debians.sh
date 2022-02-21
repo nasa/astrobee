@@ -37,7 +37,7 @@ if [ "$DIST" != "xenial" ]; then
   sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
   cd ${DEBIAN_LOC}
   ./build_opencv.sh || exit 1
-  cd ${DEBIAN_LOC}/libopencv
+  mv ${DEBIAN_LOC}/libopencv/libopencv*_amd64.deb .
   sudo dpkg -i libopencv*_amd64.deb || exit 1
 
   # alvar
@@ -118,7 +118,7 @@ cd ${DEBIAN_LOC}
 sudo dpkg -i libopenmvg*_amd64.deb || exit 1
 
 REQUIRED_PKG="rti-dev"
-PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
+PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG 2>&1 | grep "install ok installed" || true)
 echo Checking for $REQUIRED_PKG: $PKG_OK
 if [ "install ok installed" = "$PKG_OK" ]; then
   echo "$REQUIRED_PKG exists. Setting up miro and soracore."
@@ -138,3 +138,6 @@ if [ "install ok installed" = "$PKG_OK" ]; then
   sudo dpkg -i libsoracore*_amd64.deb || exit 1
 
 fi
+
+# Rename debians
+for file in *.deb; do mv "$file" "${file%.deb}_${DIST}.deb"; done;

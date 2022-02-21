@@ -33,7 +33,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 def create_plot(pdf, csv_file, value_combos_file, prefix=""):
     dataframe = pd.read_csv(csv_file)
-    rmses = dataframe[prefix + "rmse"]
+    try:
+        rmses = dataframe[prefix + "rmse"]
+    except:
+        return
     x_axis_vals = []
     x_axis_label = ""
     if value_combos_file:
@@ -97,6 +100,7 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=""):
     plt.close()
 
 
+# TODO(rsoussan): Make this more generic, don't hardcode each RMSE type
 def create_plots(output_file, csv_file, value_combos_file):
     with PdfPages(output_file) as pdf:
         # Graph RMSEs
@@ -121,6 +125,12 @@ def create_plots(output_file, csv_file, value_combos_file):
         create_plot(
             pdf, csv_file, value_combos_file, "rel_imu_bias_tester_orientation_"
         )
+
+        # Depth Odometry RMSEs
+        create_plot(pdf, csv_file, value_combos_file, "depth_odometry_")
+        create_plot(pdf, csv_file, value_combos_file, "depth_odometry_orientation_")
+        create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_")
+        create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_orientation_")
 
 
 if __name__ == "__main__":

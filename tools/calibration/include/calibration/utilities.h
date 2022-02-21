@@ -18,11 +18,11 @@
 #ifndef CALIBRATION_UTILITIES_H_
 #define CALIBRATION_UTILITIES_H_
 
-#include <calibration/camera_utilities.h>
 #include <calibration/match_set.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 #include <optimization_common/utilities.h>
+#include <vision_common/pose_estimation.h>
 
 #include <Eigen/Geometry>
 
@@ -73,7 +73,7 @@ void SaveReprojectionImage(const std::vector<Eigen::Vector2d>& image_points,
     const Eigen::Vector3d& point_3d = points_3d[i];
     const Eigen::Vector3d camera_t_target_point = pose * point_3d;
     const Eigen::Vector2d projected_image_point =
-      Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
+      vision_common::ProjectWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
     const Eigen::Vector2d error = (image_point - projected_image_point);
     const double error_norm = error.norm();
     const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));
@@ -119,7 +119,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Isometry3d>& c
       const auto& target_point = match_set.points_3d[j];
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
       const Eigen::Vector2d projected_image_point =
-        Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
+        vision_common::ProjectWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
       const Eigen::Vector2d error = (image_point - projected_image_point);
       const double error_norm = error.norm();
       if (error_norm > max_error_norm) max_error_norm = error_norm;
@@ -148,7 +148,7 @@ void SaveReprojectionFromAllTargetsImage(const std::vector<Eigen::Isometry3d>& c
       const auto& target_point = match_set.points_3d[j];
       const Eigen::Vector3d camera_t_target_point = camera_T_target * target_point;
       const Eigen::Vector2d projected_image_point =
-        Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
+        vision_common::ProjectWithDistortion<DISTORTER>(camera_t_target_point, intrinsics, distortion);
       const Eigen::Vector2d error = (image_point - projected_image_point);
       const double error_norm = error.norm();
       const cv::Point2i rounded_image_point(std::round(image_point.x()), std::round(image_point.y()));

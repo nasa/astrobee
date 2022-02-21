@@ -19,6 +19,9 @@
 #ifndef LOCALIZATION_COMMON_LOGGER_H_
 #define LOCALIZATION_COMMON_LOGGER_H_
 
+// Needed for ros include
+#include <ff_common/eigen_vectors.h>
+
 #include <ros/console.h>
 
 #include <glog/logging.h>
