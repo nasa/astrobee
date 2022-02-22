@@ -30,7 +30,6 @@ import utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
