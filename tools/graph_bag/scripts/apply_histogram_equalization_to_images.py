@@ -24,14 +24,12 @@ import argparse
 import os
 import sys
 
+import cv2
 import rosbag
 import rospy
 import utilities
-
-from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-
-import cv2
+from sensor_msgs.msg import Image
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
