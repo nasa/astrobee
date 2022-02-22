@@ -145,13 +145,6 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
   return (uncorrected_accelerometer_measurement + imu_F_gravity);
 }
 
-Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation) {
-  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
-  pose.translation() = translation;
-  pose.linear() = rotation;
-  return pose;
-}
-
 double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
 
 double Rad2Deg(const double radians) { return 180.0 / M_PI * radians; }
@@ -229,5 +222,14 @@ std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformP
   std::vector<Eigen::Vector3d> transformed_points = Transform(points, b_T_a);
   std::vector<Eigen::Vector3d> rotated_normals = Rotate(normals, b_T_a.linear());
   return std::make_pair(transformed_points, rotated_normals);
+}
+
+Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const Eigen::Isometry3d& upper_bound_pose,
+                              const double alpha) {
+  const Eigen::Vector3d translation =
+    (1.0 - alpha) * lower_bound_pose.translation() + alpha * upper_bound_pose.translation();
+  const auto rotation =
+    Eigen::Quaterniond(lower_bound_pose.linear()).slerp(alpha, Eigen::Quaterniond(upper_bound_pose.linear()));
+  return Isometry3d(translation, rotation);
 }
 }  // namespace localization_common
