@@ -127,7 +127,7 @@ TEST(InverseDepthMeasurementTester, InvalidProject) {
 TEST(InverseDepthMeasurementTester, ProjectJacobians) {
   constexpr double translation_stddev = 0.05;
   constexpr double rotation_stddev = 1;
-  for (int i = 0; i < 500; ++i) {
+  for (int i = 0; i < 5000; ++i) {
     const gtsam::Point3 source_cam_t_measurement = lc::RandomFrontFacingPoint();
     const gtsam::Pose3 body_T_cam = lc::RandomPose();
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
@@ -163,7 +163,7 @@ TEST(InverseDepthMeasurementTester, ProjectJacobians) {
         gtsam::numericalDerivative11<Eigen::Vector2d, gtsam::Pose3>(
           boost::function<Eigen::Vector2d(const gtsam::Pose3&)>(
             boost::bind(&ProjectPoseJacobianHelper, inverse_depth_measurement, _1, world_T_target_body)),
-          world_T_source_body);
+          world_T_source_body, 1e-6);
       EXPECT_MATRIX_NEAR(numerical_d_projected_point_d_world_T_source_body, d_projected_point_d_world_T_source_body,
                          1e-6);
     }
@@ -173,7 +173,7 @@ TEST(InverseDepthMeasurementTester, ProjectJacobians) {
         gtsam::numericalDerivative11<Eigen::Vector2d, gtsam::Pose3>(
           boost::function<Eigen::Vector2d(const gtsam::Pose3&)>(
             boost::bind(&ProjectPoseJacobianHelper, inverse_depth_measurement, world_T_source_body, _1)),
-          world_T_target_body);
+          world_T_target_body, 1e-6);
       EXPECT_MATRIX_NEAR(numerical_d_projected_point_d_world_T_target_body, d_projected_point_d_world_T_target_body,
                          1e-6);
     }
