@@ -49,8 +49,8 @@ Eigen::Vector2d Project(const Eigen::Vector3d& cam_t_point, const Eigen::Matrix3
     const double z_inv = 1.0 / cam_t_point.z();
     const double z_inv_2 = z_inv * z_inv;
     *d_projected_point_d_cam_t_point << intrinsics(0, 0) * z_inv, intrinsics(0, 1) * z_inv,
-      intrinsics(0, 2) * z_inv - p.x() * z_inv_2, 0, intrinsics(1, 1) * z_inv,
-      intrinsics(1, 2) * z_inv - p.y() * z_inv_2;
+      -intrinsics(0, 0) * cam_t_point.x() * z_inv_2 - intrinsics(0, 1) * cam_t_point.y() * z_inv_2, 0,
+      intrinsics(1, 1) * z_inv, -intrinsics(1, 1) * cam_t_point.y() * z_inv_2;
   }
   return (intrinsics * cam_t_point).hnormalized();
 }
