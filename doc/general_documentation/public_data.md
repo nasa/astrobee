@@ -141,10 +141,10 @@ to log two concurrent telemetry streams:
 
 To reiterate, these two streams are logged concurrently, so it is common
 to have an `immediate` bag file and a `delayed` bag file that cover
-overlapping time intervals. The fact that the two streams are stored in
-separate bag files is not a barrier to analyzing them together: if
-needed, we have tools that enable you to merge bag files in message
-timestamp order.
+overlapping time intervals, recording different topics. The fact that
+the two streams are stored in separate bag files is not a barrier to
+analyzing them together: if needed, we have tools that enable you to
+merge bag files in message timestamp order.
 
 The first part of each bag filename gives the date and time when
 recording of the bag file started, specified in the UTC (also known as
@@ -222,3 +222,19 @@ from: the Astrobee Facility has a script that extracts imagery in order
 to generate a movie for NASA imagery release review.
 
 TODO: Test and provide a detailed example with an Astrobee bag.
+
+## Potential issues
+
+TODO: Discuss how to handle older bags that include messages with
+outdated message definitions, where the message type has changed in the
+latest software version. For example, a new field may have been added to
+the message type, but messages in the older bag don't include it. A
+relevant resource: [rosbag
+migration](http://wiki.ros.org/rosbag/migration). In some cases, rather
+than migrating the bag, it might be easier to revert the installed
+version of the Astrobee flight software to the version that was used to
+record the bag file?
+
+TODO: Discuss issues involved in joining different message types based
+on timestamp, and the possibility of clock skew between multiple
+Astrobee processors.
