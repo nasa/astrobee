@@ -1,8 +1,9 @@
 
 # Using Astrobee Robot Telemetry Logs
 
-Astrobee robot telemetry logs from selected ISS activities can be found
-[here](https://nasagov.box.com/s/4ign43svk39guhy9ev8t5xkzui6tqjm1).
+The ISS Astrobee Facility has established an [Astrobee ISS telemetry
+log public release
+folder](https://nasagov.box.com/s/4ign43svk39guhy9ev8t5xkzui6tqjm1).
 
 Astrobee telemetry logs are also called "bag files" and use the
 [rosbag](http://wiki.ros.org/rosbag) format.
@@ -52,20 +53,23 @@ including:
   invaluable for understanding what actually happened during an
   activity, especially if there were significant anomalies.
 
-- Post-activity data processing. Certain simple processing steps are
-  almost always applied to the telemetry logs before you receive
-  them. For example: Telemetry bag files that were split on the robot
-  may have been merged into a single bag file. Bag file problems such as
-  missing message definition metadata may have been repaired. However,
-  other types of post-activity processing are performed on a
-  case-by-case basis, and the results may not be included in the ISS log
-  file you receive. For example, it is common to log Astrobee NavCam
-  imagery during an ISS activity so that post-activity processing can
-  generate higher-quality position estimates using a costly
-  bundle-adjustment algorithm that can't run in real-time onboard the
-  robot. When this type of processing has been performed, you may prefer
-  to request and use the higher-quality post-activity position estimate
-  vs. the real-time position estimate logged on the ISS.
+- Post-activity data processing.
+  - Certain simple processing steps are almost always applied to the
+    telemetry logs before you receive them. For example:
+    - Telemetry bag files that were split on the robot may have been
+      merged into a single bag file.
+    - Bag file problems such as missing message definition metadata may
+      have been repaired.
+  - However, other types of post-activity processing are performed on a
+    case-by-case basis, and the results may not be included in the ISS
+    log file you receive. For example:
+    - It is common to log Astrobee NavCam imagery during an ISS activity
+      so that post-activity processing can generate higher-quality
+      position estimates using a costly bundle-adjustment algorithm that
+      can't run in real-time onboard the robot. When this type of
+      processing has been performed, you may prefer to request and use
+      the higher-quality post-activity position estimate vs. the
+      real-time position estimate logged on the ISS.
 
 - Research publications. If the activity results were published, the
   publications are often the best resource for detailed context.
@@ -98,7 +102,7 @@ A ROS bag file includes two main types of information:
 
 ## Finding the right bag
 
-In the [Astrobee ISS telemetry public release
+In the [Astrobee ISS telemetry log public release
 folder](https://nasagov.box.com/s/4ign43svk39guhy9ev8t5xkzui6tqjm1), the
 telemetry is packaged as ZIP archives, ordered by ISS activity date.
 
@@ -129,9 +133,11 @@ to log two concurrent telemetry streams:
    activity, ground operators can start and stop bag recording as well
    as switching logging profiles, as directed by the ground
    procedure. The tail end of the filename for each `delayed` stream bag
-   file is also set by the operator. Recording start/stop is
-   frequently used to separate the bag files relating to different
-   procedure steps and give them meaningful names.
+   file is also set by the operator. Recording start/stop is frequently
+   used to separate the bag files relating to different procedure steps
+   and give them meaningful names. Because high-bandwidth imagery
+   logging can quickly exhaust Astrobee's onboard storage, `delayed`
+   stream bag recording is often disabled for most of the activity.
 
 To reiterate, these two streams are logged concurrently, so it is common
 to have an `immediate` bag file and a `delayed` bag file that cover
@@ -141,8 +147,8 @@ needed, we have tools that enable you to merge bag files in message
 timestamp order.
 
 The first part of each bag filename gives the date and time when
-recording of the bag file started, specified in the UTC, also known as
-GMT, time zone used aboard the ISS. For long activities that generate
+recording of the bag file started, specified in the UTC (also known as
+GMT) time zone used onboard the ISS. For long activities that generate
 many bag files, you will probably want to use context information such
 as the ground procedure to determine which bag files are relevant for
 your needs.
@@ -191,3 +197,19 @@ folders:
 - [`ff_hw_msgs`](https://github.com/nasa/astrobee/tree/master/communications/ff_hw_msgs/msg)
 - [`isaac_msgs`](https://github.com/nasa/isaac_msgs/tree/master/isaac_msgs/msg)
 - [`isaac_hw_msgs`](https://github.com/nasa/isaac_msgs/tree/master/isaac_hw_msgs/msg)
+
+## Common bag processing tasks
+
+### Converting a bag to CSV format for import to other tools
+
+Many ROS users have shared their own `bag2csv` scripts, but there is not
+a clear standard implementation.
+
+TODO: Test and provide a detailed example with an Astrobee bag.
+
+### Displaying imagery found within a bag file
+
+Try using the [`rqt_image_view`](http://wiki.ros.org/rqt_image_view) or
+[`rqt_bag`](http://wiki.ros.org/rqt_bag) tools.
+
+TODO: Test and provide a detailed example with an Astrobee bag.
