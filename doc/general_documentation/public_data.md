@@ -213,3 +213,12 @@ Try using the [`rqt_image_view`](http://wiki.ros.org/rqt_image_view) or
 [`rqt_bag`](http://wiki.ros.org/rqt_bag) tools.
 
 TODO: Test and provide a detailed example with an Astrobee bag.
+
+### Exporting imagery found within a bag file
+
+There are multiple tutorials about how to do this with ROS bags. Not
+clear what is the best method. Or an internal example we could build
+from: the Astrobee Facility has a script that extracts imagery in order
+to generate a movie for NASA imagery release review.
+
+TODO: Test and provide a detailed example with an Astrobee bag.
