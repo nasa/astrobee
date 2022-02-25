@@ -155,27 +155,26 @@ your needs.
 
 ## Install before working with bags
 
-In order to use the `rosbag` tools to work with Astrobee bag files, you
-will need to install both the ROS distribution itself and the relevant
-ROS packages that define Astrobee message types. You will always need
-the `ff_msgs` and `ff_hw_msgs` ROS packages, defined in the
-[`astrobee`](https://github.com/nasa/astrobee) repo.
+The short version is that you can get both the ROS bag file tools and
+the message definitions necessary for working with Astrobee bag files by
+following the installation instructions for the Astrobee robot software
+(\ref install-nonNASA).
 
-Depending on the nature of the ISS activity, the bags may include
-additional ROS message types published by any custom guest science
-software that was running. For example, for ISAAC activities, you may
-need the `isaac_msgs` and `isaac_hw_msgs` ROS packages defined in the
-[`isaac_msgs`](https://github.com/nasa/isaac_msgs) repo.
-
-To install these ROS packages, you can follow the general purpose
-software installation instructions for Astrobee (\ref install-nonNASA),
-and for any relevant guest science software.
+Depending on the activity, if there was guest science software installed
+and publishing additional message types, you may need to get the
+necessary message definitions by installing that software as well. For
+example, here are the [ISAAC software installation
+instructions](https://nasa.github.io/isaac/html/md_INSTALL.html).
 
 We also note that, if `rosbag` processing is all you need, it should
-suffice to do a minimal install of just the `*_msgs` ROS packages
-without building the entire Astrobee software system and without
-installing all of its many third-party dependencies. (But that
-slimmed-down install process has not yet been tested and documented.)
+suffice to do a minimal install of just the `ff_msgs` and `ff_hw_msgs`
+ROS packages from the [`astrobee`](https://github.com/nasa/astrobee)
+repo without building the entire Astrobee software system and without
+installing all of its many third-party dependencies. And likewise, just
+the `isaac_msgs` and `isaac_hw_msgs` ROS packages from the
+[`isaac_msgs`](https://github.com/nasa/isaac_msgs) repo should suffice
+for ISAAC messages. (But that slimmed-down install process has not yet
+been tested and documented.)
 
 ## Figuring out what's in the bag
 
