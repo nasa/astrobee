@@ -201,10 +201,16 @@ folders:
 
 ### Converting a bag to CSV format for import to other tools
 
-Many ROS users have shared their own `bag2csv` scripts, but there is not
-a clear standard implementation.
+The following example CSV export uses a bag from the publicly released ZIP archive
+`2021-03-26_SN003_bumble.zip`:
 
-TODO: Test and provide a detailed example with an Astrobee bag.
+```console
+ASTROBEE_DIR=$HOME/astrobee
+# generate a smaller bag containing only the topic of interest (filtering out any bad message types)
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py 20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag -a /loc/pose loc_pose.bag
+# export to CSV
+rostopic echo -b loc_pose.bag -p /loc/pose > loc_pose.csv
+```
 
 ### Displaying imagery found within a bag file
 
@@ -224,6 +230,52 @@ TODO: Test and provide a detailed example with an Astrobee bag.
 
 ## Potential issues
 
+### Incomplete bag metadata
+
+When processing a bag file, you may see an error message like this:
+
+    genmsg.msg_loader.MsgNotFound: Cannot locate message [Header]: unknown package [std_msgs] on search path [{}]
+
+It typically indicates that the bag file metadata is missing some
+required message definition information, most commonly due to a
+[known](https://github.com/rosjava/rosjava_bootstrap/issues/16)
+[bug](https://github.com/nasa/astrobee/issues/402) with messages
+published by nodes using `rosjava`, which we use on the Astrobee HLP).
+
+Frequently, the messages affected by this problem aren't important
+for your analysis goals. In that case, you can detect and filter
+out the affected messages as follows:
+
+```console
+ASTROBEE_DIR=$HOME/astrobee
+# optionally detect bad topics
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_detect_bad_topics.py in.bag
+# example filtering out the usual bad topics
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
+```
+
+If you care about analyzing the affected messages, an alternative
+workaround is to download a script that fixes the bag metadata from the
+[`rosbag_fixer`
+repo](https://github.com/gavanderhoorn/rosbag_fixer). You run it as
+follows:
+
+```console
+git clone https://github.com/gavanderhoorn/rosbag_fixer.git
+FIXER_DIR=`pwd`/rosbag_fixer
+$FIXER_DIR/fix_bag_msg_def.py -l in.bag fixed.bag
+rosbag reindex fixed.bag
+```
+
+However, note that the fixer script may cause problems if the bag
+contains messages with outdated message definitions (see below).
+
+As our processes improve, we hope to ensure future bag files have this
+metadata issue fixed before public data release, so you will not have to
+deal with it.
+
+### Bags containing messages with outdated message definitions
+
 TODO: Discuss how to handle older bags that include messages with
 outdated message definitions, where the message type has changed in the
 latest software version. For example, a new field may have been added to
@@ -233,6 +285,8 @@ migration](http://wiki.ros.org/rosbag/migration). In some cases, rather
 than migrating the bag, it might be easier to revert the installed
 version of the Astrobee flight software to the version that was used to
 record the bag file?
+
+### Analyzing different message types together based on their timestamps
 
 TODO: Discuss issues involved in joining different message types based
 on timestamp, and the possibility of clock skew between multiple
