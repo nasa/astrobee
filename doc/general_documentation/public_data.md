@@ -267,8 +267,8 @@ $FIXER_DIR/fix_bag_msg_def.py -l in.bag fixed.bag
 rosbag reindex fixed.bag
 ```
 
-However, note that the fixer script may cause problems if the bag
-contains messages with outdated message definitions (see below).
+However, note that the fixer script output may be unusable if the input
+bag contains messages with outdated message definitions (see below).
 
 As our processes improve, we hope to ensure future bag files have this
 metadata issue fixed before public data release, so you will not have to
