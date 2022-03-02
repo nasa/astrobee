@@ -21,7 +21,7 @@
 
 #include <camera/camera_params.h>
 #include <localization_analysis/graph_localizer_simulator.h>
-#include <localization_analysis/localization_analysis_params.h>
+#include <localization_analysis/graph_bag_params.h>
 #include <imu_bias_tester/imu_bias_tester_wrapper.h>
 #include <localization_analysis/live_measurement_simulator.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>

@@ -19,7 +19,7 @@
 #define LOCALIZATION_ANALYSIS_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
-#include <localization_analysis/localization_analysis_params.h>
+#include <localization_analysis/graph_bag_params.h>
 #include <localization_analysis/graph_localizer_simulator_params.h>
 #include <localization_analysis/live_measurement_simulator_params.h>
 #include <localization_analysis/message_buffer_params.h>
