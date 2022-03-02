@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   std::string world;
   bool save_all_topics = false;
   std::string config_path_prefix;
-  po::options_description desc("Adds depth odometry relative poses to a new bag file.");
+  po::options_description desc("Adds depth odometry relative poses to a new bag file");
   desc.add_options()("help,h", "produce help message")(
     "bagfile", po::value<std::string>()->required(),
     "Input bagfile containing point cloud and image messages for a depth camera.")(

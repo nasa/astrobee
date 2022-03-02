@@ -73,6 +73,12 @@ if (USE_ROS)
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
   target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
+  ## Declare a C++ executable: convert_depth_msg 
+  add_executable(convert_depth_msg tools/convert_depth_msg.cc)
+  add_dependencies(convert_depth_msg ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(convert_depth_msg
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
   ## Declare a C++ executable: run_bag_imu_filterer
   add_executable(run_bag_imu_filterer tools/run_bag_imu_filterer.cc)
   add_dependencies(run_bag_imu_filterer ${catkin_EXPORTED_TARGETS})
@@ -121,6 +127,7 @@ install(TARGETS run_graph_bag DESTINATION bin)
 install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
 install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
+  COMMAND ln -s ../../bin/convert_depth_msg share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_bag_imu_filterer share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_depth_odometry_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_graph_bag share/${PROJECT_NAME}

@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   po::options_description desc(
     "Reads through a bag file and filters imu measurements, replacing the old imu measurements with new filtered "
     "ones.  Saves output to a new bagfile.");
-  desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
+  desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
     "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("filtered_imu.bag"), "Output bagfile")(
     "filter-name,f", po::value<std::string>(&filter_name)->default_value("none"), "Imu filter name");
   po::positional_options_description p;
@@ -40,14 +40,13 @@ int main(int argc, char** argv) {
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    if (vm.count("help") || (argc <= 1)) {
+      std::cout << desc << "\n";
+      return 1;
+    }
     po::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
-    return 1;
-  }
-
-  if (vm.count("help")) {
-    std::cout << desc << "\n";
     return 1;
   }
 

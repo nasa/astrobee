@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   po::options_description desc(
-    "Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics.");
-  desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Bagfile")(
+    "Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics");
+  desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
     "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
@@ -44,14 +44,13 @@ int main(int argc, char** argv) {
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+   if (vm.count("help") || (argc <= 1)) {
+      std::cout << desc << "\n";
+      return 1;
+    }
     po::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
-    return 1;
-  }
-
-  if (vm.count("help")) {
-    std::cout << desc << "\n";
     return 1;
   }
 

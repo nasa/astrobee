@@ -3,12 +3,34 @@
 # Package Overview
 The localization analysis package provides several tools for measuring localization performance as described below.
 
-# Tools
-## GraphBag
-Graph bag simulates localization using a saved bagfile.  Rather than relying on rosbag play, it loads measurements directly and greatly decreases runtime.  To accurately simulate measurement delays and drops, the LiveMeasurementSimulator class is provided along with a config file to provide delays and minimum spacing between measurements.  Graph bag saves results to a new bag file that can be processed by the plot\_results\_main.py script into a pdf showing information such as poses estiamtes, velocity estimates, bias estiates, covariances, and more.
+## Usage Instructions
+For each tool and script, run `rosrun bag_processing tool_or_script_name -h` for further details and 
+usage instructions.
 
-## BagImuFilterer
-The bag imu filterer enables the testing of imu filters written in c++.  It parses a bag file and loads a c++ imu filter, then saves the filtered data to a new bag file.  The filtered data can be plotted and analyzed by the imu\_analyzer script.
+# Tools
+## `convert_depth_msg`
+Converts messages for depth topic in provided bagfile to intensity images.
+
+## `run_bag_imu_filterer`
+Reads through a bag file and filters imu measurements, replacing the old imu measurements with new filtered ones.
+Saves output to a new bagfile. The filtered data can be plotted and analyzed by the imu\_analyzer script.
+
+## `run_depth_odometry_adder`
+Adds depth odometry relative poses to a new bag file.
+
+## `run_graph_bag`
+Runs graph localization on a bagfile and saves the results to a new bagfile that can be processed by the plot_results_main.py script into a pdf showing information such as poses estiamtes, velocity estimates, bias estiates, covariances, and more.
+Rather than relying on rosbag play, it loads measurements directly and greatly decreases runtime.  To accurately simulate measurement delays and drops, the LiveMeasurementSimulator class is provided along with a config file to provide delays and minimum spacing between measurements. 
+
+## `run_imu_bias_tester_adder`
+Adds imu bias tester predictions to a new bag file using recorded localization states and IMU msgs.
+The IMU biases are taken from the recorded localization state msgs and applied to the IMU msgs to generate 
+IMU poses.
+These predictions are plotted in `run_graph_bag` against provided groundtruth to measure the accuracy of 
+recorded IMU biases.
+
+## `run_sparse_mapping_pose_adder`
+Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics from the robot config file.
 
 # Scripts
 ## bag\_sweep

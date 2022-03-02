@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   std::string world;
   bool use_image_features;
   std::string graph_config_path_prefix;
-  po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
+  po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile");
   desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
                                                        "Input bagfile")(
     "map-file", po::value<std::string>()->required(), "Map file")("config-path,c", po::value<std::string>()->required(),
