@@ -42,10 +42,10 @@ namespace choreographer {
               if (surface) {
                 tmp(j) = zx;
                 tmp(k) = zy;
-                tmp(i) = zmin(i) - map_res_ * 1.001;
+                tmp(i) = zmin(i) + map_res_ * 0.001;
                 map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
                     cell_value;
-                tmp(i) = zmax(i) + map_res_ * 1.001;
+                tmp(i) = zmax(i) - map_res_ * 0.001;
                 map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
                     cell_value;
               // Attribute the desired value to the volume of the zone
@@ -208,6 +208,14 @@ bool Validator::Init(ros::NodeHandle *nh, ff_util::ConfigServer & cfg) {
     SERVICE_MOBILITY_GET_MAP_RESOLUTION);
   get_map_inflation_ = nh->serviceClient<ff_msgs::GetFloat>(
     SERVICE_MOBILITY_GET_MAP_INFLATION);
+
+  // Wait for services to exist
+  if (!get_resolution_.waitForExistence(ros::Duration(5.0))) {
+    ROS_ERROR_STREAM("Mapper service to get map resolution not working");
+  }
+  if (!get_map_inflation_.waitForExistence(ros::Duration(5.0))) {
+    ROS_ERROR_STREAM("Mapper service to get map inflation not working");
+  }
 
   // Check if overwriting is allowed
   zone_file_ = cfg.Get<std::string>("zone_file");
