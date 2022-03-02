@@ -15,6 +15,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Creates a new bagfile with trimmed start and end times from a provided bagfile.
+"""
+
 import argparse
 import os
 import sys
@@ -45,10 +49,12 @@ def trim_bag(bag_name, start_time_to_trim, end_time_to_trim):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("bagfile")
-    parser.add_argument("-s", "--start-time-to-trim", type=float, default=0)
-    parser.add_argument("-e", "--end-time-to-trim", type=float, default=0)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("bagfile", help="Input bagfile.")
+    parser.add_argument("-s", "--start-time-to-trim", type=float, default=0, help="Duration of time to trim from the beginning of the bagfile in seconds.")
+    parser.add_argument("-e", "--end-time-to-trim", type=float, default=0, help="Duration of time to trim from the end of the bagfile in seconds.")
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))

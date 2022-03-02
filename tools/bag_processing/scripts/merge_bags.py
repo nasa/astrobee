@@ -15,6 +15,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Merges bagfiles with given prefix in the current working directory. 
+"""
+
 
 import argparse
 import os
@@ -77,12 +81,13 @@ def merge_bag(input_bag_prefix, merged_bag, only_loc_topics=False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input_bag_prefix")
-    parser.add_argument("--merged-bag", default="")
-    parser.add_argument(
-        "--only-loc-topics", dest="only_loc_topics", action="store_true"
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("--merged-bag", default="")
+    parser.add_argument("input_bag_prefix", help="Prefix for bagfiles to merge. Bags should all be in the current working directory.")
+    parser.add_argument("--merged-bag", default="", help="Output merged bag. By default this is merged_prefix.bag where prefix is the provided bag prefix.")
+    parser.add_argument(
+        "--only-loc-topics", dest="only_loc_topics", action="store_true", help="Only save loc topics to output merged bag."
+    )
     args = parser.parse_args()
     merge_bag(args.input_bag_prefix, args.merged_bag, args.only_loc_topics)

@@ -15,6 +15,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Finds all bag prefixes in the current directory and creates merged bagfiles for each of these. 
+"""
+
 
 import argparse
 import os
@@ -26,10 +30,11 @@ import merge_bags
 import rosbag
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--merged-bag", default="")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
-        "--only-loc-topics", dest="only_loc_topics", action="store_true"
+        "--only-loc-topics", dest="only_loc_topics", action="store_true", help="Only save loc topics to output merged bagfiles."
     )
     args = parser.parse_args()
 
@@ -48,4 +53,4 @@ if __name__ == "__main__":
         print(("Found " + str(len(bag_names)) + " bag file prefixes."))
 
     for bag_name in bag_names:
-        merge_bags.merge_bag(bag_name, args.merged_bag, args.only_loc_topics)
+        merge_bags.merge_bag(bag_name, None, args.only_loc_topics)
