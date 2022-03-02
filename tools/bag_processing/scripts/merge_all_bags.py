@@ -41,7 +41,11 @@ if __name__ == "__main__":
         help="Only save loc topics to output merged bagfiles.",
     )
 
-    parser.add_argument('--bag-prefixes', nargs='*', help="List of bag prefixes to use for merging. If none provided, all bag prefixes in the current directory are used.")
+    parser.add_argument(
+        "--bag-prefixes",
+        nargs="*",
+        help="List of bag prefixes to use for merging. If none provided, all bag prefixes in the current directory are used.",
+    )
     args = parser.parse_args()
 
     bag_names = args.bag_prefixes

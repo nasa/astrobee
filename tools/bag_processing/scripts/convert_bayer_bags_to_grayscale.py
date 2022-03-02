@@ -50,9 +50,13 @@ if __name__ == "__main__":
         action="store_true",
         help="Save all topics from input bagfile to output bagfile.",
     )
-    parser.add_argument('--bags', nargs='*', help="List of bags to convert. If none provided, all bags in the current directory are used.")
+    parser.add_argument(
+        "--bags",
+        nargs="*",
+        help="List of bags to convert. If none provided, all bags in the current directory are used.",
+    )
     args = parser.parse_args()
-    bags = args.bags if args.bags is not None else glob.glob("*.bag") 
+    bags = args.bags if args.bags is not None else glob.glob("*.bag")
     for bag in bags:
         convert_bayer_bag_to_grayscale.convert_bayer_to_grayscale(
             bag, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics
