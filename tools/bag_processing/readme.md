@@ -19,7 +19,8 @@ Also prints stats for the time differences for messages with the provided topic 
 Converts bayer encoded color images to grayscale.
 
 ## `convert_all_bayer_bags_to_grayscale`
-Converts all bags in a directory with bayer encoded color images to grayscale.
+Creates a new bagfile with grayscale images for the provided bags using their bayer encoded images.
+If no bags are provided, runs conversion for each bag in the current directory.
 
 ## `get_msg_stats` 
 Prints stats for a numeric field of a topic in a bagfile.
@@ -28,8 +29,8 @@ Prints stats for a numeric field of a topic in a bagfile.
 Merges bagfiles with given prefix in the current directory.
 
 ## `merge_all_bags`
-Finds all the different bag prefixes in the current directory and creates 
-merged bagfiles for these.
+Creates merged bagfiles for each provided bag prefix or for each prefix in the current directory
+if none are provided. 
 
 ## `trim_bag`
 Creates a new bagfile with trimmed start and end times from a provided

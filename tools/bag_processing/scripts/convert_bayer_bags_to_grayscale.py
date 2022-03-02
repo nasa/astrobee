@@ -16,14 +16,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Creates a new bagfile with grayscale images for each bag in the current directory using its bayer encoded images.
+Creates a new bagfile with grayscale images for the provided bags using their bayer encoded images.
+If no bags are provided, runs conversion for each bag in the current directory.
 """
 
 
 import argparse
 import glob
 
-import convert_bayer_to_grayscale
+import convert_bayer_bag_to_grayscale
 import rosbag
 
 if __name__ == "__main__":
@@ -49,8 +50,10 @@ if __name__ == "__main__":
         action="store_true",
         help="Save all topics from input bagfile to output bagfile.",
     )
+    parser.add_argument('--bags', nargs='*', help="List of bags to convert. If none provided, all bags in the current directory are used.")
     args = parser.parse_args()
-    for bag in glob.glob("*.bag"):
-        convert_bayer_to_grayscale.convert_bayer_to_grayscale(
+    bags = args.bags if args.bags is not None else glob.glob("*.bag") 
+    for bag in bags:
+        convert_bayer_bag_to_grayscale.convert_bayer_to_grayscale(
             bag, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics
         )

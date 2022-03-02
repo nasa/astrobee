@@ -16,7 +16,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Finds all bag prefixes in the current directory and creates merged bagfiles for each of these. 
+Creates merged bagfiles for each provided bag prefix or for each prefix in the current directory
+if none are provided. 
 """
 
 
@@ -39,21 +40,25 @@ if __name__ == "__main__":
         action="store_true",
         help="Only save loc topics to output merged bagfiles.",
     )
+
+    parser.add_argument('--bag-prefixes', nargs='*', help="List of bag prefixes to use for merging. If none provided, all bag prefixes in the current directory are used.")
     args = parser.parse_args()
 
-    # Find bagfiles with bag prefix in current directory, fail if none found
-    bag_names = [
-        (os.path.splitext(bag)[0]).rstrip(string.digits)
-        for bag in os.listdir(".")
-        if os.path.isfile(bag) and bag.endswith(".bag")
-    ]
-    # Remove duplicates
-    bag_names = sorted(set(bag_names))
-    if len(bag_names) == 0:
-        print("No bag files found")
-        sys.exit()
-    else:
-        print(("Found " + str(len(bag_names)) + " bag file prefixes."))
+    bag_names = args.bag_prefixes
+    if bag_names is None:
+        # Find bagfiles with bag prefix in current directory, fail if none found
+        bag_names = [
+            (os.path.splitext(bag)[0]).rstrip(string.digits)
+            for bag in os.listdir(".")
+            if os.path.isfile(bag) and bag.endswith(".bag")
+        ]
+        # Remove duplicates
+        bag_names = sorted(set(bag_names))
+        if len(bag_names) == 0:
+            print("No bag files found")
+            sys.exit()
+        else:
+            print(("Found " + str(len(bag_names)) + " bag file prefixes."))
 
     for bag_name in bag_names:
         merge_bags.merge_bag(bag_name, None, args.only_loc_topics)
