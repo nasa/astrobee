@@ -33,17 +33,34 @@ recorded IMU biases.
 Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics from the robot config file.
 
 # Scripts
-## bag\_sweep
-The bag sweep tool runs the graph bag tool in parallel on multiple bag files.  It takes config file with bagnames, map names, and robot configs and produces pdfs and result bagfiles for each entry.
+## `bag_and_parameter_sweep`
+Runs a parameter sweep on a set of bagfiles.  See parameter_sweep.py and bag_sweep.py for more details
+on parameter and bag sweeps.
+
+## `bag_sweep`
+The bag sweep tool runs the graph bag tool in parallel on multiple bag files.  It takes config file with bag names, map names, and robot configs and produces pdfs and result bagfiles for each entry.
 Example config file:   
 ```
-/home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/astrobee config/robots/bumble.config iss false  
-/home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/astrobee config/robots/bumble.config iss false
+/home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false  
+/home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false
 ```
 Example bag sweep command:  
 ```
 rosrun localization_analysis bag_sweep.py /home/bag_sweep_config.csv /home/output_dir
 ``` 
+
+## `depth_odometry_parameter_sweep`
+## `get_average_opt_and_update_times`
+## `groundtruth_sweep`
+## `imu_analyzer`
+## `make_groundtruth`
+## `make_map`
+## `parameter_sweep`
+## `plot_all_results`
+## `plot_results`
+## `run_graph_bag_and_plot_results`
+## `plot_all_results`
+
 
 ## imu\_analyzer\_main
 The imu analyzer tool plots imu data and also filtered imu data.  It can use python filtering tools to lowpass filter imu data at a certain cutoff frequency, or it can use a provided bag file with filtered imu data and compare this against a bag file with unfiltered data.  Data is plotted in its raw form and also after being passed through an FFT to show its frequency response.

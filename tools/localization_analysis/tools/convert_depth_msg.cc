@@ -75,13 +75,14 @@ void ConvertBag(const std::string& input_bagfile, const std::string& output_bagf
 
 int main(int argc, char** argv) {
   po::options_description desc("Converts messages for depth topic in provided bagfile to intensity images.");
-  desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile.");
+  desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
+                                                       "Input bagfile.");
   po::positional_options_description p;
   p.add("bagfile", 1);
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-   if (vm.count("help") || (argc <= 1)) {
+    if (vm.count("help") || (argc <= 1)) {
       std::cout << desc << "\n";
       return 1;
     }

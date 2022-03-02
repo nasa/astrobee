@@ -131,13 +131,3 @@ def create_plots(output_file, csv_file, value_combos_file):
         create_plot(pdf, csv_file, value_combos_file, "depth_odometry_orientation_")
         create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_")
         create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_orientation_")
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    # Csv file with combined results (or mean results if using bag_and_param_sweep) for each job
-    parser.add_argument("csv_file")
-    parser.add_argument("--output-file", default="param_sweep_results.pdf")
-    parser.add_argument("--value-combos-file")
-    args = parser.parse_args()
-    create_plots(args.output_file, args.csv_file, args.value_combos_file)

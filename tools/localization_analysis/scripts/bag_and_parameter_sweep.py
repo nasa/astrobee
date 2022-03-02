@@ -16,6 +16,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Runs a parameter sweep on a set of bagfiles.  See parameter_sweep.py and bag_sweep.py for more details
+on parameter and bag sweeps.
+"""
 
 import argparse
 import os
@@ -104,9 +108,11 @@ def bag_and_parameter_sweep(graph_bag_params_list, output_dir):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config_file")
-    parser.add_argument("output_dir")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("config_file", help="Config file containing information for bag sweep.  See bag_sweep.py script for more details.")
+    parser.add_argument("output_dir", help="Output directory where results are saved.")
     args = parser.parse_args()
     if not os.path.isfile(args.config_file):
         print(("Config file " + args.config_file + " does not exist."))

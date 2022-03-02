@@ -441,29 +441,3 @@ def create_plot(
                 rel_imu_bias_tester_orientation_rmses_2,
                 label_2,
             )
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    # Combined csv results, where each row is the result from a bag file
-    parser.add_argument("csv_file")
-    parser.add_argument("--output-file", default="bag_sweep_results.pdf")
-    parser.add_argument("--csv-file2", help="Optional second csv file to plot")
-    parser.add_argument(
-        "--label1", default="", help="Optional label for first csv file"
-    )
-    parser.add_argument(
-        "--label2", default="", help="Optional label for second csv file"
-    )
-    parser.add_argument(
-        "--no-imu-augmented2", dest="imu_augmented2", action="store_false"
-    )
-    args = parser.parse_args()
-    create_plot(
-        args.output_file,
-        args.csv_file,
-        args.label1,
-        args.csv_file2,
-        args.label2,
-        args.imu_augmented2,
-    )

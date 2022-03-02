@@ -31,7 +31,6 @@ import math
 import multiprocessing
 import os
 
-import average_results
 import config_creator
 import numpy as np
 import parameter_sweep_utilities
