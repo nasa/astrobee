@@ -28,6 +28,9 @@ namespace choreographer {
     Vec3f zmin, zmax;
     for (auto &zone : zones_.zones) {
       if (zone.type == type) {
+        // If it's a keepin zone, the border should be added outside
+        double gap = (zone.type == ff_msgs::Zone::KEEPIN) ? map_res_ : -map_res_ * 0.001;
+
         zmin << std::min(zone.min.x, zone.max.x),
             std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
         zmax << std::max(zone.min.x, zone.max.x),
@@ -42,10 +45,10 @@ namespace choreographer {
               if (surface) {
                 tmp(j) = zx;
                 tmp(k) = zy;
-                tmp(i) = zmin(i) + map_res_ * 0.001;
+                tmp(i) = zmin(i) - gap;
                 map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
                     cell_value;
-                tmp(i) = zmax(i) - map_res_ * 0.001;
+                tmp(i) = zmax(i) + gap;
                 map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
                     cell_value;
               // Attribute the desired value to the volume of the zone
