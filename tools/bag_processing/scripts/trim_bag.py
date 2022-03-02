@@ -53,8 +53,20 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
-    parser.add_argument("-s", "--start-time-to-trim", type=float, default=0, help="Duration of time to trim from the beginning of the bagfile in seconds.")
-    parser.add_argument("-e", "--end-time-to-trim", type=float, default=0, help="Duration of time to trim from the end of the bagfile in seconds.")
+    parser.add_argument(
+        "-s",
+        "--start-time-to-trim",
+        type=float,
+        default=0,
+        help="Duration of time to trim from the beginning of the bagfile in seconds.",
+    )
+    parser.add_argument(
+        "-e",
+        "--end-time-to-trim",
+        type=float,
+        default=0,
+        help="Duration of time to trim from the end of the bagfile in seconds.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))

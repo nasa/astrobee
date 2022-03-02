@@ -33,9 +33,20 @@ if __name__ == "__main__":
     )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("topic", help="Topic to check.")
-    parser.add_argument("-m", "--max-time-diff", type=float, default=0.5, help="Maximum time difference for a gap, time differences above this will be counted as gaps.")
+    parser.add_argument(
+        "-m",
+        "--max-time-diff",
+        type=float,
+        default=0.5,
+        help="Maximum time difference for a gap, time differences above this will be counted as gaps.",
+    )
     # Use header or received time
-    parser.add_argument("-r", "--use-receive-time", action="store_true", help="Use receive time instead of header time.")
+    parser.add_argument(
+        "-r",
+        "--use-receive-time",
+        action="store_true",
+        help="Use receive time instead of header time.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))

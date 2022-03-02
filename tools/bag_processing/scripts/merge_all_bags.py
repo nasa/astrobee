@@ -34,7 +34,10 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "--only-loc-topics", dest="only_loc_topics", action="store_true", help="Only save loc topics to output merged bagfiles."
+        "--only-loc-topics",
+        dest="only_loc_topics",
+        action="store_true",
+        help="Only save loc topics to output merged bagfiles.",
     )
     args = parser.parse_args()
 

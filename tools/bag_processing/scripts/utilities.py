@@ -18,6 +18,7 @@
 import numpy as np
 import rosbag
 
+
 def get_topic_rates(
     bag_name,
     topic,

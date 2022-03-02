@@ -48,7 +48,9 @@ if __name__ == "__main__":
         dest="save_all_topics",
         action="store_true",
         help="Save all topics from input bagfile to output bagfile.",
-    ) 
+    )
     args = parser.parse_args()
     for bag in glob.glob("*.bag"):
-        convert_bayer_to_grayscale.convert_bayer_to_grayscale(bag, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics)
+        convert_bayer_to_grayscale.convert_bayer_to_grayscale(
+            bag, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics
+        )

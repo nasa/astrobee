@@ -30,7 +30,10 @@ import utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
-def convert_bayer_to_grayscale(bagfile, bayer_image_topic, gray_image_topic, save_all_topics = False):
+
+def convert_bayer_to_grayscale(
+    bagfile, bayer_image_topic, gray_image_topic, save_all_topics=False
+):
     bridge = CvBridge()
     topics = None if save_all_topics else [bayer_image_topic]
     output_bag_name = os.path.splitext(bagfile)[0] + "_gray.bag"
@@ -50,7 +53,7 @@ def convert_bayer_to_grayscale(bagfile, bayer_image_topic, gray_image_topic, sav
             else:
                 output_bag.write(topic, msg, t)
     output_bag.close()
- 
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -81,4 +84,9 @@ if __name__ == "__main__":
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    convert_bayer_to_grayscale(args.bagfile, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics)
+    convert_bayer_to_grayscale(
+        args.bagfile,
+        args.bayer_image_topic,
+        args.gray_image_topic,
+        args.save_all_topics,
+    )
