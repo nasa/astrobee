@@ -89,67 +89,6 @@ def basename(filename):
 
 
 # TODO(rsoussan): Move these to different utilities file
-def get_topic_rates(
-    bag_name,
-    topic,
-    min_time_diff_for_gap,
-    use_header_time=True,
-    verbose=False,
-    ignore_zero_time_diffs=True,
-):
-    with rosbag.Bag(bag_name, "r") as bag:
-        last_time = 0.0
-        gaps = 0
-        time_diffs = []
-        for _, msg, t in bag.read_messages([topic]):
-            time = (
-                msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9
-                if use_header_time
-                else t.secs + t.nsecs * 1.0e-9
-            )
-            time_diff = time - last_time
-            if last_time != 0 and time_diff >= min_time_diff_for_gap:
-                if verbose:
-                    print(
-                        (
-                            topic
-                            + " Gap: time: "
-                            + str(time)
-                            + ", last_time: "
-                            + str(last_time)
-                            + ", diff: "
-                            + str(time_diff)
-                        )
-                    )
-                gaps += 1
-            if last_time != 0 and (time_diff != 0 or not ignore_zero_time_diffs):
-                time_diffs.append(time_diff)
-            last_time = time
-
-        mean_time_diff = np.mean(time_diffs)
-        min_time_diff = np.min(time_diffs)
-        max_time_diff = np.max(time_diffs)
-        stddev_time_diff = np.std(time_diffs)
-        if verbose:
-            if use_header_time:
-                print("Using Header time.")
-            else:
-                print("Using Receive time.")
-            print(
-                (
-                    "Found "
-                    + str(gaps)
-                    + " time diffs >= "
-                    + str(min_time_diff_for_gap)
-                    + " secs."
-                )
-            )
-            print(("Mean time diff: " + str(mean_time_diff)))
-            print(("Min time diff: " + str(min_time_diff)))
-            print(("Max time diff: " + str(max_time_diff)))
-            print(("Stddev time diff: " + str(stddev_time_diff)))
-
-
 def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name):
     starting_relative_time = relative_poses.times[0]
     np_times = np.array(absolute_poses.times)
