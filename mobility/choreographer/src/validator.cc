@@ -199,7 +199,8 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
     tmp << it->pose.position.x, it->pose.position.y, it->pose.position.z;
     if (jps_map_util_->isOccupied(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_OUT;
-    else if (jps_map_util_->isUnKnown(jps_map_util_->floatToInt(tmp)))
+    else if (jps_map_util_->isUnKnown(jps_map_util_->floatToInt(tmp)) ||
+              jps_map_util_->isOutSide(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_IN;
   }
   return SUCCESS;
