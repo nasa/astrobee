@@ -17,3 +17,18 @@
 
 cmake_minimum_required(VERSION 3.0)
 project(bag_processing)
+
+if (USE_ROS)
+  ## Compile as C++14, supported in ROS Kinetic and newer
+  add_compile_options(-std=c++14)
+
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    rosbag
+  )
+
+  catkin_package(
+    LIBRARIES ${PROJECT_NAME}
+    CATKIN_DEPENDS rosbag 
+  )
+endif (USE_ROS)
