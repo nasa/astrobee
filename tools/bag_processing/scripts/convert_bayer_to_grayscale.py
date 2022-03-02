@@ -30,15 +30,15 @@ import utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
-def convert_bayer_to_grayscale(bagfile, bayer_image_topic, grayscale_image_topic, save_all_topics = False):
+def convert_bayer_to_grayscale(bagfile, bayer_image_topic, gray_image_topic, save_all_topics = False):
     bridge = CvBridge()
-    topics = None if args.save_all_topics else [args.bayer_image_topic]
+    topics = None if save_all_topics else [bayer_image_topic]
     output_bag_name = os.path.splitext(bagfile)[0] + "_gray.bag"
     output_bag = rosbag.Bag(output_bag_name, "w")
 
-    with rosbag.Bag(args.bagfile, "r") as bag:
+    with rosbag.Bag(bagfile, "r") as bag:
         for topic, msg, t in bag.read_messages(topics):
-            if topic == args.bayer_image_topic:
+            if topic == bayer_image_topic:
                 try:
                     image = bridge.imgmsg_to_cv2(msg, "mono8")
                 except (CvBridgeError) as e:
@@ -46,7 +46,7 @@ def convert_bayer_to_grayscale(bagfile, bayer_image_topic, grayscale_image_topic
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
                 gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
                 gray_image_msg.header = msg.header
-                output_bag.write(args.gray_image_topic, gray_image_msg, t)
+                output_bag.write(gray_image_topic, gray_image_msg, t)
             else:
                 output_bag.write(topic, msg, t)
     output_bag.close()

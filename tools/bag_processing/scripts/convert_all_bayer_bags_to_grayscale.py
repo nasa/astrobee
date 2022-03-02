@@ -21,6 +21,7 @@ Creates a new bagfile with grayscale images for each bag in the current director
 
 
 import argparse
+import glob
 
 import convert_bayer_to_grayscale
 import rosbag
