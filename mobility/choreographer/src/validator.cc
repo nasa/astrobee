@@ -29,7 +29,8 @@ namespace choreographer {
     for (auto &zone : zones_.zones) {
       if (zone.type == type) {
         // If it's a keepin zone, the border should be added outside
-        double gap = (zone.type == ff_msgs::Zone::KEEPIN) ? map_res_ : -map_res_ * 0.001;
+        // The second term is used to assure the selected voxel is the inner one when specifying boundaries
+        double gap = (zone.type == ff_msgs::Zone::KEEPIN) ? map_res_ - map_res_ * 0.001 : - map_res_ * 0.001;
 
         zmin << std::min(zone.min.x, zone.max.x),
             std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
