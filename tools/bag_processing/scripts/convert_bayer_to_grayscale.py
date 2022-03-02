@@ -30,9 +30,11 @@ import utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
-def convert_bayer_to_grayscale(bagfile, output_bagfile, bayer_image_topic, grayscale_image_topic, save_all_topics = False):
+def convert_bayer_to_grayscale(bagfile, bayer_image_topic, grayscale_image_topic, save_all_topics = False):
     bridge = CvBridge()
     topics = None if args.save_all_topics else [args.bayer_image_topic]
+    output_bag_name = os.path.splitext(bagfile)[0] + "_gray.bag"
+    output_bag = rosbag.Bag(output_bag_name, "w")
 
     with rosbag.Bag(args.bagfile, "r") as bag:
         for topic, msg, t in bag.read_messages(topics):
@@ -47,7 +49,7 @@ def convert_bayer_to_grayscale(bagfile, output_bagfile, bayer_image_topic, grays
                 output_bag.write(args.gray_image_topic, gray_image_msg, t)
             else:
                 output_bag.write(topic, msg, t)
-
+    output_bag.close()
  
 
 if __name__ == "__main__":
@@ -79,8 +81,4 @@ if __name__ == "__main__":
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    output_bag_name = os.path.splitext(args.bagfile)[0] + "_gray.bag"
-    convert_bayer_to_grayscale(args.bagfile, output_bag_name, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics = False):
-    convert_bayer_to_grayscale(
-    output_bag = rosbag.Bag(output_bag_name, "w")
-   output_bag.close()
+    convert_bayer_to_grayscale(args.bagfile, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics)

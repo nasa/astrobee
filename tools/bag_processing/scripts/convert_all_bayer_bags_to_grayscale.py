@@ -15,37 +15,39 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Creates a new bagfile with grayscale images for each bag in the current directory using its bayer encoded images.
+"""
+
 
 import argparse
-import os
-import re
-import string
-import sys
 
-import merge_bags
+import convert_bayer_to_grayscale
 import rosbag
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--merged-bag", default="")
-    parser.add_argument(
-        "--only-loc-topics", dest="only_loc_topics", action="store_true"
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    parser.add_argument(
+        "-b",
+        "--bayer-image-topic",
+        default="/hw/cam_nav_bayer",
+        help="Bayer image topic name.",
+    )
+    parser.add_argument(
+        "-g",
+        "--gray-image-topic",
+        default="/mgt/img_sampler/nav_cam/image_record",
+        help="Output gray image topic.",
+    )
+    parser.add_argument(
+        "-s",
+        "--save-all-topics",
+        dest="save_all_topics",
+        action="store_true",
+        help="Save all topics from input bagfile to output bagfile.",
+    ) 
     args = parser.parse_args()
-
-    # Find bagfiles with bag prefix in current directory, fail if none found
-    bag_names = [
-        (os.path.splitext(bag)[0]).rstrip(string.digits)
-        for bag in os.listdir(".")
-        if os.path.isfile(bag) and bag.endswith(".bag")
-    ]
-    # Remove duplicates
-    bag_names = sorted(set(bag_names))
-    if len(bag_names) == 0:
-        print("No bag files found")
-        sys.exit()
-    else:
-        print(("Found " + str(len(bag_names)) + " bag file prefixes."))
-
-    for bag_name in bag_names:
-        merge_bags.merge_bag(bag_name, args.merged_bag, args.only_loc_topics)
+    for bag in glob.glob("*.bag"):
+        convert_bayer_to_grayscale.convert_bayer_to_grayscale(bag, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics)
