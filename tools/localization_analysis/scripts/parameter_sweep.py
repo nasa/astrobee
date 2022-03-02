@@ -16,6 +16,15 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Runs a parameter sweep for the graph localizer using the provided bagfile.
+Parameters to sweep on are set in the make_value_ranges function and applied to 
+the graph_localizer.config file.
+All combinations of provided parameters are used for the sweep and the results
+are plotted for various RMSEs. 
+"""
+
+
 
 import argparse
 import csv
@@ -231,7 +240,9 @@ def make_values_and_parameter_sweep(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("bag_file", help="Full path to bagfile.")
     parser.add_argument("map_file", help="Full path to map file.")
     parser.add_argument("image_topic", help="Image topic.")

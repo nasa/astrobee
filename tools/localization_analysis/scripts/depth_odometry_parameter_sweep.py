@@ -18,7 +18,8 @@
 # under the License.
 """
 Runs a parameter sweep for depth odometry using the provided bagfile.
-Parameters to sweep on are set in the make_value_ranges function.
+Parameters to sweep on are set in the make_value_ranges function and applied to 
+the localization/depth_odometry.config file.
 All combinations of provided parameters are used for the sweep and the results
 are plotted for various RMSEs. 
 """

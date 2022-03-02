@@ -50,12 +50,20 @@ rosrun localization_analysis bag_sweep.py /home/bag_sweep_config.csv /home/outpu
 ``` 
 
 ## `depth_odometry_parameter_sweep`
+Runs a parameter sweep for depth odometry on a bagfile and plots the results.
+
 ## `get_average_opt_and_update_times`
+Prints stats for the optimization and update times of the graph localizer
+from the recorded graph_state messages in the provided bagfile.
+
 ## `groundtruth_sweep`
 ## `imu_analyzer`
 ## `make_groundtruth`
 ## `make_map`
+
 ## `parameter_sweep`
+Runs a parameter sweep for the graph localizer on a bagfile and plots the results.
+
 ## `plot_all_results`
 ## `plot_results`
 ## `run_graph_bag_and_plot_results`
@@ -83,9 +91,4 @@ for further details and usage instructions.
 ## groundtruth\_sweep.py
 Creates groundtruth in parallel for a set of bagfiles.
 See 'rosrun graph\_bag groundtruth\_sweep.py -h'
-for further details and usage instructions.
-
-## depth\_odometry\_parameter\_sweep.py
-Runs a parameter sweep for depth odometry on a bagfile and plots the results.
-See 'rosrun depth\_odometry\_parameter\_sweep.py -h'
 for further details and usage instructions.

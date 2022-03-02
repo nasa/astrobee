@@ -15,6 +15,12 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Prints stats for the optimization and update times of the graph localizer
+from the recorded graph_state messages in the provided bagfile.
+"""
+
+
 import argparse
 import os
 import sys
@@ -51,8 +57,10 @@ def get_average_opt_and_update_times(bagfile):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("bagfile")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("bagfile", help="Input bagfile.")
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
