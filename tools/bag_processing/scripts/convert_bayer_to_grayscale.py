@@ -30,7 +30,8 @@ import utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
-
+# TODO(rsoussan): Update/remove comment when color conversion issue resolved.
+# We suspect this hard-coded RGB color mapping is not correct for the Astrobee NavCam/DockCam camera Bayer pattern. It may have swapped color channels. A color channel swap has a subtle effect on grayscale output because different color channels have different weighting factors when outputting luminance calibrated for human perception. However, for the purposes of this script, the key requirement is to exactly replicate the onboard debayer conversion performed in the FSW is_camera ROS node, so localization features will be the same regardless of which tool is used to do the conversion.
 def convert_bayer_to_grayscale(
     bagfile, bayer_image_topic, gray_image_topic, save_all_topics=False
 ):
