@@ -111,7 +111,8 @@ void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::Featu
   if (!publish_optical_flow_images_->getBool()) return;
   const auto img = getImage(latest_graph_time);
   if (!img) return;
-  const auto feature_track_image = localization_analysis::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
+  const auto feature_track_image =
+    localization_analysis::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
   if (!feature_track_image) return;
   optical_flow_image_pub_.publish(*feature_track_image);
 }
@@ -265,7 +266,8 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
 
   for (const auto loc_projection_factor : latest_loc_projection_factors) {
     const auto projected_point = camera.project(loc_projection_factor->landmark_point());
-    const auto distorted_measurement = localization_analysis::Distort(loc_projection_factor->measured(), *nav_cam_params_);
+    const auto distorted_measurement =
+      localization_analysis::Distort(loc_projection_factor->measured(), *nav_cam_params_);
     cv::circle(loc_projection_factor_image.image, distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0),
                -1 /*Filled*/, 8);
     const auto distorted_projected_point = localization_analysis::Distort(projected_point, *nav_cam_params_);
