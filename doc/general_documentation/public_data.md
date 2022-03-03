@@ -199,17 +199,43 @@ folders:
 
 ## Common bag processing tasks
 
-### Converting a bag to CSV format for import to other tools
+### Converting a bag to CSV format
 
 The following example CSV export uses a bag from the publicly released ZIP archive
 `2021-03-26_SN003_bumble.zip`:
 
 ```console
 ASTROBEE_DIR=$HOME/astrobee
+BAG=20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag
 # generate a smaller bag containing only the topic of interest (filtering out any bad message types)
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py 20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag -a /loc/pose loc_pose.bag
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
 # export to CSV
 rostopic echo -b loc_pose.bag -p /loc/pose > loc_pose.csv
+```
+
+### Combining different message topics based on their timestamps
+
+Often we want to analyze two message topics together, combining the
+fields of messages on both topics that were received around the same
+time. For example, we might want to join sensor measurement messages
+with pose messages to generate combined sensor+pose records that can be
+used to plot a map.
+
+We provide the `csv_join.py` script to perform this task on exported CSV
+files. The following example uses a bag from the publicly released ZIP
+archive `2021-03-26_SN003_bumble.zip`:
+
+```console
+ASTROBEE_DIR=$HOME/astrobee
+BAG=20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag
+
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py $BAG -a /hw/wifi hw_wifi.bag
+rostopic echo -b hw_wifi.bag -p /hw/wifi > hw_wifi.csv
+
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
+rostopic echo -b loc_pose.bag -p /loc/pose > loc_pose.csv
+
+$ASTROBEE_DIR/src/scripts/postprocessing/csv_join.py hw_wifi.csv loc_pose.csv wifi_plus_pose.csv
 ```
 
 ### Displaying imagery found within a bag file
@@ -282,8 +308,45 @@ than migrating the bag, it might be easier to revert the installed
 version of the Astrobee flight software to the version that was used to
 record the bag file?
 
-### Analyzing different message types together based on their timestamps
+### Timestamp clock skew
 
-TODO: Discuss issues involved in joining different message types based
-on timestamp, and the possibility of clock skew between multiple
-Astrobee processors.
+Astrobee has multiple processors (the LLP, MLP, and HLP) that have
+independent clocks. We describe the difference between their times
+as clock skew.
+
+In some cases, clock skew can be large enough to impact your telemetry
+analysis when trying to combine messages logged on different processors.
+For example, you might want to determine the robot's position when it
+captured a SciCam image (logged on the HLP) using pose messages (logged
+on the MLP). In that case, clock skew between HLP and MLP would
+introduce a position error proportional to the robot's velocity times
+the clock skew time delta.
+
+Astrobee's processor clocks are nominally kept in sync using the Network
+Time Protocol (NTP), but that synchronization has not always been
+reliable. NTP is designed for hosts with long uptimes and tries to bring
+them into sync gradually. It tends not to work as well in the Astrobee
+context where each processor's clock starts completely uninitialized
+(the clocks are not battery backed), and robot operations don't allow
+much time for sync before starting important telemetry logging.
+
+Astrobee processes for mitigating clock skew have gradually improved,
+including:
+- Improved startup procedures do a better job of forcing the clocks to
+  sync precisely at startup. Older bags are likely to suffer more
+  clock skew.
+- Astrobee `immediate` stream bag files now include clock skew
+  measurements. You can analyze clock skew with the [`clock_skew.py`
+  script](https://github.com/nasa/astrobee/blob/master/management/sys_monitor/tools/clock_skew.py).
+  In theory, you could also use these measurements to correct for clock
+  skew, but that has not been implemented.
+
+Note that the same clock skew issues can also arise between Astrobee's
+processors and:
+- The processor of a payload installed in the Astrobee
+- Another Astrobee
+- Other timestamped data, such as ISS camcorder video
+
+In these cases, you can check procedures and notes for the activity to
+determine if any special measures were taken to prevent or to measure
+clock skew.
