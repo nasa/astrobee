@@ -306,7 +306,7 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
     }
     // If we have depth data, use the same mechanism as L1 to push it
     if (pub_cloud_.getNumSubscribers() > 0) {
-      cloud_.header.stamp = ros::Time::now();
+      cloud_.header.stamp.fromNSec(std::chrono::duration_cast<std::chrono::nanoseconds>(data->timeStamp).count());
       std::copy(
         reinterpret_cast<const uint8_t*>(data->points.data()),
         reinterpret_cast<const uint8_t*>(data->points.data()) + cloud_.row_step * cloud_.height,
@@ -328,7 +328,9 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
     }
     // If we have depth data, use the same mechanism as L1 to push it
     if (pub_depth_image_.getNumSubscribers() > 0) {
-      depth_image_.header.stamp = ros::Time::now();
+      // units not documented in DepthImage.hpp, maybe usecs like DepthData?
+      uint64_t stampUsecs = data->timestamp;
+      depth_image_.header.stamp.fromNSec(stampUsecs * 1000);
       std::copy(
         reinterpret_cast<const uint8_t*>(data->data.data()),
         reinterpret_cast<const uint8_t*>(data->data.data()) + depth_image_.height * depth_image_.step,
@@ -430,10 +432,21 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
       ROS_WARN("data pointer = nullptr");
       return;
     }
+
+    ros::Time commonStamp(0, 0);
+    if (data->hasDepthData() && data->getDepthData() != nullptr) {
+      commonStamp.fromNSec(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(data->getDepthData()->timeStamp).count());
+    } else if (data->hasIntermediateData()
+               && data->getIntermediateData() != nullptr) {
+      commonStamp.fromNSec(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(data->getIntermediateData()->timeStamp).count());
+    }
+
     // If we have depth data, use the same mechanism as L1 to push it
     if (data->hasDepthData() && pub_cloud_.getNumSubscribers() > 0
       && data->getDepthData() != nullptr) {
-      cloud_.header.stamp = ros::Time::now();
+      cloud_.header.stamp = commonStamp;
        std::copy(
           reinterpret_cast<const uint8_t*>(data->getDepthData()->points.data()),
           reinterpret_cast<const uint8_t*>(data->getDepthData()->points.data()) + cloud_.row_step * cloud_.height,
@@ -443,7 +456,7 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
     // If we have a listener and the extended data contains intermediate data, publish it
     if (data->hasIntermediateData() && pub_extended_.getNumSubscribers() > 0
         && data->getIntermediateData() != nullptr) {
-      extended_.header.stamp = ros::Time::now();
+      extended_.header.stamp = commonStamp;
       // Populate the modulation frequencies and exposures used to produce this data
       extended_.frequency.resize(data->getIntermediateData()->modulationFrequencies.size());
       for (size_t i = 0; i < data->getIntermediateData()->modulationFrequencies.size(); i++)
