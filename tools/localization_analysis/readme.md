@@ -9,7 +9,7 @@ usage instructions.
 
 # Tools
 ## `convert_depth_msg`
-Converts depth messages in provided bagfile to intensity images.
+Converts depth messages in a provided bagfile to intensity images.
 
 ## `run_bag_imu_filterer`
 Reads through a bag file and filters imu measurements, replacing the old imu measurements with new filtered ones.
