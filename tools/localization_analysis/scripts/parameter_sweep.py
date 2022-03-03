@@ -100,7 +100,7 @@ def test_values(
     output_pdf_file = os.path.join(new_output_dir, str(job_id) + "_output.pdf")
     output_csv_file = os.path.join(new_output_dir, "graph_stats.csv")
     plot_command = (
-        "rosrun localization_analysis plot_results_main.py "
+        "rosrun localization_analysis plot_results.py "
         + output_bag
         + " --output-file "
         + output_pdf_file

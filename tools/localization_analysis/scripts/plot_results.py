@@ -16,6 +16,15 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Plots the localization information from a bagfile to a pdf. Generates 
+plots for localization poses, velocities, covariances, integrated velocities, 
+IMU bias values, IMU bias tester poses, feature counts, and more.
+"""
+
+import argparse
+import os
+import sys
 
 import loc_states
 import matplotlib
@@ -922,3 +931,29 @@ def create_plots(
                 rmse_rel_start_time=rmse_rel_start_time,
                 rmse_rel_end_time=rmse_rel_end_time,
             )
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("bagfile", help="Input bagfile.")
+    parser.add_argument("--output-file", default="output.pdf", help="Output pdf file.")
+    parser.add_argument("--output-csv-file", default="results.csv", help="Output csv file containing localization stats.")
+    parser.add_argument("-g", "--groundtruth-bagfile", default=None, help="Optional bagfile containing groundtruth poses to use as a comparison for poses in the input bagfile. If none provided, sparse mapping poses are used as groundtruth from the input bagfile if available.")
+    parser.add_argument("--rmse-rel-start-time", type=float, default=0, help="Optional start time for plots.")
+    parser.add_argument("--rmse-rel-end-time", type=float, default=-1, help="Optional end time for plots.")
+    args = parser.parse_args()
+    if not os.path.isfile(args.bagfile):
+        print(("Bag file " + args.bagfile + " does not exist."))
+        sys.exit()
+    if args.groundtruth_bagfile and not os.path.isfile(args.groundtruth_bagfile):
+        print(("Groundtruth Bag file " + args.groundtruth_bagfile + " does not exist."))
+        sys.exit()
+    create_plots(
+        args.bagfile,
+        args.output_file,
+        args.output_csv_file,
+        args.groundtruth_bagfile,
+        args.rmse_rel_start_time,
+        args.rmse_rel_end_time,
+    )

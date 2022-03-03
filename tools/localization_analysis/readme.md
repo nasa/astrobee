@@ -72,27 +72,13 @@ Creates a map for a provided bagfile, optionally merged with an existing map as 
 Runs a parameter sweep for the graph localizer on a bagfile and plots the results.
 
 ## `plot_all_results`
+Plots localization results for each bagfile in a directory.
+
 ## `plot_results`
+Plots localization information for a bagfile to a pdf. Uses either sparse mapping poses
+from the input bagfile or a seperate bagfile containing groundtruth poses for comparison
+with the localization estimates.
+
 ## `run_graph_bag_and_plot_results`
-## `plot_all_results`
+Generates localization estimates and plots results for a provided bagfile.
 
-
-## run\_graph\_bag\_and\_plot\_results
-Generates localization results for a provided bagfile.
-See 'rosrun graph\_bag run\_graph\_bag\_and\_plot\_results.py -h'
-for further details and usage instructions.
-
-## make\_groundtruth.py
-Generates groundtruth map and bagfile for a given bagfile.
-See 'rosrun graph\_bag make\_groundtruth.py -h'
-for further details and usage instructions.
-
-## make\_groundtruth\_map.py
-Generates groundtruth map for a given bagfile.
-See 'rosrun graph\_bag make\_groundtruth.py -h'
-for further details and usage instructions.
-
-## groundtruth\_sweep.py
-Creates groundtruth in parallel for a set of bagfiles.
-See 'rosrun graph\_bag groundtruth\_sweep.py -h'
-for further details and usage instructions.

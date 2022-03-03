@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # Plot results
     plot_results_command = (
-        "rosrun localization_analysis plot_results_main.py "
+        "rosrun localization_analysis plot_results.py "
         + args.output_bagfile
         + " --output-file "
         + args.output_file

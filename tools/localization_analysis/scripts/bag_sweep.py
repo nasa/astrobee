@@ -141,7 +141,7 @@ def run_graph_bag(params, output_dir):
     os.system(run_command)
     output_pdf_file = os.path.join(output_dir, bag_name + "_output.pdf")
     plot_command = (
-        "rosrun localization_analysis plot_results_main.py "
+        "rosrun localization_analysis plot_results.py "
         + output_bag_path
         + " --output-file "
         + output_pdf_file
