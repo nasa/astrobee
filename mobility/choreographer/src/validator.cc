@@ -193,9 +193,14 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
     break;
   }
   // Now, check each setpoint in the segment against the zones
-  ff_util::Segment::reverse_iterator it;
+  ff_util::Segment::iterator it;
   Vec3f tmp = Vec3f::Zero();
-  for (it = seg.rbegin(); it != seg.rend(); it++) {
+  // Check if the robot is going outside a keepin zone
+  tmp << seg.end()->pose.position.x, seg.end()->pose.position.y, seg.end()->pose.position.z;
+  if (jps_map_util_->isOutSide(jps_map_util_->floatToInt(tmp)))
+      return VIOLATES_KEEP_IN;
+
+  for (it = seg.begin(); it != seg.end(); it++) {
     tmp << it->pose.position.x, it->pose.position.y, it->pose.position.z;
     if (jps_map_util_->isOccupied(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_OUT;
