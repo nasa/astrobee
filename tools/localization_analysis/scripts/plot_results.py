@@ -932,16 +932,36 @@ def create_plots(
                 rmse_rel_end_time=rmse_rel_end_time,
             )
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("--output-file", default="output.pdf", help="Output pdf file.")
-    parser.add_argument("--output-csv-file", default="results.csv", help="Output csv file containing localization stats.")
-    parser.add_argument("-g", "--groundtruth-bagfile", default=None, help="Optional bagfile containing groundtruth poses to use as a comparison for poses in the input bagfile. If none provided, sparse mapping poses are used as groundtruth from the input bagfile if available.")
-    parser.add_argument("--rmse-rel-start-time", type=float, default=0, help="Optional start time for plots.")
-    parser.add_argument("--rmse-rel-end-time", type=float, default=-1, help="Optional end time for plots.")
+    parser.add_argument(
+        "--output-csv-file",
+        default="results.csv",
+        help="Output csv file containing localization stats.",
+    )
+    parser.add_argument(
+        "-g",
+        "--groundtruth-bagfile",
+        default=None,
+        help="Optional bagfile containing groundtruth poses to use as a comparison for poses in the input bagfile. If none provided, sparse mapping poses are used as groundtruth from the input bagfile if available.",
+    )
+    parser.add_argument(
+        "--rmse-rel-start-time",
+        type=float,
+        default=0,
+        help="Optional start time for plots.",
+    )
+    parser.add_argument(
+        "--rmse-rel-end-time",
+        type=float,
+        default=-1,
+        help="Optional end time for plots.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))

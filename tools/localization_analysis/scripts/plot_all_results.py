@@ -30,7 +30,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--output-dir", default="", help="Output directory where generated pdfs for bagfiles are saved.")
+    parser.add_argument(
+        "--output-dir",
+        default="",
+        help="Output directory where generated pdfs for bagfiles are saved.",
+    )
     args = parser.parse_args()
 
     # Find bagfiles with bag prefix in current directory, fail if none found

@@ -25,7 +25,6 @@ are plotted for various RMSEs.
 """
 
 
-
 import argparse
 import csv
 import itertools

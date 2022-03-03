@@ -111,7 +111,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("config_file", help="Config file containing information for bag sweep.  See bag_sweep.py script for more details.")
+    parser.add_argument(
+        "config_file",
+        help="Config file containing information for bag sweep.  See bag_sweep.py script for more details.",
+    )
     parser.add_argument("output_dir", help="Output directory where results are saved.")
     args = parser.parse_args()
     if not os.path.isfile(args.config_file):

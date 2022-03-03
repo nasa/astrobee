@@ -182,13 +182,20 @@ def bag_sweep(config_file, output_dir):
 
 
 if __name__ == "__main__":
-    class Formatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=Formatter
+
+    class Formatter(
+        argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter
+    ):
+        pass
+
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=Formatter)
+    parser.add_argument(
+        "config_file",
+        help="Config file containing bag names, map names, image topics, config path, robot config, and world.  A new line should be used for each bagfile.  Example:\n /home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false \n /home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false",
     )
-    parser.add_argument("config_file", help="Config file containing bag names, map names, image topics, config path, robot config, and world.  A new line should be used for each bagfile.  Example:\n /home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false \n /home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false"
-)
-    parser.add_argument("output_dir", help="Output directory where results files are saved.")
+    parser.add_argument(
+        "output_dir", help="Output directory where results files are saved."
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.config_file):
         print(("Config file " + args.config_file + " does not exist."))
