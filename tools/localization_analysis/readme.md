@@ -4,33 +4,30 @@
 The localization analysis package provides several tools for measuring localization performance as described below.
 
 ## Usage Instructions
-For each tool and script, run `rosrun bag_processing tool_or_script_name -h` for further details and 
+For each tool and script, run `rosrun localization_analysis tool_or_script_name -h` for further details and 
 usage instructions.
 
 # Tools
 ## `convert_depth_msg`
-Converts messages for depth topic in provided bagfile to intensity images.
+Converts depth messages in provided bagfile to intensity images.
 
 ## `run_bag_imu_filterer`
 Reads through a bag file and filters imu measurements, replacing the old imu measurements with new filtered ones.
-Saves output to a new bagfile. The filtered data can be plotted and analyzed by the imu\_analyzer script.
+The filtered data is saved to a bagfile and can be plotted and analyzed using the imu\_analyzer script.
 
 ## `run_depth_odometry_adder`
-Adds depth odometry relative poses to a new bag file.
+Generates depth odometry relative poses using recorded depth camera data and saves these to a bag file.
 
 ## `run_graph_bag`
-Runs graph localization on a bagfile and saves the results to a new bagfile that can be processed by the plot_results_main.py script into a pdf showing information such as poses estiamtes, velocity estimates, bias estiates, covariances, and more.
-Rather than relying on rosbag play, it loads measurements directly and greatly decreases runtime.  To accurately simulate measurement delays and drops, the LiveMeasurementSimulator class is provided along with a config file to provide delays and minimum spacing between measurements. 
+Runs graph localization on a bagfile and saves the results to a new bagfile. The results can be plotted using the `plot_results.py` script.
 
 ## `run_imu_bias_tester_adder`
-Adds imu bias tester predictions to a new bag file using recorded localization states and IMU msgs.
-The IMU biases are taken from the recorded localization state msgs and applied to the IMU msgs to generate 
-IMU poses.
-These predictions are plotted in `run_graph_bag` against provided groundtruth to measure the accuracy of 
-recorded IMU biases.
+Generates imu bias integrated poses and saves these to a bagfile.
+The results can be plotted using the `plot_results.py` script.
+See the `imu_bias_tester` package readme for more details.
 
 ## `run_sparse_mapping_pose_adder`
-Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics from the robot config file.
+Generates sparse mapping poses using sparse mapping feature messages and the body_T_nav_cam extrinsics from the provided robot config file.
 
 # Scripts
 ## `bag_and_parameter_sweep`
@@ -38,7 +35,7 @@ Runs a parameter sweep on a set of bagfiles.  See parameter_sweep.py and bag_swe
 on parameter and bag sweeps.
 
 ## `bag_sweep`
-The bag sweep tool runs the graph bag tool in parallel on multiple bag files.  It takes config file with bag names, map names, and robot configs and produces pdfs and result bagfiles for each entry.
+Runs the graph bag tool in parallel on multiple bag files.  It takes config file with bag names, map names, and robot configs and produces pdfs and result bagfiles for each entry.
 Example config file:   
 ```
 /home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false  
@@ -50,7 +47,7 @@ rosrun localization_analysis bag_sweep.py /home/bag_sweep_config.csv /home/outpu
 ``` 
 
 ## `depth_odometry_parameter_sweep`
-Runs a parameter sweep for depth odometry on a bagfile and plots the results.
+Runs a parameter sweep for depth odometry relative pose estimation and plots the results.
 
 ## `get_average_opt_and_update_times`
 Prints stats for the optimization and update times of the graph localizer
