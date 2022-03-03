@@ -28,35 +28,47 @@ namespace choreographer {
     Vec3f zmin, zmax;
     for (auto &zone : zones_.zones) {
       if (zone.type == type) {
-        zmin << std::min(zone.min.x, zone.max.x),
-            std::min(zone.min.y, zone.max.y), std::min(zone.min.z, zone.max.z);
-        zmax << std::max(zone.min.x, zone.max.x),
-            std::max(zone.min.y, zone.max.y), std::max(zone.min.z, zone.max.z);
         Vec3f tmp = Vec3f::Zero();
-        for (int i = 0; i < 3; i++) {
-          int j = (i + 1) % 3;
-          int k = (i + 2) % 3;
-          for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
-            for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
-              // Attribute the desired value to the surface around zone
-              if (surface) {
+        zmin << std::min(zone.min.x, zone.max.x) + map_res_ * EPS,
+                std::min(zone.min.y, zone.max.y) + map_res_ * EPS,
+                std::min(zone.min.z, zone.max.z) + map_res_ * EPS;
+        zmax << std::max(zone.min.x, zone.max.x) - map_res_ * EPS,
+                std::max(zone.min.y, zone.max.y) - map_res_ * EPS,
+                std::max(zone.min.z, zone.max.z) - map_res_ * EPS;
+
+        if (surface) {
+          // If it's a keepin zone, the border should be added outside
+          // The second term is used to assure the selected voxel is the inner one when specifying boundaries
+          double gap = (zone.type == ff_msgs::Zone::KEEPIN) ? map_res_  : 0;
+          zmin = zmin.array() - gap;
+          zmax = zmax.array() + gap;
+          for (int i = 0; i < 3; i++) {
+            int j = (i + 1) % 3;
+            int k = (i + 2) % 3;
+            for (auto zx = zmin(j); zx <= zmax(j); zx += map_res_) {
+              for (auto zy = zmin(k); zy <= zmax(k); zy += map_res_) {
+                // Attribute the desired value to the surface around zone
                 tmp(j) = zx;
                 tmp(k) = zy;
-                tmp(i) = zmin(i) + map_res_ * 0.001;
+                tmp(i) = zmin(i);
                 map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
                     cell_value;
-                tmp(i) = zmax(i) - map_res_ * 0.001;
+                tmp(i) = zmax(i);
                 map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
                     cell_value;
-              // Attribute the desired value to the volume of the zone
-              } else {
-                for (auto zz = zmin(2); zz <= zmax(2); zz += map_res_) {
-                  tmp(0) = zx;
-                  tmp(1) = zy;
-                  tmp(2) = zz;
-                  map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
-                      cell_value;
-                }
+              }
+            }
+          }
+        // Attribute the desired value to the volume of the zone
+        } else {
+          for (auto zx = zmin(0); zx <= zmax(0); zx += map_res_) {
+            for (auto zy = zmin(1); zy <= zmax(1); zy += map_res_) {
+              for (auto zz = zmin(2); zz <= zmax(2); zz += map_res_) {
+                tmp(0) = zx;
+                tmp(1) = zy;
+                tmp(2) = zz;
+                map[jps_map_util_->getIndex(jps_map_util_->floatToInt(tmp))] =
+                    cell_value;
               }
             }
           }
@@ -181,13 +193,20 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
     break;
   }
   // Now, check each setpoint in the segment against the zones
-  ff_util::Segment::reverse_iterator it;
+  ff_util::Segment::iterator it;
   Vec3f tmp = Vec3f::Zero();
-  for (it = seg.rbegin(); it != seg.rend(); it++) {
+  // Check if the robot is going outside a keepin zone
+  tmp << seg.back().pose.position.x, seg.back().pose.position.y, seg.back().pose.position.z;
+  if (jps_map_util_->isUnKnown(jps_map_util_->floatToInt(tmp)) ||
+            jps_map_util_->isOutSide(jps_map_util_->floatToInt(tmp)))
+    return VIOLATES_KEEP_IN;
+
+  for (it = seg.begin(); it != seg.end(); it++) {
     tmp << it->pose.position.x, it->pose.position.y, it->pose.position.z;
     if (jps_map_util_->isOccupied(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_OUT;
-    else if (jps_map_util_->isUnKnown(jps_map_util_->floatToInt(tmp)))
+    else if (jps_map_util_->isUnKnown(jps_map_util_->floatToInt(tmp)) ||
+              jps_map_util_->isOutSide(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_IN;
   }
   return SUCCESS;
