@@ -242,33 +242,29 @@ required message definition information, most commonly due to a
 [bug](https://github.com/nasa/astrobee/issues/402) with messages
 published by nodes using `rosjava`, which we use on the Astrobee HLP).
 
-Frequently, the messages affected by this problem aren't important
-for your analysis goals. In that case, you can detect and filter
-out the affected messages as follows:
+You should be able to fix the problem by rewriting the message
+definitions for the affected message topics, as follows:
+
+```console
+git clone https://github.com/trey0/rosbag_fixer.git
+FIXER_DIR=`pwd`/rosbag_fixer
+$FIXER_DIR/fix_bag_msg_def.py -l -t "/gs/*" -t /hw/cam_sci/compressed in.bag
+```
+
+If that doesn't work, you can try checking which topics are problematic
+in case more topics need to be fixed with the approach above:
 
 ```console
 ASTROBEE_DIR=$HOME/astrobee
-# optionally detect bad topics
 $ASTROBEE_DIR/src/scripts/postprocessing/rosbag_detect_bad_topics.py in.bag
-# example filtering out the usual bad topics
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
 ```
 
-If you care about analyzing the affected messages, an alternative
-workaround is to download a script that fixes the bag metadata from the
-[`rosbag_fixer`
-repo](https://github.com/gavanderhoorn/rosbag_fixer). You run it as
-follows:
+And an alternate approach is to filter out the bad topics instead of
+trying to fix their message definitions:
 
 ```console
-git clone https://github.com/gavanderhoorn/rosbag_fixer.git
-FIXER_DIR=`pwd`/rosbag_fixer
-$FIXER_DIR/fix_bag_msg_def.py -l in.bag fixed.bag
-rosbag reindex fixed.bag
+$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
 ```
-
-However, note that the fixer script output may be unusable if the input
-bag contains messages with outdated message definitions (see below).
 
 As our processes improve, we hope to ensure future bag files have this
 metadata issue fixed before public data release, so you will not have to
