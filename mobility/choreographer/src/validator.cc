@@ -197,7 +197,8 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
   Vec3f tmp = Vec3f::Zero();
   // Check if the robot is going outside a keepin zone
   tmp << seg.end()->pose.position.x, seg.end()->pose.position.y, seg.end()->pose.position.z;
-  if (jps_map_util_->isOutSide(jps_map_util_->floatToInt(tmp)))
+  if (jps_map_util_->isUnKnown(jps_map_util_->floatToInt(tmp)) ||
+            jps_map_util_->isOutSide(jps_map_util_->floatToInt(tmp)))
       return VIOLATES_KEEP_IN;
 
   for (it = seg.begin(); it != seg.end(); it++) {
