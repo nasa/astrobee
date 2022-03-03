@@ -57,9 +57,16 @@ Prints stats for the optimization and update times of the graph localizer
 from the recorded graph_state messages in the provided bagfile.
 
 ## `groundtruth_sweep`
+Creates groundtruth in parallel for a set of bagfiles.
+
 ## `imu_analyzer`
+Generates comparison plots for raw and filtered IMU data.
+
 ## `make_groundtruth`
+Creates a groundtruth map and bagfile containing groundtruth poses for a provided bagfile.
+
 ## `make_map`
+Creates a map for a provided bagfile, optionally merged with an existing map as well.
 
 ## `parameter_sweep`
 Runs a parameter sweep for the graph localizer on a bagfile and plots the results.
@@ -69,9 +76,6 @@ Runs a parameter sweep for the graph localizer on a bagfile and plots the result
 ## `run_graph_bag_and_plot_results`
 ## `plot_all_results`
 
-
-## imu\_analyzer\_main
-The imu analyzer tool plots imu data and also filtered imu data.  It can use python filtering tools to lowpass filter imu data at a certain cutoff frequency, or it can use a provided bag file with filtered imu data and compare this against a bag file with unfiltered data.  Data is plotted in its raw form and also after being passed through an FFT to show its frequency response.
 
 ## run\_graph\_bag\_and\_plot\_results
 Generates localization results for a provided bagfile.

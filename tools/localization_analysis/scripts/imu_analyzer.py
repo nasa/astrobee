@@ -16,6 +16,16 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Generates comparison plots for raw and filtered IMU data.
+Takes a bagfile and filtered bagfile for plotting.
+If a filtered bagfile is not provided, lowpass filtering is applied on the input
+bagfile for comparison.
+""" 
+
+import argparse
+import os
+import sys
 
 import imu_measurements
 import matplotlib
@@ -344,3 +354,28 @@ def create_plots(bagfile, filtered_bagfile, output_file, cutoff_frequency, sampl
             filtered_angular_velocity_z_fft_frequencies,
             "Filtered Imu FFT Ang Vel z ",
         )
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("bagfile", help="Input bagfile.")
+    parser.add_argument("--output-file", default="imu_analyzer_output.pdf", help="Output plots.")
+    parser.add_argument("-f", "--filtered-bagfile", default="", help="Bagfile with filtered IMU data.  If none provided, a lowpass filter is applied using the provided cutoff frequency for comparison.")
+    parser.add_argument("-s", "--sample-rate", type=float, default=62.5, help="Sample rate, only needed if a second filtered bagfile is not provied.")
+    # Only applicable if filtered_bagfile not provided, uses python filters
+    parser.add_argument("-c", "--cutoff-frequency", type=float, default=5.0, help="Cutoff frequency, used for the lowpass filter if a second filtered bagfile is not provided.")
+    args = parser.parse_args()
+    if not os.path.isfile(args.bagfile):
+        print(("Bag file " + args.bagfile + " does not exist."))
+        sys.exit()
+    if args.filtered_bagfile and not os.path.isfile(args.filtered_bagfile):
+        print(("Bag file " + args.filtered_bagfile + " does not exist."))
+        sys.exit()
+    create_plots(
+        args.bagfile,
+        args.filtered_bagfile,
+        args.output_file,
+        args.cutoff_frequency,
+        args.sample_rate,
+    )
