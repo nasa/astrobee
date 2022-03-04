@@ -37,15 +37,17 @@ bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::F
                               vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
   const auto& matches = detector_and_matcher.Match(current_image, next_image);
   if (matches.size() < 5) {
-    LogInfo("Few matches! " << matches.size());
+    LogDebug("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
+                                 << ", next image keypoints: " << next_image.keypoints().size());
     return false;
   }
-  LogInfo("Found matches: " << matches.size());
+  LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
+                             << ", next image keypoints: " << next_image.keypoints().size());
   lc::Averager distance_averager;
   for (const auto& match : matches) {
     distance_averager.Update(match.distance);
   }
-  LogInfo("mean distance: " << distance_averager.average());
+  LogDebug("Mean distance: " << distance_averager.average());
   if (distance_averager.average() <= max_low_movement_mean_distance) return true;
   return false;
 }
@@ -53,9 +55,6 @@ bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::F
 vc::FeatureImage LoadImage(const int index, const std::vector<std::string>& image_names, cv::Feature2D& detector) {
   auto image = cv::imread(image_names[index], cv::IMREAD_GRAYSCALE);
   if (image.empty()) LogFatal("Failed to load image " << image_names[index]);
-  LogInfo("Loading image: " << image_names[index]);
-  cv::imshow("test", image);
-  cv::waitKey(0);
   cv::resize(image, image, cv::Size(), 0.5, 0.5);
   // TODO(rsoussan): Add option to undistort image, use histogram equalization
   return vc::FeatureImage(image, detector);
@@ -95,22 +94,18 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
   while (current_image_index < image_names.size()) {
     while (next_image_index < image_names.size() &&
            LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
-      LogInfo("(remove) compared current image " << current_image_index << " with next image " << next_image_index);
+      LogDebug("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
       std::remove((image_names[next_image_index++]).c_str());
       ++num_removed_images;
       // Don't load next image if index is past the end of the sequence
       if (next_image_index >= image_names.size()) break;
       next_image = LoadImage(next_image_index, image_names, detector);
-      LogInfo("(remove) next keypoints: " << next_image.keypoints().size());
     }
-    LogInfo("compared current image " << current_image_index << " with next image " << next_image_index);
     current_image = next_image;
     current_image_index = next_image_index;
-    LogInfo("current keypoints: " << current_image.keypoints().size());
     // Exit if current image is the last image in the sequence
     if (current_image_index >= image_names.size() - 1) break;
     next_image = LoadImage(++next_image_index, image_names, detector);
-    LogInfo("next keypoints: " << next_image.keypoints().size());
   }
 
   return num_removed_images;
@@ -135,7 +130,7 @@ int main(int argc, char** argv) {
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--max-low-movement-mean-distance,m", po::value<double>(&max_low_movement_mean_distance)->default_value(1.0),
+    "--max-low-movement-mean-distance,m", po::value<double>(&max_low_movement_mean_distance)->default_value(0.1),
     "Max mean distance for optical flow tracks between sequential images to be classified as a low movement pair.");
   po::positional_options_description p;
   p.add("image-directory", 1);
