@@ -15,6 +15,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+"""
+Checks a bagfile for messages with gaps larger than the provided maximum time difference for the given topic.
+Prints timestamps for found gaps along with min/mean/max/stddev for the time differences.
+"""
+
 import argparse
 import os
 import sys
@@ -22,36 +27,31 @@ import sys
 import rosbag
 import utilities
 
-
-def trim_bag(bag_name, start_time_to_trim, end_time_to_trim):
-    with rosbag.Bag(bag_name, "r") as bag:
-        start_time = bag.get_start_time()
-        new_start_time = start_time + start_time_to_trim
-        end_time = bag.get_end_time()
-        new_end_time = end_time - end_time_to_trim
-        output_bag_name = os.path.splitext(bag_name)[0] + "_trimmed.bag"
-        run_command = (
-            "rosbag filter "
-            + bag_name
-            + " "
-            + output_bag_name
-            + ' "t.secs >= '
-            + str(new_start_time)
-            + " and t.secs <= "
-            + str(new_end_time)
-            + '"'
-        )
-        os.system(run_command)
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("bagfile")
-    parser.add_argument("-s", "--start-time-to-trim", type=float, default=0)
-    parser.add_argument("-e", "--end-time-to-trim", type=float, default=0)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("bagfile", help="Input bagfile.")
+    parser.add_argument("topic", help="Topic to check.")
+    parser.add_argument(
+        "-m",
+        "--max-time-diff",
+        type=float,
+        default=0.5,
+        help="Maximum time difference for a gap, time differences above this will be counted as gaps.",
+    )
+    # Use header or received time
+    parser.add_argument(
+        "-r",
+        "--use-receive-time",
+        action="store_true",
+        help="Use receive time instead of header time.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    trim_bag(args.bagfile, args.start_time_to_trim, args.end_time_to_trim)
+    utilities.get_topic_rates(
+        args.bagfile, args.topic, args.max_time_diff, not args.use_receive_time, True
+    )

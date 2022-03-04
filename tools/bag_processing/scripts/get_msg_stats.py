@@ -50,7 +50,7 @@ def get_stats(bagfile, topic, field, use_size=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile containing desired topic.")
     parser.add_argument("topic", help="Topic in the bagfile to get stats for.")

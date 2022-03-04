@@ -30,6 +30,33 @@ import utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
+
+# TODO(rsoussan): Update/remove comment when color conversion issue resolved.
+# We suspect this hard-coded RGB color mapping is not correct for the Astrobee NavCam/DockCam camera Bayer pattern. It may have swapped color channels. A color channel swap has a subtle effect on grayscale output because different color channels have different weighting factors when outputting luminance calibrated for human perception. However, for the purposes of this script, the key requirement is to exactly replicate the onboard debayer conversion performed in the FSW is_camera ROS node, so localization features will be the same regardless of which tool is used to do the conversion.
+def convert_bayer_to_grayscale(
+    bagfile, bayer_image_topic, gray_image_topic, save_all_topics=False
+):
+    bridge = CvBridge()
+    topics = None if save_all_topics else [bayer_image_topic]
+    output_bag_name = os.path.splitext(bagfile)[0] + "_gray.bag"
+    output_bag = rosbag.Bag(output_bag_name, "w")
+
+    with rosbag.Bag(bagfile, "r") as bag:
+        for topic, msg, t in bag.read_messages(topics):
+            if topic == bayer_image_topic:
+                try:
+                    image = bridge.imgmsg_to_cv2(msg, "mono8")
+                except (CvBridgeError) as e:
+                    print(e)
+                gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
+                gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
+                gray_image_msg.header = msg.header
+                output_bag.write(gray_image_topic, gray_image_msg, t)
+            else:
+                output_bag.write(topic, msg, t)
+    output_bag.close()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -59,23 +86,9 @@ if __name__ == "__main__":
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    output_bag_name = os.path.splitext(args.bagfile)[0] + "_gray.bag"
-    output_bag = rosbag.Bag(output_bag_name, "w")
-    bridge = CvBridge()
-    topics = None if args.save_all_topics else [args.bayer_image_topic]
-
-    with rosbag.Bag(args.bagfile, "r") as bag:
-        for topic, msg, t in bag.read_messages(topics):
-            if topic == args.bayer_image_topic:
-                try:
-                    image = bridge.imgmsg_to_cv2(msg, "mono8")
-                except (CvBridgeError) as e:
-                    print(e)
-                gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
-                gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
-                gray_image_msg.header = msg.header
-                output_bag.write(args.gray_image_topic, gray_image_msg, t)
-            else:
-                output_bag.write(topic, msg, t)
-
-    output_bag.close()
+    convert_bayer_to_grayscale(
+        args.bagfile,
+        args.bayer_image_topic,
+        args.gray_image_topic,
+        args.save_all_topics,
+    )
