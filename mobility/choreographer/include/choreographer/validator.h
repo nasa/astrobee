@@ -44,6 +44,8 @@
 #include <string>
 #include <vector>
 
+#define EPS 0.001
+
 namespace choreographer {
 
 class Validator {
