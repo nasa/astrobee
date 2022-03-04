@@ -50,4 +50,4 @@ fi
 
 final=$(relocate_remappings "${final}")
 
-GAZEBO_MASTER_URI="$desired_master_uri" gzserver $final --verbose
+GAZEBO_MASTER_URI="$desired_master_uri" gzserver $final
