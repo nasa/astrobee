@@ -60,7 +60,7 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   return params;
 }
 
-void RemoveLowMovementImages(const std::vector<std::string>& image_names, const double max_low_movement_mean_distance) {
+int RemoveLowMovementImages(const std::vector<std::string>& image_names, const double max_low_movement_mean_distance) {
   vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
 
@@ -74,10 +74,12 @@ void RemoveLowMovementImages(const std::vector<std::string>& image_names, const 
 
   vc::FeatureImage next_image(cv::imread(image_names[next_image_index], cv::IMREAD_GRAYSCALE),
                               *(detector_and_matcher.detector()));
+  int num_removed_images = 0;
   while (current_image_index < image_names.size()) {
     while (next_image_index < image_names.size() &&
            LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
       std::remove((image_names[next_image_index++]).c_str());
+      ++num_removed_images;
       next_image = vc::FeatureImage(cv::imread(image_names[next_image_index], cv::IMREAD_GRAYSCALE),
                                     *(detector_and_matcher.detector()));
     }
@@ -85,6 +87,8 @@ void RemoveLowMovementImages(const std::vector<std::string>& image_names, const 
     current_image = vc::FeatureImage(cv::imread(image_names[current_image_index], cv::IMREAD_GRAYSCALE),
                                      *(detector_and_matcher.detector()));
   }
+
+  return num_removed_images;
 }
 
 std::vector<std::string> GetImageNames(const std::string& image_directory,
@@ -135,5 +139,7 @@ int main(int argc, char** argv) {
   const auto image_names = GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
-  RemoveLowMovementImages(image_names, max_low_movement_mean_distance);
+  const int num_original_images = image_names.size();
+  const int num_removed_images = RemoveLowMovementImages(image_names, max_low_movement_mean_distance);
+  LogInfo("Removed " << num_removed_images << " of " << num_original_images);
 }
