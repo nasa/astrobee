@@ -68,7 +68,7 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
   // If a subsequent image is removed, check the next image compared with the current image for low movement.
   // If a subsequent image does not have low movement, advance current image and start the process over.
   int current_image_index = 0;
-  int next_image_index = 0;
+  int next_image_index = 1;
   vc::FeatureImage current_image(cv::imread(image_names[current_image_index], cv::IMREAD_GRAYSCALE),
                                  *(detector_and_matcher.detector()));
 
@@ -80,12 +80,18 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
            LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
       std::remove((image_names[next_image_index++]).c_str());
       ++num_removed_images;
+      // Don't load next image if index is past the end of the sequence
+      if (next_image_index >= image_names.size()) break;
       next_image = vc::FeatureImage(cv::imread(image_names[next_image_index], cv::IMREAD_GRAYSCALE),
                                     *(detector_and_matcher.detector()));
     }
     current_image_index = next_image_index++;
+    // Exit if current image is the last image in the sequence
+    if (current_image_index >= image_names.size() - 1) break;
     current_image = vc::FeatureImage(cv::imread(image_names[current_image_index], cv::IMREAD_GRAYSCALE),
                                      *(detector_and_matcher.detector()));
+    next_image = vc::FeatureImage(cv::imread(image_names[next_image_index], cv::IMREAD_GRAYSCALE),
+                                  *(detector_and_matcher.detector()));
   }
 
   return num_removed_images;
@@ -98,6 +104,7 @@ std::vector<std::string> GetImageNames(const std::string& image_directory,
     if (boost::filesystem::is_regular_file(file) && file.path().extension() == image_extension)
       image_names.emplace_back(file.path().filename().string());
   }
+  LogInfo("Found " << image_names.size() << " images.");
   return image_names;
 }
 
@@ -141,5 +148,5 @@ int main(int argc, char** argv) {
 
   const int num_original_images = image_names.size();
   const int num_removed_images = RemoveLowMovementImages(image_names, max_low_movement_mean_distance);
-  LogInfo("Removed " << num_removed_images << " of " << num_original_images);
+  LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
 }
