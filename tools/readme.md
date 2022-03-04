@@ -13,9 +13,9 @@ but are not run on the robot.
 
 \subpage gncvisualizer
 
-\subpage graphbag
-
 \subpage imubiastester
+
+\subpage localizationanalysis 
 
 \subpage localizationrvizplugins
 
