@@ -182,8 +182,7 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
   // Called when depth image data arrives
   void DepthImageCallback(const sensor_msgs::ImageConstPtr& msg) {
     // Prepare distance image
-    // TODO(oalexan1): keep same timestamp as the input?
-    distance_.header.stamp = ros::Time::now();
+    distance_.header.stamp = msg->header.stamp;
     distance_.header.frame_id = msg->header.frame_id;
     distance_.height = msg->height;
     distance_.width = msg->width;
@@ -192,8 +191,7 @@ class PicoProxyNodelet : public ff_util::FreeFlyerNodelet  {
     distance_.step = distance_.width * sizeof(uint16_t);
     distance_.data.resize(distance_.height * distance_.step);
     // Prepare confidence image
-    // TODO(oalexan1): keep same timestamp as the input?
-    confidence_.header.stamp = ros::Time::now();
+    confidence_.header.stamp = msg->header.stamp;
     confidence_.header.frame_id = msg->header.frame_id;
     confidence_.height = msg->height;
     confidence_.width = msg->width;
