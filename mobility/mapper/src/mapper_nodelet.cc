@@ -114,13 +114,10 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     TOPIC_MAPPER_OCTOMAP_INFLATED_CLOUD, 1, true);
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
-    ROS_ERROR_STREAM("disable_mapper!" << cfg_.Get<bool>("disable_mapper"));
-    ROS_ERROR_STREAM("enable_obstacles!" << cfg_.Get<bool>("enable_obstacles"));
 
   if (disable_mapper) {
     NODELET_WARN("Mapper disabled, obstacle avoidance not working!");
   } else {
-    ROS_ERROR("Mapper enabled!");
     // Timers
     timer_o_ = nh->createTimer(
       ros::Duration(ros::Rate(octomap_update_rate_)),
