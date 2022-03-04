@@ -23,14 +23,8 @@ Example bag sweep command:
 rosrun graph_bag bag_sweep.py /home/bag_sweep_config.csv /home/output_dir
 ``` 
 
-## check\_bags\_for\_gaps
-This is a simple tool to check for large gaps in imu or image data in a bagfile.
-
 ## imu\_analyzer\_main
 The imu analyzer tool plots imu data and also filtered imu data.  It can use python filtering tools to lowpass filter imu data at a certain cutoff frequency, or it can use a provided bag file with filtered imu data and compare this against a bag file with unfiltered data.  Data is plotted in its raw form and also after being passed through an FFT to show its frequency response.
-
-## merge\_bags
-Merge bags looks for bag files in the current directory with a provided name prefix and merges these into a single bag file.  Bags are assumed to be numbered and are merged in numerical order.
 
 ## run\_graph\_bag\_and\_plot\_results
 Generates localization results for a provided bagfile.
