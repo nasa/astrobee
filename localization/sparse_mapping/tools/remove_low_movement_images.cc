@@ -33,10 +33,15 @@ bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::F
                               const double max_low_movement_mean_distance,
                               vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
   const auto& matches = detector_and_matcher.Match(current_image, next_image);
+  if (matches.size() < 5) {
+    LogInfo("Few matches! " << matches.size());
+    return false;
+  }
   lc::Averager distance_averager;
   for (const auto& match : matches) {
     distance_averager.Update(match.distance);
   }
+  LogInfo("mean distance: " << distance_averager.average());
   if (distance_averager.average() <= max_low_movement_mean_distance) return true;
   return false;
 }
@@ -46,15 +51,15 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   // TODO(rsoussan): Add some of these as command line args?
   params.max_iterations = 10;
   params.termination_epsilon = 0.03;
-  params.window_length = 10;
+  params.window_length = 31;
   params.max_level = 3;
   params.min_eigen_threshold = 0.2;
-  params.max_flow_distance = 50;
+  params.max_flow_distance = 180;
   params.max_backward_match_distance = 0.1;
-  params.good_features_to_track.max_corners = 100;
+  params.good_features_to_track.max_corners = 60;
   params.good_features_to_track.quality_level = 0.01;
-  params.good_features_to_track.min_distance = 10;
-  params.good_features_to_track.block_size = 5;
+  params.good_features_to_track.min_distance = 40;
+  params.good_features_to_track.block_size = 3;
   params.good_features_to_track.use_harris_detector = false;
   params.good_features_to_track.k = 0.04;
   return params;
@@ -78,20 +83,25 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
   while (current_image_index < image_names.size()) {
     while (next_image_index < image_names.size() &&
            LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
+      LogInfo("(remove) compared current image " << current_image_index << " with next image " << next_image_index);
       std::remove((image_names[next_image_index++]).c_str());
       ++num_removed_images;
       // Don't load next image if index is past the end of the sequence
       if (next_image_index >= image_names.size()) break;
       next_image = vc::FeatureImage(cv::imread(image_names[next_image_index], cv::IMREAD_GRAYSCALE),
                                     *(detector_and_matcher.detector()));
+      LogInfo("(remove) next keypoints: " << next_image.keypoints().size());
     }
+    LogInfo("compared current image " << current_image_index << " with next image " << next_image_index);
     current_image_index = next_image_index++;
     // Exit if current image is the last image in the sequence
     if (current_image_index >= image_names.size() - 1) break;
     current_image = vc::FeatureImage(cv::imread(image_names[current_image_index], cv::IMREAD_GRAYSCALE),
                                      *(detector_and_matcher.detector()));
+    LogInfo("current keypoints: " << current_image.keypoints().size());
     next_image = vc::FeatureImage(cv::imread(image_names[next_image_index], cv::IMREAD_GRAYSCALE),
                                   *(detector_and_matcher.detector()));
+    LogInfo("next keypoints: " << next_image.keypoints().size());
   }
 
   return num_removed_images;
