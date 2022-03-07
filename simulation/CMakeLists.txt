@@ -76,7 +76,6 @@ catkin_package(
     gazebo_sensor_plugin_perch_cam
     #gazebo_sensor_plugin_handrail_detect
     gazebo_sensor_plugin_haz_cam
-    gazebo_sensor_plugin_sci_cam
     gazebo_world_plugin_speed
     gazebo_system_plugin_client
   CATKIN_DEPENDS
@@ -289,15 +288,6 @@ add_library(gazebo_sensor_plugin_dock_cam
 )
 add_dependencies(gazebo_sensor_plugin_dock_cam ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gazebo_sensor_plugin_dock_cam
-  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-)
-
-# Create a sensor plugin for the sci cam
-add_library(gazebo_sensor_plugin_sci_cam
-  src/gazebo_sensor_plugin_sci_cam/gazebo_sensor_plugin_sci_cam.cc
-)
-add_dependencies(gazebo_sensor_plugin_sci_cam ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_sensor_plugin_sci_cam
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
