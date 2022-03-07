@@ -37,6 +37,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   gnc_autocode
   camera
+  cv_bridge
   jsonloader
 )
 
@@ -93,6 +94,7 @@ catkin_package(
     ff_util
     gnc_autocode
     camera
+    cv_bridge
     jsonloader
 )
 
