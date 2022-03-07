@@ -173,7 +173,6 @@ bool ConfigServer::Listen() {
           }
         }
       }
-      nh_.getParam(id, strs_[id]);
       nh_.setParam(id, strs_[id]);
       // *** INTEGERS *** //
     } else if (!type.compare("integer")) {
@@ -219,7 +218,6 @@ bool ConfigServer::Listen() {
           }
         }
       }
-      nh_.getParam(id, ints_[id]);
       nh_.setParam(id, ints_[id]);
       // *** BOOLEANS *** //
     } else if (!type.compare("boolean")) {
@@ -259,8 +257,7 @@ bool ConfigServer::Listen() {
           }
         }
       }
-      // Grab the persistent value from the parameter server
-      nh_.getParam(id, bools_[id]);
+      // Set the value to the parameter server
       nh_.setParam(id, bools_[id]);
       // *** DOUBLES *** //
     } else if (!type.compare("double")) {
@@ -306,7 +303,6 @@ bool ConfigServer::Listen() {
           }
         }
       }
-      nh_.getParam(id, doubles_[id]);
       nh_.setParam(id, doubles_[id]);
     } else {
       ROS_ERROR_STREAM("Could not understand type " << type << " of parameter " << id);
