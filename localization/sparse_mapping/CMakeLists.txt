@@ -172,12 +172,6 @@ add_dependencies(parse_cam ${catkin_EXPORTED_TARGETS})
 target_link_libraries(parse_cam
   sparse_mapping gflags glog ${catkin_LIBRARIES})
 
-## Declare a C++ executable: remove_low_movement_images
-add_executable(remove_low_movement_images tools/remove_low_movement_images.cc)
-add_dependencies(remove_low_movement_images ${catkin_EXPORTED_TARGETS})
-target_link_libraries(remove_low_movement_images
-  sparse_mapping ${catkin_LIBRARIES})
-
 ## Declare a C++ executable: select_images
 add_executable(select_images tools/select_images.cc)
 add_dependencies(select_images ${catkin_EXPORTED_TARGETS})
