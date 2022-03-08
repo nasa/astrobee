@@ -18,6 +18,9 @@ Also prints stats for the time differences for messages with the provided topic 
 ## `convert_bayer_to_grayscale`
 Converts bayer encoded color images to grayscale.
 
+## `convert_bayer_to_color`
+Converts bayer encoded color images to color image.
+
 ## `convert_all_bayer_bags_to_grayscale`
 Creates a new bagfile with grayscale images for the provided bags using their bayer encoded images.
 If no bags are provided, runs conversion for each bag in the current directory.
