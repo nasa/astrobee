@@ -41,13 +41,13 @@ if __name__ == "__main__":
         "-g",
         "--gray-image-topic",
         default="/mgt/img_sampler/nav_cam/image_record",
-        help="Output gray image topic.",
+        help="Output gray image topic. If empty does not convert to greyscale image.",
     )
     parser.add_argument(
         "-c",
         "--color-image-topic",
         default="/hw/cam_nav/image_color",
-        help="Output color image topic.",
+        help="Output color image topic. If empty does not convert to color image.",
     )
     parser.add_argument(
         "-s",
