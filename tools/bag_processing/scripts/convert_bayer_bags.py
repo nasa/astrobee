@@ -38,6 +38,14 @@ if __name__ == "__main__":
         help="Bayer image topic name.",
     )
     parser.add_argument(
+        "-l",
+        "--list-cam",
+        default=["nav"],
+        help="Cameras to be converted, default nav, can add dock.",
+        nargs="+",
+        type=str,
+    )
+    parser.add_argument(
         "-g",
         "--gray-image-topic",
         default="/mgt/img_sampler/nav_cam/image_record",
@@ -73,6 +81,7 @@ if __name__ == "__main__":
     for bag in bags:
         convert_bayer_bag.convert_bayer(
             bag,
+            args.list_cam,
             args.bayer_image_topic,
             args.gray_image_topic,
             args.color_image_topic,

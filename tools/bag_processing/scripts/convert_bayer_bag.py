@@ -41,6 +41,7 @@ from sensor_msgs.msg import Image
 # regardless of which tool is used to do the conversion.
 def convert_bayer(
     bagfile,
+    list_cam,
     bayer_image_topic,
     gray_image_topic,
     color_image_topic,
@@ -48,13 +49,14 @@ def convert_bayer(
     keep_bayer_topic=False,
 ):
     bridge = CvBridge()
-    topics = None if save_all_topics else [bayer_image_topic]
+    topics = dict((bayer_image_topic.replace("nav", cam), cam) for cam in list_cam)
     output_bag_name = os.path.splitext(bagfile)[0] + "_out.bag"
     output_bag = rosbag.Bag(output_bag_name, "w")
 
     with rosbag.Bag(bagfile, "r") as bag:
-        for topic, msg, t in bag.read_messages(topics):
-            if topic == bayer_image_topic:
+        for topic, msg, t in bag.read_messages():
+            if topic in topics:
+                # Check if we should save greyscale image
                 if gray_image_topic != "":
                     try:
                         image = bridge.imgmsg_to_cv2(msg, "mono8")
@@ -63,7 +65,12 @@ def convert_bayer(
                     gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
                     gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
                     gray_image_msg.header = msg.header
-                    output_bag.write(gray_image_topic, gray_image_msg, t)
+                    output_bag.write(
+                        gray_image_topic.replace("nav", topics[topic]),
+                        gray_image_msg,
+                        t,
+                    )
+                # Check if we should save color image
                 if color_image_topic != "":
                     try:
                         image = bridge.imgmsg_to_cv2(msg, "bayer_grbg8")
@@ -72,10 +79,14 @@ def convert_bayer(
                     color_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GB2BGR)
                     color_image_msg = bridge.cv2_to_imgmsg(color_image, encoding="bgr8")
                     color_image_msg.header = msg.header
-                    output_bag.write(color_image_topic, color_image_msg, t)
+                    output_bag.write(
+                        color_image_topic.replace("nav", topics[topic]),
+                        color_image_msg,
+                        t,
+                    )
                 if keep_bayer_topic:
                     output_bag.write(topic, msg, t)
-            else:
+            elif save_all_topics:
                 output_bag.write(topic, msg, t)
     output_bag.close()
 
@@ -85,6 +96,14 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile with bayer images.")
+    parser.add_argument(
+        "-l",
+        "--list-cam",
+        default=["nav"],
+        help="Cameras to be converted, default nav, can add dock.",
+        nargs="+",
+        type=str,
+    )
     parser.add_argument(
         "-b",
         "--bayer-image-topic",
@@ -124,6 +143,7 @@ if __name__ == "__main__":
 
     convert_bayer(
         args.bagfile,
+        args.list_cam,
         args.bayer_image_topic,
         args.gray_image_topic,
         args.color_image_topic,
