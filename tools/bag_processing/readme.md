@@ -15,14 +15,11 @@ Applies either CLAHE or standard histogram equalization to images in a bagfile.
 Prints gaps above provided maximum time for a bagfile and topic using either message header times or bag receive times.
 Also prints stats for the time differences for messages with the provided topic in the bagfile.
 
-## `convert_bayer_to_grayscale`
-Converts bayer encoded color images to grayscale.
+## `convert_bayer`
+Converts bayer encoded color images to grayscale and color image.
 
-## `convert_bayer_to_color`
-Converts bayer encoded color images to color image.
-
-## `convert_all_bayer_bags_to_grayscale`
-Creates a new bagfile with grayscale images for the provided bags using their bayer encoded images.
+## `convert_all_bayer_bags`
+Creates a new bagfile with grayscale and color images for the provided bags using their bayer encoded images.
 If no bags are provided, runs conversion for each bag in the current directory.
 
 ## `get_msg_stats` 
