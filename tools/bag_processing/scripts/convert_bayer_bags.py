@@ -24,7 +24,7 @@ If no bags are provided, runs conversion for each bag in the current directory.
 import argparse
 import glob
 
-import convert_bayer_bag_to_grayscale
+import convert_bayer_bag
 import rosbag
 
 if __name__ == "__main__":
@@ -44,11 +44,24 @@ if __name__ == "__main__":
         help="Output gray image topic.",
     )
     parser.add_argument(
+        "-c",
+        "--color-image-topic",
+        default="/hw/cam_nav/image_color",
+        help="Output color image topic.",
+    )
+    parser.add_argument(
         "-s",
         "--save-all-topics",
         dest="save_all_topics",
         action="store_true",
         help="Save all topics from input bagfile to output bagfile.",
+    )
+    parser.add_argument(
+        "-k",
+        "--keep-bayer",
+        dest="keep_bayer_topic",
+        action="store_true",
+        help="Save bayer topic alongside converted image on the new bagfile",
     )
     parser.add_argument(
         "--bags",
@@ -58,6 +71,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     bags = args.bags if args.bags is not None else glob.glob("*.bag")
     for bag in bags:
-        convert_bayer_bag_to_grayscale.convert_bayer_to_grayscale(
-            bag, args.bayer_image_topic, args.gray_image_topic, args.save_all_topics
+        convert_bayer_bag.convert_bayer(
+            bag,
+            args.bayer_image_topic,
+            args.gray_image_topic,
+            args.color_image_topic,
+            args.save_all_topics,
+            args.keep_bayer_topic,
         )

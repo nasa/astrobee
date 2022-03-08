@@ -39,25 +39,42 @@ from sensor_msgs.msg import Image
 # However, for the purposes of this script, the key requirement is to exactly replicate the onboard
 # debayer conversion performed in the FSW is_camera ROS node, so localization features will be the same
 # regardless of which tool is used to do the conversion.
-def convert_bayer_to_grayscale(
-    bagfile, bayer_image_topic, gray_image_topic, save_all_topics=False
+def convert_bayer(
+    bagfile,
+    bayer_image_topic,
+    gray_image_topic,
+    color_image_topic,
+    save_all_topics=False,
+    keep_bayer_topic=False,
 ):
     bridge = CvBridge()
     topics = None if save_all_topics else [bayer_image_topic]
-    output_bag_name = os.path.splitext(bagfile)[0] + "_gray.bag"
+    output_bag_name = os.path.splitext(bagfile)[0] + "_out.bag"
     output_bag = rosbag.Bag(output_bag_name, "w")
 
     with rosbag.Bag(bagfile, "r") as bag:
         for topic, msg, t in bag.read_messages(topics):
             if topic == bayer_image_topic:
-                try:
-                    image = bridge.imgmsg_to_cv2(msg, "mono8")
-                except (CvBridgeError) as e:
-                    print(e)
-                gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
-                gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
-                gray_image_msg.header = msg.header
-                output_bag.write(gray_image_topic, gray_image_msg, t)
+                if gray_image_topic != "":
+                    try:
+                        image = bridge.imgmsg_to_cv2(msg, "mono8")
+                    except (CvBridgeError) as e:
+                        print(e)
+                    gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
+                    gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
+                    gray_image_msg.header = msg.header
+                    output_bag.write(gray_image_topic, gray_image_msg, t)
+                if color_image_topic != "":
+                    try:
+                        image = bridge.imgmsg_to_cv2(msg, "bayer_grbg8")
+                    except (CvBridgeError) as e:
+                        print(e)
+                    color_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GB2BGR)
+                    color_image_msg = bridge.cv2_to_imgmsg(color_image, encoding="bgr8")
+                    color_image_msg.header = msg.header
+                    output_bag.write(color_image_topic, color_image_msg, t)
+                if keep_bayer_topic:
+                    output_bag.write(topic, msg, t)
             else:
                 output_bag.write(topic, msg, t)
     output_bag.close()
@@ -81,20 +98,35 @@ if __name__ == "__main__":
         help="Output gray image topic.",
     )
     parser.add_argument(
+        "-c",
+        "--color-image-topic",
+        default="/hw/cam_nav/image_color",
+        help="Output color image topic.",
+    )
+    parser.add_argument(
         "-s",
         "--save-all-topics",
         dest="save_all_topics",
         action="store_true",
         help="Save all topics from input bagfile to output bagfile.",
     )
+    parser.add_argument(
+        "-k",
+        "--keep-bayer",
+        dest="keep_bayer_topic",
+        action="store_true",
+        help="Save bayer topic alongside converted image on the new bagfile",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    convert_bayer_to_grayscale(
+    convert_bayer(
         args.bagfile,
         args.bayer_image_topic,
         args.gray_image_topic,
+        args.color_image_topic,
         args.save_all_topics,
+        args.keep_bayer_topic,
     )
