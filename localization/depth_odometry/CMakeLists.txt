@@ -23,7 +23,7 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  camera
+  cv_bridge
   ff_util
   image_transport
   localization_common 
@@ -50,7 +50,7 @@ find_package(pcl_conversions REQUIRED)
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_util image_transport localization_common localization_measurements msg_conversions nodelet optimization_common point_cloud_common vision_common 
+  CATKIN_DEPENDS roscpp cv_bridge ff_msgs ff_util image_transport localization_common localization_measurements msg_conversions nodelet optimization_common point_cloud_common vision_common 
   DEPENDS gtsam pcl 
 )
 
@@ -90,24 +90,29 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_point_to_plane_icp_depth_odometry
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
-  add_rostest_gtest(test_image_features_with_known_correspondences_aligner_depth_odometry
-    test/test_image_features_with_known_correspondences_aligner_depth_odometry.test
-    test/test_image_features_with_known_correspondences_aligner_depth_odometry.cc
-    test/test_utilities.cc
-  )
-  target_link_libraries(test_image_features_with_known_correspondences_aligner_depth_odometry
-    ${PROJECT_NAME} ${catkin_LIBRARIES} 
-  )
 
- find_package(rostest REQUIRED)
-  add_rostest_gtest(test_depth_odometry_wrapper
-    test/test_depth_odometry_wrapper.test
-    test/test_depth_odometry_wrapper.cc
-    test/test_utilities.cc
-  )
-  target_link_libraries(test_depth_odometry_wrapper
-    ${PROJECT_NAME} ${catkin_LIBRARIES} 
-  )
+  # Ignore these tests if OpenCV 4 installed as cv_bridge will cause a runtime segfault
+  # since it uses opencv4 on newer ros versions and the rest of the code uses opencv3
+  find_package(OpenCV 4 QUIET)
+  if(NOT OpenCV_FOUND)
+    add_rostest_gtest(test_image_features_with_known_correspondences_aligner_depth_odometry
+      test/test_image_features_with_known_correspondences_aligner_depth_odometry.test
+      test/test_image_features_with_known_correspondences_aligner_depth_odometry.cc
+      test/test_utilities.cc
+    )
+    target_link_libraries(test_image_features_with_known_correspondences_aligner_depth_odometry
+      ${PROJECT_NAME} ${catkin_LIBRARIES} 
+    )
+
+    add_rostest_gtest(test_depth_odometry_wrapper
+      test/test_depth_odometry_wrapper.test
+      test/test_depth_odometry_wrapper.cc
+      test/test_utilities.cc
+    )
+    target_link_libraries(test_depth_odometry_wrapper
+      ${PROJECT_NAME} ${catkin_LIBRARIES} 
+    )
+  endif()
 
 endif()
 
