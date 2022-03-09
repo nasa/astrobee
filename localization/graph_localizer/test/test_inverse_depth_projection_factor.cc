@@ -91,7 +91,7 @@ TEST(InverseDepthProjectionFactorTester, InvalidError) {
 TEST(InverseDepthProjectionFactorTester, Jacobians) {
   constexpr double translation_stddev = 0.05;
   constexpr double rotation_stddev = 1;
-  for (int i = 0; i < 500; ++i) {
+  for (int i = 0; i < 5000; ++i) {
     const gtsam::Point3 source_cam_t_measurement = lc::RandomFrontFacingPoint();
     const gtsam::Pose3 body_T_cam = lc::RandomPose();
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
@@ -118,7 +118,7 @@ TEST(InverseDepthProjectionFactorTester, Jacobians) {
         boost::function<Eigen::Vector2d(const gtsam::Pose3&, const vc::InverseDepthMeasurement&, const gtsam::Pose3&)>(
           boost::bind(&gtsam::InverseDepthProjectionFactor::evaluateError, factor, _1, _2, _3, boost::none, boost::none,
                       boost::none)),
-        world_T_source_body, inverse_depth_measurement, world_T_target_body);
+        world_T_source_body, inverse_depth_measurement, world_T_target_body, 1e-6);
     EXPECT_MATRIX_NEAR(numerical_d_error_d_world_T_source_body, d_error_d_world_T_source_body, 1e-6);
     const auto numerical_d_error_d_inverse_depth =
       gtsam::numericalDerivative32<Eigen::Vector2d, gtsam::Pose3, vc::InverseDepthMeasurement, gtsam::Pose3>(
@@ -132,7 +132,7 @@ TEST(InverseDepthProjectionFactorTester, Jacobians) {
         boost::function<Eigen::Vector2d(const gtsam::Pose3&, const vc::InverseDepthMeasurement&, const gtsam::Pose3&)>(
           boost::bind(&gtsam::InverseDepthProjectionFactor::evaluateError, factor, _1, _2, _3, boost::none, boost::none,
                       boost::none)),
-        world_T_source_body, inverse_depth_measurement, world_T_target_body);
+        world_T_source_body, inverse_depth_measurement, world_T_target_body, 1e-6);
     EXPECT_MATRIX_NEAR(numerical_d_error_d_world_T_target_body, d_error_d_world_T_target_body, 1e-6);
   }
 }

@@ -62,6 +62,7 @@ add_library(${PROJECT_NAME}
   src/averager.cc
   src/combined_nav_state.cc
   src/combined_nav_state_covariances.cc
+  src/pose_interpolater.cc
   src/rate_timer.cc
   src/ros_timer.cc
   src/time.cc
@@ -85,6 +86,21 @@ install(TARGETS ${PROJECT_NAME}
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  add_rostest_gtest(test_pose_interpolater
+    test/test_pose_interpolater.test
+    test/test_pose_interpolater.cc
+  )
+  target_link_libraries(test_pose_interpolater
+    ${PROJECT_NAME}  
+  )
+
+  add_rostest_gtest(test_timestamped_set
+    test/test_timestamped_set.test
+    test/test_timestamped_set.cc
+  )
+  target_link_libraries(test_timestamped_set
+    ${PROJECT_NAME}  
+  )
   add_rostest_gtest(test_utilities_localization_common
     test/test_utilities.test
     test/test_utilities.cc

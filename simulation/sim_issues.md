@@ -185,3 +185,10 @@ This error only occurs when running the simulator in a native linux machine
 instead of a virtual machine. To get rid of it, you will have to open the
 astrobee/config/communications/dds/RAPID_QOS_PROFILES.xml file and remove
 ip address '128.102.\*' from line 118.
+
+## Gazebo shows up black in VM Ubuntu 20.04
+
+This is a known issue not specific to our project reported [here](https://forum.parallels.com/threads/black-screen-with-3d-acceleration-enabled-for-gazebo-and-rviz-robotic.355825/).
+The solution is to turn off 3D acceleration on the VM settings. Note that otherwise
+the simulation will still work and the robot is capable of moving, but all scicam
+data imagery will show up black.
