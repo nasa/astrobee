@@ -59,6 +59,7 @@ catkin_package(
   	sparse_mapping
     msg_conversions
     ff_util
+    nodelet
 )
 
 

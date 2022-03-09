@@ -29,6 +29,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   localization_common 
   localization_measurements 
   msg_conversions 
+  nodelet
   optimization_common
   point_cloud_common
   vision_common
@@ -49,7 +50,7 @@ find_package(pcl_conversions REQUIRED)
 catkin_package(
   INCLUDE_DIRS include ${CERES_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES} ${GTSAM_LIBRARIES}   
-  CATKIN_DEPENDS roscpp ff_msgs ff_util image_transport localization_common localization_measurements msg_conversions optimization_common point_cloud_common vision_common 
+  CATKIN_DEPENDS roscpp ff_msgs ff_util image_transport localization_common localization_measurements msg_conversions nodelet optimization_common point_cloud_common vision_common 
   DEPENDS gtsam pcl 
 )
 
