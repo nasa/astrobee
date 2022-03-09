@@ -28,7 +28,9 @@
 namespace dd = depth_odometry;
 namespace lc = localization_common;
 
-TEST(DepthOdometryWrapperTester, PointToPlaneICP) {
+// TODO(rsoussan): Put back this test when opencv and cv_bridge
+// are compatible (migrate to opencv4 and use ubuntu 20)
+/*TEST(DepthOdometryWrapperTester, PointToPlaneICP) {
   auto params = dd::DefaultDepthOdometryWrapperParams();
   params.icp.icp.search_radius = 1.0;
   dd::DepthOdometryWrapper depth_odometry_wrapper(params);
@@ -566,7 +568,7 @@ TEST(DepthOdometryWrapperTester, UmeyamaInitialGuessImageFeatureAligner) {
       params.body_T_haz_cam * target_2_T_target.inverse() * (params.body_T_haz_cam).inverse();
     EXPECT_MATRIX_NEAR(body_F_target_T_target_2, true_body_F_target_T_target_2, 1e-2);
   }
-}
+}*/
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
