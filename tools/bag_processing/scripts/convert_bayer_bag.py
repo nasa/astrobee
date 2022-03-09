@@ -112,12 +112,22 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-g",
+        dest="disable_gray",
+        action="store_true",
+        help="Disable grayscale conversion.",
+    )
+    parser.add_argument(
         "--gray-image-topic",
         default="/mgt/img_sampler/nav_cam/image_record",
         help="Output gray image topic.",
     )
     parser.add_argument(
         "-c",
+        dest="disable_color",
+        action="store_true",
+        help="Disable color conversion.",
+    )
+    parser.add_argument(
         "--color-image-topic",
         default="/hw/cam_nav/image_color",
         help="Output color image topic.",
@@ -140,6 +150,11 @@ if __name__ == "__main__":
     if not os.path.isfile(args.bagfile):
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
+
+    if args.disable_gray:
+        args.gray_image_topic = ""
+    if args.disable_color:
+        args.color_image_topic = ""
 
     convert_bayer(
         args.bagfile,
