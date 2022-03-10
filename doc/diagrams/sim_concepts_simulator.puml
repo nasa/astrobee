@@ -25,11 +25,10 @@ folder "Development Computer" {
     mgt_node(image_sampler)
     loc_node("real robot\nsparse_mapping\nnode not running")
     'frame GNC {
-      gnc_node(EKF)
       gnc_node(CTL)
       gnc_node(FAM)
     '}
-    EKF -> CTL
+    LOC -> CTL
     CTL -> FAM
   }
 
@@ -43,12 +42,12 @@ folder "Development Computer" {
   NavImage --> image_sampler
 
   sparse_mapping --> Features
-  Features ---> EKF
+  Features ---> LOC
 
   image_sampler --> ImgSample
 
   IMU --> ImuTelem
-  ImuTelem --> EKF
+  ImuTelem --> LOC
 
   FAM -up-> PmcCommand
   PmcCommand -up-> PMC
