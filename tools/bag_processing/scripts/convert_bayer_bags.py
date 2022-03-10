@@ -46,23 +46,24 @@ if __name__ == "__main__":
         help="Bayer image topic name.",
     )
     parser.add_argument(
-        "-g",
+        "--no-gray",
         dest="disable_gray",
-        action="store_false",
+        action="store_true",
         help="Disable grayscale conversion.",
     )
     parser.add_argument(
-        "--gray-image-topic",
+        "-g" "--gray-image-topic",
         default="/mgt/img_sampler/nav_cam/image_record",
         help="Output gray image topic.",
     )
     parser.add_argument(
-        "-c",
+        "--no-color",
         dest="disable_color",
-        action="store_false",
+        action="store_true",
         help="Disable color conversion.",
     )
     parser.add_argument(
+        "-c",
         "--color-image-topic",
         default="/hw/cam_nav/image_color",
         help="Output color image topic.",
