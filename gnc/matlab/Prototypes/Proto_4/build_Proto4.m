@@ -20,8 +20,7 @@
 %%
 run([fileparts(mfilename('fullpath')) '/../../' 'astrobee_set_path'])
 % List of subsystems to build
-models = {'astrobee/fsw_lib/est_estimator',...
-    'astrobee/fsw_lib/ctl_controller', ...
+models = {'astrobee/fsw_lib/ctl_controller', ...
     'astrobee/fsw_lib/fam_force_allocation_module',...
     'astrobee/sim_model_lib',...
     'astrobee/sim_model_lib/veh_vehicle_model/bpm_blower_1_propulsion_module', ...
@@ -59,19 +58,12 @@ copyfile(fullfile('slprj', 'ert', '_sharedutils'), 'sharedutils')
 %% Generate tunable functions
 dirs = ls;
 ctl_dir = regexp(dirs, 'ctl_\w+_rtw', 'match');
-est_dir = regexp(dirs, 'est_\w+_rtw', 'match');
 fam_dir = regexp(dirs, 'fam_\w+_rtw', 'match');
 sim_dir = regexp(dirs, 'sim_\w+_rtw', 'match');
 
 if ~isempty(ctl_dir)
     cd(ctl_dir{1});
     generate_ctl_param_reads;
-    cd ..
-end
-
-if ~isempty(est_dir)
-    cd(est_dir{1});
-    generate_est_param_reads;
     cd ..
 end
 
