@@ -293,6 +293,7 @@ If that doesn't work, you can try filtering out the bad topics instead of
 trying to fix their message definitions:
 
 ```console
+ASTROBEE_DIR=$HOME/astrobee
 $ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
 ```
 
@@ -300,7 +301,6 @@ And this command may help determine which topics are problematic
 in case more topics need to be fixed with the filtering approach:
 
 ```console
-ASTROBEE_DIR=$HOME/astrobee
 $ASTROBEE_DIR/src/scripts/postprocessing/rosbag_detect_bad_topics.py in.bag
 ```
 
@@ -310,15 +310,15 @@ deal with it.
 
 ### Bags containing messages with outdated message definitions
 
-TODO: Discuss how to handle older bags that include messages with
-outdated message definitions, where the message type has changed in the
-latest software version. For example, a new field may have been added to
-the message type, but messages in the older bag don't include it. A
-relevant resource: [rosbag
-migration](http://wiki.ros.org/rosbag/migration). In some cases, rather
-than migrating the bag, it might be easier to revert the installed
-version of the Astrobee flight software to the version that was used to
-record the bag file?
+When processing a bag file, you may see an error message indicating
+that some messages need to be migrated.
+
+This is because, as Astrobee flight software continues to evolve, its
+telemetry message definitions occasionally change in ways that break
+backward compatibility for analysis of archived telemetry bags.
+
+If you encounter this problem, [fix the bag as described
+above](#preparing-the-bag-for-analysis).
 
 ### Timestamp clock skew
 
