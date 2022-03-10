@@ -17,30 +17,6 @@
 # under the License.
 
 """
-This script has the same basic goal as rosbag migration ("rosbag fix")
-but takes an alternative approach of rewriting the message to have a
-different type name without changing the raw message contents.
-
-When and how to use it:
-
-1. Determine if you have a message type whose definition has changed
-   incompatibly such that it's not feasible to migrate legacy bags
-   containing the message to use the new definition of the same message
-   type. For example, maybe an important field of the old message has
-   been deleted or has changed semantics, so that there's no easy and
-   robust way to capture the old field's information in the new message.
-
-2. Define a new message type with a different name that has exactly the
-   same data structure as the old message type. Note: Take care! Because
-   this script copies over the raw message contents verbatim, any change
-   in the data structure could cause data corruption. By convention, if
-   the old message type was pkg_msgs/Msg, the new message type should be
-   something like pkg_legacy_msgs/MsgV1 (or V2, V3, ... if needed). If
-   you are copying a parent type that contains subtypes that may change
-   in the future, those subtypes should also be copied, and the
-   reference to the subtype in the parent type should be updated to
-   point to the copy.
-
 3. Add the message type to a rules file. An example file is
    rosbag_rewrite_types_rules.json found in this folder. Message
    instances whose type matches old_type and whose message definition

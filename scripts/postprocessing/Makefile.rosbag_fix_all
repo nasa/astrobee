@@ -1,0 +1,24 @@
+
+ifeq (,${ASTROBEE_DIR})
+  ASTROBEE_DIR = ${HOME}/astrobee
+endif
+REWRITE_TYPES = ${ASTROBEE_DIR}/src/scripts/postprocessing/rosbag_rewrite_types.py
+BMR = $(wildcard ${ASTROBEE_DIR}/src/communications/ff_msgs/bmr/*.bmr)
+REWRITE_RULES = -r ${ASTROBEE_DIR}/src/communications/ff_msgs/bmr/rosbag_rewrite_types_rules.json
+
+ifeq (,${ISAAC_DIR})
+  ISAAC_DIR = ${HOME}/isaac
+endif
+
+# If ISAAC_DIR exists, apply extra rules for ISAAC messages. Shouldn't hurt non-ISAAC bags.
+ifneq (,$(wildcard ${ISAAC_DIR}))
+  BMR += $(wildcard ${ISAAC_DIR}/src/isaac_msgs/isaac_msgs/bmr/*.bmr)
+  REWRITE_RULES += -r ${ISAAC_DIR}/src/isaac_msgs/isaac_msgs/bmr/rosbag_rewrite_types_rules.json
+endif
+
+%.rewrite_types.bag: %.bag
+	${REWRITE_TYPES} -v ${REWRITE_RULES} $< -o $@
+
+%.fix_all.bag: %.rewrite_types.bag
+	rosbag fix $< $@ ${BMR}
+	rosbag check $@  # test: post-migration consistency
