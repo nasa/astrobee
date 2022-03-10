@@ -52,7 +52,8 @@ if __name__ == "__main__":
         help="Disable grayscale conversion.",
     )
     parser.add_argument(
-        "-g" "--gray-image-topic",
+        "-g",
+        "--gray-image-topic",
         default="/mgt/img_sampler/nav_cam/image_record",
         help="Output gray image topic.",
     )
