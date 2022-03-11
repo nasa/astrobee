@@ -17,24 +17,23 @@
 # under the License.
 
 """
-3. Add the message type to a rules file. An example file is
-   rosbag_rewrite_types_rules.json found in this folder. Message
-   instances whose type matches old_type and whose message definition
-   MD5 sum matches old_type_md5sum will have their type renamed to
-   new_type and MD5 sum updated to new_type_md5sum. You can figure out
-   both the old_type and old_type_md5sum to use by running 'rosbag info'
-   on the legacy bag you want to migrate. You can figure out
-   new_type_md5sum by running 'rosmsg md5 <new_type>'.
+Tool that applies rules to fix bag files, as specified in
+rosbag_rewrite_types_rules.json. It performs two types of fix:
 
-4. Run the script to rename the types. The legacy messages should now
-   be compatible with the latest version of your package.
+1. Fix incomplete message definition metadata, as written by rosjava
+   nodes. Which topics to fix is specified in the
+   fix_message_definition_topic_patterns field of the rules file.
 
-Note: It seems like 'rosbag fix' should support this use case, but we
-tried hard and couldn't get it to work in practice. It always tried to
-rewrite the message to the latest version of the same type instead of
-renaming the type, regardless of what we put in the *.bmr update
-rules. Also, an advantage of using this script instead of 'rosbag fix'
-is that both the migration rules and the script itself are much simpler.
+2. For message types whose definition changed in a way that makes
+   migration infeasible, changes the message type name to be the
+   "frozen" type name, so that migration is not needed. Which message
+   types to fix is specified in the rename_types field of the rules
+   file.
+
+These fixes should be run before "rosbag fix" bag migration. The overall
+strategy is explained in [1].
+
+[1] https://github.com/nasa/astrobee/blob/develop/doc/general_documentation/maintaining_telemetry.md
 """
 
 from __future__ import print_function
@@ -49,8 +48,6 @@ import os
 import genpy
 import rosbag
 import roslib
-
-DEFAULT_RULES_FILE = "rosbag_rewrite_types_rules.json"
 
 # See the following sources for many of the genpy/rosbag/roslib patterns used
 # here:
@@ -137,6 +134,9 @@ def fix_message_definitions(inbag, fix_topic_patterns, verbose=False):
 
 
 def rename_types(inbag, outbag, rename_lookup, verbose=False):
+    # TODO(trey0): Is it possible to do the type renaming by iterating only
+    # over the connections rather than over every message, like we do in
+    # fix_message_definitions()? Might be faster.
     num_renamed = collections.Counter()
     for topic, msg, t, conn in inbag.read_messages(
         raw=True, return_connection_header=True
