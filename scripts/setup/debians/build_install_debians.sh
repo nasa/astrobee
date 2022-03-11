@@ -64,6 +64,6 @@ do
   cd ${debian_loc}/$pkg &&
   sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control &&
   cd ${debian_loc} &&
-  ./build_${pkg}.sh
+  ./build_${pkg}.sh &&
   sudo dpkg -i *${pkg}*.deb || exit 1
 done
