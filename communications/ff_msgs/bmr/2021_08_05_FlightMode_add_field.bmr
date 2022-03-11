@@ -1,0 +1,214 @@
+class update_ff_msgs_FlightMode_21af9f940eeb9407d4d58829e8cfc200(MessageUpdateRule):
+	old_type = "ff_msgs/FlightMode"
+	old_full_text = """
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# This message captures all information in a flight mode
+
+Header header                     # Metadata
+
+string name                       # Name of the flight mode
+
+bool control_enabled              # Is control enabled?
+
+float32 collision_radius          # Collision radius in meters
+
+# Tolerances (all in SI units)
+float32 tolerance_pos             # Position tolerance in m
+float32 tolerance_vel             # Velocity tolerance in m/s
+float32 tolerance_att             # Attitude tolerance in rads
+float32 tolerance_omega           # Angular acceleration tolerance in rad/s
+float32 tolerance_time            # Acceptable lag betwee TX and RX of control
+
+# Controller gains
+geometry_msgs/Vector3 att_kp      # Positional proportional constant
+geometry_msgs/Vector3 att_ki      # Positional integrative constant
+geometry_msgs/Vector3 omega_kd    # Attidue derivative constant
+geometry_msgs/Vector3 pos_kp      # Positional proportional contant
+geometry_msgs/Vector3 pos_ki      # Positional integrative constant
+geometry_msgs/Vector3 vel_kd      # Positional derivative constant
+
+# Hard limit on planning
+float32 hard_limit_vel            # Position tolerance in m/s
+float32 hard_limit_accel          # Position tolerance in m/s^2
+float32 hard_limit_omega          # Position tolerance in rads/s
+float32 hard_limit_alpha          # Position tolerance in rads/s^2
+
+# Impeller speed
+uint8 speed                       # Current speed gain
+uint8 SPEED_MIN        = 0        # Min acceptable gain
+uint8 SPEED_OFF        = 0        # Blowers off
+uint8 SPEED_QUIET      = 1        # Quiet mode
+uint8 SPEED_NOMINAL    = 2        # Nomainal mode
+uint8 SPEED_AGGRESSIVE = 3        # Aggressive mode
+uint8 SPEED_MAX        = 3        # Max acceptable gain
+
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data 
+# in a particular coordinate frame.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+# time-handling sugar is provided by the client library
+time stamp
+#Frame this data is associated with
+# 0: no frame
+# 1: global frame
+string frame_id
+
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space. 
+# It is only meant to represent a direction. Therefore, it does not
+# make sense to apply a translation to it (e.g., when applying a 
+# generic rigid transformation to a Vector3, tf2 will only apply the
+# rotation). If you want your data to be translatable too, use the
+# geometry_msgs/Point message instead.
+
+float64 x
+float64 y
+float64 z
+"""
+
+	new_type = "ff_msgs/FlightMode"
+	new_full_text = """
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# This message captures all information in a flight mode
+
+Header header                     # Metadata
+
+string name                       # Name of the flight mode
+
+bool control_enabled              # Is control enabled?
+
+float32 collision_radius          # Collision radius in meters
+
+# Tolerances (all in SI units)
+float32 tolerance_pos_endpoint    # Endpoint position tolerance in m
+float32 tolerance_pos             # Position tolerance in m
+float32 tolerance_vel             # Velocity tolerance in m/s
+float32 tolerance_att             # Attitude tolerance in rads
+float32 tolerance_omega           # Angular acceleration tolerance in rad/s
+float32 tolerance_time            # Acceptable lag betwee TX and RX of control
+
+# Controller gains
+geometry_msgs/Vector3 att_kp      # Positional proportional constant
+geometry_msgs/Vector3 att_ki      # Positional integrative constant
+geometry_msgs/Vector3 omega_kd    # Attidue derivative constant
+geometry_msgs/Vector3 pos_kp      # Positional proportional contant
+geometry_msgs/Vector3 pos_ki      # Positional integrative constant
+geometry_msgs/Vector3 vel_kd      # Positional derivative constant
+
+# Hard limit on planning
+float32 hard_limit_vel            # Position tolerance in m/s
+float32 hard_limit_accel          # Position tolerance in m/s^2
+float32 hard_limit_omega          # Position tolerance in rads/s
+float32 hard_limit_alpha          # Position tolerance in rads/s^2
+
+# Impeller speed
+uint8 speed                       # Current speed gain
+uint8 SPEED_MIN        = 0        # Min acceptable gain
+uint8 SPEED_OFF        = 0        # Blowers off
+uint8 SPEED_QUIET      = 1        # Quiet mode
+uint8 SPEED_NOMINAL    = 2        # Nomainal mode
+uint8 SPEED_AGGRESSIVE = 3        # Aggressive mode
+uint8 SPEED_MAX        = 3        # Max acceptable gain
+
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data 
+# in a particular coordinate frame.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+# time-handling sugar is provided by the client library
+time stamp
+#Frame this data is associated with
+string frame_id
+
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space. 
+# It is only meant to represent a direction. Therefore, it does not
+# make sense to apply a translation to it (e.g., when applying a 
+# generic rigid transformation to a Vector3, tf2 will only apply the
+# rotation). If you want your data to be translatable too, use the
+# geometry_msgs/Point message instead.
+
+float64 x
+float64 y
+float64 z
+"""
+
+	order = 0
+	migrated_types = [
+		("Header","Header"),
+		("geometry_msgs/Vector3","geometry_msgs/Vector3"),]
+
+	valid = True
+
+	def update(self, old_msg, new_msg):
+		self.migrate(old_msg.header, new_msg.header)
+		new_msg.name = old_msg.name
+		new_msg.control_enabled = old_msg.control_enabled
+		new_msg.collision_radius = old_msg.collision_radius
+		new_msg.tolerance_pos = old_msg.tolerance_pos
+		new_msg.tolerance_vel = old_msg.tolerance_vel
+		new_msg.tolerance_att = old_msg.tolerance_att
+		new_msg.tolerance_omega = old_msg.tolerance_omega
+		new_msg.tolerance_time = old_msg.tolerance_time
+		self.migrate(old_msg.att_kp, new_msg.att_kp)
+		self.migrate(old_msg.att_ki, new_msg.att_ki)
+		self.migrate(old_msg.omega_kd, new_msg.omega_kd)
+		self.migrate(old_msg.pos_kp, new_msg.pos_kp)
+		self.migrate(old_msg.pos_ki, new_msg.pos_ki)
+		self.migrate(old_msg.vel_kd, new_msg.vel_kd)
+		new_msg.hard_limit_vel = old_msg.hard_limit_vel
+		new_msg.hard_limit_accel = old_msg.hard_limit_accel
+		new_msg.hard_limit_omega = old_msg.hard_limit_omega
+		new_msg.hard_limit_alpha = old_msg.hard_limit_alpha
+		new_msg.speed = old_msg.speed
+
+		# New field. Fill by coping the value of tolerance_pos, which
+		# accurately represents the old behavior.
+		new_msg.tolerance_pos_endpoint = old_msg.tolerance_pos
