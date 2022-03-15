@@ -29,6 +29,6 @@ if (USE_ROS)
 
   catkin_package(
     LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS rosbag 
+    CATKIN_DEPENDS rosbag
   )
 endif (USE_ROS)

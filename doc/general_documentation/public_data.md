@@ -187,8 +187,7 @@ We recommend "fixing" a bag (rewriting it for compatibility with the
 latest message definitions) before using it, as follows:
 
 ```console
-ASTROBEE_DIR=$HOME/astrobee
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_fix_all.py in.bag
+rosrun bag_processing rosbag_fix_all.py in.bag
 ```
 
 However, fixing the bag may not be needed if you plan to analyze it
@@ -223,10 +222,9 @@ The following example CSV export uses a bag from the publicly released ZIP archi
 `2021-03-26_SN003_bumble.zip`:
 
 ```console
-ASTROBEE_DIR=$HOME/astrobee
 BAG=20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag
 # generate a smaller bag containing only the topic of interest (filtering out any bad message types)
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
+rosrun bag_processing rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
 # export to CSV
 rostopic echo -b loc_pose.bag -p /loc/pose > loc_pose.csv
 ```
@@ -244,16 +242,15 @@ files. The following example uses a bag from the publicly released ZIP
 archive `2021-03-26_SN003_bumble.zip`:
 
 ```console
-ASTROBEE_DIR=$HOME/astrobee
 BAG=20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag
 
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py $BAG -a /hw/wifi hw_wifi.bag
+rosrun bag_processing rosbag_topic_filter.py $BAG -a /hw/wifi hw_wifi.bag
 rostopic echo -b hw_wifi.bag -p /hw/wifi > hw_wifi.csv
 
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
+rosrun bag_processing rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
 rostopic echo -b loc_pose.bag -p /loc/pose > loc_pose.csv
 
-$ASTROBEE_DIR/src/scripts/postprocessing/csv_join.py hw_wifi.csv loc_pose.csv wifi_plus_pose.csv
+rosrun bag_processing csv_join.py hw_wifi.csv loc_pose.csv wifi_plus_pose.csv
 ```
 
 ### Displaying imagery found within a bag file
@@ -293,15 +290,14 @@ If that doesn't work, you can try filtering out the bad topics instead of
 trying to fix their message definitions:
 
 ```console
-ASTROBEE_DIR=$HOME/astrobee
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
+rosrun bag_processing rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
 ```
 
 And this command may help determine which topics are problematic
 in case more topics need to be fixed with the filtering approach:
 
 ```console
-$ASTROBEE_DIR/src/scripts/postprocessing/rosbag_detect_bad_topics.py in.bag
+rosrun bag_processing rosbag_detect_bad_topics.py in.bag
 ```
 
 As our processes improve, we hope to ensure future bag files have this
