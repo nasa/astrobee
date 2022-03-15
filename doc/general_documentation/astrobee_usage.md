@@ -23,4 +23,6 @@
 
 \subpage adding_a_command
 
-\subpage command_dictionary
+\subpage using_telemetry
+
+\subpage maintaining_telemetry
