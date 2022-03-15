@@ -233,7 +233,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r",
         "--rules",
-        nargs="?",
+        nargs="+",
         help="path to input rules file (specify multiple times for multiple files)",
         default=[],
         action="append",
@@ -251,18 +251,6 @@ if __name__ == "__main__":
 
     level = logging.DEBUG if args.verbose else logging.WARN
     logging.basicConfig(level=level, format="%(message)s")
-
-    if not args.rules:
-        repo_root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        )
-        rel_paths = (
-            "communication/ff_msgs/bmr/rosbag_rewrite_types_rules.json",
-            "communication/ff_hw_msgs/bmr/rosbag_rewrite_types_rules.json",
-        )
-        rules_paths = [os.path.join(repo_root, p) for p in rel_paths]
-        rules_paths = [p for p in rules_paths if os.path.isfile(p)]
-        args.rules = rules_paths
 
     rewrite_msg_types(
         args.inbag,
