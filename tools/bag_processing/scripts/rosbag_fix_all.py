@@ -36,9 +36,15 @@ def dosys(cmd):
     return ret
 
 
-def rosbag_fix_all(inbag_paths, jobs):
+def rosbag_fix_all(inbag_paths_in, jobs):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
+    inbag_paths = [p for p in inbag_paths_in if not p.endswith(".fix_all.bag")]
+    skip_count = len(inbag_paths_in) - len(inbag_paths)
+    if skip_count:
+        logging.info(
+            "Not trying to fix %d files that already end in .fix_all.bag", skip_count
+        )
     outbag_paths = [os.path.splitext(p)[0] + ".fix_all.bag" for p in inbag_paths]
     outbag_paths_str = " ".join(outbag_paths)
     ret = dosys("make -f%s -j%s %s" % (makefile, jobs, outbag_paths_str))
@@ -46,7 +52,7 @@ def rosbag_fix_all(inbag_paths, jobs):
     logging.info("")
     logging.info("====================")
     if ret == 0:
-        logging.info("Fixed bags written to:")
+        logging.info("Fixed bags:")
         for outbag_path in outbag_paths:
             logging.info("  %s", outbag_path)
     else:

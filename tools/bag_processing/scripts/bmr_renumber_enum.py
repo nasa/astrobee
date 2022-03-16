@@ -89,7 +89,8 @@ def get_renumber_function(
         logging.info("enum_mapping: %s", enum_mapping)
         logging.info("missing_labels: %s", missing_labels)
     assert not missing_labels
-    return lambda old_value: enum_mapping[old_value]
+
+    return lambda old_value: enum_mapping.get(old_value, old_value)
 
 
 ######################################################################
