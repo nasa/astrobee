@@ -67,7 +67,7 @@ Definition of topic names are maintained in \subpage shared:<br>
 
 ### Communication
   - \subpage comms
-  - directory: `communication`
+  - directory: `communications`
   - topic prefix: `comm`
   - This is not a subsystem like the others... Does the bridge still get a prefix and publish all "FF-ROS-Commands" under it? [ted]
   - include:

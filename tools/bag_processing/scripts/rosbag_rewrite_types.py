@@ -59,7 +59,7 @@ def dosys(cmd):
     logging.info(cmd)
     ret = os.system(cmd)
     if ret != 0:
-        logging.warning("Command failed with return value %s\n" % ret)
+        logging.warning("Command failed with return value %s\n", ret)
     return ret
 
 
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r",
         "--rules",
-        nargs="+",
+        nargs="?",
         help="path to input rules file (specify multiple times for multiple files)",
         default=[],
         action="append",
@@ -251,6 +251,9 @@ if __name__ == "__main__":
 
     level = logging.DEBUG if args.verbose else logging.WARN
     logging.basicConfig(level=level, format="%(message)s")
+
+    if not args.rules:
+        parser.error("-r argument is required")
 
     rewrite_msg_types(
         args.inbag,
