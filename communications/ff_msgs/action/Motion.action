@@ -31,6 +31,14 @@ string OFF        = off
 string NOMINAL    = nominal
 string DIFFICULT  = difficult
 string QUIET      = quiet
+
+# These four values no longer used (2020/10). Keep for backward
+# compatibility with archived ISS telemetry bags.
+string PERCHING   = perching
+string UNPERCHING = unperching
+string DOCKING    = docking
+string UNDOCKING  = undocking
+
 string PRECISION  = precision
 
 # EXECUTE ONLY : The segment

@@ -11,6 +11,12 @@ usage instructions.
 ## `apply_histogram_equalization_to_images`
 Applies either CLAHE or standard histogram equalization to images in a bagfile.
 
+## `bmr_renumber_enum`
+This is not a standalone script. It is a library that provides utility
+functions to be used in *.bmr bag migration rules to help with migrating
+legacy messages that contain an enumerated field where the label
+numbering has changed.
+
 ## `check_bag_for_gaps`
 Prints gaps above provided maximum time for a bagfile and topic using either message header times or bag receive times.
 Also prints stats for the time differences for messages with the provided topic in the bagfile.
