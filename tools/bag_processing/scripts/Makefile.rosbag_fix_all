@@ -32,7 +32,7 @@ endif
 ifeq (,${FF_MSGS_BMR})
   FF_MSGS_BMR = $(shell catkin_find ff_msgs bmr)
 endif
-BMR = $(wildcard ${FF_MSGS_BMR}/*.bmr)
+BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr))
 REWRITE_RULES = -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
 
 ifeq (,${ISAAC_MSGS_BMR})
@@ -40,7 +40,7 @@ ifeq (,${ISAAC_MSGS_BMR})
 endif
 ifneq (,${ISAAC_MSGS_BMR})
   # If isaac_msgs is available, apply extra rules. Shouldn't hurt non-ISAAC bags.
-  BMR += $(wildcard ${ISAAC_MSGS_BMR}/*.bmr)
+  BMR += $(sort $(wildcard ${ISAAC_MSGS_BMR}/*.bmr))
   REWRITE_RULES += -r ${ISAAC_MSGS_BMR}/rosbag_rewrite_types_rules.json
 endif
 
@@ -49,4 +49,5 @@ endif
 
 %.fix_all.bag: %.rewrite_types.bag
 	rosbag fix $< $@ ${BMR}
+	rm $<  # explicitly delete right away to save disk space
 	rosbag check $@  # test: post-migration consistency
