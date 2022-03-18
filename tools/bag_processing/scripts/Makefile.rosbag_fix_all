@@ -27,7 +27,7 @@
 # rosbag_fix_all.py.
 
 ifeq (,${REWRITE_TYPES})
-  REWRITE_TYPES = rosrun bag_processing rosbag_rewrite_types.py
+  REWRITE_TYPES = $(shell catkin_find bag_processing scripts/rosbag_rewrite_types.py)
 endif
 ifeq (,${FF_MSGS_BMR})
   FF_MSGS_BMR = $(shell catkin_find ff_msgs bmr)

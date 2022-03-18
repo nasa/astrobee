@@ -44,6 +44,7 @@ import fnmatch
 import json
 import logging
 import os
+import tempfile
 
 import genpy
 import rosbag
@@ -102,6 +103,25 @@ def get_rules(rules_files):
 
 def topic_matcher(topic, topic_patterns):
     return any((fnmatch.fnmatch(topic, p) for p in topic_patterns))
+
+
+def reindex(inbag_path):
+    tmp_folder = tempfile.mkdtemp()
+    dosys("rosbag reindex --output-dir=%s %s " % (tmp_folder, inbag_path))
+    reindexed_path = os.path.join(tmp_folder, os.path.basename(inbag_path))
+    return reindexed_path, tmp_folder
+
+
+def reindex_if_needed(inbag_path):
+    try:
+        with rosbag.Bag(inbag_path, "r") as inbag:
+            pass
+        return inbag_path, None
+    except rosbag.bag.ROSBagUnindexedException:
+        logging.warning(
+            "WARNING: input bag %s was unindexed, reindexing automatically", inbag_path
+        )
+        return reindex(inbag_path)
 
 
 def fix_message_definitions(inbag, fix_topic_patterns, verbose=False):
@@ -174,17 +194,19 @@ def rename_types(inbag, outbag, rename_lookup, verbose=False):
             )
 
 
-def rewrite_msg_types1(inbag_path, outbag_path, rules, verbose=False, no_reindex=False):
-    if os.path.exists(outbag_path):
-        logging.error("Not overwriting existing file %s" % outbag_path)
-        return
+def rewrite_msg_types1(
+    inbag_path_in, outbag_path, rules, verbose=False, no_reindex=False
+):
+    inbag_path, tmp_folder = reindex_if_needed(inbag_path_in)
 
     fix_topic_patterns, rename_lookup = rules
-    with rosbag.Bag(inbag_path, "r") as inbag, rosbag.Bag(
-        outbag_path, "w", options=inbag.options
-    ) as outbag:
-        fix_message_definitions(inbag, fix_topic_patterns, verbose)
-        rename_types(inbag, outbag, rename_lookup, verbose)
+    with rosbag.Bag(inbag_path, "r") as inbag:
+        with rosbag.Bag(outbag_path, "w", options=inbag.options) as outbag:
+            fix_message_definitions(inbag, fix_topic_patterns, verbose)
+            rename_types(inbag, outbag, rename_lookup, verbose)
+
+    if tmp_folder:
+        dosys("rm -r %s" % tmp_folder)
 
     cmd = "rosbag reindex %s" % outbag_path
     if no_reindex:
@@ -202,6 +224,9 @@ def rewrite_msg_types(
     for inbag_path in inbag_paths:
         inbag_name = os.path.splitext(inbag_path)[0]
         outbag_path = outbag_path_pattern.format(inbag=inbag_name)
+        if os.path.exists(outbag_path):
+            logging.error("Not overwriting existing file %s", outbag_path)
+            continue
         rewrite_msg_types1(
             inbag_path, outbag_path, rules, verbose=verbose, no_reindex=no_reindex
         )
