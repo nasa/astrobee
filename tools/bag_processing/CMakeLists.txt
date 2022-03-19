@@ -31,4 +31,8 @@ if (USE_ROS)
     LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS rosbag
   )
+
+  if (CATKIN_ENABLE_TESTING)
+    catkin_add_nosetests(test)
+  endif()
 endif (USE_ROS)
