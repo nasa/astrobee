@@ -26,6 +26,7 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import sys
 
 
 def dosys(cmd):
@@ -58,6 +59,8 @@ def rosbag_fix_all(inbag_paths_in, jobs):
     else:
         logging.warning("Not all bags were fixed successfully (see errors above).")
 
+    return ret
+
 
 class CustomFormatter(
     argparse.ArgumentDefaultsHelpFormatter,
@@ -81,7 +84,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    rosbag_fix_all(args.inbag, args.jobs)
+    ret = rosbag_fix_all(args.inbag, args.jobs)
 
     # suppress confusing ROS message at exit
     logging.getLogger().setLevel(logging.WARN)
+
+    sys.exit(0 if ret == 0 else 1)
