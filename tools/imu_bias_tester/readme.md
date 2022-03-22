@@ -1,4 +1,4 @@
-\page imubiastester Imu Bias Tester 
+\page imubiastester IMU Bias Tester
 
 ## ImuBiasTester
 The ImuBiasTester integrates IMU measurements using the latest estimated IMU biases from graph_state messages.

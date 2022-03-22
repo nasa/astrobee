@@ -1,5 +1,5 @@
 
-# Maintaining Astrobee Telemetry Backward Compatibility
+\page maintaining_telemetry Maintaining Astrobee Telemetry Backward Compatibility
 
 ## Motivation and scope
 

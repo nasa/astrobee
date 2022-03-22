@@ -1,6 +1,4 @@
-\page using_telemetry
-
-# Using Astrobee Robot Telemetry Logs
+\page using_telemetry Using Astrobee Robot Telemetry Logs
 
 The ISS Astrobee Facility has established an [Astrobee ISS telemetry
 log public release
