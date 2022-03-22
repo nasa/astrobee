@@ -1,4 +1,4 @@
-\page bagprocessing Bag Processing
+\page bag_processing Bag Processing
 
 # Package Overview
 The bag processing package provides several helper tools for handling bagfiles.

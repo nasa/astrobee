@@ -74,6 +74,9 @@ Definition of topic names are maintained in \subpage shared:<br>
     - Bridge
     - Msg / Srv / Action
 
+### Description (URDF Robot Description)
+  - \subpage urdf
+
 ### Drivers (hardware)
   - \subpage hw
   - directory: `hardware`
