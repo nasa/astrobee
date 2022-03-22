@@ -92,7 +92,7 @@ def get_rules(rules_files):
         with open(rules_file, "r") as rules_stream:
             rules_info = json.load(rules_stream)
 
-        for k, rules in rules_info.iteritems():
+        for k, rules in rules_info.items():
             if k == "fix_message_definition_topic_patterns":
                 fix_topic_patterns += rules
             elif k == "rename_types":

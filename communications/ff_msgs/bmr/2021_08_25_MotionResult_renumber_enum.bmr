@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-bre_folder = subprocess.check_output(["catkin_find", "bag_processing", "scripts"]).strip()
+bre_folder = subprocess.check_output(["catkin_find", "bag_processing", "scripts"]).decode("utf-8").strip()
 sys.path.insert(0, bre_folder)
 import bmr_renumber_enum as bre
 
