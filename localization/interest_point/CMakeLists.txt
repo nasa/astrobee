@@ -15,48 +15,55 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0)
 project(interest_point)
 
-set(LIBS
-  ${GLOG_LIBRARIES}
-  ${GFLAGS_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  ${OPENMVG_LIBRARIES}
-  ${CERES_LIBRARY}
-  )
-set(INCLUDES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/common/include
-  ${CERES_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-  ${OPENMVG_INCLUDE_DIRS}
-  ${GFLAGS_INCLUDE_DIRS}
-  ${GLOG_INCLUDE_DIRS}
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
 )
+
+# System dependencies are found with CMake's conventions
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenMVG QUIET REQUIRED)
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES interest_point
+  LIBRARIES interest_point  ${OpenCV_LIBRARIES}
   CATKIN_DEPENDS
 #  DEPENDS system_lib
 )
 
-create_library(TARGET interest_point
-  LIBS ${LIBS}
-  INC ${INCLUDES}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
+  ${OPENMVG_INCLUDE_DIRS}
 )
 
-set(INTEREST_LIBS
-  interest_point
-  ff_common
-  ${LIBS})
-
-create_tool_targets(DIR tools
-  LIBS ${INTEREST_LIBS}
-  INC ${INCLUDES}
+# Declare C++ libraries
+add_library(interest_point
+  src/agast_score.cc
+  src/brisk.cc
+  src/essential.cc
+  src/matching.cc
 )
+add_dependencies(interest_point ${catkin_EXPORTED_TARGETS})
+target_link_libraries(interest_point ${OPENMVG_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -66,10 +73,25 @@ if(CATKIN_ENABLE_TESTING)
     test/test_matching.cc
   )
   target_link_libraries(test_matching
-    interest_point
+    interest_point glog
   )
 
 endif()
 
-set(INTEREST_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+#############
+## Install ##
+#############
 
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

@@ -1,5 +1,24 @@
 # Releases
 
+## Release 0.16.2
+
+  * Performance improvements
+  * Small bug fixes
+
+## Release 0.16.1
+
+  * depth odometry
+  * better performance evaluation
+  * multiple other fixes and improvements
+
+## Release 0.16.0
+
+  * project compiles with catkin
+  * mapper performance improvement
+  * imu_augmentor performance improvement
+  * calibration improvements
+  * multiple other fixes
+
 ## Release 0.15.2
 
   * added python linters black and isort in the CI pipeline

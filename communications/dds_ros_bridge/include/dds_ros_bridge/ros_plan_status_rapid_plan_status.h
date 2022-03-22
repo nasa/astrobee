@@ -35,8 +35,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "PlanStatusSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/PlanStatusSupport.h"
 
 namespace ff {
 

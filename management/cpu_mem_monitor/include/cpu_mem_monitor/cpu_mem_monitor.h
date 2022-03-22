@@ -74,7 +74,7 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
 
  private:
   // Get the PIDs of the nodes to monitor
-  int GetPIDs();
+  void GetPIDs(ros::TimerEvent const &te);
 
   // Assert CPU loads and report if too high
   void AssertCPULoadHighFaultCallback(ros::TimerEvent const& te);
@@ -123,20 +123,23 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
   ros::Publisher cpu_state_pub_;            // Cpu stats publisher
   ros::Publisher mem_state_pub_;            // Memory stats publisher
   ros::Timer reload_params_timer_;          // Ckeck if parameters were updated
+  ros::Timer pid_timer_;                    // Update PIDs
   ros::Timer stats_timer_;                  // Update stats
   ros::Timer assert_cpu_load_fault_timer_;  // Check cpu load limits
   ros::Timer clear_cpu_load_fault_timer_;   // Clear cpu fault timer
   ros::Timer assert_mem_load_fault_timer_;  // Check memory load limits
   ros::Timer clear_mem_load_fault_timer_;   // Clear memory fault timer
-  int pub_queue_size_, update_freq_hz_;     // Monitor publishing queue size and frequency
+  int pub_queue_size_;                      // Monitor publishing queue size
+  double update_freq_hz_, update_pid_hz_;   // Publishing and PID update frequency
   struct sysinfo mem_info_;                 // Scope memory info from sysinfo
 
   unsigned int ncpus_;          // Number of cpu's
   std::string processor_name_;  // Processor running this monitor (mlp,llp)
 
-  // Store PID values
   std::string monitor_host_;     // Either mlp, llp, hlp
-  std::map<std::string, int> nodes_pid_;
+
+  std::map<std::string, int> nodes_pid_;             // Map PID values
+  std::map<std::string, uint64_t> nodes_proc_time_;  // Map proc time values
 
   // CPU Monitor Parameters
   bool temp_fault_triggered_;                // Temperature fault triggered

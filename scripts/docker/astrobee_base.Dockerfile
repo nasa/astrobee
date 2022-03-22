@@ -55,20 +55,8 @@ COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 RUN /setup/astrobee/install_desktop_packages.sh \
   && rm -rf /var/lib/apt/lists/*
 
-#Add new sudo user
-ENV USERNAME astrobee
-RUN useradd -m $USERNAME && \
-  echo "$USERNAME:$USERNAME" | chpasswd && \
-  usermod --shell /bin/bash $USERNAME && \
-  usermod -aG sudo $USERNAME && \
-  echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
-  chmod 0440 /etc/sudoers.d/$USERNAME && \
-  # Replace 1000 with your user/group id
-  usermod  --uid 1000 $USERNAME && \
-  groupmod --gid 1000 $USERNAME
-
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/noetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/${ROS_VERSION}/setup.bash\"\nsource \"/src/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/src/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
   chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'

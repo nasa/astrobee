@@ -223,12 +223,9 @@ namespace is_camera {
         bayer_img_msg_buffer_[i]->width = kImageWidth;
         bayer_img_msg_buffer_[i]->height = kImageHeight;
 
-        // The OpenCV specification of the IS camera Bayer encoding
-        // appears to be "BayerGR" if our previous cvtColor() call
-        // is correct. That corresponds to a ROS specification of
-        // enc::BAYER_GBRG8 [1].
-        // [1] https://github.com/ros-perception/image_pipeline/blob/71d537a50bf4e7769af513f4a3d3df0d188cfa05/image_proc/src/nodelets/debayer.cpp#L223
-        bayer_img_msg_buffer_[i]->encoding = "bayer_gbrg8";
+        // This was tested in the lab using a color test picture
+        // Images in https://github.com/nasa/astrobee/issues/434
+        bayer_img_msg_buffer_[i]->encoding = "bayer_grbg8";
         bayer_img_msg_buffer_[i]->step = kImageWidth;
         bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
       }
@@ -367,6 +364,10 @@ namespace is_camera {
                            cv::DataType<uint8_t>::type,
                            &(out_image->data[0]),
                            kImageWidth);
+          // This encoding is incorrect, however given that the maps were built
+          // with it it will not be changed. It's supposed to be BayerGB2GRAY [1], given
+          // that the bayer encoding is BAYER_GRBG8, as tested in the lab.
+          // [1] https://github.com/ros-perception/image_pipeline/blob/71d537a50bf4e7769af513f4a3d3df0d188cfa05/image_proc/src/nodelets/debayer.cpp#L226
           cv::cvtColor(wrapped, owrapped,
                        CV_BayerGR2GRAY);
 

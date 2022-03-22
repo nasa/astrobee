@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import fnmatch
 import importlib
 import os
@@ -33,12 +50,8 @@ def run_cpplint(filename, cpplint_path):
 
 
 def print_objection():
-    print("   ____  __      _           __  _             __")
-    print("  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /")
-    print(" / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / ")
-    print("/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  ")
-    print("\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   ")
-    print("          /___/                                  ")
+    print("Code formatting errors were found.")
+    print("==================================")
 
 
 def main():
@@ -98,9 +111,9 @@ def main():
 
     print(("=" * 50))
     if num_errors > 0:
-        print(("  You have %d lint errors" % num_errors))
+        print(("  You have %d lint errors." % num_errors))
     elif num_errors == 0:
-        print("  Code adheres to style guide lines")
+        print("  Code adheres to style guidelines.")
 
     exit(num_errors)
 

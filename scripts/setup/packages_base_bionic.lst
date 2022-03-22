@@ -25,6 +25,14 @@ libgmp10
 libusb-1.0-0
 libtinyxml2.6.2v5
 libpcl-common1.8
+libpcl-features1.8
+libpcl-filters1.8
+libpcl-kdtree1.8
+libpcl-keypoints1.8
+libpcl-octree1.8
+libpcl-registration1.8
+libpcl-sample-consensus1.8
+libpcl-search1.8
 libjson-c3
 libargtable2-0
 libboost-program-options1.62.0
@@ -75,6 +83,7 @@ ros-melodic-xmlrpcpp
 ros-melodic-mavlink
 ros-melodic-xacro
 ros-melodic-octomap
+ros-melodic-catkin
 libalvar2
 libdbow21
 libgtsam
@@ -102,6 +111,7 @@ libtinyxml-dev
 libyaml-cpp-dev
 libusb-1.0-0-dev
 libpcl-dev
+libpcl-conversions-dev
 libboost-program-options-dev
 libboost-signals-dev
 libboost-system-dev
@@ -125,3 +135,4 @@ libdecomputil-dev
 libjps3d-dev
 libopencv3.3.1
 libopencv-dev3.3.1
+python-catkin-tools

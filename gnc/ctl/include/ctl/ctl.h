@@ -184,6 +184,7 @@ class Ctl {
   std::string name_;
   bool inertia_received_;
   bool control_enabled_;
+  bool flight_enabled_;
   bool use_truth_;
   float stopping_vel_thresh_squared_;
   float stopping_omega_thresh_squared_;

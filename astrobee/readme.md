@@ -1,4 +1,4 @@
-\page astrobee Astrobee
+\page astrobee General Considerations
 
 # Folder description
 
@@ -130,6 +130,9 @@ connection to the LLP (in case it is absent from the test rig):
 3. Add a second p4d robot to the simulation above on namespace '/bumble'
 
     `roslaunch astrobee spawn.launch world:=iss ns:=bumble`
+
+See more details in \ref running-the-sim for how to run the robot in
+simulation.
 
 4. Do a processor-in-the-loop simulation
 

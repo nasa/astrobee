@@ -72,8 +72,9 @@ docker build ${rootdir}/ \
             --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
             --build-arg ROS_VERSION=${ROS_VERSION} \
             --build-arg PYTHON=${PYTHON} \
-            -t astrobee/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
+            -t astrobee/astrobee:latest-base-ubuntu${UBUNTU_VERSION}
 docker build ${rootdir}/ \
             -f ${rootdir}/scripts/docker/astrobee.Dockerfile \
             --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
+            --build-arg ROS_VERSION=${ROS_VERSION} \
             -t astrobee/astrobee:latest-ubuntu${UBUNTU_VERSION}

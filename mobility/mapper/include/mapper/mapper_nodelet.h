@@ -98,7 +98,7 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
 
   // Callbacks (see callbacks.cpp for implementation) ----------------
   // Callback for handling incoming point cloud messages
-  void PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg);
+  void PclCallback(ros::TimerEvent const& event);
 
   // Callback for handling incoming new trajectory messages
   void SegmentCallback(const ff_msgs::Segment::ConstPtr &msg);
@@ -157,15 +157,10 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   // Thread for fading memory of the octomap
   void FadeTask(ros::TimerEvent const& event);
 
-  // Threads for constantly updating the tfTree values
-  void HazTfTask(ros::TimerEvent const& event);
-  void PerchTfTask(ros::TimerEvent const& event);
-  void BodyTfTask(ros::TimerEvent const& event);
-
-  // Thread for collision checking
+  // Collision checking
   void CollisionCheckTask();
 
-  // Thread for getting pcl data and populating the octomap
+  // Timer for getting pcl data and populating the octomap
   void OctomappingTask();
 
   // Initialize fault management
@@ -174,30 +169,32 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
  private:
   // Declare global variables (structures defined in structs.h)
   GlobalVariables globals_;
-  MutexStruct mutexes_;
-  SemaphoreStruct semaphores_;
 
-  // Thread variables
-  std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
+  // Timer variables
+  ros::Timer timer_o_;  // Octomapping Task
+  ros::Timer timer_d_;  // Diagnostics
+  ros::Timer timer_f_;  // Fade Task
 
   // Subscriber variables
-  ros::Subscriber haz_sub_, perch_sub_, segment_sub_, reset_sub_;
+  bool use_haz_cam_, use_perch_cam_;
+  ros::Subscriber segment_sub_, reset_sub_;
 
   // Octomap services
   ros::ServiceServer set_resolution_srv_, set_memory_time_srv_, set_collision_distance_srv_;
   ros::ServiceServer get_resolution_srv_, get_memory_time_srv_, get_collision_distance_srv_;
   ros::ServiceServer reset_map_srv_;
 
-  // Thread rates (hz)
-  double tf_update_rate_, fading_memory_update_rate_;
+  // Timer rates (hz)
+  double octomap_update_rate_, tf_update_rate_, fading_memory_update_rate_;
 
   // Trajectory validation variables -----------------------------
   State state_;                                       // State of the mapper (structure defined in struct.h)
   ff_util::Segment segment_;                          // Segment
+
+  // Services
   ros::ServiceServer get_free_map_srv_;               // Get free map service
   ros::ServiceServer get_obstacle_map_srv_;           // Set obstacle map service
-  ros::Timer timer_d_, timer_f_, timer_h_, timer_p_, timer_b_;  // Diagnostics
-  std::atomic<bool> killed_;
+
   ff_util::ConfigServer cfg_;                         // Config server
 
   // TF2

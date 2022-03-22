@@ -44,8 +44,6 @@
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
-namespace flags = FREEFLYER_GFLAGS_NAMESPACE;
-
 DEFINE_string(compression, "none",
               "Type of compression [none, deflate, gzip]");
 
@@ -86,11 +84,11 @@ int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "data_to_disk_publisher");
 
-  if (!flags::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
+  if (!google::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
     std::cerr << "Failed to register compression flag validator." << std::endl;
     return -1;
   }
-  flags::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc <= 1) {
     std::cerr << "error: must provide at least one file to send as zones"

@@ -154,3 +154,9 @@ TEST(nvm_fileio, read_write_loop_features) {
     EXPECT_EQ(descriptors1.at<uchar>(1, i), descriptors2.at<uchar>(1, i));
   }
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

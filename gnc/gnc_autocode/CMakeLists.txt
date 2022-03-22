@@ -15,12 +15,25 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(gnc_autocode)
+
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  ff_util
+  config_reader
+  msg_conversions
+)
 
 # find gnc directories
 find_path ( GNC_ROOT_DIR ctl_controller0_ert_rtw/ctl_controller0.h
-  PATHS ${CMAKE_SOURCE_DIR}/gnc/matlab/code_generation
-  HINTS ${CMAKE_SOURCE_DIR}/gnc/matlab/code_generation
+  PATHS ${CMAKE_SOURCE_DIR}/../matlab/code_generation
+  HINTS ${CMAKE_SOURCE_DIR}/../matlab/code_generation
   NO_CMAKE_FIND_ROOT_PATH
 )
 
@@ -28,13 +41,12 @@ if (GNC_ROOT_DIR)
   # blindly setting paths, TODO: confirm these paths exist
   set (GNC_ADDITIONAL_DIR ${GNC_ROOT_DIR}/AdditionalIncludes)
   set (GNC_CTL_DIR ${GNC_ROOT_DIR}/ctl_controller0_ert_rtw)
-  set (GNC_EST_DIR ${GNC_ROOT_DIR}/est_estimator_ert_rtw)
   set (GNC_FAM_DIR ${GNC_ROOT_DIR}/fam_force_allocation_module_ert_rtw)
   set (GNC_SIM_DIR ${GNC_ROOT_DIR}/sim_model_lib0_ert_rtw)
   set (GNC_BL1_DIR ${GNC_ROOT_DIR}/bpm_blower_1_propulsion_module_ert_rtw)
   set (GNC_BL2_DIR ${GNC_ROOT_DIR}/bpm_blower_2_propulsion_module_ert_rtw)
   set (GNC_UTIL_DIR ${GNC_ROOT_DIR}/sharedutils)
-  set (GNC_SPD_DIR ${GNC_ROOT_DIR}/esc_electronic_speed_controller0_ert_rtw)
+  #set (GNC_SPD_DIR ${GNC_ROOT_DIR}/esc_electronic_speed_controller0_ert_rtw)
   set (GNC_CXX_DIR ${GNC_ROOT_DIR}/../cxx_functions)
   set (GNC_INCLUDE_DIRS ${GNC_ADDITIONAL_DIR} ${GNC_CTL_DIR} ${GNC_EST_DIR} ${GNC_FAM_DIR})
 else (GNC_ROOT_DIR)
@@ -47,9 +59,6 @@ set(GNC_SOURCES
   ${GNC_CTL_DIR}/ctl_tunable_funcs.cpp
   ${GNC_CTL_DIR}/ctl_controller0.cpp
   ${GNC_CTL_DIR}/ctl_controller0_data.cpp
-  ${GNC_EST_DIR}/est_estimator.cpp
-  ${GNC_EST_DIR}/est_estimator_data.cpp
-  ${GNC_EST_DIR}/est_tunable_funcs.cpp
   ${GNC_FAM_DIR}/fam_force_allocation_module.cpp
   ${GNC_FAM_DIR}/fam_force_allocation_module_data.cpp
   ${GNC_FAM_DIR}/fam_tunable_funcs.cpp
@@ -74,7 +83,6 @@ set(GNC_SOURCES
 
 set(GNC_INCLUDES
   ${GNC_CTL_DIR}
-  ${GNC_EST_DIR}
   ${GNC_FAM_DIR}
   ${GNC_SIM_DIR}
   ${GNC_BL1_DIR}
@@ -91,9 +99,55 @@ STRING(REGEX REPLACE "-Werror[^ ]*" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -DPORTABLE_WORDSIZES -ffast-math -funsafe-math-optimizations")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -DPORTABLE_WORDSIZES -ffast-math -funsafe-math-optimizations")
 
-create_library(TARGET gnc_autocode
-  LIBS ${EIGEN_LIBRARIES} ff_nodelet config_reader msg_conversions
-  INC ${GNC_INCLUDES} ${EIGEN_INCLUDE_DIRS}
-  ADD_SRCS ${GNC_SOURCES}
+catkin_package(
+  INCLUDE_DIRS include ${GNC_INCLUDES}
+  LIBRARIES gnc_autocode
+  CATKIN_DEPENDS
+    roscpp
+    ff_util
+    config_reader
+    msg_conversions
 )
 
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${GNC_INCLUDES}
+)
+
+# Declare C++ libraries
+add_library(gnc_autocode
+  src/autocode.cc
+  src/constants.cc
+  src/fam.cc
+  src/sim_csv.cc
+  src/blowers.cc
+  src/ctl.cc
+  src/sim.cc
+  ${GNC_SOURCES}
+)
+add_dependencies(gnc_autocode ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gnc_autocode ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

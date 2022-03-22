@@ -1,20 +1,28 @@
 
-# Astrobee Usage
+# Tutorials
 
 \subpage astrobee
 
+\subpage running-the-sim
+
+\subpage advanced-sim-info
+
 \subpage teleop
 
-\subpage release
+\subpage astrobee-code-style
 
-\subpage managing_debians
+\subpage conventions
 
 \subpage new_robot
 
 \subpage doc
 
-\subpage conventions
+\subpage release
+
+\subpage managing_debians
 
 \subpage adding_a_command
 
-\subpage command_dictionary
+\subpage using_telemetry
+
+\subpage maintaining_telemetry

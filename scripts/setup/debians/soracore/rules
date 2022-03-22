@@ -20,4 +20,4 @@ export NDDSARCH=$(shell ls $(NDDSHOME)/lib | grep -v jdk)
 	dh $@ --parallel --buildsystem=cmake
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-allow-multiple-definition"
+	dh_auto_configure -- -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-allow-multiple-definition" -DMIRO_BUILD_WITH_QT5=true

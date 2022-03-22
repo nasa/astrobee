@@ -33,8 +33,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "CompressedFileAckSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/CompressedFileAckSupport.h"
 
 namespace ff {
 

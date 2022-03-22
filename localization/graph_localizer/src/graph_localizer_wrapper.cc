@@ -200,6 +200,13 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
+void GraphLocalizerWrapper::DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  if (graph_localizer_) {
+    const auto depth_odometry_measurement = lm::MakeDepthOdometryMeasurement(depth_odometry_msg);
+    graph_localizer_->AddDepthOdometryMeasurement(depth_odometry_measurement);
+  }
+}
+
 void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
   feature_counts_.depth = depth_landmarks_msg.landmarks.size();
   if (!ValidDepthMsg(depth_landmarks_msg)) return;

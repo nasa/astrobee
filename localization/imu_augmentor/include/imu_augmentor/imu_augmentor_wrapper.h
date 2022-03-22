@@ -39,6 +39,8 @@ class ImuAugmentorWrapper {
  public:
   explicit ImuAugmentorWrapper(const std::string& graph_config_path_prefix = "");
 
+  explicit ImuAugmentorWrapper(const ImuAugmentorParams& params);
+
   void LocalizationStateCallback(const ff_msgs::GraphState& loc_msg);
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
@@ -51,6 +53,8 @@ class ImuAugmentorWrapper {
   boost::optional<ff_msgs::EkfState> LatestImuAugmentedLocalizationMsg();
 
  private:
+  void Initialize(const ImuAugmentorParams& params);
+
   bool LatestImuAugmentedCombinedNavStateAndCovariances(
     localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
     localization_common::CombinedNavStateCovariances& latest_imu_augmented_covariances);
@@ -61,6 +65,7 @@ class ImuAugmentorWrapper {
 
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
   boost::optional<localization_common::CombinedNavState> latest_combined_nav_state_;
+  boost::optional<localization_common::CombinedNavState> latest_imu_augmented_combined_nav_state_;
   boost::optional<localization_common::CombinedNavStateCovariances> latest_covariances_;
   boost::optional<ff_msgs::GraphState> latest_loc_msg_;
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;

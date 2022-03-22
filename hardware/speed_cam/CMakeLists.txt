@@ -15,7 +15,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(speed_cam)
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  ff_util
+  ff_hw_msgs
+  ff_serial
+  mavlink
+)
 
 catkin_package(
   LIBRARIES
@@ -23,20 +37,36 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     nodelet
-    pluginlib
-    sensor_msgs
-    geometry_msgs
     ff_util
     ff_hw_msgs
-    mavlink
+    ff_serial
 )
 
-create_library(
-  TARGET speed_cam
-  LIBS ${catkin_LIBRARIES} ff_serial config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS mavlink speed_cam_gencpp
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+# Declare C++ libraries
+# Declare C++ libraries
+add_library(speed_cam
+  src/speed_cam.cc
+  src/speed_cam_node.cc
+)
+add_dependencies(speed_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(speed_cam ${catkin_LIBRARIES})
+
+## Declare a C++ executable: speed_cam_tool
+add_executable(speed_cam_tool tools/speed_cam_tool.cc)
+add_dependencies(speed_cam_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(speed_cam_tool
+  speed_cam gflags ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -47,13 +77,37 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(test_init_speed_cam
-    ${catkin_LIBRARIES} config_reader ff_nodelet
+    ${catkin_LIBRARIES} glog
   )
 endif()
 
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} speed_cam
-  INC ${catkin_INCLUDE_DIRS}
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-install_launch_files()
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Install C++ executables
+install(TARGETS speed_cam_tool DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/speed_cam_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+

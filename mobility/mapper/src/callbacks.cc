@@ -23,34 +23,58 @@
 
 namespace mapper {
 
-void MapperNodelet::PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg) {
-  // Structure to include pcl and its frame
-  StampedPcl new_pcl;
-  uint max_queue_size = 4;
+void MapperNodelet::PclCallback(ros::TimerEvent const& event) {
+  // Get messages
+  std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
+  std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
 
-  // Convert message into pcl type
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  pcl::fromROSMsg(*msg, cloud);
-  new_pcl.cloud = cloud;
+  if (use_haz_cam_) {
+    std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
+    // Get depth message
+    boost::shared_ptr<sensor_msgs::PointCloud2 const> msg;
+    msg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>(
+                      cam_prefix + cam + cam_suffix, ros::Duration(0.5));
+    if (msg == NULL) {
+      ROS_INFO("No point clound message received");
+    } else {
+      // Structure to include pcl and its frame
+      StampedPcl new_pcl;
 
-  // Get transform from camera to world
-  const std::string pcl_frame = cloud.header.frame_id;
-  mutexes_.tf.lock();
-  if (!pcl_frame.compare("haz_cam"))
-    new_pcl.tf_cam2world = globals_.tf_cam2world;
-  else if (!pcl_frame.compare("perch_cam"))
+      // Convert message into pcl type
+      pcl::PointCloud<pcl::PointXYZ> cloud;
+      pcl::fromROSMsg(*msg, cloud);
+      new_pcl.cloud = cloud;
+      new_pcl.tf_cam2world = globals_.tf_cam2world;
+
+      // save into global variables
+      globals_.pcl_queue.push(new_pcl);
+    }
+  }
+  if (use_perch_cam_) {
+    std::string cam = TOPIC_HARDWARE_NAME_PERCH_CAM;
+    // Get depth message
+    boost::shared_ptr<sensor_msgs::PointCloud2 const> msg;
+
+    msg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>(
+                      cam_prefix + cam + cam_suffix, ros::Duration(0.5));
+    if (msg == NULL) {
+      ROS_INFO("No point clound message received");
+    } else {
+    // Structure to include pcl and its frame
+    StampedPcl new_pcl;
+
+    // Convert message into pcl type
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    pcl::fromROSMsg(*msg, cloud);
+    new_pcl.cloud = cloud;
     new_pcl.tf_cam2world = globals_.tf_perch2world;
-  mutexes_.tf.unlock();
 
-  // save into global variables
-  mutexes_.point_cloud.lock();
-  globals_.pcl_queue.push(new_pcl);
-  if (globals_.pcl_queue.size() > max_queue_size)
-    globals_.pcl_queue.pop();
-  mutexes_.point_cloud.unlock();
+    // save into global variables
+    globals_.pcl_queue.push(new_pcl);
+    }
+  }
 
-  // signal octomap thread to process new pcl data
-  semaphores_.pcl.notify_one();
+  OctomappingTask();
 }
 
 
@@ -63,7 +87,7 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
   if (!cfg_.Get<bool>("enable_obstacles"))
     return;
 
-  // For timint this callback
+  // For timing this callback
   ros::Time t0 = ros::Time::now();
 
   // transform message into set of polynomials
@@ -73,7 +97,6 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
   double ts = 0.1;
   sampled_traj::SampledTrajectory3D sampled_traj(ts, poly_trajectories);
 
-  mutexes_.sampled_traj.lock();
   globals_.sampled_traj.pos_ = sampled_traj.pos_;
   globals_.sampled_traj.time_ = sampled_traj.time_;
   globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
@@ -94,10 +117,9 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
 
   // populate kdtree for finding nearest neighbor w.r.t. collisions
   globals_.sampled_traj.CreateKdTree();
-  mutexes_.sampled_traj.unlock();
 
   // Notify the collision checker to check for collision
-  semaphores_.collision_check.notify_one();
+  CollisionCheckTask();
 
   ros::Duration solver_time = ros::Time::now() - t0;
   ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
@@ -117,9 +139,7 @@ bool MapperNodelet::ReconfigureCallback(dynamic_reconfigure::Config &config) {
 }
 
 void MapperNodelet::ResetCallback(std_msgs::EmptyConstPtr const& msg) {
-  mutexes_.octomap.lock();
   globals_.octomap.ResetMap();
-  mutexes_.octomap.unlock();
 }
 
 

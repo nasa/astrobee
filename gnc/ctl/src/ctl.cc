@@ -42,7 +42,7 @@ namespace ctl {  // Nodehandle for <robot>/gnc/wrapper
 Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
   fsm_(WAITING, std::bind(&Ctl::UpdateCallback,
     this, std::placeholders::_1, std::placeholders::_2)),
-      name_(name), inertia_received_(false), control_enabled_(false) {
+      name_(name), inertia_received_(false), control_enabled_(true), flight_enabled_(false) {
   // Add the state transition lambda functions - refer to the FSM diagram
   // [0]
   fsm_.Add(WAITING,
@@ -332,7 +332,7 @@ void Ctl::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   mc::ros_to_array_vector(mode->pos_ki, input.pos_ki);
   mc::ros_to_array_vector(mode->vel_kd, input.vel_kd);
   input.speed_gain_cmd = mode->speed;
-  control_enabled_ =
+  flight_enabled_ =
     (input.speed_gain_cmd > 0 ? mode->control_enabled : false);
 }
 
@@ -510,7 +510,7 @@ bool Ctl::Step(void) {
       NODELET_DEBUG_STREAM_THROTTLE(10, "GNC step waiting for inertia");
       return false;
     }
-    if (!control_enabled_) {
+    if (!flight_enabled_ || !control_enabled_) {
       NODELET_DEBUG_STREAM_THROTTLE(10, "GNC control disabled in flight mode");
       return false;
     }

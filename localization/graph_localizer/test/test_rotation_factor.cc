@@ -18,6 +18,7 @@
 
 #include <graph_localizer/pose_rotation_factor.h>
 #include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>
@@ -43,11 +44,17 @@ TEST(RotationFactorTester, Jacobian) {
   const auto numerical_H1 = gtsam::numericalDerivative21<gtsam::Vector3, gtsam::Pose3, gtsam::Pose3>(
     boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
       boost::bind(&gtsam::PoseRotationFactor::evaluateError, rotation_factor, _1, _2, boost::none, boost::none)),
-    world_T_body_1, world_T_perturbed_body_2, 1e-5);
-  ASSERT_TRUE(numerical_H1.isApprox(factor_H1.matrix(), 1e-6));
+    world_T_body_1, world_T_perturbed_body_2);
+  EXPECT_MATRIX_NEAR(numerical_H1, factor_H1, 1e-6);
   const auto numerical_H2 = gtsam::numericalDerivative22<gtsam::Vector3, gtsam::Pose3, gtsam::Pose3>(
     boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
       boost::bind(&gtsam::PoseRotationFactor::evaluateError, rotation_factor, _1, _2, boost::none, boost::none)),
-    world_T_body_1, world_T_perturbed_body_2, 1e-5);
-  ASSERT_TRUE(numerical_H2.isApprox(factor_H2.matrix(), 1e-6));
+    world_T_body_1, world_T_perturbed_body_2);
+  EXPECT_MATRIX_NEAR(numerical_H2, factor_H2, 1e-6);
+}
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
