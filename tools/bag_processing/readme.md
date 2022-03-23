@@ -79,6 +79,10 @@ Filter `rosbag` messages based on topic. Like a subset of `rosbag filter`
 functionality, but more robust to incomplete message definitions because
 it doesn't need to deserialize the messages to filter on topic.
 
+## `splice_bag`
+Interactively splices a bagfile at selected timestamps to create multiple smaller bagfiles, which when combined 
+span the original bagfile. Iterates through the bagfile images to allow the user to select splice points.
+
 ## `trim_bag`
 Creates a new bagfile with trimmed start and end times from a provided
 bagfile.
