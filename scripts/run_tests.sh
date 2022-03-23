@@ -21,14 +21,16 @@
 # container. It closely mimics test_astrobee.Dockerfile and the
 # testing phase of the GitHub CI.
 
+script_folder=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+catkin_ws=$( cd -- "${script_folder}/../.." &> /dev/null && pwd )
+
 set -e
 set -x
 
 # The package argument is optional. Default is to test all packages.
 package=$1
 
-cd /src/astrobee
-
+cd ${catkin_ws}
 
 catkin build --no-status --force-color ${package} --make-args tests
 { catkin build --no-status --force-color ${package} --make-args test -j1 || true; }
