@@ -38,7 +38,7 @@ BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr) $(wildcard ${FF_MSGS_BMR}/${ROS_VE
 REWRITE_RULES = -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
 
 ifeq (,${ISAAC_MSGS_BMR})
-  ISAAC_MSGS_BMR = $(shell catkin_find --first-only isaac_msgs bmr)
+  ISAAC_MSGS_BMR = $(shell catkin_find --first-only isaac_msgs bmr 2> /dev/null)
 endif
 ifneq (,${ISAAC_MSGS_BMR})
   # If isaac_msgs is available, apply extra rules. Shouldn't hurt non-ISAAC bags.
