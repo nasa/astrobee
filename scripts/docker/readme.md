@@ -42,11 +42,16 @@ However, if you need to build a local copy of the docker images, run:
     
     ./build.sh
 
-The build script will automatically detect the current Ubuntu OS
-version and define the docker files variables `UBUNTU_VERSION`,
-`ROS_VERSION`, and `PYTHON`. If a specific version is desired, the
-option `--xenial`, `--bionic`, and `--focal` is used for Ubuntu 16.04,
-18.04, and 20.04 docker images, respectively.
+By default, the build script will automatically detect your host's
+Ubuntu OS version and configure the docker image to use the same
+version using the Dockerfile variables `UBUNTU_VERSION`,
+`ROS_VERSION`, and `PYTHON`.
+
+However, there is no requirement for the host OS and the docker image
+OS to match.  You can override the default and select a specific
+docker image Ubuntu version by specifying `--xenial`, `--bionic`, or
+`--focal` for Ubuntu 16.04, 18.04, or 20.04 docker images,
+respectively.
 
 ## Run commands in the container
 
@@ -55,18 +60,18 @@ execute arbitrary commands:
 
     ./run_headless.sh --remote
 
-It will automatically detect the current Ubuntu OS version. If a
-specific version is desired, the options `--xenial`, `--bionic`, and
-`--focal` are used for Ubuntu 16.04, 18.04, and 20.04 docker images,
-respectively.
+As with `build.sh`, by default, the docker image OS version will be
+configured to match your host's OS version, but you can override that
+by specifying the `--xenial`, `--bionic`, or `--focal` option for
+Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
 
 With the `--remote` argument, it will fetch and run a pre-built
-Astrobee docker image. Omit the `--remote` argument to run with a
+Astrobee docker image. Omit the `--remote` argument to run using a
 docker image built locally by `./build.sh`.
 
 As the script name suggests, this script doesn't set up the X display,
 so it can be used to run a docker container from within a headless
-VM. However, graphical applications will not be usable within the
+VM host. However, graphical applications will not be usable within the
 resulting shell.
 
 ## Run unit tests in the container
@@ -83,6 +88,10 @@ Example usage:
     docker# /src/astrobee/src/scripts/docker/run_tests.sh [package]
 
 The package argument is optional. By default, it tests all packages.
+
+If debugging a CI failure that is specific to a particular OS version,
+run `run_headless.sh` with the `--xenial`, `--bionic`, or `--focal`
+options to select the right OS version to replicate the failure.
 
 ## Run the Astrobee simulator in the container
 
