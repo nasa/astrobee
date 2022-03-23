@@ -39,17 +39,25 @@ from sensor_msgs.msg import Image
 
 
 def print_info(splice_timestamps, bag_start_time, bag_end_time):
-    print(str(len(splice_timestamps)) + ' splice timestamps selected.')
-    print('Splicing timestamps: ' + str(splice_timestamps))
-    print('Splicing intervals: ')
+    print(str(len(splice_timestamps)) + " splice timestamps selected.")
+    print("Splicing timestamps: " + str(splice_timestamps))
+    print("Splicing intervals: ")
     starting_splice_percent = 0
     for i in range(len(splice_timestamps) + 1):
         ending_splice_percent = (
-            splice_timestamps[i] -
-            bag_start_time) / float(bag_end_time - bag_start_time) if i < len(
-                splice_timestamps) else 1
-        print(str(i) + ': ' + '{0:.2f}'.format(starting_splice_percent * 100) +
-              '% to ' + '{0:.2f}'.format(ending_splice_percent * 100) + '%')
+            (splice_timestamps[i] - bag_start_time)
+            / float(bag_end_time - bag_start_time)
+            if i < len(splice_timestamps)
+            else 1
+        )
+        print(
+            str(i)
+            + ": "
+            + "{0:.2f}".format(starting_splice_percent * 100)
+            + "% to "
+            + "{0:.2f}".format(ending_splice_percent * 100)
+            + "%"
+        )
         starting_splice_percent = ending_splice_percent
 
 
@@ -60,35 +68,37 @@ def sort_and_remove_repeats(splice_timestamps):
     return splice_timestamps
 
 
-def show_image_with_message(image,
-                            window,
-                            title,
-                            message,
-                            origin=(50, 450),
-                            font_size=4,
-                            timeout=750):
+def show_image_with_message(
+    image, window, title, message, origin=(50, 450), font_size=4, timeout=750
+):
     color_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    splice_image = cv2.putText(color_image, message, origin,
-                               cv2.FONT_HERSHEY_SIMPLEX, font_size,
-                               (0, 0, 255), 10)
+    splice_image = cv2.putText(
+        color_image,
+        message,
+        origin,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        font_size,
+        (0, 0, 255),
+        10,
+    )
     cv2.imshow(window, splice_image)
     cv2.setWindowTitle(window, title)
     key = cv2.waitKey(timeout)
 
 
 def make_spliced_bag(bagfile, start_time, end_time, index):
-    spliced_bagfile = os.path.splitext(bagfile)[0] + '_' + str(index) + '.bag'
+    spliced_bagfile = os.path.splitext(bagfile)[0] + "_" + str(index) + ".bag"
     with rosbag.Bag(bagfile, "r") as bag:
         with rosbag.Bag(spliced_bagfile, "w") as spliced_bag:
-            for topic, msg, t in bag.read_messages(None,
-                                                   rospy.Time(start_time),
-                                                   rospy.Time(end_time)):
+            for topic, msg, t in bag.read_messages(
+                None, rospy.Time(start_time), rospy.Time(end_time)
+            ):
                 spliced_bag.write(topic, msg, t)
 
 
 def splice_bag(bagfile, splice_timestamps):
     if not splice_timestamps:
-        print('No timestamps provided, not splicing.')
+        print("No timestamps provided, not splicing.")
         return
     start_and_end_times = []
     with rosbag.Bag(bagfile, "r") as bag:
@@ -96,8 +106,11 @@ def splice_bag(bagfile, splice_timestamps):
         start_time = bag.get_start_time() - 1.0
         for i in range(len(splice_timestamps) + 1):
             # Add extra time to end time to ensure final message included
-            end_time = splice_timestamps[i] if i < len(
-                splice_timestamps) else bag.get_end_time() + 1.0
+            end_time = (
+                splice_timestamps[i]
+                if i < len(splice_timestamps)
+                else bag.get_end_time() + 1.0
+            )
             make_spliced_bag(bagfile, start_time, end_time, i)
             # Add slight extra time so new start time doesn't overlap with previous end time
             start_time = end_time + 1e-4
@@ -121,8 +134,15 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
             msg = (msg_tuples[i])[0]
             timestamp = ((msg_tuples[i])[1]).to_sec()
             progress = i / float(num_msgs) * 100
-            msg_info_string = '{0:.2f}'.format(progress) + '%, Image ' + str(
-                i) + '/' + str(num_msgs) + ', t: ' + str(timestamp)
+            msg_info_string = (
+                "{0:.2f}".format(progress)
+                + "%, Image "
+                + str(i)
+                + "/"
+                + str(num_msgs)
+                + ", t: "
+                + str(timestamp)
+            )
             if print_string:
                 print(msg_info_string)
                 print_string = False
@@ -146,55 +166,70 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                 i -= 10
                 print_string = True
 
-            elif key == ord('q') or key == 27:  # Escape key
-                print('Manually closing program, no splice operation applied.')
+            elif key == ord("q") or key == 27:  # Escape key
+                print("Manually closing program, no splice operation applied.")
                 exit(0)
-            elif key == ord('p'):
-                print_info(splice_timestamps, bag.get_start_time(),
-                           bag.get_end_time())
-                show_image_with_message(image, window,
-                                        'Printing splice intervals',
-                                        'Printing splice intervals',
-                                        (130, 450), 3)
-            elif key == ord('s'):
-                print('Splice timestamp selected, t: ' + str(timestamp))
+            elif key == ord("p"):
+                print_info(splice_timestamps, bag.get_start_time(), bag.get_end_time())
+                show_image_with_message(
+                    image,
+                    window,
+                    "Printing splice intervals",
+                    "Printing splice intervals",
+                    (130, 450),
+                    3,
+                )
+            elif key == ord("s"):
+                print("Splice timestamp selected, t: " + str(timestamp))
                 splice_timestamps.append(timestamp)
                 splice_timestamps = sort_and_remove_repeats(splice_timestamps)
-                print_info(splice_timestamps, bag.get_start_time(),
-                           bag.get_end_time())
+                print_info(splice_timestamps, bag.get_start_time(), bag.get_end_time())
                 show_image_with_message(
-                    image, window, 'Splice t selected! ' + msg_info_string,
-                    'Saving splice time')
-            elif key == ord('u'):
+                    image,
+                    window,
+                    "Splice t selected! " + msg_info_string,
+                    "Saving splice time",
+                )
+            elif key == ord("u"):
                 if not splice_timestamps:
-                    message = 'No splice timestamps added.'
+                    message = "No splice timestamps added."
                     print(message)
-                    show_image_with_message(image, window, message, message,
-                                            (80, 450), 2.4)
-                else:
-                    print('Removing last added splice point at timestamp: ' +
-                          str(timestamp))
-                    splice_timestamps.pop()
-                    print_info(splice_timestamps, bag.get_start_time(),
-                               bag.get_end_time())
                     show_image_with_message(
-                        image, window,
-                        'Removed last splice point at timestamp ' +
-                        str(timestamp), 'Removed last splice time', (50, 450),
-                        3)
+                        image, window, message, message, (80, 450), 2.4
+                    )
+                else:
+                    print(
+                        "Removing last added splice point at timestamp: "
+                        + str(timestamp)
+                    )
+                    splice_timestamps.pop()
+                    print_info(
+                        splice_timestamps, bag.get_start_time(), bag.get_end_time()
+                    )
+                    show_image_with_message(
+                        image,
+                        window,
+                        "Removed last splice point at timestamp " + str(timestamp),
+                        "Removed last splice time",
+                        (50, 450),
+                        3,
+                    )
 
             elif key == 13:  # Enter key
                 if not splice_timestamps:
-                    message = 'No splice timestamps added.'
+                    message = "No splice timestamps added."
                     print(message)
-                    show_image_with_message(image, window, message, message,
-                                            (80, 450), 2.4)
+                    show_image_with_message(
+                        image, window, message, message, (80, 450), 2.4
+                    )
                 else:
-                    print('Splicing bag using selected timestamps.')
-                    print_info(splice_timestamps, bag.get_start_time(),
-                               bag.get_end_time())
-                    show_image_with_message(image, window, 'Splicing',
-                                            'Splicing', (350, 450))
+                    print("Splicing bag using selected timestamps.")
+                    print_info(
+                        splice_timestamps, bag.get_start_time(), bag.get_end_time()
+                    )
+                    show_image_with_message(
+                        image, window, "Splicing", "Splicing", (350, 450)
+                    )
                     splice_bag(bagfile, splice_timestamps)
                     return
 
@@ -202,14 +237,15 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                 i = 0
             if i >= num_msgs:
                 i = num_msgs - 1
-                show_image_with_message(image, window, 'End of bag',
-                                        'End of bag', (350, 450), 3)
+                show_image_with_message(
+                    image, window, "End of bag", "End of bag", (350, 450), 3
+                )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument(
         "-i",
