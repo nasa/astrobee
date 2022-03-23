@@ -75,3 +75,11 @@ if ! sudo apt-get install -m -y $pkgs; then
     exit 1
   }
 fi
+
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+if [ "$DIST" == "focal" ]; then
+  echo "Ubuntu 20.04 Focal Fossa detected"
+
+  echo "If 'python' interpreter is missing, point to 'python3'"
+  which python >/dev/null || sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+fi
