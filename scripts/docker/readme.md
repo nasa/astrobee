@@ -33,25 +33,68 @@ The Docker files also accept args to use local or container registry images.
 
 ## Building the docker images
 
-To build the docker images, run:
+The fastest way to start running the software is to fetch a remote
+docker image by using the `--remote` option with the `run_headless.sh`
+and `run.sh` scripts described below. Building the docker images is
+not required.
+
+However, if you need to build a local copy of the docker images, run:
     
     ./build.sh
 
-The build script will automatically detect the current Ubuntu OS version and define the docker files variables
-`UBUNTU_VERSION`, `ROS_VERSION`, and `PYTHON`. If a specific version is desired, the option --xenial, --bionic,
-and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
+The build script will automatically detect the current Ubuntu OS
+version and define the docker files variables `UBUNTU_VERSION`,
+`ROS_VERSION`, and `PYTHON`. If a specific version is desired, the
+option `--xenial`, `--bionic`, and `--focal` is used for Ubuntu 16.04,
+18.04, and 20.04 docker images, respectively.
 
-## Run the container
+## Run commands in the container
 
-To run the docker container:
+To start an interactive shell in the docker container, allowing you to
+execute arbitrary commands:
 
-    ./run.sh
+    ./run_headless.sh --remote
 
-It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
---xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
+It will automatically detect the current Ubuntu OS version. If a
+specific version is desired, the options `--xenial`, `--bionic`, and
+`--focal` are used for Ubuntu 16.04, 18.04, and 20.04 docker images,
+respectively.
+
+With the `--remote` argument, it will fetch and run a pre-built
+Astrobee docker image. Omit the `--remote` argument to run with a
+docker image built locally by `./build.sh`.
+
+As the script name suggests, this script doesn't set up the X display,
+so it can be used to run a docker container from within a headless
+VM. However, graphical applications will not be usable within the
+resulting shell.
+
+## Run unit tests in the container
+
+The `run_tests.sh` script runs within the container and is designed to
+closely mimic the testing actions in `test_astrobee.Dockerfile`, which is
+invoked by the `astrobee` GitHub continuous integration workflow. You can
+use it to replicate and debug failed CI tests.
+
+Example usage:
+
+    host$ ./run_headless.sh --remote
+    docker# (cd /src/astrobee && catkin build)  # recompile local changes
+    docker# /src/astrobee/src/scripts/docker/run_tests.sh [package]
+
+The package argument is optional. By default, it tests all packages.
+
+## Run the Astrobee simulator in the container
+
+To run the Astrobee simulator in the container:
+
+    ./run.sh --remote
+
+It takes the same arguments as `run_headless.sh` for selecting the image version to use.
+
 To add arguments to the launch file in addition to `dds:=false robot:=sim_pub` you can do instead:
 
-    ./run.sh --args "rviz:=true sviz:=true"
+    ./run.sh --remote --args "rviz:=true sviz:=true"
 
 *Note: You have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
 
@@ -61,7 +104,7 @@ To open another terminal inside the docker container:
 
 Once inside the container, don't forget to source astrobee to have access to all the commands:
 
-	source /build/astrobee/devel/setup.bash
+    source /build/astrobee/devel/setup.bash
 
 To shutdown the docker container, run:
 
