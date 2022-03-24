@@ -13,7 +13,7 @@ For some systems (with discrete graphics cards), you may need to install [additi
 ``` bash
 git clone https://github.com/nasa/astrobee.git
 cd astrobee
-./scripts/docker/run.sh --remote
+./scripts/docker/run.sh --remote --sim
 ```
 
 ## Building the code natively

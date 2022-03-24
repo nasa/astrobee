@@ -61,7 +61,7 @@ interactively execute arbitrary commands:
 
 You can also give it a command to run. For example:
 
-    ./run.sh --remote rosmsg info std_msgs/Header
+    ./run.sh --remote -- rosmsg info std_msgs/Header
 
 As with `build.sh`, by default, the docker image OS version will be
 configured to match your host's OS version, but you can override that
@@ -131,6 +131,17 @@ option to select the right OS version to replicate the failure.
 Note: integration tests that use Gazebo simulation will be silently
 disabled when running with `--no-display`. To ensure complete testing,
 run in a host environment that supports X graphics.
+
+If you care about higher-fidelity replication of CI problems and are
+willing to wait through a full `astrobee` build, you can also use
+`build.sh` to invoke `test_astrobee.Dockerfile` itself, like this:
+
+    ./build.sh --remote astrobee test_astrobee
+
+Or, if you made changes that affect `astrobee_base.Dockerfile`, you
+will need to rebuild that locally as well:
+
+    ./build.sh astrobee_base astrobee test_astrobee
 
 ## Cross-compile Astrobee (NASA users only)
 

@@ -20,7 +20,7 @@
 read -r -d '' usage_string <<EOF
 usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m]
               [-s] [-a "arg1 arg2"]
-              [cmd [arg1] [arg2] ...]
+              -- [cmd [arg1] [arg2] ...]
 
 -h or --help: Print this help
 -x or --xenial: Use Ubuntu 16.04 docker image
