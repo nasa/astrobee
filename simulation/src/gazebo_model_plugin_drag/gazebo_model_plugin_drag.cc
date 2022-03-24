@@ -80,8 +80,10 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
            * drag_.Length() * drag_.Length() * drag_.Normalize();
     #else
     drag_ = GetLink()->GetRelativeLinearVel();
+    math::Vector3 drag_normalized = drag_;
+    drag_normalized.Normalize();
     drag_ = -0.5 * coefficient_ * area_ * density_
-          * drag_.GetLength() * drag_.GetLength() * drag_.Normalize();
+          * drag_.GetLength() * drag_.GetLength() * drag_normalized;
     #endif
     // Apply the force and torque to the model
     GetLink()->AddRelativeForce(drag_);
