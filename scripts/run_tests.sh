@@ -32,12 +32,21 @@ package=$1
 
 cd ${catkin_ws}
 
+# compile the tests
 catkin build --no-status --force-color ${package} --make-args tests
+
+# run the tests and build the formal test results
 { catkin build --no-status --force-color ${package} --make-args test -j1 || true; }
 
 set +x
 { source devel/setup.sh || true; }
 set -x
 
-catkin run_tests --no-status --force-color ${package}
-catkin_test_results build/${package}
+# collect the test results to determine global success/failure
+{ catkin_test_results build/${package} || success=$? || true; }
+
+# if any tests failed, re-run in a different way that provides more debug output
+{ [ $success -eq 0 ] || catkin run_tests --no-status --force-color -j1 ${package} || true; }
+
+# return global success/failure
+[ $success -eq 0 ]
