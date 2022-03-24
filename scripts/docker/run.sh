@@ -18,8 +18,8 @@
 # under the License.
 
 read -r -d '' usage_string <<EOF
-usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m]
-              [-s] [-a "arg1 arg2"]
+usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
+              [-a "arg1 arg2"]
               -- [cmd [arg1] [arg2] ...]
 
 -h or --help: Print this help
@@ -28,16 +28,16 @@ usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m]
 -f or --focal: Use Ubuntu 20.04 docker image
 -r or --remote: Fetch pre-built remote docker image (vs. local image built by build.sh)
 -n or --no-display: Don't set up X forwarding. (For headless environment.)
--m or --mount-directory: Mount the local checkout folder into the docker container.
--s or --sim: Run the Astrobee simulator
--a or --sim-args "arg1 arg2": Pass extra args to sim
+-m or --mount: Mount the local checkout folder into the docker container.
+-d or --dry-run: Just what commands would be run
+-a or --args "arg1 arg2": Pass extra args to sim
 
-Run the specified command and args within a docker container. If no
-command is specified, the default is to provide an interactive
-shell with 'bash'.
+Run the specified command and args within a docker container.
 
-With --sim, run the standard command to start the Astrobee simulator.
-Pass extra args to the simulator with --sim-args.
+If no command is specified, the default is to start the Astrobee
+simulator.  Pass extra args to the simulator with --args.
+
+If you want an interactive shell, use 'bash' as the command.
 
 The -xbfr flags specify the type of docker container to run the command in.
 EOF
@@ -55,8 +55,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="x,b,f,r,n,m,s,a:,h"
-longopts="xenial,bionic,focal,remote,no-display,mount-directory,sim,sim-args:,help"
+shortopts="h,x,b,f,r,n,m,d,a:"
+longopts="help,xenial,bionic,focal,remote,no-display,mount,dry-run,args:"
 opts=$(getopt -a -n run.sh --options "$shortops" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -76,12 +76,15 @@ os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 sim_args="dds:=false robot:=sim_pub"
 display="true"
 mount="false"
-sim="false"
-tagrepo=astrobee
+tagrepo="astrobee"
+dry_run="false"
 
 # extract variables from options
 while [ "$1" != "" ]; do
     case $1 in
+        --help )                   usage
+                                   exit
+                                   ;;
         --xenial )                 os="xenial"
                                    ;;
         --bionic )                 os="bionic"
@@ -92,15 +95,12 @@ while [ "$1" != "" ]; do
                                    ;;
         --no-display )             display="false"
                                    ;;
-        --mount-directory )        mount="true"
+        --mount )                  mount="true"
                                    ;;
-        --sim )                    sim="true"
-                                   ;;
-        --sim-args )               sim_args+=" $2"
+        --dry-run )                dry_run="true"
+				   ;;
+        --args )                   sim_args+=" $2"
                                    shift
-                                   ;;
-        --help )                   usage
-                                   exit
                                    ;;
         -- )                       shift
                                    break
@@ -112,32 +112,26 @@ while [ "$1" != "" ]; do
 done
 
 # collect remaining non-option arguments
-user_cmd="$*"
-
-######################################################################
-# Set up command
-######################################################################
-
-if [ "$sim" = "true" ]; then
-    if [ -z "$user_cmd" ]; then
-        # run simulator
-        cmd="roslaunch astrobee sim.launch $sim_args"
-    else
-        echo "Specify --sim or your own command, not both."
-        echo
-        usage
-        exit 1
-    fi
-else
-    if [ -z "$user_cmd" ]; then
-        # run interactive shell
-        cmd="bash"
-    else
-        # run the user's command
-        cmd="$user_cmd"
-    fi
+cmd="$*"
+if [ -z "$cmd" ]; then
+    cmd="roslaunch astrobee sim.launch $sim_args"
 fi
+
 # echo "cmd: $cmd"
+
+######################################################################
+# Dry run
+######################################################################
+
+if [ "$dry_run" = "true" ]; then
+    echo "Dry run"
+
+    docker()
+    {
+	# dry run, do nothing
+	{ : ; } 2>/dev/null
+    }
+fi
 
 ######################################################################
 # Set up tag
@@ -198,6 +192,7 @@ fi
 # Run
 ######################################################################
 
+set -x
 cd $script_dir
 docker run -it --rm --name astrobee \
        $display_args \

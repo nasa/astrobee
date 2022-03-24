@@ -52,16 +52,46 @@ docker image Ubuntu version by specifying `--xenial`, `--bionic`, or
 `--focal` for Ubuntu 16.04, 18.04, or 20.04 docker images,
 respectively.
 
-## Run commands in the container
+## Run the Astrobee simulator in the container
 
-To quick start a shell in a docker container, allowing you to
-interactively execute arbitrary commands:
+*Note: To run the simulator within a docker container, the container
+generally needs to have hardware-accelerated graphics support. This
+requires compatible graphics hardware and may also require installing
+a special support package, such as `nvidia-container-toolkit`.*
+
+To run the Astrobee simulator in the container:
 
     ./run.sh --remote
 
-You can also give it a command to run. For example:
+The default arguments to the sim are `dds:=false robot:=sim_pub`. To add more arguments:
+
+    ./run.sh --remote --args "rviz:=true sviz:=true"
+
+To open another terminal inside the same docker container:
+
+    docker exec -it astrobee /astrobee_init.sh bash
+
+(The `/astrobee_init.sh` script configures the shell in the container
+to know about the Astrobee development environment, then runs the
+specified command, in this case `bash`, to get an interactive shell.)
+
+To shutdown the docker container, run:
+
+    ./shutdown.sh
+
+## Run other commands in the container
+
+Besides the simulator, you can also run arbitrary commands with `run.sh`. To
+get an interactive shell:
+
+    ./run.sh --remote -- bash
+
+Or run any other command:
 
     ./run.sh --remote -- rosmsg info std_msgs/Header
+
+(The `--` separator is usually not necessary, but makes the `run.sh`
+argument parsing more predictable.)
 
 As with `build.sh`, by default, the docker image OS version will be
 configured to match your host's OS version, but you can override that
@@ -81,31 +111,6 @@ Use `--mount` to mount your local source checkout into its standard
 location in the docker container, where it will override the copy
 embedded within the container. This is ideal for making changes in
 your host environment, then quickly testing them in the container.
-
-## Run the Astrobee simulator in the container
-
-There is a special shortcut to run the Astrobee simulator in the container:
-
-    ./run.sh --remote --sim
-
-The default arguments to the sim are `dds:=false robot:=sim_pub`. To add more arguments:
-
-    ./run.sh --remote --sim --sim-args "rviz:=true sviz:=true"
-
-*Note: You have to install `nvidia-container-toolkit` for the Gazebo
-simulation to run properly within a docker container.*
-
-To open another terminal inside the same docker container:
-
-    docker exec -it astrobee /astrobee_init.sh bash
-
-(The `/astrobee_init.sh` script configures the shell in the container
-to know about the Astrobee development environment, then runs the
-specified command, in this case `bash`, to get an interactive shell.)
-
-To shutdown the docker container, run:
-
-    ./shutdown.sh
 
 ## Run unit tests in the container
 
