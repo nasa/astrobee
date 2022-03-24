@@ -171,7 +171,6 @@ namespace ff_util {
         if (   !flight_modes.GetTable(j + 1, &mode)
             || !mode.GetStr("name", &info.name)
             || !mode.GetBool("control_enabled", &control_enabled)
-            || !mode.GetReal("collision_radius", &info.collision_radius)
             || !mode.GetReal("hard_limit_omega", &info.hard_limit_omega)
             || !mode.GetReal("hard_limit_vel", &info.hard_limit_vel)
             || !mode.GetReal("hard_limit_alpha", &info.hard_limit_alpha)

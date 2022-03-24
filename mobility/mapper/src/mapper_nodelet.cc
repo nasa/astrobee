@@ -48,11 +48,13 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
       &MapperNodelet::DiagnosticsCallback, this, false, true);
 
   // load parameters
+  bool disable_mapper = false;
   double map_resolution, memory_time, max_range, min_range, collision_distance, robot_radius;
   double cam_fov, aspect_ratio;
   double occupancy_threshold, probability_hit, probability_miss;
   double clamping_threshold_max, clamping_threshold_min;
   double traj_resolution, compression_max_dev;
+  disable_mapper = cfg_.Get<bool>("disable_mapper");
   map_resolution = cfg_.Get<double>("map_resolution");
   max_range = cfg_.Get<double>("max_range");
   min_range = cfg_.Get<double>("min_range");
@@ -113,19 +115,23 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
 
-  // Timers
-  timer_o_ = nh->createTimer(
-    ros::Duration(ros::Rate(octomap_update_rate_)),
-      &MapperNodelet::PclCallback, this, false, true);
-  timer_f_ = nh->createTimer(
-    ros::Duration(ros::Rate(fading_memory_update_rate_)),
-      &MapperNodelet::FadeTask, this, false, true);
+  if (disable_mapper) {
+    NODELET_WARN("Mapper disabled, obstacle avoidance not working!");
+  } else {
+    // Timers
+    timer_o_ = nh->createTimer(
+      ros::Duration(ros::Rate(octomap_update_rate_)),
+        &MapperNodelet::PclCallback, this, false, true);
+    timer_f_ = nh->createTimer(
+      ros::Duration(ros::Rate(fading_memory_update_rate_)),
+        &MapperNodelet::FadeTask, this, false, true);
 
-  // Subscribers
-  segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
-    &MapperNodelet::SegmentCallback, this);
-  reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
-    &MapperNodelet::ResetCallback, this);
+    // Subscribers
+    segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
+      &MapperNodelet::SegmentCallback, this);
+    reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
+      &MapperNodelet::ResetCallback, this);
+  }
 
   // Services
   set_resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_MAP_RESOLUTION,

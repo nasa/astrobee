@@ -1,0 +1,296 @@
+import subprocess
+import sys
+
+bre_folder = subprocess.check_output(["catkin_find", "bag_processing", "scripts"]).strip()
+sys.path.insert(0, bre_folder)
+import bmr_renumber_enum as bre
+
+OLD_STATE_ENUM = """
+# No faults are occurring in system
+uint8 FUNCTIONAL  = 0
+# Faults are occurring in the system which may or may not leave the robot
+# functional
+uint8 FAULT       = 1
+# A fault has occurred that indirectly affects the motion of the robot
+uint8 BLOCKED     = 2
+"""
+
+NEW_STATE_ENUM = """
+# System starting up
+uint8 STARTING_UP           = 0
+# No faults are occurring in system
+uint8 FUNCTIONAL            = 1
+# Faults are occurring in the system which may or may not leave the robot
+# functional
+uint8 FAULT                 = 2
+# A fault has occurred that indirectly affects the motion of the robot
+uint8 BLOCKED               = 3
+# Recovering from nodes dying on startup
+uint8 RELOADING_NODELETS    = 4
+"""
+
+RENUMBER_ENUM_STATE = bre.get_renumber_function(OLD_STATE_ENUM, NEW_STATE_ENUM)
+
+class update_ff_msgs_FaultState_3f21141637835b4058a2c2ea0e8588fd(MessageUpdateRule):
+	old_type = "ff_msgs/FaultState"
+	old_full_text = """
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Fault state message used to alert the ground of the current faults. It is also
+# used to express to the executive that a fault has occurred that indirectly
+# affects the motion of the robot.
+
+std_msgs/Header header
+
+# No faults are occurring in system
+uint8 FUNCTIONAL  = 0
+# Faults are occurring in the system which may or may not leave the robot
+# functional
+uint8 FAULT       = 1
+# A fault has occurred that indirectly affects the motion of the robot
+uint8 BLOCKED     = 2
+
+# Not sent to the ground, only used by the executive to determine what commands
+# to accept.
+uint8 state
+
+# Faults occurring in the astrobee system, can only send 32 faults down
+ff_msgs/Fault[] faults
+
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data 
+# in a particular coordinate frame.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+# time-handling sugar is provided by the client library
+time stamp
+#Frame this data is associated with
+# 0: no frame
+# 1: global frame
+string frame_id
+
+================================================================================
+MSG: ff_msgs/Fault
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Fault message is used to provide all the information about an occurring fault
+
+time time_of_fault        # Time when fault occurred
+
+uint32 id                 # id specifying fault
+
+string msg                # string specifying why the fault occurred
+
+ff_msgs/FaultData[] data  # Data used for fault analysis
+
+================================================================================
+MSG: ff_msgs/FaultData
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+# 
+# Fault data messsage contains information of why the fault occurred
+
+uint8 DATA_TYPE_FLOAT   = 0   # Data in this msg is of type float
+uint8 DATA_TYPE_INT     = 1   # Data in this msg is of type int
+uint8 DATA_TYPE_STRING  = 2   # Data in this msg is of type string
+
+string key  # Specifies what the data in the msg is, can only be 32 chars long
+
+uint8 data_type   # Specifies the type of data in the message
+
+float32 f   # Value used for fault analysis, data_type must be 0
+int32 i     # Value used for fault analysis, data_type must be 1
+string s    # String used for fault analysis, data_type must be 2
+"""
+
+	new_type = "ff_msgs/FaultState"
+	new_full_text = """
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Fault state message used to alert the ground of the current faults. It is also
+# used to express to the executive that a fault has occurred that indirectly
+# affects the motion of the robot.
+
+std_msgs/Header header
+
+# Not sent to the ground, only used by the executive to determine what commands
+# to accept.
+uint8 state
+# System starting up
+uint8 STARTING_UP           = 0
+# No faults are occurring in system
+uint8 FUNCTIONAL            = 1
+# Faults are occurring in the system which may or may not leave the robot
+# functional
+uint8 FAULT                 = 2
+# A fault has occurred that indirectly affects the motion of the robot
+uint8 BLOCKED               = 3
+# Recovering from nodes dying on startup
+uint8 RELOADING_NODELETS    = 4
+
+# A human readable version of the state - only really used for when nodes die on
+# startup and need to be restarted.
+string hr_state
+
+# Faults occurring in the astrobee system, can only send 32 faults down
+ff_msgs/Fault[] faults
+
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data 
+# in a particular coordinate frame.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+# time-handling sugar is provided by the client library
+time stamp
+#Frame this data is associated with
+string frame_id
+
+================================================================================
+MSG: ff_msgs/Fault
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Fault message is used to provide all the information about an occurring fault
+
+time time_of_fault        # Time when fault occurred
+
+uint32 id                 # id specifying fault
+
+string msg                # string specifying why the fault occurred
+
+ff_msgs/FaultData[] data  # Data used for fault analysis
+
+================================================================================
+MSG: ff_msgs/FaultData
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+# 
+# Fault data messsage contains information of why the fault occurred
+
+uint8 DATA_TYPE_FLOAT   = 0   # Data in this msg is of type float
+uint8 DATA_TYPE_INT     = 1   # Data in this msg is of type int
+uint8 DATA_TYPE_STRING  = 2   # Data in this msg is of type string
+
+string key  # Specifies what the data in the msg is, can only be 32 chars long
+
+uint8 data_type   # Specifies the type of data in the message
+
+float32 f   # Value used for fault analysis, data_type must be 0
+int32 i     # Value used for fault analysis, data_type must be 1
+string s    # String used for fault analysis, data_type must be 2
+"""
+
+	order = 0
+	migrated_types = [
+		("Header","Header"),
+		("Fault","Fault"),]
+
+	valid = True
+
+	def update(self, old_msg, new_msg):
+		self.migrate(old_msg.header, new_msg.header)
+		self.migrate_array(old_msg.faults, new_msg.faults, "ff_msgs/Fault")
+
+                # renumber legacy enumerated values to match new label numbering
+		new_msg.state = RENUMBER_ENUM_STATE(old_msg.state)
+                # fill new field with no-data value: empty string
+		new_msg.hr_state = ''

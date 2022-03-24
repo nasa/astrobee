@@ -1,9 +1,0 @@
-<library path="lib/libekf">
-  <class name="ekf/ekf"
-	 type="ekf::EkfNodelet"
-	 base_class_type="nodelet::Nodelet">
-    <description>
-      This nodelet wraps GNC's implementations of the EKF module.
-    </description>
-  </class>
-</library>

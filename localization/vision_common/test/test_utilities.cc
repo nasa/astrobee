@@ -108,7 +108,7 @@ TEST(UtilitiesTester, PrincipalPointProjection) {
 
 TEST(UtilitiesTester, ProjectionJacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 cam_t_point = lc::RandomPoint3d();
+    const gtsam::Point3 cam_t_point = lc::RandomFrontFacingPoint();
     const Eigen::Matrix3d intrinsics = lc::RandomIntrinsics();
     const auto noise = gtsam::noiseModel::Unit::Create(2);
     gtsam::Matrix H;

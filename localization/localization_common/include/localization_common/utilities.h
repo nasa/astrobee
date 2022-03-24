@@ -112,7 +112,8 @@ double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,
                           const double orientation_covariance_threshold = 0,
                           const bool check_position_covariance = true, const bool check_orientation_covariance = true);
 
-Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation);
+template <typename RotationType>
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const RotationType& rotation);
 
 double Deg2Rad(const double degrees);
 
@@ -148,6 +149,9 @@ std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformP
   const std::vector<Eigen::Vector3d>& points, const std::vector<Eigen::Vector3d>& normals,
   const Eigen::Isometry3d& b_T_a);
 
+Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const Eigen::Isometry3d& upper_bound_pose,
+                              const double alpha);
+
 // Implementations
 template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
@@ -179,6 +183,14 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
 template <typename MatrixType>
 double LogDeterminant(const MatrixType& matrix) {
   return std::log10(matrix.determinant());
+}
+
+template <typename RotationType>
+Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const RotationType& rotation) {
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.translation() = translation;
+  pose.linear() = Eigen::Quaterniond(rotation).toRotationMatrix();
+  return pose;
 }
 
 template <int CostDim, int StateDim>
