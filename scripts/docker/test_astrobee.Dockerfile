@@ -10,6 +10,6 @@ RUN cd /src/astrobee \
 	&& catkin build --no-status --force-color --make-args tests \
 	&& { catkin build --no-status --force-color --make-args test -j1 || true; } \
 	&& { . devel/setup.sh || true; } \
-	&& { catkin_test_results build || success=$? || true; } \
-	&& { [ $success -eq 0 ] || catkin run_tests --no-status --force-color -j1 || true; } \
-	&& [ $success -eq 0 ]
+	&& { success="true" && catkin_test_results build/${package} || success="false" || true; } \
+	&& { [ "$success" = "true" ] || catkin run_tests --no-status --force-color -j1 ${package} || true; } \
+	&& [ "$success" = "true" ]

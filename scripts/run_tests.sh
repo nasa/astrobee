@@ -43,10 +43,10 @@ set +x
 set -x
 
 # collect the test results to determine global success/failure
-{ catkin_test_results build/${package} || success=$? || true; }
+{ success="true" && catkin_test_results build/${package} || success="false" || true; }
 
 # if any tests failed, re-run in a different way that provides more debug output
-{ [ $success -eq 0 ] || catkin run_tests --no-status --force-color -j1 ${package} || true; }
+{ [ "$success" = "true" ] || catkin run_tests --no-status --force-color -j1 ${package} || true; }
 
 # return global success/failure
-[ $success -eq 0 ]
+[ "$success" = "true" ]
