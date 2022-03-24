@@ -76,25 +76,21 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
     // Calculate drag
     #if GAZEBO_MAJOR_VERSION > 7
     drag_ = GetLink()->RelativeLinearVel();
-    drag_normalized = drag_;
-    drag_normalized.Normalize();
-    drag_ = -0.5 * coefficient_ * area_ * density_
-           * drag_.Length() * drag_.Length() * drag_normalized;
+    vel_ = drag_.Length();
     #else
     drag_ = GetLink()->GetRelativeLinearVel();
-    drag_normalized = drag_;
-    drag_normalized.Normalize();
-    drag_ = -0.5 * coefficient_ * area_ * density_
-          * drag_.GetLength() * drag_.GetLength() * drag_normalized;
+    vel_ = drag_.GetLength();
     #endif
+    drag_ = -0.5 * coefficient_ * area_ * density_
+           * vel_ * vel_ * drag_.Normalize();
+
     // Apply the force and torque to the model
     GetLink()->AddRelativeForce(drag_);
   }
 
  private:
-  double coefficient_, area_, density_;              // Drag parameters
+  double coefficient_, area_, density_, vel_;              // Drag parameters
   common::Time next_tick_;
-  math::Vector3 drag_normalized;
 #if GAZEBO_MAJOR_VERSION > 7
   ignition::math::Vector3d drag_;
 #else
