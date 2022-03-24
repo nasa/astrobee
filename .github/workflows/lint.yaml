@@ -2,7 +2,7 @@
 
 name: Check for lint errors
 
-on: ['push', 'pull_request']
+on: ['push', 'pull_request', 'workflow_dispatch']
 
 jobs:
   lint_check_cpp:
