@@ -31,12 +31,11 @@ The Docker files also accept args to use local or container registry images.
 - `REMOTE` - The repository where the dockerfile should derive its base. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 - `REMOTE_CACHED` - (Only for `astrobee_quick.dockerfile`, defaults to `${REMOTE}`). The repository for the build cache image. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 
-## Building the docker images
+## Optional: Build the docker image
 
 The fastest way to start running the software is to fetch a remote
-docker image by using the `--remote` option with the `run_headless.sh`
-and `run.sh` scripts described below. Building the docker images is
-not required.
+docker image by using the `--remote` option with the `run.sh` script
+described below. Building the docker images is not required.
 
 However, if you need to build a local copy of the docker images, run:
     
@@ -55,70 +54,83 @@ respectively.
 
 ## Run commands in the container
 
-To start an interactive shell in the docker container, allowing you to
-execute arbitrary commands:
+To quick start a shell in a docker container, allowing you to
+interactively execute arbitrary commands:
 
-    ./run_headless.sh --remote
+    ./run.sh --remote
+
+You can also give it a command to run. For example:
+
+    ./run.sh --remote rosmsg info std_msgs/Header
 
 As with `build.sh`, by default, the docker image OS version will be
 configured to match your host's OS version, but you can override that
 by specifying the `--xenial`, `--bionic`, or `--focal` option for
 Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
 
-With the `--remote` argument, it will fetch and run a pre-built
-Astrobee docker image. Omit the `--remote` argument to run using a
-docker image built locally by `./build.sh`.
+Use `--remote` to fetch and run a pre-built Astrobee docker
+image. (Omit `--remote` to run using a docker image built locally by
+`./build.sh`.)
 
-As the script name suggests, this script doesn't set up the X display,
-so it can be used to run a docker container from within a headless
-VM host. However, graphical applications will not be usable within the
-resulting shell.
+Use `--no-display` to skip setting up the X graphical environment. The
+script will also automatically skip X setup if it detects you are in a
+headless host environment. Of course, graphical applications will not
+be available.
 
-## Run unit tests in the container
-
-The `run_tests.sh` script runs within the container and is designed to
-closely mimic the testing actions in `test_astrobee.Dockerfile`, which is
-invoked by the `astrobee` GitHub continuous integration workflow. You can
-use it to replicate and debug failed CI tests.
-
-Example usage:
-
-    host$ ./run_headless.sh --remote
-    docker# (cd /src/astrobee && catkin build)  # recompile local changes
-    docker# /src/astrobee/src/scripts/docker/run_tests.sh [package]
-
-The package argument is optional. By default, it tests all packages.
-
-If debugging a CI failure that is specific to a particular OS version,
-run `run_headless.sh` with the `--xenial`, `--bionic`, or `--focal`
-options to select the right OS version to replicate the failure.
+Use `--mount` to mount your local source checkout into its standard
+location in the docker container, where it will override the copy
+embedded within the container. This is ideal for making changes in
+your host environment, then quickly testing them in the container.
 
 ## Run the Astrobee simulator in the container
 
-To run the Astrobee simulator in the container:
+There is a special shortcut to run the Astrobee simulator in the container:
 
-    ./run.sh --remote
+    ./run.sh --remote --sim
 
-It takes the same arguments as `run_headless.sh` for selecting the image version to use.
+The default arguments to the sim are `dds:=false robot:=sim_pub`. To add more arguments:
 
-To add arguments to the launch file in addition to `dds:=false robot:=sim_pub` you can do instead:
+    ./run.sh --remote --sim --sim-args "rviz:=true sviz:=true"
 
-    ./run.sh --remote --args "rviz:=true sviz:=true"
+*Note: You have to install `nvidia-container-toolkit` for the Gazebo
+simulation to run properly within a docker container.*
 
-*Note: You have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
+To open another terminal inside the same docker container:
 
-To open another terminal inside the docker container:
+    docker exec -it astrobee /astrobee_init.sh bash
 
-    docker exec -it astrobee bash
-
-Once inside the container, don't forget to source astrobee to have access to all the commands:
-
-    source /build/astrobee/devel/setup.bash
+(The `/astrobee_init.sh` script configures the shell in the container
+to know about the Astrobee development environment, then runs the
+specified command, in this case `bash`, to get an interactive shell.)
 
 To shutdown the docker container, run:
 
     ./shutdown.sh
 
+## Run unit tests in the container
+
+The `run_tests.sh` script (located in the parent `scripts` folder) is
+designed to run within the container and closely mimic the testing
+actions in `test_astrobee.Dockerfile`, which is invoked by the
+`astrobee` GitHub continuous integration workflow. You can use it to
+replicate and debug failed CI tests.
+
+Example usage:
+
+    host$ ./run.sh --remote --mount
+    docker# (cd /src/astrobee && catkin build [package])  # recompile local changes
+    docker# /src/astrobee/src/scripts/run_tests.sh [package]
+
+The package argument is optional. The default is to build/test all
+packages.
+
+If debugging a CI failure that is specific to a particular OS version,
+remember to pass `run.sh` the `--xenial`, `--bionic`, or `--focal`
+option to select the right OS version to replicate the failure.
+
+Note: integration tests that use Gazebo simulation will be silently
+disabled when running with `--no-display`. To ensure complete testing,
+run in a host environment that supports X graphics.
 
 ## Cross-compile Astrobee (NASA users only)
 
