@@ -233,6 +233,9 @@ namespace is_camera {
         bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
       }
     }
+    // Start bayer enable/disable service
+    enable_bayer_srv_ = nh->advertiseService(SERVICE_HARDWARE_BAYER_ENABLE,
+      &CameraNodelet::EnableBayerService, this);
 
     v4l_.reset(new V4LStruct(camera_device_, camera_gain_, camera_exposure_));
     thread_running_ = true;
