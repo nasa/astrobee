@@ -86,6 +86,12 @@ add_library(perf_timer
 add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
 target_link_libraries(perf_timer ${catkin_LIBRARIES})
 
+## Declare a C++ executable: config_tool
+add_executable(config_tool tools/config_tool.cc)
+add_dependencies(config_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(config_tool
+  config_client gflags glog ${catkin_LIBRARIES})
+
 ##########
 ## Test ##
 ##########
@@ -151,6 +157,15 @@ install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install C++ executables
+install(TARGETS config_tool DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/config_tool share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
