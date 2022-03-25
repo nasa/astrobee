@@ -324,6 +324,10 @@ namespace is_camera {
       }
     } else if (!req.enable && bayer_enable_) {
       bayer_pub_.shutdown();
+      // Clear msg buffer
+      for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
+        bayer_img_msg_buffer_[i].reset();
+      }
     }
     bayer_enable_ = req.enable;
 

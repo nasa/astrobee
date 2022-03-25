@@ -391,7 +391,6 @@
 #define TOPIC_HARDWARE_NAV_CAM                      "hw/cam_nav"
 #define TOPIC_HARDWARE_DOCK_CAM                     "hw/cam_dock"
 #define TOPIC_HARDWARE_CAM_SUFFIX_BAYER_RAW         "_bayer/image_raw"
-#define TOPIC_HARDWARE_CAM_SUFFIX_BAYER_MONO        "_bayer/image_mono"
 #define TOPIC_HARDWARE_CAM_SUFFIX_BAYER_COLOR       "_bayer/image_color"
 #define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci"
 #define TOPIC_HARDWARE_LIGHT_FRONT                  "hw/light_front"
