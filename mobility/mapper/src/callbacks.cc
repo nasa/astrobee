@@ -136,7 +136,7 @@ bool MapperNodelet::ReconfigureCallback(dynamic_reconfigure::Config &config) {
     return false;
   cfg_.Reconfigure(config);
   // Turn on mapper
-  if (!disable_mapper_ && cfg_.Get<bool>("disable_mapper")) {
+  if (disable_mapper_ && !cfg_.Get<bool>("disable_mapper")) {
     // Timers
     timer_o_.start();
     timer_f_.start();
@@ -146,7 +146,7 @@ bool MapperNodelet::ReconfigureCallback(dynamic_reconfigure::Config &config) {
     reset_sub_ = nh_->subscribe(TOPIC_GNC_EKF_RESET, 1,
       &MapperNodelet::ResetCallback, this);
   // Turn off mapper
-  } else if (disable_mapper_ && !cfg_.Get<bool>("disable_mapper")) {
+  } else if (!disable_mapper_ && cfg_.Get<bool>("disable_mapper")) {
     // Timers
     timer_o_.stop();
     timer_f_.stop();
@@ -154,6 +154,7 @@ bool MapperNodelet::ReconfigureCallback(dynamic_reconfigure::Config &config) {
     segment_sub_.shutdown();
     reset_sub_.shutdown();
   }
+  disable_mapper_ = cfg_.Get<bool>("disable_mapper");
 
   return true;
 }
