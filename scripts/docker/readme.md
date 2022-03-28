@@ -31,42 +31,122 @@ The Docker files also accept args to use local or container registry images.
 - `REMOTE` - The repository where the dockerfile should derive its base. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 - `REMOTE_CACHED` - (Only for `astrobee_quick.dockerfile`, defaults to `${REMOTE}`). The repository for the build cache image. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 
-## Building the docker images
+## Optional: Build the docker image
 
-To build the docker images, run:
+The fastest way to start running the software is to fetch a remote
+docker image by using the `--remote` option with the `run.sh` script
+described below. Building the docker images is not required.
+
+However, if you need to build a local copy of the docker images, run:
     
     ./build.sh
 
-The build script will automatically detect the current Ubuntu OS version and define the docker files variables
-`UBUNTU_VERSION`, `ROS_VERSION`, and `PYTHON`. If a specific version is desired, the option --xenial, --bionic,
-and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
+By default, the build script will automatically detect your host's
+Ubuntu OS version and configure the docker image to use the same
+version using the Dockerfile variables `UBUNTU_VERSION`,
+`ROS_VERSION`, and `PYTHON`.
 
-## Run the container
+However, there is no requirement for the host OS and the docker image
+OS to match.  You can override the default and select a specific
+docker image Ubuntu version by specifying `--xenial`, `--bionic`, or
+`--focal` for Ubuntu 16.04, 18.04, or 20.04 docker images,
+respectively.
 
-To run the docker container:
+## Run the Astrobee simulator in the container
 
-    ./run.sh
+*Note: To run the simulator within a docker container, the container
+generally needs to have hardware-accelerated graphics support. This
+requires compatible graphics hardware and may also require installing
+a special support package, such as `nvidia-container-toolkit`.*
 
-It will automatically detect the current Ubuntu OS version. If a specific version is desired, the option
---xenial, --bionic, and --focal is used for ubuntu 16.04, 18.04, and 20.04 docker images, respectively.
-To add arguments to the launch file in addition to `dds:=false robot:=sim_pub` you can do instead:
+To run the Astrobee simulator in the container:
 
-    ./run.sh --args "rviz:=true sviz:=true"
+    ./run.sh --remote
 
-*Note: You have to install the nvidia-container-toolkit for the gazebo simulation to run properly*
+The default arguments to the sim are `dds:=false robot:=sim_pub`. To add more arguments:
 
-To open another terminal inside the docker container:
+    ./run.sh --remote --args "rviz:=true sviz:=true"
 
-    docker exec -it astrobee bash
+To open another terminal inside the same docker container:
 
-Once inside the container, don't forget to source astrobee to have access to all the commands:
+    docker exec -it astrobee /astrobee_init.sh bash
 
-	source /build/astrobee/devel/setup.bash
+(The `/astrobee_init.sh` script configures the shell in the container
+to know about the Astrobee development environment, then runs the
+specified command, in this case `bash`, to get an interactive shell.)
 
 To shutdown the docker container, run:
 
     ./shutdown.sh
 
+## Run other commands in the container
+
+Besides the simulator, you can also run arbitrary commands with `run.sh`. To
+get an interactive shell:
+
+    ./run.sh --remote -- bash
+
+Or run any other command:
+
+    ./run.sh --remote -- rosmsg info std_msgs/Header
+
+(The `--` separator is usually not necessary, but makes the `run.sh`
+argument parsing more predictable.)
+
+As with `build.sh`, by default, the docker image OS version will be
+configured to match your host's OS version, but you can override that
+by specifying the `--xenial`, `--bionic`, or `--focal` option for
+Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
+
+Use `--remote` to fetch and run a pre-built Astrobee docker
+image. (Omit `--remote` to run using a docker image built locally by
+`./build.sh`.)
+
+Use `--no-display` to skip setting up the X graphical environment. The
+script will also automatically skip X setup if it detects you are in a
+headless host environment. Of course, graphical applications will not
+be available.
+
+Use `--mount` to mount your local source checkout into its standard
+location in the docker container, where it will override the copy
+embedded within the container. This is ideal for making changes in
+your host environment, then quickly testing them in the container.
+
+## Run unit tests in the container
+
+The `run_tests.sh` script (located in the parent `scripts` folder) is
+designed to run within the container and closely mimic the testing
+actions in `test_astrobee.Dockerfile`, which is invoked by the
+`astrobee` GitHub continuous integration workflow. You can use it to
+replicate and debug failed CI tests.
+
+Example usage:
+
+    host$ ./run.sh --remote --mount
+    docker# (cd /src/astrobee && catkin build [package])  # recompile local changes
+    docker# /src/astrobee/src/scripts/run_tests.sh [package]
+
+The package argument is optional. The default is to build/test all
+packages.
+
+If debugging a CI failure that is specific to a particular OS version,
+remember to pass `run.sh` the `--xenial`, `--bionic`, or `--focal`
+option to select the right OS version to replicate the failure.
+
+Note: integration tests that use Gazebo simulation will be silently
+disabled when running with `--no-display`. To ensure complete testing,
+run in a host environment that supports X graphics.
+
+If you care about higher-fidelity replication of CI problems and are
+willing to wait through a full `astrobee` build, you can also use
+`build.sh` to invoke `test_astrobee.Dockerfile` itself, like this:
+
+    ./build.sh --remote astrobee test_astrobee
+
+Or, if you made changes that affect `astrobee_base.Dockerfile`, you
+will need to rebuild that locally as well:
+
+    ./build.sh astrobee_base astrobee test_astrobee
 
 ## Cross-compile Astrobee (NASA users only)
 
