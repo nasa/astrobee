@@ -3,6 +3,7 @@ name: Build and Test CI for Pull Requests
 on:
   pull_request:
     branches: [ 'master', 'develop' ]
+  workflow_dispatch:
 
 jobs:
 
