@@ -31,6 +31,8 @@ MapperNodelet::MapperNodelet() :
 MapperNodelet::~MapperNodelet() {}
 
 void MapperNodelet::Initialize(ros::NodeHandle *nh) {
+  // Store the node handle for future use
+  nh_ = nh;
   listener_.reset(new tf2_ros::TransformListener(buffer_));
 
   // Grab some configuration parameters for this node from the config reader
@@ -48,13 +50,12 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
       &MapperNodelet::DiagnosticsCallback, this, false, true);
 
   // load parameters
-  bool disable_mapper = false;
   double map_resolution, memory_time, max_range, min_range, collision_distance, robot_radius;
   double cam_fov, aspect_ratio;
   double occupancy_threshold, probability_hit, probability_miss;
   double clamping_threshold_max, clamping_threshold_min;
   double traj_resolution, compression_max_dev;
-  disable_mapper = cfg_.Get<bool>("disable_mapper");
+  disable_mapper_ = cfg_.Get<bool>("disable_mapper");
   map_resolution = cfg_.Get<double>("map_resolution");
   max_range = cfg_.Get<double>("max_range");
   min_range = cfg_.Get<double>("min_range");
@@ -115,17 +116,20 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
 
-  if (disable_mapper) {
-    NODELET_WARN("Mapper disabled, obstacle avoidance not working!");
-  } else {
     // Timers
     timer_o_ = nh->createTimer(
       ros::Duration(ros::Rate(octomap_update_rate_)),
-        &MapperNodelet::PclCallback, this, false, true);
+        &MapperNodelet::PclCallback, this, false, false);
     timer_f_ = nh->createTimer(
       ros::Duration(ros::Rate(fading_memory_update_rate_)),
-        &MapperNodelet::FadeTask, this, false, true);
+        &MapperNodelet::FadeTask, this, false, false);
 
+  if (disable_mapper_) {
+    NODELET_WARN("Mapper disabled, obstacle avoidance not working!");
+  } else {
+    // Start timers
+    timer_o_.start();
+    timer_f_.start();
     // Subscribers
     segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
       &MapperNodelet::SegmentCallback, this);
