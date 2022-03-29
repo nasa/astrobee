@@ -18,22 +18,13 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build base for Ubuntu 16 Xenial
-      run: ./scripts/docker/build.sh --xenial astrobee_base
-
-    - name: Build code for Ubuntu 16 Xenial
-      run: ./scripts/docker/build.sh --xenial astrobee
-
-    - name: Test code
-      run: ./scripts/docker/build.sh --xenial test_astrobee
-
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Push Docker image
-      run: |
-        docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu16.04
-        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu16.04
+    - name: Build base, build, test, push base docker
+      run: ./scripts/docker/build.sh --xenial
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee push_astrobee_base
 
   build-bionic:
 
@@ -45,22 +36,13 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build base for Ubuntu 18 Bionic
-      run: ./scripts/docker/build.sh --bionic astrobee_base
-
-    - name: Build code for Ubuntu 18 Bionic
-      run: ./scripts/docker/build.sh --bionic astrobee
-
-    - name: Test code
-      run: ./scripts/docker/build.sh --bionic test_astrobee
-
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Push Docker image
-      run: |
-        docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu18.04
-        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu18.04
+    - name: Build base, build, test, push base docker
+      run: ./scripts/docker/build.sh --bionic
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee push_astrobee_base
 
   build-focal:
 
@@ -72,19 +54,10 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build base for Ubuntu 20 Focal
-      run: ./scripts/docker/build.sh --focal astrobee_base
-
-    - name: Build code for Ubuntu 20 Focal
-      run: ./scripts/docker/build.sh --focal astrobee
-
-    - name: Test code
-      run: ./scripts/docker/build.sh --focal test_astrobee
-
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Push Docker image
-      run: |
-        docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu20.04
-        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu20.04
+    - name: Build base, build, test, push base docker
+      run: ./scripts/docker/build.sh --focal
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee push_astrobee_base
