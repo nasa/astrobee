@@ -26,17 +26,19 @@
 # FF_MSGS_BMR, ISAAC_MSGS_BMR) in your shell environment before running
 # rosbag_fix_all.py.
 
+ROS_VERSION=$(shell rosversion -d)
+
 ifeq (,${REWRITE_TYPES})
-  REWRITE_TYPES = $(shell catkin_find bag_processing scripts/rosbag_rewrite_types.py)
+  REWRITE_TYPES = $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
 endif
 ifeq (,${FF_MSGS_BMR})
-  FF_MSGS_BMR = $(shell catkin_find ff_msgs bmr)
+  FF_MSGS_BMR = $(shell catkin_find --first-only ff_msgs bmr)
 endif
-BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr))
+BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr) $(wildcard ${FF_MSGS_BMR}/${ROS_VERSION}/*.bmr))
 REWRITE_RULES = -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
 
 ifeq (,${ISAAC_MSGS_BMR})
-  ISAAC_MSGS_BMR = $(shell catkin_find isaac_msgs bmr)
+  ISAAC_MSGS_BMR = $(shell catkin_find --first-only isaac_msgs bmr 2> /dev/null)
 endif
 ifneq (,${ISAAC_MSGS_BMR})
   # If isaac_msgs is available, apply extra rules. Shouldn't hurt non-ISAAC bags.

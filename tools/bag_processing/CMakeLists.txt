@@ -31,4 +31,9 @@ if (USE_ROS)
     LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS rosbag
   )
+
+  if (CATKIN_ENABLE_TESTING)
+    find_package(rostest REQUIRED)
+    add_rostest(test/test_fix_all.test)
+  endif()
 endif (USE_ROS)
