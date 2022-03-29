@@ -22,7 +22,7 @@ jobs:
     - name: Build, test, push docker
       run: ./scripts/docker/build.sh --xenial --remote
                                      --owner ${{ github.repository_owner }}
-				     astrobee test_astrobee push_astrobee
+                                     astrobee test_astrobee push_astrobee
 
   build-bionic:
 
@@ -40,7 +40,7 @@ jobs:
     - name: Build, test, push docker
       run: ./scripts/docker/build.sh --bionic --remote
                                      --owner ${{ github.repository_owner }}
-				     astrobee test_astrobee push_astrobee
+                                     astrobee test_astrobee push_astrobee
 
   build-focal:
 
@@ -58,4 +58,4 @@ jobs:
     - name: Build, test, push docker
       run: ./scripts/docker/build.sh --focal --remote
                                      --owner ${{ github.repository_owner }}
-				     astrobee test_astrobee push_astrobee
+                                     astrobee test_astrobee push_astrobee

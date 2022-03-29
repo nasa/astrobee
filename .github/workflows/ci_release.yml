@@ -22,13 +22,13 @@ jobs:
     - name: Build, test, push base docker
       run: ./scripts/docker/build.sh --xenial
                                      --owner ${{ github.repository_owner }}
-				     astrobee_base astrobee test_astrobee
-				     push_astrobee_base
+                                     astrobee_base astrobee test_astrobee
+                                     push_astrobee_base
 
     - name: Push code docker
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-	docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
+        docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
 
   build-bionic:
@@ -47,13 +47,13 @@ jobs:
     - name: Build, test, push base docker
       run: ./scripts/docker/build.sh --bionic
                                      --owner ${{ github.repository_owner }}
-				     astrobee_base astrobee test_astrobee
-				     push_astrobee_base
+                                     astrobee_base astrobee test_astrobee
+                                     push_astrobee_base
 
     - name: Push code docker
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-	docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
+        docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
 
   build-focal:
@@ -72,11 +72,11 @@ jobs:
     - name: Build, test, push base docker
       run: ./scripts/docker/build.sh --focal
                                      --owner ${{ github.repository_owner }}
-				     astrobee_base astrobee test_astrobee
-				     push_astrobee_base
+                                     astrobee_base astrobee test_astrobee
+                                     push_astrobee_base
 
     - name: Push code docker
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-	docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
+        docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
