@@ -24,17 +24,13 @@
 // Shared libraries
 #include <ff_util/ff_names.h>
 #include <ff_util/ff_nodelet.h>
-#include <config_reader/config_reader.h>
 
 #include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 // Messages
 #include <sensor_msgs/Image.h>
-#include <ff_msgs/PicoflexxIntermediateData.h>
 
 #include <string>
 #include <map>
