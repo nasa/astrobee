@@ -18,8 +18,8 @@
 # under the License.
 
 read -r -d '' usage_string <<EOF
-usage: build.sh [-h] [-x] [-b] [-f] [-r] [-d]
-                [target1] [target2] ...
+usage: build.sh [-h] [-x] [-b] [-f] [-r] [-o <owner>] [-d]
+                -- [target1] [target2] ...
 
 -h or --help: Print this help
 -x or --xenial: Build Ubuntu 16.04 docker images
@@ -38,7 +38,9 @@ Build specified docker image targets. Available targets:
 
 Default if no targets are specified: astrobee_base astrobee
 
-Targets are always built in the order listed above.
+Targets are always built in the order listed above. You must
+separately run 'docker login' to authenticate before using build.sh
+to build the push_* targets.
 EOF
 
 set -e
@@ -47,6 +49,26 @@ usage()
 {
     echo "$usage_string"
 }
+
+######################################################################
+# Parse options 1 (validate and normalize with getopt)
+######################################################################
+
+shortopts="h,x,b,f,r,o:,d"
+longopts="help,xenial,bionic,focal,remote,owner:,dry-run"
+opts=$(getopt -a -n build.sh --options "$shortops" --longoptions "$longopts" -- "$@")
+if [ $? -ne 0 ]; then
+    echo
+    usage
+    exit 1
+fi
+# echo "opts: $opts"
+
+eval set -- "$opts"
+
+######################################################################
+# Parse options 2 (extract variables)
+######################################################################
 
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
@@ -59,61 +81,62 @@ push_astrobee="false"
 remote="false"
 owner="nasa"
 dry_run="false"
-revision="latest-"
+revision="latest"
 
 while [ "$1" != "" ]; do
     case $1 in
-        -h | --help )                   usage
-                                        exit
-                                        ;;
-        -x | --xenial )                 os="xenial"
-                                        ;;
-        -b | --bionic )                 os="bionic"
-                                        ;;
-        -f | --focal )                  os="focal"
-                                        ;;
-        -r | --remote )                 remote="true"
-                                        ;;
-        -o | --owner )                  owner=$2
-                                        shift
-                                        ;;
-        -d | --dry-run )                dry_run="true"
-                                        ;;
-        astrobee_base )                 build_astrobee_base="true"
-                                        ;;
-        astrobee )                      build_astrobee="true"
-                                        ;;
-        test_astrobee )                 build_test_astrobee="true"
-                                        ;;
-        push_astrobee_base )            push_astrobee_base="true"
-                                        ;;
-        push_astrobee )                 push_astrobee="true"
-                                        ;;
-        * )                             usage
-                                        exit 1
+        --help )                   usage
+                                   exit
+                                   ;;
+        --xenial )                 os="xenial"
+                                   ;;
+        --bionic )                 os="bionic"
+                                   ;;
+        --focal )                  os="focal"
+                                   ;;
+        --remote )                 remote="true"
+                                   ;;
+        --owner )                  owner=$2
+                                   shift
+                                   ;;
+        --dry-run )                dry_run="true"
+                                   ;;
+        -- )                       shift
+                                   break
+                                   ;;
+        * )                        usage
+                                   exit 1
     esac
     shift
 done
 
-if [ "$dry_run" = "true" ]; then
-    echo "Dry run"
+# remaining arguments are positional, i.e., targets
 
-    docker()
-    {
-        # dry run, do nothing
-        { : ; } 2>/dev/null
-    }
-fi
-
-if [[ "$build_astrobee_base" == "false" \
-          && "$build_astrobee" == "false" \
-          && "$build_test_astrobee" == "false" \
-          && "$push_astrobee_base" == "false" \
-          && "$push_astrobee" == "false" ]]; then
+if [ "$#" -eq 0 ]; then
    # if user didn't specify any targets, set defaults
    build_astrobee_base="true"
    build_astrobee="true"
 fi
+
+# collect user-specified targets
+while [ "$1" != "" ]; do
+    case $1 in
+        astrobee_base )            build_astrobee_base="true"
+                                   ;;
+        astrobee )                 build_astrobee="true"
+                                   ;;
+        test_astrobee )            build_test_astrobee="true"
+                                   ;;
+        push_astrobee_base )       push_astrobee_base="true"
+                                   ;;
+        push_astrobee )            push_astrobee="true"
+                                   ;;
+        * )                        echo "unknown target '$1'"
+                                   usage
+                                   exit 1
+    esac
+    shift
+done
 
 if [[ "$build_astrobee_base" == "true" \
           && "$remote" == "true" ]]; then
@@ -122,9 +145,9 @@ if [[ "$build_astrobee_base" == "true" \
     exit 1
 fi
 
-script_dir=$(dirname "$(readlink -f "$0")")
-checkout_dir=$(dirname $(dirname "$script_dir"}))
-echo "Astrobee checkout path: "${checkout_dir}/
+######################################################################
+# Set up version
+######################################################################
 
 UBUNTU_VERSION=16.04
 ROS_VERSION=kinetic
@@ -141,9 +164,23 @@ elif [ "$os" = "focal" ]; then
 fi
 echo "Building Ubuntu $UBUNTU_VERSION images"
 
-set -x
-cd "${checkout_dir}"
-{ set +x; } 2>/dev/null
+######################################################################
+# Dry run
+######################################################################
+
+if [ "$dry_run" = "true" ]; then
+    echo "Dry run"
+
+    docker()
+    {
+        # dry run, do nothing
+        { : ; } 2>/dev/null
+    }
+fi
+
+######################################################################
+# Define actions
+######################################################################
 
 build () {
     stage=$1
@@ -190,12 +227,24 @@ push () {
     { set +x; } 2>/dev/null
 }
 
+######################################################################
+# Run
+######################################################################
+
+script_dir=$(dirname "$(readlink -f "$0")")
+checkout_dir=$(dirname $(dirname "$script_dir"}))
+echo "Astrobee checkout path: "${checkout_dir}/
+
+set -x
+cd "${checkout_dir}"
+{ set +x; } 2>/dev/null
+
 if [ "$build_astrobee_base" = "true" ]; then
-    build astrobee_base "$revision" "base-"
+    build astrobee_base "${revision}-" "base-"
 fi
 
 if [ "$build_astrobee" = "true" ]; then
-    build astrobee "$revision" ""
+    build astrobee "${revision}-" ""
 fi
 
 if [ "$build_test_astrobee" = "true" ]; then
@@ -203,9 +252,9 @@ if [ "$build_test_astrobee" = "true" ]; then
 fi
 
 if [ "$push_astrobee_base" = "true" ]; then
-    push astrobee_base "$revision" "base-"
+    push astrobee_base "${revision}-" "base-"
 fi
 
 if [ "$push_astrobee" = "true" ]; then
-    push astrobee "$revision" ""
+    push astrobee "${revision}-" ""
 fi
