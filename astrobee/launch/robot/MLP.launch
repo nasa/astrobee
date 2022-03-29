@@ -352,10 +352,9 @@
      <arg name="debug" value="$(arg debug)" />
      <arg name="default" value="true" />
    </include>
-  <group ns="hw/cam_nav_bayer">
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-     <arg name="class" value="image_proc/debayer" />
-     <arg name="name" value="debayer_nav_cam" />
+     <arg name="class" value="debayer/DebayerNodelet" />
+     <arg name="name" value="nav_cam_debayer" />
      <arg name="manager" value="/mlp_vision" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />
@@ -363,7 +362,6 @@
      <arg name="debug" value="$(arg debug)" />
      <arg name="default" value="true" />
    </include>
-  </group>
 
    <!-- DockCam pipeline -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
@@ -396,10 +394,9 @@
      <arg name="debug" value="$(arg debug)" />
      <arg name="default" value="true" />
    </include>
-  <group ns="hw/cam_dock_bayer">
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-     <arg name="class" value="image_proc/debayer" />
-     <arg name="name" value="debayer_dock_cam" />
+     <arg name="class" value="debayer/DebayerNodelet" />
+     <arg name="name" value="dock_cam_debayer" />
      <arg name="manager" value="/mlp_vision" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />
@@ -407,7 +404,6 @@
      <arg name="debug" value="$(arg debug)" />
      <arg name="default" value="true" />
    </include>
-  </group>
 
    <!-- Depth camera pipeline -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
