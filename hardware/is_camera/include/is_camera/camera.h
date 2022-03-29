@@ -74,6 +74,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void PublishLoop();
+  void EnableBayer();
   bool EnableBayerService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);  // NOLINT
   size_t getNumBayerSubscribers();
 
