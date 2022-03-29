@@ -33,6 +33,7 @@ if (USE_ROS)
   )
 
   if (CATKIN_ENABLE_TESTING)
-    catkin_add_nosetests(test)
+    find_package(rostest REQUIRED)
+    add_rostest(test/test_fix_all.test)
   endif()
 endif (USE_ROS)
