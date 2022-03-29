@@ -167,6 +167,8 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   void InitFault(std::string const& msg);
 
  private:
+  ros::NodeHandle *nh_;
+  bool disable_mapper_ = false;
   // Declare global variables (structures defined in structs.h)
   GlobalVariables globals_;
 
