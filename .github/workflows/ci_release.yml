@@ -16,33 +16,18 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build base for Ubuntu 16
-      run: docker build . -f ./scripts/docker/astrobee_base.Dockerfile
-                          --build-arg UBUNTU_VERSION=16.04
-                          --build-arg ROS_VERSION=kinetic
-                          --build-arg PYTHON=''
-                          -t astrobee/astrobee:latest-base-ubuntu16.04
-
-    - name: Build code for Ubuntu 16
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=16.04
-                          --build-arg ROS_VERSION=kinetic
-                          --build-arg PYTHON=''
-                          -t astrobee/astrobee:latest-ubuntu16.04
-
-    - name: Test code
-      run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=16.04
-                          -t astrobee:test-ubuntu16.04
-
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Push Docker image
+    - name: Build, test, push base docker
+      run: ./scripts/docker/build.sh --xenial
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee
+                                     push_astrobee_base
+
+    - name: Push code docker
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu16.04
-        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu16.04
         docker tag astrobee/astrobee:latest-ubuntu16.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu16.04
 
@@ -56,33 +41,18 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build base for Ubuntu 18
-      run: docker build . -f ./scripts/docker/astrobee_base.Dockerfile
-                          --build-arg UBUNTU_VERSION=18.04
-                          --build-arg ROS_VERSION=melodic
-                          --build-arg PYTHON=''
-                          -t astrobee/astrobee:latest-base-ubuntu18.04
-
-    - name: Build code for Ubuntu 18
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=18.04
-                          --build-arg ROS_VERSION=melodic
-                          --build-arg PYTHON=''
-                          -t astrobee/astrobee:latest-ubuntu18.04
-
-    - name: Test code
-      run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=18.04
-                          -t astrobee:test-ubuntu18.04
-
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Push Docker image
+    - name: Build, test, push base docker
+      run: ./scripts/docker/build.sh --bionic
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee
+                                     push_astrobee_base
+
+    - name: Push code docker
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu18.04
-        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu18.04
         docker tag astrobee/astrobee:latest-ubuntu18.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu18.04
 
@@ -96,32 +66,17 @@ jobs:
     - name: Checkout submodule
       run: git submodule update --init --depth 1 description/media
 
-    - name: Build base for Ubuntu 20
-      run: docker build . -f ./scripts/docker/astrobee_base.Dockerfile
-                          --build-arg UBUNTU_VERSION=20.04
-                          --build-arg ROS_VERSION=noetic
-                          --build-arg PYTHON=3
-                          -t astrobee/astrobee:latest-base-ubuntu20.04
-
-    - name: Build code for Ubuntu 20
-      run: docker build . -f ./scripts/docker/astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=20.04
-                          --build-arg ROS_VERSION=noetic
-                          --build-arg PYTHON=3
-                          -t astrobee/astrobee:latest-ubuntu20.04
-
-    - name: Test code
-      run: docker build . -f ./scripts/docker/test_astrobee.Dockerfile
-                          --build-arg UBUNTU_VERSION=20.04
-                          -t astrobee:test-ubuntu20.04
-
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Push Docker image
+    - name: Build, test, push base docker
+      run: ./scripts/docker/build.sh --focal
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee
+                                     push_astrobee_base
+
+    - name: Push code docker
       run: |
         export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`
-        docker tag astrobee/astrobee:latest-base-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu20.04
-        docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-base-ubuntu20.04
         docker tag astrobee/astrobee:latest-ubuntu20.04 ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
         docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-ubuntu20.04
