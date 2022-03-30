@@ -166,6 +166,7 @@ namespace is_camera {
     bayer_img_msg_buffer_idx_(0),
     thread_running_(false),
     camera_topic_(""),
+    bayer_camera_topic_(""),
     calibration_mode_(false),
     bayer_throttle_ratio_counter_(0)
     {}
@@ -177,6 +178,8 @@ namespace is_camera {
   }
 
   void CameraNodelet::Initialize(ros::NodeHandle* nh) {
+    // Store the node handle for future use
+    nh_ = nh;
     calibration_mode_ = false;
     config_name_ = GetName();
     if (GetName() == "nav_cam") {
@@ -201,10 +204,6 @@ namespace is_camera {
       config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));}, false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
-    if (bayer_enable_) {
-      bayer_camera_topic_ = camera_topic_ + "_bayer";
-      bayer_pub_ = nh->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
-    }
 
     // Allocate space for our output msg buffer
     for (size_t i = 0; i < kImageMsgBuffer; i++) {
@@ -217,19 +216,12 @@ namespace is_camera {
     }
 
     if (bayer_enable_) {
-      // Allocate space for our Bayer output msg buffer
-      for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
-        bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
-        bayer_img_msg_buffer_[i]->width = kImageWidth;
-        bayer_img_msg_buffer_[i]->height = kImageHeight;
-
-        // This was tested in the lab using a color test picture
-        // Images in https://github.com/nasa/astrobee/issues/434
-        bayer_img_msg_buffer_[i]->encoding = "bayer_grbg8";
-        bayer_img_msg_buffer_[i]->step = kImageWidth;
-        bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
-      }
+      EnableBayer();
     }
+
+    // Start bayer enable/disable service
+    enable_bayer_srv_ = nh->advertiseService(SERVICE_HARDWARE_BAYER_ENABLE,
+      &CameraNodelet::EnableBayerService, this);
 
     v4l_.reset(new V4LStruct(camera_device_, camera_gain_, camera_exposure_));
     thread_running_ = true;
@@ -288,16 +280,45 @@ namespace is_camera {
       exit(EXIT_FAILURE);
     }
 
-    if (bayer_enable_) {
-      if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
-        FF_FATAL("Bayer throttle ratio not specified.");
-        exit(EXIT_FAILURE);
-      }
+    if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
+      FF_FATAL("Bayer throttle ratio not specified.");
+      exit(EXIT_FAILURE);
     }
 
     if (thread_running_) {
       v4l_->SetParameters(camera_gain_, camera_exposure_);
     }
+  }
+
+  void CameraNodelet::EnableBayer() {
+      bayer_camera_topic_ = camera_topic_ + TOPIC_HARDWARE_CAM_SUFFIX_BAYER_RAW;
+      bayer_pub_ = nh_->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
+      // Allocate space for our Bayer output msg buffer
+      for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
+        if (bayer_img_msg_buffer_[i] != NULL) continue;
+        bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
+        bayer_img_msg_buffer_[i]->width = kImageWidth;
+        bayer_img_msg_buffer_[i]->height = kImageHeight;
+
+        // This was tested in the lab using a color test picture
+        // Images in https://github.com/nasa/astrobee/issues/434
+        bayer_img_msg_buffer_[i]->encoding = "bayer_grbg8";
+        bayer_img_msg_buffer_[i]->step = kImageWidth;
+        bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
+      }
+  }
+  // Enable or disable the feature timer
+  bool CameraNodelet::EnableBayerService(ff_msgs::SetBool::Request & req,
+                     ff_msgs::SetBool::Response & res) {
+    if (req.enable && !bayer_enable_) {
+      EnableBayer();
+    } else if (!req.enable && bayer_enable_) {
+      bayer_pub_.shutdown();
+    }
+    bayer_enable_ = req.enable;
+
+    res.success = true;
+    return true;
   }
 
   void CameraNodelet::PublishLoop() {
