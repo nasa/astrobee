@@ -59,7 +59,8 @@ jobs:
         cd ..
     - name: Replace old documentation with new
       run: |
-        rm -r docs/html
+        [ -d docs ] || mkdir docs
+        [ -d docs/html ] && rm -r docs/html
         cp -r repo/doc/html docs
     - name: Commit and Push
       run: |
