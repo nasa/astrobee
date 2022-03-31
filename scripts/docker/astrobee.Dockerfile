@@ -13,6 +13,6 @@ RUN . /opt/ros/${ROS_VERSION}/setup.sh \
 	&& cd /src/astrobee \
 	&& ./src/scripts/configure.sh -l -F -D -T \
 	&& CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/src/astrobee/src/cmake \
-	&& catkin build
+	&& catkin build --no-status --force-color
 
 COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources

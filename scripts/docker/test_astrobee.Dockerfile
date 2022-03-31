@@ -5,8 +5,11 @@ ARG UBUNTU_VERSION=16.04
 ARG REMOTE=astrobee
 FROM ${REMOTE}/astrobee:latest-ubuntu${UBUNTU_VERSION}
 
-# Run tests
-RUN cd /src/astrobee && catkin build --make-args tests \
-	&& catkin build --make-args test -j1\
+# Run tests. See also ../run_tests.sh for explanation.
+RUN cd /src/astrobee \
+	&& catkin build --no-status --force-color --make-args tests \
+	&& { catkin build --no-status --force-color --make-args test -j1 || true; } \
 	&& { . devel/setup.sh || true; } \
-	&& catkin_test_results build
+	&& { success="true" && catkin_test_results build || success="false" || true; } \
+	&& { [ "$success" = "true" ] || catkin run_tests --no-status --force-color -j1 || true; } \
+	&& [ "$success" = "true" ]

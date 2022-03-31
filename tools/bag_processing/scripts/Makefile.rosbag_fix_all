@@ -1,0 +1,55 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# This Makefile is designed to be used by the rosbag_fix_all.py script.
+
+# The paths to scripts and configuration files should work as long as
+# the relevant ROS packages (ff_msgs, bag_processing, optionally
+# isaac_msgs) are installed and the necessary devel/setup.bash files
+# have been sourced.
+
+# As a fallback, you can override the relevant variables (REWRITE_TYPES,
+# FF_MSGS_BMR, ISAAC_MSGS_BMR) in your shell environment before running
+# rosbag_fix_all.py.
+
+ROS_VERSION=$(shell rosversion -d)
+
+ifeq (,${REWRITE_TYPES})
+  REWRITE_TYPES = $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
+endif
+ifeq (,${FF_MSGS_BMR})
+  FF_MSGS_BMR = $(shell catkin_find --first-only ff_msgs bmr)
+endif
+BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr) $(wildcard ${FF_MSGS_BMR}/${ROS_VERSION}/*.bmr))
+REWRITE_RULES = -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
+
+ifeq (,${ISAAC_MSGS_BMR})
+  ISAAC_MSGS_BMR = $(shell catkin_find --first-only isaac_msgs bmr 2> /dev/null)
+endif
+ifneq (,${ISAAC_MSGS_BMR})
+  # If isaac_msgs is available, apply extra rules. Shouldn't hurt non-ISAAC bags.
+  BMR += $(sort $(wildcard ${ISAAC_MSGS_BMR}/*.bmr))
+  REWRITE_RULES += -r ${ISAAC_MSGS_BMR}/rosbag_rewrite_types_rules.json
+endif
+
+%.rewrite_types.bag: %.bag
+	${REWRITE_TYPES} -v ${REWRITE_RULES} $< -o $@
+
+%.fix_all.bag: %.rewrite_types.bag
+	rosbag fix $< $@ ${BMR}
+	rm $<  # explicitly delete right away to save disk space
+	rosbag check $@  # test: post-migration consistency

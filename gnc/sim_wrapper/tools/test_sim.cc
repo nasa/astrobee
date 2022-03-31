@@ -18,8 +18,6 @@
 
 #include <gnc_autocode/sim.h>
 #include <gnc_autocode/sim_csv.h>
-#include <gnc_autocode/ekf.h>
-#include <gnc_autocode/ekf_csv.h>
 
 #define COMPARE_INT(a, b) if (a != b) {fprintf(stderr, "Comparison failed at line %d. (%d, %d)\n", __LINE__, \
     (a), (b)); return 1;}
@@ -73,38 +71,12 @@ int verify_sim_output(const gnc_autocode::GncSimAutocode & sim, const gnc_autoco
   return 0;
 }
 
-int verify_ekf_output(const gnc_autocode::GncEkfAutocode & ekf, const gnc_autocode::GncEkfCSV & csv) {
-  const kfl_msg & k1 = ekf.kfl_;
-  const kfl_msg & k2 = csv.kfl_;
-  COMPARE_FLOAT_VECTOR(k1.quat_ISS2B, k2.quat_ISS2B, 4, 0.001);
-  COMPARE_FLOAT_VECTOR(k1.omega_B_ISS_B, k2.omega_B_ISS_B, 3, 0.001);
-  COMPARE_FLOAT_VECTOR(k1.gyro_bias, k2.gyro_bias, 3, 0.001);
-  COMPARE_FLOAT_VECTOR(k1.V_B_ISS_ISS, k2.V_B_ISS_ISS, 3, 0.07);
-  COMPARE_FLOAT_VECTOR(k1.A_B_ISS_ISS, k2.A_B_ISS_ISS, 3, 0.07);
-  COMPARE_FLOAT_VECTOR(k1.accel_bias, k2.accel_bias, 3, 0.003);
-  COMPARE_FLOAT_VECTOR(k1.P_B_ISS_ISS, k2.P_B_ISS_ISS, 3, 0.005);
-  COMPARE_INT(k1.confidence, k2.confidence);
-  COMPARE_INT(k1.aug_state_enum, k2.aug_state_enum);
-  COMPARE_FLOAT_VECTOR(k1.ml_quat_ISS2cam, k2.ml_quat_ISS2cam, 4, 0.001);
-  COMPARE_FLOAT_VECTOR(k1.ml_P_cam_ISS_ISS, k2.ml_P_cam_ISS_ISS, 3, 0.005);
-  COMPARE_FLOAT_VECTOR(k1.of_quat_ISS2cam,  k2.of_quat_ISS2cam, 20, 0.001);
-  COMPARE_FLOAT_VECTOR(k1.of_P_cam_ISS_ISS, k2.of_P_cam_ISS_ISS, 15, 0.005);
-  COMPARE_FLOAT_VECTOR(k1.cov_diag, k2.cov_diag, 51, 0.005);
-  COMPARE_INT(k1.kfl_status, k2.kfl_status);
-  return 0;
-}
-
 int main(int argc, char** argv) {
   gnc_autocode::GncSimCSV csv_sim;
   gnc_autocode::GncSimAutocode sim;
 
-  gnc_autocode::GncEkfCSV csv_ekf;
-  gnc_autocode::GncEkfAutocode ekf;
-
   csv_sim.Initialize(std::string("."));
-  csv_ekf.Initialize(std::string("."));
   sim.Initialize();
-  ekf.Initialize();
 
   while (true) {
     csv_sim.Step();
@@ -115,21 +87,6 @@ int main(int argc, char** argv) {
 
     if (verify_sim_output(sim, csv_sim)) {
       fprintf(stderr, "Sim failed at time %g.\n",
-          csv_sim.act_msg_.act_timestamp_sec + static_cast<double>(csv_sim.act_msg_.act_timestamp_nsec) / 1e9);
-      break;
-    }
-
-    csv_ekf.Step();
-
-    // now copy the inputs to the EKF
-    memcpy(&ekf.vis_, &csv_sim.landmark_msg_, sizeof(cvs_landmark_msg));
-    memcpy(&ekf.reg_, &csv_sim.reg_pulse_, sizeof(cvs_registration_pulse));
-    memcpy(&ekf.of_,  &csv_sim.optical_msg_, sizeof(cvs_optical_flow_msg));
-    memcpy(&ekf.imu_, &csv_sim.imu_msg_, sizeof(imu_msg));
-    ekf.Step();
-
-    if (verify_ekf_output(ekf, csv_ekf)) {
-      fprintf(stderr, "EKF failed at time %g.\n",
           csv_sim.act_msg_.act_timestamp_sec + static_cast<double>(csv_sim.act_msg_.act_timestamp_nsec) / 1e9);
       break;
     }
