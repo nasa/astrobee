@@ -35,10 +35,10 @@ RapidPositionToRos::RapidPositionToRos(const std::string& subscribe_topic,
   // connect to ddsEventLoop
   try {
     dds_event_loop_.connect<rapid::ext::astrobee::EkfState>(this,
-            rapid::ext::astrobee::EKF_STATE_TOPIC + subscribe_topic, // topic
-            "",                                                      // name
-            "AstrobeeEkfStateProfile",                               // profile
-            "");                                                     // library
+            rapid::ext::astrobee::EKF_STATE_TOPIC + subscribe_topic,  // topic
+            "",                                                       // name
+            "AstrobeeEkfStateProfile",                                // profile
+            "");                                                      // library
   } catch (std::exception& e) {
     ROS_ERROR_STREAM("RapidPositionToRos exception: " << e.what());
     throw;
@@ -85,7 +85,7 @@ void RapidPositionToRos::operator() (rapid::ext::astrobee::EkfState const*
 
   CopyVec3D(state.accel, rapid_ekf_state->accel);
 
-  CopyVec3D(state.accel_bias, rapid_ekf_state->accel_bias);  
+  CopyVec3D(state.accel_bias, rapid_ekf_state->accel_bias);
 
   for (int i = 0; i <15; i++) {
     state.cov_diag[i] = rapid_ekf_state->cov_diag[i];

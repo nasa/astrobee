@@ -38,10 +38,10 @@ RapidGuestScienceDataToRos::RapidGuestScienceDataToRos(
   // connect to ddsEventLoop
   try {
     dds_event_loop_.connect<rapid::ext::astrobee::GuestScienceData>(this,
-    rapid::ext::astrobee::GUEST_SCIENCE_DATA_TOPIC + subscribe_topic, // topic
-    "",                                                               // name
-    "AstrobeeGuestScienceDataProfile",                                // profile
-    "");                                                              // library
+    rapid::ext::astrobee::GUEST_SCIENCE_DATA_TOPIC + subscribe_topic,  // topic
+    "",                                                                // name
+    "AstrobeeGuestScienceDataProfile",                                 // profile
+    "");                                                               // library
   } catch (std::exception& e) {
     ROS_ERROR_STREAM("RapidGuestScienceDataToRos exception: " << e.what());
     throw;
@@ -58,14 +58,14 @@ void RapidGuestScienceDataToRos::operator() (
                   rapid::ext::astrobee::GuestScienceData const* rapid_gs_data) {
   ff_msgs::GuestScienceData data;
   util::RapidHeader2Ros(rapid_gs_data->hdr, &data.header);
- 
+
   data.apk_name = rapid_gs_data->apkName;
 
   if (rapid_gs_data->type == rapid::ext::astrobee::GUEST_SCIENCE_STRING) {
     data.data_type = ff_msgs::GuestScienceData::STRING;
   } else if (rapid_gs_data->type == rapid::ext::astrobee::GUEST_SCIENCE_JSON) {
     data.data_type = ff_msgs::GuestScienceData::JSON;
-  } else if (rapid_gs_data->type == 
+  } else if (rapid_gs_data->type ==
                                   rapid::ext::astrobee::GUEST_SCIENCE_BINARY) {
     data.data_type = ff_msgs::GuestScienceData::BINARY;
   }

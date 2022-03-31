@@ -21,7 +21,7 @@
 namespace ff {
 
 RapidAccessControlStateToRos::RapidAccessControlStateToRos(
-                                            const std::string& subscribe_topic, 
+                                            const std::string& subscribe_topic,
                                             const std::string& pub_topic,
                                             const ros::NodeHandle &nh,
                                             const unsigned int queue_size)
@@ -38,10 +38,10 @@ RapidAccessControlStateToRos::RapidAccessControlStateToRos(
   // connect to ddsEventLoop
   try {
     dds_event_loop_.connect<rapid::AccessControlState>(this,
-                  rapid::ACCESSCONTROL_STATE_TOPIC + subscribe_topic, // topic
-                  "",                                                 // name
-                  "RapidAccessControlStateProfile",                   // profile
-                  "");                                                // library
+                  rapid::ACCESSCONTROL_STATE_TOPIC + subscribe_topic,  // topic
+                  "",                                                  // name
+                  "RapidAccessControlStateProfile",                    // profile
+                  "");                                                 // library
   } catch (std::exception& e) {
     ROS_ERROR_STREAM("RapidAccessControlStateToRos exception: " << e.what());
     throw;

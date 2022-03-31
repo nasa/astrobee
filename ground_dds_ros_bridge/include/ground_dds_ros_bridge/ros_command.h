@@ -52,7 +52,6 @@ class RosCommandToRapid : public RosSubRapidPub {
   using CommandSupplierPtr = std::unique_ptr<CommandSupplier>;
 
   CommandSupplierPtr command_supplier_;
-
 };
 
 }  // end namespace ff

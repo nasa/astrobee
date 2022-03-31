@@ -238,7 +238,7 @@ bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
   ground_params->teamMembers.push_back(connecting_robot_);
 
   SubstituteROBOT_NAME(dds_params);
-  
+
   // Set values for default publisher and subscriber
 /*  dds_params->publishers[0].name = agent_name_;
   dds_params->publishers[0].partition = agent_name_;
