@@ -15,27 +15,79 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(framestore)
+
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  ff_util
+  tf2_ros
+  geometry_msgs
+  config_reader
+)
 
 # Call catkin
 catkin_package(
   CATKIN_DEPENDS
-    roscpp roscpp tf2 tf2_ros geometry_msgs
+    roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
 )
 
-# Create global_transforms
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} ff_common msg_conversions config_reader
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_common msg_conversions config_reader tf2 tf2_ros geometry_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-# Create framestore
-create_library(TARGET framestore
-  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet msg_conversions
-  INC  ${catkin_INCLUDE_DIRS}
-  DEPS ff_common msg_conversions roscpp nodelet pluginlib tf2 tf2_ros geometry_msgs
+# Declare C++ libraries
+add_library(framestore
+  src/framestore.cc
+)
+add_dependencies(framestore ${catkin_EXPORTED_TARGETS})
+target_link_libraries(framestore ${catkin_LIBRARIES})
+
+
+## Declare a C++ executable: global_transforms
+add_executable(global_transforms tools/global_transforms.cc)
+add_dependencies(global_transforms ${catkin_EXPORTED_TARGETS})
+target_link_libraries(global_transforms
+  framestore gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-# Install our launch file
-install_launch_files()
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Install C++ executables
+install(TARGETS global_transforms DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/global_transforms share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

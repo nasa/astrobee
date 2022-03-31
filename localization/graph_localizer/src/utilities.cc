@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <graph_localizer/feature_track.h>
 #include <graph_localizer/serialization.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
@@ -27,18 +28,19 @@
 #include <string>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
+bool ValidPointSet(const int num_points, const double average_distance_from_mean,
                    const double min_avg_distance_from_mean, const int min_num_points) {
-  if (static_cast<int>(points.size()) < min_num_points) return false;
+  if (num_points < min_num_points) return false;
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
+double AverageDistanceFromMean(const std::vector<lm::FeaturePoint>& points) {
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
   for (const auto& point : points) {
@@ -59,11 +61,15 @@ bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int 
   return (static_cast<int>(visual_landmarks_msg.landmarks.size()) >= min_num_landmarks);
 }
 
+bool ValidDepthMsg(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  return (static_cast<int>(depth_landmarks_msg.landmarks.size()) >= 0);
+}
+
 ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphStats& graph_stats,
+                                  const bool standstill, const GraphLocalizerStats& graph_stats,
                                   const lm::FanSpeedMode fan_speed_mode) {
   ff_msgs::GraphState loc_msg;
 
@@ -78,7 +84,8 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   lc::CombinedNavStateCovariancesToMsg(covariances, loc_msg);
 
   // Set Confidence
-  loc_msg.confidence = covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
+  // Controller can't handle a confidence other than 0.  TODO(rsoussan): switch back when this is fixed.
+  loc_msg.confidence = 0;  // covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
 
   // Set Graph Feature Counts/Information
   loc_msg.num_detected_of_features = detected_feature_counts.of;
@@ -133,13 +140,17 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::
   return PoseMsg(lc::EigenPose(global_T_body), time);
 }
 
+geometry_msgs::PoseStamped PoseMsg(const lm::TimestampedPose& timestamped_pose) {
+  return PoseMsg(timestamped_pose.pose, timestamped_pose.time);
+}
+
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
   return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
   const auto original_keys = smart_factor.keys();
@@ -155,10 +166,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-      params.factor.smart_projection_adder.huber_k);
+      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+      params.rotation_only_fallback, params.robust, params.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -171,8 +180,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {
   constexpr int min_num_measurements = 2;
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
@@ -187,10 +196,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-      params.factor.smart_projection_adder.huber_k);
+      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+      params.rotation_only_fallback, params.robust, params.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -216,10 +223,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
         keys_to_add.emplace_back(original_keys[i]);
       }
       auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-        params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-        params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-        params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-        params.factor.smart_projection_adder.huber_k);
+        params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+        params.rotation_only_fallback, params.robust, params.huber_k);
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
       if (new_point.valid()) {
@@ -252,5 +257,21 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
       new_smart_factor->add(smart_factor.measured()[i], smart_factor.keys()[i]);
   }
   return new_smart_factor;
+}
+
+int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const gtsam::Values& values,
+                    const bool check_valid) {
+  int num_of_factors = 0;
+  for (const auto& factor : graph_factors) {
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
+    if (smart_factor) {
+      if (check_valid) {
+        if (smart_factor->valid(values)) ++num_of_factors;
+      } else {
+        ++num_of_factors;
+      }
+    }
+  }
+  return num_of_factors;
 }
 }  // namespace graph_localizer

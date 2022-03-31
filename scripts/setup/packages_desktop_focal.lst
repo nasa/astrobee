@@ -1,0 +1,10 @@
+ros-noetic-rviz
+ros-noetic-gazebo-dev
+ros-noetic-gazebo-plugins
+ros-noetic-gazebo-ros
+ros-noetic-gazebo-ros-pkgs
+doxygen
+zlib1g-dev
+libusb-1.0-0-dev
+clang-format-8
+python3-rosdep

@@ -22,9 +22,10 @@ jobs:
         ref: gh-pages
     - name: Install dependencies
       run: |
-        sudo apt-get install bison
-        sudo apt-get install flex
-        sudo apt-get install graphviz
+        sudo apt-get install -y bison
+        sudo apt-get install -y flex
+        sudo apt-get install -y graphviz
+        sudo apt-get install -y python-setuptools
     - name: Install doxygen
       run: |
         wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.20.src.tar.gz'
@@ -58,7 +59,8 @@ jobs:
         cd ..
     - name: Replace old documentation with new
       run: |
-        rm -r docs/html
+        [ -d docs ] || mkdir docs
+        [ -d docs/html ] && rm -r docs/html
         cp -r repo/doc/html docs
     - name: Commit and Push
       run: |

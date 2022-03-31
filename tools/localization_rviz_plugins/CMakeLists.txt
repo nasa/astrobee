@@ -15,26 +15,65 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(localization_rviz_plugins)
 
 if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
  
- # For Qt
- set(CMAKE_AUTOMOC ON)
- set(QT_LIBRARIES Qt5::Widgets)
+  ## Compile as C++14, supported in ROS Kinetic and newer
+  add_compile_options(-std=c++14)
+
+
+  ## Find catkin macros and libraries
+  find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    localization_analysis
+    localization_common
+    ff_util
+    graph_localizer
+    rviz
+  )
+
+  find_package(pcl_conversions REQUIRED)
+
+  # For Qt
+  set(CMAKE_AUTOMOC ON)
+  find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
+  set(QT_LIBRARIES Qt5::Widgets)
 
  catkin_package(
-   LIBRARIES ${PROJECT_NAME} ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements 
-   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-   CATKIN_DEPENDS rviz 
-   DEPENDS gtsam 
+   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
+   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
+   CATKIN_DEPENDS roscpp localization_analysis localization_common ff_util graph_localizer rviz
  )
  
- create_library(TARGET ${PROJECT_NAME} 
-   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements 
-   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-   ADD_SRCS src/localization_graph_display.cc src/localization_graph_panel.cc src/pose_display.cc src/utilities.cc src/imu_augmentor_display.cc src/sparse_mapping_display.cc ${MOC_FILES}
-   DEPS gtsam rviz 
- )
+  ###########
+  ## Build ##
+  ###########
+  # Specify additional locations of header files
+  include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${pcl_conversions_INCLUDE_DIRS} 
+    ${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Gui_INCLUDE_DIRS}
+  )
 
+  # Declare C++ libraries
+  add_library(${PROJECT_NAME}
+    src/depth_odometry_display.cc
+    src/localization_graph_display.cc
+    src/localization_graph_panel.cc
+    src/pose_display.cc
+    src/utilities.cc
+    src/imu_augmentor_display.cc
+    src/slider_property.cc
+    src/sparse_mapping_display.cc
+  )
+  add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${QT_LIBRARIES})
+
+else (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
 endif (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)

@@ -26,7 +26,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 
-// C++11 includes
+// C++ includes
 #include <functional>
 #include <memory>
 #include <string>
@@ -161,11 +161,12 @@ class FreeFlyerActionClient {
     WAITING_FOR_RESPONSE, /*!< Goal accepted but no feedback/result yet */
     WAITING_FOR_DEADLINE  /*!< Deadline */
   };
-  static constexpr double DEFAULT_TIMEOUT_CONNECTED = 0.0;
-  static constexpr double DEFAULT_TIMEOUT_ACTIVE    = 0.0;
-  static constexpr double DEFAULT_TIMEOUT_RESPONSE  = 0.0;
-  static constexpr double DEFAULT_TIMEOUT_DEADLINE  = 0.0;
-  static constexpr double DEFAULT_POLL_DURATION     = 0.1;
+  static constexpr double DEFAULT_TIMEOUT_CONNECTED      = 0.0;
+  static constexpr double DEFAULT_TIMEOUT_ACTIVE         = 0.0;
+  static constexpr double DEFAULT_TIMEOUT_RESPONSE       = 0.0;
+  static constexpr double DEFAULT_TIMEOUT_DEADLINE       = 0.0;
+  static constexpr double DEFAULT_POLL_DURATION          = 0.1;
+  static constexpr double DEFAULT_TIMEOUT_RESPONSE_DELAY = 0.1;
 
  public:
   // Templated action definition
@@ -183,7 +184,8 @@ class FreeFlyerActionClient {
     to_active_(DEFAULT_TIMEOUT_ACTIVE),
     to_response_(DEFAULT_TIMEOUT_RESPONSE),
     to_deadline_(DEFAULT_TIMEOUT_DEADLINE),
-    to_poll_(DEFAULT_POLL_DURATION) {}
+    to_poll_(DEFAULT_POLL_DURATION),
+    to_response_delay_(DEFAULT_TIMEOUT_RESPONSE_DELAY) {}
 
   // Destructor
   ~FreeFlyerActionClient() {}
@@ -214,6 +216,8 @@ class FreeFlyerActionClient {
       &FreeFlyerActionClient::DeadlineTimeoutCallback, this, true, false);
     timer_poll_ = nh->createTimer(to_poll_,
         &FreeFlyerActionClient::ConnectPollCallback, this, false, false);
+    timer_response_delay_ = nh->createTimer(to_response_delay_,
+        &FreeFlyerActionClient::ResultDelayCallback, this, true, false);
     // Initialize the action client
     sac_ = std::shared_ptr < actionlib::SimpleActionClient < ActionSpec > > (
       new actionlib::SimpleActionClient < ActionSpec > (*nh, topic, false));
@@ -362,12 +366,29 @@ class FreeFlyerActionClient {
     // so that this doesn't happen
     sac_->stopTrackingGoal();
     // The response we send depends on the state
+    result_ = result;
+
+    // The response we send depends on the state
     if (action_state == actionlib::SimpleClientGoalState::SUCCEEDED)
-      Complete(FreeFlyerActionState::SUCCESS, result);
+      state_response_ = FreeFlyerActionState::SUCCESS;
     else if (action_state == actionlib::SimpleClientGoalState::PREEMPTED)
-      Complete(FreeFlyerActionState::PREEMPTED, result);
+      state_response_ = FreeFlyerActionState::PREEMPTED;
     else
-      Complete(FreeFlyerActionState::ABORTED, result);
+      state_response_ = FreeFlyerActionState::ABORTED;
+
+    StartOptionalTimer(timer_response_delay_, to_response_delay_);
+  }
+
+  // This delayed callback is necessary because on Ubuntu 20 / ROS noetic,
+  // an action is only considered finished once the ResultCallback returns.
+  // This raises the problem where, if another action of the same type is
+  // called in the ResultCallback or immediately afterwards, it returns
+  // failed because the previous action is technically not finished and
+  // returns an error.
+  void ResultDelayCallback(ros::TimerEvent const& event) {
+    // Call the result callback on the client side
+    Complete(state_response_, result_);
+
     // Return to waiting for a goal
     state_ = WAITING_FOR_GOAL;
   }
@@ -379,6 +400,7 @@ class FreeFlyerActionClient {
   ros::Duration to_response_;
   ros::Duration to_deadline_;
   ros::Duration to_poll_;
+  ros::Duration to_response_delay_;
   std::shared_ptr < actionlib::SimpleActionClient < ActionSpec > > sac_;
   FeedbackCallbackType cb_feedback_;
   ResultCallbackType cb_result_;
@@ -389,6 +411,10 @@ class FreeFlyerActionClient {
   ros::Timer timer_response_;
   ros::Timer timer_deadline_;
   ros::Timer timer_poll_;
+  ros::Timer timer_response_delay_;
+  // Save response
+  FreeFlyerActionState::Enum state_response_;
+  ResultConstPtr result_;
 };
 
 }  // namespace ff_util

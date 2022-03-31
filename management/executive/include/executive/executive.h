@@ -52,9 +52,11 @@
 #include <ff_msgs/PerchAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
 #include <ff_msgs/SetDataToDisk.h>
+#include <ff_msgs/SetFloat.h>
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
 #include <ff_msgs/SetZones.h>
+#include <ff_msgs/UnloadLoadNodelet.h>
 #include <ff_msgs/Zone.h>
 #include <ff_util/config_client.h>
 #include <ff_util/ff_action.h>
@@ -174,16 +176,15 @@ class Executive : public ff_util::FreeFlyerNodelet {
                              std::string const& current_mobility_state,
                              std::string const& accepted_mobility_state = "");
   bool ArmControl(ff_msgs::CommandStampedPtr const& cmd);
-  bool CheckNotMoving(ff_msgs::CommandStampedPtr const& cmd);
   bool CheckServiceExists(ros::ServiceClient& serviceIn,
                           std::string const& serviceName,
                           std::string const& cmd_in);
   bool CheckStoppedOrDrifting(std::string const& cmd_id,
                               std::string const& cmd_name);
   bool ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv);
-  bool ConfigureMobility(std::string const& cmd_id);
-  bool ConfigureMobility(bool move_to_start,
-                         std::string& err_msg);
+  bool ConfigureMobility(bool move_to_start, std::string& err_msg);
+  bool FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd);
+  bool LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   ros::Time MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
   bool ResetEkf(std::string const& cmd_id);
@@ -200,14 +201,13 @@ class Executive : public ff_util::FreeFlyerNodelet {
   // Commands
   bool ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd);
   bool AutoReturn(ff_msgs::CommandStampedPtr const& cmd);
-  bool ClearData(ff_msgs::CommandStampedPtr const& cmd);
   bool CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool Dock(ff_msgs::CommandStampedPtr const& cmd);
-  bool DownloadData(ff_msgs::CommandStampedPtr const& cmd);
   bool Fault(ff_msgs::CommandStampedPtr const& cmd);
   bool GripperControl(ff_msgs::CommandStampedPtr const& cmd);
   bool IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd);
   bool InitializeBias(ff_msgs::CommandStampedPtr const& cmd);
+  bool LoadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   bool NoOp(ff_msgs::CommandStampedPtr const& cmd);
   bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
   bool Perch(ff_msgs::CommandStampedPtr const& cmd);
@@ -225,6 +225,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetDataToDisk(ff_msgs::CommandStampedPtr const& cmd);
   bool SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
   bool SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetEnableReplan(ff_msgs::CommandStampedPtr const& cmd);
   bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd);
   bool SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd);
   bool SetInertia(ff_msgs::CommandStampedPtr const& cmd);
@@ -232,28 +233,26 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetPlan(ff_msgs::CommandStampedPtr const& cmd);
   bool SetPlanner(ff_msgs::CommandStampedPtr const& cmd);
   bool SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd);
-  bool SetTimeSync(ff_msgs::CommandStampedPtr const& cmd);
   bool SetZones(ff_msgs::CommandStampedPtr const& cmd);
-  bool Shutdown(ff_msgs::CommandStampedPtr const& cmd);
   bool SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd);
   bool StartGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool StartRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StopAllMotion(ff_msgs::CommandStampedPtr const& cmd);
   bool StopArm(ff_msgs::CommandStampedPtr const& cmd);
-  bool StopDownload(ff_msgs::CommandStampedPtr const& cmd);
   bool StopRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StopGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool StowArm(ff_msgs::CommandStampedPtr const& cmd);
   bool SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd);
   bool Undock(ff_msgs::CommandStampedPtr const& cmd);
+  bool UnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   bool Unperch(ff_msgs::CommandStampedPtr const& cmd);
   bool Unterminate(ff_msgs::CommandStampedPtr const& cmd);
   bool Wait(ff_msgs::CommandStampedPtr const& cmd);
-  bool WipeHlp(ff_msgs::CommandStampedPtr const& cmd);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
+  bool ReadMapperParams();
   bool ReadCommand(config_reader::ConfigReader::Table *response,
                    ff_msgs::CommandStampedPtr cmd);
   void PublishAgentState();
@@ -265,7 +264,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
   ExecutiveActionClient<ff_msgs::PerchAction> perch_ac_;
 
-  config_reader::ConfigReader config_params_;
+  config_reader::ConfigReader config_params_, mapper_config_params_;
 
   ff_msgs::AgentStateStamped agent_state_;
 
@@ -310,6 +309,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient set_inertia_client_, set_rate_client_;
   ros::ServiceClient set_data_client_, enable_recording_client_;
   ros::ServiceClient eps_terminate_client_;
+  ros::ServiceClient unload_load_nodelet_client_;
+  ros::ServiceClient set_collision_distance_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;

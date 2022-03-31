@@ -65,7 +65,6 @@ frame localization {
 frame gnc {
   [CTL]
   [FAM]
-  [EKF]
   () "/gnc/control\nff_msgs::ControlAction" <<action>> as ControlAction
   () "/gnc/ekf/set_input\nff_msgs::SetEkfInput" <<service>> as EkfSetInput
   () "/gnc/ekf\nff_msgs::EkfState" <<msg>> as EkfState
@@ -94,7 +93,7 @@ EXECUTIVE <<-->> ArmAction
 EXECUTIVE --> InertiaStamped
 InertiaStamped --> FAM
 InertiaStamped --> CTL
-InertiaStamped --> EKF
+InertiaStamped --> LOC 
 
 
 DockAction -- DOCK
@@ -103,14 +102,14 @@ DOCK <<-->> SwitchAction
 PERCH <<-->> SwitchAction
 SwitchAction -- LOCALIZATION_MANAGER
 LOCALIZATION_MANAGER --> EkfSetInput
-EkfSetInput --|> EKF
+EkfSetInput --|> LOC 
 DOCK <<-->> MotionAction
 PERCH <<-->> MotionAction
 PERCH <<-->> ArmAction
 MotionAction -- CHOREOGRAPHER
 CHOREOGRAPHER <<-->> ControlAction
 CHOREOGRAPHER --> SpeedGain
-SpeedGain --> EKF
+SpeedGain --> LOC 
 SpeedGain --> FAM
 ControlAction -- CTL
 CTL --> WrenchStamped
@@ -123,9 +122,9 @@ ArmAction -- ARM
 WrenchStamped --> FAM
 FAM --> PmcCommand
 ARM --> JointGoals
-EKF --> PoseStamped
-EKF --> TwistStamped
-EKF --> EkfState
+LOC --> PoseStamped
+LOC --> TwistStamped
+LOC --> EkfState
 TwistStamped --> CTL
 PoseStamped --> CTL
 JointStates --> ARM

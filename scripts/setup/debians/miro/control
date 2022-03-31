@@ -1,0 +1,20 @@
+Source: libmiro
+Priority: optional
+Maintainer: Brian Coltin <nospam@nospam.org>
+Build-Depends: debhelper (>=9), cmake (>=3.5), rti-dev (>=5.1), libqt4-qt3support (>=4) | libqt5widgets5, libace-dev (>=6.3)
+Standards-Version: 3.9.7
+Section: libs
+Homepage: https://github.com/hhutz/Miro
+
+Package: libmiro-dev
+Section: libdevel
+Architecture: any
+Depends: libmiro0 (= ${binary:Version}), ${misc:Depends}
+Description: Middleware for Robots
+ Middleware for Robots.
+
+Package: libmiro0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Middleware for Robots.
+ Middleware for Robots.

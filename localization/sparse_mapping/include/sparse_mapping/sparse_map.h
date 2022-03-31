@@ -19,8 +19,8 @@
 #ifndef SPARSE_MAPPING_SPARSE_MAP_H_
 #define SPARSE_MAPPING_SPARSE_MAP_H_
 
+#include <ff_common/eigen_vectors.h>
 #include <interest_point/matching.h>
-#include <sparse_mapping/eigen_vectors.h>
 #include <sparse_mapping/vocab_tree.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <camera/camera_model.h>
@@ -305,6 +305,9 @@ struct SparseMap {
   SparseMap();
   SparseMap(SparseMap &);
   SparseMap& operator=(const SparseMap&);
+
+  // Reorder the images in the map and the rest of the data accordingly
+  void reorderMap(std::map<int, int> const& old_cid_to_new_cid);
 };
 }  // namespace sparse_mapping
 

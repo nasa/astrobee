@@ -17,7 +17,7 @@
  */
 
 #include <ff_util/ff_names.h>
-#include <graph_bag/utilities.h>
+#include <localization_analysis/utilities.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -43,6 +43,7 @@
 #include "utilities.h"                   // NOLINT
 
 namespace localization_rviz_plugins {
+namespace go = graph_optimizer;
 namespace lc = localization_common;
 
 LocalizationGraphDisplay::LocalizationGraphDisplay() {
@@ -105,12 +106,13 @@ void LocalizationGraphDisplay::imageCallback(const sensor_msgs::ImageConstPtr& i
   img_buffer_.emplace(lc::TimeFromHeader(image_msg->header), image_msg);
 }
 
-void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
+void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                                                     const localization_common::Time latest_graph_time) {
   if (!publish_optical_flow_images_->getBool()) return;
   const auto img = getImage(latest_graph_time);
   if (!img) return;
-  const auto feature_track_image = graph_bag::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
+  const auto feature_track_image =
+    localization_analysis::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
   if (!feature_track_image) return;
   optical_flow_image_pub_.publish(*feature_track_image);
 }
@@ -197,15 +199,15 @@ void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera
   int destination_column = 0;
   // Cameras are in same order as images and measurements
   for (int i = 0; i < num_images && i < 16; ++i) {
-    const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
+    const auto distorted_measurement = localization_analysis::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 20 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    const cv::Point rectangle_offset(40, 40);
+    const cv::Point2f rectangle_offset(40, 40);
     cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
                   cv::Scalar(0, 255, 0), 8);
     // TODO(rsoussan): account for case where triangulation fails
     if (true) {
       const auto projection = cameras[i].project2(world_t_landmark);
-      const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
+      const auto distorted_projection = localization_analysis::Distort(projection, *nav_cam_params_);
       cv::circle(images[i], distorted_projection, 15 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
     }
     cv::resize(images[i], images[i], cv::Size(width, height));
@@ -223,7 +225,7 @@ void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera
 
 void LocalizationGraphDisplay::addLocProjectionVisual(
   const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
-  const graph_localizer::GraphValues& graph_values) {
+  const graph_localizer::CombinedNavStateGraphValues& graph_values) {
   if (!publish_loc_projection_factor_images_->getBool()) return;
   lc::Time latest_timestamp = std::numeric_limits<double>::lowest();
   for (const auto loc_projection_factor : loc_projection_factors) {
@@ -264,10 +266,11 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
 
   for (const auto loc_projection_factor : latest_loc_projection_factors) {
     const auto projected_point = camera.project(loc_projection_factor->landmark_point());
-    const auto distorted_measurement = graph_bag::Distort(loc_projection_factor->measured(), *nav_cam_params_);
+    const auto distorted_measurement =
+      localization_analysis::Distort(loc_projection_factor->measured(), *nav_cam_params_);
     cv::circle(loc_projection_factor_image.image, distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0),
                -1 /*Filled*/, 8);
-    const auto distorted_projected_point = graph_bag::Distort(projected_point, *nav_cam_params_);
+    const auto distorted_projected_point = localization_analysis::Distort(projected_point, *nav_cam_params_);
     cv::circle(loc_projection_factor_image.image, distorted_projected_point, 7 /* Radius*/, cv::Scalar(255, 0, 0),
                -1 /*Filled*/, 8);
   }
@@ -292,14 +295,14 @@ void LocalizationGraphDisplay::addSmartFactorsProjectionVisual() {
     return;
   }
   const auto smart_factor = latest_smart_factors_[smart_factor_index];
-  const auto landmark_point = smart_factor->serialized_point(latest_graph_localizer_->graph_values().values());
+  const auto landmark_point = smart_factor->serialized_point(latest_graph_localizer_->values());
   // TODO(rsoussan): Draw failed landmark points, indicate with point and line colors there was a failure (color red on
   // failure, green on success)
   if (!landmark_point) return;
-  const auto cameras = smart_factor->cameras(latest_graph_localizer_->graph_values().values());
+  const auto cameras = smart_factor->cameras(latest_graph_localizer_->values());
   std::vector<cv::Mat> images;
   for (const auto& key : smart_factor->keys()) {
-    const auto timestamp = latest_graph_localizer_->graph_values().Timestamp(key);
+    const auto timestamp = latest_graph_localizer_->combined_nav_state_graph_values().Timestamp(key);
     if (!timestamp) {
       LogError("addSmartFactorsProjectionVisual: Failed to get timestamp.");
       return;
@@ -322,8 +325,8 @@ void LocalizationGraphDisplay::addSmartFactorsProjectionVisual() {
   addProjectionVisual(cameras, smart_factor->measured(), *landmark_point, images);
 }
 
-void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
-                                                              const graph_localizer::GraphValues& graph_values) {
+void LocalizationGraphDisplay::addSmartFactorProjectionVisual(
+  const SmartFactor& smart_factor, const graph_localizer::CombinedNavStateGraphValues& graph_values) {
   if (!publish_smart_factor_images_->getBool()) return;
   std::vector<cv::Mat> images;
   for (const auto& key : smart_factor.keys()) {
@@ -378,14 +381,14 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
   const auto& measurements = smart_factor.measured();
   double summed_error = 0;
   for (int i = 0; i < num_images && i < 16; ++i) {
-    const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
+    const auto distorted_measurement = localization_analysis::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    const cv::Point rectangle_offset(40, 40);
+    const cv::Point2f rectangle_offset(40, 40);
     cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
                   cv::Scalar(0, 255, 0), 8);
     if (point) {
       const auto projection = cameras[i].project2(*point);
-      const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
+      const auto distorted_projection = localization_analysis::Distort(projection, *nav_cam_params_);
       cv::circle(images[i], distorted_projection, 7 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
       const double error = 0.5 * (measurements[i] - projection).squaredNorm();
       const auto text_color = textColor(error, 1.0, 1.5);
@@ -421,13 +424,13 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                                             const gtsam::CombinedImuFactor* const imu_factor) {
-  const auto world_T_body = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
+  const auto world_T_body = graph_localizer.combined_nav_state_graph_values().at<gtsam::Pose3>(imu_factor->key1());
   if (!world_T_body) {
     LogError("addImuVisual: Failed to get world_T_body.");
     return;
   }
 
-  const auto timestamp = graph_localizer.graph_values().Timestamp(imu_factor->key1());
+  const auto timestamp = graph_localizer.combined_nav_state_graph_values().Timestamp(imu_factor->key1());
   if (!timestamp) {
     LogError("addImuVisual: Failed to get timestamp.");
   }
@@ -474,15 +477,14 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   latest_smart_factors_.clear();
   SmartFactor* largest_error_smart_factor = nullptr;
   double largest_smart_factor_error = -1;
-  if (latest_graph_localizer_->graph_values().LatestTimestamp())
+  if (latest_graph_localizer_->combined_nav_state_graph_values().LatestTimestamp())
     addOpticalFlowVisual(latest_graph_localizer_->feature_tracks(),
-                         *(latest_graph_localizer_->graph_values().LatestTimestamp()));
-  for (const auto factor : latest_graph_localizer_->factor_graph()) {
+                         *(latest_graph_localizer_->combined_nav_state_graph_values().LatestTimestamp()));
+  for (const auto factor : latest_graph_localizer_->graph_factors()) {
     const auto smart_factor = dynamic_cast<SmartFactor*>(factor.get());
     if (smart_factor) {
       latest_smart_factors_.emplace_back(smart_factor);
-      const double smart_factor_error =
-        smart_factor->serialized_error(latest_graph_localizer_->graph_values().values());
+      const double smart_factor_error = smart_factor->serialized_error(latest_graph_localizer_->values());
       if (smart_factor_error > largest_smart_factor_error) {
         largest_smart_factor_error = smart_factor_error;
         largest_error_smart_factor = smart_factor;
@@ -498,12 +500,13 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
     }
   }
   if (largest_error_smart_factor)
-    addSmartFactorProjectionVisual(*largest_error_smart_factor, latest_graph_localizer_->graph_values());
+    addSmartFactorProjectionVisual(*largest_error_smart_factor,
+                                   latest_graph_localizer_->combined_nav_state_graph_values());
 
   if (!loc_projection_factors.empty())
-    addLocProjectionVisual(loc_projection_factors, latest_graph_localizer_->graph_values());
+    addLocProjectionVisual(loc_projection_factors, latest_graph_localizer_->combined_nav_state_graph_values());
 
-  const auto oldest_timestamp = latest_graph_localizer_->graph_values().OldestTimestamp();
+  const auto oldest_timestamp = latest_graph_localizer_->combined_nav_state_graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);
 
   projection_factor_slider_->setMaximum(latest_smart_factors_.size() - 1);

@@ -20,7 +20,7 @@
 #define SPARSE_MAPPING_TENSOR_H_
 
 #include <camera/camera_model.h>
-#include <sparse_mapping/eigen_vectors.h>
+#include <ff_common/eigen_vectors.h>
 #include <Eigen/Geometry>
 #include <ceres/ceres.h>
 
@@ -32,6 +32,7 @@
 #include <utility>
 #include <vector>
 #include <limits>
+#include <memory>
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(std::array<std::pair<std::pair<int, int>, Eigen::Affine3d>, 3>)
 
@@ -47,7 +48,7 @@ namespace cv {
 namespace sparse_mapping {
 
   typedef std::map<std::pair<int, int>, Eigen::Affine3d, std::less<std::pair<int, int> >,
-                   Eigen::aligned_allocator<std::pair<std::pair<const int, const int>, Eigen::Affine3d> > >
+                   Eigen::aligned_allocator<std::pair<std::pair<int , int > const, Eigen::Affine3d> > >
                    CIDPairAffineMap;
   typedef std::array<std::pair<std::pair<int, int>, Eigen::Affine3d>, 3> CIDAffineTuple;
   typedef std::vector<CIDAffineTuple, Eigen::aligned_allocator<CIDAffineTuple> > CIDAffineTupleVec;
@@ -84,14 +85,16 @@ namespace sparse_mapping {
    * Improve the map with bundle adjustment. Vary only the cameras
    * between given indices.
    **/
-  void BundleAdjust(bool fix_cameras, sparse_mapping::SparseMap * map);
+  void BundleAdjust(bool fix_all_cameras, sparse_mapping::SparseMap * map,
+                    std::set<int> const& fixed_cameras = std::set<int>());
 
   void BundleAdjustment(sparse_mapping::SparseMap * s,
                         ceres::LossFunction * loss,
                         const ceres::Solver::Options & options,
                         ceres::Solver::Summary * summary,
                         int first = 0, int last = std::numeric_limits<int>::max(),
-                        bool fix_cameras = false);
+                        bool fix_all_cameras = false,
+                        std::set<int> const& fixed_cameras = std::set<int>());
 
   /**
      Append map file.
@@ -99,7 +102,7 @@ namespace sparse_mapping {
   void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
                      int num_image_overlaps_at_endpoints,
                      double outlier_factor,
-                     bool bundle_adjust);
+                     bool bundle_adjust, bool fix_first_map);
 
   /**
      Merge two maps.

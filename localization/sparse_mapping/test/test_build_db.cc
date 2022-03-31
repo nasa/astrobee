@@ -49,7 +49,7 @@ void RunWithDB(std::string const& detector_name) {
 
   // Write local copies of the images.
   for (size_t cid = 0; cid < img_files.size(); cid++) {
-    cv::Mat image = cv::imread(img_files[cid], CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat image = cv::imread(img_files[cid], cv::IMREAD_GRAYSCALE);
     cv::imwrite(local_imgs[cid], image);
   }
 
@@ -131,4 +131,10 @@ void RunWithDB(std::string const& detector_name) {
 
 TEST(build_db_dbow2_orgbrisk, write_descriptors_build_db) {
   RunWithDB("ORGBRISK");
+}
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

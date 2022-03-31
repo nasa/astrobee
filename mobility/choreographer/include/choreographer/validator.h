@@ -34,9 +34,17 @@
 #include <ff_msgs/Zone.h>
 #include <ff_msgs/SetZones.h>
 #include <ff_msgs/GetZones.h>
+#include <ff_msgs/GetOccupancyMap.h>
+#include <ff_msgs/GetFloat.h>
+
+// Voxel map
+#include <jps3d/planner/jps_3d_util.h>
 
 // STL includes
 #include <string>
+#include <vector>
+
+#define EPS 0.001
 
 namespace choreographer {
 
@@ -69,14 +77,19 @@ class Validator {
   // Markers for keep in / keep out zones
   void PublishMarkers();
 
-  // Check if a point is inside a cuboid
-  bool PointInsideCuboid(geometry_msgs::Point const& x,
-                         geometry_msgs::Vector3 const& cubemin,
-                         geometry_msgs::Vector3 const& cubemax);
+  // Process zones when building the occupancy map
+  void ProcessZone(std::vector<signed char>& map, int type, char cell_value, bool surface);
+
+  // Build the occupancy map
+  bool GetZonesMap();
 
   // Callback to get the keep in/out zones
   bool GetZonesCallback(ff_msgs::GetZones::Request& req,
                        ff_msgs::GetZones::Response& res);
+
+  // Callback to get the keep in/out zones map
+  bool GetZonesMapCallback(ff_msgs::GetOccupancyMap::Request& req,
+                       ff_msgs::GetOccupancyMap::Response& res);
 
   // Callback to set the keep in/out zones
   bool SetZonesCallback(ff_msgs::SetZones::Request& req,
@@ -87,8 +100,19 @@ class Validator {
   bool overwrite_;                                    // New zones overwrite
   ff_msgs::SetZones::Request zones_;                  // Zones
   ros::Publisher pub_zones_;                          // Zone publisher
-  ros::ServiceServer get_zones_srv_;                  // Set zone service
-  ros::ServiceServer set_zones_srv_;                  // Set zone service
+  ros::ServiceServer get_zones_srv_;                  // Get zones service
+  ros::ServiceServer get_zones_map_srv_;              // Get zones map
+  ros::ServiceServer set_zones_srv_;                  // Set zones service
+  ros::ServiceClient get_resolution_;                 // Get the zones map resolution
+  ros::ServiceClient get_map_inflation_;              // Get the zones map inflation
+
+  double map_res_ = 0.08;
+  std::shared_ptr<JPS::VoxelMapUtil> jps_map_util_;
+
+  // Voxel map values
+  char val_occ_ = 100;         // Assume occupied cell has value 100
+  char val_free_ = 0;          // Assume free cell has value 0
+  char val_unknown_ = -1;      // Assume unknown cell has value -1
 };
 
 }  // namespace choreographer

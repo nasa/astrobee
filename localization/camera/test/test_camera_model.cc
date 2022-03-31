@@ -176,3 +176,9 @@ TEST(camera_model, DistortionCoeffs) {
   EXPECT_NEAR(3.92, optical_center[0], 1e-3);
   EXPECT_NEAR(0.827, optical_center[1], 1e-3);
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

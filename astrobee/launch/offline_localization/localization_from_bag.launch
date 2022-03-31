@@ -24,13 +24,14 @@
   <!-- Command line arguments -->
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
-  <arg name="imu_augmentor" default="false" />
+  <arg name="imu_augmentor" default="true" />
+  <arg name="depth_odometry" default="false" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
   <arg name="localization_manager" default="false" />
   <arg name="service_calls" default="true" unless="$(arg localization_manager)"/>     
   <arg name="service_calls" value="false" if="$(arg localization_manager)" />   
-  <arg name="image_features" default="false" />
+  <arg name="image_features" default="true" />
 
 
   <!-- Set environment configs that are required to run nodes -->
@@ -75,6 +76,13 @@
   </include>
   <group if="$(arg localization_manager)">
     <include file="$(find localization_manager)/launch/localization_manager.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
+
+ <!-- Run depth odometry if required -->
+  <group if="$(arg depth_odometry)">
+    <include file="$(find depth_odometry)/launch/depth_odometry.launch">
       <arg name="terminal" value="terminator -x"/>
     </include>
   </group>

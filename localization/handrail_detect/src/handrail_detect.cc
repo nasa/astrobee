@@ -52,7 +52,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-// Eigen incliudes
+// Eigen includes
 #include <Eigen/Geometry>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
@@ -183,6 +183,12 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     if (!config_.GetReal("max_depth_dist", &max_depth_dist_))
       ROS_FATAL("Unspecified max_depth_dist.");
 
+    if (!config_.GetInt("max_num_line_points", &max_num_line_points_))
+      ROS_FATAL("Unspecified max_num_line_points.");
+
+    if (!config_.GetInt("max_num_plane_points", &max_num_plane_points_))
+      ROS_FATAL("Unspecified max_num_plane_points.");
+
     // Maximum RANSAC iteration for line estimation
     if (!config_.GetInt("RANSAC_line_iteration", &RANSAC_line_iteration_))
       ROS_FATAL("Unspecified RANSAC_line_iteration.");
@@ -284,6 +290,13 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     HandrailCallback();
   }
 
+  void Clear() {
+    dl_.landmarks.clear();
+    dl_.sensor_t_line_points.clear();
+    dl_.sensor_t_line_endpoints.clear();
+    dl_.sensor_t_plane_points.clear();
+  }
+
   // Performs handrail detection
   void HandrailCallback() {
     // Publish registration
@@ -294,7 +307,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     r.camera_id = frame_count_;
     registration_pub_.publish(r);
     ros::spinOnce();
-    dl_.landmarks.clear();
+    Clear();
     dl_.end_seen = 0;
 
     // Publish depth image
@@ -428,11 +441,11 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
         rolling_window_pos_(0, rolling_window_cnt_) = rolling_window_pos_(0, previous_index);
         rolling_window_pos_(1, rolling_window_cnt_) = rolling_window_pos_(1, previous_index);
         rolling_window_pos_(2, rolling_window_cnt_) = rolling_window_pos_(2, previous_index);
-        dl_.local_pose.position.x = rolling_window_pos_(0, previous_index);
-        dl_.local_pose.position.y = rolling_window_pos_(1, previous_index);
-        dl_.local_pose.position.z = rolling_window_pos_(2, previous_index);
+        dl_.sensor_T_handrail.position.x = rolling_window_pos_(0, previous_index);
+        dl_.sensor_T_handrail.position.y = rolling_window_pos_(1, previous_index);
+        dl_.sensor_T_handrail.position.z = rolling_window_pos_(2, previous_index);
         // Don't publish landmark if it refuses point
-        dl_.landmarks.clear();
+        Clear();
 
         // Since we copy the previous point in the hope of rejecting 1 or two wrong samples
         // We have to stop if we copy too many points in a row. This would imply we are lost
@@ -441,7 +454,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
           // Restart handrail detect if we are lost
           start_ = false;
           //  Don't publish landmark if we are lost
-          dl_.landmarks.clear();
+          Clear();
           return false;
         }
       } else {
@@ -452,9 +465,9 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
         rolling_window_pos_(0, rolling_window_cnt_) = i2h.translation()(0);
         rolling_window_pos_(1, rolling_window_cnt_) = i2h.translation()(1);
         rolling_window_pos_(2, rolling_window_cnt_) = i2h.translation()(2);
-        dl_.local_pose.position.x = i2h.translation()(0);
-        dl_.local_pose.position.y = i2h.translation()(1);
-        dl_.local_pose.position.z = i2h.translation()(2);
+        dl_.sensor_T_handrail.position.x = i2h.translation()(0);
+        dl_.sensor_T_handrail.position.y = i2h.translation()(1);
+        dl_.sensor_T_handrail.position.z = i2h.translation()(2);
       }
     } else {
       // If we don't have 5 positions saved, the outlier rejection averaging filter
@@ -462,14 +475,19 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       rolling_window_pos_(0, rolling_window_cnt_) = i2h.translation()(0);
       rolling_window_pos_(1, rolling_window_cnt_) = i2h.translation()(1);
       rolling_window_pos_(2, rolling_window_cnt_) = i2h.translation()(2);
-      dl_.local_pose.position.x = i2h.translation()(0);
-      dl_.local_pose.position.y = i2h.translation()(1);
-      dl_.local_pose.position.z = i2h.translation()(2);
+      dl_.sensor_T_handrail.position.x = i2h.translation()(0);
+      dl_.sensor_T_handrail.position.y = i2h.translation()(1);
+      dl_.sensor_T_handrail.position.z = i2h.translation()(2);
     }
-    dl_.local_pose.orientation.x = rtoq.x();
-    dl_.local_pose.orientation.y = rtoq.y();
-    dl_.local_pose.orientation.z = rtoq.z();
-    dl_.local_pose.orientation.w = rtoq.w();
+    dl_.sensor_T_handrail.orientation.x = rtoq.x();
+    dl_.sensor_T_handrail.orientation.y = rtoq.y();
+    dl_.sensor_T_handrail.orientation.z = rtoq.z();
+    dl_.sensor_T_handrail.orientation.w = rtoq.w();
+
+    // Add endpoints
+    for (const auto& line_endpoint : end_point) {
+      dl_.sensor_t_line_endpoints.push_back(line_endpoint);
+    }
 
     rolling_window_cnt_++;
 
@@ -1538,18 +1556,19 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
   void GetFeaturePoints(const std::vector<int>& plane_inliers,
                                         const std::vector<int>& line_inliers) {
-    int num_line_features = 4;
-    int num_plane_features = 6;
-    int tot_features = num_line_features + num_plane_features;
+    int tot_features = max_num_line_points_ + max_num_plane_points_;
 
     std::vector<int> feature_idx;
     feature_idx.reserve(tot_features);
+    std::vector<int> line_point_indices;
+    std::vector<int> plane_point_indices;
 
     // Get feature points for each step from handrail
-    int line_step = line_inliers.size() / num_line_features;
+    int line_step = line_inliers.size() / max_num_line_points_;
     int steps = 0;
-    for (int i = 0; i < num_line_features && steps < static_cast<int>(line_inliers.size()); ++i) {
+    for (int i = 0; i < max_num_line_points_ && steps < static_cast<int>(line_inliers.size()); ++i) {
       feature_idx.push_back(line_inliers[steps]);
+      line_point_indices.push_back(line_inliers[steps]);
       steps += line_step;
     }
 
@@ -1560,12 +1579,12 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     float fov_y_half_tan = static_cast<float>(tan(fov_y * 0.5 * (M_PI / 180.0)));
     float half_tan = std::min(fov_x_half_tan, fov_y_half_tan);
     float feature_dist_thres = (half_tan * cloud_.points[plane_inliers[plane_inliers.size() / 2]].z)
-                               / sqrt(static_cast<float>((tot_features - num_line_features)));
+                               / sqrt(static_cast<float>((tot_features - max_num_line_points_)));
 
     Eigen::Vector2f rp, tp;
     int rv, escape_cnt = 0, escape_cnt2 = 0;
 
-    for (int i = num_line_features; i < tot_features; ++i) {
+    for (int i = max_num_line_points_; i < tot_features; ++i) {
       bool g2g = false;
       escape_cnt2 = 0;
 
@@ -1586,6 +1605,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
           }
           if (g2g) {
             feature_idx.push_back(plane_inliers[rv]);
+            plane_point_indices.push_back(plane_inliers[rv]);
             break;
           } else if (escape_cnt2 > static_cast<int>(feature_idx.size())) {
             ++escape_cnt;
@@ -1609,6 +1629,13 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       dl_.landmarks[lm_cnt].v = cloud_.points[itr].y;
       dl_.landmarks[lm_cnt].w = cloud_.points[itr].z;
       ++lm_cnt;
+    }
+
+    for (const auto line_point_index : line_point_indices) {
+      dl_.sensor_t_line_points.push_back(cloud_.points[line_point_index]);
+    }
+    for (const auto plane_point_index : plane_point_indices) {
+      dl_.sensor_t_plane_points.push_back(cloud_.points[plane_point_index]);
     }
   }
 
@@ -1869,6 +1896,8 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
   float min_measure_gap_;
   float min_depth_dist_;
   float max_depth_dist_;
+  int max_num_line_points_;
+  int max_num_plane_points_;
 
   // RANSAC related parameters
   int RANSAC_line_iteration_;

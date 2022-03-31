@@ -45,11 +45,16 @@
   separate directory is specified.
 */
 
-DEFINE_string(image_list, "", "The list of images to undistort, one per line. If not specified, "
-              "it is assumed they are passed in directly on the command line.");
+DEFINE_string(image_list, "", "A file having the list of images to undistort, one per line. "
+              "If not specified, it is assumed they are passed in directly on the command line.");
 
-DEFINE_string(output_directory, "", "If not specified, undistorted images will "
+DEFINE_string(output_directory, "", "Output directory. If not specified, undistorted images will "
               "saved in the same directory as the inputs.");
+
+DEFINE_string(output_list, "", "Save the undistorted images with names given in this list, "
+              "instead of using the output directory.");
+
+DEFINE_string(undistorted_intrinsics, "", "Save to this file the undistorted camera intrinsics.");
 
 DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their width "
               "being a multiple of this scale compared to the camera model.");
@@ -57,7 +62,7 @@ DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their 
 DEFINE_string(undistorted_crop_win, "",
               "After undistorting, apply a crop window of these dimensions "
               "centered at the undistorted image center. The adjusted "
-              "dimensions and optical center will be displayed below. "
+              "dimensions and optical center will be printed on screen. "
               "Specify as: 'crop_x crop_y'.");
 
 DEFINE_bool(save_bgr, false,
@@ -67,7 +72,7 @@ DEFINE_bool(histogram_equalization, false,
             "If true, do histogram equalization.");
 
 DEFINE_string(robot_camera, "nav_cam",
-              "Which of bot's cameras to use. Anything except nav_cam is experimental.");
+              "Which of bot's cameras to use. Tested with nav_cam and sci_cam.");
 
 int main(int argc, char ** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
@@ -86,6 +91,18 @@ int main(int argc, char ** argv) {
 
   if (images.empty())
       LOG(FATAL) << "Expecting at least one input image.";
+
+  std::vector<std::string> undist_images;
+  if (FLAGS_output_list != "") {
+    std::ifstream ifs(FLAGS_output_list);
+    std::string image;
+    while (ifs >> image)
+      undist_images.push_back(image);
+
+    if (undist_images.size() != images.size())
+      LOG(FATAL) << "There must be as many output undistorted "
+                 << "images as input distorted images.\n";
+  }
 
   // Read the camera
   config_reader::ConfigReader config;
@@ -111,17 +128,51 @@ int main(int argc, char ** argv) {
   cv::Mat floating_remap, fixed_map, interp_map;
   cam_params.GenerateRemapMaps(&floating_remap, FLAGS_scale);
 
-  // Deal with the fact that this map may request pixels from the
-  // image that are out of bounds. Hence we will need to grow the
-  // image before interpolating into it.
+  // We have to conform to the OpenCV API, which says:
+  // undist_image(x, y) = dist_image(floating_remap(x, y)).
 
-  // Find the expanded image bounds
+  // If floating_remap(x, y) is out of dist_image bounds, the above
+  // should return a black pixel, yet a straightforward application of
+  // this formula will result in a segfault.
+
+  // The solution is to grow dist_image by padding it with black pixels
+  // so that the above API succeeds.
+
+  // This can have the following problem though. floating_remap(x, y)
+  // can be huge for unreasonable distortion. So tame it. We only
+  // want to know that if this falls outside the image bounds, a black
+  // pixel is assigned to undist_image(x, y), so if it falls too
+  // much outside the image just assign it to a closer pixel outside
+  // the image.
+  float max_extra = 100.0f;  // the furthest floating_remap(x, y) can deviate
+
+  // The image dimensions
+  Eigen::Vector2i dims(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
+                       round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
+  int img_cols = dims[0], img_rows = dims[1];
+
   cv::Vec2f start = floating_remap.at<cv::Vec2f>(0, 0);
-  double min_x = start[0], max_x = start[0];
-  double min_y = start[1], max_y = start[1];
+  double min_x = 0.0, max_x = 0.0, min_y = 0.0, max_y = 0.0;  // will change very soon
   for (int col = 0; col < floating_remap.cols; col++) {
     for (int row = 0; row < floating_remap.rows; row++) {
       cv::Vec2f pix = floating_remap.at<cv::Vec2f>(row, col);
+
+      // Tame floating_remap
+      pix[0] = std::max(pix[0], -max_extra);
+      pix[0] = std::min(pix[0], img_cols + max_extra);
+      pix[1] = std::max(pix[1], -max_extra);
+      pix[1] = std::min(pix[1], img_rows + max_extra);
+      floating_remap.at<cv::Vec2f>(row, col) = pix;
+
+      if (col == 0 && row == 0) {
+        // initialize with the potentially adjusted value of pix.
+        min_x = pix[0];
+        max_x = pix[0];
+        min_y = pix[1];
+        max_y = pix[1];
+      }
+
+      // Find the expanded (but tamed) image bounds
       if (pix[0] < min_x)
         min_x = pix[0];
       if (pix[0] > max_x)
@@ -132,13 +183,10 @@ int main(int argc, char ** argv) {
         max_y = pix[1];
     }
   }
+
+  // Convert the bounds to int
   min_x = floor(min_x); max_x = ceil(max_x);
   min_y = floor(min_y); max_y = ceil(max_y);
-
-  // The image dimensions
-  Eigen::Vector2i dims(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
-                       round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
-  int img_cols = dims[0], img_rows = dims[1];
 
   // Ensure that the expanded image is not smaller than the old one,
   // to make the logic simpler
@@ -193,19 +241,23 @@ int main(int argc, char ** argv) {
     if (undist_size[0] % 2 != 0 || undist_size[1] % 2 != 0 )
       LOG(FATAL) << "The undistorted image dimensions must be even.";
 
-    int startx = (undist_size[0] - widx)/2;
-    int starty = (undist_size[1] - widy)/2;
-
-    cropROI = cv::Rect(startx, starty, widx, widy);
-    if (cropROI.empty())
-      LOG(FATAL) << "Empty crop region.";
-    std::cout << "Crop region: " << cropROI << std::endl;
+    // Ensure that the crop window is within the image bounds
+    int startx = std::max((undist_size[0] - widx)/2, 0);
+    int starty = std::max((undist_size[1] - widy)/2, 0);
+    widx = std::min(widx, undist_size[0] - startx);
+    widy = std::min(widy, undist_size[1] - starty);
 
     // Update these quantities
     undist_size[0]     = widx;
     undist_size[1]     = widy;
     optical_center[0] -= startx;
     optical_center[1] -= starty;
+
+    cropROI = cv::Rect(startx, starty, widx, widy);
+    if (cropROI.empty())
+      LOG(FATAL) << "Empty crop region.";
+
+    std::cout << "Undistorted crop region: " << cropROI << std::endl;
   }
 
   for (size_t i = 0; i < images.size(); i++) {
@@ -243,7 +295,10 @@ int main(int argc, char ** argv) {
 
     // The output file name
     std::string undist_file;
-    if (!FLAGS_output_directory.empty()) {
+    if (!undist_images.empty()) {
+      // Was specified via a list
+      undist_file = undist_images[i];
+    } else if (!FLAGS_output_directory.empty()) {
       // A separate output directory was specified
       undist_file = FLAGS_output_directory + "/" + ff_common::basename(filename);
     } else {
@@ -256,7 +311,11 @@ int main(int argc, char ** argv) {
     cv::Mat bgr_image;
     if (FLAGS_save_bgr && undist_image.channels() == 1) {
       // Convert from grayscale to color if needed
-      cvtColor(undist_image, bgr_image, CV_GRAY2BGR);
+      #if (CV_VERSION_MAJOR >= 4)
+        cvtColor(undist_image, bgr_image, cv::COLOR_GRAY2BGR);
+      #else
+        cvtColor(undist_image, bgr_image, CV_GRAY2BGR);
+      #endif
       undist_image = bgr_image;
     }
     cv::imwrite(undist_file, undist_image);
@@ -268,15 +327,18 @@ int main(int argc, char ** argv) {
   std::cout << "Focal length:               " << focal_length               << "\n";
   std::cout << "Undistorted optical center: " << optical_center.transpose() << "\n";
 
-  if (!FLAGS_output_directory.empty()) {
-    std::string intrinsics_file = FLAGS_output_directory + "/undistorted_intrinsics.txt";
+  std::string intrinsics_file = FLAGS_undistorted_intrinsics;
+  if (intrinsics_file.empty() && !FLAGS_output_directory.empty())
+    intrinsics_file = FLAGS_output_directory + "/undistorted_intrinsics.txt";
+
+  if (!intrinsics_file.empty()) {
+    std::cout << "Writing: " << intrinsics_file << std::endl;
     std::ofstream ofs(intrinsics_file.c_str());
     ofs.precision(17);
     ofs << "# Unidistored width and height, focal length, undistorted optical center\n";
     ofs << undist_size.transpose() << " " << focal_length << " "
         << optical_center.transpose() << "\n";
     ofs.close();
-    std::cout << "Wrote: " << intrinsics_file << std::endl;
   }
 
   return 0;

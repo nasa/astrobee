@@ -38,6 +38,8 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_mapper" output="$(arg output)" launch-prefix="nice -n 5"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_management" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_recording" output="$(arg output)"/>
@@ -45,6 +47,8 @@
           name="mlp_monitors" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_communications" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_multibridge" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_serial" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
@@ -82,12 +86,22 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="depth_odometry/DepthOdometryNodelet" />
+    <arg name="name" value="depth_odometry_nodelet" />
+    <arg name="manager" value="mlp_vision" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
   <!-- Run ground_truth_localizer, otherwise run graph localizer -->
   <group unless="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
-      <arg name="name" value="graph_localizer" />
+      <arg name="name" value="graph_loc" />
       <arg name="manager" value="mlp_graph_localization" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
@@ -96,7 +110,7 @@
       <arg name="default" value="true" />
     </include>
   </group>
- 
+
   <group if="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="ground_truth_localizer/GroundTruthLocalizerNodelet" />
@@ -125,7 +139,7 @@
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="mapper/MapperNodelet" />
     <arg name="name" value="mapper" />
-    <arg name="manager" value="mlp_depth_cam" />
+    <arg name="manager" value="mlp_mapper" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
     <arg name="extra" value="$(arg extra)" />
@@ -272,6 +286,19 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="$(arg dds)" />
   </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="dds_ros_bridge/AstrobeeAstrobeeBridge" />
+    <arg name="name" value="astrobee_astrobee_bridge" />
+    <arg name="manager" value="mlp_multibridge" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="$(arg dds)" />
+  </include>
+
+ <!-- Drivers (optional) -->
+ <group if="$(arg drivers)">
 
   <!-- Perching arm -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
@@ -284,10 +311,6 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
-
- <!-- Drivers (optional) -->
- <group if="$(arg drivers)">
-
    <!-- NavCam pipeline -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="is_camera/camera" />
@@ -366,6 +389,17 @@
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
      <arg name="class" value="pico_driver/PicoDriverNodelet" />
      <arg name="name" value="pico_driver" />
+     <arg name="manager" value="mlp_depth_cam" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="pico_proxy/PicoProxyNodelet" />
+     <arg name="name" value="pico_proxy_haz_cam_extended" />
      <arg name="manager" value="mlp_depth_cam" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />

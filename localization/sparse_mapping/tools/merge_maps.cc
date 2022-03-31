@@ -43,7 +43,7 @@
 // merging may move things around a bit.
 
 // outputs
-DEFINE_string(output_map, "merged.map",
+DEFINE_string(output_map, "",
               "Output file containing the merged map.");
 
 DEFINE_int32(num_image_overlaps_at_endpoints, 10,
@@ -58,6 +58,10 @@ DEFINE_double(outlier_factor, 3.0,
 
 DEFINE_bool(skip_bundle_adjustment, false,
             "If true, do not bundle adjust the merged map.");
+
+DEFINE_bool(fix_first_map, false,
+            "If true and bundle adjustment is not skipped, keep the first map fixed "
+            "when bundle adjustment takes place.");
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
@@ -74,8 +78,14 @@ int main(int argc, char** argv) {
       LOG(FATAL) << "The input and output maps must have different names.";
   }
 
+  if (FLAGS_output_map == "")
+    LOG(FATAL) << "No output map was specified.";
+
   if (FLAGS_num_image_overlaps_at_endpoints <= 0)
     LOG(FATAL) << "Must have num_image_overlaps_at_endpoints > 0.";
+
+  if (FLAGS_fix_first_map && argc != 3)
+    LOG(FATAL) << "Keeping the first map fixed works only when there are two input maps.";
 
   // The merged map starts as the first map.
   {
@@ -89,7 +99,8 @@ int main(int argc, char** argv) {
     sparse_mapping::AppendMapFile(FLAGS_output_map, argv[i],
                                   FLAGS_num_image_overlaps_at_endpoints,
                                   FLAGS_outlier_factor,
-                                  !FLAGS_skip_bundle_adjustment);
+                                  !FLAGS_skip_bundle_adjustment,
+                                  FLAGS_fix_first_map);
   }
 
   google::protobuf::ShutdownProtobufLibrary();

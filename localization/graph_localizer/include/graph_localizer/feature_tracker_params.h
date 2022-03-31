@@ -22,6 +22,8 @@ namespace graph_localizer {
 struct FeatureTrackerParams {
   // Max duration, feature tracker trims measurements outside of this window or outside of graph window
   double sliding_window_duration;
+  int smart_projection_adder_measurement_spacing;
+  bool use_allowed_timestamps;
 };
 }  // namespace graph_localizer
 

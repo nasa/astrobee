@@ -18,11 +18,13 @@
 
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
+#include <graph_optimizer/parameter_reader.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
@@ -30,18 +32,33 @@ namespace mc = msg_conversions;
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params) {
   params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
   params.world_T_dock = lc::LoadTransform(config, "world_dock_transform");
   params.nav_cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.dock_cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
 }
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
+  LoadHandrailFactorAdderParams(config, params.handrail_adder);
+  LoadDepthOdometryFactorAdderParams(config, params.depth_odometry_adder);
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
   LoadProjectionFactorAdderParams(config, params.projection_adder);
   LoadSmartProjectionFactorAdderParams(config, params.smart_projection_adder);
   LoadStandstillFactorAdderParams(config, params.standstill_adder);
+}
+
+void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "handrail_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.min_num_line_matches = mc::LoadDouble(config, "handrail_adder_min_num_line_matches");
+  params.min_num_plane_matches = mc::LoadDouble(config, "handrail_adder_min_num_plane_matches");
+  params.point_to_line_stddev = mc::LoadDouble(config, "handrail_adder_point_to_line_stddev");
+  params.point_to_plane_stddev = mc::LoadDouble(config, "handrail_adder_point_to_plane_stddev");
+  params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
+  params.use_silu_for_point_to_line_segment_factor =
+    mc::LoadBool(config, "handrail_adder_use_silu_for_point_to_line_segment_factor");
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -66,6 +83,21 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+}
+
+void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, DepthOdometryFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "depth_odometry_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.noise_scale = mc::LoadDouble(config, "depth_odometry_adder_noise_scale");
+  params.use_points_between_factor = mc::LoadBool(config, "depth_odometry_adder_use_points_between_factor");
+  params.position_covariance_threshold = mc::LoadDouble(config, "depth_odometry_adder_position_covariance_threshold");
+  params.orientation_covariance_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_orientation_covariance_threshold");
+  params.body_T_sensor = lc::LoadTransform(config, "haz_cam_transform");
+  params.point_to_point_error_threshold = mc::LoadDouble(config, "depth_odometry_adder_point_to_point_error_threshold");
+  params.pose_translation_norm_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_pose_translation_norm_threshold");
+  params.max_num_points_between_factors = mc::LoadDouble(config, "depth_odometry_adder_max_num_points_between_factors");
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -133,10 +165,13 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
   params.max_num_factors = mc::LoadInt(config, "smart_projection_adder_max_num_factors");
   params.min_num_points = mc::LoadInt(config, "smart_projection_adder_min_num_points");
   params.max_num_points_per_factor = mc::LoadInt(config, "smart_projection_adder_max_num_points_per_factor");
+  params.measurement_spacing = mc::LoadInt(config, "smart_projection_adder_measurement_spacing");
+  params.feature_track_min_separation = mc::LoadDouble(config, "smart_projection_adder_feature_track_min_separation");
   params.rotation_only_fallback = mc::LoadBool(config, "smart_projection_adder_rotation_only_fallback");
   params.splitting = mc::LoadBool(config, "smart_projection_adder_splitting");
   params.scale_noise_with_num_points = mc::LoadBool(config, "smart_projection_adder_scale_noise_with_num_points");
   params.noise_scale = mc::LoadDouble(config, "smart_projection_adder_noise_scale");
+  params.use_allowed_timestamps = mc::LoadBool(config, "smart_projection_adder_use_allowed_timestamps");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise =
@@ -157,25 +192,7 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, Stands
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
   params.sliding_window_duration = mc::LoadDouble(config, "feature_tracker_sliding_window_duration");
-}
-
-void LoadStandstillFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
-  params.sliding_window_duration = mc::LoadDouble(config, "standstill_feature_tracker_sliding_window_duration");
-}
-
-void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
-  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
-  params.min_num_states = mc::LoadInt(config, "min_num_states");
-  params.max_num_states = mc::LoadInt(config, "max_num_states");
-  params.min_num_factors_per_feature = mc::LoadInt(config, "min_num_factors_per_feature");
-}
-
-void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
-  params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
-  params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
-  params.starting_prior_velocity_stddev = mc::LoadDouble(config, "starting_prior_velocity_stddev");
-  params.starting_prior_accel_bias_stddev = mc::LoadDouble(config, "starting_prior_accel_bias_stddev");
-  params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
+  params.smart_projection_adder_measurement_spacing = mc::LoadInt(config, "smart_projection_adder_measurement_spacing");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
@@ -195,30 +212,51 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
   params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
 }
 
+void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateNodeUpdaterParams& params) {
+  params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
+  params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
+  params.starting_prior_velocity_stddev = mc::LoadDouble(config, "starting_prior_velocity_stddev");
+  params.starting_prior_accel_bias_stddev = mc::LoadDouble(config, "starting_prior_accel_bias_stddev");
+  params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.add_priors = mc::LoadBool(config, "add_priors");
+  params.threshold_bias_uncertainty = mc::LoadBool(config, "threshold_bias_uncertainty");
+  params.accel_bias_stddev_threshold = mc::LoadDouble(config, "accel_bias_stddev_threshold");
+  params.gyro_bias_stddev_threshold = mc::LoadDouble(config, "gyro_bias_stddev_threshold");
+  LoadCombinedNavStateGraphValuesParams(config, params.graph_values);
+}
+
+void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateGraphValuesParams& params) {
+  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
+  params.min_num_states = mc::LoadInt(config, "min_num_states");
+  params.max_num_states = mc::LoadInt(config, "max_num_states");
+}
+
+void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params) {
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+}
+
+void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params) {
+  params.length = mc::LoadDouble(config, "handrail_length");
+  params.distance_to_wall = mc::LoadDouble(config, "handrail_wall_min_gap");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
+  LoadCombinedNavStateNodeUpdaterParams(config, params.combined_nav_state_node_updater);
   LoadGraphInitializerParams(config, params.graph_initializer);
   LoadFactorParams(config, params.factor);
+  LoadFeaturePointNodeUpdaterParams(config, params.feature_point_node_updater);
   LoadFeatureTrackerParams(config, params.feature_tracker);
-  LoadStandstillFeatureTrackerParams(config, params.standstill_feature_tracker);
-  LoadGraphValuesParams(config, params.graph_values);
-  LoadNoiseParams(config, params.noise);
-  params.verbose = mc::LoadBool(config, "verbose");
-  params.fatal_failures = mc::LoadBool(config, "fatal_failures");
-  params.print_factor_info = mc::LoadBool(config, "print_factor_info");
-  params.use_ceres_params = mc::LoadBool(config, "use_ceres_params");
-  params.max_iterations = mc::LoadInt(config, "max_iterations");
-  params.marginals_factorization = mc::LoadString(config, "marginals_factorization");
-  params.limit_imu_factor_spacing = mc::LoadBool(config, "limit_imu_factor_spacing");
-  params.max_imu_factor_spacing = mc::LoadDouble(config, "max_imu_factor_spacing");
-  params.add_priors = mc::LoadBool(config, "add_priors");
-  params.add_marginal_factors = mc::LoadBool(config, "add_marginal_factors");
+  LoadHandrailParams(config, params.handrail);
+  go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
     mc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.standstill_min_num_points_per_track = mc::LoadInt(config, "standstill_min_num_points_per_track");
-  params.log_rate = mc::LoadInt(config, "log_rate");
-  params.optical_flow_measurement_spacing = mc::LoadInt(config, "optical_flow_measurement_spacing");
+  params.standstill_feature_track_duration = mc::LoadDouble(config, "standstill_feature_track_duration");
   params.estimate_world_T_dock_using_loc = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
 
@@ -229,5 +267,7 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_optical_flow_buffer_size = mc::LoadInt(config, "max_optical_flow_buffer_size");
   params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
   params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
+  params.max_depth_odometry_buffer_size = mc::LoadInt(config, "max_depth_odometry_buffer_size");
+  params.max_dl_buffer_size = mc::LoadInt(config, "max_dl_buffer_size");
 }
 }  // namespace graph_localizer

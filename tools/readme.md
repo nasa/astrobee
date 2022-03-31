@@ -3,15 +3,19 @@
 This directory contains tools that are useful for debugging,
 but are not run on the robot.
 
+\subpage bag_processing
+
+\subpage calibration
+
 \subpage ekfbag
 
 \subpage ekfvideo
 
 \subpage gncvisualizer
 
-\subpage graphbag
-
 \subpage imubiastester
+
+\subpage localizationanalysis 
 
 \subpage localizationrvizplugins
 
@@ -22,3 +26,7 @@ but are not run on the robot.
 \subpage visualeyez
 
 \subpage dds_profile
+
+\subpage interactive_marker_teleop
+
+\subpage performance_tester

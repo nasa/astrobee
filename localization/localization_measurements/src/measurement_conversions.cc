@@ -16,15 +16,24 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
+#include <msg_conversions/msg_conversions.h>
+
+#include <gtsam/geometry/Point3.h>
+
+#include <cv_bridge/cv_bridge.h>
+
+#include <geometry_msgs/Point32.h>
 
 namespace localization_measurements {
 namespace lc = localization_common;
+namespace mc = msg_conversions;
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks) {
   MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.matched_projections.reserve(visual_landmarks.landmarks.size());
-  const lc::Time timestamp = lc::GetTime(visual_landmarks.header.stamp.sec, visual_landmarks.header.stamp.nsec);
+  const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks.header);
   matched_projections_measurement.timestamp = timestamp;
 
   for (const auto& landmark : visual_landmarks.landmarks) {
@@ -33,9 +42,59 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
     matched_projections_measurement.matched_projections.emplace_back(image_point, map_point, timestamp);
   }
 
-  matched_projections_measurement.global_T_cam = lc::GtPose(visual_landmarks);
+  matched_projections_measurement.global_T_cam = lc::PoseFromMsg(visual_landmarks.pose);
 
   return matched_projections_measurement;
+}
+
+Plane MakeHandrailPlane(const gtsam::Pose3& world_T_handrail, const double distance_to_wall) {
+  // Assumes plane normal is aligned with x-axis of handrail and distance to wall is the distance along the negative x
+  // axis to the wall from the handrail
+  const gtsam::Point3 handrail_t_handrail_plane_point(-1.0 * distance_to_wall, 0.0, 0.0);
+  const gtsam::Point3 handrail_F_handrail_plane_normal(1.0, 0.0, 0.0);
+  const gtsam::Point3 world_t_handrail_plane_point = world_T_handrail * handrail_t_handrail_plane_point;
+  const gtsam::Vector3 world_F_handrail_plane_normal = world_T_handrail.rotation() * handrail_F_handrail_plane_normal;
+  return Plane(world_t_handrail_plane_point, world_F_handrail_plane_normal);
+}
+
+std::pair<gtsam::Point3, gtsam::Point3> MakeHandrailEndpoints(const gtsam::Pose3& world_T_handrail,
+                                                              const double length) {
+  // Assumes handrail endpoints are on z axis and handrail z is the center of the handrail
+  const gtsam::Point3 handrail_t_handrail_endpoint(0, 0, length / 2.0);
+  const gtsam::Point3 world_F_handrail_t_handrail_endpoint = world_T_handrail.rotation() * handrail_t_handrail_endpoint;
+  const gtsam::Point3 world_t_handrail_endpoint_a =
+    world_T_handrail.translation() + world_F_handrail_t_handrail_endpoint;
+  const gtsam::Point3 world_t_handrail_endpoint_b =
+    world_T_handrail.translation() - world_F_handrail_t_handrail_endpoint;
+  return std::make_pair(world_t_handrail_endpoint_a, world_t_handrail_endpoint_b);
+}
+
+HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks,
+                                                        const TimestampedHandrailPose& world_T_handrail) {
+  HandrailPointsMeasurement handrail_points_measurement;
+  handrail_points_measurement.world_T_handrail = world_T_handrail;
+  handrail_points_measurement.world_T_handrail_plane =
+    MakeHandrailPlane(world_T_handrail.pose, world_T_handrail.distance_to_wall);
+  if (world_T_handrail.accurate_z_position) {
+    handrail_points_measurement.world_t_handrail_endpoints =
+      MakeHandrailEndpoints(world_T_handrail.pose, world_T_handrail.length);
+  }
+  const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
+  handrail_points_measurement.timestamp = timestamp;
+
+  for (const auto& sensor_t_line_point : depth_landmarks.sensor_t_line_points) {
+    handrail_points_measurement.sensor_t_line_points.emplace_back(
+      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point32>(sensor_t_line_point));
+  }
+  for (const auto& sensor_t_line_endpoint : depth_landmarks.sensor_t_line_endpoints) {
+    handrail_points_measurement.sensor_t_line_endpoints.emplace_back(
+      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point>(sensor_t_line_endpoint));
+  }
+  for (const auto& sensor_t_plane_point : depth_landmarks.sensor_t_plane_points) {
+    handrail_points_measurement.sensor_t_plane_points.emplace_back(
+      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point32>(sensor_t_plane_point));
+  }
+  return handrail_points_measurement;
 }
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
@@ -52,8 +111,7 @@ MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
 FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_feature_points) {
   FeaturePointsMeasurement feature_points_measurement;
   feature_points_measurement.feature_points.reserve(optical_flow_feature_points.feature_array.size());
-  lc::Time timestamp =
-    lc::GetTime(optical_flow_feature_points.header.stamp.sec, optical_flow_feature_points.header.stamp.nsec);
+  lc::Time timestamp = lc::TimeFromHeader(optical_flow_feature_points.header);
   feature_points_measurement.timestamp = timestamp;
   // TODO(rsoussan): put this somewhere else?
   static int image_id = 0;
@@ -80,5 +138,124 @@ FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
   }
   // Shouldn't get here
   return FanSpeedMode::kOff;
+}
+
+boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg,
+                                                       const std::string& encoding) {
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    cv_image = cv_bridge::toCvCopy(image_msg, encoding);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return boost::none;
+  }
+  const auto timestamp = lc::TimeFromHeader(image_msg->header);
+  return ImageMeasurement(cv_image->image, timestamp);
+}
+
+PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
+  const lc::Time timestamp = lc::TimeFromHeader(point_cloud_msg->header);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
+  return PointCloudMeasurement(timestamp, point_cloud);
+}
+
+boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
+  const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg, const sensor_msgs::ImageConstPtr& image_msg,
+  const Eigen::Affine3d image_A_depth_cam) {
+  const auto timestamp = lc::TimeFromHeader(image_msg->header);
+  // TODO(rsoussan): Unify image and point cloud conversion with other functions
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::MONO8);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return boost::none;
+  }
+  const auto& intensities = cv_image->image;
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr depth_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*depth_cloud_msg, *depth_cloud);
+
+  if (static_cast<int>(intensities.cols) != static_cast<int>(depth_cloud->width) ||
+      static_cast<int>(intensities.rows) != static_cast<int>(depth_cloud->height)) {
+    LogError("MakeDepthImageMeasurement: Image and Point Cloud dimensions do not match.");
+    return boost::none;
+  }
+
+  pcl::PointCloud<pcl::PointXYZI>::Ptr depth_cloud_with_intensities(new pcl::PointCloud<pcl::PointXYZI>());
+  depth_cloud_with_intensities->width = intensities.cols;
+  depth_cloud_with_intensities->height = intensities.rows;
+  depth_cloud_with_intensities->points.resize(depth_cloud_with_intensities->width *
+                                              depth_cloud_with_intensities->height);
+
+  int index = 0;
+  for (int row = 0; row < intensities.rows; ++row) {
+    for (int col = 0; col < intensities.cols; ++col) {
+      const auto& point = depth_cloud->points[index];
+      const Eigen::Vector3d depth_cam_t_point(point.x, point.y, point.z);
+      const Eigen::Vector3d image_t_point = image_A_depth_cam * depth_cam_t_point;
+      depth_cloud_with_intensities->points[index].x = image_t_point.x();
+      depth_cloud_with_intensities->points[index].y = image_t_point.y();
+      depth_cloud_with_intensities->points[index].z = image_t_point.z();
+      depth_cloud_with_intensities->points[index].intensity = static_cast<float>(intensities.at<uint8_t>(row, col));
+      ++index;
+    }
+  }
+  return DepthImageMeasurement(intensities, depth_cloud_with_intensities, timestamp);
+}
+
+lc::PoseWithCovariance MakePoseWithCovariance(const geometry_msgs::PoseWithCovariance& msg) {
+  const Eigen::Isometry3d pose = lc::EigenPose(lc::PoseFromMsg(msg.pose));
+  lc::PoseCovariance covariance;
+  for (int i = 0; i < 36; ++i) {
+    const int row = i / 6;
+    const int col = i - row * 6;
+    covariance(col, row) = msg.covariance[i];
+  }
+  return lc::PoseWithCovariance(pose, covariance);
+}
+
+Odometry MakeOdometry(const ff_msgs::Odometry& msg) {
+  Odometry odometry;
+  odometry.source_time = lc::TimeFromRosTime(msg.source_time);
+  odometry.target_time = lc::TimeFromRosTime(msg.target_time);
+  odometry.sensor_F_source_T_target = MakePoseWithCovariance(msg.sensor_F_source_T_target);
+  odometry.body_F_source_T_target = MakePoseWithCovariance(msg.body_F_source_T_target);
+  return odometry;
+}
+
+DepthCorrespondences MakeDepthCorrespondences(const ff_msgs::DepthOdometry& msg) {
+  std::vector<Eigen::Vector2d> source_image_points;
+  std::vector<Eigen::Vector2d> target_image_points;
+  std::vector<Eigen::Vector3d> source_3d_points;
+  std::vector<Eigen::Vector3d> target_3d_points;
+  for (const auto& correspondence : msg.correspondences) {
+    if (msg.valid_image_points) {
+      const Eigen::Vector2d source_image_point =
+        mc::Vector2dFromMsg<Eigen::Vector2d, ff_msgs::ImagePoint>(correspondence.source_image_point);
+      const Eigen::Vector2d target_image_point =
+        mc::Vector2dFromMsg<Eigen::Vector2d, ff_msgs::ImagePoint>(correspondence.target_image_point);
+      source_image_points.emplace_back(source_image_point);
+      target_image_points.emplace_back(target_image_point);
+    }
+    const Eigen::Vector3d source_3d_point =
+      mc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(correspondence.source_3d_point);
+    const Eigen::Vector3d target_3d_point =
+      mc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(correspondence.target_3d_point);
+    source_3d_points.emplace_back(source_3d_point);
+    target_3d_points.emplace_back(target_3d_point);
+  }
+
+  if (msg.valid_image_points)
+    return DepthCorrespondences(source_image_points, target_image_points, source_3d_points, target_3d_points);
+  return DepthCorrespondences(source_3d_points, target_3d_points);
+}
+
+DepthOdometryMeasurement MakeDepthOdometryMeasurement(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  Odometry odometry = MakeOdometry(depth_odometry_msg.odometry);
+  DepthCorrespondences correspondences = MakeDepthCorrespondences(depth_odometry_msg);
+  const lc::Time timestamp = lc::TimeFromHeader(depth_odometry_msg.header);
+  return DepthOdometryMeasurement(odometry, correspondences, timestamp);
 }
 }  // namespace localization_measurements

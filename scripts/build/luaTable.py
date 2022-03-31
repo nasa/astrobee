@@ -3,7 +3,7 @@
 Output Python data structure as a Lua table constructor.
 """
 
-from cStringIO import StringIO
+from io import StringIO
 
 
 def q(s):
@@ -18,7 +18,7 @@ def dumpStream(out, d, lvl=0):
     def w(s):
         out.write(s)
 
-    if isinstance(d, basestring):
+    if isinstance(d, str):
         w(q(d))
 
     elif isinstance(d, (list, tuple)):
@@ -40,7 +40,7 @@ def dumpStream(out, d, lvl=0):
         if d:
             w('{\n')
             n = len(d)
-            keys = d.keys()
+            keys = list(d.keys())
             keys.sort()
             for i, k in enumerate(keys):
                 v = d[k]

@@ -208,14 +208,14 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   double pose_prior_error = 0;
   double velocity_prior_error = 0;
   double bias_prior_error = 0;
-  for (const auto factor : graph_localizer.factor_graph()) {
-    const double error = factor->error(graph_localizer.graph_values().values());
+  for (const auto factor : graph_localizer.graph_factors()) {
+    const double error = factor->error(graph_localizer.values());
     total_error += error;
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
       // Using serialized error instead of error due to bug in gtsam serialization.
       // TODO(rsoussan): Remove this when gtsam bug is fixed
-      const double serialized_error = smart_factor->serialized_error(graph_localizer.graph_values().values());
+      const double serialized_error = smart_factor->serialized_error(graph_localizer.values());
       total_error -= error;
       total_error += serialized_error;
       smart_factor_error += serialized_error;
@@ -268,7 +268,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
       ++bias_prior_factors;
     }
   }
-  const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
+  const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
   if (latest_combined_nav_state) {
     addVectorToLabel(latest_combined_nav_state->velocity(), "Latest Vel", *latest_velocity_label_, true);
 

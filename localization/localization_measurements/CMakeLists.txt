@@ -15,17 +15,104 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(localization_measurements)
 
-catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}  localization_common
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS 
-  DEPENDS gtsam ff_msgs 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  ff_msgs
+  config_reader
+  localization_common
+  msg_conversions
+  point_cloud_common
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} gtsam localization_common 
-  INC ${catkin_INCLUDE_DIRS} 
-  DEPS ff_msgs
+find_package(PCL REQUIRED COMPONENTS common features filters octree search)
+
+find_package(pcl_conversions REQUIRED)
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
+
+catkin_package(
+  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${pcl_conversions_INCLUDE_DIRS}  
+  INCLUDE_DIRS include ${PCL_INCLUDE_DIRS} 
+  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions point_cloud_common 
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  src/depth_image.cc
+  src/measurement_conversions.cc
+)
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_plane
+    test/test_plane.test
+    test/test_plane.cc
+  )
+  target_link_libraries(test_plane
+    localization_measurements gtsam
+  )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_depth_image
+    test/test_depth_image.test
+    test/test_depth_image.cc
+  )
+  target_link_libraries(test_depth_image
+    localization_measurements gtsam
+  )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_measurement_conversions
+    test/test_measurement_conversions.test
+    test/test_measurement_conversions.cc
+  )
+  target_link_libraries(test_measurement_conversions
+    localization_measurements gtsam
+  )
+
+endif()
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )

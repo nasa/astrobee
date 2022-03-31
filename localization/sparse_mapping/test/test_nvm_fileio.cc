@@ -16,8 +16,8 @@
  * under the License.
  */
 
+#include <ff_common/eigen_vectors.h>
 #include <sparse_mapping/sparse_mapping.h>
-#include <sparse_mapping/eigen_vectors.h>
 
 #include <Eigen/Geometry>
 #include <gtest/gtest.h>
@@ -153,4 +153,10 @@ TEST(nvm_fileio, read_write_loop_features) {
     EXPECT_EQ(descriptors1.at<uchar>(0, i), descriptors2.at<uchar>(0, i));
     EXPECT_EQ(descriptors1.at<uchar>(1, i), descriptors2.at<uchar>(1, i));
   }
+}
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

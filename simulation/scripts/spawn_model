@@ -18,22 +18,25 @@
 # Author: John Hsu, Dave Coleman
 #
 
-import rospy, sys, os, time
-import string
-import warnings
+import os
 import re
+import string
+import sys
+import time
+import warnings
 
-from gazebo_ros import gazebo_interface
-
+import rospy
+import tf.transformations as tft
 from gazebo_msgs.msg import *
 from gazebo_msgs.srv import *
-from std_srvs.srv import Empty
+from gazebo_ros import gazebo_interface
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Wrench
-import tf.transformations as tft
+from std_srvs.srv import Empty
+
 
 def excepthook(*args):
-    print >> STDERR, 'caught'
-    print >> STDERR, args
+    print('caught', STDERR)
+    print(args, STDERR)
 
 sys.excepthook = excepthook
 
@@ -46,7 +49,7 @@ model_database_template = """<sdf version="1.4">
 </sdf>"""
 
 def usage():
-    print '''Commands:
+    print('''Commands:
     -[urdf|sdf|trimesh|gazebo] - specify incoming xml is urdf, sdf or trimesh format. gazebo arg is deprecated in ROS Hydro
     -[file|param|database] [<file_name>|<param_name>|<model_name>] - source of the model xml or the trimesh file
     -model <model_name> - name of the model to be spawned.
@@ -67,7 +70,7 @@ def usage():
     -joint <joint_name joint_position> - optional: initialize the specified joint at the specified value
     -package_to_model - optional: convert urdf <mesh filename="package://..." to <mesh filename="model://..."
     -b - optional: bond to gazebo and delete the model when this program is interrupted
-    '''
+    ''')
     sys.exit(1)
 
 class SpawnModel():
@@ -275,7 +278,7 @@ class SpawnModel():
           try:
             success = gazebo_interface.set_model_configuration_client(self.model_name, self.param_name,
                                                                       self.joint_names, self.joint_positions, self.gazebo_namespace)
-          except rospy.ServiceException, e:
+          except rospy.ServiceException as e:
             rospy.logerr("Set model configuration service call failed: %s", e)
 
         # unpause physics if user requested
@@ -284,7 +287,7 @@ class SpawnModel():
           try:
             unpause_physics = rospy.ServiceProxy('%s/unpause_physics'%(self.gazebo_namespace), Empty)
             unpause_physics()
-          except rospy.ServiceException, e:
+          except rospy.ServiceException as e:
             rospy.logerr("Unpause physics service call failed: %s", e)
 
         return
@@ -294,12 +297,12 @@ class SpawnModel():
         try:
             delete_model = rospy.ServiceProxy('%s/delete_model'%(self.gazebo_namespace), DeleteModel)
             delete_model(model_name=self.model_name)
-        except rospy.ServiceException, e:
+        except rospy.ServiceException as e:
             rospy.logerr("Delete model service call failed: %s", e)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print usage()
+        print(usage())
     else:
         print("SpawnModel script started") # make this a print incase roscore has not been started
         sm = SpawnModel()

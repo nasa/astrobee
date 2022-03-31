@@ -1,7 +1,17 @@
-\page imubiastester Imu Bias Tester 
+\page imubiastester IMU Bias Tester
 
 ## ImuBiasTester
-The imu bias tester provides a way to evaluate the accuracy of imu biases without having bias groundtruth.  It works by relying on some sort of localization groundtruth instead.  The bias tester integrates imu measurements but updates biases as localization estimates are provided.  Thus, if the biases are perfectly estimated by the localizer, the integrated imu measurements should perfectly match localization groundtruth. The nodelet subscribes to the imu and localization state and published a imu bias pose. 
+The ImuBiasTester integrates IMU measurements using the latest estimated IMU biases from graph_state messages.
+The integrated measurements are published as pose messages.
+These poses can then be plotted against localization groundtruth to measure the accuracy of the estimated IMU biases.
+
+# Usage
+Launch the nodelet online or while playing a recored bagfile using
+`roslaunch imu_bias_tester imu_bias_tester.launch`
+to generated IMU bias poses. Ensure that localization estimates and IMU messages are
+available as these are required for IMU bias pose estimation. 
+Record the results to a bagfile and plot using the `plot_results.py` script in 
+localization_analysis.  See the localization_analysis readme for more details on plotting results.
 
 # Inputs
 * `/hw/imu`

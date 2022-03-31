@@ -66,9 +66,8 @@
   <group ns="/$(arg ns)">
 
     <!-- Set the TF prefix, create a robot description and joint state publisher -->
-    <param name="tf_prefix" value="$(arg ns)" />
     <param name="robot_description"
-           command='$(find xacro)/xacro --inorder $(find description)/urdf/model.urdf.xacro world:="$(arg world)" top_aft:="$(arg top_aft)" bot_aft:="$(arg bot_aft)" bot_front:="$(arg bot_front)" ns:="_$(arg ns)"' />
+           command='$(find xacro)/xacro --inorder $(find description)/urdf/model.urdf.xacro world:="$(arg world)" top_aft:="$(arg top_aft)" bot_aft:="$(arg bot_aft)" bot_front:="$(arg bot_front)" ns:="_$(arg ns)" prefix:="$(arg ns)/"'/>
     <node pkg="robot_state_publisher" type="robot_state_publisher"
           name="astrobee_state_publisher" />
 
@@ -134,9 +133,9 @@
            name="ROS_HOSTNAME" value="$(arg mlp)" />
 
       <!-- Update the environment variables relating to absolute paths -->
-      <env unless="$(eval arg('llp')=='local')"
+      <env unless="$(eval arg('mlp')=='local')"
            name="ASTROBEE_ROBOT" value="$(arg robot)" />
-      <env unless="$(eval arg('llp')=='local')"
+      <env unless="$(eval arg('mlp')=='local')"
            name="ASTROBEE_WORLD" value="$(arg world)" />
       <env unless="$(eval arg('mlp')=='local')"
            name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />

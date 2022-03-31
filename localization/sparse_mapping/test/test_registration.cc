@@ -51,7 +51,7 @@ class SparseMapTest : public ::testing::Test {
 
     // Write local copies of the images. Why?
     for (size_t cid = 0; cid < img_files.size(); cid++) {
-      cv::Mat image = cv::imread(img_files[cid], CV_LOAD_IMAGE_GRAYSCALE);
+      cv::Mat image = cv::imread(img_files[cid], cv::IMREAD_GRAYSCALE);
       cv::imwrite(local_imgs[cid], image);
     }
 
@@ -145,4 +145,10 @@ TEST_F(SparseMapTest, Registration) {
   sparse_mapping::RegistrationOrVerification(files, verification, surf_map);
   double scale = pow(surf_map->GetWorldTransform().linear().determinant(), 1.0/3.0);
   EXPECT_GT(scale, 0);  // just a sanity check
+}
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

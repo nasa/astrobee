@@ -27,12 +27,13 @@
 namespace imu_augmentor {
 namespace lc = localization_common;
 
-ImuAugmentorNodelet::ImuAugmentorNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true) {
+ImuAugmentorNodelet::ImuAugmentorNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true) {
   imu_nh_.setCallbackQueue(&imu_queue_);
   loc_nh_.setCallbackQueue(&loc_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
+  last_time_ = ros::Time::now();
+  last_heartbeat_time_ = ros::Time::now();
 }
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
@@ -76,7 +77,10 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorNodelet::PublishLatestImuAugmente
     LogDebugEveryN(100, "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.");
     return boost::none;
   }
+  // Avoid sending repeat messages
+  if (last_state_msg_time_ && (latest_imu_augmented_loc_msg->header.stamp == *last_state_msg_time_)) return boost::none;
   state_pub_.publish(*latest_imu_augmented_loc_msg);
+  last_state_msg_time_ = latest_imu_augmented_loc_msg->header.stamp;
   return latest_imu_augmented_loc_msg;
 }
 
@@ -97,6 +101,11 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
   // Publish TF
   geometry_msgs::TransformStamped transform_msg;
   transform_msg.header = loc_msg.header;
+  transform_msg.header.stamp = ros::Time::now();
+  // If the rate is higher than the sim time, prevent repeated timestamps
+  if (transform_msg.header.stamp == last_time_) return;
+  last_time_ = transform_msg.header.stamp;
+
   transform_msg.child_frame_id = platform_name_ + "body";
   transform_msg.transform.translation.x = loc_msg.pose.position.x;
   transform_msg.transform.translation.y = loc_msg.pose.position.y;
@@ -107,7 +116,9 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
 
 void ImuAugmentorNodelet::PublishHeartbeat() {
   heartbeat_.header.stamp = ros::Time::now();
+  if ((heartbeat_.header.stamp - last_heartbeat_time_).toSec() < 1.0) return;
   heartbeat_pub_.publish(heartbeat_);
+  last_heartbeat_time_ = heartbeat_.header.stamp;
 }
 
 void ImuAugmentorNodelet::Run() {

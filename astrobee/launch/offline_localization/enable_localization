@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Run the command to enable localization. If it fails, try again after a short time.
+
+while [ 1 ]; do 
+  rosservice call --wait /loc/ml/enable true
+  ans=$?
+  if [ "$ans" -eq 0 ]; then 
+    break 
+  fi 
+  sleep 0.25 
+done
+
+
+

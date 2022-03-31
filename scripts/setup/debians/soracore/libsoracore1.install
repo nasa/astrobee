@@ -1,0 +1,4 @@
+usr/lib/lib*.so
+usr/bin/*
+usr/etc/*
+usr/idl/*

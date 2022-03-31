@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+files=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
+
+# If files is empty exit success
+if [ -z "${files}" ]; then
+  echo "=================================================="
+  echo "  No Python files changed, no checks needed."
+  exit 0
+fi
+
+failed_lint=false
+
+command -v black > /dev/null 2>&1
+ans=$?
+if [ "$ans" -ne "0" ]; then
+    echo "'black' was not found. To install, check https://github.com/psf/black."
+    echo "Note that black requires Python 3.6.2+ to run."
+    exit 0
+fi
+
+command -v isort > /dev/null 2>&1
+ans=$?
+if [ "$ans" -ne "0" ]; then
+    echo "'isort' was not found. To install, check https://github.com/PyCQA/isort."
+    exit 0
+fi
+
+echo "=================================================="
+echo "  Analysing python code style with 'black'."
+# This check the files but they will not be commited
+if `black . --include ${files} --check --quiet`; then
+    echo "Linter checks using 'black' passed."
+else
+    echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
+    black . --include ${files}
+    failed_lint=true
+fi
+
+echo "=================================================="
+echo "  Analysing python code style with 'isort'."
+if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
+    echo "Linter checks using 'isort' passed."
+else
+    echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
+  isort ${files} --extend-skip cmake --profile black >/dev/null
+  failed_lint=true
+fi
+
+# Cancel commit if linter failed
+# The user should add manually the corrected files
+if ${failed_lint}; then
+  exit 1
+fi

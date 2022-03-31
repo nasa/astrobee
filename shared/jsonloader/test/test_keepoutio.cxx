@@ -27,7 +27,7 @@
 #include <string>
 
 // TEST_DIR is defined by cmake as the test directory of our module
-const std::string kDataDir = std::string(TEST_DIR) + "/data/";
+const std::string kDataDir = std::string(std::getenv("DATA_DIR"));
 
 TEST(KeepoutIO, LoadGoodKeepout) {
   jsonloader::Keepout k(true);  // opposite of what it should be
@@ -62,4 +62,10 @@ TEST(KeepoutIO, LoadDir) {
 
   EXPECT_EQ(safeZone.GetBoxes().size(), 1);
   EXPECT_EQ(dangerZone.GetBoxes().size(), 2);
+}
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

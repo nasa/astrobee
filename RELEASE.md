@@ -1,5 +1,54 @@
 # Releases
 
+## Release 0.16.2
+
+  * Performance improvements
+  * Small bug fixes
+
+## Release 0.16.1
+
+  * depth odometry
+  * better performance evaluation
+  * multiple other fixes and improvements
+
+## Release 0.16.0
+
+  * project compiles with catkin
+  * mapper performance improvement
+  * imu_augmentor performance improvement
+  * calibration improvements
+  * multiple other fixes
+
+## Release 0.15.2
+
+  * added python linters black and isort in the CI pipeline
+  * added perching arm reconnect service
+  * added nav and dock cam bayer image output option
+  * added code to report time for llp, mlp, hlp
+  * added end of motion check 
+
+## Release 0.15.1
+
+  * Separated config files for DDS communications to avoid conflict
+  * Increased plan name length
+  * Pico proxy was added to the MLP launch file
+  * System monitor now attempts to reload nodelets that die on startup
+  * Other fixes/software and documentation improvements
+
+## Release 0.15.0
+
+  * Perching functional
+  * Ubuntu 20 compatibility
+  * Added astrobee to astrobee coms
+  * Various other fixes/software improvements
+
+## Release 0.14.3
+
+  * Rotation fallback fix
+  * Unified install instructions and Ubuntu 18 nasa install
+  * Various other minor fixes
+  * Note, Perching does not work in this release, use another version for this.
+
 ## Release 0.14.1
 
   * Dynamic IMU Filtering

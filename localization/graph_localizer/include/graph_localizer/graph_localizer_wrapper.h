@@ -18,6 +18,8 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 
+#include <ff_msgs/DepthOdometry.h>
+#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
@@ -26,11 +28,13 @@
 #include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
-#include <graph_localizer/graph_stats.h>
+#include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/sanity_checker.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
+#include <localization_measurements/timestamped_handrail_pose.h>
+#include <localization_measurements/timestamped_pose.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/Imu.h>
@@ -59,6 +63,8 @@ class GraphLocalizerWrapper {
 
   boost::optional<geometry_msgs::PoseStamped> LatestARTagPoseMsg() const;
 
+  boost::optional<geometry_msgs::PoseStamped> LatestHandrailPoseMsg() const;
+
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
   boost::optional<ff_msgs::GraphState> LatestLocalizationStateMsg();
@@ -75,21 +81,33 @@ class GraphLocalizerWrapper {
 
   void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
+  void DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg);
+
+  void DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
+
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
-  boost::optional<const FeatureTrackMap&> feature_tracks() const;
+  boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
+
+  boost::optional<const GraphLocalizer&> graph_localizer() const;
 
   void MarkWorldTDockForResettingIfNecessary();
 
+  void MarkWorldTHandrailForResetting();
+
   void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
+  void ResetWorldTHandrailIfNecessary(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
 
   gtsam::Pose3 estimated_world_T_dock() const;
 
+  boost::optional<localization_measurements::TimestampedHandrailPose> estimated_world_T_handrail() const;
+
   void SaveLocalizationGraphDotFile() const;
 
-  boost::optional<const GraphStats&> graph_stats() const;
+  boost::optional<const GraphLocalizerStats&> graph_localizer_stats() const;
 
   bool publish_localization_graph() const;
 
@@ -109,13 +127,18 @@ class GraphLocalizerWrapper {
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphLocalizerInitializer graph_localizer_initializer_;
   FeatureCounts feature_counts_;
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> ar_tag_pose_;
+  // world_T_body poses using sensor measurements
+  // TODO(rsoussan): Rename these? world_T_body_sensor_name?
+  boost::optional<localization_measurements::TimestampedPose> sparse_mapping_pose_;
+  boost::optional<localization_measurements::TimestampedPose> ar_tag_pose_;
+  boost::optional<localization_measurements::TimestampedHandrailPose> handrail_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;
   gtsam::Pose3 estimated_world_T_dock_;
+  boost::optional<localization_measurements::TimestampedHandrailPose> estimated_world_T_handrail_;
   bool reset_world_T_dock_;
+  bool reset_world_T_handrail_;
   bool estimate_world_T_dock_using_loc_;
   int ar_min_num_landmarks_;
   int sparse_mapping_min_num_landmarks_;
