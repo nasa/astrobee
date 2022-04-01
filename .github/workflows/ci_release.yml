@@ -2,7 +2,7 @@ name: Build, test and push packages CI
 
 on:
   push:
-    branches: [ 'release' ]
+    branches: [ 'master' ]
 
 jobs:
 
