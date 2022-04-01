@@ -75,7 +75,7 @@ debug_mode=0
 target="install"
 
 # short help
-usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
+usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>] [-n <profile name>]\
  [-p install_path] [-w workspace_path] [-B build_type] [-c <force clean cache>]\
  [-C <don't clean cache>] [-d <with DDS>] [-D <without DDS>]\
  [-r <with QP planner>] [-R <without QP planner>]\
@@ -87,7 +87,7 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
 #[-t make_target]
 
 # options to parse
-optstring="hlap:w:B:cCdDrRfFkKvVtTg"
+optstring="hlan:p:w:B:cCdDrRfFkKvVtTg"
 
 # Print the script usage
 print_usage()
@@ -102,6 +102,7 @@ print_help()
     echo $usage_string
     echo -e "\t-l Generate a Native Linux build"
     echo -e "\t-a Generate a cross-compiled ARM build"
+    echo -e "\t-n set profile name"
     echo -e "\t-p install_path specify the installation directory"
     echo -e "\t   default=${HOME}/cmake_install_platform"
     echo -e "\t-w workspace_path specify the workspace directory"
@@ -153,7 +154,9 @@ parse_args()
          ;;
         "a") armhf_build=1
          ;;
-        "p") install_path=$OPTARG
+        "n") profile=$OPTARG
+         ;;
+        "p") install_path=$OPTARG/
          ;;
         "w") workspace_path=$OPTARG/
          ;;
@@ -325,8 +328,8 @@ if [ $native_build == 1 ] ; then
         }
     fi
 
-    catkin profile add native
-    catkin profile set native
+    catkin profile add ${profile:-native}
+    catkin profile set ${profile:-native}
     catkin config --no-extend \
         --build-space ${workspace_path}build \
         --install-space ${install_path:-${workspace_path}install} \
@@ -345,8 +348,8 @@ if [ $armhf_build == 1 ] ; then
     use_ctc=" -DUSE_CTC=on"
     enable_gazebo=""
     build_loc_rviz_plugins=""
-    catkin profile add armhf
-    catkin profile set armhf
+    catkin profile add ${profile:-armhf}
+    catkin profile set ${profile:-armhf}
     catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
         --build-space ${workspace_path:-armhf/}build \
         --install-space ${install_path:-${workspace_path:-armhf/}}opt/astrobee \
