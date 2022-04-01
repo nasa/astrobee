@@ -44,14 +44,13 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, RampedPoin
   }
   const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
-               target_T_source.inverse().matrix());
+  EXPECT_MATRIX_NEAR(pose_with_covariance->pose_with_covariance.pose, target_T_source.inverse(), 1e-2);
   const auto& correspondences = pose_with_covariance->depth_correspondences;
   for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
-    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
-                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
-    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
-                 correspondences.target_3d_points[i].matrix());
+    EXPECT_MATRIX_NEAR(correspondences.source_image_points[i],
+                       (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)), 1e-2);
+    EXPECT_MATRIX_NEAR(target_T_source * correspondences.source_3d_points[i], correspondences.target_3d_points[i],
+                       1e-2);
   }
 }
 
@@ -76,14 +75,13 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, PointToPla
   }
   const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
-               target_T_source.inverse().matrix());
+  EXPECT_MATRIX_NEAR(pose_with_covariance->pose_with_covariance.pose, target_T_source.inverse(), 1e-2);
   const auto& correspondences = pose_with_covariance->depth_correspondences;
   for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
-    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
-                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
-    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
-                 correspondences.target_3d_points[i].matrix());
+    EXPECT_MATRIX_NEAR(correspondences.source_image_points[i],
+                       (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)), 1e-2);
+    EXPECT_MATRIX_NEAR(target_T_source * correspondences.source_3d_points[i], correspondences.target_3d_points[i],
+                       1e-2);
   }
 }
 
@@ -108,14 +106,13 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, SymmetricP
   }
   const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
-               target_T_source.inverse().matrix());
+  EXPECT_MATRIX_NEAR(pose_with_covariance->pose_with_covariance.pose, target_T_source.inverse(), 1e-2);
   const auto& correspondences = pose_with_covariance->depth_correspondences;
   for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
-    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
-                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
-    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
-                 correspondences.target_3d_points[i].matrix());
+    EXPECT_MATRIX_NEAR(correspondences.source_image_points[i],
+                       (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)), 1e-2);
+    EXPECT_MATRIX_NEAR(target_T_source * correspondences.source_3d_points[i], correspondences.target_3d_points[i],
+                       1e-2);
   }
 }
 
@@ -137,14 +134,13 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, UmeyamaRam
   }
   const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
-               target_T_source.inverse().matrix());
+  EXPECT_MATRIX_NEAR(pose_with_covariance->pose_with_covariance.pose, target_T_source.inverse(), 1e-2);
   const auto& correspondences = pose_with_covariance->depth_correspondences;
   for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
-    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
-                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
-    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
-                 correspondences.target_3d_points[i].matrix());
+    EXPECT_MATRIX_NEAR(correspondences.source_image_points[i],
+                       (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)), 1e-2);
+    EXPECT_MATRIX_NEAR(target_T_source * correspondences.source_3d_points[i], correspondences.target_3d_points[i],
+                       1e-2);
   }
 }
 
@@ -166,14 +162,13 @@ TEST(ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryTester, UmeyamaIni
   }
   const auto pose_with_covariance = image_features_depth_odometry.DepthImageCallback(target_depth_image_measurement);
   ASSERT_TRUE(pose_with_covariance != boost::none);
-  EXPECT_PRED2(lc::MatrixEquality<2>, pose_with_covariance->pose_with_covariance.pose.matrix(),
-               target_T_source.inverse().matrix());
+  EXPECT_MATRIX_NEAR(pose_with_covariance->pose_with_covariance.pose, target_T_source.inverse(), 1e-2);
   const auto& correspondences = pose_with_covariance->depth_correspondences;
   for (int i = 0; i < correspondences.source_image_points.size(); ++i) {
-    EXPECT_PRED2(lc::MatrixEquality<2>, correspondences.source_image_points[i].matrix(),
-                 (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)).matrix());
-    EXPECT_PRED2(lc::MatrixEquality<2>, target_T_source * correspondences.source_3d_points[i].matrix(),
-                 correspondences.target_3d_points[i].matrix());
+    EXPECT_MATRIX_NEAR(correspondences.source_image_points[i],
+                       (correspondences.target_image_points[i] - Eigen::Vector2d(offset.x, offset.y)), 1e-2);
+    EXPECT_MATRIX_NEAR(target_T_source * correspondences.source_3d_points[i], correspondences.target_3d_points[i],
+                       1e-2);
   }
 }
 

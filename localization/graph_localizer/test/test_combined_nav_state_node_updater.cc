@@ -64,7 +64,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantVelocity) {
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
   }
 }
 
@@ -100,7 +100,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAcceleration) {
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
   }
 }
 
@@ -143,7 +143,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationNonZeroBias) {
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
   }
 }
 
@@ -190,7 +190,7 @@ TEST(CombinedNavStateNodeUpdaterTester, ConstantAccelerationConstantAngularVeloc
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
   }
 }
 
@@ -235,7 +235,7 @@ TEST(CombinedNavStateNodeUpdaterTester, SlidingWindow) {
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), current_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
     // Check num states, ensure window is sliding properly
     // i + 2 since graph is initialized with a starting state and i = 0 also adds a state
     const int total_states_added = i + 2;
@@ -339,7 +339,7 @@ TEST(CombinedNavStateNodeUpdaterTester, SplitExistingFactor) {
     const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), latest_time, 1e-6);
-    EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), latest_pose.matrix()));
+    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), latest_pose, 1e-5);
   }
   // Add measurement between initial and latest times
   {
@@ -377,7 +377,7 @@ TEST(CombinedNavStateNodeUpdaterTester, SplitExistingFactor) {
       const auto middle_combined_nav_state = graph_localizer.GetCombinedNavState(middle_time);
       ASSERT_TRUE(middle_combined_nav_state != boost::none);
       EXPECT_NEAR(middle_combined_nav_state->timestamp(), middle_time, 1e-6);
-      EXPECT_TRUE(lc::MatrixEquality<5>(middle_combined_nav_state->pose().matrix(), middle_pose.matrix()));
+      EXPECT_MATRIX_NEAR(middle_combined_nav_state->pose(), middle_pose, 1e-5);
     }
     // Check latest imu factor
     {
@@ -393,7 +393,7 @@ TEST(CombinedNavStateNodeUpdaterTester, SplitExistingFactor) {
       const auto latest_combined_nav_state = graph_localizer.GetCombinedNavState(latest_time);
       ASSERT_TRUE(latest_combined_nav_state != boost::none);
       EXPECT_NEAR(latest_combined_nav_state->timestamp(), latest_time, 1e-6);
-      EXPECT_TRUE(lc::MatrixEquality<5>(latest_combined_nav_state->pose().matrix(), latest_pose.matrix()));
+      EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), latest_pose, 1e-5);
     }
   }
 }

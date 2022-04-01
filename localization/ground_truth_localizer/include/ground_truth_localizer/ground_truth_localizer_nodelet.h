@@ -60,6 +60,7 @@ class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   void PublishLocState(const localization_common::Time& timestamp);
 
   std::string platform_name_;
+  ros::Time last_time_;
   boost::optional<Eigen::Isometry3d> pose_;
   boost::optional<Twist> twist_;
   int input_mode_ = ff_msgs::SetEkfInputRequest::MODE_TRUTH;

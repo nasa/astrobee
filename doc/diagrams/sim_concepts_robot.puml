@@ -27,13 +27,12 @@ folder "Astrobee Robot" {
 
   node LLP <<CPU>> COLOR_CPU {
     'frame GNC {
-      gnc_node(EKF)
       gnc_node(CTL)
       gnc_node(FAM)
     '}
     drv_node(epson_imu)
     drv_node(pmc_actuator)
-    EKF -> CTL
+    LOC -> CTL
     CTL -> FAM
     message(PmcCommand, ff_hw_msgs::PmcCommand, /hw/pmc/command)
     message(ImuTelem, sensor_msgs::Imu, /hw/imu)
@@ -52,12 +51,12 @@ folder "Astrobee Robot" {
   NavImage --> image_sampler
 
   sparse_mapping --> Features
-  Features ---> EKF
+  Features ---> LOC
 
   image_sampler --> ImgSample
 
   epson_imu --> ImuTelem
-  ImuTelem -> EKF
+  ImuTelem -> LOC
 
   FAM -> PmcCommand
   PmcCommand --> pmc_actuator

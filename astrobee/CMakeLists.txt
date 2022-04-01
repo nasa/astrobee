@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(astrobee)
 
-set(ASTROBEE_VERSION 0.16.2)
+set(ASTROBEE_VERSION 0.16.3)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)

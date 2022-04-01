@@ -42,7 +42,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointNoisyInitialEs
     const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
       source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -61,7 +61,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointNoisyInitialEs
     const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
       source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -81,7 +81,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPlaneNoisyInitialEs
       aligner.ComputeRelativeTransform(source_T_points_and_normals.first, target_T_points_and_normals.first,
                                        boost::none, target_T_points_and_normals.second, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -102,7 +102,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPlaneNoisyInitialEs
       aligner.ComputeRelativeTransform(source_T_points_and_normals.first, target_T_points_and_normals.first,
                                        boost::none, target_T_points_and_normals.second, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -122,7 +122,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, SymmetricPointToPlaneNoisy
       source_T_points_and_normals.first, target_T_points_and_normals.first, source_T_points_and_normals.second,
       target_T_points_and_normals.second, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -143,7 +143,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, SymmetricPointToPlaneNoisy
       source_T_points_and_normals.first, target_T_points_and_normals.first, source_T_points_and_normals.second,
       target_T_points_and_normals.second, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -162,7 +162,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, UmeyamaNoisyInitialEstimat
     const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
       source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -182,7 +182,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, UmeyamaNoisyInitialEstimat
     const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
       source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -201,7 +201,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointInitialUmeyama
     const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
       source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 
@@ -221,7 +221,7 @@ TEST(PointCloudWithKnownCorrespondencesAlignerTester, PointToPointInitialUmeyama
     const auto estimated_target_T_source = aligner.ComputeRelativeTransform(
       source_T_points_and_normals.first, target_T_points_and_normals.first, noisy_target_T_source);
     ASSERT_TRUE(estimated_target_T_source != boost::none);
-    EXPECT_PRED2(lc::MatrixEquality<4>, estimated_target_T_source->pose.matrix(), target_T_source.matrix());
+    EXPECT_MATRIX_NEAR(estimated_target_T_source->pose, target_T_source, 1e-4);
   }
 }
 

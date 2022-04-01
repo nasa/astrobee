@@ -1,4 +1,4 @@
-\page astrobee Astrobee
+\page astrobee General Considerations
 
 # Folder description
 

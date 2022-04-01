@@ -28,7 +28,7 @@
 #include <optimization_common/residuals.h>
 #include <optimization_common/se3_local_parameterization.h>
 #include <optimization_common/utilities.h>
-#include <vision_common/camera_utilities.h>
+#include <vision_common/pose_estimation.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>

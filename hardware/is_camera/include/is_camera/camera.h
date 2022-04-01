@@ -74,9 +74,11 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void PublishLoop();
-  bool EnableService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);  // NOLINT
+  void EnableBayer();
+  bool EnableBayerService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);  // NOLINT
   size_t getNumBayerSubscribers();
 
+  ros::NodeHandle *nh_;
   sensor_msgs::ImagePtr img_msg_buffer_[kImageMsgBuffer];
   sensor_msgs::ImagePtr bayer_img_msg_buffer_[kBayerImageMsgBufferLength];
   size_t img_msg_buffer_idx_;
@@ -85,6 +87,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   std::atomic<bool> thread_running_;
   ros::Publisher pub_;
   ros::Publisher bayer_pub_;
+  ros::ServiceServer enable_bayer_srv_;
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;

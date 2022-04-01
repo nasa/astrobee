@@ -26,8 +26,8 @@ namespace lm = localization_measurements;
 namespace go = graph_optimizer;
 
 localization_measurements::Plane RandomPlane() {
-  gtsam::Point3 point = lc::RandomVector();
-  gtsam::Vector3 normal = lc::RandomVector().normalized();
+  gtsam::Point3 point = lc::RandomPoint3d();
+  gtsam::Vector3 normal = lc::RandomVector3d().normalized();
   return localization_measurements::Plane(point, normal);
 }
 
