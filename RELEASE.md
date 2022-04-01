@@ -1,5 +1,12 @@
 # Releases
 
+## Release 0.16.3
+
+  * Added bag tools
+  * Disabled mapper (can be enabled through service)
+  * Add debayer live
+  * Multiple other fixes and improvements
+
 ## Release 0.16.2
 
   * Performance improvements
