@@ -102,7 +102,7 @@ of turning on and off options. To see which options are supported, simply run
     source ~/.bashrc
     popd
 
-In you run a Zsh session, then
+If you run a Zsh session, then
 
     pushd $ASTROBEE_WS
     ./src/scripts/configure.sh -l -F -D

@@ -24,6 +24,7 @@
 #include <calibration/utilities.h>
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
+#include <localization_common/test_utilities.h>
 #include <vision_common/test_utilities.h>
 
 #include <vector>
@@ -50,7 +51,7 @@ std::vector<MatchSet> RandomTargetMatchSets(const int num_match_sets, const int 
   match_sets.reserve(num_match_sets);
   for (int i = 0; i < num_match_sets; ++i) {
     const auto correspondences = vision_common::RegistrationCorrespondences<DISTORTER>(
-      vision_common::RandomFrontFacingPose(), intrinsics,
+      localization_common::RandomFrontFacingPose(), intrinsics,
       vision_common::TargetPoints(num_target_points_per_row_and_col, num_target_points_per_row_and_col), distortion);
     // Set inliers using correspondence point size since correspondence points with negative z are not
     // included in RegistrationCorrespondences

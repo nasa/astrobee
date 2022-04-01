@@ -21,8 +21,8 @@
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/image_correspondences.h>
 #include <optimization_common/optimization_params.h>
-#include <vision_common/camera_utilities.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher_params.h>
+#include <vision_common/pose_estimation.h>
 #include <vision_common/ransac_pnp_params.h>
 #include <vision_common/reprojection_pose_estimate_params.h>
 
@@ -31,6 +31,10 @@
 #include <vector>
 
 namespace vision_common {
+void SetFocalLengths(const Eigen::Vector2d& focal_lengths, Eigen::Matrix3d& intrinsics);
+
+void SetPrincipalPoints(const Eigen::Vector2d& principal_points, Eigen::Matrix3d& intrinsics);
+
 LKOpticalFlowFeatureDetectorAndMatcherParams DefaultLKOpticalFlowFeatureDetectorAndMatcherParams();
 
 cv::Mat MarkerImage(const int row_spacing, const int col_spacing, int& num_markers_added,
@@ -51,16 +55,6 @@ Eigen::VectorXd RandomRadDistortion();
 
 Eigen::VectorXd RandomRadTanDistortion();
 
-// Samples in cylindrical coordinates for pose translation to keep pose in view frustrum.
-// Samples z using scaled rho value to prevent large z vals with small rho values
-// that may move the pose out of the view frustrum.
-Eigen::Isometry3d RandomFrontFacingPose(const double rho_min, const double rho_max, const double phi_min,
-                                        const double phi_max, const double z_rho_scale, const double yaw_min,
-                                        const double yaw_max, const double pitch_min, const double pitch_max,
-                                        const double roll_min, const double roll_max);
-
-Eigen::Isometry3d RandomFrontFacingPose();
-
 // Spaced out poses for targets which when projected into image space cover
 // the image well with target points.  Poses are sampled for each row/col combination
 // and evenly spaced in cylindrical coordinates
@@ -69,13 +63,6 @@ std::vector<Eigen::Isometry3d> EvenlySpacedTargetPoses(const int num_rows = 3, c
 
 std::vector<Eigen::Vector3d> TargetPoints(const int points_per_row, const int points_per_col,
                                           const double row_spacing = 0.1, const double col_spacing = 0.1);
-
-std::vector<Eigen::Vector3d> RandomFrontFacingPoints(const int num_points);
-
-Eigen::Vector3d RandomFrontFacingPoint();
-
-Eigen::Vector3d RandomFrontFacingPoint(const double rho_min, const double rho_max, const double phi_min,
-                                       const double phi_max, const double z_rho_scale);
 
 template <typename DISTORTER>
 class RegistrationCorrespondences {
@@ -105,7 +92,7 @@ RegistrationCorrespondences<DISTORTER>::RegistrationCorrespondences(
     const Eigen::Vector3d camera_t_target_point = camera_T_target_ * target_t_target_point;
     if (camera_t_target_point.z() <= 0) continue;
     const Eigen::Vector2d image_point =
-      Project3dPointToImageSpaceWithDistortion<DISTORTER>(camera_t_target_point, intrinsics_, distortion);
+      ProjectWithDistortion<DISTORTER>(camera_t_target_point, intrinsics_, distortion);
     correspondences_.AddCorrespondence(image_point, target_t_target_point);
   }
 }

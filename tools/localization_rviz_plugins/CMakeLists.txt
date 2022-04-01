@@ -27,10 +27,10 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
   ## Find catkin macros and libraries
   find_package(catkin REQUIRED COMPONENTS
     roscpp
+    localization_analysis
     localization_common
     ff_util
     graph_localizer
-    graph_bag
     rviz
   )
 
@@ -44,7 +44,7 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
  catkin_package(
    LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
    INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
-   CATKIN_DEPENDS roscpp localization_common ff_util graph_localizer graph_bag rviz
+   CATKIN_DEPENDS roscpp localization_analysis localization_common ff_util graph_localizer rviz
  )
  
   ###########

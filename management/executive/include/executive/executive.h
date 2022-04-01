@@ -252,6 +252,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
+  bool ReadMapperParams();
   bool ReadCommand(config_reader::ConfigReader::Table *response,
                    ff_msgs::CommandStampedPtr cmd);
   void PublishAgentState();
@@ -263,7 +264,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
   ExecutiveActionClient<ff_msgs::PerchAction> perch_ac_;
 
-  config_reader::ConfigReader config_params_;
+  config_reader::ConfigReader config_params_, mapper_config_params_;
 
   ff_msgs::AgentStateStamped agent_state_;
 

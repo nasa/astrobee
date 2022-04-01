@@ -38,8 +38,7 @@ build-indep: ;
 override_dh_auto_configure:
 	# configure the build
 	cd .. && \
-	./src/scripts/configure.sh -a -w src/debian/tmp && \
-	catkin clean -y --force
+	./src/scripts/configure.sh -a -w debian -p src/debian/tmp -n debian
 override_dh_auto_build: ;
 
 # the install command is already invoked in the build

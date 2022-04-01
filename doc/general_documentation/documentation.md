@@ -1,6 +1,4 @@
-\page doc Documentation
-
-# Tools used for FSW documentation
+\page doc Tools used for FSW documentation
 
 ## Code documentation
 

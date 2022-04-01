@@ -352,6 +352,16 @@
      <arg name="debug" value="$(arg debug)" />
      <arg name="default" value="true" />
    </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="debayer/DebayerNodelet" />
+     <arg name="name" value="nav_cam_debayer" />
+     <arg name="manager" value="/mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
 
    <!-- DockCam pipeline -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">
@@ -378,6 +388,16 @@
      <arg name="class" value="marker_tracking_node/MarkerTrackingNodelet" />
      <arg name="name" value="marker_tracking" />
      <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="debayer/DebayerNodelet" />
+     <arg name="name" value="dock_cam_debayer" />
+     <arg name="manager" value="/mlp_vision" />
      <arg name="spurn" value="$(arg spurn)" />
      <arg name="nodes" value="$(arg nodes)" />
      <arg name="extra" value="$(arg extra)" />

@@ -245,7 +245,7 @@ bool SendMobilityCommand() {
     // Set frame
     cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
     if (FLAGS_relative) {
-      cmd.args[0].s = "body";
+      cmd.args[0].s = (FLAGS_ns.empty() ? "body" : FLAGS_ns + "/" + std::string(FRAME_NAME_BODY));
     } else {
       cmd.args[0].s = "world";
     }
