@@ -33,8 +33,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "CommandSupport.h"
-#include "RapidConstants.h"
+#include "rapidDds/CommandSupport.h"
+#include "rapidDds/RapidConstants.h"
 
 namespace ff {
 

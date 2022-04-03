@@ -12,12 +12,12 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
+ * License for the specific launguage governing permissions and limitations
  * under the License.
  */
 
-#ifndef GROUND_DDS_ROS_BRIDGE_RAPID_POSITION_H_
-#define GROUND_DDS_ROS_BRIDGE_RAPID_POSITION_H_
+#ifndef GROUND_DDS_ROS_BRIDGE_RAPID_GUEST_SCIENCE_DATA_H_
+#define GROUND_DDS_ROS_BRIDGE_RAPID_GUEST_SCIENCE_DATA_H_
 
 #include <string>
 #include <memory>
@@ -25,30 +25,24 @@
 #include "ground_dds_ros_bridge/rapid_sub_ros_pub.h"
 #include "ground_dds_ros_bridge/util.h"
 
-#include "ff_msgs/EkfState.h"
+#include "ff_msgs/GuestScienceData.h"
 
-#include "AstrobeeConstants.h"
-#include "EkfStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/GuestScienceDataSupport.h"
 
 namespace ff {
 
-class RapidPositionToRos : public RapidSubRosPub {
+class RapidGuestScienceDataToRos : public RapidSubRosPub {
  public:
-  RapidPositionToRos(const std::string& subscribe_topic,
-                     const std::string& pub_topic,
-                     const ros::NodeHandle &nh,
-                     const unsigned int queue_size = 10);
-
-  void CopyTransform3D(geometry_msgs::Pose& pose,
-                       const rapid::Transform3D& transform);
-
-  void CopyVec3D(geometry_msgs::Vector3& vec_out,
-                 const rapid::Vec3d& vec_in);
+  RapidGuestScienceDataToRos(const std::string& subscribe_topic,
+                             const std::string& pub_topic,
+                             const ros::NodeHandle &nh,
+                             const unsigned int queue_size = 10);
 
   // Callback for ddsEventLoop
-  void operator() (rapid::ext::astrobee::EkfState const* rapid_ekf_state);
+  void operator() (rapid::ext::astrobee::GuestScienceData const* rapid_gs_data);
 };
 
 }  // end namespace ff
 
-#endif  // GROUND_DDS_ROS_BRIDGE_RAPID_POSITION_H_
+#endif  // GROUND_DDS_ROS_BRIDGE_RAPID_GUEST_SCIENCE_DATA_H_
