@@ -97,7 +97,7 @@ add_library(ground_dds_ros_bridge
 target_compile_definitions(ground_dds_ros_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(ground_dds_ros_bridge ${catkin_EXPORTED_TARGETS})
 if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
-  target_link_libraries(ground_dds_ros_bridge rapidIo Qt5:Xml ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+  target_link_libraries(ground_dds_ros_bridge rapidIo Qt5::Xml ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 else ()
   target_link_libraries(ground_dds_ros_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 endif ()
