@@ -17,9 +17,10 @@
 # under the License.
 """
 Splices a bagfile at selected timestamps to create multiple smaller bagfiles which when combined 
-span the original bagfile. Iterate through the images using the right and left arrow keys.
-Iterate more quickly (skipping 10 images at a time) using the up and down arrow keys.
-Create a splice point using the current image's timestamp using the s key. 
+span the original bagfile. Uses wasd controls to iterate through the images.
+Iterate through the images one at a time using the d and a keys.
+Iterate more quickly (skipping 10 images at a time) using the w and s keys.
+Create a splice point using the current image's timestamp using the space bar. 
 Undo adding last splice point using the u key.
 Print current splice points and intervals using the p key.
 Generate spliced bags using all selected splice points by pressing the enter key at
@@ -156,16 +157,18 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
             cv2.imshow(window, image)
             cv2.setWindowTitle(window, msg_info_string)
             key = cv2.waitKey(0)
-            if key == 83:  # Right arrow key
+            # Have to use wasd instead of arrow keys due to opencv/QT bug where 
+            # arrow presses aren't registered when the user clicks of the screen then back to the screen
+            if key == ord("d"):  
                 i += 1
                 print_string = True
-            elif key == 81:  # Left arrow key
+            elif key == ord("a"):  
                 i -= 1
                 print_string = True
-            if key == 82:  # Up arrow key
+            if key == ord("w"): 
                 i += 10
                 print_string = True
-            elif key == 84:  # Down arrow key
+            elif key == ord("s"):  
                 i -= 10
                 print_string = True
 
@@ -177,12 +180,12 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                 show_image_with_message(
                     image,
                     window,
-                    "Printing splice intervals",
-                    "Printing splice intervals",
+                    "Printed splice intervals",
+                    "Printed splice intervals",
                     (130, 450),
                     3,
                 )
-            elif key == ord("s"):
+            elif key == 32:  # Space bar
                 print("Splice timestamp selected, t: " + str(timestamp))
                 splice_timestamps.append(timestamp)
                 splice_timestamps = sort_and_remove_repeats(splice_timestamps)
@@ -191,7 +194,7 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                     image,
                     window,
                     "Splice t selected! " + msg_info_string,
-                    "Saving splice time",
+                    "Added splice point",
                 )
             elif key == ord("u"):
                 if not splice_timestamps:
@@ -202,7 +205,7 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                     )
                 else:
                     print(
-                        "Removing last added splice point at timestamp: "
+                        "Removed last added splice point at timestamp: "
                         + str(timestamp)
                     )
                     splice_timestamps.pop()
@@ -213,8 +216,8 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                         image,
                         window,
                         "Removed last splice point at timestamp " + str(timestamp),
-                        "Removed last splice time",
-                        (50, 450),
+                        "Removed last splice point",
+                        (40, 450),
                         3,
                     )
 
@@ -231,7 +234,7 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                         splice_timestamps, bag.get_start_time(), bag.get_end_time()
                     )
                     show_image_with_message(
-                        image, window, "Splicing", "Splicing", (350, 450)
+                        image, window, "Creating spliced bags", "Creating spliced bags", (20, 450), 3.5
                     )
                     splice_bag(bagfile, splice_timestamps)
                     return
