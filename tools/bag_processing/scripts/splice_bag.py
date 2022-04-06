@@ -124,6 +124,9 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
         print("Reading msgs...")
         for topic, msg, t in bag.read_messages([image_topic]):
             msg_tuples.append((msg, t))
+        if not msg_tuples:
+            print("No messages found for topic: " + image_topic)
+            sys.exit()
         i = 0
         num_msgs = len(msg_tuples)
         window = "image"
