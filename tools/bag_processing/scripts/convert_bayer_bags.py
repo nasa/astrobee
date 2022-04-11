@@ -88,13 +88,13 @@ if __name__ == "__main__":
         nargs="*",
         help="List of bags to convert. If none provided, all bags in the current directory are used.",
     )
+    
+    args = parser.parse_args()
 
     if args.disable_gray:
         args.gray_image_topic = ""
     if args.disable_color:
         args.color_image_topic = ""
-
-    args = parser.parse_args()
     bags = args.bags if args.bags is not None else glob.glob("*.bag")
     for bag in bags:
         convert_bayer_bag.convert_bayer(

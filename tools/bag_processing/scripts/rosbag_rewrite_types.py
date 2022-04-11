@@ -92,7 +92,7 @@ def get_rules(rules_files):
         with open(rules_file, "r") as rules_stream:
             rules_info = json.load(rules_stream)
 
-        for k, rules in rules_info.items():
+        for k, rules in rules_info.iteritems():
             if k == "fix_message_definition_topic_patterns":
                 fix_topic_patterns += rules
             elif k == "rename_types":
@@ -154,33 +154,39 @@ def fix_message_definitions(inbag, fix_topic_patterns, verbose=False):
 
 
 def rename_types(inbag, outbag, rename_lookup, verbose=False):
-    """
-    Modifies inbag metadata (in memory, not on disk). Changes will take
-    effect when inbag's messages are subsequently written to outbag.
-    """
-
-    renamed_types = set()
-    for conn in inbag._get_connections():
-        hdr = conn.header
-        rename_key = (hdr["type"].decode("utf-8"), hdr["md5sum"].decode("utf-8"))
+    # TODO(trey0): Is it possible to do the type renaming by iterating only
+    # over the connections rather than over every message, like we do in
+    # fix_message_definitions()? Might be faster.
+    num_renamed = collections.Counter()
+    for topic, msg, t, conn in inbag.read_messages(
+        raw=True, return_connection_header=True
+    ):
+        old_type, msg_data, old_type_md5sum, msg_pos, msg_pytype = msg
+        rename_key = (old_type, old_type_md5sum)
         tgt = rename_lookup.get(rename_key)
-        if tgt is not None:
-            renamed_types.add(rename_key)
-            # rewrite the necessary fields of the connection header
+        if tgt is None:
+            # just copy the message to outbag, no rewrite needed
+            outbag.write(topic, msg, t, raw=True)
+        else:
+            num_renamed[rename_key] += 1
+            # rewrite the necessary fields of the message and connection header
+            new_msg = (tgt["type"], msg_data, tgt["md5sum"], msg_pos, tgt["pytype"])
             for k in ("type", "md5sum", "message_definition"):
-                hdr[k] = tgt[k].encode("utf-8")
+                conn[k] = tgt[k]
+            outbag.write(topic, new_msg, t, connection_header=conn, raw=True)
 
     if verbose:
         # summary of renamed messages
-        migrated = sorted(renamed_types)
-        logging.info("Renamed types in bag:")
+        migrated = sorted(num_renamed.keys())
+        logging.info("Renamed message counts by type:")
         if not migrated:
-            logging.info("  [no matching types found in bag]")
+            logging.info("  [no matching messages found]")
         for key in migrated:
             old_type, old_type_md5sum = key
             tgt = rename_lookup[key]
             logging.info(
-                "  %s %s -> %s %s",
+                "  %5d %s %s -> %s %s",
+                num_renamed[key],
                 old_type,
                 old_type_md5sum[:8],
                 tgt["type"],
@@ -237,7 +243,11 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=CustomFormatter
     )
     parser.add_argument(
-        "-v", "--verbose", help="print debug info", default=False, action="store_true"
+        "-v",
+        "--verbose",
+        help="print debug info",
+        default=False,
+        action="store_true",
     )
     parser.add_argument(
         "-o",
