@@ -40,7 +40,7 @@ thread program_options timer)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 
 if (USE_CTC)
-  set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/user)
+  set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)
 else (USE_CTC)
   set(SORACORE_ROOT_DIR /usr)
 endif (USE_CTC)
