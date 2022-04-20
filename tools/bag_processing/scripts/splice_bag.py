@@ -221,7 +221,7 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                         3,
                     )
 
-            elif key == 13:  # Enter key
+            elif key == 13 or key == 10:  # Enter key
                 if not splice_timestamps:
                     message = "No splice timestamps added."
                     print(message)
