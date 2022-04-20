@@ -3,7 +3,7 @@
 Output Python data structure as a Lua table constructor.
 """
 
-from io import StringIO
+from cStringIO import StringIO  # fmt: skip
 
 
 def q(s):
@@ -18,7 +18,7 @@ def dumpStream(out, d, lvl=0):
     def w(s):
         out.write(s)
 
-    if isinstance(d, str):
+    if isinstance(d, basestring): # fmt: skip
         w(q(d))
 
     elif isinstance(d, (list, tuple)):
