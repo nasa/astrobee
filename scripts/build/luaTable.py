@@ -1,9 +1,23 @@
 
 """
 Output Python data structure as a Lua table constructor.
+PLEASE NOTE: This script currently only works with python 2.
+The python script that imports this script and generates the
+astrobee fsw files uses a repo that is only compatible with
+python 2. Until that repo is updated to work with python 3,
+this script will only be compatible with python 2 since there
+is no easy way to guarantee the python 3 compatibility changes
+continue to generate the fsw files correctly.
 """
 
-from io import StringIO
+import sys
+
+if (sys.version_info > (3, 0)):
+    # exit if python 3
+    print("The lua table script is only compatible with python 2")
+    sys.exit(1)
+
+from cStringIO import StringIO  # fmt: skip
 
 
 def q(s):
@@ -18,7 +32,7 @@ def dumpStream(out, d, lvl=0):
     def w(s):
         out.write(s)
 
-    if isinstance(d, str):
+    if isinstance(d, basestring): # fmt: skip
         w(q(d))
 
     elif isinstance(d, (list, tuple)):

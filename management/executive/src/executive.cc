@@ -3025,14 +3025,14 @@ bool Executive::StartGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::StartRecording(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing start recordiing command.");
+  NODELET_INFO("Executive executing start recording command.");
   bool successful = true;
   std::string err_msg;
   uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
   if (cmd->args.size() != 1 ||
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
     successful = false;
-    err_msg = "Malformed arguments for start recordinng command.";
+    err_msg = "Malformed arguments for start recording command.";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
   } else {
     ff_msgs::EnableRecording enable_rec_srv;
