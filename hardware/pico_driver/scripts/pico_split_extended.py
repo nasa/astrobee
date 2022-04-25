@@ -57,18 +57,27 @@ def pico_xyz_from_extended(
     ext_topic = pico.get_ext_topic(cam)
     pts_topic = pico.get_pts_topic(cam)
     amp_topic = pico.get_amp_topic(cam)
-    with rosbag.Bag(out_bag_path, "w") as out_bag:
-        for ext_msg in pico.get_msgs(in_bag_path, ext_topic, fast):
-            distance, amplitude, intensity, noise = pico.split_extended(ext_msg)
 
-            xyz = pico.xyz_from_distance(distance, xyz_coeff)
-            pts_msg = pico.make_points_msg(ext_msg.header, xyz)
-            out_bag.write(pts_topic, pts_msg, pts_msg.header.stamp)
+    out_bag = rosbag.Bag(out_bag_path, "w")
 
-            amp_msg = pico.make_amp_msg(ext_msg.header, amplitude)
-            out_bag.write(amp_topic, amp_msg, amp_msg.header.stamp)
+    with rosbag.Bag(in_bag_path, "r") as bag:
+        # for ext_msg in pico.get_msgs(in_bag_path, ext_topic, fast):
+        for topic, msg, t in bag.read_messages():
+            if topic == ext_topic:
+                distance, amplitude, intensity, noise = pico.split_extended(msg)
 
-            k_logger.info("split %5d extended messages", k_logger.count + 1)
+                xyz = pico.xyz_from_distance(distance, xyz_coeff)
+                pts_msg = pico.make_points_msg(msg.header, xyz)
+                out_bag.write(pts_topic, pts_msg, pts_msg.header.stamp)
+
+                amp_msg = pico.make_amp_msg(msg.header, amplitude)
+                out_bag.write(amp_topic, amp_msg, amp_msg.header.stamp)
+
+                k_logger.info("split %5d extended messages", k_logger.count + 1)
+
+            elif save_all_topics:
+                out_bag.write(topic, msg, t)
+    out_bag.close()
     logging.info("wrote split messages to %s", out_bag_path)
 
 
