@@ -3002,16 +3002,9 @@ bool Executive::StartGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
                          ff_msgs::AckCompletedStatus::EXEC_FAILED,
                          "Can't start primary apk when one is already running");
           return false;
-        } else if ((state_->id() == ff_msgs::OpState::PLAN_EXECUTION &&
-                    cmd->cmd_id != "plan" && cmd->cmd_src != "plan") ||
-                    state_->id() == ff_msgs::OpState::TELEOPERATION) {
-          state_->AckCmd(cmd->cmd_id,
-                         ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                         "Must be in the ready state to start a primary apk");
-          return false;
         }
-        break;
       }
+      break;
     }
   }
 
