@@ -74,8 +74,8 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void PublishLoop();
-  void EnableBayer();
-  bool EnableBayerService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);  // NOLINT
+  void EnableBayer(bool enable);
+  void AutoExposure(ros::TimerEvent const& te);
   size_t getNumBayerSubscribers();
 
   ros::NodeHandle *nh_;
@@ -87,11 +87,11 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   std::atomic<bool> thread_running_;
   ros::Publisher pub_;
   ros::Publisher bayer_pub_;
-  ros::ServiceServer enable_bayer_srv_;
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;
   ros::Timer config_timer_;
+  ros::Timer auto_exposure_timer_;
   std::string camera_device_;
   std::string camera_topic_;
   std::string bayer_camera_topic_;
@@ -108,6 +108,10 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   // published. Larger n reduces I/O overhead.
   unsigned int bayer_throttle_ratio_;
   size_t bayer_throttle_ratio_counter_;
+
+  // Auto exposure parameters
+  bool auto_exposure_;
+  double desired_msv_, k_p_, k_i_, max_i_, err_p_, err_i_;
 };
 
 }  // end namespace is_camera

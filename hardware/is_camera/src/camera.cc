@@ -168,7 +168,11 @@ namespace is_camera {
     camera_topic_(""),
     bayer_camera_topic_(""),
     calibration_mode_(false),
-    bayer_throttle_ratio_counter_(0)
+    bayer_throttle_ratio_counter_(0),
+    bayer_enable_(false),
+    auto_exposure_(false),
+    err_p_(0),
+    err_i_(0)
     {}
 
   CameraNodelet::~CameraNodelet() {
@@ -202,6 +206,8 @@ namespace is_camera {
     ReadParams();
     config_timer_ = GetPrivateHandle()->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
       config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));}, false, true);
+    auto_exposure_timer_ = nh->createTimer(ros::Duration(1),
+                              &CameraNodelet::AutoExposure, this, false, false);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
 
@@ -214,14 +220,6 @@ namespace is_camera {
       img_msg_buffer_[i]->step   = kImageWidth;
       img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
     }
-
-    if (bayer_enable_) {
-      EnableBayer();
-    }
-
-    // Start bayer enable/disable service
-    enable_bayer_srv_ = nh->advertiseService(SERVICE_HARDWARE_BAYER_ENABLE,
-      &CameraNodelet::EnableBayerService, this);
 
     v4l_.reset(new V4LStruct(camera_device_, camera_gain_, camera_exposure_));
     thread_running_ = true;
@@ -275,8 +273,38 @@ namespace is_camera {
       }
     }
 
-    if (!camera.GetBool("bayer_enable", &bayer_enable_)) {
+    bool bayer_enable;
+    if (!camera.GetBool("bayer_enable", &bayer_enable)) {
       FF_FATAL("Bayer enable not specified.");
+      exit(EXIT_FAILURE);
+    }
+    // Check if bayer configuration changed
+    EnableBayer(bayer_enable);
+
+    // Auto Exposure Parameters
+    bool auto_exposure;
+    if (!camera.GetBool("auto_exposure", &auto_exposure)) {
+      FF_FATAL("Auto Exposure enable not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (auto_exposure && !auto_exposure_) auto_exposure_timer_.start();
+    else if (!auto_exposure && auto_exposure_) auto_exposure_timer_.stop();
+    auto_exposure_ = auto_exposure;
+
+    if (!config_.GetReal("desired_msv", &desired_msv_)) {
+      FF_FATAL("Auto-Exposure: Desired MSV not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("k_p", &k_p_)) {
+      FF_FATAL("Auto-Exposure: Kp not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("k_i", &k_i_)) {
+      FF_FATAL("Auto-Exposure: Ki not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("max_i", &max_i_)) {
+      FF_FATAL("Auto-Exposure: Maximum I not specified.");
       exit(EXIT_FAILURE);
     }
 
@@ -285,16 +313,18 @@ namespace is_camera {
       exit(EXIT_FAILURE);
     }
 
-    if (thread_running_) {
+    if (thread_running_ & !auto_exposure_) {
       v4l_->SetParameters(camera_gain_, camera_exposure_);
     }
   }
 
-  void CameraNodelet::EnableBayer() {
+  void CameraNodelet::EnableBayer(bool enable) {
+    if (enable && !bayer_enable_) {
       bayer_camera_topic_ = camera_topic_ + TOPIC_HARDWARE_CAM_SUFFIX_BAYER_RAW;
       bayer_pub_ = nh_->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
       // Allocate space for our Bayer output msg buffer
       for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
+        // Ignore if already initialized once
         if (bayer_img_msg_buffer_[i] != NULL) continue;
         bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
         bayer_img_msg_buffer_[i]->width = kImageWidth;
@@ -306,19 +336,54 @@ namespace is_camera {
         bayer_img_msg_buffer_[i]->step = kImageWidth;
         bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
       }
-  }
-  // Enable or disable the feature timer
-  bool CameraNodelet::EnableBayerService(ff_msgs::SetBool::Request & req,
-                     ff_msgs::SetBool::Response & res) {
-    if (req.enable && !bayer_enable_) {
-      EnableBayer();
-    } else if (!req.enable && bayer_enable_) {
+    } else if (!enable && bayer_enable_) {
       bayer_pub_.shutdown();
+    } else {
+      return;
     }
-    bayer_enable_ = req.enable;
+    enable = bayer_enable_;
+  }
 
-    res.success = true;
-    return true;
+  // Timer that periodically changes camera exposure based on the captured image's histogram
+  void CameraNodelet::AutoExposure(ros::TimerEvent const& te) {
+    // If images not being captured, do not adjust exposure
+    if (!thread_running_) return;
+
+    // Get last generated image from buffer (index incremented after image completed)
+    sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ - 1) % kImageMsgBuffer];
+
+    cv::Mat input(kImageHeight, kImageWidth,
+                     cv::DataType<uint8_t>::type,
+                     &(grey_image->data[0]),
+                     kImageWidth);
+
+    // Calculate Histogram
+    cv::Mat hist;
+    int histSize = 256;
+    float range[] = {0, 256};  // the upper boundary is exclusive
+    const float* histRange[] = { range };
+    bool uniform = true, accumulate = false;
+    cv::calcHist(&input, 1, 0, cv::Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
+
+    // Calculate mean sample value
+    double mean_sample_value = 0;
+    for (int i = 1; i < histSize; ++i) {
+      mean_sample_value += hist.at<float>(i-1) * hist.at<float>(i);
+    }
+    mean_sample_value /= (kImageHeight*kImageWidth);
+
+    // Control Auto exposure with a PI controller
+    err_p_ = desired_msv_ - mean_sample_value;
+    err_i_ += err_p_;
+    if (abs(err_i_) > max_i_) {
+      err_i_ = abs(err_i_) * max_i_;
+    }
+
+    // Don't change exposure if we're close enough. Changing too often slows
+    // down the data rate of the camera.
+    if (abs(err_p_) > 0.5) {
+      v4l_->SetParameters(camera_gain_, camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
+    }
   }
 
   void CameraNodelet::PublishLoop() {
