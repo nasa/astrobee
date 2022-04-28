@@ -202,6 +202,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd);
   bool AutoReturn(ff_msgs::CommandStampedPtr const& cmd);
   bool CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd);
+  bool DeployArm(ff_msgs::CommandStampedPtr const& cmd);
   bool Dock(ff_msgs::CommandStampedPtr const& cmd);
   bool Fault(ff_msgs::CommandStampedPtr const& cmd);
   bool GripperControl(ff_msgs::CommandStampedPtr const& cmd);
