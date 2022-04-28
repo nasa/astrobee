@@ -210,6 +210,7 @@ namespace is_camera {
                               &CameraNodelet::AutoExposure, this, false, false);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
+    pub_exposure_ = nh->advertise<std_msgs::Int32>(camera_topic_ + "_exposure", 1);
 
     // Allocate space for our output msg buffer
     for (size_t i = 0; i < kImageMsgBuffer; i++) {
@@ -384,6 +385,11 @@ namespace is_camera {
     if (abs(err_p_) > 0.5) {
       v4l_->SetParameters(camera_gain_, camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
     }
+
+    // Publish exposure data
+    std_msgs::Int32 exposure_msg;
+    exposure_msg.data = camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_;
+    pub_exposure_.publish(exposure_msg);
   }
 
   void CameraNodelet::PublishLoop() {

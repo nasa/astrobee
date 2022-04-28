@@ -25,6 +25,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <ff_msgs/SetBool.h>
 #include <ff_util/ff_nodelet.h>
+#include <std_msgs/Int32.h>
 
 #include <thread>
 #include <atomic>
@@ -87,6 +88,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   std::atomic<bool> thread_running_;
   ros::Publisher pub_;
   ros::Publisher bayer_pub_;
+  ros::Publisher pub_exposure_;
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;
