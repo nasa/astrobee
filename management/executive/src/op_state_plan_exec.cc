@@ -156,10 +156,6 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       if (!exec_->StartGuestScience(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
-    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-      if (!exec_->StopGuestScience(cmd)) {
-        return OpStateRepo::Instance()->ready()->StartupState();
-      }
     } else if (cmd->cmd_name ==
                               CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
       if (!exec_->SwitchLocalization(cmd)) {
@@ -263,8 +259,6 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       } else {
         exec_->StopArm(cmd);
       }
-    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-      exec_->StopGuestScience(cmd);
     } else {
       err_msg = "Command " + cmd->cmd_name + "not accepted in op state"
           + " plan execution.";

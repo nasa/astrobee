@@ -154,8 +154,6 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->StopArm(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-    exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     if (exec_->StowArm(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
