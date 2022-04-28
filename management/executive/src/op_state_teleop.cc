@@ -33,6 +33,8 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->ArmPanAndTilt(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
     exec_->CustomGuestScience(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DEPLOY_ARM) {
+    exec_->DeployArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
     if (exec_->Fault(cmd)) {
       return OpStateRepo::Instance()->fault()->StartupState();

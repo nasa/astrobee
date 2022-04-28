@@ -564,6 +564,8 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd) {
           + cmd->args[2].s;
       }
     }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DEPLOY_ARM) {
+    arm_goal_.command = ff_msgs::ArmGoal::ARM_DEPLOY;
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_GRIPPER_CONTROL) {
     // Gripper control has one argument which is a booleanused to specify
     // whether to open or close the arm
@@ -1613,6 +1615,19 @@ bool Executive::CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   gs_custom_command_timer_.start();
   gs_custom_cmd_id_ = cmd->cmd_id;
   return true;
+}
+
+bool Executive::DeployArm(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing deploy arm command!");
+  // Check if Astrobee is perching/perched. Arm control will check the rest.
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::PERCHING) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Can't deploy arm while perched or (un)perching!");
+    return false;
+  }
+
+  return ArmControl(cmd);
 }
 
 bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
