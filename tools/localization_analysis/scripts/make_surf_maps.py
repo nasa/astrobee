@@ -23,12 +23,14 @@ details on surf map creation.
 
 import argparse
 import csv
+import glob
 import itertools
 import multiprocessing
 import os
 import sys
 
-import make_surf_map
+# Import as to avoid same name as function in this script
+import make_surf_map as mm
 import multiprocessing_helpers
 import utilities
 
@@ -37,8 +39,8 @@ import utilities
 # some errors are suppressed due to the multiprocessing
 # library call
 @multiprocessing_helpers.full_traceback
-def make_surf_map(params):
-    make_surf_map.make_surf_map(bagfile, world, robot_name)
+def make_surf_map(bagfile, world, robot_name):
+    mm.make_surf_map(bagfile, world, robot_name)
 
 # Helper that unpacks arguments and calls original function
 # Aides running jobs in parallel as pool only supports
@@ -46,10 +48,9 @@ def make_surf_map(params):
 def make_surf_map_helper(zipped_vals):
     return make_surf_map(*zipped_vals)
 
-def make_surf_maps(bags, world, robot_name, num_processes)
+def make_surf_maps(bags, world, robot_name, num_processes):
     pool = multiprocessing.Pool(num_processes)
     pool.map(make_surf_map_helper, list(zip(bags, itertools.repeat(world), itertools.repeat(robot_name))))
-)
 
 
 if __name__ == "__main__":
