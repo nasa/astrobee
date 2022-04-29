@@ -23,6 +23,7 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
+  rosbag
   roscpp
   cv_bridge
   image_transport
@@ -45,6 +46,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
+    rosbag
   	roscpp
   	message_runtime
   	std_msgs
@@ -57,6 +59,7 @@ catkin_package(
   	sparse_mapping
     msg_conversions
     ff_util
+    nodelet
 )
 
 

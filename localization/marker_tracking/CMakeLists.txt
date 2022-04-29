@@ -30,7 +30,9 @@ find_package(catkin2 REQUIRED COMPONENTS
   geometry_msgs
   cv_bridge
   image_transport
-  camera msg_conversions
+  camera 
+  nodelet
+  msg_conversions
 )
 
 # System dependencies are found with CMake's conventions
@@ -46,7 +48,7 @@ find_package(OpenCV331 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions
+  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions nodelet
 )
 
 ###########

@@ -39,7 +39,7 @@ if (USE_ROS)
   catkin_package(
     LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} 
     INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} 
-    CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common
+    CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common nodelet
   )
 
   ###########
