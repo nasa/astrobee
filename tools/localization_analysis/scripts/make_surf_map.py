@@ -43,10 +43,16 @@ def make_surf_map(
         + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory "
         + bag_images_dir_path
     )
-    utilities.run_command_and_save_output(extract_images_command, basename + "_extract_images.txt")
+    utilities.run_command_and_save_output(
+        extract_images_command, basename + "_extract_images.txt"
+    )
 
-    remove_low_movement_images_command = "rosrun sparse_mapping remove_low_movement_images " + bag_images_dir_path
-    utilities.run_command_and_save_output(remove_low_movement_images_command, basename + "_remove_low_movement_images.txt")
+    remove_low_movement_images_command = (
+        "rosrun sparse_mapping remove_low_movement_images " + bag_images_dir_path
+    )
+    utilities.run_command_and_save_output(
+        remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
+    )
 
     # Set environment variables
     home = os.path.expanduser("~")
@@ -65,12 +71,15 @@ def make_surf_map(
     map_name = basename + ".map"
     build_map_command = (
         "rosrun sparse_mapping build_map "
-        + bag_images 
+        + bag_images
         + " -output_map "
-        + map_name 
+        + map_name
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100000000"
     )
-    utilities.run_command_and_save_output(build_map_command, basename + "_build_map.txt")
+    utilities.run_command_and_save_output(
+        build_map_command, basename + "_build_map.txt"
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

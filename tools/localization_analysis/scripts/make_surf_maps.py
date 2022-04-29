@@ -42,15 +42,20 @@ import utilities
 def make_surf_map(bagfile, world, robot_name):
     mm.make_surf_map(bagfile, world, robot_name)
 
+
 # Helper that unpacks arguments and calls original function
 # Aides running jobs in parallel as pool only supports
 # passing a single argument to workers
 def make_surf_map_helper(zipped_vals):
     return make_surf_map(*zipped_vals)
 
+
 def make_surf_maps(bags, world, robot_name, num_processes):
     pool = multiprocessing.Pool(num_processes)
-    pool.map(make_surf_map_helper, list(zip(bags, itertools.repeat(world), itertools.repeat(robot_name))))
+    pool.map(
+        make_surf_map_helper,
+        list(zip(bags, itertools.repeat(world), itertools.repeat(robot_name))),
+    )
 
 
 if __name__ == "__main__":
