@@ -36,19 +36,16 @@ def make_surf_map(
     basename = utilities.basename(bagfile)
     bag_images_dir = basename + "_bag_images"
     os.mkdir(bag_images_dir)
-    bag_images = os.path.abspath(bag_images_dir)
+    bag_images_dir_path = os.path.abspath(bag_images_dir)
     extract_images_command = (
         "rosrun localization_node extract_image_bag "
         + bagfile
         + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory "
-        + bag_images
+        + bag_images_dir_path
     )
     utilities.run_command_and_save_output(extract_images_command, basename + "_extract_images.txt")
 
-   remove_low_movement_images_command = (
-        "rosrun sparse_mapping remove_low_movement_images "
-        + bag_images
-    )
+    remove_low_movement_images_command = "rosrun sparse_mapping remove_low_movement_images " + bag_images_dir_path
     utilities.run_command_and_save_output(remove_low_movement_images_command, basename + "_remove_low_movement_images.txt")
 
     # Set environment variables
@@ -64,10 +61,11 @@ def make_surf_map(
 
     # Build map
     relative_bag_images_path = os.path.relpath(bag_images_dir)
+    bag_images = os.path.join(relative_bag_images_path, "*.jpg")
     map_name = basename + ".map"
     build_map_command = (
         "rosrun sparse_mapping build_map "
-        + relative_bag_images_path 
+        + bag_images 
         + " -output_map "
         + map_name 
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100000000"
