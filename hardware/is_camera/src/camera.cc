@@ -214,7 +214,7 @@ namespace is_camera {
       false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
-    pub_exposure_ = nh->advertise<std_msgs::Int32>(camera_topic_ + "_exposure", 1);
+    pub_exposure_ = nh->advertise<std_msgs::Int32MultiArray>(camera_topic_ + "_ctrl", 1);
 
     // Allocate space for our output msg buffer
     for (size_t i = 0; i < kImageMsgBuffer; i++) {
@@ -308,13 +308,17 @@ namespace is_camera {
       FF_FATAL("Auto-Exposure: Maximum I not specified.");
       exit(EXIT_FAILURE);
     }
+    if (!config_.GetReal("tolerance", &tolerance_)) {
+      FF_FATAL("Auto-Exposure: Error tolerance not specified.");
+      exit(EXIT_FAILURE);
+    }
 
     if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
       FF_FATAL("Bayer throttle ratio not specified.");
       exit(EXIT_FAILURE);
     }
 
-    if (thread_running_ & !auto_exposure_) {
+    if (thread_running_ && !auto_exposure_) {
       v4l_->SetParameters(camera_gain_, camera_exposure_);
     }
   }
@@ -360,11 +364,11 @@ namespace is_camera {
 
     // Calculate Histogram
     cv::Mat hist;
-    int histSize = 5;
+    int hist_size = 5;
     float range[] = {0, 256};  // the upper boundary is exclusive
-    const float* histRange[] = { range };
+    const float* hist_range[] = { range };
     bool uniform = true, accumulate = false;
-    cv::calcHist(&input, 1, 0, cv::Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
+    cv::calcHist(&input, 1, 0, cv::Mat(), hist, 1, &hist_size, hist_range, uniform, accumulate);
 
     // Calculate mean sample value
     double mean_sample_value = 0;
@@ -379,7 +383,7 @@ namespace is_camera {
 
     // Don't change exposure if we're close enough. Changing too often slows
     // down the data rate of the camera.
-    if (std::abs(err_p_) > 0.2) {
+    if (std::abs(err_p_) > tolerance_) {
       // Calculate PI coefficients
       err_i_ += err_p_;
       if (std::abs(err_i_) > max_i_) {
@@ -394,9 +398,10 @@ namespace is_camera {
     }
 
     // Publish exposure data
-    std_msgs::Int32 exposure_msg;
-    exposure_msg.data = camera_auto_exposure_;
-    pub_exposure_.publish(exposure_msg);
+    std_msgs::Int32MultiArray msg;
+    msg.data.push_back(camera_gain_);
+    msg.data.push_back(camera_auto_exposure_);
+    pub_exposure_.publish(msg);
   }
 
   void CameraNodelet::PublishLoop() {

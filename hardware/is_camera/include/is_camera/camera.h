@@ -25,7 +25,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <ff_msgs/SetBool.h>
 #include <ff_util/ff_nodelet.h>
-#include <std_msgs/Int32.h>
+#include <std_msgs/Int32MultiArray.h>
 
 #include <thread>
 #include <atomic>
@@ -113,7 +113,8 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
 
   // Auto exposure parameters
   bool auto_exposure_;
-  double desired_msv_, k_p_, k_i_, max_i_, err_p_, err_i_;
+  int hist_size_;
+  double desired_msv_, k_p_, k_i_, max_i_, err_p_, err_i_, tolerance_;
 };
 
 }  // end namespace is_camera
