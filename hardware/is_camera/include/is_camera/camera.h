@@ -48,20 +48,20 @@ struct V4LStruct;
 class CameraNodelet : public ff_util::FreeFlyerNodelet {
  public:
   // The size of the image message ring buffer for publishing
-  // grayscale images.  15 images = 17.6 MB of buffer space. This
+  // grayscale images.  30 images = 35.2 MB of buffer space. This
   // number is so large because it sets the lifetime for each image
   // message sent out. Eventually we'll write over the pointer we've
-  // handed out. At 15 Hz, 15 frames means an image will stay valid
-  // for 1.0 seconds.  Localization can process at 2 Hz, so it only
-  // needs an image for 0.5 seconds.
-  static constexpr size_t kImageMsgBuffer = 15;
+  // handed out. At 15 Hz, 30 frames means an image will stay valid
+  // for 2.0 seconds.  Localization can process at 1 Hz, so it only
+  // needs an image for 1.0 second.
+  static constexpr size_t kImageMsgBuffer = 30;
 
   // The size of the image message ring buffer for publishing raw
   // Bayer format images.  The same comments apply about message
-  // lifetime, but in this case we're expecting the subscriber
-  // callback to at most de-Bayer the image before passing it on, so
-  // the buffer doesn't need to be so long.
-  static constexpr size_t kBayerImageMsgBufferLength = 5;
+  // lifetime, but in this case we're publishing at a lower rate and
+  // expecting the subscriber callback to at most de-Bayer the image
+  // before passing it on, so the buffer doesn't need to be so long.
+  static constexpr size_t kBayerImageMsgBufferLength = 10;
 
   static constexpr size_t kImageWidth = 1280;
   static constexpr size_t kImageHeight = 960;
@@ -76,7 +76,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
  private:
   void PublishLoop();
   void EnableBayer(bool enable);
-  void AutoExposure(ros::TimerEvent const& te);
+  void AutoExposure();
   size_t getNumBayerSubscribers();
 
   ros::NodeHandle *nh_;
@@ -98,7 +98,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   std::string camera_topic_;
   std::string bayer_camera_topic_;
   std::string config_name_;
-  int camera_gain_, camera_exposure_;
+  int camera_gain_, camera_exposure_, camera_auto_exposure_;
   bool calibration_mode_;
 
   // bayer_enable: Set to true to enable publishing raw Bayer image

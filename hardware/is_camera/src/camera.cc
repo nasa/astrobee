@@ -206,8 +206,12 @@ namespace is_camera {
     ReadParams();
     config_timer_ = GetPrivateHandle()->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
       config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));}, false, true);
-    auto_exposure_timer_ = nh->createTimer(ros::Duration(1),
-                              &CameraNodelet::AutoExposure, this, false, false);
+    auto_exposure_timer_ = GetPrivateHandle()->createTimer(
+      ros::Duration(1),
+      [this](ros::TimerEvent e) {
+        if (auto_exposure_) AutoExposure();
+      },
+      false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
     pub_exposure_ = nh->advertise<std_msgs::Int32>(camera_topic_ + "_exposure", 1);
@@ -283,14 +287,10 @@ namespace is_camera {
     EnableBayer(bayer_enable);
 
     // Auto Exposure Parameters
-    bool auto_exposure;
-    if (!camera.GetBool("auto_exposure", &auto_exposure)) {
+    if (!camera.GetBool("auto_exposure", &auto_exposure_)) {
       FF_FATAL("Auto Exposure enable not specified.");
       exit(EXIT_FAILURE);
     }
-    if (auto_exposure && !auto_exposure_) auto_exposure_timer_.start();
-    else if (!auto_exposure && auto_exposure_) auto_exposure_timer_.stop();
-    auto_exposure_ = auto_exposure;
 
     if (!config_.GetReal("desired_msv", &desired_msv_)) {
       FF_FATAL("Auto-Exposure: Desired MSV not specified.");
@@ -346,9 +346,9 @@ namespace is_camera {
   }
 
   // Timer that periodically changes camera exposure based on the captured image's histogram
-  void CameraNodelet::AutoExposure(ros::TimerEvent const& te) {
+  void CameraNodelet::AutoExposure() {
     // If images not being captured, do not adjust exposure
-    if (!thread_running_) return;
+    if (!thread_running_ || ((pub_.getNumSubscribers() == 0) && (getNumBayerSubscribers() == 0))) return;
 
     // Get last generated image from buffer (index incremented after image completed)
     sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ - 1) % kImageMsgBuffer];
@@ -360,7 +360,7 @@ namespace is_camera {
 
     // Calculate Histogram
     cv::Mat hist;
-    int histSize = 256;
+    int histSize = 5;
     float range[] = {0, 256};  // the upper boundary is exclusive
     const float* histRange[] = { range };
     bool uniform = true, accumulate = false;
@@ -368,27 +368,34 @@ namespace is_camera {
 
     // Calculate mean sample value
     double mean_sample_value = 0;
-    for (int i = 1; i < histSize; ++i) {
-      mean_sample_value += hist.at<float>(i-1) * hist.at<float>(i);
+
+    for (int i = 0; i < histSize; ++i) {
+      mean_sample_value += hist.at<float>(i) * (i+1);
     }
-    mean_sample_value /= (kImageHeight*kImageWidth);
+    mean_sample_value /= (kImageHeight * kImageWidth);
 
     // Control Auto exposure with a PI controller
     err_p_ = desired_msv_ - mean_sample_value;
-    err_i_ += err_p_;
-    if (abs(err_i_) > max_i_) {
-      err_i_ = abs(err_i_) * max_i_;
-    }
 
     // Don't change exposure if we're close enough. Changing too often slows
     // down the data rate of the camera.
-    if (abs(err_p_) > 0.5) {
-      v4l_->SetParameters(camera_gain_, camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
+    if (std::abs(err_p_) > 0.2) {
+      // Calculate PI coefficients
+      err_i_ += err_p_;
+      if (std::abs(err_i_) > max_i_) {
+        err_i_ = (err_i_ > 0) ? max_i_ : - max_i_;
+      }
+      // Update camera exposure parameter
+      camera_auto_exposure_ = std::round(camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
+      if (camera_auto_exposure_ < 0) camera_auto_exposure_ = 0;
+      else if (camera_auto_exposure_ > 300000) camera_auto_exposure_ = 300000;
+
+      v4l_->SetParameters(camera_gain_, camera_auto_exposure_);
     }
 
     // Publish exposure data
     std_msgs::Int32 exposure_msg;
-    exposure_msg.data = camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_;
+    exposure_msg.data = camera_auto_exposure_;
     pub_exposure_.publish(exposure_msg);
   }
 
