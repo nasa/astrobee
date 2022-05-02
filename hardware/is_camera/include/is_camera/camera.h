@@ -61,7 +61,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   // lifetime, but in this case we're publishing at a lower rate and
   // expecting the subscriber callback to at most de-Bayer the image
   // before passing it on, so the buffer doesn't need to be so long.
-  static constexpr size_t kBayerImageMsgBufferLength = 10;
+  static constexpr size_t kBayerImageMsgBufferLength = 5;
 
   static constexpr size_t kImageWidth = 1280;
   static constexpr size_t kImageHeight = 960;
