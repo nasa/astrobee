@@ -45,7 +45,7 @@ The creation of registration points is detailed in `build_map.md`, images from t
 
 ### 6. Verify the resulting map
 Use:     
-`rosrun localization_analysis run_graph_bag_and_plot_results bag_name map_name config_path --generate-image-features -r robot_config -w world_name`
+`rosrun localization_analysis run_graph_bag_and_plot_results bag_name map_name config_path --generate-image-features -r robot_config -w world_name`  
 to test localization with the map. 
 
 The bags used here should not have been used for map creation but should contain data in the area of the map. They additionally need IMU data, if this is not available image registration can be testing using the sparse_mapping_pose_adder tool. Make sure to include the `--generate-image-features` option since image features in the bag are recorded using matches with whatever map was used when the bag was recorded. 
