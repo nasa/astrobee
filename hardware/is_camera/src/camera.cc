@@ -373,7 +373,7 @@ namespace is_camera {
     // Calculate mean sample value
     double mean_sample_value = 0;
 
-    for (int i = 0; i < histSize; ++i) {
+    for (int i = 0; i < hist_size; ++i) {
       mean_sample_value += hist.at<float>(i) * (i+1);
     }
     mean_sample_value /= (kImageHeight * kImageWidth);
