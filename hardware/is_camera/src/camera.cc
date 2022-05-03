@@ -209,8 +209,18 @@ namespace is_camera {
     auto_exposure_timer_ = GetPrivateHandle()->createTimer(
       ros::Duration(1),
       [this](ros::TimerEvent e) {
-        if (auto_exposure_) AutoExposure();
-      },
+        // Publish exposure data
+        std_msgs::Int32MultiArray msg;
+        msg.data.push_back(camera_gain_);
+        if (auto_exposure_) {
+          AutoExposure();
+          msg.data.push_back(camera_auto_exposure_);
+        } else {
+          msg.data.push_back(camera_exposure_);
+        }
+        pub_exposure_.publish(msg);
+      }
+      ,
       false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
@@ -396,12 +406,6 @@ namespace is_camera {
 
       v4l_->SetParameters(camera_gain_, camera_auto_exposure_);
     }
-
-    // Publish exposure data
-    std_msgs::Int32MultiArray msg;
-    msg.data.push_back(camera_gain_);
-    msg.data.push_back(camera_auto_exposure_);
-    pub_exposure_.publish(msg);
   }
 
   void CameraNodelet::PublishLoop() {
