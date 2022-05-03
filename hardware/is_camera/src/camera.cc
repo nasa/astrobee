@@ -401,8 +401,8 @@ namespace is_camera {
       }
       // Update camera exposure parameter
       camera_auto_exposure_ = std::round(camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
-      if (camera_auto_exposure_ < 0) camera_auto_exposure_ = 0;
-      else if (camera_auto_exposure_ > 300000) camera_auto_exposure_ = 300000;
+      if (camera_auto_exposure_ < 50.0) camera_auto_exposure_ = 50.0;
+      else if (camera_auto_exposure_ > 250.0) camera_auto_exposure_ = 250.0;
 
       v4l_->SetParameters(camera_gain_, camera_auto_exposure_);
     }
