@@ -102,9 +102,7 @@ if __name__ == "__main__":
         + " -o "
         + args.output_bagfile
     )
-    lu.run_command_and_save_output(
-        run_graph_bag_command, "run_graph_bag_command.txt"
-    )
+    lu.run_command_and_save_output(run_graph_bag_command, "run_graph_bag_command.txt")
 
     # Plot results
     plot_results_command = (
@@ -117,6 +115,4 @@ if __name__ == "__main__":
     )
     if args.groundtruth_bagfile:
         plot_results_command += " -g " + args.groundtruth_bagfile
-    lu.run_command_and_save_output(
-        plot_results_command, "plot_results_command.txt"
-    )
+    lu.run_command_and_save_output(plot_results_command, "plot_results_command.txt")

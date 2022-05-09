@@ -76,9 +76,7 @@ def make_surf_map(
         + map_name
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100000000"
     )
-    lu.run_command_and_save_output(
-        build_map_command, basename + "_build_map.txt"
-    )
+    lu.run_command_and_save_output(build_map_command, basename + "_build_map.txt")
 
 
 if __name__ == "__main__":

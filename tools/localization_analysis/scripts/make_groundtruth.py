@@ -132,9 +132,7 @@ if __name__ == "__main__":
         + groundtruth_csv
         + " --generate-image-features"
     )
-    lu.run_command_and_save_output(
-        make_groundtruth_command, "make_groundtruth.txt"
-    )
+    lu.run_command_and_save_output(make_groundtruth_command, "make_groundtruth.txt")
     os.rename("run_graph_bag_command.txt", "groundtruth_run_graph_bag_command.txt")
 
     loc_results_bag = bag_prefix + "_results.bag"
@@ -164,7 +162,5 @@ if __name__ == "__main__":
     )
     if not args.use_image_features:
         get_loc_results_command += " --generate-image-features"
-    lu.run_command_and_save_output(
-        get_loc_results_command, "get_loc_results.txt"
-    )
+    lu.run_command_and_save_output(get_loc_results_command, "get_loc_results.txt")
     os.rename("run_graph_bag_command.txt", "loc_run_graph_bag_command.txt")

@@ -31,7 +31,7 @@ import sys
 
 # Import as to avoid same name as function in this script
 import make_surf_map as mm
-import localization_common.utilities as lu 
+import localization_common.utilities as lu
 
 
 # Add traceback so errors are forwarded, otherwise
