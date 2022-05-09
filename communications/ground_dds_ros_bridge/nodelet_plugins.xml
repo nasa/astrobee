@@ -1,0 +1,9 @@
+<library path="lib/libdds_ros_bridge">
+  <class name="dds_ros_bridge/DdsRosBridge"
+    type="dds_ros_bridge::DdsRosBridge"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to act as a translator between dds and ros.
+    </description>
+  </class>
+</library>

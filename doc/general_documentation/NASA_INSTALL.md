@@ -152,7 +152,7 @@ When compiling, the `$WORKSPACE_PATH` defines where the `devel`, `build`, `logs`
   - native build path (WORKSPACE_PATH): `$ASTROBEE_WS`
   - native install path (INSTALL_PATH): `$ASTROBEE_WS/install`
   - armhf build path (WORKSPACE_PATH):  `$ASTROBEE_WS/armhf`
-  - armhf install path (INSTALL_PATH):  `$ASTROBEE_WS/armhf/install`
+  - armhf install path (INSTALL_PATH):  `$ASTROBEE_WS/armhf/opt/astrobee`
 
 You should set these values in your shell. 
 

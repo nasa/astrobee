@@ -113,6 +113,9 @@ module rapid {
       const rapid::String32 ARM_METHOD_ARM_PAN_AND_TILT_PARAM_WHICH = "which";
       const rapid::DataType ARM_METHOD_ARM_PAN_AND_TILT_DTYPE_WHICH = rapid::RAPID_STRING;
 
+      //@copy-declaration /** Deploys arm. The motion sequence is:<ol><li>Pan to 0</li><li>Tilt to 0</li></ol><p/>See also Arm.armPanAndTilt for more discussion of the arm. */
+      const rapid::String32 ARM_METHOD_DEPLOY_ARM = "deployArm";
+
       //@copy-declaration /** Opens or closes gripper.<p/>Astrobee's arm has a passively under-actuated gripper with a single motor. Opening the gripper commands the motor to pull on a pair of tendons that open the fingers. Closing the gripper cuts power to the motor; the fingers are spring-loaded to close. The first time the gripper opens, it calibrates the motor encoder position by fully opening until the fingers contact a hard stop, then relaxes slightly to its nominal open position. On later open cycles, it opens directly to the nominal open position. Note that the motor consumes significant power holding the gripper open, so it should be closed when not actively in use. Holding it open for extended periods (minutes) runs the risk of triggering a motor overtemperature fault, which disables the motor. */
       const rapid::String32 ARM_METHOD_GRIPPER_CONTROL = "gripperControl";
 
