@@ -31,14 +31,13 @@ import sys
 
 # Import as to avoid same name as function in this script
 import make_surf_map as mm
-import multiprocessing_helpers
-import utilities
+import localization_common.utilities as lu 
 
 
 # Add traceback so errors are forwarded, otherwise
 # some errors are suppressed due to the multiprocessing
 # library call
-@multiprocessing_helpers.full_traceback
+@lu.full_traceback
 def make_surf_map(bagfile, world, robot_name):
     mm.make_surf_map(bagfile, world, robot_name)
 

@@ -25,7 +25,7 @@ import os
 import shutil
 import sys
 
-import utilities
+import localization_common.utilities as lu
 
 
 def make_surf_map(
@@ -33,7 +33,7 @@ def make_surf_map(
     world,
     robot_name,
 ):
-    basename = utilities.basename(bagfile)
+    basename = lu.basename(bagfile)
     bag_images_dir = basename + "_bag_images"
     os.mkdir(bag_images_dir)
     bag_images_dir_path = os.path.abspath(bag_images_dir)
@@ -43,14 +43,14 @@ def make_surf_map(
         + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory "
         + bag_images_dir_path
     )
-    utilities.run_command_and_save_output(
+    lu.run_command_and_save_output(
         extract_images_command, basename + "_extract_images.txt"
     )
 
     remove_low_movement_images_command = (
         "rosrun sparse_mapping remove_low_movement_images " + bag_images_dir_path
     )
-    utilities.run_command_and_save_output(
+    lu.run_command_and_save_output(
         remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
     )
 
@@ -76,7 +76,7 @@ def make_surf_map(
         + map_name
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -histogram_equalization -num_subsequent_images 100000000"
     )
-    utilities.run_command_and_save_output(
+    lu.run_command_and_save_output(
         build_map_command, basename + "_build_map.txt"
     )
 
