@@ -29,7 +29,8 @@ import shutil
 import sys
 
 import make_map
-import utilities
+
+import localization_common.utilities as lu
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     os.chdir(args.output_directory)
 
     map_name = args.map_name
-    bag_prefix = utilities.basename(bagfile)
+    bag_prefix = lu.basename(bagfile)
     if not args.map_name:
         map_name = bag_prefix + "_groundtruth"
 
@@ -131,7 +132,7 @@ if __name__ == "__main__":
         + groundtruth_csv
         + " --generate-image-features"
     )
-    utilities.run_command_and_save_output(
+    lu.run_command_and_save_output(
         make_groundtruth_command, "make_groundtruth.txt"
     )
     os.rename("run_graph_bag_command.txt", "groundtruth_run_graph_bag_command.txt")
@@ -163,7 +164,7 @@ if __name__ == "__main__":
     )
     if not args.use_image_features:
         get_loc_results_command += " --generate-image-features"
-    utilities.run_command_and_save_output(
+    lu.run_command_and_save_output(
         get_loc_results_command, "get_loc_results.txt"
     )
     os.rename("run_graph_bag_command.txt", "loc_run_graph_bag_command.txt")

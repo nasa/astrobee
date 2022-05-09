@@ -24,7 +24,7 @@ After splicing, the original bags can be removed or moved elsewhere.
 
 ### 3. Build individual maps for each spliced bag
 Run    
-`rosrun localization_analysis make_surf_maps.py`
+`rosrun sparse_mapping make_surf_maps.py`
 
 This builds individual maps in parallel for each spliced bag in the directory. The mapping process first removes low movement images from a bagfile to prevent triangulation issues and make the mapping process more efficient, then builds a surf map (detects image features, matches features, runs incremental bundle adjustment using successive images, runs a final round of bundle adjustment on the whole map).
 
@@ -45,7 +45,7 @@ The creation of registration points is detailed in `build_map.md`, images from t
 
 ### 6. Verify the resulting map
 Use:     
-`rosrun localization_analysis run_graph_bag_and_plot_results bag_name map_name config_path --generate-image-features -r robot_config -w world_name`  
+`rosrun sparse_mapping run_graph_bag_and_plot_results bag_name map_name config_path --generate-image-features -r robot_config -w world_name`  
 to test localization with the map. 
 
 The bags used here should not have been used for map creation but should contain data in the area of the map. They additionally need IMU data, if this is not available image registration can be testing using the sparse_mapping_pose_adder tool. Make sure to include the `--generate-image-features` option since image features in the bag are recorded using matches with whatever map was used when the bag was recorded. 

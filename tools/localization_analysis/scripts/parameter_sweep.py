@@ -37,14 +37,15 @@ import config_creator
 import numpy as np
 import parameter_sweep_utilities
 import plot_parameter_sweep_results
-import utilities
+
+import localization_common.utilities as lu
 
 
 # Run graph localizer with values.
 # Add traceback so errors are forwarded, otherwise
 # some errors are suppressed due to the multiprocessing
 # library call
-@utilities.full_traceback
+@lu.full_traceback
 def test_values(
     values,
     job_id,
@@ -199,7 +200,7 @@ def make_values_and_parameter_sweep(
     rmse_rel_start_time=0,
     rmse_rel_end_time=-1,
 ):
-    output_dir = utilities.create_directory(output_dir)
+    output_dir = lu.create_directory(output_dir)
     print(("Output directory for results is {}".format(output_dir)))
 
     value_ranges, value_names = make_value_ranges()

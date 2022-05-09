@@ -25,7 +25,6 @@ import argparse
 import os
 
 import pandas as pd
-import utilities
 
 
 def combined_results(csv_files):
