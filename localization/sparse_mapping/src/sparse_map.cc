@@ -424,8 +424,10 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
 void SparseMap::SetDetectorParams(int min_features, int max_features, int retries,
                                   double min_thresh, double default_thresh, double max_thresh) {
+  mutex_detector_.lock();
   detector_.Reset(detector_.GetDetectorName(), min_features, max_features, retries,
                   min_thresh, default_thresh, max_thresh);
+  mutex_detector_.unlock();
 }
 
 void SparseMap::Save(const std::string & protobuf_file) const {
@@ -610,6 +612,7 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
 #endif
 
   std::vector<cv::KeyPoint> storage;
+  mutex_detector_.lock();
   if (!multithreaded) {
     detector_.Detect(*image_ptr, &storage, descriptors);
   } else {
@@ -626,6 +629,7 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
                                                    min_thresh, default_thresh, max_thresh);
     local_detector.Detect(*image_ptr, &storage, descriptors);
   }
+  mutex_detector_.unlock();
 
   if (FLAGS_verbose_localization)
     std::cout << "Features detected " << storage.size() << std::endl;
