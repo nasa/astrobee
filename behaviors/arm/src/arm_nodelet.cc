@@ -257,7 +257,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
             return STATE::STOWING_SETTING;
           else if (goal_set_)
             return STATE::SETTING;
-          else   // We don't know where we were, return error
+          else   // Finished
             return Result(RESPONSE::SUCCESS);
         }
         if (!Arm(PAN))
