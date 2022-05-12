@@ -28,9 +28,8 @@ import os
 import shutil
 import sys
 
-import make_map
-
 import localization_common.utilities as lu
+import make_map
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

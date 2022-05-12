@@ -27,11 +27,10 @@ import shutil
 import sys
 
 import bag_sweep
+import localization_common.utilities as lu
 import pandas as pd
 import parameter_sweep
 import plot_parameter_sweep_results
-
-import localization_common.utilities as lu
 
 
 def save_ranges(param_range_directory, output_directory):

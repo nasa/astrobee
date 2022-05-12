@@ -29,9 +29,10 @@ import multiprocessing
 import os
 import sys
 
+import localization_common.utilities as lu
+
 # Import as to avoid same name as function in this script
 import make_surf_map as mm
-import localization_common.utilities as lu
 
 
 # Add traceback so errors are forwarded, otherwise

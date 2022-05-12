@@ -33,11 +33,10 @@ import multiprocessing
 import os
 
 import config_creator
+import localization_common.utilities as lu
 import numpy as np
 import parameter_sweep_utilities
 import plot_parameter_sweep_results
-
-import localization_common.utilities as lu
 
 
 # Run depth odometry with values.

@@ -29,10 +29,9 @@ import multiprocessing
 import os
 import sys
 
+import localization_common.utilities as lu
 import multiprocessing_helpers
 import utilities
-
-import localization_common.utilities as lu
 
 
 class GroundtruthParams(object):
