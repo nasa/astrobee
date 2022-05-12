@@ -51,7 +51,7 @@ def make_map(
     utilities.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
     remove_low_movement_images_command = (
-        "rosrun sparse_mapping remove_low_movement_images " + bag_images 
+        "rosrun sparse_mapping remove_low_movement_images " + bag_images
     )
     utilities.run_command_and_save_output(
         remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
