@@ -50,11 +50,12 @@ def make_map(
     )
     utilities.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
-    all_bag_images = os.path.join(bag_images, "*.jpg")
-    select_images_command = (
-        "rosrun sparse_mapping select_images -density_factor 1.4 " + all_bag_images
+    remove_low_movement_images_command = (
+        "rosrun sparse_mapping remove_low_movement_images " + bag_images 
     )
-    utilities.run_command_and_save_output(select_images_command, "select_images.txt")
+    utilities.run_command_and_save_output(
+        remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
+    )
 
     # Set environment variables
     home = os.path.expanduser("~")
@@ -69,6 +70,7 @@ def make_map(
 
     # Build map
     bag_surf_map = map_name + ".map"
+    all_bag_images = os.path.join(bag_images, "*.jpg")
     build_map_command = (
         "rosrun sparse_mapping build_map "
         + all_bag_images
