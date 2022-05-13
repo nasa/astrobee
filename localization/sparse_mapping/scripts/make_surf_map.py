@@ -60,9 +60,7 @@ def make_surf_map(
     astrobee_path = os.path.join(home, "astrobee/src/astrobee")
     os.environ["ASTROBEE_RESOURCE_DIR"] = os.path.join(astrobee_path, "resources")
     os.environ["ASTROBEE_CONFIG_DIR"] = os.path.join(astrobee_path, "config")
-    os.environ["ASTROBEE_ROBOT"] = os.path.join(
-        astrobee_path, "config/robots/bumble.config"
-    )
+    os.environ["ASTROBEE_ROBOT"] = os.path.join(astrobee_path, robot_config_file)
     os.environ["ASTROBEE_WORLD"] = world
 
     # Build map
