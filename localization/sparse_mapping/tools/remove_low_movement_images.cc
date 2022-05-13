@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--max-low-movement-mean-distance,m", po::value<double>(&max_low_movement_mean_distance)->default_value(0.1),
+    "--max-low-movement-mean-distance,m", po::value<double>(&max_low_movement_mean_distance)->default_value(0.15),
     "Max mean distance for optical flow tracks between sequential images to be classified as a low movement pair.");
   po::positional_options_description p;
   p.add("image-directory", 1);
