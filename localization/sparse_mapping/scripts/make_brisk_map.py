@@ -50,7 +50,7 @@ def make_brisk_map(
     # Get full path to output file to avoid permission errors when running
     # command in maps directory
     map_name = lu.basename(surf_map)
-    rebuild_output_file = os.path.join(os.getcwd(), "rebuild_map_as_brisk_map.txt")
+    build_brisk_map_output_file = os.path.join(os.getcwd(), "rebuild_map_as_brisk_map.txt")
     brisk_map = map_name + ".brisk.map"
     shutil.copyfile(surf_map, brisk_map)
     brisk_map_full_path = os.path.abspath(brisk_map)
@@ -62,7 +62,7 @@ def make_brisk_map(
         "rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map "
         + brisk_map_full_path
     )
-    lu.run_command_and_save_output(build_brisk_map_command, "build_brisk_map.txt")
+    lu.run_command_and_save_output(build_brisk_map_command, build_brisk_map_output_file)
     # Change back to original directory so final map is saved there
     if map_directory:
         os.chdir(path)
