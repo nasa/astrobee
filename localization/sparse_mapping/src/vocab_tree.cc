@@ -52,6 +52,7 @@
  *
  */
 
+#include <sparse_mapping/FBrisk.h>
 #include <sparse_mapping/vocab_tree.h>
 // TODO(bcoltin) remove circular dependency?
 #include <sparse_mapping/sparse_map.h>
@@ -97,16 +98,16 @@ class ProtobufDatabase : public DBoW2::TemplatedDatabase<TDescriptor, F> {
   void LoadProtobuf(google::protobuf::io::ZeroCopyInputStream* input);
 };
 
-typedef ProtobufVocabulary<DBoW2::FBrief::TDescriptor, DBoW2::FBrief> BinaryVocabulary;
-typedef ProtobufDatabase<DBoW2::FBrief::TDescriptor, DBoW2::FBrief> BriefDatabase;
+typedef ProtobufVocabulary<DBoW2::FBrisk::TDescriptor, DBoW2::FBrisk> BinaryVocabulary;
+typedef ProtobufDatabase<DBoW2::FBrisk::TDescriptor, DBoW2::FBrisk> BriskDatabase;
 
 // Thin wrappers around DBoW2 databases, to avoid exposing the
 // originals in the header file for compilation speed.
-class BinaryDB : public BriefDatabase {
+class BinaryDB : public BriskDatabase {
  public:
-  explicit BinaryDB(google::protobuf::io::ZeroCopyInputStream* input) : BriefDatabase(input) {}
+  explicit BinaryDB(google::protobuf::io::ZeroCopyInputStream* input) : BriskDatabase(input) {}
   BinaryDB(BinaryVocabulary const& voc, bool flag, int val):
-       BriefDatabase(voc, flag, val){}
+       BriskDatabase(voc, flag, val){}
 };
 
 template<class TDescriptor, class F>
@@ -342,7 +343,7 @@ void ResetDB(VocabDB* db) {
 // These are defined here, rather than in the header file,
 // since they are very local functions, and to put them
 // in the header file would require defining there
-// the typedef DVision::BRIEF::bitset, which
+// the typedef DVision::BRISK::bitset, which
 // would imply including in the header file all DBoW2
 // headers, which will slow compilation.
 
@@ -361,17 +362,17 @@ void MatDescrToVec(cv::Mat const& mat, std::vector<float> * vec) {
   }
 }
 
-void MatDescrToVec(cv::Mat const& mat, DBoW2::BriefDescriptor * brief) {
+void MatDescrToVec(cv::Mat const& mat, DBoW2::BriskDescriptor * brisk) {
   // Go from a row matrix of binary descriptors to a vector of
   // descriptors, extracting the bits from each byte along the way.
 
   if (mat.rows != 1)
     LOG(FATAL) << "Expecting a single-row matrix.\n";
 
-  brief->Initialize(mat.cols);
+  brisk->Initialize(mat.cols);
 
   for (int c = 0; c < mat.cols; c++)
-    brief->desc[c] = mat.at<uchar>(0, c);
+    brisk->desc[c] = mat.at<uchar>(0, c);
 }
 
 // Query the database. Return the indices of the images
@@ -386,9 +387,9 @@ void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
     assert(IsBinaryDescriptor(descriptor));
     BinaryDB & db = *(vocab_db->binary_db);  // shorten
 
-    std::vector<DBoW2::BriefDescriptor> descriptors_vec;
+    std::vector<DBoW2::BriskDescriptor> descriptors_vec;
     for (int r = 0; r < descriptors.rows; r++) {
-      DBoW2::BriefDescriptor descriptor;
+      DBoW2::BriskDescriptor descriptor;
       MatDescrToVec(descriptors.row(r), &descriptor);
       descriptors_vec.push_back(descriptor);
     }
@@ -422,14 +423,14 @@ void BuildDBforDBoW2(SparseMap* map, std::string const& descriptor,
     // Binary descriptors. For each image, copy them from a CV matrix
     // to a vector of vectors. Also extract individual bits from
     // each byte.
-    std::vector<std::vector<DBoW2::FBrief::TDescriptor > > features;
+    std::vector<std::vector<DBoW2::FBrisk::TDescriptor > > features;
     for (int cid = 0; cid < num_frames; cid++) {
       int num_keys = map->GetFrameKeypoints(cid).outerSize();
       num_features += num_keys;
-      std::vector<DBoW2::FBrief::TDescriptor> descriptors;
+      std::vector<DBoW2::FBrisk::TDescriptor> descriptors;
       for (int i = 0; i < num_keys; i++) {
         cv::Mat row = map->GetDescriptor(cid, i);
-        DBoW2::FBrief::TDescriptor descriptor;
+        DBoW2::FBrisk::TDescriptor descriptor;
         MatDescrToVec(row, &descriptor);
         descriptors.push_back(descriptor);
       }
