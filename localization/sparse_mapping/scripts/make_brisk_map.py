@@ -62,7 +62,7 @@ def make_brisk_map(
         "rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map "
         + brisk_map_full_path
     )
-    lu.run_command_and_save_output(build_brisk_map_command, build_brisk_output_file)
+    lu.run_command_and_save_output(build_brisk_map_command, "build_brisk_map.txt")
     # Change back to original directory so final map is saved there
     if map_directory:
         os.chdir(path)
