@@ -27,10 +27,10 @@ import shutil
 import sys
 
 import bag_sweep
+import localization_common.utilities as lu
 import pandas as pd
 import parameter_sweep
 import plot_parameter_sweep_results
-import utilities
 
 
 def save_ranges(param_range_directory, output_directory):
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     if os.path.isdir(args.output_dir):
         print(("Output directory " + args.output_dir + " already exists."))
         sys.exit()
-    output_dir = utilities.create_directory(args.output_dir)
+    output_dir = lu.create_directory(args.output_dir)
 
     graph_bag_params_list = bag_sweep.load_params(args.config_file)
     bag_and_parameter_sweep(graph_bag_params_list, output_dir)
