@@ -28,29 +28,23 @@ import sys
 import localization_common.utilities as lu
 
 
-def make_brisk_map(
-    surf_map,
-    world,
-    robot_name,
-    map_directory = None
-):
+def make_brisk_map(surf_map, world, robot_name, map_directory=None):
     # Set environment variables
     home = os.path.expanduser("~")
     robot_config_file = os.path.join("config/robots", robot_name + ".config")
     astrobee_path = os.path.join(home, "astrobee/src/astrobee")
     os.environ["ASTROBEE_RESOURCE_DIR"] = os.path.join(astrobee_path, "resources")
     os.environ["ASTROBEE_CONFIG_DIR"] = os.path.join(astrobee_path, "config")
-    os.environ["ASTROBEE_ROBOT"] = os.path.join(
-        astrobee_path, robot_config_file
-    )
+    os.environ["ASTROBEE_ROBOT"] = os.path.join(astrobee_path, robot_config_file)
     os.environ["ASTROBEE_WORLD"] = world
-
 
     # Convert SURF to BRISK map
     # Get full path to output file to avoid permission errors when running
     # command in maps directory
     map_name = lu.basename(surf_map)
-    build_brisk_map_output_file = os.path.join(os.getcwd(), "rebuild_map_as_brisk_map.txt")
+    build_brisk_map_output_file = os.path.join(
+        os.getcwd(), "rebuild_map_as_brisk_map.txt"
+    )
     brisk_map = map_name + ".brisk.map"
     shutil.copyfile(surf_map, brisk_map)
     brisk_map_full_path = os.path.abspath(brisk_map)
@@ -80,10 +74,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("surf_map", help="Input SURF map to generate the BRISK map for.")
+    parser.add_argument(
+        "surf_map", help="Input SURF map to generate the BRISK map for."
+    )
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
-    parser.add_argument("-d", "--map-directory", default=None, help="Location where surf map was created, needed to load images for BRISK map building since relative paths are used during map creation for the image locations. Defaults to current working directory.")
+    parser.add_argument(
+        "-d",
+        "--map-directory",
+        default=None,
+        help="Location where surf map was created, needed to load images for BRISK map building since relative paths are used during map creation for the image locations. Defaults to current working directory.",
+    )
 
     args = parser.parse_args()
     if not os.path.isfile(args.surf_map):
@@ -97,9 +98,4 @@ if __name__ == "__main__":
     surf_map = os.path.abspath(args.surf_map)
     if args.map_directory:
         args.map_directory = os.path.abspath(args.map_directory)
-    make_brisk_map(
-        surf_map,
-        args.world,
-        args.robot_name,
-        args.map_directory
-    )
+    make_brisk_map(surf_map, args.world, args.robot_name, args.map_directory)
