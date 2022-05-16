@@ -495,6 +495,11 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  if (FLAGS_jump_to_3d_view) {
+    FLAGS_skip_3d_points = true;
+    FLAGS_skip_3d_images = true;
+  }
+
   // Do a visualization of all the projected keypoints into the
   // cameras. Navigate with the arrow keys or with 'a' and 'd'. Press
   // 'c' to show the cameras and points in 3D.
