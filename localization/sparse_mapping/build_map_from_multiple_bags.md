@@ -28,12 +28,20 @@ Run
 
 This builds individual maps in parallel for each spliced bag in the directory. The mapping process first removes low movement images from a bagfile to prevent triangulation issues and make the mapping process more efficient, then builds a surf map (detects image features, matches features, runs incremental bundle adjustment using successive images, runs a final round of bundle adjustment on the whole map).
 
+View the map poses using  
+`rosrun sparse_mapping nvm_visualize -only_poses`
+to ensure the maps were built successfully.
+
 
 ### 4. Merge SURF maps
 A common merge strategy for a set of movements is to identify the longest movement that covers the most of an area and incrementally merge in maps that have sufficient overlap with this. Use:    
 `rosrun sparse_mapping merge_maps larger_map_name smaller_map_name -output_map combined_map_name -num_image_overlaps_at_endpoints 1000000`
 
 First merge the new movements together using the above strategy, then optionally merge the resultant combined new movements map into an already existing map (that has some overlap with the new combined movements maps). 
+
+View the resulting map poses using  
+`rosrun sparse_mapping nvm_visualize -only_poses`
+to ensure the maps were built successfully.
 
 ### 5. Register SURF map using provided world points
 Since mapping is perfomed using monocular images, no set scale is provied and the map needs to be registered using real world points before being used for localization. Additionally, providing known point locations for images in the map can improve the accuracy of the map creation. 
