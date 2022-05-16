@@ -356,7 +356,7 @@ namespace is_camera {
     } else {
       return;
     }
-    enable = bayer_enable_;
+    bayer_enable_ = enable;
   }
 
   // Timer that periodically changes camera exposure based on the captured image's histogram
