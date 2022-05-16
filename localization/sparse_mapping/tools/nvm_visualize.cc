@@ -39,6 +39,8 @@
 #include <fstream>
 #include <sstream>
 
+DEFINE_bool(only_poses, false,
+            "Only view camera poses in 3D.");
 DEFINE_bool(jump_to_3d_view, false,
             "Skip displaying images and features, go directly to the 3D view.");
 DEFINE_bool(skip_3d_points, false,
@@ -495,7 +497,8 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  if (FLAGS_jump_to_3d_view) {
+  if (FLAGS_only_poses) {
+    FLAGS_jump_to_3d_view = true;
     FLAGS_skip_3d_points = true;
     FLAGS_skip_3d_images = true;
   }
