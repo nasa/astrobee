@@ -37,7 +37,7 @@ def dosys(cmd):
     return ret
 
 
-def rosbag_fix_all(inbag_paths_in, jobs):
+def rosbag_fix_all(inbag_paths_in, jobs, deserialize=False):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
     inbag_paths = [p for p in inbag_paths_in if not p.endswith(".fix_all.bag")]
@@ -48,7 +48,16 @@ def rosbag_fix_all(inbag_paths_in, jobs):
         )
     outbag_paths = [os.path.splitext(p)[0] + ".fix_all.bag" for p in inbag_paths]
     outbag_paths_str = " ".join(outbag_paths)
-    ret = dosys("make -f%s -j%s %s" % (makefile, jobs, outbag_paths_str))
+
+    rosbag_verify_args = "-v"
+    if deserialize:
+        rosbag_verify_args += " -d"
+
+    # "1>&2": redirect stdout to stderr to see make's command echo in rostest output
+    ret = dosys(
+        'ROSBAG_VERIFY_ARGS="%s" make -f%s -j%s %s 1>&2'
+        % (rosbag_verify_args, makefile, jobs, outbag_paths_str)
+    )
 
     logging.info("")
     logging.info("====================")
@@ -62,9 +71,7 @@ def rosbag_fix_all(inbag_paths_in, jobs):
     return ret
 
 
-class CustomFormatter(
-    argparse.ArgumentDefaultsHelpFormatter,
-):
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter):
     pass
 
 
@@ -79,12 +86,19 @@ if __name__ == "__main__":
         type=int,
         default=1,
     )
+    parser.add_argument(
+        "-d",
+        "--deserialize",
+        help="perform deserialization check on output bag (can be slow for large bags)",
+        default=False,
+        action="store_true",
+    )
     parser.add_argument("inbag", nargs="+", help="input bag")
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    ret = rosbag_fix_all(args.inbag, args.jobs)
+    ret = rosbag_fix_all(args.inbag, args.jobs, deserialize=args.deserialize)
 
     # suppress confusing ROS message at exit
     logging.getLogger().setLevel(logging.WARN)
