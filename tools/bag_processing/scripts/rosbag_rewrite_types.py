@@ -185,7 +185,7 @@ def rename_types(inbag, outbag_path, rename_lookup, verbose=False):
             )
 
     # while copying messages we need to rename types so they are mapped to the right connection
-    do_meter = True
+    do_meter = False  # unhelpful in CI test logs
     with rosbag.Bag(outbag_path, "w", options=inbag.options) as outbag:
         if do_meter:
             meter = rosbag.rosbag_main.ProgressMeter(
@@ -232,7 +232,7 @@ def rewrite_msg_types1(
     if tmp_folder:
         dosys("rm -r %s" % tmp_folder)
 
-    cmd = "rosbag reindex %s" % outbag_path
+    cmd = "rosbag reindex -q %s" % outbag_path
     if no_reindex:
         logging.info("%s probably needs to be re-indexed. Run: %s\n", outbag_path, cmd)
     else:
