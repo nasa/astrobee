@@ -153,12 +153,8 @@ def fix_message_definitions(inbag, fix_topic_patterns, verbose=False):
             logging.info("  [none]")
 
 
-def rename_types(inbag, outbag, rename_lookup, verbose=False):
-    """
-    Modifies inbag metadata (in memory, not on disk). Changes will take
-    effect when inbag's messages are subsequently written to outbag.
-    """
-
+def rename_types(inbag, outbag_path, rename_lookup, verbose=False):
+    # rewrite connection headers
     renamed_types = set()
     for conn in inbag._get_connections():
         hdr = conn.header
@@ -170,6 +166,7 @@ def rename_types(inbag, outbag, rename_lookup, verbose=False):
             for k in ("type", "md5sum", "message_definition"):
                 hdr[k] = tgt[k].encode("utf-8")
 
+    # summarize rewrite rules that were applied
     if verbose:
         # summary of renamed messages
         migrated = sorted(renamed_types)
@@ -187,6 +184,40 @@ def rename_types(inbag, outbag, rename_lookup, verbose=False):
                 tgt["md5sum"][:8],
             )
 
+    # while copying messages we need to rename types so they are mapped to the right connection
+    do_meter = False  # unhelpful in CI test logs
+    with rosbag.Bag(outbag_path, "w", options=inbag.options) as outbag:
+        if do_meter:
+            meter = rosbag.rosbag_main.ProgressMeter(
+                outbag_path, inbag._uncompressed_size
+            )
+            total_bytes = 0
+
+        for topic, raw_msg, t in inbag.read_messages(raw=True):
+            msg_type, serialized_bytes, md5sum, pos, pytype = raw_msg
+
+            rename_key = (msg_type, md5sum)
+            tgt = rename_lookup.get(rename_key)
+            if tgt is not None:
+                out_msg = (
+                    tgt["type"],
+                    serialized_bytes,
+                    tgt["md5sum"],
+                    pos,
+                    tgt["pytype"],
+                )
+            else:
+                out_msg = raw_msg
+
+            outbag.write(topic, out_msg, t, raw=True)
+
+            if do_meter:
+                total_bytes += len(serialized_bytes)
+                meter.step(total_bytes)
+
+        if do_meter:
+            meter.finish()
+
 
 def rewrite_msg_types1(
     inbag_path_in, outbag_path, rules, verbose=False, no_reindex=False
@@ -195,14 +226,13 @@ def rewrite_msg_types1(
 
     fix_topic_patterns, rename_lookup = rules
     with rosbag.Bag(inbag_path, "r") as inbag:
-        with rosbag.Bag(outbag_path, "w", options=inbag.options) as outbag:
-            fix_message_definitions(inbag, fix_topic_patterns, verbose)
-            rename_types(inbag, outbag, rename_lookup, verbose)
+        fix_message_definitions(inbag, fix_topic_patterns, verbose)
+        rename_types(inbag, outbag_path, rename_lookup, verbose)
 
     if tmp_folder:
         dosys("rm -r %s" % tmp_folder)
 
-    cmd = "rosbag reindex %s" % outbag_path
+    cmd = "rosbag reindex -q %s" % outbag_path
     if no_reindex:
         logging.info("%s probably needs to be re-indexed. Run: %s\n", outbag_path, cmd)
     else:
