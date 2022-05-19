@@ -92,7 +92,7 @@ def get_rules(rules_files):
         with open(rules_file, "r") as rules_stream:
             rules_info = json.load(rules_stream)
 
-        for k, rules in rules_info.iteritems():
+        for k, rules in rules_info.items():
             if k == "fix_message_definition_topic_patterns":
                 fix_topic_patterns += rules
             elif k == "rename_types":
@@ -160,30 +160,24 @@ def rename_types(inbag, outbag_path, rename_lookup, verbose=False):
         hdr = conn.header
         rename_key = (hdr["type"].decode("utf-8"), hdr["md5sum"].decode("utf-8"))
         tgt = rename_lookup.get(rename_key)
-        if tgt is None:
-            # just copy the message to outbag, no rewrite needed
-            outbag.write(topic, msg, t, raw=True)
-        else:
-            num_renamed[rename_key] += 1
-            # rewrite the necessary fields of the message and connection header
-            new_msg = (tgt["type"], msg_data, tgt["md5sum"], msg_pos, tgt["pytype"])
+        if tgt is not None:
+            renamed_types.add(rename_key)
+            # rewrite the necessary fields of the connection header
             for k in ("type", "md5sum", "message_definition"):
-                conn[k] = tgt[k]
-            outbag.write(topic, new_msg, t, connection_header=conn, raw=True)
+                hdr[k] = tgt[k].encode("utf-8")
 
     # summarize rewrite rules that were applied
     if verbose:
         # summary of renamed messages
-        migrated = sorted(num_renamed.keys())
-        logging.info("Renamed message counts by type:")
+        migrated = sorted(renamed_types)
+        logging.info("Renamed types in bag:")
         if not migrated:
-            logging.info("  [no matching messages found]")
+            logging.info("  [no matching types found in bag]")
         for key in migrated:
             old_type, old_type_md5sum = key
             tgt = rename_lookup[key]
             logging.info(
-                "  %5d %s %s -> %s %s",
-                num_renamed[key],
+                "  %s %s -> %s %s",
                 old_type,
                 old_type_md5sum[:8],
                 tgt["type"],
@@ -273,11 +267,7 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=CustomFormatter
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        help="print debug info",
-        default=False,
-        action="store_true",
+        "-v", "--verbose", help="print debug info", default=False, action="store_true"
     )
     parser.add_argument(
         "-o",
