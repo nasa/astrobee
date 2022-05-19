@@ -26,7 +26,7 @@ import os
 import shutil
 import sys
 
-import utilities
+import localization_common.utilities as lu
 
 
 def make_map(
@@ -39,7 +39,7 @@ def make_map(
     maps_directory=None,
 ):
     merge_with_base_map = base_surf_map is not None and maps_directory is not None
-    bag_images_dir = "bag_images_" + utilities.basename(bagfile)
+    bag_images_dir = "bag_images_" + lu.basename(bagfile)
     os.mkdir(bag_images_dir)
     bag_images = os.path.abspath(bag_images_dir)
     extract_images_command = (
@@ -48,13 +48,14 @@ def make_map(
         + " -use_timestamp_as_image_name -image_topic /mgt/img_sampler/nav_cam/image_record -output_directory "
         + bag_images
     )
-    utilities.run_command_and_save_output(extract_images_command, "extract_images.txt")
+    lu.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
-    all_bag_images = os.path.join(bag_images, "*.jpg")
-    select_images_command = (
-        "rosrun sparse_mapping select_images -density_factor 1.4 " + all_bag_images
+    remove_low_movement_images_command = (
+        "rosrun sparse_mapping remove_low_movement_images " + bag_images
     )
-    utilities.run_command_and_save_output(select_images_command, "select_images.txt")
+    lu.run_command_and_save_output(
+        remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
+    )
 
     # Set environment variables
     home = os.path.expanduser("~")
@@ -69,6 +70,7 @@ def make_map(
 
     # Build map
     bag_surf_map = map_name + ".map"
+    all_bag_images = os.path.join(bag_images, "*.jpg")
     build_map_command = (
         "rosrun sparse_mapping build_map "
         + all_bag_images
@@ -78,7 +80,7 @@ def make_map(
     )
     if histogram_equalization:
         build_map_command += " -histogram_equalization"
-    utilities.run_command_and_save_output(build_map_command, "build_map.txt")
+    lu.run_command_and_save_output(build_map_command, "build_map.txt")
 
     if merge_with_base_map:
         merged_surf_map = map_name + ".surf.map"
@@ -91,7 +93,7 @@ def make_map(
             + merged_surf_map
             + " -num_image_overlaps_at_endpoints 100000000 -skip_bundle_adjustment"
         )
-        utilities.run_command_and_save_output(merge_map_command, "merge_map.txt")
+        lu.run_command_and_save_output(merge_map_command, "merge_map.txt")
         bag_surf_map = merged_surf_map
 
         # Link maps directory since conversion to BRISK map needs
@@ -116,7 +118,7 @@ def make_map(
     )
     if histogram_equalization:
         rebuild_map_command += " -histogram_equalization"
-    utilities.run_command_and_save_output(rebuild_map_command, rebuild_output_file)
+    lu.run_command_and_save_output(rebuild_map_command, rebuild_output_file)
     # Use bag_path since relative commands would now be wrt maps directory simlink
     if merge_with_base_map:
         os.chdir(bag_path)
@@ -127,7 +129,7 @@ def make_map(
     add_vocabdb_command = (
         "rosrun sparse_mapping build_map -vocab_db -output_map " + bag_brisk_vocabdb_map
     )
-    utilities.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
+    lu.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
 
     if merge_with_base_map:
         # Remove simlinks

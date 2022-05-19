@@ -39,6 +39,8 @@
 #include <fstream>
 #include <sstream>
 
+DEFINE_bool(only_poses, false,
+            "Only view camera poses in 3D.");
 DEFINE_bool(jump_to_3d_view, false,
             "Skip displaying images and features, go directly to the 3D view.");
 DEFINE_bool(skip_3d_points, false,
@@ -81,6 +83,8 @@ cv::Affine3f EigenToCVAffine(const Eigen::Affine3d & e) {
 
 void Draw3DFrame(cv::viz::Viz3d* window, const sparse_mapping::SparseMap & map,
                  int cid, cv::Vec3f const& center) {
+  if (FLAGS_only_3d_points) return;
+
   std::ostringstream str;
 
   // Convert to an affine, perhaps change the origin
@@ -89,21 +93,30 @@ void Draw3DFrame(cv::viz::Viz3d* window, const sparse_mapping::SparseMap & map,
 
   // Load up the image
   cv::Mat image = cv::imread(map.GetFrameFilename(cid), cv::IMREAD_GRAYSCALE);
-  double f = map.GetCameraParameters().GetFocalLength();
-
-  if (!FLAGS_only_3d_points) {
-    if (FLAGS_skip_3d_images) {
-      window->showWidget(std::string("frame") + std::to_string(cid),
-                         cv::viz::WCameraPosition(cv::Vec2f(2*atan(image.cols * 0.5 / f),
-                             2*atan(image.rows * 0.5 / f)),
-                             FLAGS_scale), camera_pose);
-    } else {
-      window->showWidget(std::string("frame") + std::to_string(cid),
-                         cv::viz::WCameraPosition(cv::Vec2f(2*atan(image.cols * 0.5 / f),
-                             2*atan(image.rows * 0.5 / f)),
-                             image, FLAGS_scale), camera_pose);
-    }
+  if (image.empty() && !FLAGS_skip_3d_images) {
+    LOG(FATAL) << "Failed to load image.";
   }
+
+  double f;
+  int cols;
+  int rows;
+  if (!image.empty()) {
+    f = map.GetCameraParameters().GetFocalLength();
+    cols = image.cols;
+    rows = image.rows;
+  } else {
+    // Set default values if no images are available to poses are still viewable
+    f = 600;
+    cols = 640;
+    rows = 480;
+  }
+  const auto viz_camera_position =
+    FLAGS_skip_3d_images
+      ? cv::viz::WCameraPosition(cv::Vec2f(2 * atan(cols * 0.5 / f), 2 * atan(rows * 0.5 / f)), FLAGS_scale)
+      : cv::viz::WCameraPosition(cv::Vec2f(2 * atan(cols * 0.5 / f), 2 * atan(rows * 0.5 / f)), image, FLAGS_scale);
+
+  window->showWidget(std::string("frame") + std::to_string(cid),
+                         viz_camera_position, camera_pose);
 }
 
 typedef struct {
@@ -482,6 +495,12 @@ int main(int argc, char** argv) {
   if (argc < 2) {
     std::cerr << "Usage: " << argv[0] << " [ map.map ] [image1.jpg image2.jpg ...]" << "\n";
     return 0;
+  }
+
+  if (FLAGS_only_poses) {
+    FLAGS_jump_to_3d_view = true;
+    FLAGS_skip_3d_points = true;
+    FLAGS_skip_3d_images = true;
   }
 
   // Do a visualization of all the projected keypoints into the
