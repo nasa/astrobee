@@ -26,13 +26,14 @@ import sys
 import cv2
 import rosbag
 import rospy
-import utilities
+import utilities.utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
 
 def convert_bayer(
     bagfile,
+    output_bag_name,
     list_cam,
     bayer_image_topic,
     gray_image_topic,
@@ -42,7 +43,6 @@ def convert_bayer(
 ):
     bridge = CvBridge()
     topics = dict((bayer_image_topic.replace("nav", cam), cam) for cam in list_cam)
-    output_bag_name = os.path.splitext(bagfile)[0] + "_out.bag"
     output_bag = rosbag.Bag(output_bag_name, "w")
 
     with rosbag.Bag(bagfile, "r") as bag:
@@ -95,7 +95,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("bagfile", help="Input bagfile with bayer images.")
+    parser.add_argument("inbag", nargs="+", help="Input bagfile with bayer images.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="path for output bag",
+        default="debayer_{inbag}",
+    )
     parser.add_argument(
         "-l",
         "--list-cam",
@@ -149,21 +155,31 @@ if __name__ == "__main__":
         help="Save bayer topic alongside converted image on the new bagfile",
     )
     args = parser.parse_args()
-    if not os.path.isfile(args.bagfile):
-        print(("Bag file " + args.bagfile + " does not exist."))
-        sys.exit()
 
     if args.disable_gray:
         args.gray_image_topic = ""
     if args.disable_color:
         args.color_image_topic = ""
 
-    convert_bayer(
-        args.bagfile,
-        args.list_cam,
-        args.bayer_image_topic,
-        args.gray_image_topic,
-        args.color_image_topic,
-        args.save_all_topics,
-        args.keep_bayer_topic,
-    )
+    for inbag_path in args.inbag:
+        # Check if input bag exists
+        if not os.path.isfile(inbag_path):
+            print(("Bag file " + inbag_path + " does not exist."))
+            sys.exit()
+        output_bag_name = args.output.format(inbag=inbag_path)
+
+        # Check if output bag already exists
+        if os.path.exists(output_bag_name):
+            parser.error("not replacing existing file %s" % output_bag_name)
+
+        # Conver bayer topic to black/white and color
+        convert_bayer(
+            inbag_path,
+            output_bag_name,
+            args.list_cam,
+            args.bayer_image_topic,
+            args.gray_image_topic,
+            args.color_image_topic,
+            args.save_all_topics,
+            args.keep_bayer_topic,
+        )

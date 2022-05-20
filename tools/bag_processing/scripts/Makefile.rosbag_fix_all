@@ -28,32 +28,63 @@
 
 ROS_VERSION=$(shell rosversion -d)
 
+# Find script executables
 ifeq (,${REWRITE_TYPES})
   REWRITE_TYPES = $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
 endif
 ifeq (,${ROSBAG_VERIFY})
   ROSBAG_VERIFY = $(shell catkin_find --first-only bag_processing scripts/rosbag_verify.py)
 endif
+ifeq (,${ROSBAG_DEBAYER})
+  ROSBAG_DEBAYER = $(shell catkin_find --first-only bag_processing scripts/rosbag_debayer.py)
+endif
+ifeq (,${ROSBAG_SPLIT_DEPTH})
+  ROSBAG_SPLIT_DEPTH = $(shell catkin_find --first-only pico_driver scripts/pico_split_extended.py)
+endif
+ifeq (,${ROSBAG_FILTER})
+  ROSBAG_FILTER = $(shell catkin_find --first-only bag_processing scripts/rosbag_topic_filter.py)
+endif
+
+# Find rosbag migration definitions
 ifeq (,${FF_MSGS_BMR})
   FF_MSGS_BMR = $(shell catkin_find --first-only ff_msgs bmr)
 endif
 BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr) $(wildcard ${FF_MSGS_BMR}/${ROS_VERSION}/*.bmr))
-REWRITE_RULES = -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
+REWRITE_TYPES_ARGS += -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
 
 ifeq (,${ISAAC_MSGS_BMR})
   ISAAC_MSGS_BMR = $(shell catkin_find --first-only isaac_msgs bmr 2> /dev/null)
 endif
 ifneq (,${ISAAC_MSGS_BMR})
   # If isaac_msgs is available, apply extra rules. Shouldn't hurt non-ISAAC bags.
-  BMR += $(sort $(wildcard ${ISAAC_MSGS_BMR}/*.bmr))
-  REWRITE_RULES += -r ${ISAAC_MSGS_BMR}/rosbag_rewrite_types_rules.json
+  MR += $(sort $(wildcard ${ISAAC_MSGS_BMR}/*.bmr))
+  REWRITE_TYPES_ARGS += -r ${ISAAC_MSGS_BMR}/rosbag_rewrite_types_rules.json
 endif
 
-%.rewrite_types.bag: %.bag
-	${REWRITE_TYPES} -v ${REWRITE_RULES} $< -o $@
 
-%.fix_all.bag: %.rewrite_types.bag
+# Fix rosjava scicam bug
+rewrite_types_%.bag: %.bag
+	${REWRITE_TYPES} ${REWRITE_TYPES_ARGS} $< -o $@
+
+# Fix old message definitions
+migrate_old_%.bag: rewrite_types_%.bag
 	rosbag fix $< $@ ${BMR}
-	rm $<  # explicitly delete right away to save disk space
 	rosbag check $@  # test: post-migration consistency
-	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@ $(@:.fix_all.bag=.bag)
+	# compare with original bag to make sure data is there
+	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@  $(@:migrate_old_%=%)
+	rm $<  # explicitly delete right away to save disk space
+
+# Debayer the nav cam
+debayer_%.bag: migrate_old_%.bag
+	${ROSBAG_DEBAYER} ${ROSBAG_DEBAYER_ARGS} $< -o $@
+	rm $<  # explicitly delete right away to save disk space
+
+# Decode the haz cam into point cloud + image
+depth_split_%.bag: debayer_%.bag
+	${ROSBAG_SPLIT_DEPTH} ${ROSBAG_SPLIT_DEPTH_ARGS} $< -o $@
+	rm $<  # explicitly delete right away to save disk space
+
+# Decode the haz cam into point cloud + image
+fix_all_%.bag: depth_split_%.bag
+	${ROSBAG_FILTER} ${ROSBAG_FILTER_ARGS} $< -o $@
+

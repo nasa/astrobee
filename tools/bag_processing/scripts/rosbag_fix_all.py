@@ -37,38 +37,79 @@ def dosys(cmd):
     return ret
 
 
-def rosbag_fix_all(inbag_paths_in, jobs, deserialize=False):
+def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
-    inbag_paths = [p for p in inbag_paths_in if not p.endswith(".fix_all.bag")]
+    inbag_paths = [p for p in inbag_paths_in if not p.startswith("fix_all_")]
     skip_count = len(inbag_paths_in) - len(inbag_paths)
     if skip_count:
         logging.info(
-            "Not trying to fix %d files that already end in .fix_all.bag", skip_count
+            "Not trying to fix %d files that already starts with fix_all_", skip_count
         )
-    outbag_paths = [os.path.splitext(p)[0] + ".fix_all.bag" for p in inbag_paths]
+
+    # Skip processed bags to start in the correct stage if the Makefile
+    inbag_paths = [p for p in inbag_paths if not p.startswith("rewrite_types_")]
+    inbag_paths = [p for p in inbag_paths if not p.startswith("migrate_old_")]
+    inbag_paths = [p for p in inbag_paths if not p.startswith("debayer_")]
+    inbag_paths = [p for p in inbag_paths if not p.startswith("depth_split_")]
+
+    outbag_paths = ["fix_all_" + os.path.splitext(p)[0] + ".bag" for p in inbag_paths]
     outbag_paths_str = " ".join(outbag_paths)
 
+    # Rosbag migrate message definitions
+    rewrite_types_args = "-v"
+
+    # Rosbag verify bags
     rosbag_verify_args = "-v"
     if deserialize:
         rosbag_verify_args += " -d"
 
+    # Rosbag convert debayer
+    rosbag_debayer_args = "-s"
+
+    # Rosbag decode haz cam
+    output_stream = os.popen("catkin_find --first-only bag_processing resources")
+    coeff_path = output_stream.read().rstrip() + "/" + robot + "_haz_xyz_coeff.npy"
+    rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
+
+    # Rosbag filter
+    rosbag_filter_args = ""
+
+    # Call entire pipeline on all the files
     # "1>&2": redirect stdout to stderr to see make's command echo in rostest output
-    ret = dosys(
-        'ROSBAG_VERIFY_ARGS="%s" make -f%s -j%s %s 1>&2'
-        % (rosbag_verify_args, makefile, jobs, outbag_paths_str)
+    ret1 = dosys(
+        'REWRITE_TYPES_ARGS="%s" ROSBAG_VERIFY_ARGS="%s" ROSBAG_DEBAYER_ARGS="%s" ROSBAG_SPLIT_DEPTH_ARGS="%s" ROSBAG_FILTER_ARGS="%s" make -f%s -j%s %s 1>&2'
+        % (
+            rewrite_types_args,
+            rosbag_verify_args,
+            rosbag_debayer_args,
+            rosbag_pico_split_extended_args,
+            rosbag_filter_args,
+            makefile,
+            jobs,
+            outbag_paths_str,
+        )
     )
+
+    # Merge resulting bags
+    dosys("mkdir -p fix_all")
+    dosys("mv -i  fix_all_* fix_all")
+    output_stream = os.popen(
+        "catkin_find --first-only bag_processing scripts/rosbag_merge.py"
+    )
+    merge_bags_path = output_stream.read().rstrip() + " -d fix_all"
+    ret2 = dosys(merge_bags_path)
 
     logging.info("")
     logging.info("====================")
-    if ret == 0:
+    if ret1 == 0 and ret2 == 0:
         logging.info("Fixed bags:")
         for outbag_path in outbag_paths:
             logging.info("  %s", outbag_path)
     else:
         logging.warning("Not all bags were fixed successfully (see errors above).")
 
-    return ret
+    return 0
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -93,12 +134,21 @@ if __name__ == "__main__":
         default=False,
         action="store_true",
     )
+    parser.add_argument(
+        "-r",
+        "--robot",
+        default="bumble",
+        help="Robot being used.",
+        type=str,
+    )
     parser.add_argument("inbag", nargs="+", help="input bag")
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    ret = rosbag_fix_all(args.inbag, args.jobs, deserialize=args.deserialize)
+    ret = rosbag_fix_all(
+        args.inbag, args.robot, args.jobs, deserialize=args.deserialize
+    )
 
     # suppress confusing ROS message at exit
     logging.getLogger().setLevel(logging.WARN)

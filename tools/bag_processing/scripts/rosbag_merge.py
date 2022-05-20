@@ -23,6 +23,7 @@ Merges bagfiles with given prefix in the current working directory.
 import argparse
 import os
 import re
+import string
 import sys
 
 import rosbag
@@ -86,6 +87,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "input_bag_prefix",
+        nargs="*",
         help="Prefix for bagfiles to merge. Bags should all be in the current working directory.",
     )
     parser.add_argument(
@@ -94,10 +96,37 @@ if __name__ == "__main__":
         help="Output merged bag. By default this is merged_prefix.bag where prefix is the provided bag prefix.",
     )
     parser.add_argument(
+        "-d",
+        "--directory",
+        default=".",
+        help="Directory to where to find the bags",
+    )
+    parser.add_argument(
         "--only-loc-topics",
         dest="only_loc_topics",
         action="store_true",
         help="Only save loc topics to output merged bag.",
     )
     args = parser.parse_args()
-    merge_bag(args.input_bag_prefix, args.merged_bag, args.only_loc_topics)
+    os.chdir(args.directory)
+
+    bag_names = args.input_bag_prefix
+    if not bag_names:
+        # Find bagfiles with bag prefix in current directory, fail if none found
+        bag_names = [
+            (os.path.splitext(bag)[0]).rstrip(string.digits)
+            for bag in os.listdir(".")
+            if os.path.isfile(bag) and bag.endswith(".bag")
+        ]
+        # Remove duplicates
+        bag_names = sorted(set(bag_names))
+        if len(bag_names) == 0:
+            print("No bag files found")
+            sys.exit()
+        else:
+            print(("Found " + str(len(bag_names)) + " bag file prefixes."))
+
+    print(bag_names)
+    for bag_name in bag_names:
+        print(bag_name)
+        merge_bag(bag_name, args.merged_bag, args.only_loc_topics)
