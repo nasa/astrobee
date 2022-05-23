@@ -40,6 +40,7 @@ def dosys(cmd):
 def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
+    inbag_paths_in = [p for p in inbag_paths_in if p.endswith(".bag")]
     inbag_paths = [p for p in inbag_paths_in if not p.startswith("fix_all_")]
     skip_count = len(inbag_paths_in) - len(inbag_paths)
     if skip_count:
