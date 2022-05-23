@@ -1,5 +1,9 @@
 # Releases
 
+## Release 0.16.5
+
+  * Fix multiple bugs
+
 ## Release 0.16.4
 
   * Auto-exposure
