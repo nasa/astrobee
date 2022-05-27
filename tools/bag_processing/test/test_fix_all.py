@@ -40,11 +40,17 @@ class TestFixAll(unittest.TestCase):
         bags = os.path.join(bags_folder, "*.bag")
 
         bag_list = glob.glob(bags)
-        self.assertIsNot(len(bag_list), 0)  # sanity check bags path
+        self.assertIsNot(len(bag_list), 0)  # check test bags exist
 
-        fix_all_return_value = dosys("%s %s" % (fix_all, bags))
-        self.assertIs(fix_all_return_value, 0)  # check bags fixed
-        dosys("rm %s/*.fix_all.bag" % bags_folder)
+        fix_all_return_value = dosys("%s -d %s" % (fix_all, bags))
+        self.assertIs(fix_all_return_value, 0)  # check script success
+
+        fixed_bags = os.path.join(bags_folder, "*.fix_all.bag")
+        fixed_bag_list = glob.glob(fixed_bags)
+        self.assertEquals(len(bag_list), len(fixed_bag_list))  # check # output files
+
+        # cleanup
+        dosys("rm %s" % fixed_bags)
 
 
 if __name__ == "__main__":
