@@ -29,6 +29,7 @@ import multiprocessing
 import os
 import sys
 
+import localization_common.utilities as lu
 import multiprocessing_helpers
 import utilities
 
@@ -100,7 +101,7 @@ def check_params(groundtruth_params_list):
 # library call
 @multiprocessing_helpers.full_traceback
 def run_groundtruth(params):
-    output_directory = utilities.basename(params.bagfile) + "_groundtruth"
+    output_directory = lu.basename(params.bagfile) + "_groundtruth"
     groundtruth_command = (
         "rosrun localization_analysis make_groundtruth.py "
         + params.bagfile
@@ -124,8 +125,8 @@ def run_groundtruth(params):
     if not bool(params.use_image_features):
         groundtruth_command += " --generate-image-features"
 
-    output_file = utilities.basename(params.bagfile) + "_groundtruth.txt"
-    utilities.run_command_and_save_output(groundtruth_command, output_file)
+    output_file = lu.basename(params.bagfile) + "_groundtruth.txt"
+    lu.run_command_and_save_output(groundtruth_command, output_file)
 
 
 def groundtruth_sweep(config_file, num_processes):

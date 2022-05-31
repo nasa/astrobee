@@ -31,6 +31,9 @@ ROS_VERSION=$(shell rosversion -d)
 ifeq (,${REWRITE_TYPES})
   REWRITE_TYPES = $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
 endif
+ifeq (,${ROSBAG_VERIFY})
+  ROSBAG_VERIFY = $(shell catkin_find --first-only bag_processing scripts/rosbag_verify.py)
+endif
 ifeq (,${FF_MSGS_BMR})
   FF_MSGS_BMR = $(shell catkin_find --first-only ff_msgs bmr)
 endif
@@ -53,3 +56,4 @@ endif
 	rosbag fix $< $@ ${BMR}
 	rm $<  # explicitly delete right away to save disk space
 	rosbag check $@  # test: post-migration consistency
+	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@ $(@:.fix_all.bag=.bag)

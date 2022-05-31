@@ -496,6 +496,7 @@ reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
 
+\subpage build_map_from_multiple_bags
 \subpage map_building
 \subpage total_station
 \subpage granite_lab_registration

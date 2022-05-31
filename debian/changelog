@@ -1,3 +1,18 @@
+astrobee (0.16.5) testing; urgency=medium
+
+  * Fix multiple bugs
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 23 May 2022 14:15:36 -0700
+
+astrobee (0.16.4) testing; urgency=medium
+
+  * Auto-exposure
+  * Add splice tool
+  * Add arm deploy to bridge
+  * Various bug fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Tue, 03 May 2022 22:35:57 -0700
+
 astrobee (0.16.3) testing; urgency=medium
 
   * Added bag tools

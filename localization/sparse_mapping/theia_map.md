@@ -130,24 +130,10 @@ double-precision seconds since epoch), which provides for a rather
 unique name, as compared to using the image index in the bag without
 that option.
 
-Select a subset of the images:
+Remove low movement images:
+    rosrun sparse_mapping remove_low_movement_images image_directory_name
 
-    select_images -density_factor 1.4 image_dir/*.jpg
-
-This will delete a lot of similar images from that directory. This is
-not a foolproof process, and sometimes too many images are deleted but
-most of the time too many are left.  It is suggested to open the
-remaining images with ``eog`` as:
-
-    eog image_dir/*.jpg
-
-and use the ``Delete`` key to remove redundant ones. The
-``nvm_visualize`` tool (see \ref sparsemapping) can be used exactly as
-``eog``, and it has the advantage that it echoes the current image
-name in the terminal, which can be useful in some occasions.
-
-A good rule of thumb is for each image to have a 4/5 overlap with the
-next one. Too much or too little overlap will cause Theia to fail.
+This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
 
 It is suggested to avoid images with pure camera rotation, or at least
 to have in the mix additional images of the same environemnt without
