@@ -19,4 +19,5 @@
 # capabilities with a planner node.
 
 string map_file                  # Name of map to use  
+bool use_default_map             # Load default map from configs, ignore map_file
 ---

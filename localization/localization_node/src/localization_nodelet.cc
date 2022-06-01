@@ -51,6 +51,8 @@ void LocalizationNodelet::ResetMap(const std::string& map_file) {
   thread_->join();
   map_.reset(new sparse_mapping::SparseMap(map_file, true));
   inst_.reset(new Localizer(map_.get()));
+  // Check to see if any params were changed when map was reset
+  ReadParams();
   thread_.reset(new std::thread(&localization_node::LocalizationNodelet::Run, this));
 }
 
@@ -124,8 +126,14 @@ bool LocalizationNodelet::EnableService(ff_msgs::SetBool::Request & req, ff_msgs
 }
 
 bool LocalizationNodelet::ResetMapService(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
-  // TODO(rsoussan): make sure map file exists, handle failure
-  ResetMap(req.map_file);
+  std::string map_file;
+  if (req.use_default_map) {
+    if (!config_.GetStr("world_vision_map_filename", &map_file))
+      ROS_ERROR("Cannot read world_vision_map_filename from LUA config");
+  } else {
+    map_file = req.map_file;
+  }
+  ResetMap(map_file);
   return true;
 }
 
