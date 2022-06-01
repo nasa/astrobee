@@ -46,6 +46,12 @@ LocalizationNodelet::~LocalizationNodelet(void) {
   pthread_cond_destroy(&cond_features_);
 }
 
+LocalizationNodelet::ResetMap(const std::string& map_file) {
+  thread_->join();
+  map_.reset(new sparse_mapping::SparseMap(map_file, true));
+  inst_.reset(new Localizer(map_.get()));
+  thread_.reset(new std::thread(&localization_node::LocalizationNodelet::Run, this));
+}
 
 void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());
@@ -74,57 +80,14 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
 
   matched_features_on_ = false;
   all_features_on_ = false;
-  map_cloud_on_ = false;
   config_.GetBool("matched_features_on", &matched_features_on_);
   config_.GetBool("all_features_on", &all_features_on_);
-  config_.GetBool("map_cloud_on", &map_cloud_on_);
 
   if (matched_features_on_) {
     used_features_publisher_ = nh->advertise<sensor_msgs::Image>("rviz/used_features", 10);
   }
   if (all_features_on_) {
     detected_features_publisher_ = nh->advertise<sensor_msgs::Image>("rviz/detected_features", 10);
-  }
-  if (map_cloud_on_) {
-    all_features_publisher_ = nh->advertise<sensor_msgs::PointCloud2>("rviz/all_features", 1, true);
-    sensor_msgs::PointCloud2 features;
-    features.header = std_msgs::Header();
-    features.header.frame_id = "world";
-    features.height = 1;
-    features.width = (map_.get())->GetNumLandmarks();
-    features.fields.resize(3);
-    features.fields[0].name = "x";
-    features.fields[0].offset = 0;
-    features.fields[0].datatype = 7;
-    features.fields[0].count = 1;
-    features.fields[1].name = "y";
-    features.fields[1].offset = 4;
-    features.fields[1].datatype = 7;
-    features.fields[1].count = 1;
-    features.fields[2].name = "z";
-    features.fields[2].offset = 8;
-    features.fields[2].datatype = 7;
-    features.fields[2].count = 1;
-    features.is_bigendian = false;
-    features.point_step = 12;
-    features.row_step = features.point_step * features.width;
-    features.is_dense = true;
-    features.data.resize(features.row_step);
-
-    // store the entire map file once as a PointCloud2
-    for (int i = 0; i < static_cast<int>(features.width); i++) {
-      Eigen::Vector3d pos_vector = (map_.get())->GetLandmarkPosition(i);
-      float x = static_cast<float>(pos_vector[0]);
-      float y = static_cast<float>(pos_vector[1]);
-      float z = static_cast<float>(pos_vector[2]);
-
-      memcpy(&features.data[features.point_step * i + 0], &x, 4);
-      memcpy(&features.data[features.point_step * i + 4], &y, 4);
-      memcpy(&features.data[features.point_step * i + 8], &z, 4);
-    }
-
-    features.header.stamp = ros::Time::now();
-    all_features_publisher_.publish(features);
   }
 
   // start a new thread to run everything
@@ -142,6 +105,7 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
       config_.CheckFilesUpdated(std::bind(&LocalizationNodelet::ReadParams, this));}, false, true);
 
   enable_srv_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE, &LocalizationNodelet::EnableService, this);
+  reset_map_srv_ = nh->advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &LocalizationNodelet::ResetMapService, this);
 }
 
 void LocalizationNodelet::ReadParams(void) {
@@ -149,10 +113,18 @@ void LocalizationNodelet::ReadParams(void) {
     ROS_ERROR("Failed to read config files.");
     return;
   }
-  inst_->ReadParams(&config_);
+  if (inst_) inst_->ReadParams(&config_);
 }
 
 bool LocalizationNodelet::EnableService(ff_msgs::SetBool::Request & req, ff_msgs::SetBool::Response & res) {
+  enabled_ = req.enable;
+  res.success = true;
+  return true;
+}
+
+// TODO(rsoussan): pass string to reset service!! test!
+bool LocalizationNodelet::ResetMapService(ff_msgs::SetBool::Request & req, ff_msgs::SetBool::Response & res) {
+  ResetMap(map_file);
   enabled_ = req.enable;
   res.success = true;
   return true;
