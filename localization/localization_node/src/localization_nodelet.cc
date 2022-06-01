@@ -23,6 +23,7 @@
 
 #include <ros/ros.h>
 #include <ff_msgs/CameraRegistration.h>
+#include <ff_msgs/ResetMap.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <gflags/gflags.h>
@@ -46,7 +47,7 @@ LocalizationNodelet::~LocalizationNodelet(void) {
   pthread_cond_destroy(&cond_features_);
 }
 
-LocalizationNodelet::ResetMap(const std::string& map_file) {
+void LocalizationNodelet::ResetMap(const std::string& map_file) {
   thread_->join();
   map_.reset(new sparse_mapping::SparseMap(map_file, true));
   inst_.reset(new Localizer(map_.get()));
@@ -122,11 +123,9 @@ bool LocalizationNodelet::EnableService(ff_msgs::SetBool::Request & req, ff_msgs
   return true;
 }
 
-// TODO(rsoussan): pass string to reset service!! test!
-bool LocalizationNodelet::ResetMapService(ff_msgs::SetBool::Request & req, ff_msgs::SetBool::Response & res) {
-  ResetMap(map_file);
-  enabled_ = req.enable;
-  res.success = true;
+bool LocalizationNodelet::ResetMapService(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
+  // TODO(rsoussan): make sure map file exists, handle failure
+  ResetMap(req.map_file);
   return true;
 }
 
