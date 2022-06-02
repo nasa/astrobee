@@ -45,7 +45,7 @@ class LocalizationNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void ReadParams(void);
-  void ResetMap(const std::string& map_file);
+  bool ResetMap(const std::string& map_file);
   void Run(void);
   void Localize(void);
   void ImageCallback(const sensor_msgs::ImageConstPtr& msg);

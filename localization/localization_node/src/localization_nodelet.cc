@@ -32,6 +32,7 @@
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <boost/filesystem.hpp>
 
 namespace localization_node {
 
@@ -47,13 +48,23 @@ LocalizationNodelet::~LocalizationNodelet(void) {
   pthread_cond_destroy(&cond_features_);
 }
 
-void LocalizationNodelet::ResetMap(const std::string& map_file) {
-  thread_->join();
+bool LocalizationNodelet::ResetMap(const std::string& map_file) {
+  if (!boost::filesystem::exists(map_file)) {
+    LOG(ERROR) << "Map file " << map_file << " does not exist, failed to reset map.";
+    return false;
+  }
+  // Disable and wait for localization to finish running if it is running
+  // before resetting the localizer
+  enabled_ = false;
+  while (processing_image_) {
+    usleep(100000);
+  }
   map_.reset(new sparse_mapping::SparseMap(map_file, true));
   inst_.reset(new Localizer(map_.get()));
   // Check to see if any params were changed when map was reset
   ReadParams();
-  thread_.reset(new std::thread(&localization_node::LocalizationNodelet::Run, this));
+  enabled_ = true;
+  return true;
 }
 
 void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
@@ -133,8 +144,8 @@ bool LocalizationNodelet::ResetMapService(ff_msgs::ResetMap::Request& req, ff_ms
   } else {
     map_file = req.map_file;
   }
-  ResetMap(map_file);
-  return true;
+  LOG(INFO) << "Resetting map to " << map_file;
+  return ResetMap(map_file);
 }
 
 void LocalizationNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& msg) {
