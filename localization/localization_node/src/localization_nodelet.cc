@@ -139,8 +139,10 @@ bool LocalizationNodelet::EnableService(ff_msgs::SetBool::Request & req, ff_msgs
 bool LocalizationNodelet::ResetMapService(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
   std::string map_file;
   if (req.use_default_map) {
-    if (!config_.GetStr("world_vision_map_filename", &map_file))
+    if (!config_.GetStr("world_vision_map_filename", &map_file)) {
       ROS_ERROR("Cannot read world_vision_map_filename from LUA config");
+      return false;
+    }
   } else {
     map_file = req.map_file;
   }
@@ -182,7 +184,7 @@ void LocalizationNodelet::Localize(void) {
   bool success = inst_->Localize(image_ptr_, &vl, &image_keypoints);
 
   vl.camera_id = count_;
-  landmark_publisher_.publish(vl);
+  if (enabled_) landmark_publisher_.publish(vl);
   ros::spinOnce();
 
   // only send transform if succeeded

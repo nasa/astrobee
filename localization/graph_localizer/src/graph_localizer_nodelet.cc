@@ -126,6 +126,7 @@ void GraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
 bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -135,6 +136,11 @@ bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& re
 bool GraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
   // Reset localizer while loading previous biases when map is reset to prevent possible initial
   // map jump from affecting estimated IMU biases and velocity estimation.
+  // Clear vl messages to prevent old localization results from being used by localizer after reset
+  // TODO(rsoussan): Better way to clear buffer?
+  vl_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
+                          &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   return ResetBiasesFromFileAndResetLocalizer();
 }
 
@@ -144,6 +150,7 @@ bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty
 }
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetBiasesFromFileAndResetLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -156,6 +163,7 @@ bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_sr
 }
 
 void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
   EnableLocalizer();
