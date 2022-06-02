@@ -18,6 +18,5 @@
 # This message allows path planner implementations to register their
 # capabilities with a planner node.
 
-string map_file                  # Name of map to use  
-bool use_default_map             # Load default map from configs, ignore map_file
+string map_file                  # Full path to map file to use. 'default' uses the default map loaded on startup  
 ---

@@ -138,7 +138,7 @@ bool LocalizationNodelet::EnableService(ff_msgs::SetBool::Request & req, ff_msgs
 
 bool LocalizationNodelet::ResetMapService(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
   std::string map_file;
-  if (req.use_default_map) {
+  if (req.map_file == "default") {
     if (!config_.GetStr("world_vision_map_filename", &map_file)) {
       ROS_ERROR("Cannot read world_vision_map_filename from LUA config");
       return false;
