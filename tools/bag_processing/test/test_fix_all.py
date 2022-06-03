@@ -18,6 +18,7 @@
 
 import glob
 import os
+import subprocess
 import sys
 import unittest
 
@@ -32,11 +33,18 @@ def dosys(cmd):
     return ret
 
 
+def get_path(ros_package, subpath):
+    cmd = ["catkin_find", "--first-only", ros_package, subpath]
+    return subprocess.check_output(cmd).decode("utf-8").strip()
+
+
 class TestFixAll(unittest.TestCase):
+    def get_test_bags_folder(self):
+        return get_path("bag_processing", "test/bags")
+
     def test_fix_all(self):
-        bp_folder = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        fix_all = os.path.join(bp_folder, "scripts/rosbag_fix_all.py")
-        bags_folder = os.path.join(bp_folder, "test/bags")
+        fix_all = get_path("bag_processing", "scripts/rosbag_fix_all.py")
+        bags_folder = self.get_test_bags_folder()
         bags = os.path.join(bags_folder, "*.bag")
 
         bag_list = glob.glob(bags)

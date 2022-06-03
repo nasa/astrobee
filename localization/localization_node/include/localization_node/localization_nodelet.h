@@ -24,10 +24,13 @@
 #include <sparse_mapping/sparse_map.h>
 #include <config_reader/config_reader.h>
 
+#include <ff_msgs/ResetMap.h>
 #include <ff_msgs/SetBool.h>
 #include <ff_util/ff_nodelet.h>
 #include <nodelet/nodelet.h>
 #include <image_transport/image_transport.h>
+
+#include <string>
 #include <thread>
 
 namespace localization_node {
@@ -42,10 +45,12 @@ class LocalizationNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void ReadParams(void);
+  bool ResetMap(const std::string& map_file);
   void Run(void);
   void Localize(void);
   void ImageCallback(const sensor_msgs::ImageConstPtr& msg);
   bool EnableService(ff_msgs::SetBool::Request & req, ff_msgs::SetBool::Response & res);
+  bool ResetMapService(ff_msgs::ResetMap::Request & req, ff_msgs::ResetMap::Response & res);
 
   std::shared_ptr<Localizer> inst_;
   std::shared_ptr<sparse_mapping::SparseMap> map_;
@@ -55,13 +60,13 @@ class LocalizationNodelet : public ff_util::FreeFlyerNodelet {
 
   std::shared_ptr<image_transport::ImageTransport> it_;
   image_transport::Subscriber image_sub_;
-  ros::ServiceServer enable_srv_;
+  ros::ServiceServer enable_srv_, reset_map_srv_;
   ros::Publisher registration_publisher_, landmark_publisher_,
     detected_features_publisher_, used_features_publisher_, all_features_publisher_;
   bool enabled_;
   int count_;
 
-  bool matched_features_on_, all_features_on_, map_cloud_on_;
+  bool matched_features_on_, all_features_on_;
   cv_bridge::CvImageConstPtr image_ptr_;
 
   volatile bool processing_image_;

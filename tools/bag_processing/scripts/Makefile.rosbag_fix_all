@@ -52,8 +52,18 @@ endif
 %.rewrite_types.bag: %.bag
 	${REWRITE_TYPES} -v ${REWRITE_RULES} $< -o $@
 
-%.fix_all.bag: %.rewrite_types.bag
+%.fix_all_pre_check.bag: %.rewrite_types.bag
 	rosbag fix $< $@ ${BMR}
 	rm $<  # explicitly delete right away to save disk space
-	rosbag check $@  # test: post-migration consistency
-	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@ $(@:.fix_all.bag=.bag)
+
+# The fix_all_check targets are .PHONY but too much trouble and not
+# necessary to declare that.
+
+fix_all_check1-%: %.fix_all_pre_check.bag
+	rosbag check $<
+
+fix_all_check2-%: %.fix_all_pre_check.bag
+	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $< $(<:.fix_all_pre_check.bag=.bag)
+
+%.fix_all.bag: %.fix_all_pre_check.bag fix_all_check1-% fix_all_check2-%
+	mv $< $@  # checks complete
