@@ -19,8 +19,11 @@
   <!-- Start the entire simulation stack -->
   <include file="$(find astrobee)/launch/sim.launch">
     <arg name="dds" value="false"/>
+    <arg name="robot" value="sim_pub"/>
     <arg name="pose" default="10.5 -8.5 4.5 0 0 0 1" />
   </include>
 
   <test pkg="choreographer" type="test_obstacle" test-name="test_obstacle" />
+  <!-- Reconfigure mapper. Wait for the server to be available -->
+  <node pkg="dynamic_reconfigure" type="dynparam" name="dynparam" args="set /cfg/mapper disable_mapper False"  launch-prefix="bash -c 'sleep 10; $0 $@' "/>
 </launch>

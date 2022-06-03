@@ -18,8 +18,8 @@
 
 #include "rapidUtil/RapidHelper.h"
 
-#include "AstrobeeConstants.h"
-#include "GncControlStateSupport.h"
+#include "dds_msgs/AstrobeeConstants.h"
+#include "dds_msgs/GncControlStateSupport.h"
 
 namespace ff {
 

@@ -52,20 +52,17 @@ reach `astrobee.ndc.nasa.gov`:
 
   1. Use VPN to act like if you were inside the ARC TI private network and 
      obtain the correct kerberos credentials inside the VM with the following
-     command (note the capitalization):
-```
-kinit $NDC_USERNAME@NDC.NASA.GOV`
-```
+     command (note the capitalization): `kinit $NDC_USERNAME@NDC.NASA.GOV`
   2. setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
   is available at: https://babelfish.arc.nasa.gov/trac/freeflyer/wiki/SSHSetup
 
 For either solution, please verify that you can SSH to `m.ndc.nasa.gov` without
 entering your password (`m` is used to tunnel to `astrobee.ndc.nasa.gov`):
 
-   ssh $NDC_USERNAME@m.ndc.nasa.gov
+   `ssh $NDC_USERNAME@m.ndc.nasa.gov`
    
 The command should succeed without entering your password. Once this is verified,
-exit this session on `m` with <ctrl>+D.
+exit this session on `m` with `<ctrl>+D`.
 
 - These notes apply to `install_desktop_16.04_packages.sh` and `make_xenial.sh`
 
@@ -73,13 +70,13 @@ exit this session on `m` with <ctrl>+D.
 ### Checkout the project source code
 
 At this point you need to decide where you'd like to put the source code
-(`SOURCE_PATH`) on your machine:
+(`ASTROBEE_WS`) on your machine:
 
-    export SOURCE_PATH=$HOME/astrobee
+    export ASTROBEE_WS=$HOME/astrobee
 
 First, clone the flight software repository:
 
-    git clone https://github.com/nasa/astrobee.git --branch develop $SOURCE_PATH
+    git clone https://github.com/nasa/astrobee.git --branch develop $ASTROBEE_WS/src
     git submodule update --init --depth 1 description/media
     git submodule update --init --depth 1 submodules/platform
 
@@ -99,8 +96,8 @@ module is used when cross-compiling to test on the robot hardware.
 ### Dependencies
 Install dependencies:
 
-    pushd $SOURCE_PATH
-    cd scripts/setup
+    pushd $ASTROBEE_WS
+    cd src/scripts/setup
     ./add_local_repository.sh
     ./add_ros_repository.sh
     ./install_desktop_packages.sh
@@ -134,8 +131,11 @@ Next, download the cross toolchain and install the chroot:
 
     mkdir -p $ARMHF_TOOLCHAIN
     cd $HOME/arm_cross
-    $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
-    $SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+    $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
+    $ASTROBEE_WS/src/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+
+*Note: The last script shown above needs the packages `qemu-user-static` (not
+`qemu-arm-static`) and `multistrap` to be installed (can be installed through apt).*
 
 ## Configuring the build
 
@@ -145,18 +145,20 @@ the code on the robot itself). Please skip to the relevant subsection.
 
 ### Note for both builds setup
 
-By default, the configure script uses the following paths:
+When compiling, the `$WORKSPACE_PATH` defines where the `devel`, `build`, `logs` and
+`install` directories are created. If you want to customize the `install` path then the
+`$INSTALL_PATH` can be defined. By default, the configure script uses the following paths:
 
-  - native build path (BUILD_PATH):     `$HOME/astrobee_build/native`
-  - native install path (INSTALL_PATH): `$HOME/astrobee_install/native`
-  - armhf build path (BUILD_PATH):      `$HOME/astrobee_build/armhf`
-  - armhf install path (INSTALL_PATH):  `$HOME/astrobee_install/armhf`
+  - native build path (WORKSPACE_PATH): `$ASTROBEE_WS`
+  - native install path (INSTALL_PATH): `$ASTROBEE_WS/install`
+  - armhf build path (WORKSPACE_PATH):  `$ASTROBEE_WS/armhf`
+  - armhf install path (INSTALL_PATH):  `$ASTROBEE_WS/armhf/opt/astrobee`
 
 You should set these values in your shell. 
 
 If you are satisfied with these paths, you can invoke the `configure.sh` without
-the `-p` and `-b` options. For the simplicity of the instructions below,
-we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
+the `-p` and `-w` options. For the simplicity of the instructions below,
+we assume that `$WORKSPACE_PATH` and `$INSTALL_PATH` contain the location of the
 build and install path for either `native` or `armhf` platforms.
 
 ### Native build
@@ -166,45 +168,57 @@ that `configure.sh` is simply a wrapper around CMake that provides an easy way
 of turning on and off options. To see which options are supported, simply run
 `configure.sh -h`.
 
-    pushd $SOURCE_PATH
-    ./scripts/configure.sh -l
+    pushd $ASTROBEE_WS
+    ./src/scripts/configure.sh -l
+    source ~/.bashrc
     popd
 
-If you want to explicitly specify the build and install directories, use
+The configure script modifies your ``.bashrc`` to source ``setup.bash`` for 
+the current ROS distribution and to set CMAKE_PREFIX_PATH. It is suggested
+to examine it and see if all changes were made correctly.
+
+If you want to explicitly specify the workspace and/or install directories, use
 instead:
 
-    ./scripts/configure.sh -l -p $INSTALL_PATH -b $BUILD_PATH
+    ./scripts/configure.sh -l -p $INSTALL_PATH -w $WORKSPACE_PATH
+
+*Note: If a workspace is specified but not an explicit install distectory,
+install location will be $WORKSPACE_PATH/install.*
 
 ### Cross-compile build
 
 Cross compiling for the robot follows the same process, except the configure
 script takes a `-a` flag instead of `-l`.
 
-    pushd $SOURCE_PATH
-    ./scripts/configure.sh -a
+    pushd $ASTROBEE_WS
+    ./src/scripts/configure.sh -a
     popd
 
 Or with explicit build and install paths:
 
-    ./scripts/configure.sh -a -p $INSTALL_PATH -b $BUILD_PATH
+    ./scripts/configure.sh -a -p $INSTALL_PATH -w $WORKSPACE_PATH
 
-*Warning: `$INSTALL_PATH` and `$BUILD_PATH` used for cross compiling HAVE to be
+*Warning: `$INSTALL_PATH` and `$WORKSPACE_PATH` used for cross compiling HAVE to be
 different than the paths for native build! See above for the default values 
 for these.*
 
 ## Building the code
 
-To build, run `make` in the `$BUILD_PATH`. Note that depending on your host
+To build, run `catkin build` in the `$WORKSPACE_PATH`. Note that depending on your host
 machine, this might take in the order of tens of minutes to complete the first
 time round. Future builds will be faster, as only changes to the code are
 rebuilt, and not the entire code base.
 
-    pushd $BUILD_PATH
-    make -j6
+    pushd $ASTROBEE_WS
+    catkin build
     popd
 
-*Note: `$BUILD_PATH` above is either the path for native build or armhf build,
-whatever you currently are doing.*
+## Switching build profiles
+
+To alternate between native and armhf profiles:
+
+    catkin profile set native
+    catkin profile set armhf
 
 ## Running a simulation
 
@@ -212,7 +226,7 @@ In order to run a simulation you must have build natively. You will need to
 first setup your environment, so that ROS knows about the new packages provided
 by Astrobee flight software:
 
-    pushd $BUILD_PATH
+    pushd $ASTROBEE_WS
     source devel/setup.bash
     popd
 
@@ -234,21 +248,17 @@ For more information on running the simulator and moving the robot, please see t
 ## Running the code on a real robot
 
 In order to do this, you will need to have followed the cross-compile build
-instructions. Once the code has been built, you also need to install the code to
+instructions. Once the code has been built, it also installs the code to
 a singular location. CMake remembers what `$INSTALL_PATH` you specified, and
 will copy all products into this directory.
-
-    pushd $BUILD_PATH
-    make install
-    popd
 
 Once the installation has completed, copy the install directory to the robot.
 This script assumes that you are connected to the Astrobee network, as it uses
 rsync to copy the install directory to `~/armhf` on the two processors. It 
 takes the robot name as an argument. Here we use `p4d'.
 
-    pushd $SOURCE_PATH
-    ./scripts/install_to_astrobee.sh $INSTALL_PATH p4d
+    pushd $ASTROBEE_WS
+    ./src/scripts/install_to_astrobee.sh $INSTALL_PATH p4d
     popd
 
 Here, p4d is the name of the robot, which may be different in your case.
@@ -256,8 +266,8 @@ Here, p4d is the name of the robot, which may be different in your case.
 You are now ready to run the code. This code launches a visualization tool,
 which starts the flight software as a background process.
 
-    pushd $SOURCE_PATH
-    python ./tools/gnc_visualizer/scripts/visualizer --proto4
+    pushd $ASTROBEE_WS
+    python ./src/tools/gnc_visualizer/scripts/visualizer --proto4
     popd
 
 # Further information

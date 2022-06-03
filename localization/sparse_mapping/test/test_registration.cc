@@ -146,3 +146,9 @@ TEST_F(SparseMapTest, Registration) {
   double scale = pow(surf_map->GetWorldTransform().linear().determinant(), 1.0/3.0);
   EXPECT_GT(scale, 0);  // just a sanity check
 }
+
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

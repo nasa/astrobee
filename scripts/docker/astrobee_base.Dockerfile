@@ -4,8 +4,8 @@
 # but it doesn't copy or build the entire code.
 # You must set the docker context to be the repository root directory
 
-ARG UBUNTU_VERSION=ubuntu16.04
-FROM nvidia/opengl:1.0-glvnd-runtime-$UBUNTU_VERSION
+ARG UBUNTU_VERSION=16.04
+FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu$UBUNTU_VERSION
 
 ARG ROS_VERSION=kinetic
 ARG PYTHON=''
@@ -18,11 +18,11 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt-get update \
   && apt-get install -y apt-utils 2>&1 | grep -v "debconf: delaying package configuration, since apt-utils is not installed" \
   && apt-get install -y \
-    build-essential \
-    git \
-    lsb-release \
-    sudo \
-    wget \
+  build-essential \
+  git \
+  lsb-release \
+  sudo \
+  wget \
   && rm -rf /var/lib/apt/lists/*
 
 # suppress detached head warnings later
@@ -55,20 +55,8 @@ COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 RUN /setup/astrobee/install_desktop_packages.sh \
   && rm -rf /var/lib/apt/lists/*
 
-#Add new sudo user
-ENV USERNAME astrobee
-RUN useradd -m $USERNAME && \
-        echo "$USERNAME:$USERNAME" | chpasswd && \
-        usermod --shell /bin/bash $USERNAME && \
-        usermod -aG sudo $USERNAME && \
-        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
-        chmod 0440 /etc/sudoers.d/$USERNAME && \
-        # Replace 1000 with your user/group id
-        usermod  --uid 1000 $USERNAME && \
-        groupmod --gid 1000 $USERNAME
-
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/noetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/${ROS_VERSION}/setup.bash\"\nsource \"/src/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/src/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
   chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'

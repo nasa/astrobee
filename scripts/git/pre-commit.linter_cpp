@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
-import importlib
+import importlib.machinery
 import os
 import subprocess
 from itertools import groupby
@@ -58,13 +58,8 @@ def run_cpplint(filename, cpplint_path):
 
 
 def print_objection():
-    print("   ____  __      _           __  _             __")
-    print("  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /")
-    print(" / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / ")
-    print("/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  ")
-    print("\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   ")
-    print("          /___/                                  ")
-
+    print("Code formatting errors were found.")
+    print("==================================")
 
 def main():
     num_errors = 0
@@ -144,10 +139,11 @@ def main():
 
     print("=" * 50)
     if num_errors > 0:
-        print("  You have %d lint errors, commit failed" % num_errors)
-        print("  The errors were automatically piped through clang-format-8")
+        print("  You have %d lint errors, commit failed." % num_errors)
+        print("  Your code was modified with clang-format-8. " + \
+              "Try to add and commit your files again to get an updated error count.")
     elif num_errors == 0:
-        print("  Code adheres to style guide lines, committing ...")
+        print("  Code adheres to style guide lines. Committing.")
 
     exit(num_errors)
 

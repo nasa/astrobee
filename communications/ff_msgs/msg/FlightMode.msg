@@ -23,9 +23,8 @@ string name                       # Name of the flight mode
 
 bool control_enabled              # Is control enabled?
 
-float32 collision_radius          # Collision radius in meters
-
 # Tolerances (all in SI units)
+float32 tolerance_pos_endpoint    # Endpoint position tolerance in m
 float32 tolerance_pos             # Position tolerance in m
 float32 tolerance_vel             # Velocity tolerance in m/s
 float32 tolerance_att             # Attitude tolerance in rads

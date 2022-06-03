@@ -24,6 +24,7 @@ namespace graph_optimizer {
 struct GraphOptimizerParams {
   bool verbose;
   bool fatal_failures;
+  bool log_on_destruction;
   bool print_factor_info;
   bool use_ceres_params;
   int max_iterations;

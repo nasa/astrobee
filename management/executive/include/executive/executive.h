@@ -53,6 +53,7 @@
 #include <ff_msgs/PlanStatusStamped.h>
 #include <ff_msgs/ResponseOnly.h>
 #include <ff_msgs/SetDataToDisk.h>
+#include <ff_msgs/SetFloat.h>
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
 #include <ff_msgs/SetZones.h>
@@ -182,9 +183,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool CheckStoppedOrDrifting(std::string const& cmd_id,
                               std::string const& cmd_name);
   bool ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv);
-  bool ConfigureMobility(std::string const& cmd_id);
-  bool ConfigureMobility(bool move_to_start,
-                         std::string& err_msg);
+  bool ConfigureMobility(bool move_to_start, std::string& err_msg);
   bool FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd);
   bool LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   ros::Time MsToSec(std::string timestamp);
@@ -204,6 +203,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd);
   bool AutoReturn(ff_msgs::CommandStampedPtr const& cmd);
   bool CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd);
+  bool DeployArm(ff_msgs::CommandStampedPtr const& cmd);
   bool Dock(ff_msgs::CommandStampedPtr const& cmd);
   bool EnableAstrobeeIntercomms(ff_msgs::CommandStampedPtr const& cmd);
   bool Fault(ff_msgs::CommandStampedPtr const& cmd);
@@ -255,6 +255,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
+  bool ReadMapperParams();
   bool ReadCommand(config_reader::ConfigReader::Table *response,
                    ff_msgs::CommandStampedPtr cmd);
   void PublishAgentState();
@@ -266,7 +267,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
   ExecutiveActionClient<ff_msgs::PerchAction> perch_ac_;
 
-  config_reader::ConfigReader config_params_;
+  config_reader::ConfigReader config_params_, mapper_config_params_;
 
   ff_msgs::AgentStateStamped agent_state_;
 
@@ -313,6 +314,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient eps_terminate_client_;
   ros::ServiceClient enable_astrobee_intercommunication_client_;
   ros::ServiceClient unload_load_nodelet_client_;
+  ros::ServiceClient set_collision_distance_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;

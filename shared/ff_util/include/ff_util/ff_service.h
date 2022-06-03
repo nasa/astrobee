@@ -22,7 +22,7 @@
 // ROS includes
 #include <ros/ros.h>
 
-// C++11 includes
+// C++ includes
 #include <string>
 #include <functional>
 #include <memory>

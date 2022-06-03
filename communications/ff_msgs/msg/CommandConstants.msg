@@ -65,6 +65,7 @@ string CMD_NAME_UNTERMINATE = unterminate
 string CMD_NAME_WAKE = wake
 string CMD_NAME_WAKE_SAFE = wakeSafe
 string CMD_NAME_ARM_PAN_AND_TILT = armPanAndTilt
+string CMD_NAME_DEPLOY_ARM = deployArm
 string CMD_NAME_GRIPPER_CONTROL = gripperControl
 string CMD_NAME_STOP_ARM = stopArm
 string CMD_NAME_STOW_ARM = stowArm

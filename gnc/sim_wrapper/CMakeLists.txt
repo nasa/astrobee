@@ -15,21 +15,96 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 3.0)
 project(sim_wrapper)
 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  roscpp
+  ff_msgs
+  ff_hw_msgs
+  ff_util
+  config_reader
+  gnc_autocode
+  camera
+  sparse_mapping
+)
+
 catkin_package(
-  LIBRARIES sim_wrapper
-  CATKIN_DEPENDS roscpp geometry_msgs ff_util nodelet pluginlib
+  LIBRARIES
+    sim_wrapper
+  CATKIN_DEPENDS
+    roscpp
+    ff_msgs
+    ff_hw_msgs
+    ff_util
+    config_reader
+    gnc_autocode
+    camera
+    sparse_mapping
 )
 
-create_library(TARGET sim_wrapper
-  LIBS ${catkin_LIBRARIES} gnc_autocode sparse_mapping msg_conversions camera ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_hw_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS sim_wrapper
+# Declare C++ libraries
+add_library(sim_wrapper
+  src/sim.cc
+  src/sim_nodelet.cc
+)
+add_dependencies(sim_wrapper ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sim_wrapper ${catkin_LIBRARIES})
+
+## Declare a C++ executable: sim_node
+add_executable(sim_node tools/sim_node.cc)
+add_dependencies(sim_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sim_node
+  sim_wrapper gflags ${catkin_LIBRARIES})
+
+## Declare a C++ executable: sim_node
+add_executable(test_sim tools/test_sim.cc)
+add_dependencies(test_sim ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_sim
+  sim_wrapper ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-install_launch_files()
+# Mark nodelet_plugin for installation
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Install C++ executables
+install(TARGETS sim_node DESTINATION bin)
+install(TARGETS test_sim DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/sim_node share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/test_sim share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

@@ -131,7 +131,6 @@
   <xacro:include filename="$(find description)/urdf/sensor_dock_cam.urdf.xacro" />
   <xacro:include filename="$(find description)/urdf/sensor_haz_cam.urdf.xacro" />
   <xacro:include filename="$(find description)/urdf/sensor_perch_cam.urdf.xacro" />
-  <xacro:include filename="$(find description)/urdf/sensor_sci_cam.urdf.xacro" />
 
   <!-- PERCHING ARM -->
   <xacro:include filename="$(find description)/urdf/macro_perching_arm.urdf.xacro" />

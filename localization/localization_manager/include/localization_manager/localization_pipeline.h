@@ -29,7 +29,7 @@
 #include <ff_msgs/SetBool.h>
 #include <ff_msgs/EkfState.h>
 
-// C++11
+// C++ includes
 #include <functional>
 #include <string>
 #include <map>

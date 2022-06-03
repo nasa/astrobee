@@ -97,13 +97,14 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     PMC_TIMEOUT                    = (1<<10),     // PMC has timed out
     CONTROL_SUCCESS                = (1<<11),     // Control success
     CONTROL_FAILED                 = (1<<12),     // Control failure
-    TOLERANCE_POS                  = (1<<13),     // Position olerance failure
-    TOLERANCE_ATT                  = (1<<14),     // Attitude tolerance failure
-    TOLERANCE_VEL                  = (1<<15),     // Velocity tolerance failure
-    TOLERANCE_OMEGA                = (1<<16),     // Omega tolerance failure
-    OBSTACLE_DETECTED              = (1<<17),     // Hazard: obstacle
-    MANUAL_STATE_SET               = (1<<18),     // Setting the state manually with service
-    REPLAN_TIMEOUT                 = (1<<19)      // Ready to replan again
+    TOLERANCE_POS_ENDPOINT         = (1<<13),     // Endpoint position tolerance failure
+    TOLERANCE_POS                  = (1<<14),     // Position tolerance failure
+    TOLERANCE_ATT                  = (1<<15),     // Attitude tolerance failure
+    TOLERANCE_VEL                  = (1<<16),     // Velocity tolerance failure
+    TOLERANCE_OMEGA                = (1<<17),     // Omega tolerance failure
+    OBSTACLE_DETECTED              = (1<<18),     // Hazard: obstacle
+    MANUAL_STATE_SET               = (1<<19),     // Setting the state manually with service
+    REPLAN_TIMEOUT                 = (1<<20)      // Ready to replan again
   };
 
   // The various types of control
@@ -315,9 +316,12 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       });
     // [12]
     fsm_.Add(STATE::CONTROLLING,
-      TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL | TOLERANCE_OMEGA,
+      TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL
+      | TOLERANCE_OMEGA | TOLERANCE_POS_ENDPOINT,
       [this](FSM::Event const& event) -> FSM::State {
         switch (event) {
+        case TOLERANCE_POS_ENDPOINT:
+          return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION_ENDPOINT);
         case TOLERANCE_POS:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION);
         case TOLERANCE_ATT:
@@ -749,6 +753,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       result.fsm_result = "Replanning failed";
       client_c_.CancelGoal();
       break;
+    case RESPONSE::TOLERANCE_VIOLATION_POSITION_ENDPOINT:
+      result.fsm_result = "Endpoint position tolerance violated";
+      break;
     case RESPONSE::TOLERANCE_VIOLATION_POSITION:
       result.fsm_result = "Position tolerance violated";
       client_c_.CancelGoal();
@@ -1080,7 +1087,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return false;
   }
 
-  // Called when the sentinel forecasts an upcoming collision
+  // Called when there is a propulsion event
   void PmcStateCallback(ff_hw_msgs::PmcState::ConstPtr const& msg) {
     // If prepping, send a state update to prevent execute and move
     // actions from timing out on the client side
@@ -1181,6 +1188,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     switch (fsm_.GetState()) {
     // Perform tolerance checking while controling
     case STATE::CONTROLLING:
+      pos_error_ = feedback->error_position;
       if (flight_mode_.tolerance_pos > 0.0 &&
           feedback->error_position > flight_mode_.tolerance_pos) {
         // If tolerance is present more that the allowable time
@@ -1258,6 +1266,17 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // Control result
   void CResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     ff_msgs::ControlResultConstPtr const& result) {
+    // Check if it reached the endpoint
+      if (fsm_.GetState() == STATE::CONTROLLING && flight_mode_.tolerance_pos_endpoint > 0.0 &&
+          pos_error_ > flight_mode_.tolerance_pos_endpoint) {
+        // If tolerance is present more that the allowable time
+        NODELET_DEBUG_STREAM("Endpoint position tolerance violated");
+        NODELET_DEBUG_STREAM("- Value: " << pos_error_
+                                        << ", Thresh: "
+                                        << flight_mode_.tolerance_pos_endpoint);
+        return fsm_.Update(TOLERANCE_POS_ENDPOINT);
+      }
+
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       segment_ = result->segment;
@@ -1397,6 +1416,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   geometry_msgs::PointStamped obstacle_;                // Obstacle
   // Tolerance check Timers
   double tolerance_max_time_;
+  // Position error
+  double pos_error_;
   ros::Time tolerance_pos_timer, tolerance_att_timer,
                 tolerance_vel_timer, tolerance_omega_timer;
   // Cached number of replan attempts

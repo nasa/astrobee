@@ -1,5 +1,50 @@
 # Releases
 
+## Release 0.16.5
+
+  * Fix multiple bugs
+
+## Release 0.16.4
+
+  * Auto-exposure
+  * Add splice tool
+  * Add arm deploy to bridge
+  * Various bug fixes
+
+## Release 0.16.3
+
+  * Added bag tools
+  * Disabled mapper (can be enabled through service)
+  * Add debayer live
+  * Multiple other fixes and improvements
+
+## Release 0.16.2
+
+  * Performance improvements
+  * Small bug fixes
+
+## Release 0.16.1
+
+  * depth odometry
+  * better performance evaluation
+  * multiple other fixes and improvements
+
+## Release 0.16.0
+
+  * project compiles with catkin
+  * mapper performance improvement
+  * imu_augmentor performance improvement
+  * calibration improvements
+  * multiple other fixes
+
+## Release 0.15.2
+
+  * added python linters black and isort in the CI pipeline
+  * added perching arm reconnect service
+  * added nav and dock cam bayer image output option
+  * added code to report time for llp, mlp, hlp
+  * added end of motion check 
+
 ## Release 0.15.1
 
   * Separated config files for DDS communications to avoid conflict

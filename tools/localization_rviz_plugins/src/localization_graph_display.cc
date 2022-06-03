@@ -17,7 +17,7 @@
  */
 
 #include <ff_util/ff_names.h>
-#include <graph_bag/utilities.h>
+#include <localization_analysis/utilities.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -111,7 +111,8 @@ void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::Featu
   if (!publish_optical_flow_images_->getBool()) return;
   const auto img = getImage(latest_graph_time);
   if (!img) return;
-  const auto feature_track_image = graph_bag::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
+  const auto feature_track_image =
+    localization_analysis::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
   if (!feature_track_image) return;
   optical_flow_image_pub_.publish(*feature_track_image);
 }
@@ -198,15 +199,15 @@ void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera
   int destination_column = 0;
   // Cameras are in same order as images and measurements
   for (int i = 0; i < num_images && i < 16; ++i) {
-    const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
+    const auto distorted_measurement = localization_analysis::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 20 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    const cv::Point rectangle_offset(40, 40);
+    const cv::Point2f rectangle_offset(40, 40);
     cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
                   cv::Scalar(0, 255, 0), 8);
     // TODO(rsoussan): account for case where triangulation fails
     if (true) {
       const auto projection = cameras[i].project2(world_t_landmark);
-      const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
+      const auto distorted_projection = localization_analysis::Distort(projection, *nav_cam_params_);
       cv::circle(images[i], distorted_projection, 15 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
     }
     cv::resize(images[i], images[i], cv::Size(width, height));
@@ -265,10 +266,11 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
 
   for (const auto loc_projection_factor : latest_loc_projection_factors) {
     const auto projected_point = camera.project(loc_projection_factor->landmark_point());
-    const auto distorted_measurement = graph_bag::Distort(loc_projection_factor->measured(), *nav_cam_params_);
+    const auto distorted_measurement =
+      localization_analysis::Distort(loc_projection_factor->measured(), *nav_cam_params_);
     cv::circle(loc_projection_factor_image.image, distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0),
                -1 /*Filled*/, 8);
-    const auto distorted_projected_point = graph_bag::Distort(projected_point, *nav_cam_params_);
+    const auto distorted_projected_point = localization_analysis::Distort(projected_point, *nav_cam_params_);
     cv::circle(loc_projection_factor_image.image, distorted_projected_point, 7 /* Radius*/, cv::Scalar(255, 0, 0),
                -1 /*Filled*/, 8);
   }
@@ -379,14 +381,14 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(
   const auto& measurements = smart_factor.measured();
   double summed_error = 0;
   for (int i = 0; i < num_images && i < 16; ++i) {
-    const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
+    const auto distorted_measurement = localization_analysis::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
-    const cv::Point rectangle_offset(40, 40);
+    const cv::Point2f rectangle_offset(40, 40);
     cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
                   cv::Scalar(0, 255, 0), 8);
     if (point) {
       const auto projection = cameras[i].project2(*point);
-      const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
+      const auto distorted_projection = localization_analysis::Distort(projection, *nav_cam_params_);
       cv::circle(images[i], distorted_projection, 7 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
       const double error = 0.5 * (measurements[i] - projection).squaredNorm();
       const auto text_color = textColor(error, 1.0, 1.5);

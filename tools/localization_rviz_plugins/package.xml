@@ -16,6 +16,10 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
   <depend>rviz</depend>
+  <depend>localization_analysis</depend>
+  <depend>localization_common</depend>
+  <depend>ff_util</depend>
+  <depend>graph_localizer</depend>
   <export>
     <rviz plugin="${prefix}/nodelet_plugins.xml"/>
   </export> 

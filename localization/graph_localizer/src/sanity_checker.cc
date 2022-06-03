@@ -18,6 +18,7 @@
 
 #include <graph_localizer/sanity_checker.h>
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/utilities.h>
 
 namespace graph_localizer {
 namespace lc = localization_common;
@@ -36,18 +37,9 @@ bool SanityChecker::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, con
 }
 
 bool SanityChecker::CheckCovarianceSanity(const lc::CombinedNavStateCovariances& covariances) const {
-  bool sane = true;
-  if (params_.check_position_covariance) {
-    const double log_det_position_cov = covariances.LogDeterminantPositionCovariance();
-    sane &= (log_det_position_cov <= params_.position_covariance_threshold);
-  }
-
-  if (params_.check_orientation_covariance) {
-    const double log_det_orientation_cov = covariances.LogDeterminantOrientationCovariance();
-    sane &= (log_det_orientation_cov <= params_.orientation_covariance_threshold);
-  }
-
-  return sane;
+  return lc::PoseCovarianceSane(covariances.pose_covariance(), params_.position_covariance_threshold,
+                                params_.orientation_covariance_threshold, params_.check_position_covariance,
+                                params_.check_orientation_covariance);
 }
 
 void SanityChecker::Reset() { num_consecutive_failures_ = 0; }

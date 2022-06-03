@@ -4,9 +4,9 @@ Here we describe how to build a map.
 
 ## Summary
 
-1. Reduce the number of images.
+1. Set up the environment.
 
-2. Set up the environment.
+2. Reduce the number of images.
 
 3. Build the map.
 
@@ -16,58 +16,32 @@ Here we describe how to build a map.
 
 # Detailed explanation
 
-## Reduce the number of images
-
-Here, we delete the images that overlap highly. (This tool is, like all
-others, in astrobee_build/native.)
-
-    select_images -density_factor 1.4 <image dir>/*.jpg
-
-This is a non-reversible operation, so it should be invoked on a copy
-of the images.
-
-The higher the value of the density factor, the more images will be
-kept. Some experimentation with this number is necessary. A value of
-1.4 seems to work well. It may be needed to decrease this to 1.0 if
-images appear to be too dense. Ideally the images should have perhaps
-on the order of 2/3 to 3/4 of overlap. This tool is not perfect. One
-should inspect the images in the `eog` viewer, and delete redundant
-ones from it manually, using the Delete key.
-
-The images can also be inspected and deleted with nvm_visualize, a
-tool included with this software. See readme.md for details.  This
-tool, unlike eog, echoes each image name as it is displayed, which can
-be useful with image manipulation tasks.
-
-If the images do not have enough overlap, the selection tool needs to
-be run again with a different value of this factor, or otherwise
-images must be added back manually.
-
-Alternatively, one can simply first pick every 10th or 20th image,
-such as:
-
-    ls <image dir>/*.jpg
-
-then copy these to a new directory.
-
-It is important to avoid rotating the bot in place when acquiring
-images, as then the map could be of poor quality. Hence, the robot
-should have some translation motion (in addition to any rotation) when
-the data is acquired.
-
 ## Setup the environment
 
 In the first step, one needs to set some environmental variables, as
 follows:
 
-    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
-    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
+    export ASTROBEE_SOURCE_PATH=$HOME/astrobee/src
+    export ASTROBEE_BUILD_PATH=$HOME/astrobee
+    export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
     export ASTROBEE_ROBOT=p4d
     export ASTROBEE_WORLD=granite
 
-Here, `p4d` is the robot being used to take pictures, and the world is
-the granite table. These may need to change, depending on your
-goals. Under the hood, the following configuration files will be read:
+The source and build paths need to be adjusted for your particular
+setup.
+
+Also consider setting:
+
+    export PATH=$ASTROBEE_BUILD_PATH/devel/lib/sparse_mapping:$PATH
+
+to have the ``build_map`` and other related tools in your path.
+
+Above, ``p4d`` is the robot being used to take pictures, and the world
+is the granite table. These may need to change, depending on your
+goals.
+
+Under the hood, the following configuration files will be read:
 
     $ASTROBEE_CONFIG_DIR/cameras.config
 
@@ -81,9 +55,24 @@ and none of the other available config files apply, you can just
 temporarily modify the above files to reflect your camera's parameters
 (without checking in your changes).
 
-More details on these and other environmental variables can be found in
+More details on these and other environmental variables can be found
+in the \ref astrobee configuration documentation.
 
-    $SOURCE_PATH/astrobee/readme.md
+## Reduce the number of images
+
+Remove low movement images:
+    rosrun sparse_mapping remove_low_movement_images image_directory_name
+
+This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
+
+This is a non-reversible operation, so it should be invoked on a copy
+of the images.
+
+It is important to avoid rotating the bot in place when acquiring
+images, as then the map could be of poor quality. Hence, the robot
+should have some translation motion (in addition to any rotation) when
+the data is acquired.
+
 
 ## Building a map
 
@@ -110,8 +99,8 @@ before doing feature detection. It was shown to create maps that are
 more robust to illumination changes.
 
 In practice, the map is build in pieces, and then merged. Then the
-above process needs to be modified. See readme.md in this directory
-for how this approach should go.
+above process needs to be modified. See \ref sparsemapping for the
+procedure.
 
 ### Map building pipeline
 
@@ -157,11 +146,12 @@ consistently across multiple frames.
 
     build_map -bundle_adjustment -histogram_equalization
 
-  Adjust the initial transformations to minimize error with bundle adjustment.
+Adjust the initial transformations to minimize error with bundle
+adjustment.
 
-If the options: 
+If the options:
 
-    -first_ba_index and -last_ba_index 
+    -first_ba_index and -last_ba_index
 
 are specified, only cameras with indices between these (including both
 endpoints) will be optimized during bundle adjustment.
@@ -198,8 +188,8 @@ would drift from each other.
 
 If it is desired to take out images from the map, it should happen at
 this stage, before the vocabulary database and pruning happens at the
-next step. See readme.md when it comes to such operations, where the
-script grow_map.py is used.
+next step. See \ref sparsemapping when it comes to such
+operations, where the script grow_map.py is used.
 
 #### Vocabulary database
 
@@ -290,8 +280,8 @@ The xyz locations of the control points for the granite lab, the
 ISS and MGTF are mentioned below.
 
 If a set of world coordinates needs to be acquired, one can use the
-Total Station, as described in the [total station](total_station.md)
-documentation.
+\ref total_station. (Alternatively one can can try the
+\ref faro instrument but that is more technically involved.)
 
 Register the map with the command:
     
@@ -352,7 +342,7 @@ new image set.
 ### Registration in the granite lab
 
 See the xyz coordinates of the control points used for registration in
-[granite_lab_registration.md](granite_lab_registration.md)
+the \ref granite_lab_registration section.
 
 ### Registration on the ISS
 
@@ -363,8 +353,12 @@ be visualized in the ISS as follows:
 
 Open two terminals, and in each one type:
 
-    export BUILD_PATH=$HOME/astrobee_build/native
-    source $BUILD_PATH/devel/setup.bash
+    export ASTROBEE_BUILD_PATH=$HOME/astrobee
+    source $ASTROBEE_BUILD_PATH/devel/setup.bash
+
+The Astrobee directory above must have ``src`` and ``devel``
+subdirectories, and needs to be adjusted given its location on your
+disk.
 
 In the first terminal start the simulator:
 
@@ -372,8 +366,8 @@ In the first terminal start the simulator:
  
 In the second, run:
 
-    python $SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
-      $SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
+    python $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
+      $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
 
 Go back to the simulated ISS and examine the registration points.
 If the Rviz display looks too cluttered, most topics can be turned off.
@@ -409,9 +403,9 @@ Python command will refresh them.
 ### Registration in the MGTF
 
 A set of 10 registration points were measured in the MGTF with the
-Total Station. They are in the file
+\ref total_station. They are in the file:
 
-    $SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
+    $ASTROBEE_SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
 
 Two of these are on the back wall, and the rest are on the metal
 columns on the side walls, with four on each wall. Half of the points
@@ -427,7 +421,8 @@ be needed to identify them.
 A registered and bundle-adjusted map can be used to study how well it
 predicts the computed 3D locations for an independently acquired set
 of control points and 3D measurements. These are in the same format as
-for registration. The map is not modified in any way during this step.
+for registration. The map is not modified in any way during this step,
+The command is:
 
     build_map -verification <hugin files> <xyz files>
 
@@ -459,7 +454,7 @@ To test how the map may perform on the robot, do the following:
 
 ### Stage the feature counter utility (should be added to the install at one point):
 
-    scp $SOURCE_PATH/localization/marker_tracking/ros/tools/features_counter.py mlp:
+    scp $ASTROBEE_SOURCE_PATH/localization/marker_tracking/ros/tools/features_counter.py mlp:
 
 ### Launch the localization node on LLP
 
@@ -474,24 +469,27 @@ this robot will give wrong results for other users.
 Then launch localization:
 
     ssh llp
-    roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp nodes:=framestore,dds_ros_bridge,localization_node
+    roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp \
+      nodes:=framestore,dds_ros_bridge,localization_node
+
+### Play the bags (on MLP)
+
+    cd /data/bags/directory_of_bags
+    export ROS_MASTER_URI=http://llp:11311
+    rosbag play --clock --loop *.bag                       \
+      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
+      /loc/ml/features:=/loc/ml/old_features               \
+      /loc/ml/registration:=/loc/ml/old_registration
 
 ### Enable localization and the mapped landmark production (on MLP)
+
+This must happen after the bags start playing:
 
     export ROS_MASTER_URI=http://llp:11311
     rosservice call /loc/ml/enable true
 
 If this command returns an error saying that the service is not
 available, wait a little and try again.
-
-### Play the bags (on MLP)
-
-    cd /data/bags/directory_of_bags
-    export ROS_MASTER_URI=http://llp:11311
-    rosbag play --loop *.bag                               \
-      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
-      /loc/ml/features:=/loc/ml/old_features               \
-      /loc/ml/registration:=/loc/ml/old_registration
 
 It is important to check the topics that were recorded to the bag. If
 the nav camera was recorded on /mgt/img_sampler/nav_cam/image_record
@@ -526,12 +524,14 @@ run things on the robot, but use instead a local machine. This should
 result on similar results as on the robot, but the speed of
 computations may differ.
 
+### Preparation
+
 Set up the environment in every terminal that is used. Ensure that you
 use the correct robot name below.
 
-    source $BUILD_PATH/devel/setup.bash
-    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
-    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
+    source $ASTROBEE_BUILD_PATH/devel/setup.bash
+    export ASTROBEE_RESOURCE_DIR=$ASTROBEE_SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$ASTROBEE_SOURCE_PATH/astrobee/config
     export ASTROBEE_WORLD=iss
     export ASTROBEE_ROBOT=bumble # your robot's name may be different
     export ROS_MASTER_URI=http://127.0.0.1:11311/
@@ -542,23 +542,53 @@ Examine the localization configuration file:
 
 Sym link the map to test:
 
-    mkdir -p $SOURCE_PATH/astrobee/resources/maps
-    rm -fv $SOURCE_PATH/astrobee/resources/maps/iss.map
-    ln -s $(pwd)/mymap.map $SOURCE_PATH/astrobee/resources/maps/iss.map
+    mkdir -p $ASTROBEE_SOURCE_PATH/astrobee/resources/maps
+    rm -fv $ASTROBEE_SOURCE_PATH/astrobee/resources/maps/iss.map
+    ln -s $(pwd)/mymap.map $ASTROBEE_SOURCE_PATH/astrobee/resources/maps/iss.map
 
-Start the localization node:
+### Start localization
 
-    roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
-      nodes:=framestore,localization_node robot:=$ASTROBEE_ROBOT
+    roslaunch astrobee astrobee.launch mlp:=local llp:=disabled  \
+      nodes:=framestore,localization_node robot:=$ASTROBEE_ROBOT \
+      output:=screen
 
 Note how we specify the robot name at the end. 
 
-Enable localization:
+### Play the bag
+
+As above, one must play a bag with the ``--clock`` option, while
+redirecting the existing /loc topics, and ensure that the images are
+published on /hw/cam_nav:
+
+    rosbag play --clock mybag.bag                          \
+      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
+      /loc/ml/features:=/loc/ml/old_features               \
+      /loc/ml/registration:=/loc/ml/old_registration
+
+### Enable localization
+
+Run:
 
     rosservice call /loc/ml/enable true
 
-Then, as above, one must play a bag while redirecting the existing
-/loc topics, and ensure that the images are published on /hw/cam_nav.
+If this fails, try again in a little while.
+
+### Alternative approach
+
+The steps of launching localization, playing the bag, and enabling
+localization can also be run from a launch file, as follows:
+
+    roslaunch $ASTROBEE_SOURCE_PATH/astrobee/launch/offline_localization/sparse_mapping_matching_from_bag.launch \
+       bagfile:=$(pwd)/mybag.bag \
+       robot:=$ASTROBEE_ROBOT    \
+       output:=screen
+
+It is very important that an absolute path to the bag be used,
+otherwise this command will fail. Errors about failing to start the
+rosservice to enable localization can be ignored, as that service will
+be started until it succeeds.
+
+### Examining the results
 
 The poses of the newly localized camera images can be displayed as:
 
@@ -570,9 +600,9 @@ and compared to the old ones via:
 
 ## Evaluating the map without running the localization node
 
-See astrobee/tools/ekf_bag/readme.md for how to run the
-sparse_map_eval tool that takes as inputs a bag and a BRISK map and
-prints the number of detected features.
+See the \ref ekfbag page for how to run the ``sparse_map_eval``
+tool that takes as inputs a bag and a BRISK map and prints the number
+of detected features.
 
 Note that this approach may give slightly different results than using
 the localization node, and even with using this node, things can

@@ -609,6 +609,18 @@
 
     {
       "type": "CommandSpec",
+      "id": "Arm.deployArm",
+      "isRapidNative": false,
+      "notes": "Deploys arm. The motion sequence is:<ol><li>Pan to 0</li><li>Tilt to 0</li></ol><p/>See also Arm.armPanAndTilt for more discussion of the arm.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params":[]
+    },
+
+    {
+      "type": "CommandSpec",
       "id": "Arm.stowArm",
       "isRapidNative": false,
       "notes": "Stows arm. The motion sequence is:<ol><li>Close gripper</li><li>Pan to 0</li><li>Tilt to 180</li></ol><p/>See also Arm.armPanAndTilt for more discussion of the arm.",

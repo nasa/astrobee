@@ -1,9 +1,16 @@
-<library path="lib/libis_camera">
-  <class name="is_camera/camera"
-    type="is_camera::CameraNodelet"
-    base_class_type="nodelet::Nodelet">
-    <description>
-      This nodelet opens the camera that is /dev/video? and publishes a
-      grayscale unrectified image.  </description>
-  </class>
-</library>
+<class_libraries>
+  <library path="lib/libis_camera">
+    <class name="is_camera/camera"
+      type="is_camera::CameraNodelet"
+      base_class_type="nodelet::Nodelet">
+      <description>
+        This nodelet opens the camera that is /dev/video? and publishes a
+        grayscale unrectified image.  </description>
+    </class>
+  </library>
+  <library path="lib/libdebayer">
+    <class name="debayer/DebayerNodelet" type="debayer::DebayerNodelet" base_class_type="nodelet::Nodelet">
+      <description>Nodelet for debayer::DebayerNodelet</description>
+    </class>
+  </library>
+</class_libraries>

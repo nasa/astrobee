@@ -1,0 +1,56 @@
+name: Build and Test CI for Pull Requests
+
+on:
+  pull_request:
+    branches: [ 'master', 'develop' ]
+  workflow_dispatch:
+
+jobs:
+
+  build-xenial:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Build, test
+      run: ./scripts/docker/build.sh --xenial --remote
+                                     astrobee test_astrobee
+
+  build-bionic:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Build, test
+      run: ./scripts/docker/build.sh --bionic --remote
+                                     astrobee test_astrobee
+
+  build-focal:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Build, test
+      run: ./scripts/docker/build.sh --focal --remote
+                                     astrobee test_astrobee

@@ -21,10 +21,11 @@
 
 #include <config_reader/config_reader.h>
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Transform.h>
@@ -73,9 +74,12 @@ bool config_read_quat(config_reader::ConfigReader::Table* t, geometry_msgs::Quat
 bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Vector3* vec);
 bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Point* point);
 
+bool SingleBoolTrue(const std::initializer_list<bool>& bools);
+
 // Alternative format for loading configs
 Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
 double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name);
+float LoadFloat(config_reader::ConfigReader& config, const std::string& config_name);
 int LoadInt(config_reader::ConfigReader& config, const std::string& config_name);
 bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name);
 std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name);
@@ -83,6 +87,10 @@ void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
+                              geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg);
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
+                              geometry_msgs::PoseWithCovariance& pose_cov_msg);
 
 template <typename VectorType, typename MsgVectorType>
 VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
@@ -90,10 +98,21 @@ VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
 }
 
 template <typename VectorType, typename MsgVectorType>
+VectorType Vector2dFromMsg(const MsgVectorType& msg_vector) {
+  return VectorType(msg_vector.x, msg_vector.y);
+}
+
+template <typename VectorType, typename MsgVectorType>
 void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
   msg_vector.x = vector.x();
   msg_vector.y = vector.y();
   msg_vector.z = vector.z();
+}
+
+template <typename VectorType, typename MsgVectorType>
+void Vector2dToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
+  msg_vector.x = vector.x();
+  msg_vector.y = vector.y();
 }
 
 template <typename RotationType, typename MsgRotationType>
@@ -107,6 +126,15 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
   msg_rotation.x = rotation.x();
   msg_rotation.y = rotation.y();
   msg_rotation.z = rotation.z();
+}
+
+template <typename ArrayType>
+void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array) {
+  for (int i = 0; i < 6; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      covariance_array[i*6 + j] = covariance(i, j);
+    }
+  }
 }
 }  // namespace msg_conversions
 

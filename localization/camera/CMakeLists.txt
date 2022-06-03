@@ -15,43 +15,62 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0)
 project(camera)
 
-set(LIBS
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+  ff_common
   config_reader
-  ${GLOG_LIBRARIES}
-  ${GFLAGS_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  ${EIGEN_LIBRARIES}
-  ${Boost_SYSTEM_LIBRARY}
-  ${Boost_FILESYSTEM_LIBRARY}
-  )
-set(INCLUDES
-  config_reader
-  ${GFLAGS_INCLUDE_DIRS}
-  ${GLOG_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
 )
+
+# System dependencies are found with CMake's conventions
+find_package(cmake_modules REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 REQUIRED)
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
+
+
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES camera
   CATKIN_DEPENDS
-#  DEPENDS system_lib
+    ff_common
+    config_reader
 )
 
-create_library(TARGET camera
-  LIBS ${LIBS}
-  INC ${INCLUDES}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS camera config_reader
-  INC ${INCLUDES}
+# Declare C++ libraries
+add_library(camera
+  src/camera_model.cc
+  src/camera_params.cc
 )
+add_dependencies(camera ${catkin_EXPORTED_TARGETS})
+target_link_libraries(camera ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
+
+## Declare a C++ executable: undistort_image
+add_executable(undistort_image tools/undistort_image.cc)
+add_dependencies(undistort_image ${catkin_EXPORTED_TARGETS})
+target_link_libraries(undistort_image
+  camera gflags glog ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -74,4 +93,29 @@ if(CATKIN_ENABLE_TESTING)
 
 endif()
 
-set(CAMERA_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Install C++ executables
+install(TARGETS undistort_image DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/undistort_image share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

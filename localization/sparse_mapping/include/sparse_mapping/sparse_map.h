@@ -297,6 +297,7 @@ struct SparseMap {
   std::vector<Eigen::Matrix2Xd> user_cid_to_keypoint_map_;
   std::vector<std::map<int, int> > user_pid_to_cid_fid_;
   std::vector<Eigen::Vector3d> user_pid_to_xyz_;
+  std::mutex mutex_detector_;
 
  private:
   // I found out the hard way that sparse maps cannot be copied
@@ -305,6 +306,9 @@ struct SparseMap {
   SparseMap();
   SparseMap(SparseMap &);
   SparseMap& operator=(const SparseMap&);
+
+  // Reorder the images in the map and the rest of the data accordingly
+  void reorderMap(std::map<int, int> const& old_cid_to_new_cid);
 };
 }  // namespace sparse_mapping
 

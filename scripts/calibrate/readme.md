@@ -6,11 +6,11 @@ This folder contains various scripts for calibration.
 - Build and install the Astrobee code on the robot.
 - Install Kalibr on your computer.
 
-## Installation instructions for Kalibr for Ubuntu 16.04
+## Installation instructions for Kalibr for Ubuntu 18.04
 
 sudo apt install python-rosinstall ipython python-software-properties \
         python-git ipython python-catkin-tools
-sudo apt install libopencv-dev ros-kinetic-vision-opencv
+sudo apt install libopencv-dev ros-melodic-vision-opencv
 
 # Install pip and use it to install python packages
 
@@ -33,9 +33,9 @@ so some effort may be needed to install the Python 2 dependencies.
 export KALIBR_WS=$HOME/source/kalibr_workspace
 mkdir -p $KALIBR_WS/src
 cd $KALIBR_WS
-source /opt/ros/kinetic/setup.bash
+source /opt/ros/melodic/setup.bash
 catkin init
-catkin config --extend /opt/ros/kinetic
+catkin config --extend /opt/ros/melodic
 catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
 cd $KALIBR_WS/src
 git clone git@github.com:oleg-alexandrov/Kalibr.git
@@ -140,12 +140,16 @@ picoflexx section should be set to the correct value. This will cause
 the depth camera to run in L2 mode, and produce data on the "extended"
 topic.
 
-After calibration.launch is run, one should also invoke
+After calibration.launch is run, one should also start the pico_proxy
+node which will process the extended topic and produce the needed
+amplitude data.
+
+With the current default setup on the robot, this node should start
+automatically. If it did not, it can be run with the command:
 
   roslaunch $SOURCE_PATH/hardware/pico_driver/launch/pico_proxy.launch 
   
-which will process the extended topic and produce the needed amplitude
-data. Note that on the robot itself this file is stored at:
+ Note that on the robot itself this file is stored at:
 
  /opt/astrobee/share/pico_driver/launch/pico_proxy.launch
 
@@ -276,7 +280,7 @@ done by the algorithm. One can also attempt to use just a portion of
 the bag, using the --from and --to options.
 
 The --verbose flag is useful to see if the calibration target corners
-are detected properly.
+are detected properly. This may result in a crash on Ubuntu 18. 
 
 The depth cameras can be tricky to calibrate, since they have lower
 resolution and it is hard to do corner detection. One should try to

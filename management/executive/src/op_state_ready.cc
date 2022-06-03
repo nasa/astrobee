@@ -43,6 +43,10 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
     exec_->CustomGuestScience(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DEPLOY_ARM) {
+    if (exec_->DeployArm(cmd)) {
+      return OpStateRepo::Instance()->teleop()->StartupState();
+    }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
     if (exec_->Dock(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
@@ -122,7 +126,10 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         return this;
       }
 
-      if (!exec_->ConfigureMobility(cmd->cmd_id)) {
+      if (!exec_->ConfigureMobility(false, err_msg)) {
+        AckCmd(cmd->cmd_id,
+               ff_msgs::AckCompletedStatus::EXEC_FAILED,
+               err_msg);
         return this;
       }
 

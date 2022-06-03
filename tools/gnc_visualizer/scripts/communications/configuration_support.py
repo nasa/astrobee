@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import configparser
 import datetime
 import socket
 import string
@@ -8,6 +7,8 @@ import xml.dom.minidom as minidom
 from collections import OrderedDict
 from os import path as osPath
 from os import remove
+
+import ConfigParser
 
 filepath = osPath.dirname(osPath.realpath(__file__))
 
@@ -20,7 +21,7 @@ class Preferences:
     def __init__(
         self, partition_name=None, given_peer=None, domain=None, public_ip=None
     ):
-        self.config = configparser.ConfigParser()
+        self.config = ConfigParser.ConfigParser()
         self.dom = None
         self.partition_name = partition_name
         self.initial_peers = dict()
@@ -55,7 +56,7 @@ class Preferences:
         )
 
         # Check if input is a valid profile
-        for key, value in list(self.initial_peers.items()):
+        for key, value in self.initial_peers.items():
             if string.lower(peer) == key:
                 self.add_warning(
                     "The given peer IS a valid profile. IP: " + value + " will be used."
@@ -97,7 +98,7 @@ class Preferences:
             validated_peer = self.validate_initial_peer(self.given_peer)
             if validated_peer != None:
                 self.initial_peers.clear()
-                for key, ip in list(validated_peer.items()):
+                for key, ip in validated_peer.items():
                     self.initial_peers[key] = ip
             else:
                 # Valdate functions shows a message explaining the value is
@@ -153,7 +154,7 @@ class Preferences:
             peer.unlink()
 
     def write_node_list(self, node_list, sub_tag_name, children):
-        children = [children] if isinstance(children, str) else children
+        children = [children] if isinstance(children, basestring) else children
         for child in children:
             new_node = node_list.ownerDocument.createElement(sub_tag_name)
             new_node.appendChild(
@@ -282,21 +283,21 @@ class Preferences:
         warnings_text = (
             "\nThe configuration proccess produced the following warnings:\n"
         )
-        for key, value in list(self.warn.items()):
+        for key, value in self.warn.items():
             warnings_text += "\n" + key + " : " + value
         warnings_text += "\n    ----"
         return warnings_text
 
     def get_all_errors(self):
         errors_text = "\nThe configuration proccess produced the following errors:\n"
-        for key, value in list(self.err.items()):
+        for key, value in self.err.items():
             errors_text += "\n" + key + " : " + value
         errors_text += "\n    ----"
         return errors_text
 
     def get_all_info(self):
         info_text = "\nResume of configuration process:\n"
-        for key, value in list(self.info.items()):
+        for key, value in self.info.items():
             info_text += "\n" + key + " : " + value
         info_text += "\n    ----"
         return info_text
@@ -376,7 +377,7 @@ class Preferences:
             + "\nInitial Peers:\n"
         )
 
-        for key, value in list(self.get_initial_peers().items()):
+        for key, value in self.get_initial_peers().items():
             info_text += " - " + value + "\n"
 
         info_text += "\nDDS Domain ID: " + self.domain
