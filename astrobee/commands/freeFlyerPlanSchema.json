@@ -846,7 +846,7 @@
       "type": "CommandSpec",
       "id": "GuestScience.restartGuestScience",
       "isRapidNative": false,
-      "note": "This command is the equivalent to issuing the stop guest science command and then the start guest science command. Sometimes guest science APKs become unresponsive and this is a quick way to try to get it work again. <p/>See GuestScience.startGuestScience for more on the guest science life cycle.",
+      "notes": "This command is the equivalent to issuing the stop guest science command and then the start guest science command. Sometimes guest science APKs become unresponsive and this is a quick way to try to get it work again. <p/>See GuestScience.startGuestScience for more on the guest science life cycle.",
       "availableContexts": [
         "teleop"
       ],

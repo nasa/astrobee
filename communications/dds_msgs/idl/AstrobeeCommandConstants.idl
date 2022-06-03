@@ -157,6 +157,7 @@ module rapid {
       const rapid::String32 GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_PARAM_COMMAND = "command";
       const rapid::DataType GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_DTYPE_COMMAND = rapid::RAPID_STRING;
 
+      //@copy-declaration /** This command is the equivalent to issuing the stop guest science command and then the start guest science command. Sometimes guest science APKs become unresponsive and this is a quick way to try to get it work again. <p/>See GuestScience.startGuestScience for more on the guest science life cycle. */
       const rapid::String32 GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE = "restartGuestScience";
 
       //@copy-declaration /** Which guest science APK to terminae */
