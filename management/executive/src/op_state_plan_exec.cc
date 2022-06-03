@@ -240,6 +240,9 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
       return OpStateRepo::Instance()->ready()->StartupState();
     } else if (cmd->cmd_name ==
+                            CommandConstants::CMD_NAME_RESTART_GUEST_SCIENCE) {
+      exec_->RestartGuestScience(cmd);
+    } else if (cmd->cmd_name ==
                               CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
       exec_->StartGuestScience(cmd);
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {

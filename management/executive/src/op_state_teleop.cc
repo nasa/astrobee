@@ -53,6 +53,9 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->ReacquirePosition(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_RESET_EKF) {
     exec_->ResetEkf(cmd);
+  } else if (cmd->cmd_name ==
+                            CommandConstants::CMD_NAME_RESTART_GUEST_SCIENCE) {
+    exec_->RestartGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CHECK_OBSTACLES) {
     exec_->SetCheckObstacles(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CHECK_ZONES) {

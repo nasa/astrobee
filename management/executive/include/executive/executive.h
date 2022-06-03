@@ -111,7 +111,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
   void GuestScienceStateCallback(ff_msgs::GuestScienceStateConstPtr const&
                                                                         state);
   void GuestScienceCustomCmdTimeoutCallback(ros::TimerEvent const& te);
-  void GuestScienceStartStopCmdTimeoutCallback(ros::TimerEvent const& te);
+  void GuestScienceStartStopRestartCmdTimeoutCallback(ros::TimerEvent const&
+                                                                            te);
   void InertiaCallback(geometry_msgs::InertiaStampedConstPtr const& inertia);
   void LedConnectedCallback();
   void MotionStateCallback(ff_msgs::MotionStatePtr const& state);
@@ -187,6 +188,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   ros::Time MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
+  bool ProcessGuestScienceCommand(ff_msgs::CommandStampedPtr const& cmd);
   bool ResetEkf(std::string const& cmd_id);
   void StartWaitTimer(float duration);
   void StopWaitTimer();
@@ -217,6 +219,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool Prepare(ff_msgs::CommandStampedPtr const& cmd);
   bool ReacquirePosition(ff_msgs::CommandStampedPtr const& cmd);
   bool ResetEkf(ff_msgs::CommandStampedPtr const& cmd);
+  bool RestartGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool RunPlan(ff_msgs::CommandStampedPtr const& cmd);
   bool SetCamera(ff_msgs::CommandStampedPtr const& cmd);
   bool SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd);
@@ -318,7 +321,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::Subscriber gs_config_sub_, gs_state_sub_, camera_state_sub_;
   ros::Subscriber perch_state_sub_, inertia_sub_;
 
-  ros::Timer gs_start_stop_command_timer_, gs_custom_command_timer_;
+  ros::Timer gs_start_stop_restart_command_timer_, gs_custom_command_timer_;
   ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;
   ros::Timer sys_monitor_startup_timer_;
 
@@ -328,7 +331,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<ff_util::ConfigClient> mapper_cfg_;
 
   std::string primary_apk_running_, run_plan_cmd_id_;
-  std::string gs_start_stop_cmd_id_, gs_custom_cmd_id_;
+  std::string gs_start_stop_restart_cmd_id_, gs_custom_cmd_id_;
 
   std::vector<Action> running_actions_;
 
