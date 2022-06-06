@@ -1,5 +1,10 @@
 # Releases
 
+## Release 0.16.6
+
+  * switch map online possibility
+  * other fixes
+
 ## Release 0.16.5
 
   * Fix multiple bugs
