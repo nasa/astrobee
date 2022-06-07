@@ -11,7 +11,6 @@ frame mob {
 }
 
 frame gnc {
-  gnc_node(EKF)
   gnc_node(CTL)
   gnc_node(FAM)
   action(Control, ff_msgs::ControlAction, /gnc/control)
@@ -31,20 +30,20 @@ message(Landmarks, ff_msgs::VisualLandmarks, "/loc/{ml,ar,of}/features")
 latching_msg(Inertia, geometry_msgs::InertiaStamped, /mob/inertia)
 latching_msg(FlightMode, ff_msgs::FlightMode, /mob/flight_mode)
 
-Landmarks -r-> EKF : "                "
+Landmarks -r-> LOC : "                "
 
 FlightMode --> FAM
 FlightMode --> choregrapher
-Inertia -up-> EKF
+Inertia -up-> LOC
 Inertia -up-> CTL
 Inertia -up-> FAM
 
-'EKF -r-> Pose
-'EKF -r-> Vels
+'LOC -r-> Pose
+'LOC -r-> Vels
 'Pose -r-> CTL
 'Vels -r-> CTL
 
-EKF -r-> CTL : "/loc/{pose,twist}\n[geometry_msgs::{Pose,Twist}Stamped]"
+LOC -r-> CTL : "/loc/{pose,twist}\n[geometry_msgs::{Pose,Twist}Stamped]"
 CTL -r-> FAM : "/gnc/ctl/command\n[ff_msgs::FamCommand]"
 'CTL -r-> Wrench : "                "
 'Wrench -r-> FAM : "                "

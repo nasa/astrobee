@@ -1,0 +1,483 @@
+class update_ff_msgs_AgentStateStamped_472e584da31bd1d215d53d4c8047de43(MessageUpdateRule):
+	old_type = "ff_msgs/AgentStateStamped"
+	old_full_text = """
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# State of the Astrobee, based off of rapid::ext::astrobee::AgentState
+
+# Header with timestamp
+std_msgs/Header header
+
+# Operating state of the Astrobee
+ff_msgs/OpState operating_state
+
+# Plan execution state. State is idle when there is no plan to be executed. Once
+# a plan is uploaded, the state change to paused. Upon a run plan command, the
+# state will change to executing. If a stop or pause plan command is received or
+# a fault occurs, the state will be set to pause. Once the plan is completed,
+# the state will go back to idle
+ff_msgs/ExecState plan_execution_state
+
+# Guest science state. If a primary guest science apk is started, the state
+# will go from idle to executing. Once the primarty apk is finished, the state
+# will go back to idle
+ff_msgs/ExecState guest_science_state
+
+# Mobility state of the Astrobee
+ff_msgs/MobilityState mobility_state
+
+# Proximity to the dock when docking and undocking. Proximity to a handrail when
+# perching or unperching. 0 the rest of the time.
+float32 proximity
+
+# Name of profile configuration, i.e. Nominal, IgnoreObstacles, Faceforward,
+# Quiet, etc. Profiles specify stuff like target velocity and acceleration,
+# collision distance, etc.
+string profile_name
+
+#Defines GN&C gains, hard limits, tolerances, etc.
+string flight_mode
+
+# Maximum linear velocity to target while translating
+float32 target_linear_velocity
+# Maximum linear acceleration to target while translating
+float32 target_linear_accel
+# Maximum angular velocity to target while rotating
+float32 target_angular_velocity
+# Maximum angular acceleration to target while rotating
+float32 target_angular_accel
+# Minimum distance margin to maintain away from obstacles
+float32 collision_distance
+
+# Specifies whether the Astrobee is allowed to fly blind i.e. not faceforward
+bool holonomic_enabled
+
+# Specifies whether the Astrobee is checking for obstacles
+bool check_obstacles
+
+# Specifies whether the Astrobee is checking the keepin and keepout zones
+bool check_zones
+
+# Specifies whether the Astrobee is allowed to auto return. Please note,
+# Astrobee will only use this flags when deciding if it should auto return. If
+# the astrobee gets a command to auto return from the operator or guest science,
+# it will auto return without checking this flag
+bool auto_return_enabled
+
+# Specifies whether timesync is enabled. Hopefully this will be used to
+# synchronize movements between Astrobees.
+bool time_sync_enabled
+
+# Specifies whether the choreographer should execute a segment immediately or
+# based on the time stamp in the segement
+bool immediate_enabled
+
+# Specifies the current planner being used
+string planner
+
+# Specifies the current world being used
+string world
+
+# Number of seconds since Unix Epoch
+uint32 boot_time
+
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data 
+# in a particular coordinate frame.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+# time-handling sugar is provided by the client library
+time stamp
+#Frame this data is associated with
+# 0: no frame
+# 1: global frame
+string frame_id
+
+================================================================================
+MSG: ff_msgs/OpState
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Operating States, based off of the enumeration constants
+# in rapid::ext::astrobee::AgentState.
+#
+# *MUST* be kept in sync with the DDS IDL file in astrobee_common
+
+uint8 READY            = 0  # Freeflyer is ready to accept commands
+uint8 PLAN_EXECUTION   = 1  # Freeflyer is executing a plan
+uint8 TELEOPERATION    = 2  # Freeflyer is executing a teleop command
+uint8 AUTO_RETURN      = 3  # Freeflyer is autonomously returning to the dock
+# The freeflyer is either executing a fault response or there is a fault
+# occurring in the system that prevents the freeflyer from moving
+uint8 FAULT            = 4
+
+# Operating state
+uint8 state
+
+================================================================================
+MSG: ff_msgs/ExecState
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Execution States, based off of the enumeration constants in
+# rapid::ext::astrobee::AgentState
+#
+# *MUST* be kept in sync with the DDS IDL file in astrobee_common
+
+uint8 IDLE      = 0   # Process is idle
+uint8 EXECUTING = 1   # Process is executing
+uint8 PAUSED    = 2   # Process is paused
+uint8 ERROR     = 3   # Process encountered an error
+
+# Execution state
+uint8 state
+
+================================================================================
+MSG: ff_msgs/MobilityState
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Mobility states, based off the enumeration constants in
+# rapid::ext::astrobee::AgentState
+#
+# *MUST* be kept in sync with the DDS IDL file in astrobee_common
+
+uint8 DRIFTING        = 0   # Astrobee's propulsion is off
+uint8 STOPPING        = 1   # Astrobee is either stopping or stopped
+uint8 FLYING          = 2   # Astrobee is flying
+uint8 DOCKING         = 3   # Astrobee is either docking or undocking
+uint8 PERCHING        = 4   # Astrobee is either perching or unperching
+
+# Mobility state
+uint8 state
+
+# Specifies the progress of the action. For docking, this value can be N to -N
+# where N through 1 specifies the progress of a docking action, 0 is docked, and
+# -1 through -N specifies the process of an undocking action. For stopping, this
+# value is either 1 or 0 where 1 means the robot is coming to a stop and 0 means
+# the robot is stopped. For perching, this value can be N to -N where N through
+# 1 specifies the progress of a perching action, 0 is perched, and -1 through
+# -N specifies the process of an unperching action.
+int32 sub_state
+"""
+
+	new_type = "ff_msgs/AgentStateStamped"
+	new_full_text = """
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# State of the Astrobee, based off of rapid::ext::astrobee::AgentState
+
+# Header with timestamp
+std_msgs/Header header
+
+# Operating state of the Astrobee
+ff_msgs/OpState operating_state
+
+# Plan execution state. State is idle when there is no plan to be executed. Once
+# a plan is uploaded, the state change to paused. Upon a run plan command, the
+# state will change to executing. If a stop or pause plan command is received or
+# a fault occurs, the state will be set to pause. Once the plan is completed,
+# the state will go back to idle
+ff_msgs/ExecState plan_execution_state
+
+# Guest science state. If a primary guest science apk is started, the state
+# will go from idle to executing. Once the primarty apk is finished, the state
+# will go back to idle
+ff_msgs/ExecState guest_science_state
+
+# Mobility state of the Astrobee
+ff_msgs/MobilityState mobility_state
+
+# Proximity to the dock when docking and undocking. Proximity to a handrail when
+# perching or unperching. 0 the rest of the time.
+float32 proximity
+
+# Name of profile configuration, i.e. Nominal, IgnoreObstacles, Faceforward,
+# Quiet, etc. Profiles specify stuff like target velocity and acceleration,
+# collision distance, etc.
+string profile_name
+
+#Defines GN&C gains, hard limits, tolerances, etc.
+string flight_mode
+
+# Maximum linear velocity to target while translating
+float32 target_linear_velocity
+# Maximum linear acceleration to target while translating
+float32 target_linear_accel
+# Maximum angular velocity to target while rotating
+float32 target_angular_velocity
+# Maximum angular acceleration to target while rotating
+float32 target_angular_accel
+# Minimum distance margin to maintain away from obstacles
+float32 collision_distance
+
+# Specifies whether the Astrobee is allowed to fly blind i.e. not faceforward
+bool holonomic_enabled
+
+# Specifies whether the Astrobee is checking for obstacles
+bool check_obstacles
+
+# Specifies whether the Astrobee is checking the keepin and keepout zones
+bool check_zones
+
+# Specifies whether the Astrobee is allowed to auto return. Please note,
+# Astrobee will only use this flags when deciding if it should auto return. If
+# the astrobee gets a command to auto return from the operator or guest science,
+# it will auto return without checking this flag
+bool auto_return_enabled
+
+# Specifies whether the choreographer should execute a segment immediately or
+# based on the time stamp in the segement
+bool immediate_enabled
+
+# Specifies the current planner being used
+string planner
+
+# Specifies whether re-planning is allowed
+bool replanning_enabled
+
+# Specifies the current world being used
+string world
+
+# Number of seconds since Unix Epoch
+uint32 boot_time
+
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data 
+# in a particular coordinate frame.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+# time-handling sugar is provided by the client library
+time stamp
+#Frame this data is associated with
+string frame_id
+
+================================================================================
+MSG: ff_msgs/OpState
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Operating States, based off of the enumeration constants
+# in rapid::ext::astrobee::AgentState.
+#
+# *MUST* be kept in sync with the DDS IDL file in astrobee_common
+
+uint8 READY            = 0  # Freeflyer is ready to accept commands
+uint8 PLAN_EXECUTION   = 1  # Freeflyer is executing a plan
+uint8 TELEOPERATION    = 2  # Freeflyer is executing a teleop command
+uint8 AUTO_RETURN      = 3  # Freeflyer is autonomously returning to the dock
+# The freeflyer is either executing a fault response or there is a fault
+# occurring in the system that prevents the freeflyer from moving
+uint8 FAULT            = 4
+
+# Operating state
+uint8 state
+
+================================================================================
+MSG: ff_msgs/ExecState
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Execution States, based off of the enumeration constants in
+# rapid::ext::astrobee::AgentState
+#
+# *MUST* be kept in sync with the DDS IDL file in astrobee_common
+
+uint8 IDLE      = 0   # Process is idle
+uint8 EXECUTING = 1   # Process is executing
+uint8 PAUSED    = 2   # Process is paused
+uint8 ERROR     = 3   # Process encountered an error
+
+# Execution state
+uint8 state
+
+================================================================================
+MSG: ff_msgs/MobilityState
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Mobility states, based off the enumeration constants in
+# rapid::ext::astrobee::AgentState
+#
+# *MUST* be kept in sync with the DDS IDL file in astrobee_common
+
+uint8 DRIFTING        = 0   # Astrobee's propulsion is off
+uint8 STOPPING        = 1   # Astrobee is either stopping or stopped
+uint8 FLYING          = 2   # Astrobee is flying
+uint8 DOCKING         = 3   # Astrobee is either docking or undocking
+uint8 PERCHING        = 4   # Astrobee is either perching or unperching
+
+# Mobility state
+uint8 state
+
+# Specifies the progress of the action. For docking, this value can be N to -N
+# where N through 1 specifies the progress of a docking action, 0 is docked, and
+# -1 through -N specifies the process of an undocking action. For stopping, this
+# value is either 1 or 0 where 1 means the robot is coming to a stop and 0 means
+# the robot is stopped. For perching, this value can be N to -N where N through
+# 1 specifies the progress of a perching action, 0 is perched, and -1 through
+# -N specifies the process of an unperching action.
+int32 sub_state
+"""
+
+	order = 0
+	migrated_types = [
+		("Header","Header"),
+		("OpState","OpState"),
+		("ExecState","ExecState"),
+		("MobilityState","MobilityState"),]
+
+	valid = True
+
+	def update(self, old_msg, new_msg):
+		self.migrate(old_msg.header, new_msg.header)
+		self.migrate(old_msg.operating_state, new_msg.operating_state)
+		self.migrate(old_msg.plan_execution_state, new_msg.plan_execution_state)
+		self.migrate(old_msg.guest_science_state, new_msg.guest_science_state)
+		self.migrate(old_msg.mobility_state, new_msg.mobility_state)
+		new_msg.proximity = old_msg.proximity
+		new_msg.profile_name = old_msg.profile_name
+		new_msg.flight_mode = old_msg.flight_mode
+		new_msg.target_linear_velocity = old_msg.target_linear_velocity
+		new_msg.target_linear_accel = old_msg.target_linear_accel
+		new_msg.target_angular_velocity = old_msg.target_angular_velocity
+		new_msg.target_angular_accel = old_msg.target_angular_accel
+		new_msg.collision_distance = old_msg.collision_distance
+		new_msg.holonomic_enabled = old_msg.holonomic_enabled
+		new_msg.check_obstacles = old_msg.check_obstacles
+		new_msg.check_zones = old_msg.check_zones
+		new_msg.auto_return_enabled = old_msg.auto_return_enabled
+		new_msg.immediate_enabled = old_msg.immediate_enabled
+		new_msg.planner = old_msg.planner
+		new_msg.world = old_msg.world
+		new_msg.boot_time = old_msg.boot_time
+
+		# Add field: bool replanning_enabled. Set to False to accurately represent old behavior.
+		new_msg.replanning_enabled = False
+		# Delete field: time_sync_enabled. Data loss is ok because it was never really used.

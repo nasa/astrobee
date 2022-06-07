@@ -2,7 +2,7 @@
 
 name: Check for lint errors
 
-on: ['push', 'pull_request']
+on: ['push', 'pull_request', 'workflow_dispatch']
 
 jobs:
   lint_check_cpp:
@@ -20,8 +20,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install linters
       run: |
-        pip install black==22.1.0
-        pip install isort==5.10.1
+        pip install click==8.0.1 black==22.1.0 isort==5.10.1
 
     - name: Run black
       run: |

@@ -24,4 +24,6 @@
   </include>
 
   <test pkg="choreographer" type="test_obstacle" test-name="test_obstacle" />
+  <!-- Reconfigure mapper. Wait for the server to be available -->
+  <node pkg="dynamic_reconfigure" type="dynparam" name="dynparam" args="set /cfg/mapper disable_mapper False"  launch-prefix="bash -c 'sleep 10; $0 $@' "/>
 </launch>

@@ -35,6 +35,9 @@ find_package(GTSAM REQUIRED)
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
+# Allow other packages to use python scripts from this package
+catkin_python_setup()
+
 catkin_package(
   INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam

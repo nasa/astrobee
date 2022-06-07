@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-files=$(git diff --cached --name-only | grep '\.py$')
+files=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
 
 # If files is empty exit success
 if [ -z "${files}" ]; then

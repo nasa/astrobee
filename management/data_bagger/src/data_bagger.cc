@@ -338,6 +338,15 @@ bool DataBagger::EnableDelayedRecordingService(ff_msgs::EnableRecording::Request
                                       ff_msgs::EnableRecording::Response &res) {
   // Check if we are starting a recording or stopping a recording
   if (req.enable) {
+    // Check to see if we are already recording a bag. If we are, reject
+    // starting a new recording.
+    if (combined_data_state_.recording) {
+      res.status = "Can't start a recording while already recording data. ";
+      res.status += "Please stop the current recording first!";
+      res.success = false;
+      return true;
+    }
+
     // Check to make sure a delayed profile is loaded
     if (delayed_profile_name_ == "" ||
                                 recorder_options_delayed_.topics.size() == 0) {

@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <camera/camera_params.h>
 #include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <msg_conversions/msg_conversions.h>

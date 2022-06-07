@@ -60,37 +60,13 @@ in the \ref astrobee configuration documentation.
 
 ## Reduce the number of images
 
-Here, we delete the images that overlap highly. (This tool is, like all
-others, in astrobee_build/native.)
+Remove low movement images:
+    rosrun sparse_mapping remove_low_movement_images image_directory_name
 
-    select_images -density_factor 1.4 <image dir>/*.jpg
+This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
 
 This is a non-reversible operation, so it should be invoked on a copy
 of the images.
-
-The higher the value of the density factor, the more images will be
-kept. Some experimentation with this number is necessary. A value of
-1.4 seems to work well. It may be needed to decrease this to 1.0 if
-images appear to be too dense. Ideally the images should have perhaps
-on the order of 3/4 to 4/5 of overlap. This tool is not perfect. One
-should inspect the images in the ``eog`` viewer, and delete redundant
-ones from it manually, using the Delete key.
-
-The images can also be inspected and deleted with ``nvm_visualize``, a
-tool included with this software. See \ref sparsemapping for
-details.  This tool, unlike ``eog``, echoes each image name as it is
-displayed, which can be useful with image manipulation tasks.
-
-If the images do not have enough overlap, the selection tool needs to
-be run again with a different value of this factor, or otherwise
-images must be added back manually.
-
-Alternatively, one can simply first pick every 10th or 20th image,
-such as:
-
-    ls <image dir>/*.jpg
-
-then copy these to a new directory.
 
 It is important to avoid rotating the bot in place when acquiring
 images, as then the map could be of poor quality. Hence, the robot

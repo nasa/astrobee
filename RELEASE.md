@@ -1,5 +1,28 @@
 # Releases
 
+## Release 0.16.6
+
+  * switch map online possibility
+  * other fixes
+
+## Release 0.16.5
+
+  * Fix multiple bugs
+
+## Release 0.16.4
+
+  * Auto-exposure
+  * Add splice tool
+  * Add arm deploy to bridge
+  * Various bug fixes
+
+## Release 0.16.3
+
+  * Added bag tools
+  * Disabled mapper (can be enabled through service)
+  * Add debayer live
+  * Multiple other fixes and improvements
+
 ## Release 0.16.2
 
   * Performance improvements

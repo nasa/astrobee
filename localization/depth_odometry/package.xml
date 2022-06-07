@@ -14,9 +14,10 @@
     Astrobee Flight Software
   </maintainer>
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>camera</build_depend>
+  <build_depend>cv_bridge</build_depend>
   <build_depend>ff_msgs</build_depend>
   <build_depend>ff_util</build_depend>
+  <build_depend>image_transport</build_depend>
   <build_depend>localization_common</build_depend>
   <build_depend>localization_measurements</build_depend>
   <build_depend>msg_conversions</build_depend>
@@ -27,9 +28,10 @@
   <build_depend>point_cloud_common</build_depend>
   <build_depend>vision_common</build_depend>
   <build_depend>roscpp</build_depend>
-  <run_depend>camera</run_depend>
+  <run_depend>cv_bridge</run_depend>
   <run_depend>ff_msgs</run_depend>
   <run_depend>ff_util</run_depend>
+  <run_depend>image_transport</run_depend>
   <run_depend>localization_common</run_depend>
   <run_depend>localization_measurements</run_depend>
   <run_depend>msg_conversions</run_depend>

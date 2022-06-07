@@ -25,7 +25,7 @@ Definition of topic names are maintained in \subpage shared:<br>
   - \subpage localization
   - directory: `localization`
   - topic prefix: `loc`
-  - We keep this name, everything necessary for localization, pose estimation is performed in the GNC EKF...
+  - Everything necessary for localization
   - include:
     - Sparse Mapping Features
     - AR Tags
@@ -52,8 +52,6 @@ Definition of topic names are maintained in \subpage shared:<br>
   - directory: `gnc`
   - topic prefix: `gnc`
   - include:
-    - EKF
-    - Visual Odometry
     - Control
 
 ### Behaviors
@@ -69,12 +67,15 @@ Definition of topic names are maintained in \subpage shared:<br>
 
 ### Communication
   - \subpage comms
-  - directory: `communication`
+  - directory: `communications`
   - topic prefix: `comm`
   - This is not a subsystem like the others... Does the bridge still get a prefix and publish all "FF-ROS-Commands" under it? [ted]
   - include:
     - Bridge
     - Msg / Srv / Action
+
+### Description (URDF Robot Description)
+  - \subpage urdf
 
 ### Drivers (hardware)
   - \subpage hw

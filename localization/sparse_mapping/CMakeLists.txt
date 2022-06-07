@@ -27,8 +27,10 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_msgs
   ff_common
   camera
-  interest_point
   config_reader
+  interest_point
+  localization_common
+  vision_common
 )
 
 # System dependencies are found with CMake's conventions
@@ -47,7 +49,7 @@ find_package(OpenCV331 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES sparse_mapping
-  CATKIN_DEPENDS ff_msgs ff_common camera interest_point config_reader
+  CATKIN_DEPENDS ff_msgs ff_common camera interest_point config_reader localization_common vision_common
 )
 
 ###########
@@ -170,11 +172,11 @@ add_dependencies(parse_cam ${catkin_EXPORTED_TARGETS})
 target_link_libraries(parse_cam
   sparse_mapping gflags glog ${catkin_LIBRARIES})
 
-## Declare a C++ executable: select_images
-add_executable(select_images tools/select_images.cc)
-add_dependencies(select_images ${catkin_EXPORTED_TARGETS})
-target_link_libraries(select_images
-  sparse_mapping gflags glog ${catkin_LIBRARIES})
+## Declare a C++ executable: remove_low_movement_images
+add_executable(remove_low_movement_images tools/remove_low_movement_images.cc)
+add_dependencies(remove_low_movement_images ${catkin_EXPORTED_TARGETS})
+target_link_libraries(remove_low_movement_images
+  sparse_mapping ${catkin_LIBRARIES})
 endif (NOT USE_CTC)
 
 
