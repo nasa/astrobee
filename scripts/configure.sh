@@ -2,15 +2,15 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -313,17 +313,17 @@ if [ $native_build == 1 ] ; then
     grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
     cmake_astrobee_path=`catkin locate -s`/cmake
     grep -qF ${cmake_astrobee_path} ~/.bashrc || {
-      echo -e '\n' >> ~/.bashrc \ 
+      echo -e '\n' >> ~/.bashrc \
       echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
     }
     source ~/.bashrc
-    
+
     shell="$SHELL"
     if [[ ${shell}  == *"zsh"* ]]; then
         echo "Setting .zshrc with environment variables..."
         grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
         grep -qF ${cmake_astrobee_path} ~/.zshrc || {
-            echo -e '\n' >> ~/.zshrc \ 
+            echo -e '\n' >> ~/.zshrc \
             echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
         }
     fi
@@ -344,19 +344,20 @@ fi
 if [ $armhf_build == 1 ] ; then
     echo "configuring for armhf..."
     catkin init
-    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake"
+    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake -DARMHF_ROS_DISTRO=${ros_version}"
     use_ctc=" -DUSE_CTC=on"
     enable_gazebo=""
     build_loc_rviz_plugins=""
     catkin profile add ${profile:-armhf}
     catkin profile set ${profile:-armhf}
-    catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/kinetic \
+    catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/$ros_version \
         --build-space ${workspace_path:-armhf/}build \
         --install-space ${install_path:-${workspace_path:-armhf/}}opt/astrobee \
         --devel-space ${workspace_path:-armhf/}devel \
         --log-space ${workspace_path:-armhf/}logs \
         --install \
-        --blacklist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
+        --skiplist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
             astrobee_dock astrobee_freeflyer astrobee_gazebo localization_rviz_plugins ground_dds_ros_bridge \
-        --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=Release
+        --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} \
+            -DCMAKE_BUILD_TYPE=Release
 fi
