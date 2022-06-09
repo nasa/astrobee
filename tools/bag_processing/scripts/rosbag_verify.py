@@ -96,7 +96,7 @@ def valid_deserialization(bag_path):
 
 def verify(fixed_path, orig_path, verbose=False, deserialize=False):
     result = True
-    result &= message_counts_match(orig_path, fixed_path)
+    result &= message_counts_match(fixed_path, orig_path)
     if deserialize:
         result &= valid_deserialization(fixed_path)
 
