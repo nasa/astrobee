@@ -356,7 +356,7 @@ if [ $armhf_build == 1 ] ; then
         --devel-space ${workspace_path:-armhf/}devel \
         --log-space ${workspace_path:-armhf/}logs \
         --install \
-        --skiplist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
+        --blacklist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
             astrobee_dock astrobee_freeflyer astrobee_gazebo localization_rviz_plugins ground_dds_ros_bridge \
         --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} \
             -DCMAKE_BUILD_TYPE=Release
