@@ -73,6 +73,7 @@ string CMD_NAME_SET_DATA_TO_DISK = setDataToDisk
 string CMD_NAME_START_RECORDING = startRecording
 string CMD_NAME_STOP_RECORDING = stopRecording
 string CMD_NAME_CUSTOM_GUEST_SCIENCE = customGuestScience
+string CMD_NAME_RESTART_GUEST_SCIENCE = restartGuestScience
 string CMD_NAME_START_GUEST_SCIENCE = startGuestScience
 string CMD_NAME_STOP_GUEST_SCIENCE = stopGuestScience
 string CMD_NAME_AUTO_RETURN = autoReturn
