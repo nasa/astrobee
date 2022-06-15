@@ -91,6 +91,7 @@ string CMD_NAME_SKIP_PLAN_STEP = skipPlanStep
 string CMD_NAME_WAIT = wait
 string CMD_NAME_POWER_OFF_ITEM = powerOffItem
 string CMD_NAME_POWER_ON_ITEM = powerOnItem
+string CMD_NAME_ENABLE_ASTROBEE_INTERCOMMS = enableAstrobeeIntercomms
 string CMD_NAME_SET_CAMERA = setCamera
 string CMD_NAME_SET_CAMERA_RECORDING = setCameraRecording
 string CMD_NAME_SET_CAMERA_STREAMING = setCameraStreaming

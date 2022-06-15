@@ -1664,11 +1664,44 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
+bool Executive::EnableAstrobeeIntercomms(ff_msgs::CommandStampedPtr const&
+                                                                          cmd) {
+  NODELET_INFO("Executive executing enable astrobee intercomms command!");
+
+  ff_msgs::ResponseOnly enable_astrobee_intercomms_srv;
+
+  if (!CheckServiceExists(enable_astrobee_intercommunication_client_,
+                          "Enable astrobee intercommunication",
+                          cmd->cmd_id)) {
+    return false;
+  }
+
+  if (!enable_astrobee_intercommunication_client_.call(
+                                              enable_astrobee_intercomms_srv)) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Enable astrobee intercommunication service returned false");
+    return false;
+  }
+
+  if (!enable_astrobee_intercomms_srv.response.success) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   ("Enable astrobee intercommunication failed with result: " +
+                    enable_astrobee_intercomms_srv.response.status));
+    return false;
+  }
+
+  state_->AckCmd(cmd->cmd_id);
+  return true;
+}
+
 bool Executive::Fault(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing fault command!");
+
   // Only transition to the fault state if the fault command came from the
   // system monitor or executive. The only way to transition out of the fault
-  // state is if the system monitor state changes to functional so we don't wan
+  // state is if the system monitor state changes to functional so we don't want
   // the ground to issue a fault command because there will be no way to
   // transition out of the fault state
   if (cmd->cmd_src == "sys_monitor" || cmd->cmd_src == "executive") {
@@ -1692,6 +1725,7 @@ bool Executive::GripperControl(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing idle propulsion command!");
+
   // Cancel any motion actions being executed include the arm
   unsigned int i = 0;
   for (i = 0; i < running_actions_.size(); i++) {
@@ -3734,6 +3768,10 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   eps_terminate_client_ = nh_.serviceClient<ff_hw_msgs::ClearTerminate>(
                                           SERVICE_HARDWARE_EPS_CLEAR_TERMINATE);
+
+  enable_astrobee_intercommunication_client_ =
+      nh_.serviceClient<ff_msgs::ResponseOnly>(
+                            SERVICE_COMMUNICATIONS_ENABLE_ASTROBEE_INTERCOMMS);
 
   unload_load_nodelet_client_ = nh_.serviceClient<ff_msgs::UnloadLoadNodelet>(
                             SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET);

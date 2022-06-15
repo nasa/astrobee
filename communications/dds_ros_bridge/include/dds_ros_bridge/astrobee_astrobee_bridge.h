@@ -20,7 +20,6 @@
 #define DDS_ROS_BRIDGE_ASTROBEE_ASTROBEE_BRIDGE_H_
 
 #include <pluginlib/class_list_macros.h>
-#include <std_srvs/Empty.h>
 
 #include <map>
 #include <memory>
@@ -37,6 +36,8 @@
 #include "dds_ros_bridge/rapid_gs_data_ros_gs_data.h"
 #include "dds_ros_bridge/ros_ekf_rapid_ekf.h"
 #include "dds_ros_bridge/ros_guest_science.h"
+
+#include "ff_msgs/ResponseOnly.h"
 
 #include "ff_util/ff_names.h"
 #include "ff_util/ff_nodelet.h"
@@ -74,11 +75,12 @@ class AstrobeeAstrobeeBridge : public ff_util::FreeFlyerNodelet {
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
   bool ReadSharedItemConf(config_reader::ConfigReader::Table &conf,
-                            std::string &topic_name, bool &enable, float &rate);
+                          std::string &topic_name, bool &enable, float &rate);
 
  private:
-  void Run();
-  bool Trigger(std_srvs::Empty::Request& req, std_srvs::Empty::Response & res);
+  bool Run();
+  bool Start(ff_msgs::ResponseOnly::Request& req,
+             ff_msgs::ResponseOnly::Response& res);
 
   config_reader::ConfigReader config_params_;
 
@@ -91,7 +93,7 @@ class AstrobeeAstrobeeBridge : public ff_util::FreeFlyerNodelet {
 
   std::map<std::string, ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
-  std::string agent_name_, participant_name_;
+  std::string agent_name_, participant_name_, read_params_error_;
   std::vector<ff::RapidPubPtr> rapid_pubs_;
   std::vector<ff::RapidSubRosPubPtr> rapid_sub_ros_pubs_;
 };
