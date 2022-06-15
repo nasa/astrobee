@@ -1238,6 +1238,19 @@
       ],
       "parent": "Command",
       "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.enableAstrobeeIntercomms",
+      "isRapidNative": false,
+      "notes": "Starts the Astrobee intercommunication software. This enables the robot to send and receive a subset of data to and from other Astrobees in the network. Please note, this command must be executed on each robot needed in the communication.",
+      "availableContext": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
     }
   ]
 }
