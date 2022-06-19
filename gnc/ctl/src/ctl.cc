@@ -207,11 +207,9 @@ bool Ctl::EnableCtl(std_srvs::SetBoolRequest&req, std_srvs::SetBoolResponse &res
   response.success = true;
   control_enabled_ = request;
   if (control_enabled_ == false) {
-    response.message = "Onboard controller disabled.";
-    NODELET_DEBUG_STREAM("Onboard controller disabled.");
+    NODELET_DEBUG_STREAM((response.message = "Onboard controller disabled."));
   } else {
-    response.message = "Onboard controller enabled.";
-    NODELET_DEBUG_STREAM("Onboard controller enabled.");
+    NODELET_DEBUG_STREAM((response.message = "Onboard controller enabled."));
   }
   return true;
 }
