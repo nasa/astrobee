@@ -25,7 +25,7 @@ elif [ "$ubuntu_version" = "focal" ]; then
   export ROS_DISTRO=noetic
   export PYTHON_VERSION=3
 else
-  export ROS_DISTRO=$(rosdistro -d)
+  echo "Unsupported OS release. Found: $ubuntu_version"
   exit 1
 fi
 
