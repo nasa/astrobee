@@ -1,0 +1,16 @@
+cmake (3.16.3-1ubuntu1+focal1) focal; urgency=medium
+
+  * Force 64bit offsets
+    - This fixes a cmake bug on 32bit systems, allowing compilation
+
+ -- Ruben Garcia <nospam@nospam.org>  Fri, 08 Apr 2022 20:33:06 -0700
+
+cmake (3.16.3-1ubuntu1) focal; urgency=low
+
+  * Merge from Debian unstable.  Remaining changes:
+    - Unset proxy settings during autopkgtest. Tests try to resolve
+    no-site and match stderr, with bad network on armhf autopkgtest
+    runners instead the stderr is failing to resolve squid.internal.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Thu, 06 Feb 2020 12:53:45 +0000
+ 
