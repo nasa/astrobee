@@ -17,6 +17,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# CMake 3.16.3 is broken for the armhf setup we use.
+# In order to compile our custom debians for the robot we need to patch 
+# CMake using this script.
+# The patched debians are already in our repositories. You do not need to 
+# run this script again unless an additional change to CMake is needed.
+# This issue is fixed in CMake 3.19.0.
+
 PACKAGE_NAME=cmake-3.16.3
 CONTROL_FILES=cmake_3.16.3-1ubuntu1.debian.tar.xz
 ORIG_TAR=cmake_3.16.3.orig.tar.gz
