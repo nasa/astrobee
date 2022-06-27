@@ -344,7 +344,7 @@ fi
 if [ $armhf_build == 1 ] ; then
     echo "configuring for armhf..."
     catkin init
-    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake -DARMHF_ROS_DISTRO=${ros_version}"
+    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake -DARMHF_ROS_DISTRO=${ros_version} -DCATKIN_ENABLE_TESTING=off"
     use_ctc=" -DUSE_CTC=on"
     enable_gazebo=""
     build_loc_rviz_plugins=""
