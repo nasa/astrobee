@@ -37,11 +37,7 @@ if [ -z "${ARMHF_CHROOT_DIR}" ]; then echo ARMHF_CHROOT_DIR is not set, please c
 echo "Build context for cross: "${DIR}/../../..
 
 if [ -z "${INSTALL_PATH}" ]
-then
-  if [ -d "${DIR}/../../../../astrobee/armhf/" ] # Checks if this folder is defined otherwise defaults to standard
-  then export INSTALL_PATH=${DIR}/../../../../astrobee/armhf/opt/astrobee
-  else export INSTALL_PATH=$HOME/astrobee/armhf/opt/astrobee
-  fi
+then export INSTALL_PATH=${DIR}/../../../../armhf/opt/astrobee
 fi
 echo "Saving the cross-compiled code in: "${INSTALL_PATH}
 

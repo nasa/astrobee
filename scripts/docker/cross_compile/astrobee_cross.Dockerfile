@@ -29,5 +29,5 @@ ARG ARMHF_TOOLCHAIN=/arm_cross/toolchain/gcc
 
 # Cross-compile
 RUN ln -s /arm_cross/rootfs/usr/include/eigen3 /usr/include/eigen3
-RUN cd /src/astrobee/ && ./src/scripts/configure.sh -a
-RUN cd /src/astrobee/ && catkin build
+    && cd /src/astrobee/ && ./src/scripts/configure.sh -a
+    && cd /src/astrobee/ && catkin build
