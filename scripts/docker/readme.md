@@ -181,6 +181,11 @@ in order of priority:
 where $DIR is the directory where the cross_compile.sh script is located.
 3) To $HOME/astrobee_build/armhf otherwise
 
+If you already cross-compiled once and just wish to rebuild the code, run:
+
+    ./scripts/docker/cross_compile/rebuild_cross_compile.sh
+
+
 ## Building an Astrobee Debian (NASA users only)
 
 This step assumes that the cross compile setup was successful and that ARMHF_CHROOT_DIR
