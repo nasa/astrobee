@@ -4,7 +4,7 @@
 
 This planner is based off Michael Watterson's PhD thesis. We generate trajectories by running an optimization which minimizes the functional:
 
-![alt text](doc/images/mobility/planner_qp_cost.png)
+![alt text](/doc/images/mobility/planner_qp_cost.png)
 
 With collision avoidance constraints and scaling to ensure dynamic feasibility.
 
@@ -24,11 +24,11 @@ By default the teleop tool configures the platform to operate in holomonic mode.
 
 This planner comes with an rviz plug-in to view the generated trajectories.  
 
-![alt text](doc/images/mobility/planner_qp_rviz_1.png)
+![alt text](/doc/images/mobility/planner_qp_rviz_1.png)
 
 From the display panel, add the traj_opt_ros trajectory plug-in. 
 
-![alt text](doc/images/mobility/planner_qp_rviz_2.png)
+![alt text](/doc/images/mobility/planner_qp_rviz_2.png)
 
 Change the topic in the plug-in to either the current trajectory or a debug version.  Here the regular trajectory is plotted in magenta and the debug is plotted in red.  The debug shows the optimization at each iteration as it converges to the current trajectory.
 
@@ -39,7 +39,7 @@ The planner has adjustable parameters which can affect the optimizer's performan
 
     rosrun rqt_reconfigure rqt_reconfigure
 
-![alt text](doc/images/mobility/planner_qp_config.png)
+![alt text](/doc/images/mobility/planner_qp_config.png)
 
 * `sample_rate` - The optimization uses a continuous trajectory representation which is sub-sampled at this rate before being sent to the choreographer.
 
