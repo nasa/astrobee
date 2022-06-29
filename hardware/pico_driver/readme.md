@@ -10,7 +10,7 @@ The objective of this page is to document an experiment to test the amount of co
 
 The hardware setup is pictured below. It is essentially an Inforce IFC6501 system on module (SOM) plugged into a development board. This board is connected by a USB 2.0 hub to two PMD PicoFlexx sensors, and through Ethernet to a host PC (Ubuntu 16.04 64bit VM). The host PC acts as a DHCP server, NAT router, DNS forwarder and debugger.
 
-![alt text](../images/hw/pico-setup.jpg "The experimental setup")
+![alt text](doc/images/hw/pico-setup.jpg "The experimental setup")
 
 The SOM is fitted with a cooling solution (heatsink and fan) that roughly mimics what is on the actual platform. Thermal testing has shown that by default all cores are run at maximum speed and under high load the CPU frequency switches three of the four cores offline when a thermal barrier is reached. For this reason the following script is run on boot to lower the maximum operating frequency of all four cores to 1.96GHz (they may be throttled lower than this in response to demand). 
 
@@ -116,7 +116,7 @@ There are a couple of interesting results from this experiment:
 
 It is also important to note that, although it is not shown in the results, the output of the pico_flexx_driver showed the point cloud callback rate to be within 1% of the target rate. For this reason, frame dropping cannot be used as a justification for the plateau in load we see from 15Hz onwards.
 
-![alt text](../images/hw/pico-results.jpg "Performance results")
+![alt text](doc/images/hw/pico-results.jpg "Performance results")
 
 The raw data for this experiment, as well as the octave code used to generate the plots, is included in [matlab-results.tar.gz](https://babelfish.arc.nasa.gov/trac/freeflyer/attachment/wiki/pmd_picoflexx/matlab-results.tar.gz).
 
@@ -126,7 +126,7 @@ The PicoFlexx SDK provides a C++ interface for querying point clouds from the ca
 
 Here we compare the performance of the pico_flexx_driver to that of a light-weight driver written for the FreeFlyer flight software stack. For both drivers we used the same SDK (our custom build) and the ROS Kinetic test environment described in the previous section. We limit our analysis to just the 5Hz mode, because this is the only feasible configuration -- all other moved are too resource-intensive for our application. The results are shown below.
 
-![alt text](../images/hw/pico-drivers.jpg "Comparison to third party ROS drivers")
+![alt text](doc/images/hw/pico-drivers.jpg "Comparison to third party ROS drivers")
 
 Our results show that we are likely to gain a 1% improvement in resource usage by running our pico_driver rather than the pico_flexx_driver. However, the pico_driver does need to be updated to distinguish between multiple cameras; it currently just picks the first one that it finds on the bus.
 
@@ -134,7 +134,7 @@ Our results show that we are likely to gain a 1% improvement in resource usage b
 
 The current version of pico_driver performed an iterative copy of all points from the royale SDK to a point cloud, and then a message conversion from the PointCloud to a PointCloud2 data type. I added the improvements mentioned in the section below, and optimized the code to use a memcpy rather than an iterative copy, by exploiting the fact that the PointCloud2 data type accommodates complex data structures. This yielded a small improvement in speed for low rates, but a massive improvement for higher rates. The results are shown in the graph below:
 
-![alt text](../images/hw/pico-optimization.jpg "Optimizing the ROS drivers")
+![alt text](doc/images/hw/pico-optimization.jpg "Optimizing the ROS drivers")
 
 # Setup on a laptop
 

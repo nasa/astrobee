@@ -112,5 +112,5 @@ on the namespace `~/mob/mapper/zones`. When listened to in rviz, these marker
 arrays render keep-in and keep-out zones as semi-transparent green and red
 cuboids. The two example zones should be rendered as shown below:
 
-![alt text](../images/mobility/zones.png "How the RVIZ user interface draws zones")
+![alt text](doc/images/mobility/zones.png "How the RVIZ user interface draws zones")
 

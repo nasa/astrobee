@@ -12,7 +12,7 @@ The localization manager supports the following localization pipelines:
 
 Refer to the image below. Each localization system can be thought of as a pipeline that converts raw measurements from a sensor into features. Since there is a delay in this pipeline, a registration pulse is sent as soon as the image is received, and this is used in the update step of the filter to perform a delay-aware correction of the state estimate. The **set_input** service on the EKF is essentially a multiplexer, which passes only one pipeline's features into the filter at any point.
 
-![alt text](../images/localization-manager.png "The localization manager")
+![alt text](doc/images/localization-manager.png "The localization manager")
 
 In order to perform a safe switch, the localization manager must run through a fixed sequence of steps:
 

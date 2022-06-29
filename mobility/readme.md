@@ -8,7 +8,7 @@ It is necessary to first define a few terms that will be used throughout the res
 
 A segment is a time-ordered sequence of **setpoints** and a corresponding **flight mode**. Each setpoint is a vector containing a pose and its first and second time derivatives, or equivalently a second order curve in 6DoF that describes motion. The flight mode is a string ("nominal", "docking", etc.) that is used to reconfigure the system (set impeller speed, controller gains, planning limits, tolerance values, etc.) so that consistency is enforced. When integrated forward in time by the controller, the setpoint carves out a continous curve in 3D space, defined over the time interval that runs from the current setpoint to the next setpoint, which we call a **trajectory**.
 
-![alt text](../images/mobility/definitions.png "Core nomenclature")
+![alt text](doc/images/mobility/definitions.png "Core nomenclature")
 
 ## Basic operation
 
@@ -34,7 +34,7 @@ The mobility subsystem is comprised of four different nodes.
 
 The diagram below illustrates how the various ndoes in the system interact with each other. ROS ctions are drawn in red, while ROS services are drawn in blue. Nodes that are part of the mobility subsystem are drawn as black boxes, while external nodes are drawn as white boxes.
 
-![alt text](../images/mobility/mob_overview.png "Interaction between mobility modules")
+![alt text](doc/images/mobility/mob_overview.png "Interaction between mobility modules")
 
 ## Using the mobility subsystem
 
