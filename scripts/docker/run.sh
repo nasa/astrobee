@@ -169,10 +169,10 @@ if [ "$display" = "true" ]; then
     XAUTH=/tmp/.docker.xauth
     touch $XAUTH
     xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
-    display_args+=" --volume=$XSOCK:$XSOCK:rw"
-    display_args+=" --volume=$XAUTH:$XAUTH:rw"
-    display_args+=" --env=\"XAUTHORITY=${XAUTH}\""
-    display_args+=" --env=\"DISPLAY\""
+    display_args+=" --volume="$XSOCK":"$XSOCK":rw"
+    display_args+=" --volume="$XAUTH":"$XAUTH":rw"
+    display_args+=" --env=XAUTHORITY="${XAUTH}
+    display_args+=" --env=DISPLAY"
     display_args+=" --gpus all"
 fi
 
