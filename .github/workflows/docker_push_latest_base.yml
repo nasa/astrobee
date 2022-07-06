@@ -1,0 +1,63 @@
+# Push the latest-base Docker images without doing a release. Called
+# manually only when needed (basically, when we push a change that
+# affects the base image on the develop branch).
+
+name: Docker push latest base
+
+on: ['workflow_dispatch']
+
+jobs:
+
+  build-xenial:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Log in to registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+    - name: Build base, build, test, push base docker
+      run: ./scripts/docker/build.sh --xenial
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee push_astrobee_base
+
+  build-bionic:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Log in to registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+    - name: Build base, build, test, push base docker
+      run: ./scripts/docker/build.sh --bionic
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee push_astrobee_base
+
+  build-focal:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Log in to registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+    - name: Build base, build, test, push base docker
+      run: ./scripts/docker/build.sh --focal
+                                     --owner ${{ github.repository_owner }}
+                                     astrobee_base astrobee test_astrobee push_astrobee_base

@@ -16,11 +16,14 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Point3.h>
+
+#include <cv_bridge/cv_bridge.h>
 
 #include <geometry_msgs/Point32.h>
 
@@ -130,9 +133,10 @@ SemanticDetsMeasurement MakeSemanticDetsMeasurement(const vision_msgs::Detection
   semantic_dets_measurement.timestamp = timestamp;
 
   for (const auto& det : detections.detections) {
-    //Ignore image_id, not used for anything
+    // Ignore image_id, not used for anything
     semantic_dets_measurement.semantic_dets.emplace_back(
-      SemanticDet(det.bbox.center.x, det.bbox.center.y, det.bbox.size_x, det.bbox.size_y, 1, det.results[0].id, timestamp));
+      SemanticDet(det.bbox.center.x, det.bbox.center.y, det.bbox.size_x, det.bbox.size_y, 1,
+        det.results[0].id, timestamp));
   }
 
   return semantic_dets_measurement;
@@ -151,5 +155,124 @@ FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
   }
   // Shouldn't get here
   return FanSpeedMode::kOff;
+}
+
+boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg,
+                                                       const std::string& encoding) {
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    cv_image = cv_bridge::toCvCopy(image_msg, encoding);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return boost::none;
+  }
+  const auto timestamp = lc::TimeFromHeader(image_msg->header);
+  return ImageMeasurement(cv_image->image, timestamp);
+}
+
+PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
+  const lc::Time timestamp = lc::TimeFromHeader(point_cloud_msg->header);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
+  return PointCloudMeasurement(timestamp, point_cloud);
+}
+
+boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
+  const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg, const sensor_msgs::ImageConstPtr& image_msg,
+  const Eigen::Affine3d image_A_depth_cam) {
+  const auto timestamp = lc::TimeFromHeader(image_msg->header);
+  // TODO(rsoussan): Unify image and point cloud conversion with other functions
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::MONO8);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return boost::none;
+  }
+  const auto& intensities = cv_image->image;
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr depth_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*depth_cloud_msg, *depth_cloud);
+
+  if (static_cast<int>(intensities.cols) != static_cast<int>(depth_cloud->width) ||
+      static_cast<int>(intensities.rows) != static_cast<int>(depth_cloud->height)) {
+    LogError("MakeDepthImageMeasurement: Image and Point Cloud dimensions do not match.");
+    return boost::none;
+  }
+
+  pcl::PointCloud<pcl::PointXYZI>::Ptr depth_cloud_with_intensities(new pcl::PointCloud<pcl::PointXYZI>());
+  depth_cloud_with_intensities->width = intensities.cols;
+  depth_cloud_with_intensities->height = intensities.rows;
+  depth_cloud_with_intensities->points.resize(depth_cloud_with_intensities->width *
+                                              depth_cloud_with_intensities->height);
+
+  int index = 0;
+  for (int row = 0; row < intensities.rows; ++row) {
+    for (int col = 0; col < intensities.cols; ++col) {
+      const auto& point = depth_cloud->points[index];
+      const Eigen::Vector3d depth_cam_t_point(point.x, point.y, point.z);
+      const Eigen::Vector3d image_t_point = image_A_depth_cam * depth_cam_t_point;
+      depth_cloud_with_intensities->points[index].x = image_t_point.x();
+      depth_cloud_with_intensities->points[index].y = image_t_point.y();
+      depth_cloud_with_intensities->points[index].z = image_t_point.z();
+      depth_cloud_with_intensities->points[index].intensity = static_cast<float>(intensities.at<uint8_t>(row, col));
+      ++index;
+    }
+  }
+  return DepthImageMeasurement(intensities, depth_cloud_with_intensities, timestamp);
+}
+
+lc::PoseWithCovariance MakePoseWithCovariance(const geometry_msgs::PoseWithCovariance& msg) {
+  const Eigen::Isometry3d pose = lc::EigenPose(lc::PoseFromMsg(msg.pose));
+  lc::PoseCovariance covariance;
+  for (int i = 0; i < 36; ++i) {
+    const int row = i / 6;
+    const int col = i - row * 6;
+    covariance(col, row) = msg.covariance[i];
+  }
+  return lc::PoseWithCovariance(pose, covariance);
+}
+
+Odometry MakeOdometry(const ff_msgs::Odometry& msg) {
+  Odometry odometry;
+  odometry.source_time = lc::TimeFromRosTime(msg.source_time);
+  odometry.target_time = lc::TimeFromRosTime(msg.target_time);
+  odometry.sensor_F_source_T_target = MakePoseWithCovariance(msg.sensor_F_source_T_target);
+  odometry.body_F_source_T_target = MakePoseWithCovariance(msg.body_F_source_T_target);
+  return odometry;
+}
+
+DepthCorrespondences MakeDepthCorrespondences(const ff_msgs::DepthOdometry& msg) {
+  std::vector<Eigen::Vector2d> source_image_points;
+  std::vector<Eigen::Vector2d> target_image_points;
+  std::vector<Eigen::Vector3d> source_3d_points;
+  std::vector<Eigen::Vector3d> target_3d_points;
+  for (const auto& correspondence : msg.correspondences) {
+    if (msg.valid_image_points) {
+      const Eigen::Vector2d source_image_point =
+        mc::Vector2dFromMsg<Eigen::Vector2d, ff_msgs::ImagePoint>(correspondence.source_image_point);
+      const Eigen::Vector2d target_image_point =
+        mc::Vector2dFromMsg<Eigen::Vector2d, ff_msgs::ImagePoint>(correspondence.target_image_point);
+      source_image_points.emplace_back(source_image_point);
+      target_image_points.emplace_back(target_image_point);
+    }
+    const Eigen::Vector3d source_3d_point =
+      mc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(correspondence.source_3d_point);
+    const Eigen::Vector3d target_3d_point =
+      mc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(correspondence.target_3d_point);
+    source_3d_points.emplace_back(source_3d_point);
+    target_3d_points.emplace_back(target_3d_point);
+  }
+
+  if (msg.valid_image_points)
+    return DepthCorrespondences(source_image_points, target_image_points, source_3d_points, target_3d_points);
+  return DepthCorrespondences(source_3d_points, target_3d_points);
+}
+
+DepthOdometryMeasurement MakeDepthOdometryMeasurement(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  Odometry odometry = MakeOdometry(depth_odometry_msg.odometry);
+  DepthCorrespondences correspondences = MakeDepthCorrespondences(depth_odometry_msg);
+  const lc::Time timestamp = lc::TimeFromHeader(depth_odometry_msg.header);
+  return DepthOdometryMeasurement(odometry, correspondences, timestamp);
 }
 }  // namespace localization_measurements

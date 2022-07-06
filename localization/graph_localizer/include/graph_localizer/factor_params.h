@@ -18,6 +18,7 @@
 #ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 #define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
+#include <graph_localizer/depth_odometry_factor_adder_params.h>
 #include <graph_localizer/handrail_factor_adder_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/semantic_loc_factor_adder_params.h>
@@ -29,6 +30,7 @@
 
 namespace graph_localizer {
 struct FactorParams {
+  DepthOdometryFactorAdderParams depth_odometry_adder;
   HandrailFactorAdderParams handrail_adder;
   RotationFactorAdderParams rotation_adder;
   SmartProjectionFactorAdderParams smart_projection_adder;

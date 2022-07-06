@@ -110,7 +110,6 @@ node LLP {
   end_manager()
 !endif
   start_manager("GN&C")
-    gnc_node([ekf])
     gnc_node([ctl])
     gnc_node([fam])
   end_manager()

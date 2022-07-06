@@ -61,12 +61,12 @@ void DataBagger::Initialize(ros::NodeHandle *nh) {
 
   set_service_ =
           nh->advertiseService(SERVICE_MANAGEMENT_DATA_BAGGER_SET_DATA_TO_DISK,
-                               &DataBagger::SetDataToDiskService,
+                               &DataBagger::SetDelayedDataToDiskService,
                                this);
 
   record_service_ =
           nh->advertiseService(SERVICE_MANAGEMENT_DATA_BAGGER_ENABLE_RECORDING,
-                               &DataBagger::EnableRecordingService,
+                               &DataBagger::EnableDelayedRecordingService,
                                this);
 
   // Timer used to determine when to query ros for the topic list. Timer is one
@@ -134,7 +134,7 @@ bool DataBagger::ReadParams() {
         return false;
       }
 
-      FixTopicNamespace(save_settings.topic_name);
+      AddTopicNamespace(save_settings.topic_name);
 
       if (!topic_entry.GetStr("downlink", &downlink)) {
         this->AssertFault(ff_util::INITIALIZATION_FAILED,
@@ -244,7 +244,7 @@ bool DataBagger::MakeDir(std::string dir,
 // give the ros bagger the topic gnc/ekf and there is a namespace of bumble, it
 // will subscribe to /bumble/gnc/ekf but the topic in the bag it records will be
 // gnc/ekf.
-void DataBagger::FixTopicNamespace(std::string &topic) {
+void DataBagger::AddTopicNamespace(std::string &topic) {
   // This function assumes a user doesn't put the namespace in the topic. If
   // they do, this won't work
   // Check topic not empty
@@ -277,7 +277,7 @@ void DataBagger::OnStartupTimer(ros::TimerEvent const& event) {
   }
 }
 
-bool DataBagger::SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
+bool DataBagger::SetDelayedDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
                                       ff_msgs::SetDataToDisk::Response &res) {
   // Don't allow set data to disk when we are recording
   if (combined_data_state_.recording) {
@@ -311,7 +311,7 @@ bool DataBagger::SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
       return true;
     }
 
-    FixTopicNamespace(setting.topic_name);
+    AddTopicNamespace(setting.topic_name);
     recorder_options_delayed_.topics.push_back(setting.topic_name);
 
     // TODO(Someone) Need to figure out how to record topics at different
@@ -334,10 +334,19 @@ bool DataBagger::SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
   return true;
 }
 
-bool DataBagger::EnableRecordingService(ff_msgs::EnableRecording::Request &req,
+bool DataBagger::EnableDelayedRecordingService(ff_msgs::EnableRecording::Request &req,
                                       ff_msgs::EnableRecording::Response &res) {
   // Check if we are starting a recording or stopping a recording
   if (req.enable) {
+    // Check to see if we are already recording a bag. If we are, reject
+    // starting a new recording.
+    if (combined_data_state_.recording) {
+      res.status = "Can't start a recording while already recording data. ";
+      res.status += "Please stop the current recording first!";
+      res.success = false;
+      return true;
+    }
+
     // Check to make sure a delayed profile is loaded
     if (delayed_profile_name_ == "" ||
                                 recorder_options_delayed_.topics.size() == 0) {

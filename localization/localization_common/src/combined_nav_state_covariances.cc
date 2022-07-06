@@ -17,6 +17,7 @@
  */
 
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/utilities.h>
 
 namespace localization_common {
 CombinedNavStateCovariances::CombinedNavStateCovariances(const Eigen::Matrix<double, 6, 6>& pose_covariance,
@@ -37,17 +38,17 @@ CombinedNavStateCovariances::CombinedNavStateCovariances(const Eigen::Vector3d& 
 }
 
 double CombinedNavStateCovariances::LogDeterminantPositionCovariance() const {
-  return std::log10(pose_covariance().block<3, 3>(0, 0).determinant());
+  return LogDeterminant(pose_covariance().block<3, 3>(0, 0));
 }
 
 double CombinedNavStateCovariances::LogDeterminantOrientationCovariance() const {
-  return std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
+  return LogDeterminant(pose_covariance().block<3, 3>(3, 3));
 }
 
 Confidence CombinedNavStateCovariances::PoseConfidence(const double position_log_det_threshold,
                                                        const double orientation_log_det_threshold) const {
   const double position_log_det = LogDeterminantPositionCovariance();
-  const double orientation_log_det = std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
+  const double orientation_log_det = LogDeterminantOrientationCovariance();
 
   const Confidence position_confidence =
     position_log_det < position_log_det_threshold ? Confidence::kGood : Confidence::kPoor;

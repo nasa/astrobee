@@ -40,6 +40,7 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
   LoadHandrailFactorAdderParams(config, params.handrail_adder);
+  LoadDepthOdometryFactorAdderParams(config, params.depth_odometry_adder);
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadSemanticLocFactorAdderParams(config, params.semantic_loc_adder);
@@ -63,8 +64,10 @@ void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, Seman
     mc::LoadDouble(config, "semantic_loc_adder_max_inlier_weighted_projection_norm");
   params.weight_projections_with_distance = mc::LoadBool(config, "semantic_loc_adder_weight_projections_with_distance");
   params.matching_distance_thresh = mc::LoadDouble(config, "semantic_loc_adder_matching_distance_thresh");
-  params.matching_distance_second_best_thresh = mc::LoadDouble(config, "semantic_loc_adder_matching_distance_second_best_thresh");
-  params.scale_matching_distance_with_bbox = mc::LoadBool(config, "semantic_loc_adder_scale_matching_distance_with_bbox");
+  params.matching_distance_second_best_thresh =
+    mc::LoadDouble(config, "semantic_loc_adder_matching_distance_second_best_thresh");
+  params.scale_matching_distance_with_bbox =
+    mc::LoadBool(config, "semantic_loc_adder_scale_matching_distance_with_bbox");
   params.cost_tolerance = mc::LoadDouble(config, "semantic_loc_adder_cost_tolerance");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
@@ -105,6 +108,21 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+}
+
+void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, DepthOdometryFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "depth_odometry_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.noise_scale = mc::LoadDouble(config, "depth_odometry_adder_noise_scale");
+  params.use_points_between_factor = mc::LoadBool(config, "depth_odometry_adder_use_points_between_factor");
+  params.position_covariance_threshold = mc::LoadDouble(config, "depth_odometry_adder_position_covariance_threshold");
+  params.orientation_covariance_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_orientation_covariance_threshold");
+  params.body_T_sensor = lc::LoadTransform(config, "haz_cam_transform");
+  params.point_to_point_error_threshold = mc::LoadDouble(config, "depth_odometry_adder_point_to_point_error_threshold");
+  params.pose_translation_norm_threshold =
+    mc::LoadDouble(config, "depth_odometry_adder_pose_translation_norm_threshold");
+  params.max_num_points_between_factors = mc::LoadDouble(config, "depth_odometry_adder_max_num_points_between_factors");
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -211,9 +229,7 @@ void LoadSemanticFlowFactorAdderParams(config_reader::ConfigReader& config, Sema
   params.robust = mc::LoadBool(config, "semantic_flow_factor_adder_robust");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
-  //params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
-  //Hack for now, manually spec the calibration matrix
-  params.cam_intrinsics.reset(new gtsam::Cal3_S2(644.3, 644.3, 0, 640., 480.));
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise =
     gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "semantic_flow_factor_adder_nav_cam_noise_stddev"));
   params.noise_scale = mc::LoadDouble(config, "semantic_flow_factor_adder_noise_scale");
@@ -302,6 +318,7 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
   params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
   params.max_sm_buffer_size = mc::LoadInt(config, "max_sm_buffer_size");
+  params.max_depth_odometry_buffer_size = mc::LoadInt(config, "max_depth_odometry_buffer_size");
   params.max_dl_buffer_size = mc::LoadInt(config, "max_dl_buffer_size");
 }
 }  // namespace graph_localizer

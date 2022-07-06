@@ -31,6 +31,8 @@ MapperNodelet::MapperNodelet() :
 MapperNodelet::~MapperNodelet() {}
 
 void MapperNodelet::Initialize(ros::NodeHandle *nh) {
+  // Store the node handle for future use
+  nh_ = nh;
   listener_.reset(new tf2_ros::TransformListener(buffer_));
 
   // Grab some configuration parameters for this node from the config reader
@@ -53,7 +55,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   double occupancy_threshold, probability_hit, probability_miss;
   double clamping_threshold_max, clamping_threshold_min;
   double traj_resolution, compression_max_dev;
-  bool use_haz_cam, use_perch_cam;
+  disable_mapper_ = cfg_.Get<bool>("disable_mapper");
   map_resolution = cfg_.Get<double>("map_resolution");
   max_range = cfg_.Get<double>("max_range");
   min_range = cfg_.Get<double>("min_range");
@@ -71,8 +73,8 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   traj_resolution = cfg_.Get<double>("traj_compression_resolution");
   octomap_update_rate_ = cfg_.Get<double>("octomap_update_rate");
   fading_memory_update_rate_ = cfg_.Get<double>("fading_memory_update_rate");
-  use_haz_cam = cfg_.Get<bool>("use_haz_cam");
-  use_perch_cam = cfg_.Get<bool>("use_perch_cam");
+  use_haz_cam_ = cfg_.Get<bool>("use_haz_cam");
+  use_perch_cam_ = cfg_.Get<bool>("use_perch_cam");
 
   // update tree parameters
   globals_.octomap.SetResolution(map_resolution);
@@ -114,31 +116,26 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
 
-  // Timers
-  timer_o_ = nh->createTimer(
-    ros::Duration(ros::Rate(octomap_update_rate_)),
-      &MapperNodelet::OctomappingTask, this, false, true);
-  timer_f_ = nh->createTimer(
-    ros::Duration(ros::Rate(fading_memory_update_rate_)),
-      &MapperNodelet::FadeTask, this, false, true);
+    // Timers
+    timer_o_ = nh->createTimer(
+      ros::Duration(ros::Rate(octomap_update_rate_)),
+        &MapperNodelet::PclCallback, this, false, false);
+    timer_f_ = nh->createTimer(
+      ros::Duration(ros::Rate(fading_memory_update_rate_)),
+        &MapperNodelet::FadeTask, this, false, false);
 
-  // Subscribers
-  std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
-  std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
-  if (use_haz_cam) {
-      std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
-      haz_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 1,
-        &MapperNodelet::PclCallback, this);
+  if (disable_mapper_) {
+    NODELET_WARN("Mapper disabled, obstacle avoidance not working!");
+  } else {
+    // Start timers
+    timer_o_.start();
+    timer_f_.start();
+    // Subscribers
+    segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
+      &MapperNodelet::SegmentCallback, this);
+    reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
+      &MapperNodelet::ResetCallback, this);
   }
-  if (use_perch_cam) {
-      std::string cam = TOPIC_HARDWARE_NAME_PERCH_CAM;
-      perch_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 1,
-        &MapperNodelet::PclCallback, this);
-  }
-  segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
-    &MapperNodelet::SegmentCallback, this);
-  reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
-    &MapperNodelet::ResetCallback, this);
 
   // Services
   set_resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_MAP_RESOLUTION,

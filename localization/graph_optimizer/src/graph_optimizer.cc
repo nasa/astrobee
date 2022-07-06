@@ -44,7 +44,7 @@ namespace graph_optimizer {
 namespace lc = localization_common;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats)
-    : graph_stats_(std::move(graph_stats)), values_(new gtsam::Values()), log_on_destruction_(true), params_(params) {
+    : graph_stats_(std::move(graph_stats)), values_(new gtsam::Values()), params_(params) {
   // Initialize lm params
   if (params_.verbose) {
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
@@ -67,7 +67,7 @@ GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_p
 }
 
 GraphOptimizer::~GraphOptimizer() {
-  if (log_on_destruction_) graph_stats_->Log();
+  if (params_.log_on_destruction) graph_stats_->Log();
 }
 
 void GraphOptimizer::AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer) {
@@ -353,6 +353,8 @@ const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { retur
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
+const int GraphOptimizer::num_factors() const { return graph_.size(); }
+
 const boost::optional<gtsam::Marginals>& GraphOptimizer::marginals() const { return marginals_; }
 
 std::shared_ptr<gtsam::Values> GraphOptimizer::shared_values() { return values_; }
@@ -368,7 +370,9 @@ const GraphStats* const GraphOptimizer::graph_stats() const { return graph_stats
 
 GraphStats* GraphOptimizer::graph_stats() { return graph_stats_.get(); }
 
-void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
+void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) {
+  params_.log_on_destruction = log_on_destruction;
+}
 
 bool GraphOptimizer::DoPostOptimizeActions() { return true; }
 

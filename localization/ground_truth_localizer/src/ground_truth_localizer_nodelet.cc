@@ -97,6 +97,11 @@ void GroundTruthLocalizerNodelet::PublishLocState(const lc::Time& timestamp) {
 
   // Also publish world_T_body TF
   const auto world_T_body_tf = lc::PoseToTF(*pose_, "world", "body", timestamp, platform_name_);
+
+  // If the rate is higher than the sim time, prevent repeated timestamps
+  if (world_T_body_tf.header.stamp == last_time_) return;
+  last_time_ = world_T_body_tf.header.stamp;
+
   transform_pub_.sendTransform(world_T_body_tf);
 }
 }  // namespace ground_truth_localizer

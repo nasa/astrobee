@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_LOC_POSE_FACTOR_H_
 #define GRAPH_LOCALIZER_LOC_POSE_FACTOR_H_
 
+#include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>
 
 namespace gtsam {

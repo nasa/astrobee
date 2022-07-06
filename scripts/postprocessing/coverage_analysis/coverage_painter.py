@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-""" Determines if a given pose or list of poses in a file is within an Astrobee volume
-    based on a database of known poses and their corresponding ML features
+""" Show spheres/markers representing where nav_cam was when it registered spheres
+    representing Map Landmarks.
 """
 
 import math
@@ -9,101 +9,97 @@ import os
 import re
 import subprocess
 import sys
-import timeit
+import time
 
-import constants
+import numpy as np
+import rospy
 from tf.transformations import *
+from visualization_msgs.msg import Marker, MarkerArray
 
 
-class Coverage_Analyzer:
+class Coverage_Painter:
     def __init__(self):
+        print("Coverage_Painter started")
+        self.max_num_features = 0
+        self.first_bin = 0
+        self.second_bin = 0
+        self.third_bin = 0
+        self.fourth_bin = 0
+        self.fifth_bin = 0
 
-        self.grid_size = 0.30  # meters
-        self.max_pose_error = ((self.grid_size / 2.0) ** 2) * 3  # Max squared error
-        self.matchCounter = 0
-        print(
-            "Grid size: {:.3f}, Max Pose Error: {:.3f}".format(
-                self.grid_size, self.max_pose_error
-            )
-        )
+        self.counter = 0
+        self.cube_size = 0.30  # Meters
+        self.markerArray = MarkerArray()
 
-        self.grid_params_z16 = [
-            2
-        ]  # Bays 1-6: Grid params for Z-axis of FWD and AFT walls
-        self.grid_params_x16 = [
-            2
-        ]  # Bays 1-6: Grid params for X-axis of OVHD and DECK walls
-        self.grid_params_z67 = [
-            2
-        ]  # Bays 6-8: Grid params for Z-axis of FWD and AFT walls
-        self.grid_params_x67 = [
-            2
-        ]  # Bays 6-8: Grid params for X-axis of FWD and AFT walls
-        self.x_init_bay16 = 0.0
-        self.x_fin_bay16 = 0.0
-        self.x_init_bay67 = 0.0
-        self.x_fin_bay67 = 0.0
+    def is_robot_far_from_last_pose(self, last_pose, current_pose, min_dist):
 
-    # Returns the squared distance between two Points (x,y,z)
-    def pose_inside_cube(self, robot_pose, cube_pose, grid_size):
-        cube_center = grid_size / 2.0
-
-        cube_squared = ((cube_center) ** 2) * 3
+        min_dist_squared = ((min_dist) ** 2) * 3  # cm
 
         error_squared = (
-            (robot_pose[0] - cube_pose[0]) ** 2
-            + (robot_pose[1] - cube_pose[1]) ** 2
-            + (robot_pose[2] - cube_pose[2]) ** 2
+            (current_pose[0] - last_pose[0]) ** 2
+            + (current_pose[1] - last_pose[1]) ** 2
+            + (current_pose[2] - last_pose[2]) ** 2
         )
 
-        # True if inside cube
-        return error_squared < cube_squared
+        # True if displacement larger than minimum distance, min_dist
+        return error_squared > min_dist_squared
 
-    # Calculates the relative rotation between 2 quaternions, returns angle between them
-    def quat_error(self, robot_quat, test_quat):
+    def transform_body_to_gazebo(self, px, py, pz, qi, qj, qk, qw):
+        # As defined in Astrobee repo: astrobee/config/robots/bumble.config
+        pose_const = np.array(
+            [0.0, 0.0, 0.0, 1.0]
+        )  # Constant translation between Astrobee body and Gazebo frames
+        quat_const = [
+            -0.5,
+            -0.5,
+            0.5,
+            0.5,
+        ]  # Constant rotation between Astrobee body and Gazebo frames, (0, -90, 90) deg
 
-        q1_inverse = self.quat_inverse(robot_quat)
+        rot_const = quaternion_matrix(quat_const)
+        rot_const[:, 3] = pose_const.T
 
-        q_relative = quaternion_multiply(test_quat, q1_inverse)
+        rot_in = quaternion_matrix([qi, qj, qk, qw])
+        rot_in[:, 3] = np.array([px, py, pz, 1.0]).T
 
-        ang_error = 2 * math.atan2(
-            math.sqrt(q_relative[0] ** 2 + q_relative[1] ** 2 + q_relative[2] ** 2),
-            q_relative[3],
+        t_body = rot_in.dot(rot_const)
+
+        quat_out = np.zeros((4, 4))
+        quat_out[0:3, 0:3] = t_body[0:3, 0:3]
+        quat_out[3, 3] = 1.0
+
+        quat_out = quaternion_from_matrix(quat_out)
+        pose_out = t_body[0:3:, 3]
+
+        return [
+            pose_out[0],
+            pose_out[1],
+            pose_out[2],
+            quat_out[0],
+            quat_out[1],
+            quat_out[2],
+            quat_out[3],
+        ]
+
+    # Use Astrobee body frame database
+    # Write the file to visualize each of the robot's pose coverage
+    def write_robot_coverage(self, fileIn):
+
+        last_pose = [0.0, 0.0, 0.0]
+        min_dist = (
+            0.0  # Minimum number of cm away from each other to be painted (e.g. 0.1 m)
         )
 
-        # To compensate for a singularity where atan2 = Pi
-        tolerance = 0.008  # 0.00 rad = 0.46 deg
-        if abs((math.pi * 2) - ang_error) < tolerance:
-            ang_error = 0.0
+        print("Reading: " + fileIn)
+        with open(fileIn) as f_in:
 
-        return ang_error
+            rospy.init_node("register")
 
-    # Returns the inverse (conjugate) of the quaternion given
-    def quat_inverse(self, robot_quat):
-        q_inv = [robot_quat[0], robot_quat[1], robot_quat[2], -robot_quat[3]]
+            # print("Pose x y z has ML features")
+            marker_id = 1
+            # lines = f.readlines()
+            for line in f_in:
 
-        return q_inv
-
-    def find_nearby_pose(self, testPt, fileIn, fileOut):
-        write_features = False
-
-        print(
-            "Finding nearby poses around: {:3f} {:3f} {:3f} {:3f} {:3f} {:3f} {:3f}".format(
-                testPt[1],
-                testPt[2],
-                testPt[3],
-                testPt[4],
-                testPt[5],
-                testPt[6],
-                testPt[7],
-            )
-        )  # skips ML num
-
-        with open(fileIn) as f:
-            f_out = open(fileOut, "a")
-            lines = f.readlines()
-
-            for line in lines:
                 # Skip empty lines and those starting with comments
                 if re.match("^\s*\n", line) or re.match("^\s*\#", line):
                     continue
@@ -115,428 +111,256 @@ class Coverage_Analyzer:
                         continue
                     vals.append(v)
 
-                if len(vals) == constants.NUM_FEAT_AND_ROBOT_COORDS_COLUMNS:
-                    ml_num = int(vals[0])
+                marker_text = ""
+                # First line corresponds to number of ML & camera pose: #ML x y z i j k w
+                if len(vals) == 8:
                     robot_pose = [float(vals[1]), float(vals[2]), float(vals[3])]
-                    robot_quat = [
-                        float(vals[4]),
-                        float(vals[5]),
-                        float(vals[6]),
-                        float(vals[7]),
-                    ]
 
-                    test_pose = [testPt[1], testPt[2], testPt[3]]
-                    test_quat = [testPt[4], testPt[5], testPt[6], testPt[7]]
-
-                    if self.pose_inside_cube(robot_pose, test_pose, grid_size) == True:
-                        f_out.write(
-                            "{:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(
-                                ml_num,
-                                robot_pose[0],
-                                robot_pose[1],
-                                robot_pose[2],
-                                robot_quat[0],
-                                robot_quat[1],
-                                robot_quat[2],
-                                robot_quat[3],
-                            )
+                    if self.is_robot_far_from_last_pose(
+                        last_pose, robot_pose, min_dist
+                    ):
+                        color_code = self.get_color_name(int(vals[0]))
+                        robot_rot = [
+                            float(vals[4]),
+                            float(vals[5]),
+                            float(vals[6]),
+                            float(vals[7]),
+                        ]
+                        q = self.transform_body_to_gazebo(
+                            robot_pose[0],
+                            robot_pose[1],
+                            robot_pose[2],
+                            robot_rot[0],
+                            robot_rot[1],
+                            robot_rot[2],
+                            robot_rot[3],
                         )
 
-                        write_features = True
-                        self.matchCounter += 1
+                        robot_rot = [q[3], q[4], q[5], q[6]]
+
+                        marker = Marker()
+                        marker.header.frame_id = "world"
+                        marker.ns = "thick_traj"
+                        marker.id = marker_id + 1
+                        marker.type = marker.ARROW
+                        marker.action = marker.ADD
+                        marker.scale.x = self.cube_size / 1.8
+                        marker.scale.y = self.cube_size / 2.8
+                        marker.scale.z = 0.05
+                        marker.color.a = 1.0
+                        marker.color.r = color_code[0]
+                        marker.color.g = color_code[1]
+                        marker.color.b = color_code[2]
+                        marker.pose.position.x = robot_pose[0]
+                        marker.pose.position.y = robot_pose[1]
+                        marker.pose.position.z = robot_pose[2]
+                        marker.pose.orientation.x = robot_rot[0]
+                        marker.pose.orientation.y = robot_rot[1]
+                        marker.pose.orientation.z = robot_rot[2]
+                        marker.pose.orientation.w = robot_rot[3]
+
+                        self.animate_markers(marker)
+                        last_pose = robot_pose
+
+                else:
+                    # print("Skipping invalid line")
+                    continue
+
+    # Use Astrobee body frame database
+    def write_map_coverage(self, fileIn):
+
+        rospy.init_node("register")
+        marker = Marker()
+
+        print("Reading: " + fileIn)
+        with open(fileIn) as f_in:
+
+            marker_id = 1
+            for line in f_in:  # lines:
+
+                # Skip empty lines and those starting with comments
+                # if re.match("^\s*\n", line) or re.match("^\s*\#", line):
+                if re.match("^\s*\n", line):
+                    continue
+
+                # Check if comments has string "Wall"
+                if re.match("^\s*\#", line):
+                    vals = []
+                    for v in re.split("\s+", line):
+                        if v == "":
+                            continue
+                        vals.append(v)
+
+                    if vals[1] == "Wall":
+                        marker_scale = [
+                            float(vals[3]),
+                            float(vals[3]),
+                            float(vals[3]),
+                        ]  # Grab the grid_size for this wall
+
+                else:
+                    # Extract all the values separated by spaces
+                    vals = []
+                    for v in re.split("\s+", line):
+                        if v == "":
+                            continue
+                        vals.append(v)
+
+                    if len(vals) == 4:
+                        color_code = self.get_color_name(int(vals[0]))
+                        robot_pose = [float(vals[1]), float(vals[2]), float(vals[3])]
+                        robot_rot = [0.0, 0.0, 0.0, 1.0]
+
+                        marker = Marker()
+                        marker.header.frame_id = "world"
+                        marker.ns = "cube_walls"
+                        marker.id = marker_id + 1
+                        marker.type = marker.CUBE
+                        marker.action = marker.ADD
+                        marker.scale.x = marker_scale[0]
+                        marker.scale.y = marker_scale[1]
+                        marker.scale.z = marker_scale[2]
+                        marker.color.a = 1.0
+                        marker.color.r = color_code[0]
+                        marker.color.g = color_code[1]
+                        marker.color.b = color_code[2]
+                        marker.pose.position.x = robot_pose[0]
+                        marker.pose.position.y = robot_pose[1]
+                        marker.pose.position.z = robot_pose[2]
+                        marker.pose.orientation.x = robot_rot[0]
+                        marker.pose.orientation.y = robot_rot[1]
+                        marker.pose.orientation.z = robot_rot[2]
+                        marker.pose.orientation.w = robot_rot[3]
+
+                        self.animate_markers(marker)
 
                     else:
-                        write_features = False
-                        ml_num = 0
-
-                if (
-                    len(vals) == constants.FEAT_COORDS_COLUMNS
-                    and write_features
-                    and ml_num > 0
-                ):
-                    f_out.write("{:s}".format(line))
-                    ml_num -= 1
-
-    # From the file containing each trajectory pose and its corresponding landmark poses
-    # save only the landmark poses in another file
-    def feature_extraction(self, databaseBodyFrame_fileIn, database_fileOut):
-
-        print(
-            "Extracting features from: {:s} to {:s}".format(
-                databaseBodyFrame_fileIn, database_fileOut
-            )
-        )
-        with open(database_fileOut, "w") as f_out:
-            with open(databaseBodyFrame_fileIn, "r") as f_in:
-
-                for line in f_in:
-                    # Skip empty lines and those starting with comments
-                    if re.match("^\s*\n", line) or re.match("^\s*\#", line):
+                        # print("Skipping invalid line")
                         continue
 
-                    # Extract all the values separated by spaces
-                    vals = []
-                    for v in re.split("\s+", line):
-                        if v == "":
-                            continue
-                        vals.append(v)
+    def animate_markers(self, marker):
+        # Publish
+        topic = "/loc/registration"
+        publisher = rospy.Publisher(topic, MarkerArray, queue_size=100)
 
-                    if len(vals) == 3:
-                        f_out.write("{:s}".format(line))
+        self.markerArray.markers.append(marker)
 
-    # From the landmark poses remove  all repeated landmarks
-    def remove_repeated_poses(self, database_fileOut, feat_only_fileOut):
+        id = 0
+        for m in self.markerArray.markers:
+            m.id = id
+            id += 1
 
-        lines_seen = set()  # holds lines seen
+        publisher.publish(self.markerArray)
+        rospy.sleep(0.01)  # Wait these many seconds to publish the next marker
+
+    def print_stats(self):
+        print("Resulting Stats: ")
+        # To get some stats
+        total_entries = (
+            self.first_bin
+            + self.second_bin
+            + self.third_bin
+            + self.fourth_bin
+            + self.fifth_bin
+        )
+        one = (self.first_bin) * 100.0 / total_entries
+        two = (self.second_bin) * 100.0 / total_entries
+        three = (self.third_bin) * 100.0 / total_entries
+        four = (self.fourth_bin) * 100.0 / total_entries
+        five = (self.fifth_bin) * 100.0 / total_entries
         print(
-            "Removing duplicated feature poses from {:s} and creating {:s}".format(
-                database_fileOut, feat_only_fileOut
+            "1stQ: {:d}, 2ndQ: {:d}, 3rdQ: {:d}, 4thQ: {:d}, 5thQ: {:d}, AllQ: {:d}".format(
+                self.first_bin,
+                self.second_bin,
+                self.third_bin,
+                self.fourth_bin,
+                self.fifth_bin,
+                total_entries,
+            )
+        )
+        print(
+            "1st%: {:.2f}, 2nd%: {:.2f}, 3rd%: {:.2f}, 4th%: {:.2f}, 5th%: {:.2f}".format(
+                one, two, three, four, five
             )
         )
 
-        match = 0
-        numlines = 0
-        with open(feat_only_fileOut, "w") as f_out:
-            with open(database_fileOut, "r+") as f_in:
+    def color_converter(self, color_name):
+        # https://www.geeksforgeeks.org/switch-case-in-python-replacement/
+        converter = {
+            "red": [1.0, 0.0, 0.0],
+            "orange": [1.0, 0.5, 0.0],
+            "green": [0.0, 1.0, 0.0],
+            "blue": [0.0, 0.0, 1.0],
+            "yellow": [1.0, 1.0, 0.0],
+            "white": [1.0, 1.0, 1.0],
+        }
+        return converter.get(color_name, [1.0, 0.0, 0.0])  # default: red
 
-                for line in f_in:
-                    if line not in lines_seen:
-                        f_out.write(line)
-                        lines_seen.add(line)
-                        match += 1
-                    numlines += 1
-        print("Found {:d} unique lines in {:d} lines".format(match, numlines))
+    # Get the max number of features from file
+    def coverage_max_num_features(self, fileIn):
 
-    # Find any landmark pose within a cube of grid_size from the landmark poses-only file
-    # and generate a coverage file with the tested pose (center of the cube) and
-    # the number of features found within that cube
-    def find_nearby_cube_pose(
-        self, px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-    ):
+        with open(fileIn) as f_in:
+            for line in f_in:
+                # Skip empty lines and those starting with comments
+                if re.match("^\s*\n", line) or re.match("^\s*\#", line):
+                    continue
 
-        num_ml = 0
-
-        with open(coverage_fileOut, "a") as f_out:
-            with open(feat_only_fileOut, "r") as f_in:
-
-                for line in f_in:
-                    # Skip empty lines and those starting with comments
-                    if re.match("^\s*\n", line) or re.match("^\s*\#", line):
+                # Extract all the values separated by spaces
+                vals = []
+                for v in re.split("\s+", line):
+                    if v == "":
                         continue
+                    vals.append(v)
 
-                    # Extract all the values separated by spaces
-                    vals = []
-                    for v in re.split("\s+", line):
-                        if v == "":
-                            continue
-                        vals.append(v)
+                if len(vals) == 4:
+                    if int(vals[0]) > self.max_num_features:
+                        self.max_num_features = int(vals[0])
+            print("Max num features: {:d}".format(self.max_num_features))
 
-                    if len(vals) == 3:
-                        robot_pose = [float(vals[0]), float(vals[1]), float(vals[2])]
-                        cube_pose = [px, py, pz]
+    # Get the color name based on how many features found in cube
+    def get_color_name(self, num_features):
 
-                        if (
-                            self.pose_inside_cube(robot_pose, cube_pose, grid_size)
-                            == True
-                        ):
-                            num_ml += 1
-                f_out.write("{:d} {:.3f} {:.3f} {:.3f}\n".format(num_ml, px, py, pz))
-
-    # Equivalent to using math.isclose() since this is Python 2.7x
-    def is_close(self, a, b, rel_tol=1e-09, abs_tol=0.0):
-        return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
-
-    def calculate_grid_params(self, initial_grid_size, start_pos, end_pos):
-        dist = abs(end_pos - start_pos)
-        num_cubes = math.floor(dist / initial_grid_size)  # float
-
-        dist_delta = 100.0  # arbitrary initial value
-        result_grid_size = 0.0
-        counter = 1
-        max_num_counter = 10000.0
-
-        # Minimizing dist_delta by changing the grid_size
-        while self.is_close(dist_delta, 0.0, abs_tol=0.01) == False:
-            result_grid_size = initial_grid_size + (
-                initial_grid_size * (counter / max_num_counter)
-            )
-            dist_delta = dist - num_cubes * result_grid_size
-            counter += 1
-            if counter == max_num_counter:
-                print("dist_delta did not converge")
-                break
-
-        return [int(num_cubes), result_grid_size]
-
-    def set_grid_params(self):
-
-        # Bays 1-6: Grid params for Z-axis of FWD and AFT walls
-        self.grid_params_z16 = self.calculate_grid_params(
-            self.grid_size, constants.ZMAX_BAY16, constants.ZMIN_BAY16
-        )
-
-        # Bays 1-6: Grid params for X-axis of OVHD and DECK walls
-        self.x_init_bay16 = constants.XMIN_BAY16 - self.grid_params_z16[1]
-        self.x_fin_bay16 = constants.XMAX_BAY16 + self.grid_params_z16[1]
-
-        self.grid_params_x16 = self.calculate_grid_params(
-            self.grid_size, self.x_init_bay16, self.x_fin_bay16
-        )
-
-        # Bays 6-8: Grid params for Z-axis of FWD and AFT walls
-        self.grid_params_z67 = self.calculate_grid_params(
-            self.grid_size, constants.ZMAX_BAY67, constants.ZMIN_BAY67
-        )
-
-        # Bays 6-8: Grid params for X-axis of OVHD and DECK walls
-        self.x_init_bay67 = constants.XMIN_BAY67 - self.grid_params_z67[1]
-        self.x_fin_bay67 = constants.XMAX_BAY67 + self.grid_params_z67[1]
-
-        self.grid_params_x67 = self.calculate_grid_params(
-            self.grid_size, self.x_init_bay67, self.x_fin_bay67
-        )
-
-    def calculate_coverage_overhead(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-    ):
-
-        current_bay = bay_num + 1
-        print("Finding matches Overhead Bay" + str(current_bay))
-
-        if current_bay < 6:
-            grid_size = self.grid_params_x16[1]
-            xlen = self.grid_params_x16[0]
-            start_pos_x = self.x_init_bay16
-            p_center = grid_size / 2.0  # Center of the cube
-            pz = constants.ZMAX_BAY16 + p_center
-
-        else:
-            grid_size = self.grid_params_x67[1]
-            xlen = self.grid_params_x67[0]
-            start_pos_x = self.x_init_bay67
-            p_center = grid_size / 2.0  # Center of the cube
-            pz = constants.ZMAX_BAY67 + p_center
-
-        ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
-
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Overhead_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
-
-        for i in range(xlen):
-            for j in range(ylen):
-                px = (start_pos_x - grid_size * i) - p_center
-                py = (start_pos_y - grid_size * j) - p_center
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
-
-    def calculate_coverage_forward(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-    ):
-
-        current_bay = bay_num + 1
-        print("Finding matches Forward Bay" + str(current_bay))
-
-        if current_bay < 6:
-            grid_size = self.grid_params_z16[1]
-            zlen = self.grid_params_z16[0]
-            p_center = grid_size / 2.0  # Center of the cube
-            px = constants.XMIN_BAY16 - p_center
-
-        else:
-            grid_size = self.grid_params_z67[1]
-            zlen = self.grid_params_z67[0]
-            p_center = grid_size / 2.0  # Center of the cube
-            px = constants.XMIN_BAY67 - p_center
-
-        ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
-
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Forward_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
-
-        for i in range(ylen):
-            for j in range(zlen):
-                py = (start_pos_y - grid_size * i) - p_center
-                pz = (
-                    constants.ZMAX_BAY16 + grid_size * j
-                ) + p_center  # Using z_max to have better coverage on the overhead.
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
-
-    def calculate_coverage_aft(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-    ):
-
-        current_bay = bay_num + 1
-        print("Finding matches Aft Bay" + str(current_bay))
-
-        if current_bay < 6:
-            grid_size = self.grid_params_z16[1]
-            zlen = self.grid_params_z16[0]
-            p_center = grid_size / 2.0  # Center of the cube
-            px = constants.XMAX_BAY16 + p_center
-
-        else:
-            grid_size = self.grid_params_z67[1]
-            zlen = self.grid_params_z67[0]
-            p_center = grid_size / 2.0  # Center of the cube
-            px = constants.XMAX_BAY67 + p_center
-
-        ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
-
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Aft_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
-
-        for i in range(ylen):
-            for j in range(zlen):
-                py = (start_pos_y - grid_size * i) - p_center
-                pz = (
-                    constants.ZMAX_BAY16 + grid_size * j
-                ) + p_center  # Using z_max to have better coverage on the overhead.
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
-
-    def calculate_coverage_deck(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-    ):
-        current_bay = bay_num + 1
-        print("Finding matches Deck Bay" + str(current_bay))
-
-        if current_bay < 6:
-            grid_size = self.grid_params_x16[1]
-            xlen = self.grid_params_x16[0]
-            start_pos_x = self.x_init_bay16
-            p_center = grid_size / 2.0  # Center of the cube
-            pz = constants.ZMIN_BAY16 - p_center
-
-        else:
-            grid_size = self.grid_params_x16[1]
-            xlen = self.grid_params_x67[0]
-            start_pos_x = self.x_init_bay67
-            p_center = grid_size / 2.0  # Center of the cube
-            pz = constants.ZMIN_BAY67 + p_center
-
-        ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
-
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Deck_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
-
-        for i in range(xlen):
-            for j in range(ylen):
-                px = (start_pos_x - grid_size * i) - p_center
-                py = (start_pos_y - grid_size * j) - p_center
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
-
-    def calculate_coverage_airlock(self, feat_only_fileOut, coverage_fileOut):
-
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Airlock" + " " + str(self.grid_size) + "\n")
-        f_out.close()
-
-        print("Finding matches Airlock")
-        p_center = self.grid_size / 2.0  # Center of the cube
-
-        xlen = int(
-            math.floor(
-                abs(constants.XMAX_AIRLK - constants.XMIN_AIRLK) / self.grid_size
-            )
-        )
-        zlen = int(
-            math.floor(
-                abs(constants.ZMAX_AIRLK - constants.ZMIN_AIRLK) / self.grid_size
-            )
-        )
-
-        py = constants.YMAX_AIRLK + p_center
-        for i in range(xlen):
-            for j in range(zlen):
-                px = (constants.XMAX_AIRLK + self.grid_size * i) + p_center
-                pz = (constants.ZMAX_AIRLK + self.grid_size * j) + p_center
-                self.find_nearby_cube_pose(
-                    px, py, pz, self.grid_size, feat_only_fileOut, coverage_fileOut
-                )
-
-    def find_nearby_features_from_file(self, feat_only_fileOut, coverage_fileOut):
-
-        print(
-            "Finding matches from pose file {:s}, creating coverage file: {:s}".format(
-                feat_only_fileOut, coverage_fileOut
-            )
-        )
-
-        f_out = open(coverage_fileOut, "w")
-        f_out.write("#Num_ML Cube_Center_Pose (X Y Z)\n")
-        f_out.close()
-
-        for bay, positions in constants.BAYS_Y_LIMITS.items():
-            start_pos_y = positions[0]
-            stop_pos_y = positions[1]
-
-            self.calculate_coverage_overhead(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-            )
-            self.calculate_coverage_forward(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-            )
-            self.calculate_coverage_aft(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-            )
-            self.calculate_coverage_deck(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
-            )
-
-        self.calculate_coverage_airlock(feat_only_fileOut, coverage_fileOut)
-
-    def remove_tmp_file(self, fileToRemove):
-        os.remove(fileToRemove)
-        print("Removing temporary file: {:s}".format(fileToRemove))
+        # If ML number based visualization is desired
+        if num_features == 0:
+            self.first_bin += 1
+            return self.color_converter("red")
+        elif num_features >= 1 and num_features <= 10:
+            self.second_bin += 1
+            return self.color_converter("orange")
+        elif num_features >= 11 and num_features <= 20:
+            self.third_bin += 1
+            return self.color_converter("yellow")
+        elif num_features >= 21 and num_features <= 40:
+            self.fourth_bin += 1
+            return self.color_converter("green")
+        elif num_features >= 40:
+            self.fifth_bin += 1
+            return self.color_converter("blue")
 
 
+# The main program
 if __name__ == "__main__":
 
     try:
-
-        if len(sys.argv) < 1:
-            print("Usage: " + sys.argv[0] + "<activity_database_file>")
-            print(
-                "       <activity_database_file>: '/dir/to/activity_database_file.csv' containing robot poses and ML features to compare with\n"
-            )
+        if len(sys.argv) < 3:
+            print("Usage: " + sys.argv[0] + "<database_file> <robot_or_map_coverage>")
+            print("       <database_file>: 'dir/to/my-database-file.csv' ")
+            print("       <robot_or_map_coverage>: 'robot_coverage' | 'map_coverage'")
             sys.exit(1)
 
-        activity_database_fileIn = sys.argv[1]
+        fileIn = sys.argv[1]
 
-        f_in = activity_database_fileIn.find("_db.csv")
-        database_fileOut = (
-            activity_database_fileIn[:f_in] + "_features_db.csv"
-        )  # Name of file with all features' pose
-        feat_only_fileOut = (
-            activity_database_fileIn[:f_in] + "_features_db_nonrepeat.csv"
-        )  # Name of file with non-repeated features' pose
-        coverage_fileOut = (
-            activity_database_fileIn[:f_in] + "_coverage_db.csv"
-        )  # Name of output file with coverage database
+        obj = Coverage_Painter()
 
-        obj = Coverage_Analyzer()
+        obj.coverage_max_num_features(fileIn)
 
-        obj.set_grid_params()
-        obj.feature_extraction(activity_database_fileIn, database_fileOut)
-        obj.remove_repeated_poses(database_fileOut, feat_only_fileOut)
+        if sys.argv[2] == "map_coverage":
+            obj.write_map_coverage(fileIn)
 
-        tic = timeit.default_timer()
-        obj.find_nearby_features_from_file(feat_only_fileOut, coverage_fileOut)
-        toc = timeit.default_timer()
-        elapsedTime = toc - tic
-        print("Time to create coverage file: {:.2f}s".format(elapsedTime))
-        obj.remove_tmp_file(database_fileOut)
-        obj.remove_tmp_file(feat_only_fileOut)
+        elif sys.argv[2] == "robot_coverage":
+            obj.write_robot_coverage(fileIn)
+
+        obj.print_stats()
 
     except KeyboardInterrupt:
         print("\n <-CTRL-C EXIT: USER manually exited!->")

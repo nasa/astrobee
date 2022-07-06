@@ -27,12 +27,14 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
   ## Find catkin macros and libraries
   find_package(catkin REQUIRED COMPONENTS
     roscpp
+    localization_analysis
     localization_common
     ff_util
     graph_localizer
-    graph_bag
     rviz
   )
+
+  find_package(pcl_conversions REQUIRED)
 
   # For Qt
   set(CMAKE_AUTOMOC ON)
@@ -41,8 +43,8 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
 
  catkin_package(
    LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
-   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS}
-   CATKIN_DEPENDS roscpp localization_common ff_util graph_localizer graph_bag rviz
+   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS} 
+   CATKIN_DEPENDS roscpp localization_analysis localization_common ff_util graph_localizer rviz
  )
  
   ###########
@@ -52,17 +54,20 @@ if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
   include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${pcl_conversions_INCLUDE_DIRS} 
     ${Qt5Core_INCLUDE_DIRS}
     ${Qt5Gui_INCLUDE_DIRS}
   )
 
   # Declare C++ libraries
   add_library(${PROJECT_NAME}
+    src/depth_odometry_display.cc
     src/localization_graph_display.cc
     src/localization_graph_panel.cc
     src/pose_display.cc
     src/utilities.cc
     src/imu_augmentor_display.cc
+    src/slider_property.cc
     src/sparse_mapping_display.cc
   )
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})

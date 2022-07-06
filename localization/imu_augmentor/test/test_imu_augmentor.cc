@@ -124,11 +124,11 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   const double expected_velocity_i = acceleration_i() * num_measurements() * time_increment();
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.velocity().matrix(), expected_velocity.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
   // x = 1/2*a*t^2
   const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() * time_increment(), 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().translation().matrix(), expected_position.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
 }
 
 TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
@@ -142,11 +142,11 @@ TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   const double expected_velocity_i = acceleration_i() * num_measurements() / 2 * time_increment();
   const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.velocity().matrix(), expected_velocity.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
   // x = 1/2*a*t^2
   const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() / 2 * time_increment(), 2);
   const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().translation().matrix(), expected_position.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
 }
 
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
@@ -156,9 +156,8 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   imu_augmentor().PimPredict(initial_state, imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.velocity().matrix(), gtsam::Vector3::Zero().matrix());
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().translation().matrix(),
-               gtsam::Vector3::Zero().matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), gtsam::Vector3::Zero(), 1e-6);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), gtsam::Vector3::Zero(), 1e-6);
 }
 
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
@@ -170,7 +169,7 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
     ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().rotation().matrix(), expected_orientation.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
 }
 
 TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
@@ -184,7 +183,7 @@ TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
     ia::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), imu_augmented_state_start_time);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().rotation().matrix(), expected_orientation.matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
 }
 
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
@@ -194,7 +193,7 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
   imu_augmentor().PimPredict(initial_state, imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
-  ASSERT_PRED2(lc::MatrixEquality<6>, imu_augmented_state.pose().rotation().matrix(), gtsam::Rot3::identity().matrix());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), gtsam::Rot3::identity(), 1e-6);
 }
 
 // Run all the tests that were declared with TEST()

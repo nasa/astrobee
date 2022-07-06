@@ -72,6 +72,9 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   dl_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_HR_FEATURES, params_.max_dl_buffer_size,
                           &GraphLocalizerNodelet::DepthLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  depth_odometry_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odometry_buffer_size,
+                          &GraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
   of_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
                           &GraphLocalizerNodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
@@ -88,6 +91,7 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
   bias_from_file_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
+  reset_map_srv_ = private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &GraphLocalizerNodelet::ResetMap, this);
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
   input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
 }
@@ -126,10 +130,22 @@ void GraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
 bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   PublishReset();
   EnableLocalizer();
   return true;
+}
+
+bool GraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
+  // Reset localizer while loading previous biases when map is reset to prevent possible initial
+  // map jump from affecting estimated IMU biases and velocity estimation.
+  // Clear vl messages to prevent old localization results from being used by localizer after reset
+  // TODO(rsoussan): Better way to clear buffer?
+  vl_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
+                          &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  return ResetBiasesFromFileAndResetLocalizer();
 }
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req,
@@ -138,6 +154,7 @@ bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty
 }
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetBiasesFromFileAndResetLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -150,6 +167,7 @@ bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_sr
 }
 
 void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -188,6 +206,14 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
   if (ValidVLMsg(*visual_landmarks_msg, params_.ar_tag_loc_adder_min_num_matches)) PublishARTagPose();
+}
+
+void GraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odometry_msg) {
+  depth_odometry_timer_.HeaderDiff(depth_odometry_msg->header);
+  depth_odometry_timer_.VlogEveryN(100, 2);
+
+  if (!localizer_enabled()) return;
+  graph_localizer_wrapper_.DepthOdometryCallback(*depth_odometry_msg);
 }
 
 void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks::ConstPtr& depth_landmarks_msg) {

@@ -167,8 +167,13 @@ namespace is_camera {
     bayer_img_msg_buffer_idx_(0),
     thread_running_(false),
     camera_topic_(""),
+    bayer_camera_topic_(""),
     calibration_mode_(false),
-    bayer_throttle_ratio_counter_(0)
+    bayer_throttle_ratio_counter_(0),
+    bayer_enable_(false),
+    auto_exposure_(false),
+    err_p_(0),
+    err_i_(0)
     {}
 
   CameraNodelet::~CameraNodelet() {
@@ -178,6 +183,8 @@ namespace is_camera {
   }
 
   void CameraNodelet::Initialize(ros::NodeHandle* nh) {
+    // Store the node handle for future use
+    nh_ = nh;
     calibration_mode_ = false;
     config_name_ = GetName();
     if (GetName() == "nav_cam") {
@@ -200,6 +207,22 @@ namespace is_camera {
     ReadParams();
     config_timer_ = GetPrivateHandle()->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
       config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));}, false, true);
+    auto_exposure_timer_ = GetPrivateHandle()->createTimer(
+      ros::Duration(1),
+      [this](ros::TimerEvent e) {
+        // Publish exposure data
+        std_msgs::Int32MultiArray msg;
+        msg.data.push_back(camera_gain_);
+        if (auto_exposure_) {
+          AutoExposure();
+          msg.data.push_back(camera_auto_exposure_);
+        } else {
+          msg.data.push_back(camera_exposure_);
+        }
+        pub_exposure_.publish(msg);
+      }
+      ,
+      false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
     info_pub_ = nh->advertise<sensor_msgs::CameraInfo>(camera_topic_ + "/camera_info", 1);
@@ -208,6 +231,7 @@ namespace is_camera {
       bayer_camera_topic_ = camera_topic_ + "_bayer";
       bayer_pub_ = nh->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
     }
+    pub_exposure_ = nh->advertise<std_msgs::Int32MultiArray>(camera_topic_ + "_ctrl", 1);
 
     // Allocate space for our output msg buffer
     for (size_t i = 0; i < kImageMsgBuffer; i++) {
@@ -217,24 +241,6 @@ namespace is_camera {
       img_msg_buffer_[i]->encoding = "mono8";
       img_msg_buffer_[i]->step   = kImageWidth;
       img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
-    }
-
-    if (bayer_enable_) {
-      // Allocate space for our Bayer output msg buffer
-      for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
-        bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
-        bayer_img_msg_buffer_[i]->width = kImageWidth;
-        bayer_img_msg_buffer_[i]->height = kImageHeight;
-
-        // The OpenCV specification of the IS camera Bayer encoding
-        // appears to be "BayerGR" if our previous cvtColor() call
-        // is correct. That corresponds to a ROS specification of
-        // enc::BAYER_GBRG8 [1].
-        // [1] https://github.com/ros-perception/image_pipeline/blob/71d537a50bf4e7769af513f4a3d3df0d188cfa05/image_proc/src/nodelets/debayer.cpp#L223
-        bayer_img_msg_buffer_[i]->encoding = "bayer_gbrg8";
-        bayer_img_msg_buffer_[i]->step = kImageWidth;
-        bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
-      }
     }
 
     v4l_.reset(new V4LStruct(camera_device_, camera_gain_, camera_exposure_));
@@ -291,19 +297,47 @@ namespace is_camera {
 
     LoadCameraInfo();
 
-    if (!camera.GetBool("bayer_enable", &bayer_enable_)) {
+    bool bayer_enable;
+    if (!camera.GetBool("bayer_enable", &bayer_enable)) {
       FF_FATAL("Bayer enable not specified.");
       exit(EXIT_FAILURE);
     }
+    // Check if bayer configuration changed
+    EnableBayer(bayer_enable);
 
-    if (bayer_enable_) {
-      if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
-        FF_FATAL("Bayer throttle ratio not specified.");
-        exit(EXIT_FAILURE);
-      }
+    // Auto Exposure Parameters
+    if (!camera.GetBool("auto_exposure", &auto_exposure_)) {
+      FF_FATAL("Auto Exposure enable not specified.");
+      exit(EXIT_FAILURE);
     }
 
-    if (thread_running_) {
+    if (!config_.GetReal("desired_msv", &desired_msv_)) {
+      FF_FATAL("Auto-Exposure: Desired MSV not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("k_p", &k_p_)) {
+      FF_FATAL("Auto-Exposure: Kp not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("k_i", &k_i_)) {
+      FF_FATAL("Auto-Exposure: Ki not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("max_i", &max_i_)) {
+      FF_FATAL("Auto-Exposure: Maximum I not specified.");
+      exit(EXIT_FAILURE);
+    }
+    if (!config_.GetReal("tolerance", &tolerance_)) {
+      FF_FATAL("Auto-Exposure: Error tolerance not specified.");
+      exit(EXIT_FAILURE);
+    }
+
+    if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
+      FF_FATAL("Bayer throttle ratio not specified.");
+      exit(EXIT_FAILURE);
+    }
+
+    if (thread_running_ && !auto_exposure_) {
       v4l_->SetParameters(camera_gain_, camera_exposure_);
     }
   }
@@ -340,6 +374,81 @@ namespace is_camera {
     info_msg_.R = {1, 0, 0,
                    0, 1, 0,
                    0, 0, 1};
+  }
+
+  void CameraNodelet::EnableBayer(bool enable) {
+    if (enable && !bayer_enable_) {
+      bayer_camera_topic_ = camera_topic_ + TOPIC_HARDWARE_CAM_SUFFIX_BAYER_RAW;
+      bayer_pub_ = nh_->advertise<sensor_msgs::Image>(bayer_camera_topic_, 1);
+      // Allocate space for our Bayer output msg buffer
+      for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
+        // Ignore if already initialized once
+        if (bayer_img_msg_buffer_[i] != NULL) continue;
+        bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
+        bayer_img_msg_buffer_[i]->width = kImageWidth;
+        bayer_img_msg_buffer_[i]->height = kImageHeight;
+
+        // This was tested in the lab using a color test picture
+        // Images in https://github.com/nasa/astrobee/issues/434
+        bayer_img_msg_buffer_[i]->encoding = "bayer_grbg8";
+        bayer_img_msg_buffer_[i]->step = kImageWidth;
+        bayer_img_msg_buffer_[i]->data.resize(kImageWidth * kImageHeight);
+      }
+    } else if (!enable && bayer_enable_) {
+      bayer_pub_.shutdown();
+    } else {
+      return;
+    }
+    bayer_enable_ = enable;
+  }
+
+  // Timer that periodically changes camera exposure based on the captured image's histogram
+  void CameraNodelet::AutoExposure() {
+    // If images not being captured, do not adjust exposure
+    if (!thread_running_ || ((pub_.getNumSubscribers() == 0) && (getNumBayerSubscribers() == 0))) return;
+
+    // Get last generated image from buffer (index incremented after image completed)
+    sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ - 1) % kImageMsgBuffer];
+
+    cv::Mat input(kImageHeight, kImageWidth,
+                     cv::DataType<uint8_t>::type,
+                     &(grey_image->data[0]),
+                     kImageWidth);
+
+    // Calculate Histogram
+    cv::Mat hist;
+    int hist_size = 5;
+    float range[] = {0, 256};  // the upper boundary is exclusive
+    const float* hist_range[] = { range };
+    bool uniform = true, accumulate = false;
+    cv::calcHist(&input, 1, 0, cv::Mat(), hist, 1, &hist_size, hist_range, uniform, accumulate);
+
+    // Calculate mean sample value
+    double mean_sample_value = 0;
+
+    for (int i = 0; i < hist_size; ++i) {
+      mean_sample_value += hist.at<float>(i) * (i+1);
+    }
+    mean_sample_value /= (kImageHeight * kImageWidth);
+
+    // Control Auto exposure with a PI controller
+    err_p_ = desired_msv_ - mean_sample_value;
+
+    // Don't change exposure if we're close enough. Changing too often slows
+    // down the data rate of the camera.
+    if (std::abs(err_p_) > tolerance_) {
+      // Calculate PI coefficients
+      err_i_ += err_p_;
+      if (std::abs(err_i_) > max_i_) {
+        err_i_ = (err_i_ > 0) ? max_i_ : - max_i_;
+      }
+      // Update camera exposure parameter
+      camera_auto_exposure_ = std::round(camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
+      if (camera_auto_exposure_ < 50.0) camera_auto_exposure_ = 50.0;
+      else if (camera_auto_exposure_ > 250.0) camera_auto_exposure_ = 250.0;
+
+      v4l_->SetParameters(camera_gain_, camera_auto_exposure_);
+    }
   }
 
   void CameraNodelet::PublishLoop() {
@@ -406,6 +515,10 @@ namespace is_camera {
                            cv::DataType<uint8_t>::type,
                            &(out_image->data[0]),
                            kImageWidth);
+          // This encoding is incorrect, however given that the maps were built
+          // with it it will not be changed. It's supposed to be BayerGB2GRAY [1], given
+          // that the bayer encoding is BAYER_GRBG8, as tested in the lab.
+          // [1] https://github.com/ros-perception/image_pipeline/blob/71d537a50bf4e7769af513f4a3d3df0d188cfa05/image_proc/src/nodelets/debayer.cpp#L226
           cv::cvtColor(wrapped, owrapped,
                        CV_BayerGR2GRAY);
 

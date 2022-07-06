@@ -30,9 +30,9 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToHandrailEndpointFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = lc::RandomVector();
-    const gtsam::Point3 world_t_handrail_endpoint_a = lc::RandomVector();
-    const gtsam::Point3 world_t_handrail_endpoint_b = lc::RandomVector();
+    const gtsam::Point3 sensor_t_point = lc::RandomPoint3d();
+    const gtsam::Point3 world_t_handrail_endpoint_a = lc::RandomPoint3d();
+    const gtsam::Point3 world_t_handrail_endpoint_b = lc::RandomPoint3d();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body = lc::RandomPose();
     // Ignore case where sensor point is directly between two endpoints as this leads to a known
@@ -51,8 +51,8 @@ TEST(PointToHandrailEndpointFactorTester, Jacobian) {
     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
       boost::function<gtsam::Vector(const gtsam::Pose3&)>(
         boost::bind(&gtsam::PointToHandrailEndpointFactor::evaluateError, factor, _1, boost::none)),
-      world_T_body, 1e-5);
-    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+      world_T_body);
+    EXPECT_MATRIX_NEAR(numerical_H, H, 1e-6);
   }
 }
 
@@ -68,7 +68,7 @@ TEST(PointToHandrailEndpointFactorTester, SelectingCorrectEndpoint) {
     const gtsam::PointToHandrailEndpointFactor factor(sensor_t_point, world_t_handrail_endpoint_a,
                                                       world_t_handrail_endpoint_b, body_T_sensor, noise, sym::P(0));
     const auto error = factor.evaluateError(world_T_body);
-    EXPECT_TRUE(error.isApprox(gtsam::Vector3(0.2, 0, 0), 1e-6));
+    EXPECT_MATRIX_NEAR(error, gtsam::Vector3(0.2, 0, 0), 1e-6);
   }
   // Closer to endpoint b
   {
@@ -76,7 +76,7 @@ TEST(PointToHandrailEndpointFactorTester, SelectingCorrectEndpoint) {
     const gtsam::PointToHandrailEndpointFactor factor(sensor_t_point, world_t_handrail_endpoint_a,
                                                       world_t_handrail_endpoint_b, body_T_sensor, noise, sym::P(0));
     const auto error = factor.evaluateError(world_T_body);
-    EXPECT_TRUE(error.isApprox(gtsam::Vector3(-0.4, 0, 0), 1e-6));
+    EXPECT_MATRIX_NEAR(error, gtsam::Vector3(-0.4, 0, 0), 1e-6);
   }
 }
 

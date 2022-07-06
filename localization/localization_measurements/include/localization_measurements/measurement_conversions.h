@@ -19,25 +19,40 @@
 #ifndef LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
 #define LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
 
+#include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <vision_msgs/Detection2DArray.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/utilities.h>
+#include <localization_measurements/depth_image_measurement.h>
+#include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/handrail_points_measurement.h>
+#include <localization_measurements/image_measurement.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 #include <localization_measurements/semantic_det.h>
 #include <localization_measurements/semantic_dets_measurement.h>
 #include <localization_measurements/plane.h>
+#include <localization_measurements/point_cloud_measurement.h>
 #include <localization_measurements/timestamped_handrail_pose.h>
 
 #include <Eigen/Core>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/PointCloud2.h>
+
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace localization_measurements {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
@@ -59,6 +74,34 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
 SemanticDetsMeasurement MakeSemanticDetsMeasurement(const vision_msgs::Detection2DArray& detections);
 
 FanSpeedMode ConvertFanSpeedMode(const uint8_t speed);
+
+boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg,
+                                                       const std::string& encoding);
+
+PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
+
+boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(
+  const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg, const sensor_msgs::ImageConstPtr& image_msg,
+  const Eigen::Affine3d image_A_depth_cam = Eigen::Affine3d::Identity());
+
+// TODO(rsoussan): Move this somewhere else?
+template <typename PointType>
+sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<PointType>& cloud,
+                                           const localization_common::Time timestamp, const std::string frame) {
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg(cloud, cloud_msg);
+  localization_common::TimeToHeader(timestamp, cloud_msg.header);
+  cloud_msg.header.frame_id = frame;
+  return cloud_msg;
+}
+
+localization_common::PoseWithCovariance MakePoseWithCovariance(const geometry_msgs::PoseWithCovariance& msg);
+
+Odometry MakeOdometry(const ff_msgs::Odometry& msg);
+
+DepthCorrespondences MakeDepthCorrespondences(const std::vector<ff_msgs::DepthCorrespondence>& msgs);
+
+DepthOdometryMeasurement MakeDepthOdometryMeasurement(const ff_msgs::DepthOdometry& depth_odometry_msg);
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_

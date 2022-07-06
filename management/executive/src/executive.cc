@@ -564,6 +564,8 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd) {
           + cmd->args[2].s;
       }
     }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DEPLOY_ARM) {
+    arm_goal_.command = ff_msgs::ArmGoal::ARM_DEPLOY;
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_GRIPPER_CONTROL) {
     // Gripper control has one argument which is a booleanused to specify
     // whether to open or close the arm
@@ -1613,6 +1615,19 @@ bool Executive::CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   gs_custom_command_timer_.start();
   gs_custom_cmd_id_ = cmd->cmd_id;
   return true;
+}
+
+bool Executive::DeployArm(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing deploy arm command!");
+  // Check if Astrobee is perching/perched. Arm control will check the rest.
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::PERCHING) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Can't deploy arm while perched or (un)perching!");
+    return false;
+  }
+
+  return ArmControl(cmd);
 }
 
 bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3025,14 +3040,14 @@ bool Executive::StartGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::StartRecording(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing start recordiing command.");
+  NODELET_INFO("Executive executing start recording command.");
   bool successful = true;
   std::string err_msg;
   uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
   if (cmd->args.size() != 1 ||
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
     successful = false;
-    err_msg = "Malformed arguments for start recordinng command.";
+    err_msg = "Malformed arguments for start recording command.";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
   } else {
     ff_msgs::EnableRecording enable_rec_srv;
@@ -3494,6 +3509,15 @@ void Executive::Initialize(ros::NodeHandle *nh) {
     return;
   }
 
+  // The mapper parmeters don't need to be reloaded since the executive only
+  // needs the collision distance on start up as a default value. The collision
+  // distance can then be changed using the set operating limits command or
+  // uploading and running a plan that has a different collision distance.
+  mapper_config_params_.AddFile("mobility/mapper.config");
+  if (!ReadMapperParams()) {
+    return;
+  }
+
   // Set up a timer to check and reload timeouts if they are changed.
   reload_params_timer_ = nh_.createTimer(ros::Duration(1),
       [this](ros::TimerEvent e) {
@@ -3743,7 +3767,6 @@ void Executive::Initialize(ros::NodeHandle *nh) {
     agent_state_.target_linear_accel = flight_mode.hard_limit_accel;
     agent_state_.target_angular_velocity = flight_mode.hard_limit_omega;
     agent_state_.target_angular_accel = flight_mode.hard_limit_alpha;
-    agent_state_.collision_distance = flight_mode.collision_radius;
   }
 
   agent_state_.holonomic_enabled = false;
@@ -3964,6 +3987,66 @@ bool Executive::ReadParams() {
   if (!config_params_.GetBool("sys_monitor_init_fault_blocking",
                               &sys_monitor_init_fault_blocking_)) {
     err_msg = "Sys monitor init fault blocking not specified.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  return true;
+}
+
+bool Executive::ReadMapperParams() {
+  std::string err_msg;
+  // Read config files into lua
+  if (!mapper_config_params_.ReadFiles()) {
+    err_msg = "Error loading executive parameters.";
+    err_msg += "Couldn't read mapper config files.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  config_reader::ConfigReader::Table mapper_params_table, mapper_group;
+  std::string id;
+  double collision_distance = -1;
+  if (!mapper_config_params_.GetTable("parameters", &mapper_params_table)) {
+    err_msg = "Unable to read mapper parameters table.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  // Need to search for the collision distance in the mapper parameters
+  for (int i = 1; i <= mapper_params_table.GetSize(); i++) {
+    if (!mapper_params_table.GetTable(i, &mapper_group)) {
+      NODELET_ERROR("Could not read the mapper parameter table row %i", i);
+      continue;
+    }
+
+    if (!mapper_group.GetStr("id", &id)) {
+      NODELET_ERROR("Could not read mapper id for row %i", i);
+      continue;
+    }
+
+    // See if this is the collision distance
+    if (id == "collision_distance") {
+      // Only need the default value for initialization
+      if (!mapper_group.GetReal("default", &collision_distance)) {
+        err_msg = "Unable to read collision distance from mapper config";
+        NODELET_ERROR("%s", err_msg.c_str());
+        this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+        return false;
+      }
+      // Stop searching for the collision distance
+      break;
+    }
+  }
+
+  // Make sure we found the collision distance in the mapper config
+  if (collision_distance != -1) {
+    agent_state_.collision_distance = collision_distance;
+  } else {
+    err_msg = "Unable to find the collision distance from the mapper config.";
     NODELET_ERROR("%s", err_msg.c_str());
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;

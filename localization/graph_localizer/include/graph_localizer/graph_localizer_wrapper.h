@@ -18,6 +18,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 
+#include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/Feature2dArray.h>
@@ -82,6 +83,8 @@ class GraphLocalizerWrapper {
   void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   void SemanticDetCallback(const vision_msgs::Detection2DArray& detections_msg);
+
+  void DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   void DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
 

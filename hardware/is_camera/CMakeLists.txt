@@ -73,12 +73,26 @@ add_library(is_camera
 add_dependencies(is_camera ${catkin_EXPORTED_TARGETS})
 target_link_libraries(is_camera ${V4L2_LIBRARY} ${catkin_LIBRARIES})
 
+# Declare C++ libraries
+add_library(debayer
+  src/debayer.cc
+)
+add_dependencies(debayer ${catkin_EXPORTED_TARGETS})
+target_link_libraries(debayer ${V4L2_LIBRARY} ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark libraries for installation
+install(TARGETS debayer
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

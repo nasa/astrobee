@@ -23,21 +23,30 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  ff_msgs
   config_reader
+  cv_bridge
+  ff_msgs
   localization_common
   msg_conversions
   vision_msgs
+  point_cloud_common
 )
 
+find_package(PCL REQUIRED COMPONENTS common features filters octree search)
+
+find_package(pcl_conversions REQUIRED)
+
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME}
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions vision_msgs
+  LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${pcl_conversions_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${PCL_INCLUDE_DIRS} 
+  CATKIN_DEPENDS config_reader cv_bridge ff_msgs localization_common msg_conversions point_cloud_common vision_msgs
 )
 
 ###########
@@ -49,22 +58,19 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
 )
-
-# create_library(TARGET ${PROJECT_NAME} 
-#   LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
-#   INC ${catkin_INCLUDE_DIRS} 
-#   DEPS ff_msgs
-# )
-
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
+  src/depth_image.cc
   src/measurement_conversions.cc
 )
 
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 
 if(CATKIN_ENABLE_TESTING)
@@ -74,6 +80,14 @@ if(CATKIN_ENABLE_TESTING)
     test/test_plane.cc
   )
   target_link_libraries(test_plane
+    localization_measurements gtsam
+  )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_depth_image
+    test/test_depth_image.test
+    test/test_depth_image.cc
+  )
+  target_link_libraries(test_depth_image
     localization_measurements gtsam
   )
   find_package(rostest REQUIRED)

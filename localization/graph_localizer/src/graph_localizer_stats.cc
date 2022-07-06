@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <graph_localizer/graph_localizer_stats.h>
+#include <graph_localizer/point_to_point_between_factor.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/tolerant_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
@@ -39,6 +40,8 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_marginal_factors_averager_);
   AddStatsAverager(num_factors_averager_);
   // AddStatsAverager(num_features_averager_);
+  AddStatsAverager(num_depth_odometry_rel_pose_factors_averager_);
+  AddStatsAverager(num_depth_odometry_rel_point_factors_averager_);
   AddStatsAverager(num_optical_flow_factors_averager_);
   AddStatsAverager(num_loc_pose_factors_averager_);
   AddStatsAverager(num_loc_proj_factors_averager_);
@@ -48,6 +51,8 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_standstill_between_factors_averager_);
   AddStatsAverager(num_vel_prior_factors_averager_);
 
+  AddErrorAverager(depth_odom_rel_pose_error_averager_);
+  AddErrorAverager(depth_odom_rel_point_error_averager_);
   AddErrorAverager(of_error_averager_);
   AddErrorAverager(loc_proj_error_averager_);
   AddErrorAverager(loc_pose_error_averager_);
@@ -71,6 +76,8 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
   using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 
   double total_error = 0;
+  double depth_odom_rel_pose_factor_error = 0;
+  double depth_odom_rel_point_factor_error = 0;
   double optical_flow_factor_error = 0;
   double loc_proj_error = 0;
   double loc_pose_error = 0;
@@ -83,6 +90,15 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
   for (const auto& factor : graph_factors) {
     const double error = factor->error(combined_nav_state_graph_values_->values());
     total_error += error;
+    // TODO(rsoussan): Differentiate between this and standstill between factor
+    const auto depth_odom_rel_pose_factor = dynamic_cast<const gtsam::BetweenFactor<gtsam::Pose3>*>(factor.get());
+    if (depth_odom_rel_pose_factor) {
+      depth_odom_rel_pose_factor_error += error;
+    }
+    const auto depth_odom_rel_point_factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor.get());
+    if (depth_odom_rel_point_factor) {
+      depth_odom_rel_point_factor_error += error;
+    }
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
       optical_flow_factor_error += error;
@@ -127,6 +143,8 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
     }
   }
   total_error_averager_.Update(total_error);
+  depth_odom_rel_pose_error_averager_.Update(depth_odom_rel_pose_factor_error);
+  depth_odom_rel_point_error_averager_.Update(depth_odom_rel_point_factor_error);
   of_error_averager_.Update(optical_flow_factor_error);
   loc_proj_error_averager_.Update(loc_proj_error);
   loc_pose_error_averager_.Update(loc_pose_error);
@@ -145,6 +163,10 @@ void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_f
   num_factors_averager_.Update(graph_factors.size());
   num_optical_flow_factors_averager_.Update(
     NumSmartFactors(graph_factors, combined_nav_state_graph_values_->values(), true));
+  num_depth_odometry_rel_pose_factors_averager_.Update(
+    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors));
+  num_depth_odometry_rel_point_factors_averager_.Update(
+    go::NumFactors<gtsam::PointToPointBetweenFactor>(graph_factors));
   num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));
   num_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors));
   num_sem_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::TolerantProjectionFactor<>>(graph_factors));

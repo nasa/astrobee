@@ -207,6 +207,13 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
+void GraphLocalizerWrapper::DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  if (graph_localizer_) {
+    const auto depth_odometry_measurement = lm::MakeDepthOdometryMeasurement(depth_odometry_msg);
+    graph_localizer_->AddDepthOdometryMeasurement(depth_odometry_measurement);
+  }
+}
+
 void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
   feature_counts_.depth = depth_landmarks_msg.landmarks.size();
   if (!ValidDepthMsg(depth_landmarks_msg)) return;
@@ -271,7 +278,7 @@ void GraphLocalizerWrapper::InitializeGraph() {
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_localizer_initializer_.params()));
 }
 
-boost::optional<const std::vector<SemanticLocFactorAdder::SemanticMatch>&> GraphLocalizerWrapper::semantic_matches() const {
+boost::optional<const std::vector<SemanticLocFactorAdder::SemanticMatch>&> GraphLocalizerWrapper::semantic_matches() const { //NOLINT
   if (!graph_localizer_) return boost::none;
   return graph_localizer_->semantic_matches();
 }

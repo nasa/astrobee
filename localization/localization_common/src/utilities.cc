@@ -82,11 +82,9 @@ Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stam
 
 Time TimeFromRosTime(const ros::Time& time) { return GetTime(time.sec, time.nsec); }
 
-void TimeToHeader(const Time timestamp, std_msgs::Header& header) {
-  ros::Time ros_time(timestamp);
-  header.stamp.sec = ros_time.sec;
-  header.stamp.nsec = ros_time.nsec;
-}
+void TimeToHeader(const Time timestamp, std_msgs::Header& header) { TimeToMsg(timestamp, header.stamp); }
+
+void TimeToMsg(const Time timestamp, ros::Time& time_msg) { time_msg = ros::Time(timestamp); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
 
@@ -147,13 +145,6 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
   return (uncorrected_accelerometer_measurement + imu_F_gravity);
 }
 
-Eigen::Isometry3d Isometry3d(const Eigen::Vector3d& translation, const Eigen::Matrix3d& rotation) {
-  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
-  pose.translation() = translation;
-  pose.linear() = rotation;
-  return pose;
-}
-
 double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
 
 double Rad2Deg(const double radians) { return 180.0 / M_PI * radians; }
@@ -166,21 +157,79 @@ Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordi
   return cartesian_coordinates;
 }
 
-Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll) {
-  const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw), Eigen::Vector3d::UnitZ());
-  const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch), Eigen::Vector3d::UnitY());
-  const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll), Eigen::Vector3d::UnitX());
+Eigen::Matrix3d RotationFromEulerAngles(const double yaw_degrees, const double pitch_degrees,
+                                        const double roll_degrees) {
+  const Eigen::AngleAxisd yaw_aa = Eigen::AngleAxisd(Deg2Rad(yaw_degrees), Eigen::Vector3d::UnitZ());
+  const Eigen::AngleAxisd pitch_aa = Eigen::AngleAxisd(Deg2Rad(pitch_degrees), Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd roll_aa = Eigen::AngleAxisd(Deg2Rad(roll_degrees), Eigen::Vector3d::UnitX());
   // For intrinsics euler angle convention, yaw, pitch, then roll in intrinsic body frame is equivalent to
   // roll, pitch, then yaw in extrinsic global frame
   const Eigen::Matrix3d rotation(roll_aa * pitch_aa * yaw_aa);
   return rotation;
 }
 
-Eigen::Vector2d FocalLengths(const Eigen::Matrix3d& intrinsics) {
-  return Eigen::Vector2d(intrinsics(0, 0), intrinsics(1, 1));
+Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a) {
+  // Consider for example a sensor odometry measurement, sensor_time_0_T_sensor_time_1.
+  // To find the movement of the robot body given static body_T_sensor extrinsics,
+  // body_time_0_T_body_time_1 = body_T_sensor * sensor_time_0_T_sensor_time_1 * sensor_T_body
+  return b_T_a * a_F_relative_pose * b_T_a.inverse();
 }
 
-Eigen::Vector2d PrincipalPoints(const Eigen::Matrix3d& intrinsics) {
-  return Eigen::Vector2d(intrinsics(0, 2), intrinsics(1, 2));
+Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
+  const Eigen::Matrix<double, 6, 6>& a_F_relative_pose_covariance, const Eigen::Isometry3d& b_T_a) {
+  // TODO(rsoussan): This might be right for translation component (frame change is equivalent to single rotation),
+  // but might be wrong for rotation component
+  return gtsam::TransformCovariance<gtsam::Pose3>(GtPose(b_T_a))(a_F_relative_pose_covariance);
+}
+
+PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
+                                                         const Eigen::Isometry3d& b_T_a) {
+  PoseWithCovariance b_F_relative_pose_with_covariance;
+  b_F_relative_pose_with_covariance.pose = FrameChangeRelativePose(a_F_relative_pose_with_covariance.pose, b_T_a);
+  b_F_relative_pose_with_covariance.covariance =
+    FrameChangeRelativeCovariance(a_F_relative_pose_with_covariance.covariance, b_T_a);
+  return b_F_relative_pose_with_covariance;
+}
+
+PoseWithCovariance InvertPoseWithCovariance(const PoseWithCovariance& pose_with_covariance) {
+  PoseWithCovariance inverted_pose_with_covariance;
+  inverted_pose_with_covariance.pose = pose_with_covariance.pose.inverse();
+  // TODO(rsoussan): Do this properly!!
+  inverted_pose_with_covariance.covariance = pose_with_covariance.covariance;
+  return inverted_pose_with_covariance;
+}
+
+double PoseCovarianceSane(const Eigen::Matrix<double, 6, 6>& pose_covariance,
+                          const double position_covariance_threshold, const double orientation_covariance_threshold,
+                          const bool check_position_covariance, const bool check_orientation_covariance) {
+  bool sane = true;
+  if (check_position_covariance) {
+    const double log_det_position_cov = LogDeterminant(pose_covariance.block<3, 3>(0, 0));
+    sane &= (log_det_position_cov <= position_covariance_threshold);
+  }
+
+  if (check_orientation_covariance) {
+    const double log_det_orientation_cov = LogDeterminant(pose_covariance.block<3, 3>(3, 3));
+    sane &= (log_det_orientation_cov <= orientation_covariance_threshold);
+  }
+
+  return sane;
+}
+
+std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformPointsWithNormals(
+  const std::vector<Eigen::Vector3d>& points, const std::vector<Eigen::Vector3d>& normals,
+  const Eigen::Isometry3d& b_T_a) {
+  std::vector<Eigen::Vector3d> transformed_points = Transform(points, b_T_a);
+  std::vector<Eigen::Vector3d> rotated_normals = Rotate(normals, b_T_a.linear());
+  return std::make_pair(transformed_points, rotated_normals);
+}
+
+Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const Eigen::Isometry3d& upper_bound_pose,
+                              const double alpha) {
+  const Eigen::Vector3d translation =
+    (1.0 - alpha) * lower_bound_pose.translation() + alpha * upper_bound_pose.translation();
+  const auto rotation =
+    Eigen::Quaterniond(lower_bound_pose.linear()).slerp(alpha, Eigen::Quaterniond(upper_bound_pose.linear()));
+  return Isometry3d(translation, rotation);
 }
 }  // namespace localization_common

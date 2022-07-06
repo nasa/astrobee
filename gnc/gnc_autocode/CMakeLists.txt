@@ -41,7 +41,6 @@ if (GNC_ROOT_DIR)
   # blindly setting paths, TODO: confirm these paths exist
   set (GNC_ADDITIONAL_DIR ${GNC_ROOT_DIR}/AdditionalIncludes)
   set (GNC_CTL_DIR ${GNC_ROOT_DIR}/ctl_controller0_ert_rtw)
-  set (GNC_EST_DIR ${GNC_ROOT_DIR}/est_estimator_ert_rtw)
   set (GNC_FAM_DIR ${GNC_ROOT_DIR}/fam_force_allocation_module_ert_rtw)
   set (GNC_SIM_DIR ${GNC_ROOT_DIR}/sim_model_lib0_ert_rtw)
   set (GNC_BL1_DIR ${GNC_ROOT_DIR}/bpm_blower_1_propulsion_module_ert_rtw)
@@ -60,9 +59,6 @@ set(GNC_SOURCES
   ${GNC_CTL_DIR}/ctl_tunable_funcs.cpp
   ${GNC_CTL_DIR}/ctl_controller0.cpp
   ${GNC_CTL_DIR}/ctl_controller0_data.cpp
-  ${GNC_EST_DIR}/est_estimator.cpp
-  ${GNC_EST_DIR}/est_estimator_data.cpp
-  ${GNC_EST_DIR}/est_tunable_funcs.cpp
   ${GNC_FAM_DIR}/fam_force_allocation_module.cpp
   ${GNC_FAM_DIR}/fam_force_allocation_module_data.cpp
   ${GNC_FAM_DIR}/fam_tunable_funcs.cpp
@@ -87,7 +83,6 @@ set(GNC_SOURCES
 
 set(GNC_INCLUDES
   ${GNC_CTL_DIR}
-  ${GNC_EST_DIR}
   ${GNC_FAM_DIR}
   ${GNC_SIM_DIR}
   ${GNC_BL1_DIR}
@@ -129,12 +124,10 @@ include_directories(
 add_library(gnc_autocode
   src/autocode.cc
   src/constants.cc
-  src/ekf.cc
   src/fam.cc
   src/sim_csv.cc
   src/blowers.cc
   src/ctl.cc
-  src/ekf_csv.cc
   src/sim.cc
   ${GNC_SOURCES}
 )

@@ -196,6 +196,11 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DEPLOYING_TILTING,
       TILT_COMPLETE,
       [this](FSM::Event const& event) -> FSM::State {
+        if (!calibrated_) {
+           if (!CalibrateGripper())
+            return Result(RESPONSE::CALIBRATE_FAILED);
+          return STATE::CALIBRATING;
+        }
         return Result(RESPONSE::SUCCESS);
       });
 
@@ -252,8 +257,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
             return STATE::STOWING_SETTING;
           else if (goal_set_)
             return STATE::SETTING;
-          else   // We don't know where we were, return error
-            return Result(RESPONSE::NO_GOAL);
+          else   // Finished
+            return Result(RESPONSE::SUCCESS);
         }
         if (!Arm(PAN))
           return Result(RESPONSE::PAN_FAILED);

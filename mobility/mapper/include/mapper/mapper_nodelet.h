@@ -98,7 +98,7 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
 
   // Callbacks (see callbacks.cpp for implementation) ----------------
   // Callback for handling incoming point cloud messages
-  void PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg);
+  void PclCallback(ros::TimerEvent const& event);
 
   // Callback for handling incoming new trajectory messages
   void SegmentCallback(const ff_msgs::Segment::ConstPtr &msg);
@@ -161,12 +161,14 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   void CollisionCheckTask();
 
   // Timer for getting pcl data and populating the octomap
-  void OctomappingTask(ros::TimerEvent const& event);
+  void OctomappingTask();
 
   // Initialize fault management
   void InitFault(std::string const& msg);
 
  private:
+  ros::NodeHandle *nh_;
+  bool disable_mapper_ = false;
   // Declare global variables (structures defined in structs.h)
   GlobalVariables globals_;
 
@@ -176,7 +178,8 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   ros::Timer timer_f_;  // Fade Task
 
   // Subscriber variables
-  ros::Subscriber haz_sub_, perch_sub_, segment_sub_, reset_sub_;
+  bool use_haz_cam_, use_perch_cam_;
+  ros::Subscriber segment_sub_, reset_sub_;
 
   // Octomap services
   ros::ServiceServer set_resolution_srv_, set_memory_time_srv_, set_collision_distance_srv_;

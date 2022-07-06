@@ -29,6 +29,8 @@
   <build_depend>ff_util</build_depend>
   <build_depend>gnc_autocode</build_depend>
   <build_depend>camera</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>jsonloader</build_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>tf2_ros</run_depend>
@@ -42,6 +44,8 @@
   <run_depend>ff_util</run_depend>
   <run_depend>gnc_autocode</run_depend>
   <run_depend>camera</run_depend>
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>jsonloader</run_depend>
   <export>
     <gazebo_ros plugin_path="${prefix}/lib"/>
     <gazebo_ros gazebo_model_path="${prefix}/../description/media"/>

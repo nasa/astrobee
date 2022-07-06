@@ -25,6 +25,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <ff_msgs/SetBool.h>
 #include <ff_util/ff_nodelet.h>
+#include <std_msgs/Int32MultiArray.h>
 
 #include <thread>
 #include <atomic>
@@ -47,19 +48,19 @@ struct V4LStruct;
 class CameraNodelet : public ff_util::FreeFlyerNodelet {
  public:
   // The size of the image message ring buffer for publishing
-  // grayscale images.  15 images = 17.6 MB of buffer space. This
+  // grayscale images.  30 images = 35.2 MB of buffer space. This
   // number is so large because it sets the lifetime for each image
   // message sent out. Eventually we'll write over the pointer we've
-  // handed out. At 15 Hz, 15 frames means an image will stay valid
-  // for 1.0 seconds.  Localization can process at 2 Hz, so it only
-  // needs an image for 0.5 seconds.
-  static constexpr size_t kImageMsgBuffer = 15;
+  // handed out. At 15 Hz, 30 frames means an image will stay valid
+  // for 2.0 seconds.  Localization can process at 1 Hz, so it only
+  // needs an image for 1.0 second.
+  static constexpr size_t kImageMsgBuffer = 30;
 
   // The size of the image message ring buffer for publishing raw
   // Bayer format images.  The same comments apply about message
-  // lifetime, but in this case we're expecting the subscriber
-  // callback to at most de-Bayer the image before passing it on, so
-  // the buffer doesn't need to be so long.
+  // lifetime, but in this case we're publishing at a lower rate and
+  // expecting the subscriber callback to at most de-Bayer the image
+  // before passing it on, so the buffer doesn't need to be so long.
   static constexpr size_t kBayerImageMsgBufferLength = 5;
 
   static constexpr size_t kImageWidth = 1280;
@@ -74,12 +75,14 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void PublishLoop();
-  bool EnableService(ff_msgs::SetBool::Request& req, ff_msgs::SetBool::Response& res);  // NOLINT
   void LoadCameraInfo();
+  void EnableBayer(bool enable);
+  void AutoExposure();
   size_t getNumBayerSubscribers();
 
   sensor_msgs::CameraInfo info_msg_;
 
+  ros::NodeHandle *nh_;
   sensor_msgs::ImagePtr img_msg_buffer_[kImageMsgBuffer];
   sensor_msgs::ImagePtr bayer_img_msg_buffer_[kBayerImageMsgBufferLength];
   size_t img_msg_buffer_idx_;
@@ -89,15 +92,17 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   ros::Publisher pub_;
   ros::Publisher info_pub_;
   ros::Publisher bayer_pub_;
+  ros::Publisher pub_exposure_;
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;
   ros::Timer config_timer_;
+  ros::Timer auto_exposure_timer_;
   std::string camera_device_;
   std::string camera_topic_;
   std::string bayer_camera_topic_;
   std::string config_name_;
-  int camera_gain_, camera_exposure_;
+  int camera_gain_, camera_exposure_, camera_auto_exposure_;
   bool calibration_mode_;
 
   // bayer_enable: Set to true to enable publishing raw Bayer image
@@ -109,6 +114,11 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   // published. Larger n reduces I/O overhead.
   unsigned int bayer_throttle_ratio_;
   size_t bayer_throttle_ratio_counter_;
+
+  // Auto exposure parameters
+  bool auto_exposure_;
+  int hist_size_;
+  double desired_msv_, k_p_, k_i_, max_i_, err_p_, err_i_, tolerance_;
 };
 
 }  // end namespace is_camera

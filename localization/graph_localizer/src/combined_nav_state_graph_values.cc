@@ -41,6 +41,14 @@ CombinedNavStateGraphValues::CombinedNavStateGraphValues(const CombinedNavStateG
 
 const CombinedNavStateGraphValuesParams& CombinedNavStateGraphValues::params() const { return params_; }
 
+std::vector<lc::Time> CombinedNavStateGraphValues::Timestamps() const {
+  std::vector<lc::Time> timestamps;
+  for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
+    timestamps.emplace_back(timestamp_key_index_pair.first);
+  }
+  return timestamps;
+}
+
 boost::optional<lc::CombinedNavState> CombinedNavStateGraphValues::LatestCombinedNavState() const {
   if (Empty()) {
     LogError("LatestCombinedNavState: No combined nav states available.");
@@ -198,6 +206,14 @@ int CombinedNavStateGraphValues::NumStates() const { return timestamp_key_index_
 boost::optional<lc::Time> CombinedNavStateGraphValues::Timestamp(const int key_index) const {
   for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
     if (timestamp_key_index_pair.second == key_index) return timestamp_key_index_pair.first;
+  }
+  return boost::none;
+}
+
+boost::optional<lc::Time> CombinedNavStateGraphValues::Timestamp(
+  graph_optimizer::KeyCreatorFunction key_creator_function, const gtsam::Key key) const {
+  for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
+    if (key_creator_function(timestamp_key_index_pair.second) == key) return timestamp_key_index_pair.first;
   }
   return boost::none;
 }

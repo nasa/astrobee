@@ -25,6 +25,7 @@ struct GraphLocalizerNodeletParams {
   int max_vl_buffer_size;
   int max_ar_buffer_size;
   int max_sm_buffer_size;
+  int max_depth_odometry_buffer_size;
   int max_dl_buffer_size;
   // Used to avoid saving ml/ar poses with too few landmark detections
   int loc_adder_min_num_matches;
