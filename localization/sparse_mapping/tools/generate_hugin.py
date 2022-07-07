@@ -118,7 +118,7 @@ def main():
     p = Panorama()  # make a new Panorama object
 
     if args.output_hugin is None:
-        output_hugin = args.map_name[:-8] + ".pto"
+        output_hugin = args.map_name.replace("_surf.map", ".pto")
     else:
         output_hugin = args.input_hugin
     # print(output_hugin)
