@@ -7,4 +7,12 @@
       resolution and rate.
     </description>
   </class>
+
+  <class name="image_sampler/NodeletThrottleImage"
+    type="image_sampler::NodeletThrottleImage"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to throttle images
+    </description>
+  </class>
 </library>

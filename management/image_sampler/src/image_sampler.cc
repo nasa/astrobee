@@ -18,6 +18,7 @@
 
 
 #include <image_sampler/image_sampler.h>
+#include <nodelet_topic_tools/nodelet_throttle.h>
 
 #include <ff_common/init.h>
 #include <cv_bridge/cv_bridge.h>
@@ -263,7 +264,10 @@ void ImageSampler::ImageCallback(const sensor_msgs::ImageConstPtr & msg, int cam
   }
 }
 
+typedef nodelet_topic_tools::NodeletThrottle<sensor_msgs::Image> NodeletThrottleImage;
+
 }  // namespace image_sampler
 
+PLUGINLIB_EXPORT_CLASS(image_sampler::NodeletThrottleImage, nodelet::Nodelet);
 PLUGINLIB_EXPORT_CLASS(image_sampler::ImageSampler, nodelet::Nodelet)
 

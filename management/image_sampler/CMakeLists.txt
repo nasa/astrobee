@@ -26,6 +26,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   ff_msgs
   nodelet
+  nodelet_topic_tools
   config_reader
   ff_util
   image_transport
@@ -36,7 +37,7 @@ find_package(OpenCV 3.3.1 REQUIRED)
 
 catkin_package(
   LIBRARIES image_sampler
-  DEPENDS roscpp ff_msgs nodelet config_reader ff_util image_transport
+  DEPENDS roscpp ff_msgs nodelet config_reader ff_util image_transport nodelet_topic_tools
 )
 
 ###########
