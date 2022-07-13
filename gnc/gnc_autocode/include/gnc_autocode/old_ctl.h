@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GNC_AUTOCODE_CTL_H_
-#define GNC_AUTOCODE_CTL_H_
+#ifndef GNC_AUTOCODE_OLD_CTL_H_
+#define GNC_AUTOCODE_OLD_CTL_H_
 
 extern "C" {
 #include <ctl_controller0.h>
@@ -51,4 +51,4 @@ class GncCtlAutocode {
 };
 }  // end namespace gnc_autocode
 
-#endif  // GNC_AUTOCODE_CTL_H_
+#endif  // GNC_AUTOCODE_OLD_CTL_H_

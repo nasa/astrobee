@@ -19,7 +19,6 @@
 #include <config_reader/config_reader.h>
 #include <assert.h>
 #include <ctl_tunable_funcs.h>
-//#include <Eigen/Core>
 #include <Eigen/Dense>
 
 
@@ -85,33 +84,29 @@ void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
 }
 
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
-//Simulink q_cmd is of format x,y,z,w
-void GncCtlAutocode::QuaternianError(float q_cmd[4], float q_actual[4])
-{
- Eigen::Quaternion<float> cmd;
- cmd.w() = q_cmd[3];
- cmd.x() = q_cmd[0];
- cmd.y() = q_cmd[1];
- cmd.z() = q_cmd[2];
+// Simulink q_cmd is of format x,y,z,w
+void GncCtlAutocode::QuaternianError(float q_cmd[4], float q_actual[4]) {
+  Eigen::Quaternion<float> cmd;
+  cmd.w() = q_cmd[3];
+  cmd.x() = q_cmd[0];
+  cmd.y() = q_cmd[1];
+  cmd.z() = q_cmd[2];
 
- Eigen::Quaternion<float> actual;
- actual.w() = q_actual[3];
- actual.x() = q_actual[0];
- actual.y() = q_actual[1];
- actual.z() = q_actual[2];
+  Eigen::Quaternion<float> actual;
+  actual.w() = q_actual[3];
+  actual.x() = q_actual[0];
+  actual.y() = q_actual[1];
+  actual.z() = q_actual[2];
 
- Eigen::Quaternion<float> out = cmd.inverse() * actual; 
+  Eigen::Quaternion<float> out = cmd.inverse() * actual;
 
-  //enfore positive scalar
- if (out.w() < 0)
- {
-    out.coeffs() = -out.coeffs(); //coeffs is a vector (x,y,z,w)
- }
+  // enfore positive scalar
+  if (out.w() < 0) {
+    out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+  }
   out.normalize();
 
-  quat_err = acos(out.w()) * 2; 
-
-
+  quat_err = acos(out.w()) * 2;
 }
 
 // updates the position and attitude command

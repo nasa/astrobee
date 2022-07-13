@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <gnc_autocode/ctl.h>
+#include <gnc_autocode/old_ctl.h>
 
 #include <config_reader/config_reader.h>
 #include <assert.h>
@@ -48,4 +48,4 @@ void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
   ctl_ReadParams(config, controller_);
 }
 
-}   //end namespace gnc_autocode
+}  // end namespace gnc_autocode
