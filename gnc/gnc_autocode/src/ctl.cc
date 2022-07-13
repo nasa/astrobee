@@ -70,9 +70,11 @@ void GncCtlAutocode::Step(void) {
 
 
 
+
+  VariablesTransfer();
+
 /*****clc_closed_loop_controller*****/
   UpdatePIDVals();
-
 
 
 
@@ -86,29 +88,47 @@ void GncCtlAutocode::Step(void) {
 
 
 /*****clc_closed_loop_controller functions*****/
-
-void GncCtlAutocode::UpdatePIDVals()
+//shouldn't be needed but keeps naming consistant with simulink
+void GncCtlAutocode::VariablesTransfer()
 {
   for (int i = 0; i < 3; i++)
   {
+    CMD_P_B_ISS_ISS[i] = position_command[i];
+    CMD_V_B_ISS_ISS[i] = velocity_command[i];
+    CMD_A_B_ISS_ISS[i] = accel_command[i];
+    CMD_Quat_ISS2B[i] = att_command[i];
+    CMD_Omega_B_ISS_B[i] = omega_command[i];
+    CMD_Alpha_B_ISS_B[i] = alpha_command[i];
+  }
+CMD_Quat_ISS2B[3] = att_command[3]; //since quat has size 4 
+}
+
+
+
+
+void GncCtlAutocode::FindPosErr()
+{
+  for (int i = 0; i < 3; i++)
+  {
+    pos_err_outport[i] = CMD_P_B_ISS_ISS[i] - ctl_input_.est_P_B_ISS_ISS[i];
+  }
+}
+
+void GncCtlAutocode::UpdatePIDVals() {
+  for (int i = 0; i < 3; i++) {
     Kp[i] = SafeDivide(ctl_input_.pos_kp[i], ctl_input_.vel_kd[i]);
     Ki[i] = SafeDivide(ctl_input_.pos_ki[i], ctl_input_.vel_kd[i]);
     Kd[i] = ctl_input_.vel_kd[i] * ctl_input_.mass;
-  } 
+  }
 }
 
-
-float GncCtlAutocode::SafeDivide(float num, float denom)
-{
-  if (denom == 0)
-  {
+float GncCtlAutocode::SafeDivide(float num, float denom) {
+  if (denom == 0) {
     return 0;
-  }
-  else{
+  } else {
     return num / denom;
   }
 }
-
 
 /*****cex_control_executive functions *****/
 void GncCtlAutocode::BypassShaper() {
@@ -147,7 +167,7 @@ bool GncCtlAutocode::CtlStatusSwitch() {
   // find sum of squares
   float pos_sum = 0;
   for (int i = 0; i < 3; i++) {
-    float tmp = pos_err[i] * pos_err[i];
+    float tmp = pos_err_parameter[i] * pos_err_parameter[i];
     pos_sum = pos_sum + tmp;
   }
 
@@ -171,7 +191,7 @@ void GncCtlAutocode::UpdatePrevious() {
 
 void GncCtlAutocode::FindPosError() {
   for (int i = 0; i < 3; i++) {
-    pos_err[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
+    pos_err_parameter[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
   }
 }
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error

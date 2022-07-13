@@ -73,8 +73,34 @@ class GncCtlAutocode {
   int prev_mode_cmd[4];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
   float prev_position[3];
   float prev_att[4];
-  float pos_err[3];
+  float pos_err_parameter[3]; //in cex control executive
   float quat_err;
+  // Simulink outports
+  //cex_control_executive
+  float att_command[4];
+  float position_command[3];
+  float ctl_status;
+  float velocity_command[3];
+  float omega_command[3];
+  float accel_command[3];
+  float alpha_command[3];
+
+  //clc_closed_loop controller
+  float Kp[3];
+  float Ki[3];
+  float Kd[3];
+  float linear_int_err[3];
+  float body_accel_cmd[3];
+  float body_force_cmd[3];
+  float pos_err_outport[3]; //in closed loop controller
+  float CMD_P_B_ISS_ISS[3];
+  float CMD_V_B_ISS_ISS[3];
+  float CMD_A_B_ISS_ISS[3];
+  float CMD_Quat_ISS2B[4];
+  float CMD_Omega_B_ISS_B[3];
+  float CMD_Alpha_B_ISS_B[3];
+
+
 
   bool BelowThreshold(float velocity[], float threshhold);
   void UpdateModeCmd(void);
@@ -88,22 +114,13 @@ class GncCtlAutocode {
   void UpdateCtlStatus();
   bool CtlStatusSwitch();
   void BypassShaper();
-
+//clc_closed_loop controller
+  void VariablesTransfer();
   float SafeDivide(float num, float denom);
   void UpdatePIDVals();
+  void FindPosErr();
 
-  // Simulink outports
-  float att_command[3];
-  float position_command[3];
-  float ctl_status;
-  float velocity_command[3];
-  float omega_command[3];
-  float accel_command[3];
-  float alpha_command[3];
-
-  float Kp[3];
-  float Ki[3];
-  float Kd[3];
+  
 };
 }  // end namespace gnc_autocode
 
