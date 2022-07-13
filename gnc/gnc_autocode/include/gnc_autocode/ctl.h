@@ -26,23 +26,21 @@ extern "C" {
 namespace config_reader {
   class ConfigReader;
 }
+
 // constants from here:
 // https://github.com/nasa/astrobee/blob/master/gnc/matlab/code_generation/ctl_controller0_ert_rtw/ctl_controller0_data.cpp
 namespace constants {
-  const unsigned int ase_status_converged = 0U;
-  const unsigned int ctl_idle_mode = 0U;
-  const unsigned int ctl_stopping_mode = 1U;
-  const unsigned int ctl_stopped_mode = 3U;
-  const long double butterworth_gain_1 = 0.0031317642291927056;
-  const long double butterworth_gain_2 = -0.993736471541614597;
-  const auto tun_ctl_stopping_omega_thresh = 0.0004F;
-  const auto tun_ctl_stopping_vel_thresh = 0.0004F;
-  const auto tun_ctl_stopped_pos_thresh = 0.1F;
-  const auto tun_ctl_stopped_quat_thresh = 0.174533F;
-}
-
-
-
+const unsigned int ase_status_converged = 0U;
+const unsigned int ctl_idle_mode = 0U;
+const unsigned int ctl_stopping_mode = 1U;
+const unsigned int ctl_stopped_mode = 3U;
+const long double butterworth_gain_1 = 0.0031317642291927056;
+const long double butterworth_gain_2 = -0.993736471541614597;
+const auto tun_ctl_stopping_omega_thresh = 0.0004F;
+const auto tun_ctl_stopping_vel_thresh = 0.0004F;
+const auto tun_ctl_stopped_pos_thresh = 0.1F;
+const auto tun_ctl_stopped_quat_thresh = 0.174533F;
+}  // namespace constants
 
 namespace gnc_autocode {
 
@@ -89,6 +87,7 @@ class GncCtlAutocode {
   void FindQuatError(float q_cmd[4], float q_actual[4]);
   void UpdateCtlStatus();
   bool CtlStatusSwitch();
+  void BypassShaper();
 
   // Simulink outports
   float att_command[3];

@@ -63,79 +63,75 @@ void GncCtlAutocode::Step(void) {
   UpdatePosAndQuat();
   FindPosError();
   FindQuatError(ctl_input_.est_quat_ISS2B, prev_att);
-  UpdatePrevious(); //this might need to go later
+  UpdatePrevious();  // this might need to go later
   UpdateCtlStatus();
-
-  
-  
-
-
+  BypassShaper();
 }
 
-void GncCtlAutocode::Initialize(void) {
-}
-
-
-
-
-void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
-}
-
-void GncCtlAutocode::UpdateCtlStatus()
+void GncCtlAutocode::BypassShaper()
 {
-  if (CtlStatusSwitch())
+  if (stopped_mode)
   {
-    ctl_status = constants::ctl_stopping_mode;
+    for (int i = 0; i < 3; i++)
+    {
+      velocity_command[i] = 0;
+      omega_command[i] = 0;
+      accel_command[i] = 0;
+      alpha_command[i] = 0;
+    }
   }
   else
   {
-    if (stopped_mode)
+    for (int i = 0; i < 3; i++)
     {
-      ctl_status = constants::ctl_stopped_mode;
+      velocity_command[i] = cmd_.traj_vel[i];
+      omega_command[i] = cmd_.traj_omega[i];
+      accel_command[i] = cmd_.traj_accel[i];
+      alpha_command[i] = cmd_.traj_alpha[i];
     }
-    else
-    {
+  }
+}
+
+void GncCtlAutocode::UpdateCtlStatus() {
+  if (CtlStatusSwitch()) {
+    ctl_status = constants::ctl_stopping_mode;
+  } else {
+    if (stopped_mode) {
+      ctl_status = constants::ctl_stopped_mode;
+    } else {
       ctl_status = mode_cmd;
     }
   }
 }
 
-//determines if still in stopping; called by UpdateCtlStatus
-bool GncCtlAutocode::CtlStatusSwitch()
-{
+// determines if still in stopping; called by UpdateCtlStatus
+bool GncCtlAutocode::CtlStatusSwitch() {
   // find sum of squares
   float pos_sum = 0;
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     float tmp = pos_err[i] * pos_err[i];
     pos_sum = pos_sum + tmp;
   }
 
-  if (((pos_sum > constants::tun_ctl_stopped_pos_thresh) ||
-      (abs(quat_err) > constants::tun_ctl_stopped_quat_thresh)) &&
-      (mode_cmd == constants::ctl_stopped_mode))
-    {
-      return true;
-    } 
+  if (((pos_sum > constants::tun_ctl_stopped_pos_thresh) || (abs(quat_err) > constants::tun_ctl_stopped_quat_thresh)) &&
+      (mode_cmd == constants::ctl_stopped_mode)) {
+    return true;
+  }
     return false;
 }
 
 // update the previous as the last part of the step if it is not in stopped mode
-void GncCtlAutocode::UpdatePrevious()
-{
- if (!stopped_mode)
-  {
-    for (int i = 0; i < 3; i++)
-    {
+void GncCtlAutocode::UpdatePrevious() {
+  if (!stopped_mode) {
+    for (int i = 0; i < 3; i++) {
       prev_position[i] =  ctl_input_.est_P_B_ISS_ISS[i];
       prev_att[i] = ctl_input_.est_quat_ISS2B[i];
     }
-    prev_att[3] = ctl_input_.est_quat_ISS2B[3]; //this has 1 more element thatn pos.
-  } 
+    prev_att[3] = ctl_input_.est_quat_ISS2B[3];  // this has 1 more element thatn pos.
+  }
 }
 
-void GncCtlAutocode::FindPosError()
-{
+void GncCtlAutocode::FindPosError() {
   for (int i = 0; i < 3; i++) {
     pos_err[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
   }
@@ -252,4 +248,13 @@ void GncCtlAutocode::UpdateModeCmd() {
   }
 }
 
+
+void GncCtlAutocode::Initialize(void) {
+}
+
+
+
+
+void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
+}
 }  // end namespace gnc_autocode
