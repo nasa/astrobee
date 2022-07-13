@@ -75,9 +75,12 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   void PublishLoop();
+  void LoadCameraInfo();
   void EnableBayer(bool enable);
   void AutoExposure();
   size_t getNumBayerSubscribers();
+
+  sensor_msgs::CameraInfo info_msg_;
 
   ros::NodeHandle *nh_;
   sensor_msgs::ImagePtr img_msg_buffer_[kImageMsgBuffer];
@@ -87,6 +90,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   std::thread thread_;
   std::atomic<bool> thread_running_;
   ros::Publisher pub_;
+  ros::Publisher info_pub_;
   ros::Publisher bayer_pub_;
   ros::Publisher pub_exposure_;
   std::shared_ptr<V4LStruct> v4l_;
