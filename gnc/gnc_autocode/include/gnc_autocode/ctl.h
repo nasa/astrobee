@@ -32,10 +32,13 @@ namespace constants {
   const unsigned int ase_status_converged = 0U;
   const unsigned int ctl_idle_mode = 0U;
   const unsigned int ctl_stopping_mode = 1U;
+  const unsigned int ctl_stopped_mode = 3U;
   const long double butterworth_gain_1 = 0.0031317642291927056;
   const long double butterworth_gain_2 = -0.993736471541614597;
   const auto tun_ctl_stopping_omega_thresh = 0.0004F;
   const auto tun_ctl_stopping_vel_thresh = 0.0004F;
+  const auto tun_ctl_stopped_pos_thresh = 0.1F;
+  const auto tun_ctl_stopped_quat_thresh = 0.174533F;
 }
 
 
@@ -84,11 +87,13 @@ class GncCtlAutocode {
   void FindPosError();
   void UpdatePrevious();
   void FindQuatError(float q_cmd[4], float q_actual[4]);
+  void UpdateCtlStatus();
+  bool CtlStatusSwitch();
 
   // Simulink outports
   float att_command[3];
   float position_command[3];
-  float ctl_status[3];
+  float ctl_status;
   float velocity_command[3];
   float omega_command[3];
   float accel_command[3];

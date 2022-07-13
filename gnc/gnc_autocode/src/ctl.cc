@@ -64,6 +64,7 @@ void GncCtlAutocode::Step(void) {
   FindPosError();
   FindQuatError(ctl_input_.est_quat_ISS2B, prev_att);
   UpdatePrevious(); //this might need to go later
+  UpdateCtlStatus();
 
   
   
@@ -78,6 +79,45 @@ void GncCtlAutocode::Initialize(void) {
 
 
 void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
+}
+
+void GncCtlAutocode::UpdateCtlStatus()
+{
+  if (CtlStatusSwitch())
+  {
+    ctl_status = constants::ctl_stopping_mode;
+  }
+  else
+  {
+    if (stopped_mode)
+    {
+      ctl_status = constants::ctl_stopped_mode;
+    }
+    else
+    {
+      ctl_status = mode_cmd;
+    }
+  }
+}
+
+//determines if still in stopping; called by UpdateCtlStatus
+bool GncCtlAutocode::CtlStatusSwitch()
+{
+  // find sum of squares
+  float pos_sum = 0;
+  for (int i = 0; i < 3; i++)
+  {
+    float tmp = pos_err[i] * pos_err[i];
+    pos_sum = pos_sum + tmp;
+  }
+
+  if (((pos_sum > constants::tun_ctl_stopped_pos_thresh) ||
+      (abs(quat_err) > constants::tun_ctl_stopped_quat_thresh)) &&
+      (mode_cmd == constants::ctl_stopped_mode))
+    {
+      return true;
+    } 
+    return false;
 }
 
 // update the previous as the last part of the step if it is not in stopped mode
