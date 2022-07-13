@@ -56,7 +56,7 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
     return boost::none;
   }
   if (end_time < measurements_.cbegin()->first) {
-    LogError("IntegrateImuMeasurements: End time occurs before first measurement.");
+    LogDebug("IntegrateImuMeasurements: End time occurs before first measurement.");
     return boost::none;
   }
   if (end_time > measurements_.crbegin()->first) {
@@ -125,7 +125,7 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
   auto pim = Pim(bias, params);
   const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
   if (!last_integrated_measurement_time) {
-    LogError("IntegratedPim: Failed to integrate imu measurments.");
+    LogDebug("IntegratedPim: Failed to integrate imu measurments.");
     return boost::none;
   }
   return pim;
