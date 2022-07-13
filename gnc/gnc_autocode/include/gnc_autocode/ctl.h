@@ -89,6 +89,9 @@ class GncCtlAutocode {
   bool CtlStatusSwitch();
   void BypassShaper();
 
+  float SafeDivide(float num, float denom);
+  void UpdatePIDVals();
+
   // Simulink outports
   float att_command[3];
   float position_command[3];
@@ -97,6 +100,10 @@ class GncCtlAutocode {
   float omega_command[3];
   float accel_command[3];
   float alpha_command[3];
+
+  float Kp[3];
+  float Ki[3];
+  float Kd[3];
 };
 }  // end namespace gnc_autocode
 

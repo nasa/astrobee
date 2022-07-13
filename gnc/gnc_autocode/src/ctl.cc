@@ -58,6 +58,7 @@ void GncCtlAutocode::Step(void) {
   // auto var = constants::ase_status_converged;
   // auto var1 = ctl_input_.est_confidence;
 
+/*****cex_control_executive*****/
   UpdateModeCmd();
   UpdateStoppedMode();
   UpdatePosAndQuat();
@@ -66,24 +67,60 @@ void GncCtlAutocode::Step(void) {
   UpdatePrevious();  // this might need to go later
   UpdateCtlStatus();
   BypassShaper();
+
+
+
+/*****clc_closed_loop_controller*****/
+  UpdatePIDVals();
+
+
+
+
 }
 
-void GncCtlAutocode::BypassShaper()
+
+
+
+
+
+
+
+/*****clc_closed_loop_controller functions*****/
+
+void GncCtlAutocode::UpdatePIDVals()
 {
-  if (stopped_mode)
+  for (int i = 0; i < 3; i++)
   {
-    for (int i = 0; i < 3; i++)
-    {
+    Kp[i] = SafeDivide(ctl_input_.pos_kp[i], ctl_input_.vel_kd[i]);
+    Ki[i] = SafeDivide(ctl_input_.pos_ki[i], ctl_input_.vel_kd[i]);
+    Kd[i] = ctl_input_.vel_kd[i] * ctl_input_.mass;
+  } 
+}
+
+
+float GncCtlAutocode::SafeDivide(float num, float denom)
+{
+  if (denom == 0)
+  {
+    return 0;
+  }
+  else{
+    return num / denom;
+  }
+}
+
+
+/*****cex_control_executive functions *****/
+void GncCtlAutocode::BypassShaper() {
+  if (stopped_mode) {
+    for (int i = 0; i < 3; i++) {
       velocity_command[i] = 0;
       omega_command[i] = 0;
       accel_command[i] = 0;
       alpha_command[i] = 0;
     }
-  }
-  else
-  {
-    for (int i = 0; i < 3; i++)
-    {
+  } else {
+    for (int i = 0; i < 3; i++) {
       velocity_command[i] = cmd_.traj_vel[i];
       omega_command[i] = cmd_.traj_omega[i];
       accel_command[i] = cmd_.traj_accel[i];
@@ -91,6 +128,7 @@ void GncCtlAutocode::BypassShaper()
     }
   }
 }
+
 
 void GncCtlAutocode::UpdateCtlStatus() {
   if (CtlStatusSwitch()) {
