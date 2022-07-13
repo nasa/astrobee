@@ -42,6 +42,7 @@ GncCtlAutocode::GncCtlAutocode(void) {
   prev_att[0] = 0;
   prev_att[1] = 0;
   prev_att[2] = 0;
+  prev_att[3] = 0;
 }
 
 GncCtlAutocode::~GncCtlAutocode() {
@@ -60,18 +61,14 @@ void GncCtlAutocode::Step(void) {
   UpdateModeCmd();
   UpdateStoppedMode();
   UpdatePosAndQuat();
+  FindPosError();
+  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att);
+  UpdatePrevious(); //this might need to go later
 
-  for (int i = 0; i < 3; i++) {
-    pos_err[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
-  }
+  
+  
 
-  // update the previous as the last part of the step if it is not in stopped mode
-  for (int i = 0; i < 3; i++) {
-    if (!stopped_mode) {
-      prev_position[i] =  ctl_input_.est_P_B_ISS_ISS[i];
-      prev_att[i] = ctl_input_.est_quat_ISS2B[i];
-    }
-  }
+
 }
 
 void GncCtlAutocode::Initialize(void) {
@@ -83,9 +80,29 @@ void GncCtlAutocode::Initialize(void) {
 void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
 }
 
+// update the previous as the last part of the step if it is not in stopped mode
+void GncCtlAutocode::UpdatePrevious()
+{
+ if (!stopped_mode)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      prev_position[i] =  ctl_input_.est_P_B_ISS_ISS[i];
+      prev_att[i] = ctl_input_.est_quat_ISS2B[i];
+    }
+    prev_att[3] = ctl_input_.est_quat_ISS2B[3]; //this has 1 more element thatn pos.
+  } 
+}
+
+void GncCtlAutocode::FindPosError()
+{
+  for (int i = 0; i < 3; i++) {
+    pos_err[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
+  }
+}
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
-void GncCtlAutocode::QuaternianError(float q_cmd[4], float q_actual[4]) {
+void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4]) {
   Eigen::Quaternion<float> cmd;
   cmd.w() = q_cmd[3];
   cmd.x() = q_cmd[0];
@@ -116,11 +133,13 @@ void GncCtlAutocode::UpdatePosAndQuat() {
       position_command[i] = prev_position[i];
       att_command[i] = prev_att[i];
     }
+    att_command[3] = prev_att[3];
   } else {
     for (int i = 0; i < 3; i++) {
       position_command[i] = cmd_.traj_pos[i];
       att_command[i] = cmd_.traj_quat[i];
     }
+    att_command[3] = cmd_.traj_quat[3];
   }
 }
 

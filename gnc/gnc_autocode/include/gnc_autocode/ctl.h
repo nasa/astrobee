@@ -71,7 +71,7 @@ class GncCtlAutocode {
   float prev_filter[3];
   int prev_mode_cmd[4];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
   float prev_position[3];
-  float prev_att[3];
+  float prev_att[4];
   float pos_err[3];
   float quat_err;
 
@@ -81,7 +81,9 @@ class GncCtlAutocode {
   bool CmdModeMakeCondition();
   void UpdateStoppedMode();
   void UpdatePosAndQuat();
-  void QuaternianError(float q_cmd[4], float q_actual[4]);
+  void FindPosError();
+  void UpdatePrevious();
+  void FindQuatError(float q_cmd[4], float q_actual[4]);
 
   // Simulink outports
   float att_command[3];
