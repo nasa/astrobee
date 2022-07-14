@@ -71,11 +71,6 @@ void GncCtlAutocode::Step(void) {
   UpdateCtlStatus();
   BypassShaper();
 
-
-
-
-  
-
 /*****clc_closed_loop_controller*****/
   VariablesTransfer();
   UpdatePIDVals();
@@ -92,51 +87,177 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller functions*****/
 
-void GncCtlAutocode::FindLinearIntErr()
-{
-  float input[3];
-  for (int i = 0; i < 3; i++)
-  {
-    input[i] = Ki[i] * pos_err_outport[i];
-  }
-  float output[3];
-  discreteTimeIntegrator(input, output, linear_integrator, constants::tun_ctl_pos_sat_upper, constants::tun_ctl_pos_sat_lower);
-  for (int i = 0; i < 3; i++)
-  {
-    linear_int_err[i] = output[i];
-  }
-  }
-  
 
-
-void GncCtlAutocode::discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit, float lower_limit)
+void GncCtlAutocode::FindBodyForceCmd()
 {
-  if (ctl_status <= 1)
+  float vec[3];
+  if (ctl_status <=1)
   {
+    for (int i = 0; i < 3; i ++)
+    {
+      vec[i] = 0 - ctl_input_.est_V_B_ISS_ISS[i];
+    }
+  }
+  else
+  {
+    //find desired velocity from position error
+    float des_vel[3];
     for (int i = 0; i < 3; i++)
     {
-      output[i] = 0;
+      des_vel[i] = (Kp[i] * pos_err_outport[i]) + linear_int_err[i];
+      vec[i] = CMD_V_B_ISS_ISS[i] + des_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
     }
-    return;
+    
   }
-  for (int i = 0; i < 3; i++)
-  {
-    output[i] = accumulator[i] + input[i];
 
-    if (output[i] > upper_limit)
-    {
-      output[i] = upper_limit;
-    } 
-    else if (output[i] < lower_limit)
-    {
-      output[i] = lower_limit;
-    }
-  }
 
 
 }
 
+void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3][3])
+{
+  QuaternionToDCM(q, output);
 
+
+}
+
+void GncCtlAutocode::QuaternionToDCM(float input_quat[4], float output[3][3])
+{
+  float quat_w = input_quat[3];
+  float U = ((quat_w * quat_w) * 2) - 1; //U in Simulink diagram
+  float scalar_matrix[3][3];
+
+  //set scalar_matrix to all 0's
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
+      scalar_matrix[i][j] = 0;
+    }
+  }
+  scalar_matrix[0][0] = U;
+  scalar_matrix[1][1] = U;
+  scalar_matrix[2][2] = U;
+
+  float subtract_matrix[3][3];
+  float quat_vals[3] = {input_quat[0], input_quat[1], input_quat[2]};
+  SkewSymetricMatrix(quat_vals, subtract_matrix);
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j <3; j++)
+    {
+      subtract_matrix[i][j] = subtract_matrix[i][j] * 2 * quat_w;
+    }
+  }
+  /******Probable source of error*****/
+  float vals_matrix[3][3];
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0 ; j < 3; j++)
+    {
+      vals_matrix[i][j] = input_quat[i];
+    }
+  }
+
+  //find transpose of vals_matrix
+  float transpose[3][3];
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0 ; j < 3; j++)
+    {
+      transpose[j][i] = vals_matrix[i][j];
+    }
+  }
+
+  float vals_output[3][3];
+  MatrixMultiplication(vals_matrix, transpose, vals_output);
+  //element wise gain of 2 and add/sub
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
+      vals_output[i][j] *= 2;
+      output[i][j] = scalar_matrix[i][j] - subtract_matrix[i][j] + vals_output[i][j];
+    }
+  }
+
+
+
+
+  
+  
+
+}
+
+void GncCtlAutocode::MatrixMultiplication(float inputA[3][3], float inputB[3][3], float output[3][3])
+{
+  //make output all zeros
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
+      output[i][j] = 0;
+    }
+  }
+
+  for (int row = 0; row < 3; row++)
+  {
+    for (int col = 0; col < 3; col++)
+    {
+      for (int k = 0; k < 3; k++)
+      {
+        output[row][col] +=inputA[row][k] * inputB[k][col];
+              }
+    }
+  }
+}
+void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]) 
+{
+  //from simulink diagram
+  output[0][0] = 0;
+  output[1][0] = input[2];
+  output[2][0] = -input[1];
+  output[0][1] = -input[2];
+  output[1][1] = 0;
+  output[2][1] = input[0];
+  output[0][2] =input[1];
+  output[1][2] = -input[0];
+  output[2][2] = 0;
+}
+
+
+
+void GncCtlAutocode::FindLinearIntErr() {
+  float input[3];
+  for (int i = 0; i < 3; i++) {
+    input[i] = Ki[i] * pos_err_outport[i];
+  }
+  float output[3];
+  discreteTimeIntegrator(input, output, linear_integrator, constants::tun_ctl_pos_sat_upper,
+                         constants::tun_ctl_pos_sat_lower);
+  for (int i = 0; i < 3; i++) {
+    linear_int_err[i] = output[i];
+  }
+}
+
+void GncCtlAutocode::discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit,
+                                            float lower_limit) {
+  if (ctl_status <= 1) {
+    for (int i = 0; i < 3; i++) {
+      output[i] = 0;
+    }
+    return;
+  }
+  for (int i = 0; i < 3; i++) {
+    output[i] = accumulator[i] + input[i];
+
+    if (output[i] > upper_limit) {
+      output[i] = upper_limit;
+    } else if (output[i] < lower_limit) {
+      output[i] = lower_limit;
+    }
+  }
+}
 
 // shouldn't be needed but keeps naming consistant with simulink
 void GncCtlAutocode::VariablesTransfer() {

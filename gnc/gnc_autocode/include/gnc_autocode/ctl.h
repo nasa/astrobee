@@ -103,7 +103,7 @@ class GncCtlAutocode {
   float CMD_Alpha_B_ISS_B[3];
   float linear_integrator[3];
   float linear_int_error[3];
-
+  
 
 
   bool BelowThreshold(float velocity[], float threshhold);
@@ -123,8 +123,15 @@ class GncCtlAutocode {
   float SafeDivide(float num, float denom);
   void UpdatePIDVals();
   void FindPosErr();
-  void discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit, float lower_limit);
+  void discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit,
+                              float lower_limit);
   void FindLinearIntErr();
+  void FindBodyForceCmd();
+  void SkewSymetricMatrix(const float input[3], float output[3][3]);
+  void QuaternionToDCM(float input_quat[4], float output[3][3]);
+  void RotateVectorAtoB(float v[3], float q[4], float output[3][3]);
+  void MatrixMultiplication(float inputA[3][3], float inputB[3][3], float output[3][3]);
+
 };
 }  // end namespace gnc_autocode
 
