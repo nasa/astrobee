@@ -113,29 +113,40 @@ def main():
 
     args = parse_args()
     source_map_images = list_images_in_map(args.map_name)
-    print(source_map_images)
 
     p = Panorama()  # make a new Panorama object
 
     if args.output_hugin is None:
         output_hugin = args.map_name.replace("_surf.map", ".pto")
     else:
-        output_hugin = args.input_hugin
-    # print(output_hugin)
+        output_hugin = args.output_hugin
 
     if args.input_hugin is not None:
-        ifs = ifstream(args.input_hugin)  # create a C++ std::ifstream
-        p.readData(ifs)  # read the pto file into the Panorama object
-        del ifs  # don't need anymore
+        # create a C++ std::ifstream
+        ifs = ifstream(args.input_hugin)
+        # read the pto file into the Panorama object
+        p.readData(ifs)
+        # don't need anymore
+        del ifs
+
+        # Delete existing image files from the to-add list
+        for x in range(0, p.getNrOfImages()):
+            img = p.getImage(x)
+            name = img.getFilename()
+            if name in source_map_images:
+                source_map_images.remove(name)
 
     for img in source_map_images:
         srcImage = SrcPanoImage()
         srcImage.setFilename(img)
         p.addImage(srcImage)
 
-    ofs = ofstream(output_hugin)  # make a c++ std::ofstream to write to
-    p.writeData(ofs)  # write the modified panorama to that stream
-    del ofs  # done with it
+    # make a c++ std::ofstream to write to
+    ofs = ofstream(output_hugin)
+    # write the modified panorama to that stream
+    p.writeData(ofs)
+    # done with it
+    del ofs
 
 
 if __name__ == "__main__":
