@@ -43,6 +43,9 @@ GncCtlAutocode::GncCtlAutocode(void) {
   prev_att[1] = 0;
   prev_att[2] = 0;
   prev_att[3] = 0;
+  linear_integrator[0] = 0;
+  linear_integrator[1] = 0;
+  linear_integrator[2] = 0;
 }
 
 GncCtlAutocode::~GncCtlAutocode() {
@@ -71,13 +74,13 @@ void GncCtlAutocode::Step(void) {
 
 
 
-  VariablesTransfer();
+  
 
 /*****clc_closed_loop_controller*****/
+  VariablesTransfer();
   UpdatePIDVals();
-
-
-
+  FindPosErr();
+  FindLinearIntErr();
 }
 
 
@@ -88,11 +91,56 @@ void GncCtlAutocode::Step(void) {
 
 
 /*****clc_closed_loop_controller functions*****/
-//shouldn't be needed but keeps naming consistant with simulink
-void GncCtlAutocode::VariablesTransfer()
+
+void GncCtlAutocode::FindLinearIntErr()
 {
+  float input[3];
   for (int i = 0; i < 3; i++)
   {
+    input[i] = Ki[i] * pos_err_outport[i];
+  }
+  float output[3];
+  discreteTimeIntegrator(input, output, linear_integrator, constants::tun_ctl_pos_sat_upper, constants::tun_ctl_pos_sat_lower);
+  for (int i = 0; i < 3; i++)
+  {
+    linear_int_err[i] = output[i];
+  }
+  }
+  
+
+
+void GncCtlAutocode::discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit, float lower_limit)
+{
+  if (ctl_status <= 1)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      output[i] = 0;
+    }
+    return;
+  }
+  for (int i = 0; i < 3; i++)
+  {
+    output[i] = accumulator[i] + input[i];
+
+    if (output[i] > upper_limit)
+    {
+      output[i] = upper_limit;
+    } 
+    else if (output[i] < lower_limit)
+    {
+      output[i] = lower_limit;
+    }
+  }
+
+
+}
+
+
+
+// shouldn't be needed but keeps naming consistant with simulink
+void GncCtlAutocode::VariablesTransfer() {
+  for (int i = 0; i < 3; i++) {
     CMD_P_B_ISS_ISS[i] = position_command[i];
     CMD_V_B_ISS_ISS[i] = velocity_command[i];
     CMD_A_B_ISS_ISS[i] = accel_command[i];
@@ -100,16 +148,11 @@ void GncCtlAutocode::VariablesTransfer()
     CMD_Omega_B_ISS_B[i] = omega_command[i];
     CMD_Alpha_B_ISS_B[i] = alpha_command[i];
   }
-CMD_Quat_ISS2B[3] = att_command[3]; //since quat has size 4 
+  CMD_Quat_ISS2B[3] = att_command[3];  // since quat has size 4
 }
 
-
-
-
-void GncCtlAutocode::FindPosErr()
-{
-  for (int i = 0; i < 3; i++)
-  {
+void GncCtlAutocode::FindPosErr() {
+  for (int i = 0; i < 3; i++) {
     pos_err_outport[i] = CMD_P_B_ISS_ISS[i] - ctl_input_.est_P_B_ISS_ISS[i];
   }
 }

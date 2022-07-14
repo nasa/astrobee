@@ -40,6 +40,8 @@ const auto tun_ctl_stopping_omega_thresh = 0.0004F;
 const auto tun_ctl_stopping_vel_thresh = 0.0004F;
 const auto tun_ctl_stopped_pos_thresh = 0.1F;
 const auto tun_ctl_stopped_quat_thresh = 0.174533F;
+const auto tun_ctl_pos_sat_upper = 0.1F;
+const auto tun_ctl_pos_sat_lower = -0.1F;
 }  // namespace constants
 
 namespace gnc_autocode {
@@ -73,10 +75,10 @@ class GncCtlAutocode {
   int prev_mode_cmd[4];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
   float prev_position[3];
   float prev_att[4];
-  float pos_err_parameter[3]; //in cex control executive
+  float pos_err_parameter[3];  // in cex control executive
   float quat_err;
   // Simulink outports
-  //cex_control_executive
+  // cex_control_executive
   float att_command[4];
   float position_command[3];
   float ctl_status;
@@ -85,20 +87,22 @@ class GncCtlAutocode {
   float accel_command[3];
   float alpha_command[3];
 
-  //clc_closed_loop controller
+  // clc_closed_loop controller
   float Kp[3];
   float Ki[3];
   float Kd[3];
   float linear_int_err[3];
   float body_accel_cmd[3];
   float body_force_cmd[3];
-  float pos_err_outport[3]; //in closed loop controller
+  float pos_err_outport[3];  // in closed loop controller
   float CMD_P_B_ISS_ISS[3];
   float CMD_V_B_ISS_ISS[3];
   float CMD_A_B_ISS_ISS[3];
   float CMD_Quat_ISS2B[4];
   float CMD_Omega_B_ISS_B[3];
   float CMD_Alpha_B_ISS_B[3];
+  float linear_integrator[3];
+  float linear_int_error[3];
 
 
 
@@ -114,13 +118,13 @@ class GncCtlAutocode {
   void UpdateCtlStatus();
   bool CtlStatusSwitch();
   void BypassShaper();
-//clc_closed_loop controller
+  // clc_closed_loop controller
   void VariablesTransfer();
   float SafeDivide(float num, float denom);
   void UpdatePIDVals();
   void FindPosErr();
-
-  
+  void discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit, float lower_limit);
+  void FindLinearIntErr();
 };
 }  // end namespace gnc_autocode
 
