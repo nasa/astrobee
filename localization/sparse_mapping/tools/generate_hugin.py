@@ -130,11 +130,14 @@ def main():
         del ifs
 
         # Delete existing image files from the to-add list
-        for x in range(0, p.getNrOfImages()):
+        for x in reversed(range(0, p.getNrOfImages())):
+            print(x)
             img = p.getImage(x)
             name = img.getFilename()
             if name in source_map_images:
                 source_map_images.remove(name)
+            else:
+                p.removeImage(x)
 
     for img in source_map_images:
         srcImage = SrcPanoImage()
