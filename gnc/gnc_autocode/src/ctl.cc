@@ -66,23 +66,24 @@ void GncCtlAutocode::Step(void) {
   UpdateStoppedMode();
   UpdatePosAndQuat();
   FindPosError();
-  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att);
+  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err);
   UpdatePrevious();  // this might need to go later
   UpdateCtlStatus();
   BypassShaper();
 
 /*****clc_closed_loop_controller*****/
   VariablesTransfer();
-  //Linear Control
-  
+  // Linear Control
+
   UpdateLinearPIDVals();
   FindPosErr();
   FindLinearIntErr();  // I'll want to check this
   FindBodyForceCmd();
   FindBodyAccelCmd();
 
-  //Rotational Control
+  // Rotational Control
   UpdateRotationalPIDVals();
+  FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag); //Finds att_err_mag
 }
 
 
@@ -94,17 +95,16 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller functions*****/
 
-void GncCtlAutocode::UpdateRotationalPIDVals()
-{
-  //reshape
+
+void GncCtlAutocode::UpdateRotationalPIDVals() {
+  // reshape
   float inertia_vec[3] = {ctl_input_.inertia_matrix[0], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[8]};
- 
+
   for (int i = 0; i < 3; i++) {
     Kp_rot[i] = SafeDivide(ctl_input_.att_kp[i], ctl_input_.omega_kd[i]);
     Ki_rot[i] = SafeDivide(ctl_input_.att_ki[i], ctl_input_.omega_kd[i]);
     Kd_rot[i] = ctl_input_.omega_kd[i] * inertia_vec[i];
   }
-
 }
 
 void GncCtlAutocode::FindBodyAccelCmd() {
@@ -401,7 +401,7 @@ void GncCtlAutocode::FindPosError() {
 }
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
-void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4]) {
+void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output) {
   Eigen::Quaternion<float> cmd;
   cmd.w() = q_cmd[3];
   cmd.x() = q_cmd[0];
@@ -422,7 +422,7 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4]) {
   }
   out.normalize();
 
-  quat_err = acos(out.w()) * 2;
+  output = acos(out.w()) * 2;
 }
 
 // updates the position and attitude command
