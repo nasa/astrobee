@@ -90,9 +90,12 @@ class GncCtlAutocode {
   float alpha_command[3];
 
   // clc_closed_loop controller
-  float Kp[3];
-  float Ki[3];
-  float Kd[3];
+  float Kp_lin[3];
+  float Ki_lin[3];
+  float Kd_lin[3];
+  float Kp_rot[3];
+  float Ki_rot[3];
+  float Kd_rot[3];
   float linear_int_err[3];
   float body_accel_cmd[3];
   float body_force_cmd[3];
@@ -121,7 +124,7 @@ class GncCtlAutocode {
   // clc_closed_loop controller
   void VariablesTransfer();
   float SafeDivide(float num, float denom);
-  void UpdatePIDVals();
+  void UpdateLinearPIDVals();
   void FindPosErr();
   void discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit,
                               float lower_limit);
@@ -133,6 +136,7 @@ class GncCtlAutocode {
   void MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]);
   void SaturateVector(const float u[3], float limit, float output[3]);
   void FindBodyAccelCmd();
+  void UpdateRotationalPIDVals();
 };
 }  // end namespace gnc_autocode
 

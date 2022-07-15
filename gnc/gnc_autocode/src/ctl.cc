@@ -73,11 +73,16 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller*****/
   VariablesTransfer();
-  UpdatePIDVals();
+  //Linear Control
+  
+  UpdateLinearPIDVals();
   FindPosErr();
-  FindLinearIntErr(); //I'll want to check this
+  FindLinearIntErr();  // I'll want to check this
   FindBodyForceCmd();
   FindBodyAccelCmd();
+
+  //Rotational Control
+  UpdateRotationalPIDVals();
 }
 
 
@@ -89,18 +94,27 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller functions*****/
 
-void GncCtlAutocode::FindBodyAccelCmd()
+void GncCtlAutocode::UpdateRotationalPIDVals()
 {
-  for (int i = 0; i < 3; i++)
-  {
-     body_accel_cmd[i] = body_force_cmd[i] / ctl_input_.mass;
-}
-  }
+  //reshape
+  float inertia_vec[3] = {ctl_input_.inertia_matrix[0], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[8]};
  
+  for (int i = 0; i < 3; i++) {
+    Kp_rot[i] = SafeDivide(ctl_input_.att_kp[i], ctl_input_.omega_kd[i]);
+    Ki_rot[i] = SafeDivide(ctl_input_.att_ki[i], ctl_input_.omega_kd[i]);
+    Kd_rot[i] = ctl_input_.omega_kd[i] * inertia_vec[i];
+  }
+
+}
+
+void GncCtlAutocode::FindBodyAccelCmd() {
+  for (int i = 0; i < 3; i++) {
+    body_accel_cmd[i] = body_force_cmd[i] / ctl_input_.mass;
+  }
+}
 
 void GncCtlAutocode::FindBodyForceCmd() {
-  if (ctl_status != 0)
-  {
+  if (ctl_status != 0) {
     float vec[3];
     if (ctl_status <= 1) {
       for (int i = 0; i < 3; i++) {
@@ -110,7 +124,7 @@ void GncCtlAutocode::FindBodyForceCmd() {
       // find desired velocity from position error
       float des_vel[3];
       for (int i = 0; i < 3; i++) {
-        des_vel[i] = (Kp[i] * pos_err_outport[i]) + linear_int_err[i];
+        des_vel[i] = (Kp_lin[i] * pos_err_outport[i]) + linear_int_err[i];
         vec[i] = CMD_V_B_ISS_ISS[i] + des_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
       }
     }
@@ -119,56 +133,45 @@ void GncCtlAutocode::FindBodyForceCmd() {
     float feed_accel_tmp[3];
     RotateVectorAtoB(vec, ctl_input_.est_quat_ISS2B, velo_err_tmp);
 
-    float a_b_gain[3] = {CMD_A_B_ISS_ISS[0] * constants::tun_accel_gain[0], CMD_A_B_ISS_ISS[1] * constants::tun_accel_gain[1], CMD_A_B_ISS_ISS[2] * constants::tun_accel_gain[2]};
+    float a_b_gain[3] = {CMD_A_B_ISS_ISS[0] * constants::tun_accel_gain[0],
+                         CMD_A_B_ISS_ISS[1] * constants::tun_accel_gain[1],
+                         CMD_A_B_ISS_ISS[2] * constants::tun_accel_gain[2]};
     float accel_err_tmp[3];
     RotateVectorAtoB(a_b_gain, ctl_input_.est_quat_ISS2B, accel_err_tmp);
 
     float input_u[3] = { 0, 0, 0};
     for (int i = 0; i < 3; i++) {
-      velo_err_tmp[i] *= Kd[i];
+      velo_err_tmp[i] *= Kd_lin[i];
       accel_err_tmp[i] *= ctl_input_.mass;
       input_u[i] = velo_err_tmp[i] + accel_err_tmp[i];
     }
 
     float saturated_output_u[3];
     SaturateVector(input_u, constants::tun_ctl_linear_force_limit, saturated_output_u);
-    for(int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
       body_force_cmd[i] = saturated_output_u[i];
     }
-  }
-  else
-  {
-    for(int i = 0; i < 3; i++)
-    {
+  } else {
+    for (int i = 0; i < 3; i++) {
       body_force_cmd[i] = 0;
     }
   }
-  
 }
 
+void GncCtlAutocode::SaturateVector(const float u[3], float limit, float output[3]) {
+  // find vector magnitude
+  float mag = sqrt(pow(u[0], 2) + pow(u[1], 2) + pow(u[2], 2));
 
-void GncCtlAutocode::SaturateVector(const float u[3], float limit, float output[3])
-{
-  //find vector magnitude
-  float mag = sqrt(pow(u[0],2) +  pow(u[1], 2) + pow(u[2], 2));
-
-  if (mag < limit)
-  {
-   for (int i = 0; i < 3; i++)
-   {
-    output[i] = u[i];
-   }
-  }
-  else
-  {
-    for (int i = 0; i < 3; i++)
-    {
+  if (mag < limit) {
+    for (int i = 0; i < 3; i++) {
+      output[i] = u[i];
+    }
+  } else {
+    for (int i = 0; i < 3; i++) {
       output[i] = u[i] / mag * limit;
     }
   }
 }
-
 
 void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3]) {
   float tmp_output[3][3];
@@ -268,7 +271,7 @@ void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]
 void GncCtlAutocode::FindLinearIntErr() {
   float input[3];
   for (int i = 0; i < 3; i++) {
-    input[i] = Ki[i] * pos_err_outport[i];
+    input[i] = Ki_lin[i] * pos_err_outport[i];
   }
   float output[3];
   discreteTimeIntegrator(input, output, linear_integrator, constants::tun_ctl_pos_sat_upper,
@@ -316,11 +319,11 @@ void GncCtlAutocode::FindPosErr() {
   }
 }
 
-void GncCtlAutocode::UpdatePIDVals() {
+void GncCtlAutocode::UpdateLinearPIDVals() {
   for (int i = 0; i < 3; i++) {
-    Kp[i] = SafeDivide(ctl_input_.pos_kp[i], ctl_input_.vel_kd[i]);
-    Ki[i] = SafeDivide(ctl_input_.pos_ki[i], ctl_input_.vel_kd[i]);
-    Kd[i] = ctl_input_.vel_kd[i] * ctl_input_.mass;
+    Kp_lin[i] = SafeDivide(ctl_input_.pos_kp[i], ctl_input_.vel_kd[i]);
+    Ki_lin[i] = SafeDivide(ctl_input_.pos_ki[i], ctl_input_.vel_kd[i]);
+    Kd_lin[i] = ctl_input_.vel_kd[i] * ctl_input_.mass;
   }
 }
 
