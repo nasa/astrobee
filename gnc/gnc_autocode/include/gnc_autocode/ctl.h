@@ -109,13 +109,16 @@ class GncCtlAutocode {
   float CMD_Omega_B_ISS_B[3];
   float CMD_Alpha_B_ISS_B[3];
   float linear_integrator[3];
-  float rotational_integrator[3]; //accumulator
+  float rotational_integrator[3];  // accumulator
   float linear_int_error[3];
   float att_err_mag;
   float att_err[3];
   float dummy[3];
   float rotate_int_err[3];
   float body_alpha_cmd[3];
+  float i_matrix[3][3];
+  float rate_error[3]; //helper in rot control
+  float body_torque_cmd[3];
 
   bool BelowThreshold(float velocity[], float threshhold);
   void UpdateModeCmd(void);
@@ -149,6 +152,8 @@ class GncCtlAutocode {
   void MatrixMultiplication3x1(float three[3][3], float one[3], float output[3]);
   void FindBodyAlphaCmd();
   void AngAccelHelper(float rate_error[3]);
+  void FindBodyTorqueCmd();
+  void CrossProduct(float vecA[3], float vecB[3], float vecOut[3]);
 
 };
 }  // end namespace gnc_autocode
