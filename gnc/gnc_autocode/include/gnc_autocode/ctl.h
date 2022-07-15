@@ -44,6 +44,8 @@ const auto tun_ctl_pos_sat_upper = 0.1F;
 const auto tun_ctl_pos_sat_lower = -0.1F;
 const float tun_accel_gain[3] = {1.0F, 1.0F, 1.0F};
 const float tun_ctl_linear_force_limit = 100.0F;
+const float tun_ctl_att_sat_upper = 0.5F;
+const float tun_ctl_att_sat_lower = -0.5F;
 }  // namespace constants
 
 namespace gnc_autocode {
@@ -107,10 +109,13 @@ class GncCtlAutocode {
   float CMD_Omega_B_ISS_B[3];
   float CMD_Alpha_B_ISS_B[3];
   float linear_integrator[3];
+  float rotational_integrator[3]; //accumulator
   float linear_int_error[3];
   float att_err_mag;
   float att_err[3];
   float dummy[3];
+  float rotate_int_err[3];
+  float body_alpha_cmd[3];
 
   bool BelowThreshold(float velocity[], float threshhold);
   void UpdateModeCmd(void);
@@ -140,6 +145,11 @@ class GncCtlAutocode {
   void SaturateVector(const float u[3], float limit, float output[3]);
   void FindBodyAccelCmd();
   void UpdateRotationalPIDVals();
+  void UpdateRotateIntErr();
+  void MatrixMultiplication3x1(float three[3][3], float one[3], float output[3]);
+  void FindBodyAlphaCmd();
+  void AngAccelHelper(float rate_error[3]);
+
 };
 }  // end namespace gnc_autocode
 

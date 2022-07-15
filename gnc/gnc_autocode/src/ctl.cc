@@ -46,6 +46,9 @@ GncCtlAutocode::GncCtlAutocode(void) {
   linear_integrator[0] = 0;
   linear_integrator[1] = 0;
   linear_integrator[2] = 0;
+  rotational_integrator[0] = 0;
+  rotational_integrator[1] = 0;
+  rotational_integrator[2] = 0;
 }
 
 GncCtlAutocode::~GncCtlAutocode() {
@@ -84,6 +87,7 @@ void GncCtlAutocode::Step(void) {
   // Rotational Control
   UpdateRotationalPIDVals();
   FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err);  // Finds att_err_mag and att_err
+  UpdateRotateIntErr();
 }
 
 
@@ -94,7 +98,47 @@ void GncCtlAutocode::Step(void) {
 
 
 /*****clc_closed_loop_controller functions*****/
+void GncCtlAutocode::FindBodyAlphaCmd()
+{
+  float rate_error[3];
+  AngAccelHelper(rate_error);
+  //make 1d array into matrix like expecting
+  float i_matrix[3][3] = { ctl_input_.inertia_matrix[0],  ctl_input_.inertia_matrix[1], ctl_input_.inertia_matrix[2],
+                    ctl_input_.inertia_matrix[3], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[5],
+                    ctl_input_.inertia_matrix[6], ctl_input_.inertia_matrix[7], ctl_input_.inertia_matrix[8]};
+  MatrixMultiplication3x1(i_matrix, rate_error, body_alpha_cmd);
 
+}
+void GncCtlAutocode::AngAccelHelper(float rate_error[3])
+{
+  if (ctl_status <=1)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      rate_error[i] = -ctl_input_.est_omega_B_ISS_B[i];
+    }
+  }
+  else{
+    for(int i = 0; i < 3; i++)
+    {
+      rate_error[i] = CMD_Omega_B_ISS_B[i] + rotate_int_err[i] + (Kp_rot[i]*att_err[i]) - ctl_input_.est_omega_B_ISS_B[i];
+    }
+  }
+
+
+  for (int i = 0; i< 3; i++)
+  {
+    rate_error[i] *= Kd_rot[i];
+  }
+}
+
+
+void GncCtlAutocode::UpdateRotateIntErr()
+{
+  float input[3] = {att_err[0] * Ki_rot[0], att_err[1] * Ki_rot[1], att_err[2] * Ki_rot[2]};
+  discreteTimeIntegrator(input, rotate_int_err, rotational_integrator, constants::tun_ctl_att_sat_upper,
+                                            constants::tun_ctl_att_sat_lower);
+}
 
 void GncCtlAutocode::UpdateRotationalPIDVals() {
   // reshape
@@ -178,13 +222,20 @@ void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3]) {
   QuaternionToDCM(q, tmp_output);
 
   // 3x3 multiply by 1x3
+  MatrixMultiplication3x1(tmp_output, v, output);
+  
+}
+
+ // 3x3 multiply by 1x3
+void GncCtlAutocode::MatrixMultiplication3x1(float three[3][3], float one[3], float output[3])
+{
   // set output to all 0's
   for (int i = 0; i < 3; i++) {
     output[i]= 0;
     }
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
-        output[i] += tmp_output[i][j] * v[i];
+        output[i] += three[i][j] * one[i];
       }
     }
 }
@@ -290,8 +341,8 @@ void GncCtlAutocode::discreteTimeIntegrator(float input[3], float output[3], flo
     return;
   }
   for (int i = 0; i < 3; i++) {
-    output[i] = accumulator[i] + input[i];
-
+    accumulator[i] += input[i];
+    output[i] = accumulator[i];
     if (output[i] > upper_limit) {
       output[i] = upper_limit;
     } else if (output[i] < lower_limit) {
@@ -425,7 +476,6 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& out
   output_vec[0] = out.x();
   output_vec[1] = out.y();
   output_vec[2] = out.z();
-  
 
   output_scalar = acos(out.w()) * 2;
 }
