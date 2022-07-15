@@ -66,7 +66,7 @@ void GncCtlAutocode::Step(void) {
   UpdateStoppedMode();
   UpdatePosAndQuat();
   FindPosError();
-  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err);
+  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy);
   UpdatePrevious();  // this might need to go later
   UpdateCtlStatus();
   BypassShaper();
@@ -83,7 +83,7 @@ void GncCtlAutocode::Step(void) {
 
   // Rotational Control
   UpdateRotationalPIDVals();
-  FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag); //Finds att_err_mag
+  FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err);  // Finds att_err_mag and att_err
 }
 
 
@@ -401,7 +401,7 @@ void GncCtlAutocode::FindPosError() {
 }
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
-void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output) {
+void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
   Eigen::Quaternion<float> cmd;
   cmd.w() = q_cmd[3];
   cmd.x() = q_cmd[0];
@@ -422,7 +422,12 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& out
   }
   out.normalize();
 
-  output = acos(out.w()) * 2;
+  output_vec[0] = out.x();
+  output_vec[1] = out.y();
+  output_vec[2] = out.z();
+  
+
+  output_scalar = acos(out.w()) * 2;
 }
 
 // updates the position and attitude command

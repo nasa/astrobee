@@ -110,7 +110,7 @@ class GncCtlAutocode {
   float linear_int_error[3];
   float att_err_mag;
   float att_err[3];
-  
+  float dummy[3];
 
   bool BelowThreshold(float velocity[], float threshhold);
   void UpdateModeCmd(void);
@@ -120,7 +120,7 @@ class GncCtlAutocode {
   void UpdatePosAndQuat();
   void FindPosError();
   void UpdatePrevious();
-  void FindQuatError(float q_cmd[4], float q_actual[4], float& output);
+  void FindQuatError(float q_cmd[4], float q_actual[4], float& output, float output_vec[3]);
   void UpdateCtlStatus();
   bool CtlStatusSwitch();
   void BypassShaper();
