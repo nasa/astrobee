@@ -75,7 +75,9 @@ void GncCtlAutocode::Step(void) {
   VariablesTransfer();
   UpdatePIDVals();
   FindPosErr();
-  FindLinearIntErr();
+  FindLinearIntErr(); //I'll want to check this
+  FindBodyForceCmd();
+  FindBodyAccelCmd();
 }
 
 
@@ -87,51 +89,101 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller functions*****/
 
-void GncCtlAutocode::FindBodyForceCmd() {
-  float vec[3];
-  if (ctl_status <= 1) {
-    for (int i = 0; i < 3; i++) {
-      vec[i] = 0 - ctl_input_.est_V_B_ISS_ISS[i];
-    }
-  } else {
-    // find desired velocity from position error
-    float des_vel[3];
-    for (int i = 0; i < 3; i++) {
-      des_vel[i] = (Kp[i] * pos_err_outport[i]) + linear_int_err[i];
-      vec[i] = CMD_V_B_ISS_ISS[i] + des_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
-    }
-  }
-
-  float velo_err_tmp[3];
-  float feed_accel_tmp[3];
-  RotateVectorAtoB(vec, ctl_input_.est_quat_ISS2B, velo_err_tmp);
-  /***********I am here*****///RotateVectorAtoB()
+void GncCtlAutocode::FindBodyAccelCmd()
+{
   for (int i = 0; i < 3; i++)
   {
-    velo_err_tmp[i] *= Kd[i];
+     body_accel_cmd[i] = body_force_cmd[i] / ctl_input_.mass;
+}
+  }
+ 
+
+void GncCtlAutocode::FindBodyForceCmd() {
+  if (ctl_status != 0)
+  {
+    float vec[3];
+    if (ctl_status <= 1) {
+      for (int i = 0; i < 3; i++) {
+        vec[i] = 0 - ctl_input_.est_V_B_ISS_ISS[i];
+      }
+    } else {
+      // find desired velocity from position error
+      float des_vel[3];
+      for (int i = 0; i < 3; i++) {
+        des_vel[i] = (Kp[i] * pos_err_outport[i]) + linear_int_err[i];
+        vec[i] = CMD_V_B_ISS_ISS[i] + des_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
+      }
+    }
+
+    float velo_err_tmp[3];
+    float feed_accel_tmp[3];
+    RotateVectorAtoB(vec, ctl_input_.est_quat_ISS2B, velo_err_tmp);
+
+    float a_b_gain[3] = {CMD_A_B_ISS_ISS[0] * constants::tun_accel_gain[0], CMD_A_B_ISS_ISS[1] * constants::tun_accel_gain[1], CMD_A_B_ISS_ISS[2] * constants::tun_accel_gain[2]};
+    float accel_err_tmp[3];
+    RotateVectorAtoB(a_b_gain, ctl_input_.est_quat_ISS2B, accel_err_tmp);
+
+    float input_u[3] = { 0, 0, 0};
+    for (int i = 0; i < 3; i++) {
+      velo_err_tmp[i] *= Kd[i];
+      accel_err_tmp[i] *= ctl_input_.mass;
+      input_u[i] = velo_err_tmp[i] + accel_err_tmp[i];
+    }
+
+    float saturated_output_u[3];
+    SaturateVector(input_u, constants::tun_ctl_linear_force_limit, saturated_output_u);
+    for(int i = 0; i < 3; i++)
+    {
+      body_force_cmd[i] = saturated_output_u[i];
+    }
+  }
+  else
+  {
+    for(int i = 0; i < 3; i++)
+    {
+      body_force_cmd[i] = 0;
+    }
   }
   
-
 }
 
-void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3]) 
-{ 
+
+void GncCtlAutocode::SaturateVector(const float u[3], float limit, float output[3])
+{
+  //find vector magnitude
+  float mag = sqrt(pow(u[0],2) +  pow(u[1], 2) + pow(u[2], 2));
+
+  if (mag < limit)
+  {
+   for (int i = 0; i < 3; i++)
+   {
+    output[i] = u[i];
+   }
+  }
+  else
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      output[i] = u[i] / mag * limit;
+    }
+  }
+}
+
+
+void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3]) {
   float tmp_output[3][3];
   QuaternionToDCM(q, tmp_output);
 
-  //3x3 multiply by 1x3 
+  // 3x3 multiply by 1x3
   // set output to all 0's
   for (int i = 0; i < 3; i++) {
     output[i]= 0;
     }
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0; j < 3; j++)
-    {
-       output[i] += tmp_output[i][j] * v[i];
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        output[i] += tmp_output[i][j] * v[i];
+      }
     }
-  }
-
 }
 
 void GncCtlAutocode::QuaternionToDCM(float input_quat[4], float output[3][3]) {
