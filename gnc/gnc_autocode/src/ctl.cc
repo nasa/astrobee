@@ -90,53 +90,68 @@ void GncCtlAutocode::Step(void) {
   UpdateRotateIntErr();
   FindBodyAlphaCmd();
   FindBodyTorqueCmd();
+
+  /*Publish to ctl_msg */
+  VarToCtlMsg();
 }
 
 
 
 
+void GncCtlAutocode::VarToCtlMsg()
+{
+  for (int i = 0; i < 3; i++)
+  {
+    ctl_.body_force_cmd[i] = body_force_cmd[i];
+    ctl_.body_accel_cmd[i] = body_accel_cmd[i];
+    ctl_.pos_err[i] = pos_err_outport[i];
+    ctl_.pos_err_int[i] = linear_int_err[i];
 
+    ctl_.body_torque_cmd[i] = body_torque_cmd[i];
+    ctl_.body_alpha_cmd[i] = body_alpha_cmd[i];
+    ctl_.att_err[i] = att_err[i];
+    
+    ctl_.att_err_int[i] = rotate_int_err[i];
+  }
+  ctl_.att_err_mag = att_err_mag;
+  ctl_.ctl_status = ctl_status;
+
+  
+
+
+}
 
 
 
 /*****clc_closed_loop_controller functions*****/
-void GncCtlAutocode::FindBodyTorqueCmd()
-{
-  if (ctl_status != 0)
-  {
-    for (int i = 0; i < 3; i++)
-    {
+void GncCtlAutocode::FindBodyTorqueCmd() {
+  if (ctl_status != 0) {
+    for (int i = 0; i < 3; i++) {
       body_torque_cmd[i] = 0;
     }
-  }
-  else{
-    //feed forward accel
+  } else {
+    // feed forward accel
     float ang_accel_feed[3];
-     MatrixMultiplication3x1(i_matrix, CMD_Alpha_B_ISS_B, ang_accel_feed); //the gain is just 1.0
+    MatrixMultiplication3x1(i_matrix, CMD_Alpha_B_ISS_B, ang_accel_feed);  // the gain is just 1.0
 
-     //feed forward linearization
+    // feed forward linearization
     float for_linearization[3];
     MatrixMultiplication3x1(i_matrix, ctl_input_.est_omega_B_ISS_B, for_linearization);
     float feed_linearization[3];
     CrossProduct(for_linearization, ctl_input_.est_omega_B_ISS_B, feed_linearization);
 
-    for(int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
       body_torque_cmd[i] = ang_accel_feed[i] + rate_error[i] - feed_linearization[i];
     }
   }
-  
-
 }
 
-void GncCtlAutocode::CrossProduct(float vecA[3], float vecB[3], float vecOut[3])
-{
+void GncCtlAutocode::CrossProduct(float vecA[3], float vecB[3], float vecOut[3]) {
   vecOut[0] = vecA[1] * vecB[2] - vecA[2] * vecB[1];
   vecOut[1] = -(vecA[0] * vecB[2] - vecA[2] * vecB[0]);
   vecOut[2] = vecA[0] * vecB[1] - vecA[1] * vecB[0];
 }
 void GncCtlAutocode::FindBodyAlphaCmd() {
-  
   AngAccelHelper(rate_error);
   // make 1d array into matrix like expecting
   i_matrix[0][0] = ctl_input_.inertia_matrix[0];
@@ -151,7 +166,6 @@ void GncCtlAutocode::FindBodyAlphaCmd() {
   i_matrix[2][1] = ctl_input_.inertia_matrix[7];
   i_matrix[2][2] = ctl_input_.inertia_matrix[8];
 
-  
   MatrixMultiplication3x1(i_matrix, rate_error, body_alpha_cmd);
 }
 

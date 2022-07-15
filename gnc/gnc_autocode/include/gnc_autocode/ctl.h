@@ -117,7 +117,7 @@ class GncCtlAutocode {
   float rotate_int_err[3];
   float body_alpha_cmd[3];
   float i_matrix[3][3];
-  float rate_error[3]; //helper in rot control
+  float rate_error[3];  // helper in rot control
   float body_torque_cmd[3];
 
   bool BelowThreshold(float velocity[], float threshhold);
@@ -155,6 +155,7 @@ class GncCtlAutocode {
   void FindBodyTorqueCmd();
   void CrossProduct(float vecA[3], float vecB[3], float vecOut[3]);
 
+  void VarToCtlMsg();
 };
 }  // end namespace gnc_autocode
 
