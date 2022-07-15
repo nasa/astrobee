@@ -87,51 +87,61 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller functions*****/
 
-
-void GncCtlAutocode::FindBodyForceCmd()
-{
+void GncCtlAutocode::FindBodyForceCmd() {
   float vec[3];
-  if (ctl_status <=1)
-  {
-    for (int i = 0; i < 3; i ++)
-    {
+  if (ctl_status <= 1) {
+    for (int i = 0; i < 3; i++) {
       vec[i] = 0 - ctl_input_.est_V_B_ISS_ISS[i];
     }
-  }
-  else
-  {
-    //find desired velocity from position error
+  } else {
+    // find desired velocity from position error
     float des_vel[3];
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
       des_vel[i] = (Kp[i] * pos_err_outport[i]) + linear_int_err[i];
       vec[i] = CMD_V_B_ISS_ISS[i] + des_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
     }
-    
   }
 
-
+  float velo_err_tmp[3];
+  float feed_accel_tmp[3];
+  RotateVectorAtoB(vec, ctl_input_.est_quat_ISS2B, velo_err_tmp);
+  /***********I am here*****///RotateVectorAtoB()
+  for (int i = 0; i < 3; i++)
+  {
+    velo_err_tmp[i] *= Kd[i];
+  }
+  
 
 }
 
-void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3][3])
-{
-  QuaternionToDCM(q, output);
+void GncCtlAutocode::RotateVectorAtoB(float v[3], float q[4], float output[3]) 
+{ 
+  float tmp_output[3][3];
+  QuaternionToDCM(q, tmp_output);
 
-
-}
-
-void GncCtlAutocode::QuaternionToDCM(float input_quat[4], float output[3][3])
-{
-  float quat_w = input_quat[3];
-  float U = ((quat_w * quat_w) * 2) - 1; //U in Simulink diagram
-  float scalar_matrix[3][3];
-
-  //set scalar_matrix to all 0's
+  //3x3 multiply by 1x3 
+  // set output to all 0's
+  for (int i = 0; i < 3; i++) {
+    output[i]= 0;
+    }
   for (int i = 0; i < 3; i++)
   {
     for (int j = 0; j < 3; j++)
     {
+       output[i] += tmp_output[i][j] * v[i];
+    }
+  }
+
+}
+
+void GncCtlAutocode::QuaternionToDCM(float input_quat[4], float output[3][3]) {
+  float quat_w = input_quat[3];
+  float U = ((quat_w * quat_w) * 2) - 1;  // U in Simulink diagram
+  float scalar_matrix[3][3];
+
+  // set scalar_matrix to all 0's
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       scalar_matrix[i][j] = 0;
     }
   }
@@ -142,78 +152,56 @@ void GncCtlAutocode::QuaternionToDCM(float input_quat[4], float output[3][3])
   float subtract_matrix[3][3];
   float quat_vals[3] = {input_quat[0], input_quat[1], input_quat[2]};
   SkewSymetricMatrix(quat_vals, subtract_matrix);
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0; j <3; j++)
-    {
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       subtract_matrix[i][j] = subtract_matrix[i][j] * 2 * quat_w;
     }
   }
   /******Probable source of error*****/
   float vals_matrix[3][3];
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0 ; j < 3; j++)
-    {
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       vals_matrix[i][j] = input_quat[i];
     }
   }
 
-  //find transpose of vals_matrix
+  // find transpose of vals_matrix
   float transpose[3][3];
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0 ; j < 3; j++)
-    {
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       transpose[j][i] = vals_matrix[i][j];
     }
   }
 
   float vals_output[3][3];
-  MatrixMultiplication(vals_matrix, transpose, vals_output);
-  //element wise gain of 2 and add/sub
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0; j < 3; j++)
-    {
+  MatrixMultiplication3x3(vals_matrix, transpose, vals_output);
+  // element wise gain of 2 and add/sub
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       vals_output[i][j] *= 2;
       output[i][j] = scalar_matrix[i][j] - subtract_matrix[i][j] + vals_output[i][j];
     }
   }
-
-
-
-
-  
-  
-
 }
 
-void GncCtlAutocode::MatrixMultiplication(float inputA[3][3], float inputB[3][3], float output[3][3])
-{
-  //make output all zeros
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0; j < 3; j++)
-    {
+void GncCtlAutocode::MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]) {
+  // make output all zeros
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       output[i][j] = 0;
     }
   }
 
-  for (int row = 0; row < 3; row++)
-  {
-    for (int col = 0; col < 3; col++)
-    {
-      for (int k = 0; k < 3; k++)
-      {
+  for (int row = 0; row < 3; row++) {
+    for (int col = 0; col < 3; col++) {
+      for (int k = 0; k < 3; k++) {
         output[row][col] +=inputA[row][k] * inputB[k][col];
-              }
+      }
     }
   }
 }
-void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]) 
-{
-  //from simulink diagram
+void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]) {
+  // from simulink diagram
   output[0][0] = 0;
   output[1][0] = input[2];
   output[2][0] = -input[1];
@@ -224,8 +212,6 @@ void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]
   output[1][2] = -input[0];
   output[2][2] = 0;
 }
-
-
 
 void GncCtlAutocode::FindLinearIntErr() {
   float input[3];

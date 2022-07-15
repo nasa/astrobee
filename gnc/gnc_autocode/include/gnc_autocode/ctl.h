@@ -42,6 +42,7 @@ const auto tun_ctl_stopped_pos_thresh = 0.1F;
 const auto tun_ctl_stopped_quat_thresh = 0.174533F;
 const auto tun_ctl_pos_sat_upper = 0.1F;
 const auto tun_ctl_pos_sat_lower = -0.1F;
+const float tun_accel_gain[3] = {1.0F, 1.0F, 1.0F};
 }  // namespace constants
 
 namespace gnc_autocode {
@@ -105,7 +106,6 @@ class GncCtlAutocode {
   float linear_int_error[3];
   
 
-
   bool BelowThreshold(float velocity[], float threshhold);
   void UpdateModeCmd(void);
   float ButterWorthFilter(float input, float previous);
@@ -129,9 +129,8 @@ class GncCtlAutocode {
   void FindBodyForceCmd();
   void SkewSymetricMatrix(const float input[3], float output[3][3]);
   void QuaternionToDCM(float input_quat[4], float output[3][3]);
-  void RotateVectorAtoB(float v[3], float q[4], float output[3][3]);
-  void MatrixMultiplication(float inputA[3][3], float inputB[3][3], float output[3][3]);
-
+  void RotateVectorAtoB(float v[3], float q[4], float output[3]);
+  void MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]);
 };
 }  // end namespace gnc_autocode
 
