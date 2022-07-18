@@ -23,6 +23,7 @@
 
 #include <ctl_tunable_funcs.h>
 
+
 namespace gnc_autocode {
 
 GncCtlAutocode::GncCtlAutocode(void) {

@@ -57,13 +57,6 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-  // auto* ctl_input = &ctl_input_;
-  // auto cmd = &cmd_;
-  // auto ctl = &ctl_; //this is the output
-  // auto myVar = ctl_input->est_quat_ISS2B;
-  // auto var = constants::ase_status_converged;
-  // auto var1 = ctl_input_.est_confidence;
-
 /*****cex_control_executive*****/
   UpdateModeCmd();
   UpdateStoppedMode();
@@ -76,8 +69,8 @@ void GncCtlAutocode::Step(void) {
 
 /*****clc_closed_loop_controller*****/
   VariablesTransfer();
-  // Linear Control
 
+  // Linear Control
   UpdateLinearPIDVals();
   FindPosErr();
   FindLinearIntErr();  // I'll want to check this
@@ -95,13 +88,8 @@ void GncCtlAutocode::Step(void) {
   VarToCtlMsg();
 }
 
-
-
-
-void GncCtlAutocode::VarToCtlMsg()
-{
-  for (int i = 0; i < 3; i++)
-  {
+void GncCtlAutocode::VarToCtlMsg() {
+  for (int i = 0; i < 3; i++) {
     ctl_.body_force_cmd[i] = body_force_cmd[i];
     ctl_.body_accel_cmd[i] = body_accel_cmd[i];
     ctl_.pos_err[i] = pos_err_outport[i];
@@ -110,18 +98,12 @@ void GncCtlAutocode::VarToCtlMsg()
     ctl_.body_torque_cmd[i] = body_torque_cmd[i];
     ctl_.body_alpha_cmd[i] = body_alpha_cmd[i];
     ctl_.att_err[i] = att_err[i];
-    
+
     ctl_.att_err_int[i] = rotate_int_err[i];
   }
   ctl_.att_err_mag = att_err_mag;
   ctl_.ctl_status = ctl_status;
-
-  
-
-
 }
-
-
 
 /*****clc_closed_loop_controller functions*****/
 void GncCtlAutocode::FindBodyTorqueCmd() {
@@ -617,12 +599,12 @@ void GncCtlAutocode::UpdateModeCmd() {
 }
 
 
-void GncCtlAutocode::Initialize(void) {
-}
+// void GncCtlAutocode::Initialize(void) {
+// }
 
 
+// void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
+// }
 
 
-void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
-}
 }  // end namespace gnc_autocode
