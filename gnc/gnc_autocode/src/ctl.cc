@@ -49,9 +49,19 @@ GncCtlAutocode::GncCtlAutocode(void) {
   rotational_integrator[0] = 0;
   rotational_integrator[1] = 0;
   rotational_integrator[2] = 0;
+
+
+
+  /****from Simulink Controller*****/
+  controller_ = ctl_controller0(&ctl_input_, &cmd_, &ctl_);
+  assert(controller_);
+  assert(rtmGetErrorStatus(controller_) == NULL);
 }
 
+
 GncCtlAutocode::~GncCtlAutocode() {
+  /****from Simulink Controller*****/
+  ctl_controller0_terminate(controller_);
 }
 
 
@@ -86,6 +96,12 @@ void GncCtlAutocode::Step(void) {
 
   /*Publish to ctl_msg */
   VarToCtlMsg();
+
+
+  /****from Simulink Controller*****/
+  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
+
+
 }
 
 void GncCtlAutocode::VarToCtlMsg() {
@@ -599,12 +615,16 @@ void GncCtlAutocode::UpdateModeCmd() {
 }
 
 
-// void GncCtlAutocode::Initialize(void) {
-// }
+ void GncCtlAutocode::Initialize(void) {
+  /****from Simulink Controller*****/
+  ctl_controller0_initialize(controller_, &ctl_input_, &cmd_, &ctl_);
+ }
 
 
-// void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
-// }
+ void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
+  /****from Simulink Controller*****/
+  ctl_ReadParams(config, controller_);
+ }
 
 
 }  // end namespace gnc_autocode
