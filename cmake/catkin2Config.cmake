@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -122,7 +122,7 @@ if(catkin2_FIND_COMPONENTS)
           foreach(library ${${component}_LIBRARIES})
             string(REGEX REPLACE "^/usr/lib" "${ARM_CHROOT_DIR}/usr/lib" library ${library})
             string(REPLACE "i386-linux-gnu" "arm-linux-gnueabihf" library ${library})
-            string(REGEX REPLACE "^/opt/ros/kinetic" "${ARM_CHROOT_DIR}/opt/ros/kinetic" library ${library})
+	    string(REGEX REPLACE "^/opt/ros/${ARM_ROS_DISTRO}" "${ARM_CHROOT_DIR}/opt/ros/${ARM_ROS_DISTRO}" library ${library})
             list(APPEND temp_LIBRARIES ${library})
           endforeach()
           set(${component}_LIBRARIES ${temp_LIBRARIES})

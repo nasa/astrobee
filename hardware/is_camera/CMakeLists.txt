@@ -28,6 +28,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   nodelet
   ff_util
   config_reader
+  camera
 )
 
 # Need to find libv4l2
@@ -51,6 +52,7 @@ catkin_package(
     nodelet
     ff_util
     config_reader
+    camera
   )
 
 ###########

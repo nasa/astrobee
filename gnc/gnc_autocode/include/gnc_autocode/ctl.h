@@ -160,3 +160,4 @@ class GncCtlAutocode {
 }  // end namespace gnc_autocode
 
 #endif  // GNC_AUTOCODE_CTL_H_
+

@@ -844,6 +844,25 @@
 
     {
       "type": "CommandSpec",
+      "id": "GuestScience.restartGuestScience",
+      "isRapidNative": false,
+      "notes": "This command is the equivalent to issuing the stop guest science command and then the start guest science command. Sometimes guest science APKs become unresponsive and this is a quick way to try to get it work again. <p/>See GuestScience.startGuestScience for more on the guest science life cycle.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "apkName",
+          "valueType": "string",
+          "notes": "Which guest science APK to terminae"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
       "id": "GuestScience.customGuestScience",
       "oldFswAlias": "guestScience",
       "isRapidNative": false,
@@ -1235,6 +1254,19 @@
       "notes": "Clears the terminate flag on the robot. This functionality is tied to Astrobee's physical terminate button and terminate indicator LED. The terminate life cycle is as follows:<ul><li>Nominal ops: When Astrobee is active, the amber terminate LED is turned on and the robot functions normally.</li><li>Terminate: A crew member may press the terminate button as a way to quickly power down the propulsion modules and payloads, while leaving the main processors running and able to communicate with the ground operator. This is a gentler way to intervene than turning off the physical power switch. While terminated, the terminate LED is also turned off.</li><li>Unterminate: The ground operator can send this command to clear the terminate flag and turn the terminate LED back on. This does <b>not</b> automatically restore power to the hardware.</li><li>Configure power: Send Power.powerOnItem commands as needed to restore power to individual hardware components.</li></ul>",
       "availableContext": [
         "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.enableAstrobeeIntercomms",
+      "isRapidNative": false,
+      "notes": "Starts the Astrobee intercommunication software. This enables the robot to send and receive a subset of data to and from other Astrobees in the network. Please note, this command must be executed on each robot needed in the communication.",
+      "availableContext": [
+        "teleop",
+        "planner"
       ],
       "parent": "Command",
       "params": []

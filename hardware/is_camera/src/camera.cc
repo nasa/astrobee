@@ -20,6 +20,7 @@
 // SUBSYSTEM=="video4linux", ATTRS{serial}=="02510265",SYMLINK+="nav_cam"
 
 #include <is_camera/camera.h>
+#include <camera/camera_params.h>
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
@@ -224,6 +225,7 @@ namespace is_camera {
       false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
+    info_pub_ = nh->advertise<sensor_msgs::CameraInfo>(camera_topic_ + "/camera_info", 1);
     pub_exposure_ = nh->advertise<std_msgs::Int32MultiArray>(camera_topic_ + "_ctrl", 1);
 
     // Allocate space for our output msg buffer
@@ -296,6 +298,8 @@ namespace is_camera {
     // Check if bayer configuration changed
     EnableBayer(bayer_enable);
 
+    LoadCameraInfo();
+
     // Auto Exposure Parameters
     if (!camera.GetBool("auto_exposure", &auto_exposure_)) {
       FF_FATAL("Auto Exposure enable not specified.");
@@ -331,6 +335,40 @@ namespace is_camera {
     if (thread_running_ && !auto_exposure_) {
       v4l_->SetParameters(camera_gain_, camera_exposure_);
     }
+  }
+
+  void CameraNodelet::LoadCameraInfo() {
+    camera::CameraParameters cam_params(&config_, config_name_.c_str());
+
+    // Load parameters
+    Eigen::Matrix3d K = cam_params.GetIntrinsicMatrix<camera::RAW>();
+    Eigen::VectorXd D = cam_params.GetDistortion();
+    Eigen::Vector2i size = cam_params.GetDistortedSize();
+
+    // Populate message
+    info_msg_.width = size[0];
+    info_msg_.height = size[1];
+    info_msg_.K = {K(0, 0), K(0, 1), K(0, 2),
+                   K(1, 0), K(1, 1), K(1, 2),
+                   K(2, 0), K(2, 1), K(2, 2)};
+    if (D.size() == 1) {
+      info_msg_.distortion_model = "fov";
+      info_msg_.D = {D[0]};
+    } else if (D.size() == 4 || D.size() == 5) {
+      info_msg_.distortion_model = "plumb_bob";
+      info_msg_.D = {D[0], D[1], D[2], D[3], 0};
+      if (D.size() > 4) {
+        info_msg_.D[4] = D[4];
+      }
+    }
+
+    // Don't use projection or rotation, but populate
+    info_msg_.P = {1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0};
+    info_msg_.R = {1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1};
   }
 
   void CameraNodelet::EnableBayer(bool enable) {
@@ -511,6 +549,13 @@ namespace is_camera {
             // Increment index in ring buffer
             bayer_img_msg_buffer_idx_ = (bayer_img_msg_buffer_idx_ + 1) % kBayerImageMsgBufferLength;
           }
+        }
+
+        // Publish camera info either way
+        if (getNumBayerSubscribers() + pub_.getNumSubscribers() > 0) {
+          info_msg_.header = std_msgs::Header();
+          info_msg_.header.stamp = timestamp;
+          info_pub_.publish(info_msg_);
         }
       }
 
