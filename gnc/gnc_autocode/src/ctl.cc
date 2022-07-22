@@ -20,8 +20,15 @@
 #include <assert.h>
 #include <ctl_tunable_funcs.h>
 #include <Eigen/Dense>
-
-
+#include<iostream>
+#include <ros/console.h>
+#include <ros/static_assert.h>
+#include <ros/platform.h>
+#include <stdlib.h>
+#include <ros/assert.h>
+#include<sstream>
+#include<string>
+#include <assert.h>
 
 namespace gnc_autocode {
 
@@ -67,6 +74,10 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
+                                     ros::console::levels::Debug)) {  // Change the level to fit your needs
+    ros::console::notifyLoggerLevelsChanged();
+  }
 /*****cex_control_executive*****/
   UpdateModeCmd();
   UpdateStoppedMode();
@@ -95,13 +106,21 @@ void GncCtlAutocode::Step(void) {
   FindBodyTorqueCmd();
 
   /*Publish to ctl_msg */
-  VarToCtlMsg();
-
+  // VarToCtlMsg();
 
   /****from Simulink Controller*****/
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 
+  if (ctl_status != ctl_.ctl_status) {
+    // int x = 7;
+    // std::string str = std::to_string(ctl_.ctl_status);
+    // const char *a = str.c_str();
 
+    // ROS_ERROR("%s\n", a);
+     ROS_ERROR("not equal");
+  } else {
+    ROS_ERROR("equal");
+  }
 }
 
 void GncCtlAutocode::VarToCtlMsg() {
@@ -614,17 +633,14 @@ void GncCtlAutocode::UpdateModeCmd() {
   }
 }
 
-
- void GncCtlAutocode::Initialize(void) {
+void GncCtlAutocode::Initialize(void) {
   /****from Simulink Controller*****/
   ctl_controller0_initialize(controller_, &ctl_input_, &cmd_, &ctl_);
- }
+}
 
-
- void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
+void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
   /****from Simulink Controller*****/
   ctl_ReadParams(config, controller_);
- }
-
+}
 
 }  // end namespace gnc_autocode
