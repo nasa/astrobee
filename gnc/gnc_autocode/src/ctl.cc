@@ -15,20 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#include <ros/console.h>
+#include <ros/static_assert.h>
+#include <ros/platform.h>
+#include <stdlib.h>
+#include <ros/assert.h>
 #include <gnc_autocode/ctl.h>
 #include <config_reader/config_reader.h>
 #include <assert.h>
 #include <ctl_tunable_funcs.h>
 #include <Eigen/Dense>
 #include<iostream>
-#include <ros/console.h>
-#include <ros/static_assert.h>
-#include <ros/platform.h>
-#include <stdlib.h>
-#include <ros/assert.h>
 #include<sstream>
 #include<string>
-#include <assert.h>
 
 namespace gnc_autocode {
 
@@ -56,6 +55,7 @@ GncCtlAutocode::GncCtlAutocode(void) {
   rotational_integrator[0] = 0;
   rotational_integrator[1] = 0;
   rotational_integrator[2] = 0;
+  
 
 
 
@@ -78,8 +78,16 @@ void GncCtlAutocode::Step(void) {
                                      ros::console::levels::Debug)) {  // Change the level to fit your needs
     ros::console::notifyLoggerLevelsChanged();
   }
+
+
+  /****from Simulink Controller*****/
+  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 /*****cex_control_executive*****/
   UpdateModeCmd();
+
+  // std::string str2 = std::to_string(cmd_.cmd_mode);
+  // const char *cmd = str2.c_str();
+  // ROS_ERROR("mode_cmd input:%s" , cmd);
   UpdateStoppedMode();
   UpdatePosAndQuat();
   FindPosError();
@@ -108,18 +116,21 @@ void GncCtlAutocode::Step(void) {
   /*Publish to ctl_msg */
   // VarToCtlMsg();
 
-  /****from Simulink Controller*****/
-  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
+  
+
+
+
+
+  std::string str = std::to_string(ctl_.ctl_status);
+  const char *old = str.c_str();
+
+  std::string str1 = std::to_string(ctl_status);
+  const char *mine = str1.c_str();
 
   if (ctl_status != ctl_.ctl_status) {
-    // int x = 7;
-    // std::string str = std::to_string(ctl_.ctl_status);
-    // const char *a = str.c_str();
-
-    // ROS_ERROR("%s\n", a);
-     ROS_ERROR("not equal");
+     ROS_ERROR("not equal New:%s Old:%s", mine, old);
   } else {
-    ROS_ERROR("equal");
+    ROS_ERROR("equal New:%s Old:%s", mine, old);
   }
 }
 
