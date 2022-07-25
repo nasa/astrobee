@@ -76,7 +76,7 @@ class GncCtlAutocode {
   int mode_cmd;
   bool stopped_mode;
   float prev_filter[3];
-  int prev_mode_cmd[4];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
+  int prev_mode_cmd[5];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
   float prev_position[3];
   float prev_att[4];
   float pos_err_parameter[3];  // in cex control executive

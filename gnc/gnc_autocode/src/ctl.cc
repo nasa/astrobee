@@ -55,9 +55,6 @@ GncCtlAutocode::GncCtlAutocode(void) {
   rotational_integrator[0] = 0;
   rotational_integrator[1] = 0;
   rotational_integrator[2] = 0;
-  
-
-
 
   /****from Simulink Controller*****/
   controller_ = ctl_controller0(&ctl_input_, &cmd_, &ctl_);
@@ -115,11 +112,6 @@ void GncCtlAutocode::Step(void) {
 
   /*Publish to ctl_msg */
   // VarToCtlMsg();
-
-  
-
-
-
 
   std::string str = std::to_string(ctl_.ctl_status);
   const char *old = str.c_str();
@@ -618,9 +610,10 @@ bool GncCtlAutocode::BelowThreshold(float velocity[], float threshhold) {
   return false;
 }
 
-/*Determines if make conditions is met: if mode_cmd equals ctl_stopping_mode for 4 times in a row*/
+/*Determines if make conditions is met: if mode_cmd equals ctl_stopping_mode for 4 previous times*/
 bool GncCtlAutocode::CmdModeMakeCondition() {
   // shift exisitng elements to the right
+  prev_mode_cmd[4] = prev_mode_cmd[3];
   prev_mode_cmd[3] = prev_mode_cmd[2];
   prev_mode_cmd[2] = prev_mode_cmd[1];
   prev_mode_cmd[1] = prev_mode_cmd[0];
@@ -628,7 +621,7 @@ bool GncCtlAutocode::CmdModeMakeCondition() {
   prev_mode_cmd[0] = mode_cmd;
 
   // check if they all equal ctl_stopping_mode
-  if ((prev_mode_cmd[3] == constants::ctl_stopping_mode) && (prev_mode_cmd[3] == prev_mode_cmd[2]) &&
+  if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) && (prev_mode_cmd[4] == prev_mode_cmd[3])&& (prev_mode_cmd[3] == prev_mode_cmd[2]) &&
       (prev_mode_cmd[2] == prev_mode_cmd[1]) && (prev_mode_cmd[1] == prev_mode_cmd[0])) {
     return true;
   }
