@@ -75,7 +75,8 @@ class GncCtlAutocode {
  private:
   int mode_cmd;
   bool stopped_mode;
-  float prev_filter[3];
+  float prev_filter_vel[3];
+  float prev_filter_omega[3];
   int prev_mode_cmd[5];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
   float prev_position[3];
   float prev_att[4];
@@ -120,9 +121,9 @@ class GncCtlAutocode {
   float rate_error[3];  // helper in rot control
   float body_torque_cmd[3];
 
-  bool BelowThreshold(float velocity[], float threshhold);
+  bool BelowThreshold(float velocity[], float threshhold, float previous[3]);
   void UpdateModeCmd(void);
-  float ButterWorthFilter(float input, float previous);
+  float ButterWorthFilter(float input, float& delay_val);
   bool CmdModeMakeCondition();
   void UpdateStoppedMode();
   void UpdatePosAndQuat();

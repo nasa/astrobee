@@ -35,9 +35,12 @@ namespace gnc_autocode {
 
 
 GncCtlAutocode::GncCtlAutocode(void) {
-  prev_filter[0] = 0;
-  prev_filter[1] = 0;
-  prev_filter[2] = 0;
+  prev_filter_vel[0] = 0;
+  prev_filter_vel[1] = 0;
+  prev_filter_vel[2] = 0;
+  prev_filter_omega[0] = 0;
+  prev_filter_omega[1] = 0;
+  prev_filter_omega[2] = 0;
   prev_mode_cmd[0] = 0;
   prev_mode_cmd[1] = 0;
   prev_mode_cmd[2] = 0;
@@ -577,35 +580,36 @@ void GncCtlAutocode::UpdateStoppedMode() {
     omega[i] = ctl_input_.est_omega_B_ISS_B[i];
   }
 
-  if (BelowThreshold(velocity, constants::tun_ctl_stopping_vel_thresh) &&
-      BelowThreshold(omega, constants::tun_ctl_stopping_omega_thresh) && CmdModeMakeCondition()) {
+  if (BelowThreshold(velocity, constants::tun_ctl_stopping_vel_thresh, prev_filter_vel) &&
+      BelowThreshold(omega, constants::tun_ctl_stopping_omega_thresh, prev_filter_omega) && CmdModeMakeCondition()) {
     stopped_mode = true;
   } else {
     stopped_mode = false;
   }
 }
 /*Butterworth filter implementation */
-float GncCtlAutocode::ButterWorthFilter(float input, float previous) {
-  float output = input * constants::butterworth_gain_1;
-  float previous_gain = previous * constants::butterworth_gain_2;
-  output = output - previous_gain;
-  output = output + previous;
+float GncCtlAutocode::ButterWorthFilter(float input, float& delay_val) {
+  float tmp_out = input * constants::butterworth_gain_1;
+  float previous_gain = delay_val * constants::butterworth_gain_2;
+  tmp_out = tmp_out - previous_gain;
+  float output = tmp_out + delay_val;
+  delay_val = tmp_out;
   return output;
 }
 /*determine if velocity (linear or angular) values are less than threshhold
   retruns true if it is less than the threshhold*/
-bool GncCtlAutocode::BelowThreshold(float velocity[], float threshhold) {
+bool GncCtlAutocode::BelowThreshold(float velocity[], float threshhold, float previous[3]) {
   float filter_out;
   float sum = 0;
   for (int i = 0; i < 3; i++) {
-    filter_out = GncCtlAutocode::ButterWorthFilter(velocity[i], prev_filter[i]);
-    prev_filter[i] = filter_out;           // update prev_filter after it is used for the calculation
+    filter_out = GncCtlAutocode::ButterWorthFilter(velocity[i], previous[i]); //previous[i] gets updated in this function 
     filter_out = filter_out * filter_out;  // square the value
     sum = sum + filter_out;                // sum all of the values
   }
 
   if (sum < threshhold) {
     return true;
+    
   }
   return false;
 }
@@ -621,8 +625,9 @@ bool GncCtlAutocode::CmdModeMakeCondition() {
   prev_mode_cmd[0] = mode_cmd;
 
   // check if they all equal ctl_stopping_mode
-  if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) && (prev_mode_cmd[4] == prev_mode_cmd[3])&& (prev_mode_cmd[3] == prev_mode_cmd[2]) &&
-      (prev_mode_cmd[2] == prev_mode_cmd[1]) && (prev_mode_cmd[1] == prev_mode_cmd[0])) {
+  if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) && (prev_mode_cmd[4] == prev_mode_cmd[3]) &&
+      (prev_mode_cmd[3] == prev_mode_cmd[2]) && (prev_mode_cmd[2] == prev_mode_cmd[1]) &&
+      (prev_mode_cmd[1] == prev_mode_cmd[0])) {
     return true;
   }
   return false;
