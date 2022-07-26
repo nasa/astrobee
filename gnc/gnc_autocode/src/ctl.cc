@@ -28,9 +28,8 @@
 #include<iostream>
 #include<sstream>
 #include<string>
-#include<stdio.h>
 #include<cstring>
-#include<string>
+
 namespace gnc_autocode {
 
 
@@ -67,7 +66,6 @@ GncCtlAutocode::GncCtlAutocode(void) {
   assert(rtmGetErrorStatus(controller_) == NULL);
 }
 
-
 GncCtlAutocode::~GncCtlAutocode() {
   /****from Simulink Controller*****/
   ctl_controller0_terminate(controller_);
@@ -76,22 +74,24 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
+  
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
                                      ros::console::levels::Debug)) {  // Change the level to fit your needs
     ros::console::notifyLoggerLevelsChanged();
   }
 
 
+
+//copy simulink values
+
 /****from Simulink Controller*****/
-  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
+ ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
+
+
 
 
 /*****cex_control_executive*****/
   UpdateModeCmd();
-
-  // std::string str2 = std::to_string(cmd_.cmd_mode);
-  // const char *cmd = str2.c_str();
-  // ROS_ERROR("mode_cmd input:%s" , cmd);
   UpdateStoppedMode();
   UpdatePosAndQuat();
   FindPosError();
@@ -118,45 +118,47 @@ void GncCtlAutocode::Step(void) {
   FindBodyTorqueCmd();
 
   /*Publish to ctl_msg */
-   //VarToCtlMsg();
+  //VarToCtlMsg();
+
+  
+
+  /* Test for ctl_status */
+  std::string str = std::to_string(ctl_.ctl_status);
+    const char *old = str.c_str();
+
+    std::string str1 = std::to_string(ctl_status);
+    const char *mine = str1.c_str();
+    if (ctl_status != ctl_.ctl_status) {
+       ROS_ERROR("not equal New:%s Old:%s", mine, old);
+    } else {
+      ROS_ERROR("equal New:%s Old:%s", mine, old);
+    }
+
+  /* Test for pos_err */
+  // std::string str1 = std::to_string(ctl_.pos_err[2]);
+  // const char *old= str1.c_str();
+
+  // std::string str3 = std::to_string(pos_err_outport[2]);
+  // const char *mine = str3.c_str();
+  //   if (ctl_.pos_err[2] !=pos_err_outport[2]) {
+  //     ROS_ERROR("NOT equal old pos  error:%s new: %s", old, mine);
+  //   } else {
+  //     ROS_ERROR("equal old pos error:%s new: %s", old, mine);
+  //   }
+
+  /*Test for Linear Int Err*/
+  // std::string str = std::to_string(ctl_.pos_err_int[0]);
+  // const char *old = str.c_str();
+
+  // std::string str1 = std::to_string(linear_int_err[0]);
+  // const char *mine = str1.c_str();
+  // if (linear_int_err[0] != ctl_.pos_err_int[0]) {
+  //    ROS_ERROR("not equal New:%s Old:%s", mine, old);
+  // } else {
+  //   ROS_ERROR("equal New:%s Old:%s", mine, old);
+  // }
 
 
-
-/* Test for ctl_status */
-// std::string str = std::to_string(ctl_.ctl_status);
-//   const char *old = str.c_str();
-
-//   std::string str1 = std::to_string(ctl_status);
-//   const char *mine = str1.c_str();
-//   if (ctl_status != ctl_.ctl_status) {
-//      ROS_ERROR("not equal New:%s Old:%s", mine, old);
-//   } else {
-//     ROS_ERROR("equal New:%s Old:%s", mine, old);
-//   }
-
-/* Test for pos_err */
-// std::string str1 = std::to_string(ctl_.pos_err[2]);
-// const char *old= str1.c_str();
-
-// std::string str3 = std::to_string(pos_err_outport[2]);
-// const char *mine = str3.c_str();
-//   if (ctl_.pos_err[2] !=pos_err_outport[2]) {
-//     ROS_ERROR("NOT equal old pos  error:%s new: %s", old, mine);
-//   } else {
-//     ROS_ERROR("equal old pos error:%s new: %s", old, mine);
-//   }
-
-/*Test for Linear Int Err*/
-std::string str = std::to_string(ctl_.pos_err_int[0]);
-  const char *old = str.c_str();
-
-  std::string str1 = std::to_string(linear_int_err[0]);
-  const char *mine = str1.c_str();
-  if (linear_int_err[0] != ctl_.pos_err_int[0]) {
-     ROS_ERROR("not equal New:%s Old:%s", mine, old);
-  } else {
-    ROS_ERROR("equal New:%s Old:%s", mine, old);
-  }
 
 /*Test for Body Force CMD*/
 // std::string str = std::to_string(ctl_.body_force_cmd[0]);
@@ -169,9 +171,38 @@ std::string str = std::to_string(ctl_.pos_err_int[0]);
 //   } else {
 //     ROS_ERROR("equal New:%s Old:%s", mine, old);
 //   }
+//}
+
+/*Test for att_Err_mag*/
+// std::string str = std::to_string(ctl_.att_err_mag);
+//   const char *old = str.c_str();
+
+//   std::string str1 = std::to_string(att_err_mag);
+//   const char *mine = str1.c_str();
+//   if (att_err_mag != ctl_.att_err_mag) {
+//      ROS_ERROR("not equal New:%s Old:%s", mine, old);
+//   } else {
+//     ROS_ERROR("equal New:%s Old:%s", mine, old);
+//   }
 
 
-}
+// std::string str = std::to_string(att_command[2]);
+//   const char *mine = str.c_str();
+// ROS_ERROR("Att_command New:%s ", mine);
+
+
+/*Test for position command*/
+  // std::string str1 = std::to_string(position_command[0]);
+  // const char *mine = str.c_str();
+  //   ROS_ERROR("Position New:%s ", mine);
+  
+
+
+
+ }
+
+
+
 
 void GncCtlAutocode::VarToCtlMsg() {
   for (int i = 0; i < 3; i++) {
@@ -625,12 +656,11 @@ void GncCtlAutocode::UpdateStoppedMode() {
     omega[i] = ctl_input_.est_omega_B_ISS_B[i];
   }
 
-
-  //need to run these outside of if condition to make sure that they are being ran every cycle
+  // need to run these outside of if condition to make sure that they are being ran every cycle
   bool vel_below_threshold = BelowThreshold(velocity, constants::tun_ctl_stopping_vel_thresh, prev_filter_vel);
   bool omega_below_threshold =  BelowThreshold(omega, constants::tun_ctl_stopping_omega_thresh, prev_filter_omega);
   bool cmd_make = CmdModeMakeCondition();
-  if ( vel_below_threshold && omega_below_threshold && cmd_make) {
+  if (vel_below_threshold && omega_below_threshold && cmd_make) {
     stopped_mode = true;
   } else {
     stopped_mode = false;

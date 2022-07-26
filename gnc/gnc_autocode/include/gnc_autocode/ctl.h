@@ -72,6 +72,10 @@ class GncCtlAutocode {
 
   ctl_msg ctl_;
 
+
+  
+
+
  private:
   int mode_cmd;
   bool stopped_mode;
