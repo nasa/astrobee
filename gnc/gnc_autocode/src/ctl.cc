@@ -74,23 +74,17 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-  
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
                                      ros::console::levels::Debug)) {  // Change the level to fit your needs
     ros::console::notifyLoggerLevelsChanged();
   }
 
+  // copy simulink values
 
+  /****from Simulink Controller*****/
+  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 
-//copy simulink values
-
-/****from Simulink Controller*****/
- ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
-
-
-
-
-/*****cex_control_executive*****/
+  /*****cex_control_executive*****/
   UpdateModeCmd();
   UpdateStoppedMode();
   UpdatePosAndQuat();
@@ -118,9 +112,7 @@ void GncCtlAutocode::Step(void) {
   FindBodyTorqueCmd();
 
   /*Publish to ctl_msg */
-  //VarToCtlMsg();
-
-  
+  // VarToCtlMsg();
 
   /* Test for ctl_status */
   std::string str = std::to_string(ctl_.ctl_status);
@@ -195,14 +187,7 @@ void GncCtlAutocode::Step(void) {
   // std::string str1 = std::to_string(position_command[0]);
   // const char *mine = str.c_str();
   //   ROS_ERROR("Position New:%s ", mine);
-  
-
-
-
- }
-
-
-
+}
 
 void GncCtlAutocode::VarToCtlMsg() {
   for (int i = 0; i < 3; i++) {
