@@ -157,6 +157,13 @@ class GncCtlAutocode {
   void CrossProduct(float vecA[3], float vecB[3], float vecOut[3]);
 
   void VarToCtlMsg();
+
+
+  //for testing
+  void BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
+  void AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
+  void RevertBackToBeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
+  void RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
 };
 }  // end namespace gnc_autocode
 
