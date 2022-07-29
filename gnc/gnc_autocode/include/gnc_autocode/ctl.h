@@ -77,7 +77,7 @@ class GncCtlAutocode {
   bool stopped_mode;
   float prev_filter_vel[3];
   float prev_filter_omega[3];
-  int prev_mode_cmd[5];  // for the 4 ticks required  to swtich to stopped; newest val at index 0
+  int prev_mode_cmd[5];  // for the 4 ticks required  to switch to stopped; newest val at index 0
   float prev_position[3];
   float prev_att[4];
   float pos_err_parameter[3];  // in cex control executive

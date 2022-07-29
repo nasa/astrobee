@@ -59,8 +59,6 @@ GncCtlAutocode::GncCtlAutocode(void) {
   rotational_integrator[0] = 0;
   rotational_integrator[1] = 0;
   rotational_integrator[2] = 0;
- 
-
 
   /****from Simulink Controller*****/
   controller_ = ctl_controller0(&ctl_input_, &cmd_, &ctl_);
@@ -81,8 +79,6 @@ void GncCtlAutocode::Step(void) {
     ros::console::notifyLoggerLevelsChanged();
   }
 
-  
-
   // copy of what it is before
 
   ctl_input_msg before_ctl_input_;
@@ -91,9 +87,9 @@ void GncCtlAutocode::Step(void) {
   BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
 /****from Simulink Controller*****/
-// std::string str1 = std::to_string(ctl_input_.est_confidence);
+// std::string str1 = std::to_string(ctl_input_.ctl_mode_cmd);
 //      const char *conf = str1.c_str();
-//     ROS_ERROR("Simulink est confidence:%s", conf);
+//     ROS_ERROR("Simulink ctl_input ctl_mode_cmd:%s", conf);
 
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 
@@ -114,12 +110,9 @@ void GncCtlAutocode::Step(void) {
   AfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
   RevertBackToBeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
-
-     std::string str2 = std::to_string(ctl_input_.ctl_mode_cmd);
-     const char *mode = str2.c_str();
-    ROS_ERROR("my input ctl_mode_cmd:%s", mode);
-  
-
+// std::string str2 = std::to_string(ctl_input_.ctl_mode_cmd);
+//      const char *conf1 = str2.c_str();
+//     ROS_ERROR("My ctl_input ctl_mode_cmd:%s", conf1);
   /*****cex_control_executive*****/
   UpdateModeCmd();
   UpdateStoppedMode();
@@ -151,19 +144,18 @@ void GncCtlAutocode::Step(void) {
 
 /*Publish to ctl_msg */
   VarToCtlMsg();
-  
 
 /* Test for ctl_status */
-  // std::string str = std::to_string(ctl_.ctl_status);
-  //   const char *mine = str.c_str();
+  std::string str = std::to_string(ctl_status);
+    const char *mine = str.c_str();
 
-  //   std::string str1 = std::to_string(after_ctl_.ctl_status);
-  //   const char *old = str1.c_str();
-  //   if (ctl_.ctl_status != after_ctl_.ctl_status) {
-  //      ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
-  //   } else {
-  //     ROS_ERROR("equal New:%s Old:%s", mine, old);
-    // }
+    std::string str3 = std::to_string(after_ctl_.ctl_status);
+    const char *old = str3.c_str();
+    if (ctl_.ctl_status != after_ctl_.ctl_status) {
+       ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
+    } else {
+      ROS_ERROR("equal New:%s Old:%s", mine, old);
+    }
 
 
 // revert back to Simulink after my controller
@@ -995,11 +987,11 @@ bool GncCtlAutocode::CmdModeMakeCondition() {
   prev_mode_cmd[1] = prev_mode_cmd[0];
   // update index 0 with new value
   prev_mode_cmd[0] = mode_cmd;
-
+  //Note: since i am shifting first, i don't account for the newest value in the comparison
   // check if they all equal ctl_stopping_mode
-  if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) && (prev_mode_cmd[4] == prev_mode_cmd[3]) &&
-      (prev_mode_cmd[3] == prev_mode_cmd[2]) && (prev_mode_cmd[2] == prev_mode_cmd[1]) &&
-      (prev_mode_cmd[1] == prev_mode_cmd[0])) {
+    if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) &&
+      (prev_mode_cmd[4] == prev_mode_cmd[3]) && (prev_mode_cmd[3] == prev_mode_cmd[2]) &&
+      (prev_mode_cmd[2] == prev_mode_cmd[1])) {
     return true;
   }
   return false;
