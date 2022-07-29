@@ -158,8 +158,7 @@ class GncCtlAutocode {
 
   void VarToCtlMsg();
 
-
-  //for testing
+  // for testing
   void BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
   void AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
   void RevertBackToBeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);

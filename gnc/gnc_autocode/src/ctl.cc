@@ -59,6 +59,8 @@ GncCtlAutocode::GncCtlAutocode(void) {
   rotational_integrator[0] = 0;
   rotational_integrator[1] = 0;
   rotational_integrator[2] = 0;
+ 
+
 
   /****from Simulink Controller*****/
   controller_ = ctl_controller0(&ctl_input_, &cmd_, &ctl_);
@@ -79,36 +81,44 @@ void GncCtlAutocode::Step(void) {
     ros::console::notifyLoggerLevelsChanged();
   }
 
+  
+
   // copy of what it is before
 
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
   ctl_msg before_ctl_;
   BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
-  
-  
+
 /****from Simulink Controller*****/
+// std::string str1 = std::to_string(ctl_input_.est_confidence);
+//      const char *conf = str1.c_str();
+//     ROS_ERROR("Simulink est confidence:%s", conf);
+
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 
+// std::string str3 = std::to_string(cmd_.cmd_mode);
+//      const char *sec = str3.c_str();
+//     ROS_ERROR("After Simulink cmd_mode:%s", sec);
+  // std::string str = std::to_string(ctl_.ctl_status);
+  //    const char *status = str.c_str();
+  //   ROS_ERROR("Simulink Ctl_status:%s", status);
+
+
+
   // copy of what it is after Simulink controller
-  
   ctl_input_msg after_ctl_input_;
   cmd_msg after_cmd_;
   ctl_msg after_ctl_;
 
   AfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
   RevertBackToBeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
-  /* Test for ctl_status */
-  std::string str = std::to_string(before_ctl_.ctl_status);
-    const char *old = str.c_str();
 
-    std::string str1 = std::to_string(ctl_.ctl_status);
-    const char *mine = str1.c_str();
-    if (ctl_.ctl_status != before_ctl_.ctl_status) {
-       ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
-    } else {
-      ROS_ERROR("equal New:%s Old:%s", mine, old);
-    }
+
+     std::string str2 = std::to_string(ctl_input_.ctl_mode_cmd);
+     const char *mode = str2.c_str();
+    ROS_ERROR("my input ctl_mode_cmd:%s", mode);
+  
 
   /*****cex_control_executive*****/
   UpdateModeCmd();
@@ -138,24 +148,29 @@ void GncCtlAutocode::Step(void) {
   FindBodyTorqueCmd();
 
 
+
 /*Publish to ctl_msg */
   VarToCtlMsg();
+  
+
+/* Test for ctl_status */
+  // std::string str = std::to_string(ctl_.ctl_status);
+  //   const char *mine = str.c_str();
+
+  //   std::string str1 = std::to_string(after_ctl_.ctl_status);
+  //   const char *old = str1.c_str();
+  //   if (ctl_.ctl_status != after_ctl_.ctl_status) {
+  //      ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
+  //   } else {
+  //     ROS_ERROR("equal New:%s Old:%s", mine, old);
+    // }
+
 
 // revert back to Simulink after my controller
-    RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
+  RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
 
 
   // comparison tests
-  
-
-    
-
-    
-
-   
-
-
-
 
   /*Publish to ctl_msg */
   // VarToCtlMsg();
@@ -223,8 +238,8 @@ void GncCtlAutocode::Step(void) {
   //   ROS_ERROR("Position New:%s ", mine);
 }
 
-void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_)
-{
+void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& after_cmd_,
+                                               ctl_msg& after_ctl_) {
   for (int i = 0; i < 4; i++) {
       ctl_input_.est_quat_ISS2B[i] = after_ctl_input_.est_quat_ISS2B[i];
     }
@@ -288,22 +303,22 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, 
   ctl_.traj_error_vel = after_ctl_.traj_error_vel;
   ctl_.traj_error_omega = after_ctl_.traj_error_omega;
 }
- void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_)
- {
-   for (int i = 0; i < 4; i++) {
-      ctl_input_.est_quat_ISS2B[i] = before_ctl_input_.est_quat_ISS2B[i];
-    }
-    for (int i = 0; i < 3; i++) {
-      ctl_input_.est_omega_B_ISS_B[i] = before_ctl_input_.est_omega_B_ISS_B[i];
-      ctl_input_.est_V_B_ISS_ISS[i] = before_ctl_input_.est_V_B_ISS_ISS[i];
-      ctl_input_.est_P_B_ISS_ISS[i] = before_ctl_input_.est_P_B_ISS_ISS[i];
-      ctl_input_.att_kp[i] = before_ctl_input_.att_kp[i];
-      ctl_input_.att_ki[i] = before_ctl_input_.att_ki[i];
-      ctl_input_.omega_kd[i] = before_ctl_input_.omega_kd[i];
-      ctl_input_.pos_kp[i] = before_ctl_input_.pos_kp[i];
-      ctl_input_.pos_ki[i] = before_ctl_input_.pos_ki[i];
-      ctl_input_.vel_kd[i] = before_ctl_input_.vel_kd[i];
-    }
+void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& before_cmd_,
+                                                ctl_msg& before_ctl_) {
+  for (int i = 0; i < 4; i++) {
+    ctl_input_.est_quat_ISS2B[i] = before_ctl_input_.est_quat_ISS2B[i];
+  }
+  for (int i = 0; i < 3; i++) {
+    ctl_input_.est_omega_B_ISS_B[i] = before_ctl_input_.est_omega_B_ISS_B[i];
+    ctl_input_.est_V_B_ISS_ISS[i] = before_ctl_input_.est_V_B_ISS_ISS[i];
+    ctl_input_.est_P_B_ISS_ISS[i] = before_ctl_input_.est_P_B_ISS_ISS[i];
+    ctl_input_.att_kp[i] = before_ctl_input_.att_kp[i];
+    ctl_input_.att_ki[i] = before_ctl_input_.att_ki[i];
+    ctl_input_.omega_kd[i] = before_ctl_input_.omega_kd[i];
+    ctl_input_.pos_kp[i] = before_ctl_input_.pos_kp[i];
+    ctl_input_.pos_ki[i] = before_ctl_input_.pos_ki[i];
+    ctl_input_.vel_kd[i] = before_ctl_input_.vel_kd[i];
+  }
   ctl_input_.est_confidence = before_ctl_input_.est_confidence;
   ctl_input_.cmd_state_a = before_ctl_input_.cmd_state_a;
   ctl_input_.cmd_state_b = before_ctl_input_.cmd_state_b;
@@ -352,11 +367,9 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, 
   ctl_.traj_error_att = before_ctl_.traj_error_att;
   ctl_.traj_error_vel = before_ctl_.traj_error_vel;
   ctl_.traj_error_omega = before_ctl_.traj_error_omega;
+}
 
- }
-
-void GncCtlAutocode::AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_)
-{
+void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& after_cmd_, ctl_msg& after_ctl_) {
   for (int i = 0; i < 4; i++) {
     after_ctl_input_.est_quat_ISS2B[i] = ctl_input_.est_quat_ISS2B[i];
   }
@@ -385,7 +398,6 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &aft
     after_ctl_input_.inertia_matrix[i] = ctl_input_.inertia_matrix[i];
   }
 
-  
   after_cmd_.cmd_timestamp_sec = cmd_.cmd_timestamp_sec;
   after_cmd_.cmd_timestamp_nsec = cmd_.cmd_timestamp_nsec;
   after_cmd_.cmd_mode = cmd_.cmd_mode;
@@ -404,7 +416,6 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &aft
     after_cmd_.traj_quat[i] = cmd_.traj_quat[i];
   }
 
-  
   for (int i = 0; i < 3; i++) {
     after_ctl_.body_force_cmd[i] = ctl_.body_force_cmd[i];
     after_ctl_.body_accel_cmd[i] = ctl_.body_accel_cmd[i];
@@ -422,9 +433,8 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &aft
   after_ctl_.traj_error_vel = ctl_.traj_error_vel;
   after_ctl_.traj_error_omega = ctl_.traj_error_omega;
 }
-void GncCtlAutocode::BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_)
-  {
-    for (int i = 0; i < 4; i++) {
+void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& before_cmd_, ctl_msg& before_ctl_) {
+  for (int i = 0; i < 4; i++) {
     before_ctl_input_.est_quat_ISS2B[i] = ctl_input_.est_quat_ISS2B[i];
   }
   for (int i = 0; i < 3; i++) {
@@ -452,7 +462,6 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &b
     before_ctl_input_.inertia_matrix[i] = ctl_input_.inertia_matrix[i];
   }
 
-  
   before_cmd_.cmd_timestamp_sec = cmd_.cmd_timestamp_sec;
   before_cmd_.cmd_timestamp_nsec = cmd_.cmd_timestamp_nsec;
   before_cmd_.cmd_mode = cmd_.cmd_mode;
@@ -471,7 +480,6 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &b
     before_cmd_.traj_quat[i] = cmd_.traj_quat[i];
   }
 
-  
   for (int i = 0; i < 3; i++) {
     before_ctl_.body_force_cmd[i] = ctl_.body_force_cmd[i];
     before_ctl_.body_accel_cmd[i] = ctl_.body_accel_cmd[i];
@@ -488,8 +496,7 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &b
   before_ctl_.traj_error_att = ctl_.traj_error_att;
   before_ctl_.traj_error_vel = ctl_.traj_error_vel;
   before_ctl_.traj_error_omega = ctl_.traj_error_omega;
-
-  }
+}
 void GncCtlAutocode::VarToCtlMsg() {
   for (int i = 0; i < 3; i++) {
     ctl_.body_force_cmd[i] = body_force_cmd[i];
@@ -1003,7 +1010,8 @@ void GncCtlAutocode::UpdateModeCmd() {
   if (ctl_input_.est_confidence != constants::ase_status_converged) {
     mode_cmd = constants::ctl_idle_mode;
   } else {
-    mode_cmd = cmd_.cmd_mode;
+    // mode_cmd = cmd_.cmd_mode;
+    mode_cmd = ctl_input_.ctl_mode_cmd;
   }
 }
 
