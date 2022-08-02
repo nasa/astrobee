@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     parser.add_argument("csv_a", help="input A CSV filename")
     parser.add_argument("csv_b", help="input B CSV filename")
-    parser.add_argument("csv_out", help="output joined CSV filename")
+    parser.add_argument("csv_out", help="output joined CSV Filename")
 
     args = parser.parse_args()
     level = logging.DEBUG if args.verbose else logging.INFO
