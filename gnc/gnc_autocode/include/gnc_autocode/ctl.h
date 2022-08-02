@@ -120,6 +120,7 @@ class GncCtlAutocode {
   float i_matrix[3][3];
   float rate_error[3];  // helper in rot control
   float body_torque_cmd[3];
+  float traj_pos_previous[3];
 
   bool BelowThreshold(float velocity[], float threshhold, float previous[3]);
   void UpdateModeCmd(void);

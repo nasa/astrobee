@@ -74,53 +74,46 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
-                                     ros::console::levels::Debug)) {  // Change the level to fit your needs
-    ros::console::notifyLoggerLevelsChanged();
-  }
+std::string str7 = std::to_string(ctl_input_.cmd_state_a.P_B_ISS_ISS[0]);
+  const char *old7 = str7.c_str();
+    ROS_ERROR("ctl_input_.cmd_state_a.P_B_ISS_ISS[0] into Simulink:%s ", old7);
 
   // copy of what it is before
-
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
   ctl_msg before_ctl_;
   BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
-/****from Simulink Controller*****/
-// std::string str1 = std::to_string(ctl_input_.ctl_mode_cmd);
-//      const char *conf = str1.c_str();
-//     ROS_ERROR("Simulink ctl_input ctl_mode_cmd:%s", conf);
 
+std::string str1 = std::to_string(cmd_.traj_pos[0]);
+  const char *old = str1.c_str();
+    ROS_ERROR("Traj pos into Simulink:%s ", old);
+
+
+
+
+/****from Simulink Controller*****/    
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
-
-// std::string str3 = std::to_string(cmd_.cmd_mode);
-//      const char *sec = str3.c_str();
-//     ROS_ERROR("After Simulink cmd_mode:%s", sec);
-  // std::string str = std::to_string(ctl_.ctl_status);
-  //    const char *status = str.c_str();
-  //   ROS_ERROR("Simulink Ctl_status:%s", status);
-
 
 
   // copy of what it is after Simulink controller
   ctl_input_msg after_ctl_input_;
   cmd_msg after_cmd_;
   ctl_msg after_ctl_;
-
   AfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
   RevertBackToBeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
-// std::string str2 = std::to_string(ctl_input_.ctl_mode_cmd);
-//      const char *conf1 = str2.c_str();
-//     ROS_ERROR("My ctl_input ctl_mode_cmd:%s", conf1);
+
+
   /*****cex_control_executive*****/
   UpdateModeCmd();
   UpdateStoppedMode();
-  UpdatePosAndQuat();
   FindPosError();
   FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy);
-  UpdatePrevious();  // this might need to go later
+  UpdatePosAndQuat();
+ 
   UpdateCtlStatus();
+  
   BypassShaper();
 
 /*****clc_closed_loop_controller*****/
@@ -140,44 +133,56 @@ void GncCtlAutocode::Step(void) {
   FindBodyAlphaCmd();
   FindBodyTorqueCmd();
 
-
+ UpdatePrevious();  // this might need to go later
 
 /*Publish to ctl_msg */
   VarToCtlMsg();
 
-/* Test for ctl_status */
-  std::string str = std::to_string(ctl_status);
-    const char *mine = str.c_str();
+// comparison tests
 
-    std::string str3 = std::to_string(after_ctl_.ctl_status);
-    const char *old = str3.c_str();
-    if (ctl_.ctl_status != after_ctl_.ctl_status) {
-       ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
+
+/* Test for ctl_status */
+  // std::string str = std::to_string(ctl_status);
+  //   const char *mine = str.c_str();
+
+  //   std::string str3 = std::to_string(after_ctl_.ctl_status);
+  //   const char *old = str3.c_str();
+  //   if (ctl_.ctl_status != after_ctl_.ctl_status) {
+  //      ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
+  //   } else {
+  //     ROS_ERROR("equal New:%s Old:%s", mine, old);
+  //   }
+
+ /*Test for position command*/
+  // std::string str1 = std::to_string(position_command[0]);
+  // const char *mine = str.c_str();
+  //   ROS_ERROR("Position New:%s ", mine);
+
+/* Test for pos_err */
+  std::string str3 = std::to_string(after_ctl_.pos_err[0]);
+  const char *old1= str3.c_str();
+
+  std::string str4 = std::to_string(ctl_.pos_err[0]);
+  const char *mine1 = str4.c_str();
+    if (ctl_.pos_err[0] !=pos_err_outport[0]) {
+      ROS_ERROR("NOT ******* equal old pos  error:%s new: %s", old1, mine1);
     } else {
-      ROS_ERROR("equal New:%s Old:%s", mine, old);
+      float difference = ctl_.pos_err[0] - after_ctl_.pos_err[0];
+      difference = difference / after_ctl_.pos_err[0] * 100;
+      ROS_ERROR("equal old pos error:%s new: %s, difference %: %f", old1, mine1, difference);
     }
+
+
 
 
 // revert back to Simulink after my controller
   RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
 
 
-  // comparison tests
 
-  /*Publish to ctl_msg */
-  // VarToCtlMsg();
 
-  /* Test for pos_err */
-  // std::string str1 = std::to_string(ctl_.pos_err[2]);
-  // const char *old= str1.c_str();
 
-  // std::string str3 = std::to_string(pos_err_outport[2]);
-  // const char *mine = str3.c_str();
-  //   if (ctl_.pos_err[2] !=pos_err_outport[2]) {
-  //     ROS_ERROR("NOT equal old pos  error:%s new: %s", old, mine);
-  //   } else {
-  //     ROS_ERROR("equal old pos error:%s new: %s", old, mine);
-  //   }
+  
 
   /*Test for Linear Int Err*/
   // std::string str = std::to_string(ctl_.pos_err_int[0]);
@@ -224,10 +229,7 @@ void GncCtlAutocode::Step(void) {
 // ROS_ERROR("Att_command New:%s ", mine);
 
 
-/*Test for position command*/
-  // std::string str1 = std::to_string(position_command[0]);
-  // const char *mine = str.c_str();
-  //   ROS_ERROR("Position New:%s ", mine);
+
 }
 
 void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& after_cmd_,
@@ -247,8 +249,8 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, 
       ctl_input_.vel_kd[i] = after_ctl_input_.vel_kd[i];
     }
   ctl_input_.est_confidence = after_ctl_input_.est_confidence;
-  ctl_input_.cmd_state_a = after_ctl_input_.cmd_state_a;
-  ctl_input_.cmd_state_b = after_ctl_input_.cmd_state_b;
+  // ctl_input_.cmd_state_a = after_ctl_input_.cmd_state_a;
+  // ctl_input_.cmd_state_b = after_ctl_input_.cmd_state_b;
   ctl_input_.ctl_mode_cmd = after_ctl_input_.ctl_mode_cmd;
   ctl_input_.current_time_sec = after_ctl_input_.current_time_sec;
   ctl_input_.current_time_nsec = after_ctl_input_.current_time_nsec;
@@ -256,6 +258,39 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, 
   ctl_input_.speed_gain_cmd = after_ctl_input_.speed_gain_cmd;
   ctl_input_. mass = after_ctl_input_. mass;
 
+  //copy the cmd_state_ a and b for ctl_input
+  ctl_input_.cmd_state_a.timestamp_sec =  after_ctl_input_.cmd_state_a.timestamp_sec;
+  ctl_input_.cmd_state_b.timestamp_sec =  after_ctl_input_.cmd_state_b.timestamp_sec;
+
+
+  ctl_input_.cmd_state_a.timestamp_nsec =  after_ctl_input_.cmd_state_a.timestamp_nsec;
+  ctl_input_.cmd_state_b.timestamp_nsec =  after_ctl_input_.cmd_state_b.timestamp_nsec;
+
+
+  for (int i = 0; i < 3; i++)
+  {
+    ctl_input_.cmd_state_a.P_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
+    ctl_input_.cmd_state_b.P_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
+
+    ctl_input_.cmd_state_a.V_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_a.V_B_ISS_ISS[i];
+    ctl_input_.cmd_state_b.V_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_b.V_B_ISS_ISS[i];
+
+    ctl_input_.cmd_state_a.A_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+    ctl_input_.cmd_state_b.A_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+
+    ctl_input_.cmd_state_a.omega_B_ISS_B[i] =  after_ctl_input_.cmd_state_a.omega_B_ISS_B[i];
+    ctl_input_.cmd_state_b.omega_B_ISS_B[i] =  after_ctl_input_.cmd_state_b.omega_B_ISS_B[i];
+
+    ctl_input_.cmd_state_a.alpha_B_ISS_B[i] =  after_ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
+    ctl_input_.cmd_state_b.alpha_B_ISS_B[i] =  after_ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    ctl_input_.cmd_state_a.quat_ISS2B[i] =  after_ctl_input_.cmd_state_a.quat_ISS2B[i];
+    ctl_input_.cmd_state_b.quat_ISS2B[i] =  after_ctl_input_.cmd_state_b.quat_ISS2B[i];
+  }
+  
   for (int i = 0; i < 9; i++) {
     ctl_input_.inertia_matrix[i] = after_ctl_input_.inertia_matrix[i];
   }
@@ -312,8 +347,8 @@ void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_
     ctl_input_.vel_kd[i] = before_ctl_input_.vel_kd[i];
   }
   ctl_input_.est_confidence = before_ctl_input_.est_confidence;
-  ctl_input_.cmd_state_a = before_ctl_input_.cmd_state_a;
-  ctl_input_.cmd_state_b = before_ctl_input_.cmd_state_b;
+  // ctl_input_.cmd_state_a = before_ctl_input_.cmd_state_a;
+  // ctl_input_.cmd_state_b = before_ctl_input_.cmd_state_b;
   ctl_input_.ctl_mode_cmd = before_ctl_input_.ctl_mode_cmd;
   ctl_input_.current_time_sec = before_ctl_input_.current_time_sec;
   ctl_input_.current_time_nsec = before_ctl_input_.current_time_nsec;
@@ -321,6 +356,40 @@ void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_
   ctl_input_.speed_gain_cmd = before_ctl_input_.speed_gain_cmd;
   ctl_input_. mass = before_ctl_input_. mass;
 
+  //copy the cmd_state_ a and b for ctl_input
+  ctl_input_.cmd_state_a.timestamp_sec = before_ctl_input_.cmd_state_a.timestamp_sec;
+  ctl_input_.cmd_state_b.timestamp_sec = before_ctl_input_.cmd_state_b.timestamp_sec;
+
+
+  ctl_input_.cmd_state_a.timestamp_nsec = before_ctl_input_.cmd_state_a.timestamp_nsec;
+  ctl_input_.cmd_state_b.timestamp_nsec = before_ctl_input_.cmd_state_b.timestamp_nsec;
+
+
+  for (int i = 0; i < 3; i++)
+  {
+    ctl_input_.cmd_state_a.P_B_ISS_ISS[i] = before_ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
+    ctl_input_.cmd_state_b.P_B_ISS_ISS[i] = before_ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
+
+    ctl_input_.cmd_state_a.V_B_ISS_ISS[i] = before_ctl_input_.cmd_state_a.V_B_ISS_ISS[i];
+    ctl_input_.cmd_state_b.V_B_ISS_ISS[i] = before_ctl_input_.cmd_state_b.V_B_ISS_ISS[i];
+
+    ctl_input_.cmd_state_a.A_B_ISS_ISS[i] = before_ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+    ctl_input_.cmd_state_b.A_B_ISS_ISS[i] = before_ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+
+    ctl_input_.cmd_state_a.omega_B_ISS_B[i] = before_ctl_input_.cmd_state_a.omega_B_ISS_B[i];
+    ctl_input_.cmd_state_b.omega_B_ISS_B[i] = before_ctl_input_.cmd_state_b.omega_B_ISS_B[i];
+
+    ctl_input_.cmd_state_a.alpha_B_ISS_B[i] = before_ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
+    ctl_input_.cmd_state_b.alpha_B_ISS_B[i] = before_ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    ctl_input_.cmd_state_a.quat_ISS2B[i] = before_ctl_input_.cmd_state_a.quat_ISS2B[i];
+    ctl_input_.cmd_state_b.quat_ISS2B[i] = before_ctl_input_.cmd_state_b.quat_ISS2B[i];
+  }
+
+  
   for (int i = 0; i < 9; i++) {
     ctl_input_.inertia_matrix[i] = before_ctl_input_.inertia_matrix[i];
   }
@@ -377,8 +446,8 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& aft
     after_ctl_input_.vel_kd[i] = ctl_input_.vel_kd[i];
   }
   after_ctl_input_.est_confidence = ctl_input_.est_confidence;
-  after_ctl_input_.cmd_state_a = ctl_input_.cmd_state_a;
-  after_ctl_input_.cmd_state_b = ctl_input_.cmd_state_b;
+  // after_ctl_input_.cmd_state_a = ctl_input_.cmd_state_a;
+  // after_ctl_input_.cmd_state_b = ctl_input_.cmd_state_b;
   after_ctl_input_.ctl_mode_cmd = ctl_input_.ctl_mode_cmd;
   after_ctl_input_.current_time_sec = ctl_input_.current_time_sec;
   after_ctl_input_.current_time_nsec = ctl_input_.current_time_nsec;
@@ -386,6 +455,39 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& aft
   after_ctl_input_.speed_gain_cmd = ctl_input_.speed_gain_cmd;
   after_ctl_input_. mass = ctl_input_. mass;
 
+
+  //copy the cmd_state_ a and b for ctl_input
+  after_ctl_input_.cmd_state_a.timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
+  after_ctl_input_.cmd_state_b.timestamp_sec = ctl_input_.cmd_state_b.timestamp_sec;
+
+
+  after_ctl_input_.cmd_state_a.timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
+  after_ctl_input_.cmd_state_b.timestamp_nsec = ctl_input_.cmd_state_b.timestamp_nsec;
+
+
+  for (int i = 0; i < 3; i++)
+  {
+    after_ctl_input_.cmd_state_a.P_B_ISS_ISS[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
+    after_ctl_input_.cmd_state_b.P_B_ISS_ISS[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
+
+    after_ctl_input_.cmd_state_a.V_B_ISS_ISS[i] = ctl_input_.cmd_state_a.V_B_ISS_ISS[i];
+    after_ctl_input_.cmd_state_b.V_B_ISS_ISS[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i];
+
+    after_ctl_input_.cmd_state_a.A_B_ISS_ISS[i] = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+    after_ctl_input_.cmd_state_b.A_B_ISS_ISS[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+
+    after_ctl_input_.cmd_state_a.omega_B_ISS_B[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i];
+    after_ctl_input_.cmd_state_b.omega_B_ISS_B[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i];
+
+    after_ctl_input_.cmd_state_a.alpha_B_ISS_B[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
+    after_ctl_input_.cmd_state_b.alpha_B_ISS_B[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    after_ctl_input_.cmd_state_a.quat_ISS2B[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
+    after_ctl_input_.cmd_state_b.quat_ISS2B[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
+  }
   for (int i = 0; i < 9; i++) {
     after_ctl_input_.inertia_matrix[i] = ctl_input_.inertia_matrix[i];
   }
@@ -441,14 +543,48 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& b
     before_ctl_input_.vel_kd[i] = ctl_input_.vel_kd[i];
   }
   before_ctl_input_.est_confidence = ctl_input_.est_confidence;
-  before_ctl_input_.cmd_state_a = ctl_input_.cmd_state_a;
-  before_ctl_input_.cmd_state_b = ctl_input_.cmd_state_b;
+  
   before_ctl_input_.ctl_mode_cmd = ctl_input_.ctl_mode_cmd;
   before_ctl_input_.current_time_sec = ctl_input_.current_time_sec;
   before_ctl_input_.current_time_nsec = ctl_input_.current_time_nsec;
 
   before_ctl_input_.speed_gain_cmd = ctl_input_.speed_gain_cmd;
   before_ctl_input_. mass = ctl_input_. mass;
+
+//copy the cmd_state_ a and b for ctl_input
+  before_ctl_input_.cmd_state_a.timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
+  before_ctl_input_.cmd_state_b.timestamp_sec = ctl_input_.cmd_state_b.timestamp_sec;
+
+
+  before_ctl_input_.cmd_state_a.timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
+  before_ctl_input_.cmd_state_b.timestamp_nsec = ctl_input_.cmd_state_b.timestamp_nsec;
+
+
+  for (int i = 0; i < 3; i++)
+  {
+    before_ctl_input_.cmd_state_a.P_B_ISS_ISS[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
+    before_ctl_input_.cmd_state_b.P_B_ISS_ISS[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
+
+    before_ctl_input_.cmd_state_a.V_B_ISS_ISS[i] = ctl_input_.cmd_state_a.V_B_ISS_ISS[i];
+    before_ctl_input_.cmd_state_b.V_B_ISS_ISS[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i];
+
+    before_ctl_input_.cmd_state_a.A_B_ISS_ISS[i] = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+    before_ctl_input_.cmd_state_b.A_B_ISS_ISS[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+
+    before_ctl_input_.cmd_state_a.omega_B_ISS_B[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i];
+    before_ctl_input_.cmd_state_b.omega_B_ISS_B[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i];
+
+    before_ctl_input_.cmd_state_a.alpha_B_ISS_B[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
+    before_ctl_input_.cmd_state_b.alpha_B_ISS_B[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    before_ctl_input_.cmd_state_a.quat_ISS2B[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
+    before_ctl_input_.cmd_state_b.quat_ISS2B[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
+  }
+
+
 
   for (int i = 0; i < 9; i++) {
     before_ctl_input_.inertia_matrix[i] = ctl_input_.inertia_matrix[i];
@@ -799,6 +935,15 @@ void GncCtlAutocode::VariablesTransfer() {
 }
 
 void GncCtlAutocode::FindPosErr() {
+  std::string str1 = std::to_string(CMD_P_B_ISS_ISS[0]);
+  const char *old = str1.c_str();
+
+  std::string str2 = std::to_string(ctl_input_.est_P_B_ISS_ISS[0]);
+  const char *old1 = str2.c_str();
+    ROS_ERROR("Mine: first:%s", old);
+
+
+
   for (int i = 0; i < 3; i++) {
     pos_err_outport[i] = CMD_P_B_ISS_ISS[i] - ctl_input_.est_P_B_ISS_ISS[i];
   }
@@ -925,6 +1070,7 @@ void GncCtlAutocode::UpdatePosAndQuat() {
   } else {
     for (int i = 0; i < 3; i++) {
       position_command[i] = cmd_.traj_pos[i];
+      //position_command[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
       att_command[i] = cmd_.traj_quat[i];
     }
     att_command[3] = cmd_.traj_quat[3];
@@ -950,6 +1096,7 @@ void GncCtlAutocode::UpdateStoppedMode() {
   } else {
     stopped_mode = false;
   }
+  ROS_ERROR("stopped mode: %i", stopped_mode);
 }
 /*Butterworth filter implementation */
 float GncCtlAutocode::ButterWorthFilter(float input, float& delay_val) {
@@ -987,11 +1134,10 @@ bool GncCtlAutocode::CmdModeMakeCondition() {
   prev_mode_cmd[1] = prev_mode_cmd[0];
   // update index 0 with new value
   prev_mode_cmd[0] = mode_cmd;
-  //Note: since i am shifting first, i don't account for the newest value in the comparison
+  // Note: since i am shifting first, i don't account for the newest value in the comparison
   // check if they all equal ctl_stopping_mode
-    if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) &&
-      (prev_mode_cmd[4] == prev_mode_cmd[3]) && (prev_mode_cmd[3] == prev_mode_cmd[2]) &&
-      (prev_mode_cmd[2] == prev_mode_cmd[1])) {
+  if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) && (prev_mode_cmd[4] == prev_mode_cmd[3]) &&
+      (prev_mode_cmd[3] == prev_mode_cmd[2]) && (prev_mode_cmd[2] == prev_mode_cmd[1])) {
     return true;
   }
   return false;
