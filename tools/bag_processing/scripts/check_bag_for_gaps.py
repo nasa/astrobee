@@ -32,7 +32,7 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
-    parser.add_argument("topic", help="Topic to check.")
+    parser.add_argument("topic", help="Topic to Check.")
     parser.add_argument(
         "-m",
         "--max-time-diff",
