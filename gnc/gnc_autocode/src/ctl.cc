@@ -74,22 +74,15 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-std::string str7 = std::to_string(ctl_input_.cmd_state_a.P_B_ISS_ISS[0]);
-  const char *old7 = str7.c_str();
-    ROS_ERROR("ctl_input_.cmd_state_a.P_B_ISS_ISS[0] into Simulink:%s ", old7);
+// std::string str7 = std::to_string(ctl_input_.cmd_state_a.P_B_ISS_ISS[0]);
+//   const char *old7 = str7.c_str();
+//     ROS_ERROR("ctl_input_.cmd_state_a.P_B_ISS_ISS[0] into Simulink:%s ", old7);
 
   // copy of what it is before
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
   ctl_msg before_ctl_;
   BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
-
-
-std::string str1 = std::to_string(cmd_.traj_pos[0]);
-  const char *old = str1.c_str();
-    ROS_ERROR("Traj pos into Simulink:%s ", old);
-
-
 
 
 /****from Simulink Controller*****/    
@@ -104,6 +97,9 @@ std::string str1 = std::to_string(cmd_.traj_pos[0]);
   RevertBackToBeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
 
+  /*****command_shaper*****/
+  CmdSelector();
+  GenerateCmdPath();
 
   /*****cex_control_executive*****/
   UpdateModeCmd();
@@ -154,23 +150,24 @@ std::string str1 = std::to_string(cmd_.traj_pos[0]);
   //   }
 
  /*Test for position command*/
-  // std::string str1 = std::to_string(position_command[0]);
-  // const char *mine = str.c_str();
-  //   ROS_ERROR("Position New:%s ", mine);
+  // std::string str1 = std::to_string(ctl_.pos_err[0]);
+  // const char *mine = str1.c_str();
+  //   ROS_ERROR("Simulink Pos Err:%s ", mine);
 
 /* Test for pos_err */
-  std::string str3 = std::to_string(after_ctl_.pos_err[0]);
-  const char *old1= str3.c_str();
+  // std::string str3 = std::to_string(after_ctl_.pos_err[0]);
+  // const char *old1= str3.c_str();
 
-  std::string str4 = std::to_string(ctl_.pos_err[0]);
-  const char *mine1 = str4.c_str();
-    if (ctl_.pos_err[0] !=pos_err_outport[0]) {
-      ROS_ERROR("NOT ******* equal old pos  error:%s new: %s", old1, mine1);
-    } else {
-      float difference = ctl_.pos_err[0] - after_ctl_.pos_err[0];
-      difference = difference / after_ctl_.pos_err[0] * 100;
-      ROS_ERROR("equal old pos error:%s new: %s, difference %: %f", old1, mine1, difference);
-    }
+  // std::string str4 = std::to_string(ctl_.pos_err[0]);
+  // const char *mine1 = str4.c_str();
+  //   if (ctl_.pos_err[0] !=pos_err_outport[0]) {
+  //     ROS_ERROR("NOT ******* equal old pos  error:%s new: %s", old1, mine1);
+  //   } else {
+  //     float difference = ctl_.pos_err[0] - after_ctl_.pos_err[0];
+  //     difference = difference / after_ctl_.pos_err[0] * 100;
+  //     ROS_ERROR("equal old pos error:%s new: %s, difference %: %f", old1, mine1, difference);
+  //   }
+
 
 
 
@@ -209,7 +206,7 @@ std::string str1 = std::to_string(cmd_.traj_pos[0]);
 //   } else {
 //     ROS_ERROR("equal New:%s Old:%s", mine, old);
 //   }
-//}
+
 
 /*Test for att_Err_mag*/
 // std::string str = std::to_string(ctl_.att_err_mag);
@@ -228,10 +225,91 @@ std::string str1 = std::to_string(cmd_.traj_pos[0]);
 //   const char *mine = str.c_str();
 // ROS_ERROR("Att_command New:%s ", mine);
 
+}
 
+/*Command Shaper */
+void GncCtlAutocode::GenerateCmdAttitude()
+{
+  if (state_cmd_switch_out) //true is A
+  {
+    for (int i = 0; i < 3; i++)
+    {
+     traj_alpha[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
+     traj_omega[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i] + (ctl_input_.cmd_state_a.alpha_B_ISS_B[i] * time_delta);
+    } 
+    for (int i = 0; i < 4; i++)
+    {
+     // TODO create omega matrix
+    }
+    //extra for quat size 4*****TODO or do separate all together for  uat since it is more complicated 
+  }
+  else{ //false so cmd B
+
+    for (int i = 0; i < 3; i++)
+    {
+     traj_alpha[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
+     traj_omega[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i] + (ctl_input_.cmd_state_b.alpha_B_ISS_B[i] * time_delta);
+    } 
+    //extra for quat size 4*****TODO
+  }
+}
+
+void GncCtlAutocode::CreateOmegaMatrix(float input[3])
+{
 
 }
 
+
+void GncCtlAutocode::GenerateCmdPath()
+{
+  if (state_cmd_switch_out) //true is A
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      traj_pos[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.V_B_ISS_ISS[i] * time_delta) + (0.5 *ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta * time_delta);
+      traj_vel[i] = ctl_input_.cmd_state_a.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta);
+      traj_accel[i] = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+    } 
+  }
+  else{ //false so cmd B
+
+    for (int i = 0; i < 3; i++)
+    {
+      traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) + (0.5 *ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
+      traj_vel[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta);
+      traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+    } 
+  }
+  
+}
+
+
+void GncCtlAutocode::CmdSelector()
+{
+  uint32_T curr_sec = ctl_input_.current_time_sec;
+  uint32_T curr_nsec = ctl_input_.current_time_nsec;
+  
+  if ((ctl_input_.cmd_state_b.timestamp_sec > curr_sec) || ((ctl_input_.cmd_state_b.timestamp_sec == curr_sec) && (curr_nsec < ctl_input_.cmd_state_b.timestamp_nsec)))
+  {
+    state_cmd_switch_out = true;
+    time_delta = (curr_sec - ctl_input_.cmd_state_a.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_a.timestamp_nsec) *  1E-9);
+  }
+  else{
+    state_cmd_switch_out = false;
+    time_delta = (curr_sec - ctl_input_.cmd_state_b.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_b.timestamp_nsec) *  1E-9);
+  }
+
+  cmd_B_inuse = !state_cmd_switch_out;
+}
+
+
+
+
+
+
+
+
+/* Testing functions */
 void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& after_cmd_,
                                                ctl_msg& after_ctl_) {
   for (int i = 0; i < 4; i++) {
@@ -1070,7 +1148,24 @@ void GncCtlAutocode::UpdatePosAndQuat() {
   } else {
     for (int i = 0; i < 3; i++) {
       position_command[i] = cmd_.traj_pos[i];
-      //position_command[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
+      
+
+  /****incomplete work on trying to match what the autocode is****/
+    //   if ((ctl_input_.cmd_state_b.timestamp_sec > ctl_input_.current_time_sec) || ((ctl_input_.current_time_sec ==
+    // ctl_input_.cmd_state_b.timestamp_sec) && (ctl_input_.current_time_nsec < ctl_input_.cmd_state_b.timestamp_nsec)))
+    //   {
+    //       position_command[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
+    //       ctl_input_.cmd_state_b.timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
+    //       ctl_input_.cmd_state_b.timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
+    //   }
+    //   else{
+    //       position_command[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
+    //   }
+
+    //   float rtb_diff = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+    //   float rtb_sqrt = (ctl_input_.current_time_nsec - ctl_input_.cmd_state_b.timestamp_sec) * 1E-9 + (ctl_input_.current_time_sec -ctl_input_.cmd_state_b.timestamp_sec);
+    //   position_command[i] = (0.5 * rtb_diff * rtb_sqrt * rtb_sqrt + position_command[i]) + ugh Switch
+
       att_command[i] = cmd_.traj_quat[i];
     }
     att_command[3] = cmd_.traj_quat[3];

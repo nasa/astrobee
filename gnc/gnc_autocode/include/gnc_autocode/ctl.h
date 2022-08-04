@@ -122,6 +122,19 @@ class GncCtlAutocode {
   float body_torque_cmd[3];
   float traj_pos_previous[3];
 
+  // command shaper
+  bool cmd_B_inuse;
+  bool state_cmd_switch_out;
+  float cmd_timestamp_sec;
+  float cmd_timestamp_nsec;
+  float time_delta;
+  float traj_pos[3];
+  float traj_vel[3];
+  float traj_accel[3];
+  float traj_quat[3];
+  float traj_omega[3];
+  float traj_alpha[3];
+
   bool BelowThreshold(float velocity[], float threshhold, float previous[3]);
   void UpdateModeCmd(void);
   float ButterWorthFilter(float input, float& delay_val);
@@ -164,6 +177,11 @@ class GncCtlAutocode {
   void AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
   void RevertBackToBeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
   void RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
+
+  // command shaper
+  void CmdSelector();
+  void GenerateCmdPath();
+  void GenerateCmdAttitude();
 };
 }  // end namespace gnc_autocode
 
