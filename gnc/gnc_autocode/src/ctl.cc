@@ -25,10 +25,12 @@
 #include <assert.h>
 #include <ctl_tunable_funcs.h>
 #include <Eigen/Dense>
+#include<unsupported/Eigen/MatrixFunctions>
 #include<iostream>
 #include<sstream>
 #include<string>
 #include<cstring>
+#include<cmath>
 
 namespace gnc_autocode {
 
@@ -84,8 +86,7 @@ void GncCtlAutocode::Step(void) {
   ctl_msg before_ctl_;
   BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
-
-/****from Simulink Controller*****/    
+  /****from Simulink Controller*****/
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 
 
@@ -107,9 +108,9 @@ void GncCtlAutocode::Step(void) {
   FindPosError();
   FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy);
   UpdatePosAndQuat();
- 
+
   UpdateCtlStatus();
-  
+
   BypassShaper();
 
 /*****clc_closed_loop_controller*****/
@@ -129,9 +130,9 @@ void GncCtlAutocode::Step(void) {
   FindBodyAlphaCmd();
   FindBodyTorqueCmd();
 
- UpdatePrevious();  // this might need to go later
+  UpdatePrevious();  // this might need to go later
 
-/*Publish to ctl_msg */
+  /*Publish to ctl_msg */
   VarToCtlMsg();
 
 // comparison tests
@@ -149,7 +150,7 @@ void GncCtlAutocode::Step(void) {
   //     ROS_ERROR("equal New:%s Old:%s", mine, old);
   //   }
 
- /*Test for position command*/
+  /*Test for position command*/
   // std::string str1 = std::to_string(ctl_.pos_err[0]);
   // const char *mine = str1.c_str();
   //   ROS_ERROR("Simulink Pos Err:%s ", mine);
@@ -174,12 +175,6 @@ void GncCtlAutocode::Step(void) {
 
 // revert back to Simulink after my controller
   RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
-
-
-
-
-
-  
 
   /*Test for Linear Int Err*/
   // std::string str = std::to_string(ctl_.pos_err_int[0]);
@@ -224,90 +219,175 @@ void GncCtlAutocode::Step(void) {
 // std::string str = std::to_string(att_command[2]);
 //   const char *mine = str.c_str();
 // ROS_ERROR("Att_command New:%s ", mine);
-
 }
 
 /*Command Shaper */
-void GncCtlAutocode::GenerateCmdAttitude()
+void GncCtlAutocode::GenerateCmdAttitude() {
+  if (state_cmd_switch_out) {
+    for (int i = 0; i < 3; i++) {
+      traj_alpha[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
+      traj_omega[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i] + (ctl_input_.cmd_state_a.alpha_B_ISS_B[i] * time_delta);
+    }
+
+    // extra for quat size 4*****TODO or do separate all together for  uat since it is more complicated
+  } else {  // false so cmd B
+    for (int i = 0; i < 3; i++) {
+      traj_alpha[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
+      traj_omega[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i] + (ctl_input_.cmd_state_b.alpha_B_ISS_B[i] * time_delta);
+    }
+    // extra for quat size 4*****TODO
+  }
+
+  FindTrajQuat();
+}
+
+void GncCtlAutocode::FindTrajQuat()
 {
-  if (state_cmd_switch_out) //true is A
-  {
-    for (int i = 0; i < 3; i++)
-    {
-     traj_alpha[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
-     traj_omega[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i] + (ctl_input_.cmd_state_a.alpha_B_ISS_B[i] * time_delta);
-    } 
+  float omega_omega[4][4];
+  float omega_alpha[4][4];
+  float quat_state_cmd[4];
+  if (state_cmd_switch_out) {
+    CreateOmegaMatrix(ctl_input_.cmd_state_a.omega_B_ISS_B, omega_omega);
+    CreateOmegaMatrix(ctl_input_.cmd_state_a.alpha_B_ISS_B, omega_alpha);
     for (int i = 0; i < 4; i++)
     {
-     // TODO create omega matrix
+      quat_state_cmd[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
     }
-    //extra for quat size 4*****TODO or do separate all together for  uat since it is more complicated 
-  }
-  else{ //false so cmd B
-
-    for (int i = 0; i < 3; i++)
+    }
+  else {
+    CreateOmegaMatrix(ctl_input_.cmd_state_b.omega_B_ISS_B, omega_omega);
+    CreateOmegaMatrix(ctl_input_.cmd_state_b.alpha_B_ISS_B, omega_alpha);
+    for (int i = 0; i < 4; i++)
     {
-     traj_alpha[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
-     traj_omega[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i] + (ctl_input_.cmd_state_b.alpha_B_ISS_B[i] * time_delta);
-    } 
-    //extra for quat size 4*****TODO
+      quat_state_cmd[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
+    }
   }
-}
 
-void GncCtlAutocode::CreateOmegaMatrix(float input[3])
-{
-
-}
-
-
-void GncCtlAutocode::GenerateCmdPath()
-{
-  if (state_cmd_switch_out) //true is A
+  //element wise multiplication and addition
+  float average_omega_matrix[4][4];
+  for (int row = 0; row < 4; row++)
   {
-    for (int i = 0; i < 3; i++)
+    for (int col = 0; col < 4; col++)
     {
-      traj_pos[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.V_B_ISS_ISS[i] * time_delta) + (0.5 *ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta * time_delta);
+      average_omega_matrix[row][col] = (0.5 * omega_alpha[row][col] *time_delta) + omega_omega[row][col];
+      average_omega_matrix[row][col] =  average_omega_matrix[row][col] * 0.5 * time_delta;
+    }
+  }
+  Eigen::Matrix<float, 4, 4> MatrixA;
+  MatrixA << average_omega_matrix[0][0], average_omega_matrix[0][1], average_omega_matrix[0][2], average_omega_matrix[0][3],
+             average_omega_matrix[1][0], average_omega_matrix[1][1], average_omega_matrix[1][2], average_omega_matrix[1][3],
+             average_omega_matrix[2][0], average_omega_matrix[2][1], average_omega_matrix[2][2], average_omega_matrix[2][3],
+             average_omega_matrix[3][0], average_omega_matrix[3][1], average_omega_matrix[3][2], average_omega_matrix[2][3];
+
+  MatrixA = MatrixA.exp();   
+  //repopulate the 2d array
+  for (int row = 0; row < 4; row++)
+  {
+    for (int col = 0; col < 4; col++)
+    {
+      average_omega_matrix[row][col] = MatrixA(row, col);
+    }
+  }
+
+  float bottom_sum_1[4][4];
+  float bottom_sum_2[4][4];
+  MatrixMultiplication4x4(omega_alpha, omega_omega, bottom_sum_1);
+  MatrixMultiplication4x4(omega_omega, omega_alpha, bottom_sum_2);
+
+  //subtract the 2 matrices and then multiply then add
+  float bottom_sum_input [4][4];
+  float sum_output[4][4];
+  for (int row = 0; row < 4; row++)
+  {
+    for (int col = 0; col < 4; col++)
+    {
+      bottom_sum_input[row][col] = bottom_sum_1[row][col] - bottom_sum_2[row][col];
+      bottom_sum_input[row][col] = bottom_sum_input[row][col] * (1/48) *time_delta * time_delta * time_delta;
+      sum_output[row][col] = bottom_sum_input[row][col] + average_omega_matrix[row][col];
+    }
+  }
+
+  float matrix_mult_out[4];
+  MatrixMultiplication4x1(sum_output, quat_state_cmd, matrix_mult_out);
+
+  Eigen::Quaternion<float> out;
+  out.x() = matrix_mult_out[0];
+  out.y() = matrix_mult_out[1];
+  out.z() = matrix_mult_out[2];
+  out.w() = matrix_mult_out[3];
+
+/*******I am here!!!!! *****/
+  // enfore positive scalar
+  // if (out.w() < 0) {
+  //   out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+  // }
+  // out.normalize();
+
+  // output_vec[0] = out.x();
+  // output_vec[1] = out.y();
+  // output_vec[2] = out.z();
+
+    
+
+}
+//Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
+void GncCtlAutocode::CreateOmegaMatrix(float input[3], float output[4][4]) {
+  output[0][0] = 0;
+  output[1][0] = -input[2];
+  output[2][0] = input[1];
+  output[3][0] = -input[0];
+
+  output[0][1] = input[2];
+  output[1][1] = 0;
+  output[2][1] = -input[0];
+  output[3][1] = -input[1];
+
+  output[0][2] = -input[1];
+  output[1][2] =input[0];
+  output[2][2] = 0;
+  output[3][2] = -input[2];
+
+  output[0][3] = input[0];
+  output[1][3] = input[1];
+  output[2][3] = input[2];
+  output[3][3] = 0;
+}
+
+void GncCtlAutocode::GenerateCmdPath() {
+  if (state_cmd_switch_out) {  // true is A
+    for (int i = 0; i < 3; i++) {
+      traj_pos[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.V_B_ISS_ISS[i] * time_delta) +
+                    (0.5 * ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta * time_delta);
       traj_vel[i] = ctl_input_.cmd_state_a.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta);
       traj_accel[i] = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
-    } 
-  }
-  else{ //false so cmd B
-
-    for (int i = 0; i < 3; i++)
-    {
-      traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) + (0.5 *ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
+    }
+  } else {  // false so cmd B
+    for (int i = 0; i < 3; i++) {
+      traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) +
+                    (0.5 * ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
       traj_vel[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta);
       traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
-    } 
+    }
   }
-  
 }
 
-
-void GncCtlAutocode::CmdSelector()
-{
+void GncCtlAutocode::CmdSelector() {
   uint32_T curr_sec = ctl_input_.current_time_sec;
   uint32_T curr_nsec = ctl_input_.current_time_nsec;
-  
-  if ((ctl_input_.cmd_state_b.timestamp_sec > curr_sec) || ((ctl_input_.cmd_state_b.timestamp_sec == curr_sec) && (curr_nsec < ctl_input_.cmd_state_b.timestamp_nsec)))
-  {
+
+  if ((ctl_input_.cmd_state_b.timestamp_sec > curr_sec) ||
+      ((ctl_input_.cmd_state_b.timestamp_sec == curr_sec) && (curr_nsec < ctl_input_.cmd_state_b.timestamp_nsec))) {
     state_cmd_switch_out = true;
-    time_delta = (curr_sec - ctl_input_.cmd_state_a.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_a.timestamp_nsec) *  1E-9);
-  }
-  else{
+    time_delta =
+      (curr_sec - ctl_input_.cmd_state_a.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_a.timestamp_nsec) * 1E-9);
+  } else {
     state_cmd_switch_out = false;
-    time_delta = (curr_sec - ctl_input_.cmd_state_b.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_b.timestamp_nsec) *  1E-9);
+    time_delta =
+      (curr_sec - ctl_input_.cmd_state_b.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_b.timestamp_nsec) * 1E-9);
   }
 
   cmd_B_inuse = !state_cmd_switch_out;
 }
-
-
-
-
-
-
-
 
 /* Testing functions */
 void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& after_cmd_,
@@ -336,7 +416,7 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, 
   ctl_input_.speed_gain_cmd = after_ctl_input_.speed_gain_cmd;
   ctl_input_. mass = after_ctl_input_. mass;
 
-  //copy the cmd_state_ a and b for ctl_input
+  // copy the cmd_state_ a and b for ctl_input
   ctl_input_.cmd_state_a.timestamp_sec =  after_ctl_input_.cmd_state_a.timestamp_sec;
   ctl_input_.cmd_state_b.timestamp_sec =  after_ctl_input_.cmd_state_b.timestamp_sec;
 
@@ -344,9 +424,7 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, 
   ctl_input_.cmd_state_a.timestamp_nsec =  after_ctl_input_.cmd_state_a.timestamp_nsec;
   ctl_input_.cmd_state_b.timestamp_nsec =  after_ctl_input_.cmd_state_b.timestamp_nsec;
 
-
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     ctl_input_.cmd_state_a.P_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
     ctl_input_.cmd_state_b.P_B_ISS_ISS[i] =  after_ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
 
@@ -363,12 +441,11 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, 
     ctl_input_.cmd_state_b.alpha_B_ISS_B[i] =  after_ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
   }
 
-  for (int i = 0; i < 4; i++)
-  {
+  for (int i = 0; i < 4; i++) {
     ctl_input_.cmd_state_a.quat_ISS2B[i] =  after_ctl_input_.cmd_state_a.quat_ISS2B[i];
     ctl_input_.cmd_state_b.quat_ISS2B[i] =  after_ctl_input_.cmd_state_b.quat_ISS2B[i];
   }
-  
+
   for (int i = 0; i < 9; i++) {
     ctl_input_.inertia_matrix[i] = after_ctl_input_.inertia_matrix[i];
   }
@@ -434,7 +511,7 @@ void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_
   ctl_input_.speed_gain_cmd = before_ctl_input_.speed_gain_cmd;
   ctl_input_. mass = before_ctl_input_. mass;
 
-  //copy the cmd_state_ a and b for ctl_input
+  // copy the cmd_state_ a and b for ctl_input
   ctl_input_.cmd_state_a.timestamp_sec = before_ctl_input_.cmd_state_a.timestamp_sec;
   ctl_input_.cmd_state_b.timestamp_sec = before_ctl_input_.cmd_state_b.timestamp_sec;
 
@@ -442,9 +519,7 @@ void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_
   ctl_input_.cmd_state_a.timestamp_nsec = before_ctl_input_.cmd_state_a.timestamp_nsec;
   ctl_input_.cmd_state_b.timestamp_nsec = before_ctl_input_.cmd_state_b.timestamp_nsec;
 
-
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     ctl_input_.cmd_state_a.P_B_ISS_ISS[i] = before_ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
     ctl_input_.cmd_state_b.P_B_ISS_ISS[i] = before_ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
 
@@ -461,13 +536,11 @@ void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_
     ctl_input_.cmd_state_b.alpha_B_ISS_B[i] = before_ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
   }
 
-  for (int i = 0; i < 4; i++)
-  {
+  for (int i = 0; i < 4; i++) {
     ctl_input_.cmd_state_a.quat_ISS2B[i] = before_ctl_input_.cmd_state_a.quat_ISS2B[i];
     ctl_input_.cmd_state_b.quat_ISS2B[i] = before_ctl_input_.cmd_state_b.quat_ISS2B[i];
   }
 
-  
   for (int i = 0; i < 9; i++) {
     ctl_input_.inertia_matrix[i] = before_ctl_input_.inertia_matrix[i];
   }
@@ -533,8 +606,7 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& aft
   after_ctl_input_.speed_gain_cmd = ctl_input_.speed_gain_cmd;
   after_ctl_input_. mass = ctl_input_. mass;
 
-
-  //copy the cmd_state_ a and b for ctl_input
+  // copy the cmd_state_ a and b for ctl_input
   after_ctl_input_.cmd_state_a.timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
   after_ctl_input_.cmd_state_b.timestamp_sec = ctl_input_.cmd_state_b.timestamp_sec;
 
@@ -542,9 +614,7 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& aft
   after_ctl_input_.cmd_state_a.timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
   after_ctl_input_.cmd_state_b.timestamp_nsec = ctl_input_.cmd_state_b.timestamp_nsec;
 
-
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     after_ctl_input_.cmd_state_a.P_B_ISS_ISS[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
     after_ctl_input_.cmd_state_b.P_B_ISS_ISS[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
 
@@ -561,8 +631,7 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& aft
     after_ctl_input_.cmd_state_b.alpha_B_ISS_B[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
   }
 
-  for (int i = 0; i < 4; i++)
-  {
+  for (int i = 0; i < 4; i++) {
     after_ctl_input_.cmd_state_a.quat_ISS2B[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
     after_ctl_input_.cmd_state_b.quat_ISS2B[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
   }
@@ -621,7 +690,7 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& b
     before_ctl_input_.vel_kd[i] = ctl_input_.vel_kd[i];
   }
   before_ctl_input_.est_confidence = ctl_input_.est_confidence;
-  
+
   before_ctl_input_.ctl_mode_cmd = ctl_input_.ctl_mode_cmd;
   before_ctl_input_.current_time_sec = ctl_input_.current_time_sec;
   before_ctl_input_.current_time_nsec = ctl_input_.current_time_nsec;
@@ -629,7 +698,7 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& b
   before_ctl_input_.speed_gain_cmd = ctl_input_.speed_gain_cmd;
   before_ctl_input_. mass = ctl_input_. mass;
 
-//copy the cmd_state_ a and b for ctl_input
+  // copy the cmd_state_ a and b for ctl_input
   before_ctl_input_.cmd_state_a.timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
   before_ctl_input_.cmd_state_b.timestamp_sec = ctl_input_.cmd_state_b.timestamp_sec;
 
@@ -637,9 +706,7 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& b
   before_ctl_input_.cmd_state_a.timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
   before_ctl_input_.cmd_state_b.timestamp_nsec = ctl_input_.cmd_state_b.timestamp_nsec;
 
-
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     before_ctl_input_.cmd_state_a.P_B_ISS_ISS[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
     before_ctl_input_.cmd_state_b.P_B_ISS_ISS[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
 
@@ -656,13 +723,10 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& b
     before_ctl_input_.cmd_state_b.alpha_B_ISS_B[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
   }
 
-  for (int i = 0; i < 4; i++)
-  {
+  for (int i = 0; i < 4; i++) {
     before_ctl_input_.cmd_state_a.quat_ISS2B[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
     before_ctl_input_.cmd_state_b.quat_ISS2B[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
   }
-
-
 
   for (int i = 0; i < 9; i++) {
     before_ctl_input_.inertia_matrix[i] = ctl_input_.inertia_matrix[i];
@@ -887,6 +951,19 @@ void GncCtlAutocode::MatrixMultiplication3x1(float three[3][3], float one[3], fl
     }
 }
 
+// 4x4 multiply by 1x4
+void GncCtlAutocode::MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]) {
+  // set output to all 0's
+  for (int i = 0; i < 4; i++) {
+    output[i]= 0;
+    }
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        output[i] += four[i][j] * one[i];
+      }
+    }
+}
+
 void GncCtlAutocode::QuaternionToDCM(float input_quat[4], float output[3][3]) {
   float quat_w = input_quat[3];
   float U = ((quat_w * quat_w) * 2) - 1;  // U in Simulink diagram
@@ -948,6 +1025,23 @@ void GncCtlAutocode::MatrixMultiplication3x3(float inputA[3][3], float inputB[3]
   for (int row = 0; row < 3; row++) {
     for (int col = 0; col < 3; col++) {
       for (int k = 0; k < 3; k++) {
+        output[row][col] +=inputA[row][k] * inputB[k][col];
+      }
+    }
+  }
+}
+
+void GncCtlAutocode::MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]) {
+  // make output all zeros
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      output[i][j] = 0;
+    }
+  }
+
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
+      for (int k = 0; k < 4; k++) {
         output[row][col] +=inputA[row][k] * inputB[k][col];
       }
     }
@@ -1148,7 +1242,6 @@ void GncCtlAutocode::UpdatePosAndQuat() {
   } else {
     for (int i = 0; i < 3; i++) {
       position_command[i] = cmd_.traj_pos[i];
-      
 
   /****incomplete work on trying to match what the autocode is****/
     //   if ((ctl_input_.cmd_state_b.timestamp_sec > ctl_input_.current_time_sec) || ((ctl_input_.current_time_sec ==
@@ -1162,9 +1255,10 @@ void GncCtlAutocode::UpdatePosAndQuat() {
     //       position_command[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
     //   }
 
-    //   float rtb_diff = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
-    //   float rtb_sqrt = (ctl_input_.current_time_nsec - ctl_input_.cmd_state_b.timestamp_sec) * 1E-9 + (ctl_input_.current_time_sec -ctl_input_.cmd_state_b.timestamp_sec);
-    //   position_command[i] = (0.5 * rtb_diff * rtb_sqrt * rtb_sqrt + position_command[i]) + ugh Switch
+      //   float rtb_diff = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+      //   float rtb_sqrt = (ctl_input_.current_time_nsec - ctl_input_.cmd_state_b.timestamp_sec) * 1E-9 +
+      //   (ctl_input_.current_time_sec -ctl_input_.cmd_state_b.timestamp_sec); position_command[i] = (0.5 * rtb_diff *
+      //   rtb_sqrt * rtb_sqrt + position_command[i]) + ugh Switch
 
       att_command[i] = cmd_.traj_quat[i];
     }

@@ -182,6 +182,10 @@ class GncCtlAutocode {
   void CmdSelector();
   void GenerateCmdPath();
   void GenerateCmdAttitude();
+  void CreateOmegaMatrix(float input[3], float output[4][4]);
+  void FindTrajQuat();
+  void MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]);
+  void MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]);
 };
 }  // end namespace gnc_autocode
 
