@@ -101,6 +101,8 @@ void GncCtlAutocode::Step(void) {
   /*****command_shaper*****/
   CmdSelector();
   GenerateCmdPath();
+  GenerateCmdAttitude();
+  FindTrajErrors();
 
   /*****cex_control_executive*****/
   UpdateModeCmd();
@@ -222,6 +224,29 @@ void GncCtlAutocode::Step(void) {
 }
 
 /*Command Shaper */
+void GncCtlAutocode::FindTrajErrors()
+{
+  float traj_error_pos_vec[3];
+  float traj_error_vel_vec[3];
+  float traj_error_omega_vec[3];
+  for (int i = 0; i < 3; i++)
+  {
+    traj_error_pos_vec[i] = traj_pos[i] - ctl_input_.est_P_B_ISS_ISS[i];
+    traj_error_vel_vec[i] = traj_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
+    traj_error_omega_vec[i] = traj_omega[i] - ctl_input_.est_omega_B_ISS_B[i];
+  }
+
+  //magnitude of the vectors
+  traj_error_pos = sqrt(pow(traj_error_pos_vec[0], 2) + pow(traj_error_pos_vec[1], 2) + pow(traj_error_pos_vec[2], 2));
+  traj_error_vel = sqrt(pow(traj_error_vel_vec[0], 2) + pow(traj_error_vel_vec[1], 2) + pow(traj_error_vel_vec[2], 2));
+  traj_error_pos = sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
+
+
+  FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
+  }
+
+
+
 void GncCtlAutocode::GenerateCmdAttitude() {
   if (state_cmd_switch_out) {
     for (int i = 0; i < 3; i++) {
@@ -312,7 +337,7 @@ void GncCtlAutocode::FindTrajQuat() {
   if (out.w() < 0) {
     out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
   }
- out.normalize();
+  out.normalize();
 
   traj_quat[0] = out.x();
   traj_quat[1] = out.y();

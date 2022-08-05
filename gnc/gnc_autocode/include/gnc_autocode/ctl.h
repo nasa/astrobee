@@ -134,6 +134,10 @@ class GncCtlAutocode {
   float traj_quat[3];
   float traj_omega[3];
   float traj_alpha[3];
+  float traj_error_pos;
+  float traj_error_att;
+  float traj_error_vel;
+  float traj_error_omega;
 
   bool BelowThreshold(float velocity[], float threshhold, float previous[3]);
   void UpdateModeCmd(void);
@@ -186,6 +190,8 @@ class GncCtlAutocode {
   void FindTrajQuat();
   void MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]);
   void MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]);
+  void FindTrajErrors();
+
 };
 }  // end namespace gnc_autocode
 
