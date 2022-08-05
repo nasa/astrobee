@@ -241,50 +241,43 @@ void GncCtlAutocode::GenerateCmdAttitude() {
   FindTrajQuat();
 }
 
-void GncCtlAutocode::FindTrajQuat()
-{
+void GncCtlAutocode::FindTrajQuat() {
   float omega_omega[4][4];
   float omega_alpha[4][4];
   float quat_state_cmd[4];
   if (state_cmd_switch_out) {
     CreateOmegaMatrix(ctl_input_.cmd_state_a.omega_B_ISS_B, omega_omega);
     CreateOmegaMatrix(ctl_input_.cmd_state_a.alpha_B_ISS_B, omega_alpha);
-    for (int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
       quat_state_cmd[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
     }
-    }
-  else {
+  } else {
     CreateOmegaMatrix(ctl_input_.cmd_state_b.omega_B_ISS_B, omega_omega);
     CreateOmegaMatrix(ctl_input_.cmd_state_b.alpha_B_ISS_B, omega_alpha);
-    for (int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
       quat_state_cmd[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
     }
   }
 
-  //element wise multiplication and addition
+  // element wise multiplication and addition
   float average_omega_matrix[4][4];
-  for (int row = 0; row < 4; row++)
-  {
-    for (int col = 0; col < 4; col++)
-    {
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
       average_omega_matrix[row][col] = (0.5 * omega_alpha[row][col] *time_delta) + omega_omega[row][col];
       average_omega_matrix[row][col] =  average_omega_matrix[row][col] * 0.5 * time_delta;
     }
   }
   Eigen::Matrix<float, 4, 4> MatrixA;
-  MatrixA << average_omega_matrix[0][0], average_omega_matrix[0][1], average_omega_matrix[0][2], average_omega_matrix[0][3],
-             average_omega_matrix[1][0], average_omega_matrix[1][1], average_omega_matrix[1][2], average_omega_matrix[1][3],
-             average_omega_matrix[2][0], average_omega_matrix[2][1], average_omega_matrix[2][2], average_omega_matrix[2][3],
-             average_omega_matrix[3][0], average_omega_matrix[3][1], average_omega_matrix[3][2], average_omega_matrix[2][3];
+  MatrixA << average_omega_matrix[0][0], average_omega_matrix[0][1], average_omega_matrix[0][2],
+    average_omega_matrix[0][3], average_omega_matrix[1][0], average_omega_matrix[1][1], average_omega_matrix[1][2],
+    average_omega_matrix[1][3], average_omega_matrix[2][0], average_omega_matrix[2][1], average_omega_matrix[2][2],
+    average_omega_matrix[2][3], average_omega_matrix[3][0], average_omega_matrix[3][1], average_omega_matrix[3][2],
+    average_omega_matrix[2][3];
 
-  MatrixA = MatrixA.exp();   
-  //repopulate the 2d array
-  for (int row = 0; row < 4; row++)
-  {
-    for (int col = 0; col < 4; col++)
-    {
+  MatrixA = MatrixA.exp();
+  // repopulate the 2d array
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
       average_omega_matrix[row][col] = MatrixA(row, col);
     }
   }
@@ -294,13 +287,11 @@ void GncCtlAutocode::FindTrajQuat()
   MatrixMultiplication4x4(omega_alpha, omega_omega, bottom_sum_1);
   MatrixMultiplication4x4(omega_omega, omega_alpha, bottom_sum_2);
 
-  //subtract the 2 matrices and then multiply then add
-  float bottom_sum_input [4][4];
+  // subtract the 2 matrices and then multiply then add
+  float bottom_sum_input[4][4];
   float sum_output[4][4];
-  for (int row = 0; row < 4; row++)
-  {
-    for (int col = 0; col < 4; col++)
-    {
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
       bottom_sum_input[row][col] = bottom_sum_1[row][col] - bottom_sum_2[row][col];
       bottom_sum_input[row][col] = bottom_sum_input[row][col] * (1/48) *time_delta * time_delta * time_delta;
       sum_output[row][col] = bottom_sum_input[row][col] + average_omega_matrix[row][col];
@@ -318,19 +309,17 @@ void GncCtlAutocode::FindTrajQuat()
 
 /*******I am here!!!!! *****/
   // enfore positive scalar
-  // if (out.w() < 0) {
-  //   out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
-  // }
-  // out.normalize();
+  if (out.w() < 0) {
+    out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+  }
+ out.normalize();
 
-  // output_vec[0] = out.x();
-  // output_vec[1] = out.y();
-  // output_vec[2] = out.z();
-
-    
-
+  traj_quat[0] = out.x();
+  traj_quat[1] = out.y();
+  traj_quat[2] = out.z();
+  traj_quat[3] = out.w();
 }
-//Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
+// Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
 void GncCtlAutocode::CreateOmegaMatrix(float input[3], float output[4][4]) {
   output[0][0] = 0;
   output[1][0] = -input[2];
