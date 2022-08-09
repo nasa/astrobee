@@ -76,10 +76,7 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-// std::string str7 = std::to_string(ctl_input_.cmd_state_a.P_B_ISS_ISS[0]);
-//   const char *old7 = str7.c_str();
-//     ROS_ERROR("ctl_input_.cmd_state_a.P_B_ISS_ISS[0] into Simulink:%s ", old7);
-
+  ROS_ERROR("Beginning of step\n");
   // copy of what it is before
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
@@ -103,6 +100,7 @@ void GncCtlAutocode::Step(void) {
   GenerateCmdPath();
   GenerateCmdAttitude();
   FindTrajErrors();
+  PublishCmdInput();
 
   /*****cex_control_executive*****/
   UpdateModeCmd();
@@ -135,8 +133,10 @@ void GncCtlAutocode::Step(void) {
   UpdatePrevious();  // this might need to go later
 
   /*Publish to ctl_msg */
-  VarToCtlMsg();
-
+  //VarToCtlMsg();
+  
+  
+   
 // comparison tests
 
 
@@ -177,7 +177,7 @@ void GncCtlAutocode::Step(void) {
 
 // revert back to Simulink after my controller
   RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
-
+ ROS_ERROR("End of step\n");
   /*Test for Linear Int Err*/
   // std::string str = std::to_string(ctl_.pos_err_int[0]);
   // const char *old = str.c_str();
@@ -221,31 +221,50 @@ void GncCtlAutocode::Step(void) {
 // std::string str = std::to_string(att_command[2]);
 //   const char *mine = str.c_str();
 // ROS_ERROR("Att_command New:%s ", mine);
+
 }
 
 /*Command Shaper */
-void GncCtlAutocode::FindTrajErrors()
+void GncCtlAutocode::PublishCmdInput()
 {
+  cmd_.cmd_timestamp_sec = cmd_timestamp_sec;
+  cmd_.cmd_timestamp_nsec = cmd_timestamp_nsec;
+  cmd_.cmd_mode = ctl_input_.ctl_mode_cmd;
+  cmd_.speed_gain_cmd = ctl_input_.speed_gain_cmd;
+  cmd_.cmd_B_inuse = cmd_B_inuse;
+  for (int i = 0; i < 3; i++)
+  {
+    cmd_.traj_pos[i] = traj_pos[i];
+    cmd_.traj_vel[i] = traj_vel[i];
+    cmd_.traj_accel[i] = traj_accel[i];
+    cmd_.traj_omega[i] = traj_omega[i];
+    cmd_.traj_alpha[i] = traj_alpha[i];
+    cmd_.traj_quat[i] = traj_quat[i];
+  }
+  cmd_.traj_quat[3] = traj_quat[3]; //since it is size 4 
+  
+}
+
+
+
+void GncCtlAutocode::FindTrajErrors() {
   float traj_error_pos_vec[3];
   float traj_error_vel_vec[3];
   float traj_error_omega_vec[3];
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     traj_error_pos_vec[i] = traj_pos[i] - ctl_input_.est_P_B_ISS_ISS[i];
     traj_error_vel_vec[i] = traj_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
     traj_error_omega_vec[i] = traj_omega[i] - ctl_input_.est_omega_B_ISS_B[i];
   }
 
-  //magnitude of the vectors
+  // magnitude of the vectors
   traj_error_pos = sqrt(pow(traj_error_pos_vec[0], 2) + pow(traj_error_pos_vec[1], 2) + pow(traj_error_pos_vec[2], 2));
   traj_error_vel = sqrt(pow(traj_error_vel_vec[0], 2) + pow(traj_error_vel_vec[1], 2) + pow(traj_error_vel_vec[2], 2));
-  traj_error_pos = sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
-
+  traj_error_pos =
+    sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
   FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
-  }
-
-
+}
 
 void GncCtlAutocode::GenerateCmdAttitude() {
   if (state_cmd_switch_out) {
@@ -253,14 +272,12 @@ void GncCtlAutocode::GenerateCmdAttitude() {
       traj_alpha[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
       traj_omega[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i] + (ctl_input_.cmd_state_a.alpha_B_ISS_B[i] * time_delta);
     }
-
-    // extra for quat size 4*****TODO or do separate all together for  uat since it is more complicated
   } else {  // false so cmd B
     for (int i = 0; i < 3; i++) {
       traj_alpha[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
       traj_omega[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i] + (ctl_input_.cmd_state_b.alpha_B_ISS_B[i] * time_delta);
     }
-    // extra for quat size 4*****TODO
+  
   }
 
   FindTrajQuat();
@@ -332,7 +349,6 @@ void GncCtlAutocode::FindTrajQuat() {
   out.z() = matrix_mult_out[2];
   out.w() = matrix_mult_out[3];
 
-/*******I am here!!!!! *****/
   // enfore positive scalar
   if (out.w() < 0) {
     out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
@@ -368,39 +384,58 @@ void GncCtlAutocode::CreateOmegaMatrix(float input[3], float output[4][4]) {
 }
 
 void GncCtlAutocode::GenerateCmdPath() {
+
+  float test[3];
   if (state_cmd_switch_out) {  // true is A
+    ROS_ERROR("I am in if");
     for (int i = 0; i < 3; i++) {
+      
       traj_pos[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.V_B_ISS_ISS[i] * time_delta) +
                     (0.5 * ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta * time_delta);
       traj_vel[i] = ctl_input_.cmd_state_a.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta);
-      traj_accel[i] = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
+      traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+     
+    
+     
     }
   } else {  // false so cmd B
-    for (int i = 0; i < 3; i++) {
-      traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) +
-                    (0.5 * ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
-      traj_vel[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta);
-      traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+    ROS_ERROR("I am in else");
+      for (int i = 0; i < 3; i++) {
+        traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) +
+                      (0.5 * ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
+        
+        traj_vel[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta);
+        traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
+      
     }
   }
+  //   ROS_ERROR("I get out of CMD path");
 }
 
 void GncCtlAutocode::CmdSelector() {
-  uint32_T curr_sec = ctl_input_.current_time_sec;
-  uint32_T curr_nsec = ctl_input_.current_time_nsec;
+  float curr_sec = ctl_input_.current_time_sec;
+  float curr_nsec = ctl_input_.current_time_nsec;
 
   if ((ctl_input_.cmd_state_b.timestamp_sec > curr_sec) ||
       ((ctl_input_.cmd_state_b.timestamp_sec == curr_sec) && (curr_nsec < ctl_input_.cmd_state_b.timestamp_nsec))) {
     state_cmd_switch_out = true;
     time_delta =
       (curr_sec - ctl_input_.cmd_state_a.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_a.timestamp_nsec) * 1E-9);
+    cmd_timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
+    cmd_timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
   } else {
     state_cmd_switch_out = false;
     time_delta =
       (curr_sec - ctl_input_.cmd_state_b.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_b.timestamp_nsec) * 1E-9);
+    cmd_timestamp_sec = ctl_input_.cmd_state_b.timestamp_sec;
+    cmd_timestamp_nsec = ctl_input_.cmd_state_b.timestamp_nsec;
   }
 
   cmd_B_inuse = !state_cmd_switch_out;
+
+
+  
+
 }
 
 /* Testing functions */
@@ -478,7 +513,7 @@ void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, 
     cmd_.traj_alpha[i] = after_cmd_.traj_alpha[i];
   }
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     cmd_.traj_quat[i] = after_cmd_.traj_quat[i];
   }
 
@@ -573,7 +608,7 @@ void GncCtlAutocode::RevertBackToBeforeSimulink(ctl_input_msg& before_ctl_input_
     cmd_.traj_alpha[i] = before_cmd_.traj_alpha[i];
   }
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     cmd_.traj_quat[i] = before_cmd_.traj_quat[i];
   }
 
@@ -667,7 +702,7 @@ void GncCtlAutocode::AfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& aft
     after_cmd_.traj_alpha[i] = cmd_.traj_alpha[i];
   }
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     after_cmd_.traj_quat[i] = cmd_.traj_quat[i];
   }
 
@@ -760,7 +795,7 @@ void GncCtlAutocode::BeforeSimulink(ctl_input_msg& before_ctl_input_, cmd_msg& b
     before_cmd_.traj_alpha[i] = cmd_.traj_alpha[i];
   }
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     before_cmd_.traj_quat[i] = cmd_.traj_quat[i];
   }
 
@@ -1085,6 +1120,7 @@ void GncCtlAutocode::FindLinearIntErr() {
   for (int i = 0; i < 3; i++) {
     linear_int_err[i] = output[i];
   }
+  
 }
 
 void GncCtlAutocode::discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit,
@@ -1126,7 +1162,7 @@ void GncCtlAutocode::FindPosErr() {
 
   std::string str2 = std::to_string(ctl_input_.est_P_B_ISS_ISS[0]);
   const char *old1 = str2.c_str();
-    ROS_ERROR("Mine: first:%s", old);
+    // ROS_ERROR("Mine: first:%s", old);
 
 
 
@@ -1256,24 +1292,6 @@ void GncCtlAutocode::UpdatePosAndQuat() {
   } else {
     for (int i = 0; i < 3; i++) {
       position_command[i] = cmd_.traj_pos[i];
-
-  /****incomplete work on trying to match what the autocode is****/
-    //   if ((ctl_input_.cmd_state_b.timestamp_sec > ctl_input_.current_time_sec) || ((ctl_input_.current_time_sec ==
-    // ctl_input_.cmd_state_b.timestamp_sec) && (ctl_input_.current_time_nsec < ctl_input_.cmd_state_b.timestamp_nsec)))
-    //   {
-    //       position_command[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i];
-    //       ctl_input_.cmd_state_b.timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
-    //       ctl_input_.cmd_state_b.timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
-    //   }
-    //   else{
-    //       position_command[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i];
-    //   }
-
-      //   float rtb_diff = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
-      //   float rtb_sqrt = (ctl_input_.current_time_nsec - ctl_input_.cmd_state_b.timestamp_sec) * 1E-9 +
-      //   (ctl_input_.current_time_sec -ctl_input_.cmd_state_b.timestamp_sec); position_command[i] = (0.5 * rtb_diff *
-      //   rtb_sqrt * rtb_sqrt + position_command[i]) + ugh Switch
-
       att_command[i] = cmd_.traj_quat[i];
     }
     att_command[3] = cmd_.traj_quat[3];
@@ -1299,7 +1317,7 @@ void GncCtlAutocode::UpdateStoppedMode() {
   } else {
     stopped_mode = false;
   }
-  ROS_ERROR("stopped mode: %i", stopped_mode);
+  // ROS_ERROR("stopped mode: %i", stopped_mode);
 }
 /*Butterworth filter implementation */
 float GncCtlAutocode::ButterWorthFilter(float input, float& delay_val) {
