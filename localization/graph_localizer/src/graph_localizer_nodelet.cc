@@ -87,6 +87,7 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
   bias_from_file_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
+  reset_map_srv_ = private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &GraphLocalizerNodelet::ResetMap, this);
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
   input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
 }
@@ -125,10 +126,22 @@ void GraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
 bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   PublishReset();
   EnableLocalizer();
   return true;
+}
+
+bool GraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
+  // Reset localizer while loading previous biases when map is reset to prevent possible initial
+  // map jump from affecting estimated IMU biases and velocity estimation.
+  // Clear vl messages to prevent old localization results from being used by localizer after reset
+  // TODO(rsoussan): Better way to clear buffer?
+  vl_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
+                          &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  return ResetBiasesFromFileAndResetLocalizer();
 }
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req,
@@ -137,6 +150,7 @@ bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty
 }
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetBiasesFromFileAndResetLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -149,6 +163,7 @@ bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_sr
 }
 
 void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
+  DisableLocalizer();
   graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -243,7 +258,7 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
 void GraphLocalizerNodelet::PublishARTagPose() const {
   const auto latest_ar_tag_pose_msg = graph_localizer_wrapper_.LatestARTagPoseMsg();
   if (!latest_ar_tag_pose_msg) {
-    LogWarning("PublishARTagPose: Failed to get latest ar tag pose msg.");
+    LogDebug("PublishARTagPose: Failed to get latest ar tag pose msg.");
     return;
   }
   ar_tag_pose_pub_.publish(*latest_ar_tag_pose_msg);

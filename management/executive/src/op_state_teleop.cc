@@ -53,6 +53,9 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->ReacquirePosition(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_RESET_EKF) {
     exec_->ResetEkf(cmd);
+  } else if (cmd->cmd_name ==
+                            CommandConstants::CMD_NAME_RESTART_GUEST_SCIENCE) {
+    exec_->RestartGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CHECK_OBSTACLES) {
     exec_->SetCheckObstacles(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CHECK_ZONES) {
@@ -117,8 +120,6 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->StopAllMotion(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     exec_->StopArm(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-    exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {

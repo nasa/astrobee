@@ -342,6 +342,8 @@ extern const std::unordered_map<std::string, CommandInfo> kCmdGenMap = {
   { jl::kCmdStartRecord,
     { cc::CMD_NAME_START_RECORDING, cc::CMD_SUBSYS_DATA, GenStartRecording } },
   { jl::kCmdStopRecord, { cc::CMD_NAME_STOP_RECORDING, cc::CMD_SUBSYS_DATA, GenNoop } },
+  { jl::kCmdEnableAstrobeeIntercomms,
+    { cc::CMD_NAME_ENABLE_ASTROBEE_INTERCOMMS, cc::CMD_SUBSYS_SETTINGS, GenNoop } }
 };
 
 }  // namespace internal

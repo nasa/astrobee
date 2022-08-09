@@ -42,6 +42,7 @@ def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
     inbag_paths_in = [p for p in inbag_paths_in if p.endswith(".bag")]
     inbag_paths = [p for p in inbag_paths_in if not p.startswith("fix_all_")]
+
     skip_count = len(inbag_paths_in) - len(inbag_paths)
     if skip_count:
         logging.info(
@@ -109,6 +110,12 @@ def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
             logging.info("  %s", outbag_path)
     else:
         logging.warning("Not all bags were fixed successfully (see errors above).")
+        logging.warning(
+            "You can debug any failed output bags - ending in .fix_all_pre_check.bag"
+        )
+        logging.warning(
+            "If you want to try again, clean first: rm *.fix_all_pre_check.bag"
+        )
 
     return 0
 

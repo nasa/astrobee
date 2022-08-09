@@ -40,7 +40,7 @@ framestore. It is based on the following work:
 }
 ```
 
-![alt text](../images/mobility/iss_sim_360_octomap.png "An example of an Octomap
+![alt text](/doc/images/mobility/iss_sim_360_octomap.png "An example of an Octomap
 obtained after an Astrobee 360-degree rotation around its z-axis. The rainbow
 color scheme displays different heights.")
 
@@ -135,13 +135,13 @@ sentinel node reacts to sensed data to check if the platform is likely to
 collide with an obstacle over some fixed time horizon, based on the segment it
 is currently following.
 
-![alt text](../images/mobility/sentinel2.png "Collision avoidance")
+![alt text](/doc/images/mobility/sentinel2.png "Collision avoidance")
 
 The sentinel is activated when a new trajectory is published in
 `gnc/ctl/segment`. A subscriber gets the message and "voxelizes" the trajectory
 as shown in the pipeline below:
 
-![alt text](../images/mobility/trajectory_voxelization.png "Collision avoidance")
+![alt text](/doc/images/mobility/trajectory_voxelization.png "Collision avoidance")
 
 * `Original Trajectory` - This is an example of a trajectory planned by Astrobee.
 * `Oversampled Curve` - First thing we do in this pipeline is an oversampling

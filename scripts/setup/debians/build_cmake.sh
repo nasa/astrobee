@@ -17,18 +17,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=libdbow2
-ORIG_TAR=libdbow2_0.1.orig.tar.gz
-DEB_DIR=dbow2
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+# CMake 3.16.3 is broken for the armhf setup we use.
+# In order to compile our custom debians for the robot we need to patch 
+# CMake using this script.
+# The patched debians are already in our repositories. You do not need to 
+# run this script again unless an additional change to CMake is needed.
+# This issue is fixed in CMake 3.19.0.
+
+PACKAGE_NAME=cmake-3.16.3
+CONTROL_FILES=cmake_3.16.3-1ubuntu1.debian.tar.xz
+ORIG_TAR=cmake_3.16.3.orig.tar.gz
+DEB_DIR=cmake
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/dorian3d/DBoW2.git $PACKAGE_NAME --branch v1.1-free 2>&1 || exit 1
-cd $PACKAGE_NAME
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../$DEB_DIR debian
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
+wget http://ports.ubuntu.com/pool/main/c/cmake/$ORIG_TAR &&
+wget http://ports.ubuntu.com/pool/main/c/cmake/$CONTROL_FILES &&
+tar -xzvf $ORIG_TAR &&
+tar -xvf $CONTROL_FILES -C $PACKAGE_NAME &&
+cd $PACKAGE_NAME &&
+cp -r ../$DEB_DIR/* debian &&
+debuild -us -uc &&
 cd ..

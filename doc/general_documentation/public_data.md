@@ -1,8 +1,6 @@
 \page using_telemetry Using Astrobee Robot Telemetry Logs
 
-The ISS Astrobee Facility has established an [Astrobee ISS telemetry
-log public release
-folder](https://nasagov.box.com/s/4ign43svk39guhy9ev8t5xkzui6tqjm1).
+The ISS Astrobee Facility has established an [Astrobee ISS telemetry log public release folder](https://nasagov.box.com/s/4ign43svk39guhy9ev8t5xkzui6tqjm1).
 
 Astrobee telemetry logs are also called "bag files" and use the
 [rosbag](http://wiki.ros.org/rosbag) format.
@@ -120,7 +118,7 @@ to log two concurrent telemetry streams:
    this stream stays fairly consistent over all Astrobee activities,
    only occasionally changing due to Astrobee baseline flight software
    upgrades. Bags that record the `immediate` stream typically have a
-   filename ending in `ars_default.bag`. (Where "`ars`" stands for
+   filename ending in `ars_default.bag`. (Where "ars" stands for
    "Astrobee Robot Software".) Recording start/stop for this stream is
    usually related to starting or restarting the Astrobee baseline
    flight software.
@@ -185,7 +183,9 @@ We recommend "fixing" a bag (rewriting it for compatibility with the
 latest message definitions) before using it, as follows:
 
 ```console
-rosrun bag_processing rosbag_fix_all.py in.bag
+source $ASTROBEE_WS/devel/setup.bash
+rosrun bag_processing rosbag_fix_all.py 1.bag 2.bag
+# should produce fixed output: 1.fix_all.bag 2.fix_all.bag
 ```
 
 However, fixing the bag may not be needed if you plan to analyze it
@@ -220,7 +220,9 @@ The following example CSV export uses a bag from the publicly released ZIP archi
 `2021-03-26_SN003_bumble.zip`:
 
 ```console
+source $ASTROBEE_WS/devel/setup.bash
 BAG=20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag
+
 # generate a smaller bag containing only the topic of interest (filtering out any bad message types)
 rosrun bag_processing rosbag_topic_filter.py $BAG -a /loc/pose loc_pose.bag
 # export to CSV
@@ -240,6 +242,7 @@ files. The following example uses a bag from the publicly released ZIP
 archive `2021-03-26_SN003_bumble.zip`:
 
 ```console
+source $ASTROBEE_WS/devel/setup.bash
 BAG=20210326_1855_phase1Loc_survey_bay_5_attempt_2.bag
 
 rosrun bag_processing rosbag_topic_filter.py $BAG -a /hw/wifi hw_wifi.bag
@@ -288,6 +291,7 @@ If that doesn't work, you can try filtering out the bad topics instead of
 trying to fix their message definitions:
 
 ```console
+source $ASTROBEE_WS/devel/setup.bash
 rosrun bag_processing rosbag_topic_filter.py in.bag -r "/gs/*" -r /hw/cam_sci/compressed fixed.bag
 ```
 
@@ -295,6 +299,7 @@ And this command may help determine which topics are problematic
 in case more topics need to be fixed with the filtering approach:
 
 ```console
+source $ASTROBEE_WS/devel/setup.bash
 rosrun bag_processing rosbag_detect_bad_topics.py in.bag
 ```
 

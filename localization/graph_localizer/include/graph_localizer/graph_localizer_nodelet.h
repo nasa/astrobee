@@ -23,6 +23,7 @@
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/Heartbeat.h>
+#include <ff_msgs/ResetMap.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_nodelet.h>
@@ -56,6 +57,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   void EnableLocalizer();
 
   bool localizer_enabled() const;
+
+  bool ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
 
   bool ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
@@ -116,7 +119,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_, dl_sub_, depth_odometry_sub_, flight_mode_sub_;
   ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, handrail_pose_pub_, sparse_mapping_pose_pub_, reset_pub_,
     heartbeat_pub_;
-  ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
+  ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_, reset_map_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;

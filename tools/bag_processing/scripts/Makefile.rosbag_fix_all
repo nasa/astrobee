@@ -61,7 +61,6 @@ ifneq (,${ISAAC_MSGS_BMR})
   REWRITE_TYPES_ARGS += -r ${ISAAC_MSGS_BMR}/rosbag_rewrite_types_rules.json
 endif
 
-
 # Fix rosjava scicam bug
 rewrite_types_%.bag: %.bag
 	${REWRITE_TYPES} ${REWRITE_TYPES_ARGS} $< -o $@
@@ -73,6 +72,7 @@ migrate_old_%.bag: rewrite_types_%.bag
 	# compare with original bag to make sure data is there
 	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@  $(@:migrate_old_%=%)
 	rm $<  # explicitly delete right away to save disk space
+
 
 # Debayer the nav cam
 debayer_%.bag: migrate_old_%.bag
@@ -88,3 +88,4 @@ depth_split_%.bag: debayer_%.bag
 fix_all_%.bag: depth_split_%.bag
 	${ROSBAG_FILTER} ${ROSBAG_FILTER_ARGS} $< -o $@
 
+.PRECIOUS: rewrite_types_%.bag migrate_old_%.bag debayer_%.bag depth_split_%.bag
