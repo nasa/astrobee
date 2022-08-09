@@ -76,7 +76,6 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-  
   // copy of what it is before
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
@@ -138,16 +137,11 @@ void GncCtlAutocode::Step(void) {
   // comparison tests
 
   /* Test for ctl_status */
-  // std::string str = std::to_string(ctl_status);
-  //   const char *mine = str.c_str();
-
-  //   std::string str3 = std::to_string(after_ctl_.ctl_status);
-  //   const char *old = str3.c_str();
-  //   if (ctl_.ctl_status != after_ctl_.ctl_status) {
-  //      ROS_ERROR("*****not equal New:%s Old:%s", mine, old);
-  //   } else {
-  //     ROS_ERROR("equal New:%s Old:%s", mine, old);
-  //   }
+    // if (ctl_.ctl_status != after_ctl_.ctl_status) {
+    //    ROS_ERROR("*****not equal New:%d Old:%d", ctl_.ctl_status,after_ctl_.ctl_status);
+    // } else {
+    //   ROS_ERROR("equal New:%d Old:%d",ctl_.ctl_status, after_ctl_.ctl_status);
+    // }
 
   /*Test for position command*/
   // std::string str1 = std::to_string(ctl_.pos_err[0]);
@@ -155,57 +149,69 @@ void GncCtlAutocode::Step(void) {
   //   ROS_ERROR("Simulink Pos Err:%s ", mine);
 
 /* Test for pos_err */
-  // std::string str3 = std::to_string(after_ctl_.pos_err[0]);
-  // const char *old3= str3.c_str();
-
-  // std::string str4 = std::to_string(ctl_.pos_err[0]);
-  // const char *mine4 = str4.c_str();
-
-  // float difference = ctl_.pos_err[0] - after_ctl_.pos_err[0];
-  // difference = difference / after_ctl_.pos_err[0] * 100;
-  // if (difference > 0.5)
-  // {
-  //    ROS_ERROR("*****CHECK:old pos error:%s new: %s, difference %: %f", old3, mine4, difference);
+  // float difference0 = ctl_.pos_err[0] - after_ctl_.pos_err[0]; 
+  // float perc_difference0 = difference0 / after_ctl_.pos_err[0];
+  //   if (fabs(difference0) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
-  // else
-  // {
-  //   ROS_ERROR("old pos error:%s new: %s, difference %: %f", old3, mine4, difference);
+  // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.pos_err[0], after_ctl_.pos_err[0], difference0);
+
+  // float difference1 = ctl_.pos_err[1] - after_ctl_.pos_err[1]; 
+  // float perc_difference1 = difference1 / after_ctl_.pos_err[1];
+  //   if (fabs(difference1) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
-   
-    
+  // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.pos_err[1], after_ctl_.pos_err[1], difference1);
 
-
-
-
-
-// revert back to Simulink after my controller
-  RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
-  
-  /*Test for Linear Int Err*/
-  // std::string str = std::to_string(ctl_.pos_err_int[0]);
-  // const char *old = str.c_str();
-
-  // std::string str1 = std::to_string(linear_int_err[0]);
-  // const char *mine = str1.c_str();
-  // if (linear_int_err[0] != ctl_.pos_err_int[0]) {
-  //    ROS_ERROR("not equal New:%s Old:%s", mine, old);
-  // } else {
-  //   ROS_ERROR("equal New:%s Old:%s", mine, old);
+  // float difference2 = ctl_.pos_err[2] - after_ctl_.pos_err[2]; 
+  // float perc_difference2 = difference2 / after_ctl_.pos_err[2];
+  //   if (fabs(difference2) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
+  // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.pos_err[2], after_ctl_.pos_err[2], difference2);
+
+
+
+  /*Test for Linear/Pos Int Err*/
+  // ROS_ERROR("ctl_status: %d",  ctl_.ctl_status);
+  // double difference0 = ctl_.pos_err_int[0] - after_ctl_.pos_err_int[0]; 
+  //   if (fabs(difference0) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.pos_err_int[0], after_ctl_.pos_err_int[0], difference0);
+
+  // double difference1 = ctl_.pos_err_int[1] - after_ctl_.pos_err_int[1]; 
+  //   if (fabs(difference1) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.pos_err_int[1], after_ctl_.pos_err_int[1], difference1);
+
+  // double difference2 = ctl_.pos_err_int[2] - after_ctl_.pos_err_int[2]; 
+  //   if (fabs(difference2) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.pos_err_int[2], after_ctl_.pos_err_int[2], difference2);
 
 
 
 /*Test for Body Force CMD*/
-// std::string str = std::to_string(ctl_.body_force_cmd[0]);
-//   const char *old = str.c_str();
-
-//   std::string str1 = std::to_string(body_force_cmd[0]);
-//   const char *mine = str1.c_str();
-//   if (body_force_cmd[0] != ctl_.body_force_cmd[0]) {
-//      ROS_ERROR("not equal New:%s Old:%s", mine, old);
-//   } else {
-//     ROS_ERROR("equal New:%s Old:%s", mine, old);
+// double difference0 = ctl_.body_force_cmd[0] - after_ctl_.body_force_cmd[0]; 
+//     if (fabs(difference0) > 0.000001f){
+//     ROS_ERROR("************ERROR************\n ******************************************\n");
 //   }
+//   ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[0], after_ctl_.body_force_cmd[0], difference0);
+
+//   double difference1 = ctl_.body_force_cmd[1] - after_ctl_.body_force_cmd[1]; 
+//     if (fabs(difference1) > 0.000001f){
+//     ROS_ERROR("************ERROR************\n ******************************************\n");
+//   }
+//   ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[1], after_ctl_.body_force_cmd[1], difference1);
+
+//   double difference2 = ctl_.body_force_cmd[2] - after_ctl_.body_force_cmd[2]; 
+//     if (fabs(difference2) > 0.000001f){
+//     ROS_ERROR("************ERROR************\n ******************************************\n");
+//   }
+//   ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[2], after_ctl_.body_force_cmd[2], difference2);
 
 
 /*Test for att_Err_mag*/
@@ -224,6 +230,57 @@ void GncCtlAutocode::Step(void) {
 // std::string str = std::to_string(att_command[2]);
 //   const char *mine = str.c_str();
 // ROS_ERROR("Att_command New:%s ", mine);
+
+/***** Test for Body Accel Cmd *****/
+  // double difference0 = ctl_.body_accel_cmd[0] - after_ctl_.body_accel_cmd[0]; 
+  //   if (fabs(difference0) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[0], after_ctl_.body_accel_cmd[0], difference0);
+
+  // double difference1 = ctl_.body_accel_cmd[1] - after_ctl_.body_accel_cmd[1]; 
+  //   if (fabs(difference1) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[1], after_ctl_.body_accel_cmd[1], difference1);
+
+  // double difference2 = ctl_.body_accel_cmd[2] - after_ctl_.body_accel_cmd[2]; 
+  //   if (fabs(difference2) > 0.000001f){
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[2], after_ctl_.body_accel_cmd[2], difference2);
+
+/*****Traj Error Pos*****/
+// double pos_diff = ctl_.traj_error_pos - after_ctl_.traj_error_pos; 
+//  if (fabs(pos_diff) > 0.000002f){
+//     ROS_ERROR("************ERROR************\n ******************************************\n");
+//   }
+//   ROS_ERROR("Traj_error_pos New: %f, Old: %f, Difference: %f",  ctl_.traj_error_pos, after_ctl_.traj_error_pos, pos_diff);
+
+/*****Traj Error Att*****/
+// double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att; 
+//  if (fabs(att_diff) > 0.000002f){
+//     ROS_ERROR("************ERROR************\n ******************************************\n");
+//   }
+//   ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att, att_diff);
+
+/*****Traj Error Vel*****/
+double vel_diff = ctl_.traj_error_vel - after_ctl_.traj_error_vel; 
+ if (fabs(vel_diff) > 0.000002f){
+    ROS_ERROR("************ERROR************\n ******************************************\n");
+  }
+  ROS_ERROR("Traj_error_vel New: %f, Old: %f, Difference: %f",  ctl_.traj_error_vel, after_ctl_.traj_error_vel, vel_diff);
+
+
+/*****Traj Error Omega*****/
+double omega_diff = ctl_.traj_error_omega - after_ctl_.traj_error_omega; 
+ if (fabs(omega_diff) > 0.000002f){
+    ROS_ERROR("************ERROR************\n ******************************************\n");
+  }
+  ROS_ERROR("Traj_error_omega New: %f, Old: %f, Difference: %f",  ctl_.traj_error_omega, after_ctl_.traj_error_omega, omega_diff);
+  
+// revert back to Simulink after my controller
+  RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
 }
 
 /*Command Shaper */
@@ -257,8 +314,8 @@ void GncCtlAutocode::FindTrajErrors() {
   // magnitude of the vectors
   traj_error_pos = sqrt(pow(traj_error_pos_vec[0], 2) + pow(traj_error_pos_vec[1], 2) + pow(traj_error_pos_vec[2], 2));
   traj_error_vel = sqrt(pow(traj_error_vel_vec[0], 2) + pow(traj_error_vel_vec[1], 2) + pow(traj_error_vel_vec[2], 2));
-  traj_error_pos =
-    sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
+  traj_error_omega = 
+   sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
   FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
 }
@@ -382,7 +439,6 @@ void GncCtlAutocode::CreateOmegaMatrix(float input[3], float output[4][4]) {
 void GncCtlAutocode::GenerateCmdPath() {
   float test[3];
   if (state_cmd_switch_out) {  // true is A
-    ROS_ERROR("I am in if");
     for (int i = 0; i < 3; i++) {
       traj_pos[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.V_B_ISS_ISS[i] * time_delta) +
                     (0.5 * ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta * time_delta);
@@ -390,7 +446,6 @@ void GncCtlAutocode::GenerateCmdPath() {
       traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
     }
   } else {  // false so cmd B
-    ROS_ERROR("I am in else");
       for (int i = 0; i < 3; i++) {
         traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) +
                       (0.5 * ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
@@ -817,6 +872,10 @@ void GncCtlAutocode::VarToCtlMsg() {
   }
   ctl_.att_err_mag = att_err_mag;
   ctl_.ctl_status = ctl_status;
+  ctl_.traj_error_pos = traj_error_pos;
+  ctl_.traj_error_att = traj_error_att;
+  ctl_.traj_error_vel = traj_error_vel;
+  ctl_.traj_error_omega = traj_error_omega;
 }
 
 /*****clc_closed_loop_controller functions*****/
@@ -1118,7 +1177,7 @@ void GncCtlAutocode::discreteTimeIntegrator(float input[3], float output[3], flo
     return;
   }
   for (int i = 0; i < 3; i++) {
-    accumulator[i] += input[i];
+    accumulator[i] += (input[i] / 62.5);
     output[i] = accumulator[i];
     if (output[i] > upper_limit) {
       output[i] = upper_limit;
