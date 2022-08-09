@@ -80,7 +80,10 @@ void GncCtlAutocode::Step(void) {
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
   ctl_msg before_ctl_;
-  BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
+  memcpy(&before_ctl_input_, &ctl_input_, sizeof(ctl_input_));
+  memcpy(&before_cmd_, &cmd_, sizeof(cmd_));
+  memcpy(&before_ctl_, &ctl_, sizeof(ctl_));
+  // BeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
   /****from Simulink Controller*****/
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
@@ -90,8 +93,17 @@ void GncCtlAutocode::Step(void) {
   ctl_input_msg after_ctl_input_;
   cmd_msg after_cmd_;
   ctl_msg after_ctl_;
-  AfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
-  RevertBackToBeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
+  memcpy(&after_ctl_input_, &ctl_input_, sizeof(ctl_input_));
+  memcpy(&after_cmd_, &cmd_, sizeof(cmd_));
+  memcpy(&after_ctl_, &ctl_, sizeof(ctl_));
+
+  // AfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
+
+  memcpy(&ctl_input_, &before_ctl_input_, sizeof(before_ctl_input_));
+  memcpy(&cmd_, &before_cmd_, sizeof(before_cmd_));
+  memcpy(&ctl_, &before_ctl_, sizeof(before_ctl_));
+
+  // RevertBackToBeforeSimulink(before_ctl_input_, before_cmd_, before_ctl_);
 
 
   /*****command_shaper*****/
@@ -137,11 +149,11 @@ void GncCtlAutocode::Step(void) {
   // comparison tests
 
   /* Test for ctl_status */
-    // if (ctl_.ctl_status != after_ctl_.ctl_status) {
-    //    ROS_ERROR("*****not equal New:%d Old:%d", ctl_.ctl_status,after_ctl_.ctl_status);
-    // } else {
-    //   ROS_ERROR("equal New:%d Old:%d",ctl_.ctl_status, after_ctl_.ctl_status);
-    // }
+    if (ctl_.ctl_status != after_ctl_.ctl_status) {
+       ROS_ERROR("*****not equal New:%d Old:%d", ctl_.ctl_status,after_ctl_.ctl_status);
+    } else {
+      ROS_ERROR("equal New:%d Old:%d",ctl_.ctl_status, after_ctl_.ctl_status);
+    }
 
   /*Test for position command*/
   // std::string str1 = std::to_string(ctl_.pos_err[0]);
@@ -149,138 +161,145 @@ void GncCtlAutocode::Step(void) {
   //   ROS_ERROR("Simulink Pos Err:%s ", mine);
 
 /* Test for pos_err */
-  // float difference0 = ctl_.pos_err[0] - after_ctl_.pos_err[0]; 
+  // float difference0 = ctl_.pos_err[0] - after_ctl_.pos_err[0];
   // float perc_difference0 = difference0 / after_ctl_.pos_err[0];
   //   if (fabs(difference0) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
   // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.pos_err[0], after_ctl_.pos_err[0], difference0);
 
-  // float difference1 = ctl_.pos_err[1] - after_ctl_.pos_err[1]; 
+  // float difference1 = ctl_.pos_err[1] - after_ctl_.pos_err[1];
   // float perc_difference1 = difference1 / after_ctl_.pos_err[1];
   //   if (fabs(difference1) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
   // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.pos_err[1], after_ctl_.pos_err[1], difference1);
 
-  // float difference2 = ctl_.pos_err[2] - after_ctl_.pos_err[2]; 
+  // float difference2 = ctl_.pos_err[2] - after_ctl_.pos_err[2];
   // float perc_difference2 = difference2 / after_ctl_.pos_err[2];
   //   if (fabs(difference2) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
   // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.pos_err[2], after_ctl_.pos_err[2], difference2);
 
-
-
   /*Test for Linear/Pos Int Err*/
   // ROS_ERROR("ctl_status: %d",  ctl_.ctl_status);
-  // double difference0 = ctl_.pos_err_int[0] - after_ctl_.pos_err_int[0]; 
+  // double difference0 = ctl_.pos_err_int[0] - after_ctl_.pos_err_int[0];
   //   if (fabs(difference0) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
   // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.pos_err_int[0], after_ctl_.pos_err_int[0], difference0);
 
-  // double difference1 = ctl_.pos_err_int[1] - after_ctl_.pos_err_int[1]; 
+  // double difference1 = ctl_.pos_err_int[1] - after_ctl_.pos_err_int[1];
   //   if (fabs(difference1) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
   // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.pos_err_int[1], after_ctl_.pos_err_int[1], difference1);
 
-  // double difference2 = ctl_.pos_err_int[2] - after_ctl_.pos_err_int[2]; 
+  // double difference2 = ctl_.pos_err_int[2] - after_ctl_.pos_err_int[2];
   //   if (fabs(difference2) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
   // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.pos_err_int[2], after_ctl_.pos_err_int[2], difference2);
 
+  /*Test for Body Force CMD*/
+  // double difference0 = ctl_.body_force_cmd[0] - after_ctl_.body_force_cmd[0];
+  //     if (fabs(difference0) > 0.000001f){
+  //     ROS_ERROR("************ERROR************\n ******************************************\n");
+  //   }
+  //   ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[0], after_ctl_.body_force_cmd[0],
+  //   difference0);
 
+  //   double difference1 = ctl_.body_force_cmd[1] - after_ctl_.body_force_cmd[1];
+  //     if (fabs(difference1) > 0.000001f){
+  //     ROS_ERROR("************ERROR************\n ******************************************\n");
+  //   }
+  //   ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[1], after_ctl_.body_force_cmd[1],
+  //   difference1);
 
-/*Test for Body Force CMD*/
-// double difference0 = ctl_.body_force_cmd[0] - after_ctl_.body_force_cmd[0]; 
-//     if (fabs(difference0) > 0.000001f){
-//     ROS_ERROR("************ERROR************\n ******************************************\n");
-//   }
-//   ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[0], after_ctl_.body_force_cmd[0], difference0);
+  //   double difference2 = ctl_.body_force_cmd[2] - after_ctl_.body_force_cmd[2];
+  //     if (fabs(difference2) > 0.000001f){
+  //     ROS_ERROR("************ERROR************\n ******************************************\n");
+  //   }
+  //   ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[2], after_ctl_.body_force_cmd[2],
+  //   difference2);
 
-//   double difference1 = ctl_.body_force_cmd[1] - after_ctl_.body_force_cmd[1]; 
-//     if (fabs(difference1) > 0.000001f){
-//     ROS_ERROR("************ERROR************\n ******************************************\n");
-//   }
-//   ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[1], after_ctl_.body_force_cmd[1], difference1);
+  /*Test for att_Err_mag*/
+  // std::string str = std::to_string(ctl_.att_err_mag);
+  //   const char *old = str.c_str();
 
-//   double difference2 = ctl_.body_force_cmd[2] - after_ctl_.body_force_cmd[2]; 
-//     if (fabs(difference2) > 0.000001f){
-//     ROS_ERROR("************ERROR************\n ******************************************\n");
-//   }
-//   ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_force_cmd[2], after_ctl_.body_force_cmd[2], difference2);
+  //   std::string str1 = std::to_string(att_err_mag);
+  //   const char *mine = str1.c_str();
+  //   if (att_err_mag != ctl_.att_err_mag) {
+  //      ROS_ERROR("not equal New:%s Old:%s", mine, old);
+  //   } else {
+  //     ROS_ERROR("equal New:%s Old:%s", mine, old);
+  //   }
 
+  // std::string str = std::to_string(att_command[2]);
+  //   const char *mine = str.c_str();
+  // ROS_ERROR("Att_command New:%s ", mine);
 
-/*Test for att_Err_mag*/
-// std::string str = std::to_string(ctl_.att_err_mag);
-//   const char *old = str.c_str();
-
-//   std::string str1 = std::to_string(att_err_mag);
-//   const char *mine = str1.c_str();
-//   if (att_err_mag != ctl_.att_err_mag) {
-//      ROS_ERROR("not equal New:%s Old:%s", mine, old);
-//   } else {
-//     ROS_ERROR("equal New:%s Old:%s", mine, old);
-//   }
-
-
-// std::string str = std::to_string(att_command[2]);
-//   const char *mine = str.c_str();
-// ROS_ERROR("Att_command New:%s ", mine);
-
-/***** Test for Body Accel Cmd *****/
-  // double difference0 = ctl_.body_accel_cmd[0] - after_ctl_.body_accel_cmd[0]; 
+  /***** Test for Body Accel Cmd *****/
+  // double difference0 = ctl_.body_accel_cmd[0] - after_ctl_.body_accel_cmd[0];
   //   if (fabs(difference0) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
-  // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[0], after_ctl_.body_accel_cmd[0], difference0);
+  // ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[0], after_ctl_.body_accel_cmd[0],
+  // difference0);
 
-  // double difference1 = ctl_.body_accel_cmd[1] - after_ctl_.body_accel_cmd[1]; 
+  // double difference1 = ctl_.body_accel_cmd[1] - after_ctl_.body_accel_cmd[1];
   //   if (fabs(difference1) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
-  // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[1], after_ctl_.body_accel_cmd[1], difference1);
+  // ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[1], after_ctl_.body_accel_cmd[1],
+  // difference1);
 
-  // double difference2 = ctl_.body_accel_cmd[2] - after_ctl_.body_accel_cmd[2]; 
+  // double difference2 = ctl_.body_accel_cmd[2] - after_ctl_.body_accel_cmd[2];
   //   if (fabs(difference2) > 0.000001f){
   //   ROS_ERROR("************ERROR************\n ******************************************\n");
   // }
-  // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[2], after_ctl_.body_accel_cmd[2], difference2);
+  // ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_accel_cmd[2], after_ctl_.body_accel_cmd[2],
+  // difference2);
 
-/*****Traj Error Pos*****/
-// double pos_diff = ctl_.traj_error_pos - after_ctl_.traj_error_pos; 
-//  if (fabs(pos_diff) > 0.000002f){
-//     ROS_ERROR("************ERROR************\n ******************************************\n");
-//   }
-//   ROS_ERROR("Traj_error_pos New: %f, Old: %f, Difference: %f",  ctl_.traj_error_pos, after_ctl_.traj_error_pos, pos_diff);
+  /*****Traj Error Pos*****/
+  // double pos_diff = ctl_.traj_error_pos - after_ctl_.traj_error_pos;
+  //  if (fabs(pos_diff) > 0.000002f){
+  //     ROS_ERROR("************ERROR************\n ******************************************\n");
+  //   }
+  //   ROS_ERROR("Traj_error_pos New: %f, Old: %f, Difference: %f",  ctl_.traj_error_pos, after_ctl_.traj_error_pos,
+  //   pos_diff);
 
-/*****Traj Error Att*****/
-// double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att; 
-//  if (fabs(att_diff) > 0.000002f){
-//     ROS_ERROR("************ERROR************\n ******************************************\n");
-//   }
-//   ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att, att_diff);
+  /*****Traj Error Att*****/
+  // double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att;
+  //  if (fabs(att_diff) > 0.000002f){
+  //     ROS_ERROR("************ERROR************\n ******************************************\n");
+  //   }
+  //   ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att,
+  //   att_diff);
 
-/*****Traj Error Vel*****/
-double vel_diff = ctl_.traj_error_vel - after_ctl_.traj_error_vel; 
- if (fabs(vel_diff) > 0.000002f){
-    ROS_ERROR("************ERROR************\n ******************************************\n");
-  }
-  ROS_ERROR("Traj_error_vel New: %f, Old: %f, Difference: %f",  ctl_.traj_error_vel, after_ctl_.traj_error_vel, vel_diff);
+  /*****Traj Error Vel*****/
+  // double vel_diff = ctl_.traj_error_vel - after_ctl_.traj_error_vel;
+  // if (fabs(vel_diff) > 0.000002f) {
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("Traj_error_vel New: %f, Old: %f, Difference: %f", ctl_.traj_error_vel, after_ctl_.traj_error_vel,
+  //           vel_diff);
 
+  /*****Traj Error Omega*****/
+  // double omega_diff = ctl_.traj_error_omega - after_ctl_.traj_error_omega;
+  // if (fabs(omega_diff) > 0.000002f) {
+  //   ROS_ERROR("************ERROR************\n ******************************************\n");
+  // }
+  // ROS_ERROR("Traj_error_omega New: %f, Old: %f, Difference: %f", ctl_.traj_error_omega, after_ctl_.traj_error_omega,
+  //           omega_diff);
 
-/*****Traj Error Omega*****/
-double omega_diff = ctl_.traj_error_omega - after_ctl_.traj_error_omega; 
- if (fabs(omega_diff) > 0.000002f){
-    ROS_ERROR("************ERROR************\n ******************************************\n");
-  }
-  ROS_ERROR("Traj_error_omega New: %f, Old: %f, Difference: %f",  ctl_.traj_error_omega, after_ctl_.traj_error_omega, omega_diff);
-  
-// revert back to Simulink after my controller
-  RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
+  // revert back to Simulink after my controller
+  // RevertBackToAfterSimulink(after_ctl_input_, after_cmd_, after_ctl_);
+  memcpy(&ctl_input_, &after_ctl_input_, sizeof(after_ctl_input_));
+  memcpy(&cmd_, &after_cmd_, sizeof(after_cmd_));
+  memcpy(&ctl_, &after_ctl_, sizeof(after_ctl_));
+
 }
 
 /*Command Shaper */
@@ -314,8 +333,8 @@ void GncCtlAutocode::FindTrajErrors() {
   // magnitude of the vectors
   traj_error_pos = sqrt(pow(traj_error_pos_vec[0], 2) + pow(traj_error_pos_vec[1], 2) + pow(traj_error_pos_vec[2], 2));
   traj_error_vel = sqrt(pow(traj_error_vel_vec[0], 2) + pow(traj_error_vel_vec[1], 2) + pow(traj_error_vel_vec[2], 2));
-  traj_error_omega = 
-   sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
+  traj_error_omega =
+    sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
   FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
 }
@@ -353,6 +372,7 @@ void GncCtlAutocode::FindTrajQuat() {
       quat_state_cmd[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
     }
   }
+// ROS_ERROR("omegaB: %f", ctl_input_.cmd_state_b.omega_B_ISS_B[0]);
 
   // element wise multiplication and addition
   float average_omega_matrix[4][4];
@@ -362,13 +382,16 @@ void GncCtlAutocode::FindTrajQuat() {
       average_omega_matrix[row][col] =  average_omega_matrix[row][col] * 0.5 * time_delta;
     }
   }
+
+
   Eigen::Matrix<float, 4, 4> MatrixA;
   MatrixA << average_omega_matrix[0][0], average_omega_matrix[0][1], average_omega_matrix[0][2],
     average_omega_matrix[0][3], average_omega_matrix[1][0], average_omega_matrix[1][1], average_omega_matrix[1][2],
     average_omega_matrix[1][3], average_omega_matrix[2][0], average_omega_matrix[2][1], average_omega_matrix[2][2],
     average_omega_matrix[2][3], average_omega_matrix[3][0], average_omega_matrix[3][1], average_omega_matrix[3][2],
-    average_omega_matrix[2][3];
+    average_omega_matrix[3][3];
 
+    
   MatrixA = MatrixA.exp();
   // repopulate the 2d array
   for (int row = 0; row < 4; row++) {
@@ -1323,6 +1346,7 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& out
   output_vec[2] = out.z();
 
   output_scalar = acos(out.w()) * 2;
+  ROS_ERROR("Output Scalar: %f", output_scalar);
 }
 
 // updates the position and attitude command
