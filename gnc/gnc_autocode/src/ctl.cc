@@ -149,11 +149,11 @@ void GncCtlAutocode::Step(void) {
   // comparison tests
 
   /* Test for ctl_status */
-    if (ctl_.ctl_status != after_ctl_.ctl_status) {
-       ROS_ERROR("*****not equal New:%d Old:%d", ctl_.ctl_status,after_ctl_.ctl_status);
-    } else {
-      ROS_ERROR("equal New:%d Old:%d",ctl_.ctl_status, after_ctl_.ctl_status);
-    }
+    // if (ctl_.ctl_status != after_ctl_.ctl_status) {
+    //   ROS_ERROR("*****not equal New:%d Old:%d", ctl_.ctl_status, after_ctl_.ctl_status);
+    // } else {
+    //   ROS_ERROR("equal New:%d Old:%d", ctl_.ctl_status, after_ctl_.ctl_status);
+    // }
 
   /*Test for position command*/
   // std::string str1 = std::to_string(ctl_.pos_err[0]);
@@ -271,12 +271,12 @@ void GncCtlAutocode::Step(void) {
   //   pos_diff);
 
   /*****Traj Error Att*****/
-  // double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att;
-  //  if (fabs(att_diff) > 0.000002f){
-  //     ROS_ERROR("************ERROR************\n ******************************************\n");
-  //   }
-  //   ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att,
-  //   att_diff);
+  double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att;
+   if (fabs(att_diff) > 0.000002f){
+      ROS_ERROR("************ERROR************\n ******************************************\n");
+    }
+    ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att,
+    att_diff);
 
   /*****Traj Error Vel*****/
   // double vel_diff = ctl_.traj_error_vel - after_ctl_.traj_error_vel;
@@ -299,7 +299,6 @@ void GncCtlAutocode::Step(void) {
   memcpy(&ctl_input_, &after_ctl_input_, sizeof(after_ctl_input_));
   memcpy(&cmd_, &after_cmd_, sizeof(after_cmd_));
   memcpy(&ctl_, &after_ctl_, sizeof(after_ctl_));
-
 }
 
 /*Command Shaper */
@@ -353,6 +352,8 @@ void GncCtlAutocode::GenerateCmdAttitude() {
   }
 
   FindTrajQuat();
+  ROS_ERROR("Traj quat:%f", traj_quat[0]);
+
 }
 
 void GncCtlAutocode::FindTrajQuat() {
@@ -365,13 +366,20 @@ void GncCtlAutocode::FindTrajQuat() {
     for (int i = 0; i < 4; i++) {
       quat_state_cmd[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
     }
+    ROS_ERROR("input state: %f, %f, %f", ctl_input_.cmd_state_a.omega_B_ISS_B[0], ctl_input_.cmd_state_a.omega_B_ISS_B[1], ctl_input_.cmd_state_a.omega_B_ISS_B[2]);
   } else {
     CreateOmegaMatrix(ctl_input_.cmd_state_b.omega_B_ISS_B, omega_omega);
     CreateOmegaMatrix(ctl_input_.cmd_state_b.alpha_B_ISS_B, omega_alpha);
     for (int i = 0; i < 4; i++) {
       quat_state_cmd[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
     }
+    ROS_ERROR("input state: %f, %f, %f", ctl_input_.cmd_state_b.omega_B_ISS_B[0], ctl_input_.cmd_state_b.omega_B_ISS_B[1], ctl_input_.cmd_state_b.omega_B_ISS_B[2]);
   }
+  // for (int row = 0; row < 4; row++) {
+  //   for (int col = 0; col < 4; col++) {
+  //     ROS_ERROR("omega omega, %d, %d: %f", row, col,  omega_omega[row][col]);  
+  //   }
+  // }
 // ROS_ERROR("omegaB: %f", ctl_input_.cmd_state_b.omega_B_ISS_B[0]);
 
   // element wise multiplication and addition
@@ -380,6 +388,7 @@ void GncCtlAutocode::FindTrajQuat() {
     for (int col = 0; col < 4; col++) {
       average_omega_matrix[row][col] = (0.5 * omega_alpha[row][col] *time_delta) + omega_omega[row][col];
       average_omega_matrix[row][col] =  average_omega_matrix[row][col] * 0.5 * time_delta;
+      // ROS_ERROR("omega matrix, %d, %d: %f", row, col, average_omega_matrix[row][col]);
     }
   }
 
@@ -391,19 +400,23 @@ void GncCtlAutocode::FindTrajQuat() {
     average_omega_matrix[2][3], average_omega_matrix[3][0], average_omega_matrix[3][1], average_omega_matrix[3][2],
     average_omega_matrix[3][3];
 
-    
   MatrixA = MatrixA.exp();
+  
   // repopulate the 2d array
   for (int row = 0; row < 4; row++) {
     for (int col = 0; col < 4; col++) {
       average_omega_matrix[row][col] = MatrixA(row, col);
     }
   }
+  
 
   float bottom_sum_1[4][4];
   float bottom_sum_2[4][4];
   MatrixMultiplication4x4(omega_alpha, omega_omega, bottom_sum_1);
   MatrixMultiplication4x4(omega_omega, omega_alpha, bottom_sum_2);
+
+  
+
 
   // subtract the 2 matrices and then multiply then add
   float bottom_sum_input[4][4];
@@ -415,6 +428,8 @@ void GncCtlAutocode::FindTrajQuat() {
       sum_output[row][col] = bottom_sum_input[row][col] + average_omega_matrix[row][col];
     }
   }
+
+  
 
   float matrix_mult_out[4];
   MatrixMultiplication4x1(sum_output, quat_state_cmd, matrix_mult_out);
@@ -429,12 +444,23 @@ void GncCtlAutocode::FindTrajQuat() {
   if (out.w() < 0) {
     out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
   }
-  out.normalize();
+  float mag = sqrt(pow(matrix_mult_out[0], 2) + pow(matrix_mult_out[1], 2) + pow(matrix_mult_out[2], 2) + pow(matrix_mult_out[3], 2));
+  if (mag < 0)
+  {
+    out.normalize();
+  }
+  
+// for (int row = 0; row < 4; row++) {
+//    ROS_ERROR("traj_quatt, %d,  %f", row, out.x());
+    
+//   }
+
 
   traj_quat[0] = out.x();
   traj_quat[1] = out.y();
   traj_quat[2] = out.z();
   traj_quat[3] = out.w();
+  
 }
 // Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
 void GncCtlAutocode::CreateOmegaMatrix(float input[3], float output[4][4]) {
@@ -1327,6 +1353,7 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& out
   cmd.y() = q_cmd[1];
   cmd.z() = q_cmd[2];
 
+ 
   Eigen::Quaternion<float> actual;
   actual.w() = q_actual[3];
   actual.x() = q_actual[0];
@@ -1339,14 +1366,19 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& out
   if (out.w() < 0) {
     out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
   }
-  out.normalize();
+  float mag = sqrt(pow(q_actual[0], 2) + pow(q_actual[1], 2) + pow(q_actual[2], 2) + pow(q_actual[3], 2));
+  if (mag < 0)
+  {
+    out.normalize();
+  }
+
 
   output_vec[0] = out.x();
   output_vec[1] = out.y();
   output_vec[2] = out.z();
 
   output_scalar = acos(out.w()) * 2;
-  ROS_ERROR("Output Scalar: %f", output_scalar);
+ 
 }
 
 // updates the position and attitude command
