@@ -271,12 +271,17 @@ void GncCtlAutocode::Step(void) {
   //   pos_diff);
 
   /*****Traj Error Att*****/
+  // ROS_ERROR("My est: %f,, %f, %f, %f", ctl_input_.est_quat_ISS2B[0], ctl_input_.est_quat_ISS2B[1], ctl_input_.est_quat_ISS2B[2], ctl_input_.est_quat_ISS2B[3]);
+  // ROS_ERROR("old est: %f,, %f, %f, %f", before_ctl_input_.est_quat_ISS2B[0], before_ctl_input_.est_quat_ISS2B[1], before_ctl_input_.est_quat_ISS2B[2], before_ctl_input_.est_quat_ISS2B[3]);
   double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att;
-   if (fabs(att_diff) > 0.000002f){
-      ROS_ERROR("************ERROR************\n ******************************************\n");
-    }
+  if (fabs(att_diff) > 0.000002f) {
+    ROS_ERROR("************ERROR************\n ******************************************");
+  }
     ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att,
     att_diff);
+
+    // ROS_ERROR("My traj_quat: %f, %f, %f, %f", cmd_.traj_quat[0], cmd_.traj_quat[1], cmd_.traj_quat[2], cmd_.traj_quat[3]);
+    // ROS_ERROR("Old traj_quat: %f, %f, %f, %f", after_cmd_.traj_quat[0], after_cmd_.traj_quat[1], after_cmd_.traj_quat[2], after_cmd_.traj_quat[3]);
 
   /*****Traj Error Vel*****/
   // double vel_diff = ctl_.traj_error_vel - after_ctl_.traj_error_vel;
@@ -335,7 +340,10 @@ void GncCtlAutocode::FindTrajErrors() {
   traj_error_omega =
     sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
+  
+ 
   FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
+
 }
 
 void GncCtlAutocode::GenerateCmdAttitude() {
@@ -352,8 +360,7 @@ void GncCtlAutocode::GenerateCmdAttitude() {
   }
 
   FindTrajQuat();
-  ROS_ERROR("Traj quat:%f", traj_quat[0]);
-
+  
 }
 
 void GncCtlAutocode::FindTrajQuat() {
@@ -366,21 +373,21 @@ void GncCtlAutocode::FindTrajQuat() {
     for (int i = 0; i < 4; i++) {
       quat_state_cmd[i] = ctl_input_.cmd_state_a.quat_ISS2B[i];
     }
-    ROS_ERROR("input state: %f, %f, %f", ctl_input_.cmd_state_a.omega_B_ISS_B[0], ctl_input_.cmd_state_a.omega_B_ISS_B[1], ctl_input_.cmd_state_a.omega_B_ISS_B[2]);
+  
   } else {
     CreateOmegaMatrix(ctl_input_.cmd_state_b.omega_B_ISS_B, omega_omega);
     CreateOmegaMatrix(ctl_input_.cmd_state_b.alpha_B_ISS_B, omega_alpha);
     for (int i = 0; i < 4; i++) {
       quat_state_cmd[i] = ctl_input_.cmd_state_b.quat_ISS2B[i];
     }
-    ROS_ERROR("input state: %f, %f, %f", ctl_input_.cmd_state_b.omega_B_ISS_B[0], ctl_input_.cmd_state_b.omega_B_ISS_B[1], ctl_input_.cmd_state_b.omega_B_ISS_B[2]);
+  
   }
   // for (int row = 0; row < 4; row++) {
   //   for (int col = 0; col < 4; col++) {
-  //     ROS_ERROR("omega omega, %d, %d: %f", row, col,  omega_omega[row][col]);  
+  //     ROS_ERROR("omega omega, %d, %d: %f", row, col,  omega_omega[row][col]);
   //   }
   // }
-// ROS_ERROR("omegaB: %f", ctl_input_.cmd_state_b.omega_B_ISS_B[0]);
+  // ROS_ERROR("omegaB: %f", ctl_input_.cmd_state_b.omega_B_ISS_B[0]);
 
   // element wise multiplication and addition
   float average_omega_matrix[4][4];
@@ -401,22 +408,18 @@ void GncCtlAutocode::FindTrajQuat() {
     average_omega_matrix[3][3];
 
   MatrixA = MatrixA.exp();
-  
+
   // repopulate the 2d array
   for (int row = 0; row < 4; row++) {
     for (int col = 0; col < 4; col++) {
       average_omega_matrix[row][col] = MatrixA(row, col);
     }
   }
-  
 
   float bottom_sum_1[4][4];
   float bottom_sum_2[4][4];
   MatrixMultiplication4x4(omega_alpha, omega_omega, bottom_sum_1);
   MatrixMultiplication4x4(omega_omega, omega_alpha, bottom_sum_2);
-
-  
-
 
   // subtract the 2 matrices and then multiply then add
   float bottom_sum_input[4][4];
@@ -428,8 +431,6 @@ void GncCtlAutocode::FindTrajQuat() {
       sum_output[row][col] = bottom_sum_input[row][col] + average_omega_matrix[row][col];
     }
   }
-
-  
 
   float matrix_mult_out[4];
   MatrixMultiplication4x1(sum_output, quat_state_cmd, matrix_mult_out);
@@ -444,15 +445,15 @@ void GncCtlAutocode::FindTrajQuat() {
   if (out.w() < 0) {
     out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
   }
-  float mag = sqrt(pow(matrix_mult_out[0], 2) + pow(matrix_mult_out[1], 2) + pow(matrix_mult_out[2], 2) + pow(matrix_mult_out[3], 2));
-  if (mag < 0)
-  {
+  float mag = sqrt(pow(matrix_mult_out[0], 2) + pow(matrix_mult_out[1], 2) + pow(matrix_mult_out[2], 2) +
+                   pow(matrix_mult_out[3], 2));
+  if (mag < 0) {
     out.normalize();
   }
-  
+
 // for (int row = 0; row < 4; row++) {
 //    ROS_ERROR("traj_quatt, %d,  %f", row, out.x());
-    
+
 //   }
 
 
@@ -460,7 +461,6 @@ void GncCtlAutocode::FindTrajQuat() {
   traj_quat[1] = out.y();
   traj_quat[2] = out.z();
   traj_quat[3] = out.w();
-  
 }
 // Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
 void GncCtlAutocode::CreateOmegaMatrix(float input[3], float output[4][4]) {
@@ -1347,38 +1347,122 @@ void GncCtlAutocode::FindPosError() {
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
 void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
-  Eigen::Quaternion<float> cmd;
-  cmd.w() = q_cmd[3];
-  cmd.x() = q_cmd[0];
-  cmd.y() = q_cmd[1];
-  cmd.z() = q_cmd[2];
+float inverse_actual[4];
+
+ for (int i = 0; i < 3; i++) //do it for elemtns 0, 1, 2
+ {
+  inverse_actual[i] = -q_actual[i];
+ }
+ inverse_actual[3] = q_actual[3];
 
  
-  Eigen::Quaternion<float> actual;
-  actual.w() = q_actual[3];
-  actual.x() = q_actual[0];
-  actual.y() = q_actual[1];
-  actual.z() = q_actual[2];
+//quat multiplication
+Eigen::Quaternion<float> q1;
+q1.x() = q_actual[0];
+q1.y() = q_actual[1];
+q1.z() = q_actual[2];
+q1.w() = q_actual[3];
 
-  Eigen::Quaternion<float> out = cmd.inverse() * actual;
+Eigen::Quaternion<float> q2;
+q2.x() = q_cmd[0];
+q2.y() = q_cmd[1];
+q2.z() = q_cmd[2];
+q2.w() = q_cmd[3];
 
-  // enfore positive scalar
-  if (out.w() < 0) {
-    out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
-  }
-  float mag = sqrt(pow(q_actual[0], 2) + pow(q_actual[1], 2) + pow(q_actual[2], 2) + pow(q_actual[3], 2));
-  if (mag < 0)
+Eigen::Quaternion<float> out;
+out = q1 * q2;
+
+float mult_out[4];
+mult_out[0] = out.x();
+mult_out[1] = out.y();
+mult_out[2] = out.z();
+mult_out[3] = out.w();
+
+if(mult_out[3] < 0) 
+{
+  for(int i = 0; i < 4; i++)
   {
-    out.normalize();
+    mult_out[i] = -mult_out[i];
   }
+}
+
+double mag = sqrt((mult_out[0] * mult_out[0]) + (mult_out[1] * mult_out[1]) + (mult_out[2] * mult_out[2]) + (mult_out[3] * mult_out[3]));
+if (mag > 1E-7)
+{
+  for(int i = 0; i < 4; i++)
+  {
+    mult_out[i] = mult_out[i] / mag;
+  }
+}
+
+for (int i = 0; i < 3; i++)
+{
+  output_vec[i] = mult_out[i];
+}
+if (mult_out[3] > 1.0F)
+{
+  mult_out[3] = 1.0F;
+}
+else if(mult_out[3] < -1.0F)
+{
+  mult_out[3] = -1.0F;
+}
+output_scalar = fabs(acos(mult_out[3])) * 2;
 
 
-  output_vec[0] = out.x();
-  output_vec[1] = out.y();
-  output_vec[2] = out.z();
 
-  output_scalar = acos(out.w()) * 2;
+
+
+/*Break to old */
+  // Eigen::Quaternion<float> cmd;
+  // cmd.w() = q_cmd[3]; 
+  // cmd.x() = q_cmd[0];
+  // cmd.y() = q_cmd[1];
+  // cmd.z() = q_cmd[2];
+
+
+  // Eigen::Quaternion<float> actual;
+  // actual.w() = q_actual[3];
+  // actual.x() = q_actual[0];
+  // actual.y() = q_actual[1];
+  // actual.z() = q_actual[2];
+
  
+
+  // // Eigen::Quaternion<float> out = cmd * actual.inverse();
+  // Eigen::Quaternion<float> inverse_actual;
+  // inverse_actual.w() = actual.w();
+  // inverse_actual.x() = -actual.x();
+  // inverse_actual.y() = -actual.y();
+  // inverse_actual.z() = -actual.w();
+  
+  //  Eigen::Quaternion<float> out = inverse_actual * cmd;
+
+  // // enfore positive scalar
+  // if (out.w() < 0) {
+  //   // out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+  //   out.x() = -out.x();
+  //   out.y() = -out.y();
+  //   out.z() = -out.z();
+  //   out.w() = -out.w();
+  // }
+
+  // double mag = sqrt(pow(out.x(), 2) + pow(out.y(), 2) + pow(out.z(), 2) + pow(out.w(), 2));
+  // double thresh = 1E-7;
+  // if (mag > thresh) {
+  //   out.x() = out.x() / mag;
+  //   out.y() = out.y() / mag;
+  //   out.z() = out.z() / mag;
+  //   out.w() = out.w() / mag;
+  //   // out.normalize();
+  // }
+
+  // output_vec[0] = out.x();
+  // output_vec[1] = out.y();
+  // output_vec[2] = out.z();
+
+  // output_scalar = fabs(acos(out.w())) * 2;
+  
 }
 
 // updates the position and attitude command
