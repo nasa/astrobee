@@ -173,6 +173,8 @@ class GncCtlAutocode {
   void AngAccelHelper(float rate_error[3]);
   void FindBodyTorqueCmd();
   void CrossProduct(float vecA[3], float vecB[3], float vecOut[3]);
+  void FindAttErr();
+  
 
   void VarToCtlMsg();
 
@@ -181,6 +183,7 @@ class GncCtlAutocode {
   void AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
   void RevertBackToBeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
   void RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
+  void TestTwoArrays(const float new_array[], const float old_array[], int length, float tolerance);
 
   // command shaper
   void CmdSelector();
@@ -191,6 +194,7 @@ class GncCtlAutocode {
   void MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]);
   void MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]);
   void FindTrajErrors();
+  void FindTrajErrAtt();
   void PublishCmdInput();
 };
 }  // end namespace gnc_autocode

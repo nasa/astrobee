@@ -136,7 +136,8 @@ void GncCtlAutocode::Step(void) {
 
   // Rotational Control
   UpdateRotationalPIDVals();
-  FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err);  // Finds att_err_mag and att_err
+  //FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err);  // Finds att_err_mag and att_err
+  FindAttErr();
   UpdateRotateIntErr();
   FindBodyAlphaCmd();
   FindBodyTorqueCmd();
@@ -148,17 +149,10 @@ void GncCtlAutocode::Step(void) {
 
   // comparison tests
 
-  /* Test for ctl_status */
-    // if (ctl_.ctl_status != after_ctl_.ctl_status) {
-    //   ROS_ERROR("*****not equal New:%d Old:%d", ctl_.ctl_status, after_ctl_.ctl_status);
-    // } else {
-    //   ROS_ERROR("equal New:%d Old:%d", ctl_.ctl_status, after_ctl_.ctl_status);
-    // }
+  //Test_Ctl_Status();
 
-  /*Test for position command*/
-  // std::string str1 = std::to_string(ctl_.pos_err[0]);
-  // const char *mine = str1.c_str();
-  //   ROS_ERROR("Simulink Pos Err:%s ", mine);
+ TestTwoArrays(ctl_.pos_err, after_ctl_.pos_err, 3, 0.000002);
+
 
 /* Test for pos_err */
   // float difference0 = ctl_.pos_err[0] - after_ctl_.pos_err[0];
@@ -269,38 +263,34 @@ void GncCtlAutocode::Step(void) {
 //     difference2);
 
 /* Test for body alpha cmd */
-double difference0 = ctl_.body_alpha_cmd[0] - after_ctl_.body_alpha_cmd[0];
-      if (fabs(difference0) > 0.000020f){
-      ROS_ERROR("************ERROR************\n ******************************************\n");
-    }
-    ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_alpha_cmd[0], after_ctl_.body_alpha_cmd[0],
-    difference0);
+// double difference0 = ctl_.body_alpha_cmd[0] - after_ctl_.body_alpha_cmd[0];
+// if (fabs(difference0) > 0.000020f) {
+//   ROS_ERROR("************ERROR************\n ******************************************\n");
+// }
+//     ROS_ERROR("idx:0 New: %f, Old: %f, Difference: %f", ctl_.body_alpha_cmd[0], after_ctl_.body_alpha_cmd[0],
+//     difference0);
 
-    double difference1 = ctl_.body_alpha_cmd[1] - after_ctl_.body_alpha_cmd[1];
-      if (fabs(difference1) > 0.000020f){
-      ROS_ERROR("************ERROR************\n ******************************************\n");
-    }
-    ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_alpha_cmd[1], after_ctl_.body_alpha_cmd[1],
-    difference1);
+//     double difference1 = ctl_.body_alpha_cmd[1] - after_ctl_.body_alpha_cmd[1];
+//     if (fabs(difference1) > 0.000020f) {
+//       ROS_ERROR("************ERROR************\n ******************************************\n");
+//     }
+//     ROS_ERROR("idx:1 New: %f, Old: %f, Difference: %f", ctl_.body_alpha_cmd[1], after_ctl_.body_alpha_cmd[1],
+//     difference1);
 
-    double difference2 = ctl_.body_alpha_cmd[2] - after_ctl_.body_alpha_cmd[2];
-      if (fabs(difference2) > 0.000020f){
-      ROS_ERROR("************ERROR************\n ******************************************\n");
-    }
-    ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_alpha_cmd[2], after_ctl_.body_alpha_cmd[2],
-    difference2);
+//     double difference2 = ctl_.body_alpha_cmd[2] - after_ctl_.body_alpha_cmd[2];
+//     if (fabs(difference2) > 0.000020f) {
+//       ROS_ERROR("************ERROR************\n ******************************************\n");
+//     }
+//     ROS_ERROR("idx:2 New: %f, Old: %f, Difference: %f", ctl_.body_alpha_cmd[2], after_ctl_.body_alpha_cmd[2],
+//     difference2);
 
   /*Test for att_Err_mag*/
-  // std::string str = std::to_string(ctl_.att_err_mag);
-  //   const char *old = str.c_str();
-
-  //   std::string str1 = std::to_string(att_err_mag);
-  //   const char *mine = str1.c_str();
-  //   if (att_err_mag != ctl_.att_err_mag) {
-  //      ROS_ERROR("not equal New:%s Old:%s", mine, old);
-  //   } else {
-  //     ROS_ERROR("equal New:%s Old:%s", mine, old);
-  //   }
+//    double difference0 = ctl_.att_err_mag - after_ctl_.att_err_mag;
+// if (fabs(difference0) > 0.000020f) {
+//   ROS_ERROR("************ERROR************\n ******************************************\n");
+// }
+//     ROS_ERROR(" New: %f, Old: %f, Difference: %f", ctl_.att_err_mag, after_ctl_.att_err_mag,
+//     difference0);
 
   // std::string str = std::to_string(att_command[2]);
   //   const char *mine = str.c_str();
@@ -337,20 +327,16 @@ double difference0 = ctl_.body_alpha_cmd[0] - after_ctl_.body_alpha_cmd[0];
   //   pos_diff);
 
   /*****Traj Error Att*****/
-  // ROS_ERROR("My est: %f,, %f, %f, %f", ctl_input_.est_quat_ISS2B[0], ctl_input_.est_quat_ISS2B[1],
-  // ctl_input_.est_quat_ISS2B[2], ctl_input_.est_quat_ISS2B[3]); ROS_ERROR("old est: %f,, %f, %f, %f",
-  // before_ctl_input_.est_quat_ISS2B[0], before_ctl_input_.est_quat_ISS2B[1], before_ctl_input_.est_quat_ISS2B[2],
-  // before_ctl_input_.est_quat_ISS2B[3]);
   // double att_diff = ctl_.traj_error_att - after_ctl_.traj_error_att;
   // if (fabs(att_diff) > 0.000002f) {
   //   ROS_ERROR("************ERROR************\n ******************************************");
   // }
   //   ROS_ERROR("Traj_error_att New: %f, Old: %f, Difference: %f",  ctl_.traj_error_att, after_ctl_.traj_error_att,
   //   att_diff);
+    // ROS_ERROR("my traj_qaut: %f %f %f %f", traj_quat[0], traj_quat[1], traj_quat[2], traj_quat[3]);
+    // ROS_ERROR("ol traj_quat: %f %f %f %f", after_cmd_.traj_quat[0], after_cmd_.traj_quat[1], after_cmd_.traj_quat[2], after_cmd_.traj_quat[3]);
 
-    // ROS_ERROR("My traj_quat: %f, %f, %f, %f", cmd_.traj_quat[0], cmd_.traj_quat[1], cmd_.traj_quat[2],
-    // cmd_.traj_quat[3]); ROS_ERROR("Old traj_quat: %f, %f, %f, %f", after_cmd_.traj_quat[0], after_cmd_.traj_quat[1],
-    // after_cmd_.traj_quat[2], after_cmd_.traj_quat[3]);
+   
 
     /*****Traj Error Vel*****/
     // double vel_diff = ctl_.traj_error_vel - after_ctl_.traj_error_vel;
@@ -410,8 +396,51 @@ void GncCtlAutocode::FindTrajErrors() {
   traj_error_omega =
     sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
-  FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
+  // FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
+  FindTrajErrAtt();
 }
+
+void GncCtlAutocode::FindTrajErrAtt()
+{
+  Eigen::Quaternion<float> cmd;
+  cmd.w() = traj_quat[3];
+  cmd.x() = traj_quat[0];
+  cmd.y() = traj_quat[1];
+  cmd.z() = traj_quat[2];
+
+  Eigen::Quaternion<float> actual;
+  actual.w() = ctl_input_.est_quat_ISS2B[3];
+  actual.x() = ctl_input_.est_quat_ISS2B[0];
+  actual.y() = ctl_input_.est_quat_ISS2B[1];
+  actual.z() = ctl_input_.est_quat_ISS2B[2];
+
+  Eigen::Quaternion<float> out = actual.inverse() * cmd;
+
+  // enfore positive scalar
+  if (out.w() < 0) {
+    // out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+    out.x() = -out.x();
+    out.y() = -out.y();
+    out.z() = -out.z();
+    out.w() = -out.w();
+  }
+
+  double mag = sqrt(pow(out.x(), 2) + pow(out.y(), 2) + pow(out.z(), 2) + pow(out.w(), 2));
+  double thresh = 1E-7;
+  // if (mag > thresh) {
+  //   out.normalize();
+  // }
+
+  float output_vec[3];
+  output_vec[0] = out.x();
+  output_vec[1] = out.y();
+  output_vec[2] = out.z();
+
+  traj_error_att = fabs(acos(out.w())) * 2;
+  }
+
+
+
 
 void GncCtlAutocode::GenerateCmdAttitude() {
   if (state_cmd_switch_out) {
@@ -594,6 +623,19 @@ void GncCtlAutocode::CmdSelector() {
 }
 
 /* Testing functions */
+void GncCtlAutocode::TestTwoArrays(const float new_array[], const float old_array[], int length, float tolerance)
+{
+  for(int i = 0; i < length; i++)
+  {
+    float difference = old_array[i] - new_array[i];
+    float perc_difference = difference / old_array[i];
+    if (fabs(difference) > tolerance){
+      ROS_ERROR("************ERROR************\n ******************************************");
+  }
+    ROS_ERROR("Idx: %i New: %f, Old: %f Difference: %f", i, new_array[i], old_array[i], difference);
+  
+  }
+}
 void GncCtlAutocode::RevertBackToAfterSimulink(ctl_input_msg& after_ctl_input_, cmd_msg& after_cmd_,
                                                ctl_msg& after_ctl_) {
   for (int i = 0; i < 4; i++) {
@@ -993,6 +1035,56 @@ void GncCtlAutocode::VarToCtlMsg() {
 }
 
 /*****clc_closed_loop_controller functions*****/
+void GncCtlAutocode::FindAttErr()
+{
+  float cmd[4];
+  float actual[4];
+  for(int i = 0; i < 4; i++)
+  {
+    cmd[i] = CMD_Quat_ISS2B[i];
+    actual[i] = ctl_input_.est_quat_ISS2B[i];
+  }
+
+  Eigen::Quaternion<float> q_cmd;
+  Eigen::Quaternion<float> q_actual;
+//trying with orientation w, x, y, z
+  q_cmd.w() = cmd[0];
+  q_cmd.x() = cmd[1];
+  q_cmd.y() = cmd[2];
+  q_cmd.z() = cmd[3];
+
+  q_actual.w() = actual[0];
+  q_actual.x() = actual[1];
+  q_actual.y() = actual[2];
+  q_actual.z() = actual[3];
+
+  Eigen::Quaternion<float> q_inverse_actual;
+  q_inverse_actual = q_actual.inverse();
+
+   Eigen::Quaternion<float> q_out;
+   q_out = q_inverse_actual * q_cmd;
+
+//*Note if this doesn't work, try to use the z() element since that is what the notation would be 
+   if (q_out.w() < 0)
+   {
+    q_out.coeffs() = -q_out.coeffs(); 
+   }
+
+   float mag = sqrt((q_out.w() * q_out.w()) + (q_out.x() * q_out.x()) + (q_out.y() * q_out.y()) + (q_out.z() * q_out.z()));
+   if (double(mag) > 1E-7)
+   {
+    q_out.normalize();
+   }
+
+   att_err_mag = 2 * acos(q_out.w());
+
+
+
+  
+}
+
+
+
 void GncCtlAutocode::FindBodyTorqueCmd() {
   if (ctl_status != 0) {
     for (int i = 0; i < 3; i++) {
@@ -1412,109 +1504,98 @@ void GncCtlAutocode::FindPosError() {
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
 void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
-float inverse_actual[4];
+// float inverse_actual[4];
 
-for (int i = 0; i < 3; i++)  {
-  inverse_actual[i] = -q_actual[i];
-}
-inverse_actual[3] = q_actual[3];
+// for (int i = 0; i < 3; i++)  {
+//   inverse_actual[i] = -q_actual[i];
+// }
+// inverse_actual[3] = q_actual[3];
 
-// quat multiplication
-Eigen::Quaternion<float> q1;
-q1.x() = q_actual[0];
-q1.y() = q_actual[1];
-q1.z() = q_actual[2];
-q1.w() = q_actual[3];
+// // quat multiplication
+// Eigen::Quaternion<float> q1;
+// q1.x() = q_actual[0];
+// q1.y() = q_actual[1];
+// q1.z() = q_actual[2];
+// q1.w() = q_actual[3];
 
-Eigen::Quaternion<float> q2;
-q2.x() = q_cmd[0];
-q2.y() = q_cmd[1];
-q2.z() = q_cmd[2];
-q2.w() = q_cmd[3];
+// Eigen::Quaternion<float> q2;
+// q2.x() = q_cmd[0];
+// q2.y() = q_cmd[1];
+// q2.z() = q_cmd[2];
+// q2.w() = q_cmd[3];
 
-Eigen::Quaternion<float> out;
-out = q1 * q2;
+// Eigen::Quaternion<float> out;
+// out = q1 * q2;
 
-float mult_out[4];
-mult_out[0] = out.x();
-mult_out[1] = out.y();
-mult_out[2] = out.z();
-mult_out[3] = out.w();
+// float mult_out[4];
+// mult_out[0] = out.x();
+// mult_out[1] = out.y();
+// mult_out[2] = out.z();
+// mult_out[3] = out.w();
 
-if (mult_out[3] < 0) {
-  for (int i = 0; i < 4; i++) {
-    mult_out[i] = -mult_out[i];
-  }
-}
+// if (mult_out[3] < 0) {
+//   for (int i = 0; i < 4; i++) {
+//     mult_out[i] = -mult_out[i];
+//   }
+// }
 
-double mag = sqrt((mult_out[0] * mult_out[0]) + (mult_out[1] * mult_out[1]) + (mult_out[2] * mult_out[2]) +
-                  (mult_out[3] * mult_out[3]));
-if (mag > 1E-7) {
-  for (int i = 0; i < 4; i++) {
-    mult_out[i] = mult_out[i] / mag;
-  }
-}
+// double mag = sqrt((mult_out[0] * mult_out[0]) + (mult_out[1] * mult_out[1]) + (mult_out[2] * mult_out[2]) +
+//                   (mult_out[3] * mult_out[3]));
+// if (mag > 1E-7) {
+//   for (int i = 0; i < 4; i++) {
+//     mult_out[i] = mult_out[i] / mag;
+//   }
+// }
 
-for (int i = 0; i < 3; i++) {
-  output_vec[i] = mult_out[i];
-}
-if (mult_out[3] > 1.0F) {
-  mult_out[3] = 1.0F;
-} else if (mult_out[3] < -1.0F) {
-  mult_out[3] = -1.0F;
-}
-output_scalar = fabs(acos(mult_out[3])) * 2;
+// for (int i = 0; i < 3; i++) {
+//   output_vec[i] = mult_out[i];
+// }
+// if (mult_out[3] > 1.0F) {
+//   mult_out[3] = 1.0F;
+// } else if (mult_out[3] < -1.0F) {
+//   mult_out[3] = -1.0F;
+// }
+// output_scalar = fabs(acos(mult_out[3])) * 2;
 
 
 
 
 
 /*Break to old */
-// Eigen::Quaternion<float> cmd;
-// cmd.w() = q_cmd[3];
-// cmd.x() = q_cmd[0];
-// cmd.y() = q_cmd[1];
-// cmd.z() = q_cmd[2];
+Eigen::Quaternion<float> cmd;
+cmd.w() = q_cmd[3];
+cmd.x() = q_cmd[0];
+cmd.y() = q_cmd[1];
+cmd.z() = q_cmd[2];
 
-// Eigen::Quaternion<float> actual;
-// actual.w() = q_actual[3];
-// actual.x() = q_actual[0];
-// actual.y() = q_actual[1];
-// actual.z() = q_actual[2];
+Eigen::Quaternion<float> actual;
+actual.w() = q_actual[3];
+actual.x() = q_actual[0];
+actual.y() = q_actual[1];
+actual.z() = q_actual[2];
 
-// // Eigen::Quaternion<float> out = cmd * actual.inverse();
-// Eigen::Quaternion<float> inverse_actual;
-// inverse_actual.w() = actual.w();
-// inverse_actual.x() = -actual.x();
-// inverse_actual.y() = -actual.y();
-// inverse_actual.z() = -actual.w();
+Eigen::Quaternion<float> out = actual.inverse() * cmd;
 
-//  Eigen::Quaternion<float> out = inverse_actual * cmd;
+// enfore positive scalar
+if (out.w() < 0) {
+  // out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+  out.x() = -out.x();
+  out.y() = -out.y();
+  out.z() = -out.z();
+  out.w() = -out.w();
+}
 
-// // enfore positive scalar
-// if (out.w() < 0) {
-//   // out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
-//   out.x() = -out.x();
-//   out.y() = -out.y();
-//   out.z() = -out.z();
-//   out.w() = -out.w();
-// }
+double mag = sqrt(pow(out.x(), 2) + pow(out.y(), 2) + pow(out.z(), 2) + pow(out.w(), 2));
+double thresh = 1E-7;
+if (mag > thresh) {
+  out.normalize();
+}
 
-// double mag = sqrt(pow(out.x(), 2) + pow(out.y(), 2) + pow(out.z(), 2) + pow(out.w(), 2));
-// double thresh = 1E-7;
-// if (mag > thresh) {
-//   out.x() = out.x() / mag;
-//   out.y() = out.y() / mag;
-//   out.z() = out.z() / mag;
-//   out.w() = out.w() / mag;
-//   // out.normalize();
-// }
+output_vec[0] = out.x();
+output_vec[1] = out.y();
+output_vec[2] = out.z();
 
-// output_vec[0] = out.x();
-// output_vec[1] = out.y();
-// output_vec[2] = out.z();
-
-// output_scalar = fabs(acos(out.w())) * 2;
+output_scalar = fabs(acos(out.w())) * 2;
 }
 
 // updates the position and attitude command
