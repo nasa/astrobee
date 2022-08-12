@@ -27,7 +27,6 @@
     old will be 0.5 and then mine will be 0.5 and the old will be 0. This seems like a simple fix, but I couln't find the fix by the end of my internship.  
     There are a few values that rely on this function working, so these values are wrong and the values that use those are wrong as well.  
 */
-   
 
 #include <ros/console.h>
 #include <ros/static_assert.h>
@@ -125,7 +124,7 @@ void GncCtlAutocode::Step(void) {
   UpdateModeCmd();
   UpdateStoppedMode();
   FindPosError();
-  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy); //Fix this fxn
+  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy);  // Fix this fxn
   UpdatePosAndQuat();
   UpdateCtlStatus();
 
@@ -137,13 +136,14 @@ void GncCtlAutocode::Step(void) {
   // Linear Control
   UpdateLinearPIDVals();
   FindPosErr();
-  FindLinearIntErr(); 
+  FindLinearIntErr();
   FindBodyForceCmd();
   FindBodyAccelCmd();
 
   // Rotational Control
   UpdateRotationalPIDVals();
-  FindAttErr(); // same as FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err) // Finds att_err_mag and att_err
+  FindAttErr();  // same as FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err) // Finds
+                 // att_err_mag and att_err
   UpdateRotateIntErr();
   FindBodyAlphaCmd();
   FindBodyTorqueCmd();
@@ -153,8 +153,7 @@ void GncCtlAutocode::Step(void) {
   /*Publish to ctl_msg */
   VarToCtlMsg();
 
-
- /***** Comparison Tests *****/
+  /***** Comparison Tests *****/
   // TestFloats(ctl_.traj_error_pos, after_ctl_.traj_error_pos, 0.000002); //correct
   // TestTwoArrays(cmd_.traj_quat, after_cmd_.traj_quat, 4, 0.000002); //correct
   // TestFloats(ctl_.traj_error_vel, after_ctl_.traj_error_vel, 0.000001); //correct
@@ -170,7 +169,7 @@ void GncCtlAutocode::Step(void) {
   // TestTwoArrays(ctl_.body_accel_cmd, after_ctl_.body_accel_cmd, 3, 0.000002); //tbd when force_cmd is solved
 
   // TestFloats(ctl_.att_err_mag, after_ctl_.att_err_mag, 0.000002); //wrong, math error suspicion--same bug as
-  // traj_error_Att 
+  // traj_error_Att
   // TestTwoArrays(ctl_.body_alpha_cmd, after_ctl_.body_alpha_cmd, 3, 0.000002); //tbd when att_Err_mag
   // is solved TestTwoArrays(ctl_.body_torque_cmd, after_ctl_.body_torque_cmd, 3, 0.000002); //tbd when body_alpha_cmd
   // is fixed
@@ -216,7 +215,6 @@ void GncCtlAutocode::FindTrajErrors() {
     sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
   FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
-
 }
 
 
