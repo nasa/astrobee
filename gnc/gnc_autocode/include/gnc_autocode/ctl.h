@@ -174,18 +174,9 @@ class GncCtlAutocode {
   void FindBodyTorqueCmd();
   void CrossProduct(float vecA[3], float vecB[3], float vecOut[3]);
   void FindAttErr();
-  
 
   void VarToCtlMsg();
-
-  // for testing
-  void BeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
-  void AfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
-  void RevertBackToBeforeSimulink(ctl_input_msg &before_ctl_input_, cmd_msg &before_cmd_, ctl_msg &before_ctl_);
-  void RevertBackToAfterSimulink(ctl_input_msg &after_ctl_input_, cmd_msg &after_cmd_, ctl_msg &after_ctl_);
-  void TestTwoArrays(const float new_array[], const float old_array[], int length, float tolerance);
-
-  // command shaper
+// command shaper
   void CmdSelector();
   void GenerateCmdPath();
   void GenerateCmdAttitude();
@@ -196,6 +187,10 @@ class GncCtlAutocode {
   void FindTrajErrors();
   void FindTrajErrAtt();
   void PublishCmdInput();
+
+// for testing
+  void TestTwoArrays(const float new_array[], const float old_array[], int length, float tolerance);
+  void TestFloats(const float new_float, const float oldfloat, float tolerance);
 };
 }  // end namespace gnc_autocode
 
