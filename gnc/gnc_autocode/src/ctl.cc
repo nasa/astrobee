@@ -15,6 +15,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+/*
+ About: This file contains code for the old Simulink controller and my new C++ controller. I kept the old controller functions in for testing. To test, I run both controllers in the 
+ step function. To ensure they are running the same, I copy the input values before I run a controller. Then, I run the Simulink controller step, copy the values after, 
+ revert to the orignal values, and then run my controller. Then, I compare the values. Testing is done in the simulator.
+  
+
+  Status: not all of the conversion is correct. The bug I am still working on is in the FindQuatError function which is implementing the quaternion_error block.
+    The new output is similar to old one: they are the same for some of the time, but then mine and the old trade off being a certain value and 0. For example, mine will be 0 and the 
+    old will be 0.5 and then mine will be 0.5 and the old will be 0. This seems like a simple fix, but I couln't find the fix by the end of my internship.  
+    There are a few values that rely on this function working, so these values are wrong and the values that use those are wrong as well.  
+*/
+   
+
 #include <ros/console.h>
 #include <ros/static_assert.h>
 #include <ros/platform.h>
@@ -74,7 +88,6 @@ GncCtlAutocode::~GncCtlAutocode() {
 
 
 void GncCtlAutocode::Step(void) {
-
 // copy of values before
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
@@ -83,7 +96,7 @@ void GncCtlAutocode::Step(void) {
   memcpy(&before_cmd_, &cmd_, sizeof(cmd_));
   memcpy(&before_ctl_, &ctl_, sizeof(ctl_));
 
-  /****from Simulink Controller*****/
+/****from Simulink Controller*****/
   ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 
 
@@ -95,12 +108,12 @@ void GncCtlAutocode::Step(void) {
   memcpy(&after_cmd_, &cmd_, sizeof(cmd_));
   memcpy(&after_ctl_, &ctl_, sizeof(ctl_));
 
-//revert back to before Simulink
+  // revert back to before Simulink
   memcpy(&ctl_input_, &before_ctl_input_, sizeof(before_ctl_input_));
   memcpy(&cmd_, &before_cmd_, sizeof(before_cmd_));
   memcpy(&ctl_, &before_ctl_, sizeof(before_ctl_));
 
-
+/*****C++ Implementation*****/
   /*****command_shaper*****/
   CmdSelector();
   GenerateCmdPath();
@@ -112,7 +125,7 @@ void GncCtlAutocode::Step(void) {
   UpdateModeCmd();
   UpdateStoppedMode();
   FindPosError();
-  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy);
+  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy); //Fix this fxn
   UpdatePosAndQuat();
   UpdateCtlStatus();
 
@@ -124,14 +137,13 @@ void GncCtlAutocode::Step(void) {
   // Linear Control
   UpdateLinearPIDVals();
   FindPosErr();
-  FindLinearIntErr();  // I'll want to check this
+  FindLinearIntErr(); 
   FindBodyForceCmd();
   FindBodyAccelCmd();
 
   // Rotational Control
   UpdateRotationalPIDVals();
-  // FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err);  // Finds att_err_mag and att_err
-  FindAttErr();
+  FindAttErr(); // same as FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err) // Finds att_err_mag and att_err
   UpdateRotateIntErr();
   FindBodyAlphaCmd();
   FindBodyTorqueCmd();
@@ -142,12 +154,13 @@ void GncCtlAutocode::Step(void) {
   VarToCtlMsg();
 
 
-  /***** Comparison Tests *****/
+ /***** Comparison Tests *****/
   // TestFloats(ctl_.traj_error_pos, after_ctl_.traj_error_pos, 0.000002); //correct
   // TestTwoArrays(cmd_.traj_quat, after_cmd_.traj_quat, 4, 0.000002); //correct
   // TestFloats(ctl_.traj_error_vel, after_ctl_.traj_error_vel, 0.000001); //correct
   // TestFloats(ctl_.traj_error_omega, after_ctl_.traj_error_omega, 0.000001); //correct
-  // TestFloats(ctl_.traj_error_att, after_ctl_.traj_error_att, 0.000005);//There is a bug here where some of my values are opposite of what the Simulink one is. Suspicion that there is a math error 
+  // TestFloats(ctl_.traj_error_att, after_ctl_.traj_error_att, 0.000005);//There is a bug here where some of my values
+  // are opposite of what the Simulink one is. Suspicion that there is a math error
 
   // TestFloats(ctl_.ctl_status, after_ctl_.ctl_status, 0); //correct
   // TestTwoArrays(ctl_.pos_err, after_ctl_.pos_err, 3, 0.000002); //correct
@@ -155,13 +168,13 @@ void GncCtlAutocode::Step(void) {
 
   // TestTwoArrays(ctl_.body_force_cmd, after_ctl_.body_force_cmd, 3, 0.000002); //maybe: not sure of margin
   // TestTwoArrays(ctl_.body_accel_cmd, after_ctl_.body_accel_cmd, 3, 0.000002); //tbd when force_cmd is solved
-  
-  // TestFloats(ctl_.att_err_mag, after_ctl_.att_err_mag, 0.000002); //wrong, math error suspicion--same bug as traj_error_Att
-  // TestTwoArrays(ctl_.body_alpha_cmd, after_ctl_.body_alpha_cmd, 3, 0.000002); //tbd when att_Err_mag is solved
-  // TestTwoArrays(ctl_.body_torque_cmd, after_ctl_.body_torque_cmd, 3, 0.000002); //tbd when body_alpha_cmd is fixed
-  
-  
-  
+
+  // TestFloats(ctl_.att_err_mag, after_ctl_.att_err_mag, 0.000002); //wrong, math error suspicion--same bug as
+  // traj_error_Att 
+  // TestTwoArrays(ctl_.body_alpha_cmd, after_ctl_.body_alpha_cmd, 3, 0.000002); //tbd when att_Err_mag
+  // is solved TestTwoArrays(ctl_.body_torque_cmd, after_ctl_.body_torque_cmd, 3, 0.000002); //tbd when body_alpha_cmd
+  // is fixed
+
   // revert back to Simulink after my controller
   memcpy(&ctl_input_, &after_ctl_input_, sizeof(after_ctl_input_));
   memcpy(&cmd_, &after_cmd_, sizeof(after_cmd_));
@@ -202,47 +215,11 @@ void GncCtlAutocode::FindTrajErrors() {
   traj_error_omega =
     sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
 
-  // FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
-  FindTrajErrAtt();
+  FindQuatError(traj_quat, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
+
 }
 
-void GncCtlAutocode::FindTrajErrAtt() {
-  Eigen::Quaternion<float> cmd;
-  cmd.w() = traj_quat[3];
-  cmd.x() = traj_quat[0];
-  cmd.y() = traj_quat[1];
-  cmd.z() = traj_quat[2];
 
-  Eigen::Quaternion<float> actual;
-  actual.w() = ctl_input_.est_quat_ISS2B[3];
-  actual.x() = ctl_input_.est_quat_ISS2B[0];
-  actual.y() = ctl_input_.est_quat_ISS2B[1];
-  actual.z() = ctl_input_.est_quat_ISS2B[2];
-
-  Eigen::Quaternion<float> out = actual.inverse() * cmd;
-
-  // enfore positive scalar
-  if (out.w() < 0) {
-    // out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
-    out.x() = -out.x();
-    out.y() = -out.y();
-    out.z() = -out.z();
-    out.w() = -out.w();
-  }
-
-  double mag = sqrt(pow(out.x(), 2) + pow(out.y(), 2) + pow(out.z(), 2) + pow(out.w(), 2));
-  double thresh = 1E-7;
-  if (mag > thresh) {
-    out.normalize();
-  }
-
-  float output_vec[3];
-  output_vec[0] = out.x();
-  output_vec[1] = out.y();
-  output_vec[2] = out.z();
-
-  traj_error_att = fabs(acos(out.w())) * 2;
-}
 
 void GncCtlAutocode::GenerateCmdAttitude() {
   if (state_cmd_switch_out) {
@@ -410,8 +387,7 @@ void GncCtlAutocode::CmdSelector() {
 }
 
 /* Testing functions */
-void GncCtlAutocode::TestFloats(const float new_float, const float old_float, float tolerance)
-{
+void GncCtlAutocode::TestFloats(const float new_float, const float old_float, float tolerance) {
   float difference = old_float - new_float;
   float perc_difference = difference / old_float;
     if (fabs(difference) > tolerance) {

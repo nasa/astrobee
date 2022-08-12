@@ -82,6 +82,7 @@ class GncCtlAutocode {
   float prev_att[4];
   float pos_err_parameter[3];  // in cex control executive
   float quat_err;
+
   // Simulink outports
   // cex_control_executive
   float att_command[4];
@@ -176,6 +177,7 @@ class GncCtlAutocode {
   void FindAttErr();
 
   void VarToCtlMsg();
+
 // command shaper
   void CmdSelector();
   void GenerateCmdPath();
@@ -185,7 +187,6 @@ class GncCtlAutocode {
   void MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]);
   void MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]);
   void FindTrajErrors();
-  void FindTrajErrAtt();
   void PublishCmdInput();
 
 // for testing
