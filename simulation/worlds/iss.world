@@ -1,7 +1,13 @@
 <sdf version='1.6'>
   <world name='default'>
 
-    <physics name='default_physics' default='0' type='ode'>
+    <physics name='default_physics' default='1' type='ode'>
+      <max_step_size>0.008</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>125</real_time_update_rate>
+    </physics>
+
+    <physics name='dart_physics' default='0' type='dart'>
       <max_step_size>0.008</max_step_size>
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>125</real_time_update_rate>
