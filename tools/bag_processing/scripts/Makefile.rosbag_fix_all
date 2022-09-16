@@ -57,7 +57,7 @@ ifeq (,${ISAAC_MSGS_BMR})
 endif
 ifneq (,${ISAAC_MSGS_BMR})
   # If isaac_msgs is available, apply extra rules. Shouldn't hurt non-ISAAC bags.
-  MR += $(sort $(wildcard ${ISAAC_MSGS_BMR}/*.bmr))
+  BMR += $(sort $(wildcard ${ISAAC_MSGS_BMR}/*.bmr))
   REWRITE_TYPES_ARGS += -r ${ISAAC_MSGS_BMR}/rosbag_rewrite_types_rules.json
 endif
 
