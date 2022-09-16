@@ -62,30 +62,29 @@ ifneq (,${ISAAC_MSGS_BMR})
 endif
 
 # Fix rosjava scicam bug
-rewrite_types_%.bag: %.bag
-	${REWRITE_TYPES} ${REWRITE_TYPES_ARGS} $< -o $@
+%.rewrite_types.bag: %.bag
+	${REWRITE_TYPES} -v ${REWRITE_TYPES_ARGS} $< -o $@
 
 # Fix old message definitions
-migrate_old_%.bag: rewrite_types_%.bag
+%.migrate_old.bag: %.rewrite_types.bag
 	rosbag fix $< $@ ${BMR}
 	rosbag check $@  # test: post-migration consistency
 	# compare with original bag to make sure data is there
-	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@  $(@:migrate_old_%=%)
+	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@  $(@:.migrate_old.bag=.bag)
 	rm $<  # explicitly delete right away to save disk space
 
-
 # Debayer the nav cam
-debayer_%.bag: migrate_old_%.bag
+%.debayer.bag: %.migrate_old.bag
 	${ROSBAG_DEBAYER} ${ROSBAG_DEBAYER_ARGS} $< -o $@
 	rm $<  # explicitly delete right away to save disk space
 
 # Decode the haz cam into point cloud + image
-depth_split_%.bag: debayer_%.bag
+%.depth_split.bag: %.debayer.bag
 	${ROSBAG_SPLIT_DEPTH} ${ROSBAG_SPLIT_DEPTH_ARGS} $< -o $@
 	rm $<  # explicitly delete right away to save disk space
 
 # Decode the haz cam into point cloud + image
-fix_all_%.bag: depth_split_%.bag
+%.fix_all.bag: %.depth_split.bag
 	${ROSBAG_FILTER} ${ROSBAG_FILTER_ARGS} $< -o $@
 
 .PRECIOUS: rewrite_types_%.bag migrate_old_%.bag debayer_%.bag depth_split_%.bag

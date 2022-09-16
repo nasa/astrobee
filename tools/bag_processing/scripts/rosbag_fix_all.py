@@ -50,12 +50,12 @@ def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
         )
 
     # Skip processed bags to start in the correct stage if the Makefile
-    inbag_paths = [p for p in inbag_paths if not p.startswith("rewrite_types_")]
-    inbag_paths = [p for p in inbag_paths if not p.startswith("migrate_old_")]
-    inbag_paths = [p for p in inbag_paths if not p.startswith("debayer_")]
-    inbag_paths = [p for p in inbag_paths if not p.startswith("depth_split_")]
+    inbag_paths = [p for p in inbag_paths if not "rewrite_types_" in p]
+    inbag_paths = [p for p in inbag_paths if not "migrate_old_" in p]
+    inbag_paths = [p for p in inbag_paths if not "debayer_" in p]
+    inbag_paths = [p for p in inbag_paths if not "depth_split_" in p]
 
-    outbag_paths = ["fix_all_" + os.path.splitext(p)[0] + ".bag" for p in inbag_paths]
+    outbag_paths = [os.path.splitext(p)[0] + ".fix_all.bag" for p in inbag_paths]
     outbag_paths_str = " ".join(outbag_paths)
 
     # Rosbag migrate message definitions
