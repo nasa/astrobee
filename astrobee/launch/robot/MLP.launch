@@ -136,11 +136,13 @@
   </include>
 
   <!-- Image Downsample for semantic seg -->
+  <!--
   <include file="$(find image_sampler)/launch/nodelet_throttle_image.launch">
     <arg name="name" value="image_throttle_for_sem"/>
     <arg name="manager" value="mlp_localization"/>
     <arg name="update_rate" value="3"/>
   </include>
+  -->
 
   <!-- Mobility -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
