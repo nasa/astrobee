@@ -114,7 +114,7 @@ if __name__ == "__main__":
         args.robot_name,
         args.histogram_equalization,
         base_surf_map,
-        maps_directory
+        maps_directory,
     )
 
     robot_config = "config/robots/" + args.robot_name + ".config"
