@@ -108,8 +108,13 @@ if __name__ == "__main__":
         map_name = bag_prefix + "_groundtruth"
 
     make_map.make_map(
-        bagfile, map_name, args.world, args.robot_name, args.histogram_equalization, 
-        base_surf_map, maps_directory
+        bagfile,
+        map_name,
+        args.world,
+        args.robot_name,
+        args.histogram_equalization,
+        base_surf_map,
+        maps_directory
     )
 
     robot_config = "config/robots/" + args.robot_name + ".config"
