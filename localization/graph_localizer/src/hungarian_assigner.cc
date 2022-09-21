@@ -27,6 +27,9 @@ namespace lc = localization_common;
 
 HungarianAssigner::HungarianAssigner(const SemanticLocFactorAdderParams& params) :
     params_(params) {
+  if (params.semantic_map_filename == "" ) {
+    return;
+  }
   config_reader::ConfigReader object_loc_config;
   object_loc_config.AddFile(params.semantic_map_filename.c_str());
   if (!object_loc_config.ReadFiles()) {
