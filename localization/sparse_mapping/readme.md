@@ -338,8 +338,8 @@ To summarize, with careful map surgery (extract submaps and merge
 submaps) large maps can be made from smaller or damaged ones within
 reasonable time.
 
-All these operations should be performed on maps with SURF features.
-Hence the general approach for building maps is to create small SURF
+All these operations should be applied on maps with SURF features.
+Hence, the general approach for building large maps is to create small SURF
 maps using the command:
 
     build_map -feature_detection -feature_matching -track_building    \
@@ -348,7 +348,7 @@ maps using the command:
      images/*jpg -output_map <map file>
 
 Then, examine the maps individually, merge them as appropriate, and
-perfor bundle adjustment and registration as per the \ref
+perform bundle adjustment and registration as per the \ref
 map_building section. Only when a good enough map is obtained, a
 renamed copy of it should be rebuilt with BRISK features and a
 vocabulary database to be used on the robot.
