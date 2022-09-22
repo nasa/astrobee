@@ -43,7 +43,7 @@ def SplitRowIntoColumns(line):
     if line.find("\"") == -1:
         return cells
 
-    append = False;
+    append = False
     s = ","
     new_cells = []
     for cell in cells:
