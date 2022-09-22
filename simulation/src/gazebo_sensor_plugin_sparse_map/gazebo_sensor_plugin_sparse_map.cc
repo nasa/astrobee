@@ -198,9 +198,9 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       for (; i < num_samp_ && msg_feat_.landmarks.size() < num_features_; i++) {
         // Get a ray through a random image coordinate
         Eigen::Vector3d ray = camera.Ray(
-          (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+          (static_cast<double>(rand_r() % 1000) / 1000 - 0.5)  // NOLINT
             * camera.GetParameters().GetDistortedSize()[0],
-          (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+          (static_cast<double>(rand_r() % 1000) / 1000 - 0.5)  // NOLINT
             * camera.GetParameters().GetDistortedSize()[1]);
 
         // Get the camera coordinate of the ray near and far clips
