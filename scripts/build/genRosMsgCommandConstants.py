@@ -95,14 +95,14 @@ def genCommandNamesMsg(inSchemaPath, outCommandNamesPath):
         for choiceCode, choiceLabel in paramSpec.choices:
             declList.append(TEMPLATE_PARAM_DECL % getParamContext(paramSpec, choiceCode, choiceLabel))
 
-    declList.append('');
+    declList.append('')
 
     for cmdSpec in cmdSpecs:
         category, _ = splitCommandCategory(cmdSpec)
         seenCategories[category] = True
         declList.append(TEMPLATE_DECL % getCommandContext(cmdSpec))
 
-    declList.append('');
+    declList.append('')
 
     for key in sorted(seenCategories.keys()):
         declList.append(TEMPLATE_SUBSYS_DECL % {
