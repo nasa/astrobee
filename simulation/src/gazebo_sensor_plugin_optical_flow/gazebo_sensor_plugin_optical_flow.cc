@@ -243,9 +243,9 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
         if (map_[i].first == 0 || !camera.IsInFov(pt)) {
           // Get a ray through a random image coordinate
           Eigen::Vector3d ray = camera.Ray(
-            (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+            (static_cast<double>(rand_r() % 1000) / 1000 - 0.5)  // NOLINT
               * camera.GetParameters().GetDistortedSize()[0],
-            (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+            (static_cast<double>(rand_r() % 1000) / 1000 - 0.5)  // NOLINT
               * camera.GetParameters().GetDistortedSize()[1]);
 
           // Get the camera coordinate of the ray near and far clips
