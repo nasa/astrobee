@@ -23,7 +23,7 @@ middleware.  It provides a high-level [Astrobee Command API](https://nasa.github
 
 <li>The Astrobee Robot Software simulator, built using [ROS](https://www.ros.org/) and [Gazebo](http://gazebosim.org/), enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to [build maps for Astrobee localization](https://nasa.github.io/astrobee/html/sparsemapping.html), along with many others.</li>
 
-Released separately, the Astrobee ground data system (GDS) includes Astrobee control station software that communicates with Astrobee flight software via the Data Distribution Service (DDS) network protocol over the ISS Ku-IP space-to-ground link. The control station is written primarily in Java using the Eclipse RCP framework. Source code is in the [`astrobee_gds`](https://github.com/nasa/astrobee_gds) repository, or you can download the [binary release](https://software.nasa.gov/software/ARC-17994-1B).
+<li>Released separately, the Astrobee ground data system (GDS) includes Astrobee control station software that communicates with Astrobee flight software via the Data Distribution Service (DDS) network protocol over the ISS Ku-IP space-to-ground link. The control station is written primarily in Java using the Eclipse RCP framework. Source code is in the [`astrobee_gds`](https://github.com/nasa/astrobee_gds) repository, or you can download the [binary release](https://software.nasa.gov/software/ARC-17994-1B).</li>
 
 Together, the Astrobee Robot and Ground Software were the NASA Software of the Year Award Runner-Up in 2020!
 
