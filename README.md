@@ -10,25 +10,25 @@
 <img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x"
   title="Astrobee" align="right" style="display: inline"/>
   <ul><li>
-Three NASA [Astrobee free-flying robots](https://nasa.gov/astrobee/) have been operating inside
-the International Space Station (ISS) since 2019. This [`astrobee`](https://github.com/nasa/astrobee) repository contains source code for the Astrobee Robot Software, consisting of
+Three NASA <a href="https://nasa.gov/astrobee/" target="_blank">Astrobee free-flying robots</a> have been operating inside
+the International Space Station (ISS) since 2019. This <a href="https://github.com/nasa/astrobee" target="_blank">`astrobee`</a> repository contains source code for the Astrobee Robot Software, consisting of
 the flight software that runs onboard the Astrobee robots, a software simulator, and supporting tools, primarily written in C++.
 </li>
 <li>Astrobee's flight software performs vision-based localization,
 provides autonomous navigation, docking and perching, manages various sensors
 and actuators, and supports human-robot interaction with co-located astronauts via screen-based displays, light
 signaling, and sound. The flight software is hosted on each Astrobee's three internal single board computers and
-uses the open-source [Robot Operating System (ROS)](https://www.ros.org/) framework as message-passing
-middleware.  It provides a high-level [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) for controlling the robot and has multiple operating modes. It can execute a plan (command sequence), individual operator commands (teleoperation), or commands from guest science code running onboard Astrobee.</li>
+uses the open-source <a href="https://www.ros.org/" target="_blank">Robot Operating System (ROS)</a> framework as message-passing
+middleware.  It provides a high-level <a href="https://nasa.github.io/astrobee/html/command_dictionary.html" target="_blank">Astrobee Command API</a> for controlling the robot and has multiple operating modes. It can execute a plan (command sequence), individual operator commands (teleoperation), or commands from guest science code running onboard Astrobee.</li>
 
-<li>The Astrobee Robot Software simulator, built using [ROS](https://www.ros.org/) and [Gazebo](http://gazebosim.org/), enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to [build maps for Astrobee localization](https://nasa.github.io/astrobee/html/sparsemapping.html), along with many others.</li>
+<li>The Astrobee Robot Software simulator, built using <a href="https://www.ros.org/" target="_blank">ROS</a> and <a href="http://gazebosim.org/" target="_blank">Gazebo</a>, enables the flight software to be evaluated without the need for robot hardware. The supporting tools include a tool that processes ISS imagery to <a href="https://nasa.github.io/astrobee/html/sparsemapping.html" target="_blank">build maps for Astrobee localization</a>, along with many others.</li>
 
-<li>Released separately, the Astrobee ground data system (GDS) includes Astrobee control station software that communicates with Astrobee flight software via the Data Distribution Service (DDS) network protocol over the ISS Ku-IP space-to-ground link. The control station is written primarily in Java using the Eclipse RCP framework. Source code is in the [`astrobee_gds`](https://github.com/nasa/astrobee_gds) repository, or you can download the [binary release](https://software.nasa.gov/software/ARC-17994-1B).</li>
+<li>Released separately, the Astrobee ground data system (GDS) includes Astrobee control station software that communicates with Astrobee flight software via the Data Distribution Service (DDS) network protocol over the ISS Ku-IP space-to-ground link. The control station is written primarily in Java using the Eclipse RCP framework. Source code is in the <a href="https://github.com/nasa/astrobee_gds" target="_blank">`astrobee_gds`</a> repository, or you can download the <a href="https://software.nasa.gov/software/ARC-17994-1B" target="_blank">binary release</a> Together.</li>
 
-Together, the Astrobee Robot and Ground Software were the NASA Software of the Year Award Runner-Up in 2020!
+<li>the Astrobee Robot and Ground Software were the NASA Software of the Year Award Runner-Up in 2020!</li>
 
-The Astrobee Robot Software remains a work in progress. Please consult the
-[release notes](https://nasa.github.io/astrobee/html/md_RELEASE.html) for the current list of features and limitations.
+<li>The Astrobee Robot Software remains a work in progress. Please consult the
+<a href="https://nasa.github.io/astrobee/html/md_RELEASE.html" target="_blank">release notes</a> for the current list of features and limitations.</li>
   </ul>
   </details>
   
