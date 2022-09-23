@@ -41,9 +41,9 @@ The Astrobee Robot Software remains a work in progress. Please consult the
 <details open>
   <summary><h2>Contributing</h2></summary>
 <div><ul><li>The Astrobee Robot Software is open source, and we welcome contributions
-from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch. The code must follow the [Astrobee code style](https://nasa.github.io/astrobee/html/astrobee-code-style.html).</li>
+from the public. Please submit pull requests to the <a href="https://github.com/nasa/astrobee/tree/develop" target="_blank">`develop`</a> branch. The code must follow the <a href="https://nasa.github.io/astrobee/html/astrobee-code-style.html" target="_blank">Astrobee code style</a>.</li>
 <li>For us to merge any pull requests, we must request that contributors sign and submit a
-[Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
+<a href="https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf" target="_blank">Contributor License Agreement</a>
   due to NASA legal requirements. Thank you for your understanding.</li></ul></div>
 </details>
   
@@ -67,7 +67,7 @@ from the public. Please submit pull requests to the [`develop`](https://github.c
 <li>The ISS Astrobee Facility maintains a collection of <a href="https://www.nasa.gov/content/guest-science-resources" target="_blank">resources for guest scientists</a>  interested in conducting research with Astrobee, including the <a href="https://www.nasa.gov/sites/default/files/atoms/files/irg-ff029-astrobee-guest-science-guide.pdf" target="_blank">Astrobee Guest Science Guide</a> overview.</li>
 <li>
 Guest science code that runs onboard Astrobee is usually hosted as an Android Java app running on Astrobee's high-level processor (HLP).</li>
-<li>Guest science apps can use the [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) through its Java bindings. The [`astrobee_android`](https://github.com/nasa/astrobee_android) repository contains source code for Astrobee services that run on the HLP, example guest science apps, as well as a [Guest Science Readme](https://github.com/nasa/astrobee_android/blob/master/guest_science_readme.md) and [Guest Science Developer Guide](https://github.com/nasa/astrobee_android/blob/master/gs_developer_guide.md) focused on HLP guest science apps.</li>
+<li>Guest science apps can use the <a href="https://nasa.github.io/astrobee/html/command_dictionary.html" target="_blank">Astrobee Command API</a> through its Java bindings. The <a href="https://github.com/nasa/astrobee_android" target="_blank">`astrobee_android`</a> repository contains source code for Astrobee services that run on the HLP, example guest science apps, as well as a <a href="https://github.com/nasa/astrobee_android/blob/master/guest_science_readme.md" target="_blank">Guest Science Readme</a> and <a href="https://github.com/nasa/astrobee_android/blob/master/gs_developer_guide.md" target="_blank">Guest Science Developer Guide</a> focused on HLP guest science apps.</li>
     </ul></div>
     </details>
   
