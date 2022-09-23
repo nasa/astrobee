@@ -1,7 +1,12 @@
-# Astrobee Robot Software
+<head>
+  <h1>
+    Astrobee Robot Software
+  </h1>
+</head>
 
-### About
-
+<body>
+<details open>
+  <summary><h2>About</h2></summary>
 <img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x"
   title="Astrobee" align="right" style="display: inline"/>
 Three NASA [Astrobee free-flying robots](https://nasa.gov/astrobee/) have been operating inside
@@ -23,50 +28,63 @@ Together, the Astrobee Robot and Ground Software were the NASA Software of the Y
 
 The Astrobee Robot Software remains a work in progress. Please consult the
 [release notes](https://nasa.github.io/astrobee/html/md_RELEASE.html) for the current list of features and limitations.
+  </details>
+  
+<details open>
+  <summary><h2>Usage</h2></summary>
+  <div><ul>
+    <li>
+<a href="https://nasa.github.io/astrobee/html/md_INSTALL.html" target="_blank">Instructions</a> on installing and using the Astrobee Robot Software.</li>
+    </ul></div>
+  </details>
 
-### Usage
-
-[Instructions on installing and using the Astrobee Robot Software](https://nasa.github.io/astrobee/html/md_INSTALL.html).
-
-### Contributing
-
-The Astrobee Robot Software is open source, and we welcome contributions
-from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch. The code must follow the [Astrobee code style](https://nasa.github.io/astrobee/html/astrobee-code-style.html).
-For us to merge any pull requests, we must request that contributors sign and submit a
+<details open>
+  <summary><h2>Contributing</h2></summary>
+<div><ul><li>The Astrobee Robot Software is open source, and we welcome contributions
+from the public. Please submit pull requests to the [`develop`](https://github.com/nasa/astrobee/tree/develop) branch. The code must follow the [Astrobee code style](https://nasa.github.io/astrobee/html/astrobee-code-style.html).</li>
+<li>For us to merge any pull requests, we must request that contributors sign and submit a
 [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
-due to NASA legal requirements. Thank you for your understanding.
+  due to NASA legal requirements. Thank you for your understanding.</li></ul></div>
+</details>
+  
+<details open>
+  <summary><h2>Documentation</h2></summary>
+  <div><ul>
+<li>Extensive <a href="https://nasa.github.io/astrobee/documentation.html" target="_blank">Extensive</a> documentation is auto-generated from the contents of this repository.</li>
 
-### Documentation
+<li><a href="https://github.com/albee/a-brief-guide-to-astrobee/raw/master/a_brief_guide_to_astrobee_latest.pdf" target="_blank">"A Brief Guide to Astrobee’s Flight Software is a good tutorial"</a>, with a particular emphasis on the advanced topic of modifying Astrobee's flight software to enable Guidance, Navigation, & Control (GN&C) research. (Note that most guest science can be implemented as an app that uses the <a href="https://nasa.github.io/astrobee/html/command_dictionary.html" target="_blank">Astrobee Command API</a> without modifying the flight software.)</li>
 
-[Extensive documentation is auto-generated from the contents of this repository.](https://nasa.github.io/astrobee/documentation.html)
+<li>The <a href="https://github.com/Pedro-Roque/astrobee_ros_demo" target="_blank">"Astrobee ROS Demo"</a> package provides a C++/Python interface to implement custom control methods in ROS.</li>
 
-["A Brief Guide to Astrobee’s Flight Software"](https://github.com/albee/a-brief-guide-to-astrobee/raw/master/a_brief_guide_to_astrobee_latest.pdf) is a good tutorial, with a particular emphasis on the advanced topic of modifying Astrobee's flight software to enable Guidance, Navigation, & Control (GN&C) research. (Note that most guest science can be implemented as an app that uses the [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) without modifying the flight software.)
-
-The ["Astrobee ROS Demo"](https://github.com/Pedro-Roque/astrobee_ros_demo) package provides a C++/Python interface to implement custom control methods in ROS.
-
-For more information, read [Astrobee-related publications](https://www.nasa.gov/content/research-publications-0).
-Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
-[software](https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf),
-and [localization](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
-are good starting points.
-
-### Guest Science
-
-The ISS Astrobee Facility maintains a collection of [resources for guest scientists](https://www.nasa.gov/content/guest-science-resources) interested in conducting research with Astrobee, including the [Astrobee Guest Science Guide](https://www.nasa.gov/sites/default/files/atoms/files/irg-ff029-astrobee-guest-science-guide.pdf) overview.
-
-Guest science code that runs onboard Astrobee is usually hosted as an Android Java app running on Astrobee's high-level processor (HLP). Guest science apps can use the [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) through its Java bindings. The [`astrobee_android`](https://github.com/nasa/astrobee_android) repository contains source code for Astrobee services that run on the HLP, example guest science apps, as well as a [Guest Science Readme](https://github.com/nasa/astrobee_android/blob/master/guest_science_readme.md) and [Guest Science Developer Guide](https://github.com/nasa/astrobee_android/blob/master/gs_developer_guide.md) focused on HLP guest science apps.
-
-### License
-
-Copyright (c) 2017, United States Government, as represented by the
+<li>For more information, read <a href="https://www.nasa.gov/content/research-publications-0" target="_blank">Astrobee-related publications</a>.</li>
+<li>Learning about the Astrobee <a href="https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf" target="_blank">platform</a>,<a href="https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf" target="_blank"> software</a>, and <a href="https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf" target="_blank">localization</a> are good starting points.</li>
+  </ul></div>
+</details>
+  
+<details open>
+  <summary><h2>Guest Science</h2></summary>
+  <div><ul>
+<li>The ISS Astrobee Facility maintains a collection of <a href="https://www.nasa.gov/content/guest-science-resources" target="_blank">resources for guest scientists</a>  interested in conducting research with Astrobee, including the <a href="https://www.nasa.gov/sites/default/files/atoms/files/irg-ff029-astrobee-guest-science-guide.pdf" target="_blank">Astrobee Guest Science Guide</a> overview.</li>
+<li>
+Guest science code that runs onboard Astrobee is usually hosted as an Android Java app running on Astrobee's high-level processor (HLP). Guest science apps can use the [Astrobee Command API](https://nasa.github.io/astrobee/html/command_dictionary.html) through its Java bindings. The [`astrobee_android`](https://github.com/nasa/astrobee_android) repository contains source code for Astrobee services that run on the HLP, example guest science apps, as well as a [Guest Science Readme](https://github.com/nasa/astrobee_android/blob/master/guest_science_readme.md) and [Guest Science Developer Guide](https://github.com/nasa/astrobee_android/blob/master/gs_developer_guide.md) focused on HLP guest science apps.</li>
+    </ul></div>
+    </details>
+  
+<details open>
+  <summary><h2>lisense</h2></summary> 
+  <div><ul>
+    <li>Copyright (c) 2017, United States Government, as represented by the
 Administrator of the National Aeronautics and Space Administration.
-All rights reserved.
+      All rights reserved.</li>
 
-The Astrobee platform is licensed under the Apache License, Version 2.0 (the
+<li>The Astrobee platform is licensed under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance with the License. You
-may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0.
+      may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0.</li>
 
-Unless required by applicable law or agreed to in writing, software distributed
+<li>Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
-specific language governing permissions and limitations under the License.
+  specific language governing permissions and limitations under the License.</li>
+    </ul></div>
+  </details>
+</body>
