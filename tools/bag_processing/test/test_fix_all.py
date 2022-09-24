@@ -55,7 +55,7 @@ class TestFixAll(unittest.TestCase):
 
         fixed_bags = os.path.join(bags_folder, "*.fix_all.bag")
         fixed_bag_list = glob.glob(fixed_bags)
-        self.assertEquals(len(bag_list), len(fixed_bag_list))  # check # output files
+        self.assertEqual(len(bag_list), len(fixed_bag_list))  # check # output files
 
         # cleanup
         dosys("rm %s" % fixed_bags)
