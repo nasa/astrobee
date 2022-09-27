@@ -25,6 +25,7 @@ messages.
 import argparse
 import logging
 import os
+import shutil
 
 import numpy as np
 import pico_utils as pico
@@ -91,7 +92,7 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "in_bag", nargs="+", help="Input bag containing extended messages"
+        "inbag", nargs="+", help="Input bag containing extended messages"
     )
     parser.add_argument("--in_npy", help="Input xyz coefficients file", default="")
     parser.add_argument(
@@ -136,13 +137,19 @@ def main():
         action="store_true",
         help="Save extended topic alongside converted on the new bagfile",
     )
+    parser.add_argument(
+        "-n",
+        dest="do_nothing",
+        action="store_true",
+        help="Option to not debayer anything and write output",
+    )
 
     args = parser.parse_args()
 
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(message)s")
 
-    for inbag_path in args.in_bag:
+    for inbag_path in args.inbag:
         # Check if input bag exists
         if not os.path.isfile(inbag_path):
             print(("Bag file " + inbag_path + " does not exist."))
@@ -153,17 +160,20 @@ def main():
         if os.path.exists(output_bag_name):
             parser.error("not replacing existing file %s" % output_bag_name)
 
-        # Split extended message
-        pico_xyz_from_extended(
-            inbag_path,
-            args.in_npy,
-            output_bag_name,
-            args.fast,
-            args.verbose,
-            args.cam,
-            args.save_all_topics,
-            args.keep_extended_topic,
-        )
+        if not args.do_nothing:
+            # Split extended message
+            pico_xyz_from_extended(
+                inbag_path,
+                args.in_npy,
+                output_bag_name,
+                args.fast,
+                args.verbose,
+                args.cam,
+                args.save_all_topics,
+                args.keep_extended_topic,
+            )
+        else:
+            shutil.copy(inbag_path, output_bag_name)
 
     # suppress confusing ROS message at exit
     logging.getLogger().setLevel(logging.WARN)

@@ -21,6 +21,7 @@ Converts bayer encoded images from the provided bagfile to grayscale images in a
 
 import argparse
 import os
+import shutil
 import sys
 
 import cv2
@@ -95,7 +96,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("inbag", nargs="+", help="Input bagfile with bayer images.")
+    parser.add_argument(
+        "inbag",
+        nargs="+",
+        help="List of bags to convert. If none provided, all bags in the current directory are used.",
+    )
     parser.add_argument(
         "-o",
         "--output",
@@ -154,6 +159,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Save bayer topic alongside converted image on the new bagfile",
     )
+    parser.add_argument(
+        "-n",
+        dest="do_nothing",
+        action="store_true",
+        help="Option to not debayer anything and write output",
+    )
     args = parser.parse_args()
 
     if args.disable_gray:
@@ -161,7 +172,9 @@ if __name__ == "__main__":
     if args.disable_color:
         args.color_image_topic = ""
 
-    for inbag_path in args.inbag:
+    inbag_paths = args.inbag if args.inbag is not None else glob.glob("*.bag")
+
+    for inbag_path in inbag_paths:
         # Check if input bag exists
         if not os.path.isfile(inbag_path):
             print(("Bag file " + inbag_path + " does not exist."))
@@ -171,15 +184,17 @@ if __name__ == "__main__":
         # Check if output bag already exists
         if os.path.exists(output_bag_name):
             parser.error("not replacing existing file %s" % output_bag_name)
-
-        # Conver bayer topic to black/white and color
-        convert_bayer(
-            inbag_path,
-            output_bag_name,
-            args.list_cam,
-            args.bayer_image_topic,
-            args.gray_image_topic,
-            args.color_image_topic,
-            args.save_all_topics,
-            args.keep_bayer_topic,
-        )
+        if not args.do_nothing:
+            # Conver bayer topic to black/white and color
+            convert_bayer(
+                inbag_path,
+                output_bag_name,
+                args.list_cam,
+                args.bayer_image_topic,
+                args.gray_image_topic,
+                args.color_image_topic,
+                args.save_all_topics,
+                args.keep_bayer_topic,
+            )
+        else:
+            shutil.copy(inbag_path, output_bag_name)

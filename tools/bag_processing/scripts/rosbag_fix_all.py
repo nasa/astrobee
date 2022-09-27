@@ -37,7 +37,9 @@ def dosys(cmd):
     return ret
 
 
-def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
+def rosbag_fix_all(
+    inbag_paths_in, robot, jobs, debayer, decode_haz, filter_topics, deserialize=False
+):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
     inbag_paths_in = [p for p in inbag_paths_in if p.endswith(".bag")]
@@ -68,15 +70,21 @@ def rosbag_fix_all(inbag_paths_in, robot, jobs, deserialize=False):
         rosbag_verify_args += " -d"
 
     # Rosbag convert debayer
-    rosbag_debayer_args = "-s"
+    if debayer:
+        rosbag_debayer_args = "-s"
+    else:
+        rosbag_debayer_args = "-n"
 
     # Rosbag decode haz cam
-    output_stream = os.popen("catkin_find --first-only bag_processing resources")
-    coeff_path = output_stream.read().rstrip() + "/" + robot + "_haz_xyz_coeff.npy"
-    rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
+    if decode_haz:
+        output_stream = os.popen("catkin_find --first-only bag_processing resources")
+        coeff_path = output_stream.read().rstrip() + "/" + robot + "_haz_xyz_coeff.npy"
+        rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
+    else:
+        rosbag_pico_split_extended_args = "-n"
 
     # Rosbag filter
-    rosbag_filter_args = ""
+    rosbag_filter_args = filter_topics
 
     # Call entire pipeline on all the files
     # "1>&2": redirect stdout to stderr to see make's command echo in rostest output
@@ -150,6 +158,24 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
+        "--debayer",
+        help="debayer the nav or dock cam",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--decode-haz",
+        help="decode the extended haz cam topic into points and amplitude_int",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--filter",
+        help="filter the bagfile with only some topics",
+        default="",
+        action="store_true",
+    )
+    parser.add_argument(
         "-r",
         "--robot",
         default="bumble",
@@ -162,7 +188,13 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     ret = rosbag_fix_all(
-        args.inbag, args.robot, args.jobs, deserialize=args.deserialize
+        args.inbag,
+        args.robot,
+        args.jobs,
+        args.debayer,
+        args.decode_haz,
+        args.filter,
+        deserialize=args.deserialize,
     )
 
     # suppress confusing ROS message at exit
