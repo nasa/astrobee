@@ -38,7 +38,7 @@ def dosys(cmd):
 
 
 def rosbag_fix_all(
-    inbag_paths_in, robot, jobs, debayer, decode_haz, filter_topics, deserialize=False
+    inbag_paths_in, jobs, debayer, decode_haz, filter_topics, deserialize=False
 ):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
@@ -75,12 +75,14 @@ def rosbag_fix_all(
         rosbag_debayer_args = "-n"
 
     # Rosbag decode haz cam
-    if decode_haz:
-        output_stream = os.popen("catkin_find --first-only bag_processing resources")
-        coeff_path = output_stream.read().rstrip() + "/" + robot + "_haz_xyz_coeff.npy"
-        rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
-    else:
+    if decode_haz is "":
         rosbag_pico_split_extended_args = "-n"
+    else:
+        output_stream = os.popen("catkin_find --first-only bag_processing resources")
+        coeff_path = (
+            output_stream.read().rstrip() + "/" + decode_haz + "_haz_xyz_coeff.npy"
+        )
+        rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
 
     # Rosbag filter
     rosbag_filter_args = filter_topics
@@ -164,22 +166,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--decode-haz",
-        help="decode the extended haz cam topic into points and amplitude_int",
-        default=False,
-        action="store_true",
+        default="",
+        help="decode the extended haz cam topic into points and amplitude_int, argument is robot name",
+        type=str,
     )
     parser.add_argument(
         "--filter",
         help="filter the bagfile with only some topics",
         default="",
         action="store_true",
-    )
-    parser.add_argument(
-        "-r",
-        "--robot",
-        default="bumble",
-        help="Robot being used.",
-        type=str,
     )
     parser.add_argument("inbag", nargs="+", help="input bag")
 
@@ -188,7 +183,6 @@ if __name__ == "__main__":
 
     ret = rosbag_fix_all(
         args.inbag,
-        args.robot,
         args.jobs,
         args.debayer,
         args.decode_haz,
