@@ -43,20 +43,19 @@ def rosbag_fix_all(
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
     inbag_paths_in = [p for p in inbag_paths_in if p.endswith(".bag")]
-    inbag_paths = [p for p in inbag_paths_in if not p.startswith("fix_all_")]
+
+    # Skip processed bags to start in the correct stage in the Makefile
+    inbag_paths = [p for p in inbag_paths_in if not ".rewrite_types.bag" in p]
+    inbag_paths = [p for p in inbag_paths if not ".migrate_old.bag" in p]
+    inbag_paths = [p for p in inbag_paths if not ".debayer.bag" in p]
+    inbag_paths = [p for p in inbag_paths if not ".depth_split.bag" in p]
+    inbag_paths = [p for p in inbag_paths if not ".fix_all.bag" in p]
 
     skip_count = len(inbag_paths_in) - len(inbag_paths)
     if skip_count:
         logging.info(
             "Not trying to fix %d files that already starts with fix_all_", skip_count
         )
-
-    # Skip processed bags to start in the correct stage if the Makefile
-    inbag_paths = [p for p in inbag_paths if not ".rewrite_types.bag" in p]
-    inbag_paths = [p for p in inbag_paths if not ".migrate_old.bag" in p]
-    inbag_paths = [p for p in inbag_paths if not ".debayer.bag" in p]
-    inbag_paths = [p for p in inbag_paths if not ".depth_split.bag" in p]
-    inbag_paths = [p for p in inbag_paths if not ".fix_all.bag" in p]
 
     outbag_paths = [os.path.splitext(p)[0] + ".fix_all.bag" for p in inbag_paths]
     outbag_paths_str = " ".join(outbag_paths)
@@ -103,17 +102,17 @@ def rosbag_fix_all(
     )
 
     # Merge resulting bags
-    inbag_folders_in = list(set([os.path.split(p)[0] for p in inbag_paths]))
-    print(inbag_folders_in)
+    inbag_folders_in = list(set([os.path.split(p)[0] for p in inbag_paths_in]))
     for inbag_folder_in in inbag_folders_in:
         output_stream = os.popen(
             "catkin_find --first-only bag_processing scripts/rosbag_merge.py"
         )
+        if inbag_folder_in is "":
+            path = ""
+        else:
+            path = " -d " + inbag_folder_in
         merge_bags_path = (
-            output_stream.read().rstrip()
-            + " -d "
-            + inbag_folder_in
-            + " --input-bag-suffix .fix_all.bag"
+            output_stream.read().rstrip() + path + " --input-bag-suffix .fix_all.bag"
         )
         ret2 = dosys(merge_bags_path)
 
