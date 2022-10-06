@@ -39,7 +39,8 @@ def make_map(
     maps_directory=None,
 ):
     merge_with_base_map = base_surf_map is not None and maps_directory is not None
-    bag_images_dir = "bag_images_" + lu.basename(bagfile)
+    basename = lu.basename(bagfile)
+    bag_images_dir = "bag_images_" + basename
     os.mkdir(bag_images_dir)
     bag_images = os.path.abspath(bag_images_dir)
     extract_images_command = (

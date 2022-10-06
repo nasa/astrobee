@@ -261,7 +261,20 @@ the map in Hugin, such as:
 
 It will ask to enter a value for the FoV (field of view). That value
 is not important since we won't use it. One can input 10 degrees,
-for example. 
+for example.
+
+Alternatively you can use the generate hugin tool that reads the
+images from a map and imports them automatically (all images will
+be added).
+
+    rosrun sparse_mapping generate_hugin.py -map_name <map_name_surf.map> \
+      -input_hugin <input_hugin.pto -- OPTIONAL ARGUMENT> 
+      -output_hugin <output_hugin.pto>
+
+If you desire to update an existing hugin file for a new map keeping the
+already defined control points (when adding images to a map) you can
+specify the -input_hugin argument (if there are images in the input
+hugin that are not on the map, they will be automatically removed)
 
 Go to the "Expert" interface, then select matching control points
 across a pair of images (make sure the left and right image are not

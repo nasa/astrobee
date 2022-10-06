@@ -37,7 +37,7 @@ Executive::Executive() :
   current_inertia_(NULL),
   primary_apk_running_("None"),
   run_plan_cmd_id_(""),
-  gs_start_stop_cmd_id_(""),
+  gs_start_stop_restart_cmd_id_(""),
   gs_custom_cmd_id_(""),
   action_active_timeout_(1),
   gs_command_timeout_(4),
@@ -185,9 +185,9 @@ void Executive::GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const&
   }
 
   // Clear guest science command timers
-  if (ack->cmd_id == gs_start_stop_cmd_id_) {
-    gs_start_stop_command_timer_.stop();
-    gs_start_stop_cmd_id_ = "";
+  if (ack->cmd_id == gs_start_stop_restart_cmd_id_) {
+    gs_start_stop_restart_command_timer_.stop();
+    gs_start_stop_restart_cmd_id_ = "";
   } else if (ack->cmd_id == gs_custom_cmd_id_) {
     gs_custom_command_timer_.stop();
     gs_custom_cmd_id_ = "";
@@ -261,16 +261,16 @@ void Executive::GuestScienceCustomCmdTimeoutCallback(
   gs_custom_cmd_id_ = "";
 }
 
-void Executive::GuestScienceStartStopCmdTimeoutCallback(
+void Executive::GuestScienceStartStopRestartCmdTimeoutCallback(
                                                     ros::TimerEvent const& te) {
   std::string err_msg = "GS manager didn't return an ack for the start/stop ";
   err_msg += "guest science command in the timeout specified. The GS manager ";
   err_msg += "may not have started or it may have died.";
-  PublishCmdAck(gs_start_stop_cmd_id_,
+  PublishCmdAck(gs_start_stop_restart_cmd_id_,
                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
                 err_msg);
   // Don't need to stop timer because it is a one shot timer
-  gs_start_stop_cmd_id_ = "";
+  gs_start_stop_restart_cmd_id_ = "";
 }
 
 
@@ -1474,6 +1474,64 @@ bool Executive::PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on) {
   return true;
 }
 
+bool Executive::ProcessGuestScienceCommand(ff_msgs::CommandStampedPtr
+                                                                  const& cmd) {
+  // Check command arguments are correct before sending to the guest science
+  // manager
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                   "Malformed arguments for guest science command.");
+    return false;
+  }
+
+  if (gs_start_stop_restart_cmd_id_ != "") {
+    std::string msg = "Already executing a start or stop guest science command";
+    msg += ". Please wait for it to finish before issuing another start guest ";
+    msg += "science command.";
+    state_->AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, msg);
+    return false;
+  }
+
+  // If starting an apk, check to see if it is primary. If it is, make sure
+  // a primary apk isn't already running.
+  if (cmd->cmd_name ==
+                      ff_msgs::CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
+    // Make sure the executive has received the guest science config message.
+    // This is needed to check if the apk is primary.
+    if (guest_science_config_ == NULL) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Executive never got GS config. GS manager may have died");
+      return false;
+    }
+
+    for (unsigned int i = 0; i < guest_science_config_->apks.size(); i++) {
+      if (cmd->args[0].s == guest_science_config_->apks[i].apk_name) {
+        if (guest_science_config_->apks[i].primary) {
+          // Cannot start a primary apk if another primary apk is running.
+          if (primary_apk_running_ != "None") {
+            state_->AckCmd(cmd->cmd_id,
+                        ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                        "Can't start primary apk when one is already running");
+            return false;
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  gs_cmd_pub_.publish(cmd);
+  gs_start_stop_restart_command_timer_.setPeriod(
+                                            ros::Duration(gs_command_timeout_));
+  gs_start_stop_restart_command_timer_.start();
+  gs_start_stop_restart_cmd_id_ = cmd->cmd_id;
+  return true;
+}
+
+
 bool Executive::ResetEkf(std::string const& cmd_id) {
   localization_goal_.command = ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER;
   // Don't need to specify a pipeline for reset but clear it just in case
@@ -1664,11 +1722,44 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
+bool Executive::EnableAstrobeeIntercomms(ff_msgs::CommandStampedPtr const&
+                                                                          cmd) {
+  NODELET_INFO("Executive executing enable astrobee intercomms command!");
+
+  ff_msgs::ResponseOnly enable_astrobee_intercomms_srv;
+
+  if (!CheckServiceExists(enable_astrobee_intercommunication_client_,
+                          "Enable astrobee intercommunication",
+                          cmd->cmd_id)) {
+    return false;
+  }
+
+  if (!enable_astrobee_intercommunication_client_.call(
+                                              enable_astrobee_intercomms_srv)) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Enable astrobee intercommunication service returned false");
+    return false;
+  }
+
+  if (!enable_astrobee_intercomms_srv.response.success) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   ("Enable astrobee intercommunication failed with result: " +
+                    enable_astrobee_intercomms_srv.response.status));
+    return false;
+  }
+
+  state_->AckCmd(cmd->cmd_id);
+  return true;
+}
+
 bool Executive::Fault(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing fault command!");
+
   // Only transition to the fault state if the fault command came from the
   // system monitor or executive. The only way to transition out of the fault
-  // state is if the system monitor state changes to functional so we don't wan
+  // state is if the system monitor state changes to functional so we don't want
   // the ground to issue a fault command because there will be no way to
   // transition out of the fault state
   if (cmd->cmd_src == "sys_monitor" || cmd->cmd_src == "executive") {
@@ -1692,6 +1783,7 @@ bool Executive::GripperControl(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing idle propulsion command!");
+
   // Cancel any motion actions being executed include the arm
   unsigned int i = 0;
   for (i = 0; i < running_actions_.size(); i++) {
@@ -1846,6 +1938,11 @@ bool Executive::ResetEkf(ff_msgs::CommandStampedPtr const& cmd) {
     return ResetEkf(cmd->cmd_id);
   }
   return false;
+}
+
+bool Executive::RestartGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing restart guest science command!");
+  return ProcessGuestScienceCommand(cmd);
 }
 
 bool Executive::RunPlan(ff_msgs::CommandStampedPtr const& cmd) {
@@ -2980,63 +3077,7 @@ bool Executive::SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::StartGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing start guest science!");
-  // Check command arguments are correct before sending to the guest science
-  // manager
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   "Malformed arguments for start guest science command.");
-    return false;
-  }
-
-  if (guest_science_config_ == NULL) {
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Executive never got GS config. GS manager may have died.");
-    return false;
-  }
-
-  if (gs_start_stop_cmd_id_ != "") {
-    std::string msg = "Already executing a start or stop guest science command";
-    msg += ". Please wait for it to finish before issuing another start guest ";
-    msg += "science command.";
-    state_->AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, msg);
-    return false;
-  }
-
-  // Check to see if the operator is trying to start a primary apk
-  for (unsigned int i = 0; i < guest_science_config_->apks.size(); i++) {
-    if (cmd->args[0].s == guest_science_config_->apks[i].apk_name) {
-      if (guest_science_config_->apks[i].primary) {
-        // We cannot start a primary apk if another primary apk is running or
-        // if we are executing a plan or teleop command. However we can start
-        // a primary apk if it is a plan command
-        if (primary_apk_running_ != "None") {
-          state_->AckCmd(cmd->cmd_id,
-                         ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                         "Can't start primary apk when one is already running");
-          return false;
-        } else if ((state_->id() == ff_msgs::OpState::PLAN_EXECUTION &&
-                    cmd->cmd_id != "plan" && cmd->cmd_src != "plan") ||
-                    state_->id() == ff_msgs::OpState::TELEOPERATION) {
-          state_->AckCmd(cmd->cmd_id,
-                         ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                         "Must be in the ready state to start a primary apk");
-          return false;
-        }
-        break;
-      }
-    }
-  }
-
-  // Don't worry if an apk is not in the config message, the guest science
-  // manager will take care of this
-  gs_cmd_pub_.publish(cmd);
-  gs_start_stop_command_timer_.setPeriod(ros::Duration(gs_command_timeout_));
-  gs_start_stop_command_timer_.start();
-  gs_start_stop_cmd_id_ = cmd->cmd_id;
-  return true;
+  return ProcessGuestScienceCommand(cmd);
 }
 
 bool Executive::StartRecording(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3268,29 +3309,7 @@ bool Executive::StopArm(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::StopGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing stop guest science command!");
-  // Check command arguments are correct before sending to the guest science
-  // manager
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   "Malformed arguments for stop guest science command.");
-    return false;
-  }
-
-  if (gs_start_stop_cmd_id_ != "") {
-    std::string msg = "Already executing a start or stop guest science command";
-    msg += ". Please wait for it to finish before issuing another start guest ";
-    msg += "science command.";
-    state_->AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, msg);
-    return false;
-  }
-
-  gs_cmd_pub_.publish(cmd);
-  gs_start_stop_command_timer_.setPeriod(ros::Duration(gs_command_timeout_));
-  gs_start_stop_command_timer_.start();
-  gs_start_stop_cmd_id_ = cmd->cmd_id;
-  return true;
+  return ProcessGuestScienceCommand(cmd);
 }
 
 bool Executive::StopRecording(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3735,6 +3754,10 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   eps_terminate_client_ = nh_.serviceClient<ff_hw_msgs::ClearTerminate>(
                                           SERVICE_HARDWARE_EPS_CLEAR_TERMINATE);
 
+  enable_astrobee_intercommunication_client_ =
+      nh_.serviceClient<ff_msgs::ResponseOnly>(
+                            SERVICE_COMMUNICATIONS_ENABLE_ASTROBEE_INTERCOMMS);
+
   unload_load_nodelet_client_ = nh_.serviceClient<ff_msgs::UnloadLoadNodelet>(
                             SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET);
 
@@ -3826,19 +3849,18 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   // science manager doesn't respond to a start or stop guest science command
   // in the time specified, we need to ack command as failed. Make it one shot
   // and don't start until we send a guest science start or stop command
-  gs_start_stop_command_timer_ = nh_.createTimer(
-                            ros::Duration(gs_command_timeout_),
-                            &Executive::GuestScienceStartStopCmdTimeoutCallback,
-                            this,
-                            true,
-                            false);
+  gs_start_stop_restart_command_timer_ = nh_.createTimer(
+                    ros::Duration(gs_command_timeout_),
+                    &Executive::GuestScienceStartStopRestartCmdTimeoutCallback,
+                    this,
+                    true,
+                    false);
 
   // Create timer for guest science custom command timeout. If the guest science
   // manager doesn't respond to a custom guest science command in the time
   // specified, we need to ack command as failed. Make it one shot and don't
   // start until we send a guest science custom command
-  gs_custom_command_timer_ = nh_.createTimer(
-                              ros::Duration(gs_command_timeout_),
+  gs_custom_command_timer_ = nh_.createTimer(ros::Duration(gs_command_timeout_),
                               &Executive::GuestScienceCustomCmdTimeoutCallback,
                               this,
                               true,

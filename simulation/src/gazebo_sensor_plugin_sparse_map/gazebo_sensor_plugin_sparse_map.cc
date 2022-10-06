@@ -187,12 +187,13 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       GetWorld()->Physics()->InitForThread();
       boost::unique_lock<boost::recursive_mutex> lock(*(
           GetWorld()->Physics()->GetPhysicsUpdateMutex()));
+      std::string physics = boost::any_cast<std::string>(GetWorld()->Physics()->GetParam("type"));
     #else
       GetWorld()->GetPhysicsEngine()->InitForThread();
       boost::unique_lock<boost::recursive_mutex> lock(*(
         GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
+      std::string physics = boost::any_cast<std::string>(GetWorld()->GetPhysicsEngine()->GetParam("type"));
     #endif
-
       // Create a new ray in the world
       size_t i = 0;
       for (; i < num_samp_ && msg_feat_.landmarks.size() < num_features_; i++) {
@@ -213,17 +214,24 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
         // Collision detection
         double dist;
-        std::string entity;
+        if (physics != "dart") {
+          std::string entity;
 
-        // Set the start anf end points of the ray
-        shape_->SetPoints(
-          ignition::math::Vector3d(n_w.x(), n_w.y(), n_w.z()),
-          ignition::math::Vector3d(f_w.x(), f_w.y(), f_w.z()));
-        shape_->GetIntersection(dist, entity);
+          // Set the start anf end points of the ray
+          shape_->SetPoints(
+            ignition::math::Vector3d(n_w.x(), n_w.y(), n_w.z()),
+            ignition::math::Vector3d(f_w.x(), f_w.y(), f_w.z()));
+          shape_->GetIntersection(dist, entity);
 
-        // If we don't have an entity then we didnt collide
-        if (entity.empty())
-          continue;
+          // If we don't have an entity then we didnt collide
+          if (entity.empty())
+            continue;
+        } else {
+          // The ray functionality does not work for dart physics engine
+          // Here we just fake some random distance values
+          // https://answers.gazebosim.org/question/16241/ray-sensor-doesnt-work-properly-with-dart/
+          dist = std::max(near_clip_, std::min(static_cast<double>(rand() % 1000) / 500, far_clip_));  // NOLINT
+        }
 
         // Get the landmark coordinate
         Eigen::Vector3d p_w = n_w + dist * (f_w - n_w).normalized();

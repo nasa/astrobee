@@ -157,6 +157,13 @@ module rapid {
       const rapid::String32 GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_PARAM_COMMAND = "command";
       const rapid::DataType GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_DTYPE_COMMAND = rapid::RAPID_STRING;
 
+      //@copy-declaration /** This command is the equivalent to issuing the stop guest science command and then the start guest science command. Sometimes guest science APKs become unresponsive and this is a quick way to try to get it work again. <p/>See GuestScience.startGuestScience for more on the guest science life cycle. */
+      const rapid::String32 GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE = "restartGuestScience";
+
+      //@copy-declaration /** Which guest science APK to terminae */
+      const rapid::String32 GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE_PARAM_APK_NAME = "apkName";
+      const rapid::DataType GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE_DTYPE_APK_NAME = rapid::RAPID_STRING;
+
       //@copy-declaration /** Starts a guest science app (APK) running on the Astrobee HLP. This command is part of the guest science app life cycle, implemented by the guest science manager node on the HLP. Steps of the life cycle include:<p/><ul><li>startGuestScience: Starts a guest science app, making it available to receive commands.</li><li>customGuestScience: Routes a command to a running guest science app.</li><li>stopGuestScience: Terminates a running guest science app.</li></ul> */
       const rapid::String32 GUESTSCIENCE_METHOD_START_GUEST_SCIENCE = "startGuestScience";
 
@@ -236,6 +243,9 @@ module rapid {
       const rapid::DataType POWER_METHOD_POWER_ON_ITEM_DTYPE_WHICH = rapid::RAPID_STRING;
 
       const rapid::String32 SETTINGS = "Settings";
+
+      //@copy-declaration /** Starts the Astrobee intercommunication software. This enables the robot to send and receive a subset of data to and from other Astrobees in the network. Please note, this command must be executed on each robot needed in the communication. */
+      const rapid::String32 SETTINGS_METHOD_ENABLE_ASTROBEE_INTERCOMMS = "enableAstrobeeIntercomms";
 
       //@copy-declaration /** Sets camera parameters.<p/>The Astrobee camera control life cycle is as follows:<ul><li>When the Astrobee flight software stack is started, recording and streaming are initially disabled for all cameras, and the default camera parameters are as specified in the astrobee/config/cameras.config file.</li><li>For each camera, while recording and streaming are disabled, you may use this Settings.setCamera command to adjust its parameters.</li><li>For each camera, you may enable/disable recording imagery to onboard storage using Settings.setCameraRecording.</li><li>For each camera, you may enable/disable live imagery downlink using Settings.setCameraStreaming.</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA = "setCamera";
