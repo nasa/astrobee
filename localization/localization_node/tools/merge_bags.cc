@@ -26,6 +26,9 @@
 // ROS
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/CompressedImage.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,8 +42,16 @@
 // Merge bags
 // Usage: merge_bags -output_bag output.bag input1.bag input2.bag ...
 
-DEFINE_string(output_bag, "",
-              "The output bag.");
+DEFINE_string(output_bag, "", "The output bag.");
+DEFINE_double(start_time, -1.0, "If non-negative, start at this time, measured in "
+              "seconds since epoch.");
+DEFINE_double(end_time, -1.0, "If non-negative, stop before this time, measured in "
+              "seconds since epoch.");
+DEFINE_string(save_topics, "", "if non-empty, the topics to write. Use quotes and a space "
+              "as separator. Example: '/hw/cam_nav /hw/cam_sci'.");
+DEFINE_double(min_time_spacing, -1.0,
+              "If non-negative, for each input bag, keep only messages for a given topic which differ by no less than "
+              "this time amount, in seconds. Assumes that messages in a bag are stored in ascending order of time.");
 
 // Read the list of topics in a bag while avoiding repetitions
 void readTopicsInBag(std::string const& bag_file, std::vector<std::string> & topics) {
@@ -62,12 +73,49 @@ void readTopicsInBag(std::string const& bag_file, std::vector<std::string> & top
   }
 }
 
+// For images and point cloud messages, the timestamp in the header is more accurate
+// than the one in the message, as the latter can be messed up by some tools.
+// Try to get the more accurate one.
+double headerOrMessageTime(rosbag::MessageInstance const & m) {
+  // Message time
+  double curr_time = m.getTime().toSec();
+
+  // Check for uncompressed images
+  sensor_msgs::Image::ConstPtr image_msg
+    = m.instantiate<sensor_msgs::Image>();
+  if (image_msg)
+    curr_time = image_msg->header.stamp.toSec();
+
+  // Check for compressed images
+  sensor_msgs::CompressedImage::ConstPtr comp_image_msg
+    = m.instantiate<sensor_msgs::CompressedImage>();
+  if (comp_image_msg)
+    curr_time = comp_image_msg->header.stamp.toSec();
+
+  // Check for cloud
+  sensor_msgs::PointCloud2::ConstPtr curr_pc_msg
+    = m.instantiate<sensor_msgs::PointCloud2>();
+  if (curr_pc_msg) curr_time = curr_pc_msg->header.stamp.toSec();
+
+  return curr_time;
+}
+
 int main(int argc, char ** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   if (FLAGS_output_bag == "") {
     std::cout << "The output bag was not specified.\n";
     return 1;
+  }
+
+  bool time_range_filter = (FLAGS_start_time >= 0 && FLAGS_end_time >= 0);
+
+  std::set<std::string> save_topics;
+  std::istringstream iss(FLAGS_save_topics);
+  std::string val;
+  while (iss >> val) {
+    std::cout << "Will save topic: " << val << std::endl;
+    save_topics.insert(val);
   }
 
   // Make the directory where the output will go
@@ -124,7 +172,33 @@ int main(int argc, char ** argv) {
     input_bag.open(input_bag_file, rosbag::bagmode::Read);
 
     rosbag::View view(input_bag, rosbag::TopicQuery(topics));
+    std::map<std::string, double> last_time_map;
+
     for (rosbag::MessageInstance const m : view) {
+      // Filter by topic, if specified
+      if (!save_topics.empty() && save_topics.find(m.getTopic()) == save_topics.end()) continue;
+
+      double curr_time = headerOrMessageTime(m);
+
+      // Filter by time range, if specified
+      if (time_range_filter && (curr_time < FLAGS_start_time || curr_time >= FLAGS_end_time))
+        continue;
+
+      // Filter by spacing
+      if (FLAGS_min_time_spacing > 0) {
+        double last_time = -1.0;
+        std::string const& topic = m.getTopic();  // alias
+        auto it = last_time_map.find(topic);
+        if (it != last_time_map.end()) {
+          last_time = it->second;
+        }
+
+        if (last_time >= 0.0 && curr_time - last_time < FLAGS_min_time_spacing)
+          continue;
+
+        last_time_map[topic] = curr_time;  // last time the message was saved, for next time
+      }
+
       output_bag.write(m.getTopic(), m.getTime(), m);
     }
 
