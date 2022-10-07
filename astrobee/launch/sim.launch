@@ -28,6 +28,7 @@
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
   <arg name="extra" default=""/>                <!-- Inject additional node  -->
   <arg name="debug" default=""/>                <!-- Debug node group        -->
+  <arg name="physics" default="ode"/>           <!-- Physics engine          -->
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
@@ -142,6 +143,7 @@
     <arg name="vmware" value="$(arg vmware)" />
     <arg name="speed" value="$(arg speed)" />
     <arg name="debug" value="$(arg sdebug)" />
+    <arg name="physics" value="$(arg physics)" />
   </include>
 
   <!-- Auto-inert platform #1 at a desired initial location -->
@@ -183,6 +185,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
+      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
     </include>
   </group>
 
@@ -205,6 +208,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
+      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
     </include>
   </group>
 
@@ -227,6 +231,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
+      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
     </include>
   </group>
 
