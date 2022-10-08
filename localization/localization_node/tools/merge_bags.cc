@@ -45,9 +45,9 @@
 DEFINE_string(output_bag, "", "The output bag.");
 DEFINE_double(start_time, -1.0, "If non-negative, start at this time, measured in "
               "seconds since epoch.");
-DEFINE_double(end_time, -1.0, "If non-negative, stop before this time, measured in "
+DEFINE_double(stop_time, -1.0, "If non-negative, stop before this time, measured in "
               "seconds since epoch.");
-DEFINE_string(save_topics, "", "if non-empty, the topics to write. Use quotes and a space "
+DEFINE_string(save_topics, "", "If non-empty, the topics to write. Use quotes and a space "
               "as separator. Example: '/hw/cam_nav /hw/cam_sci'.");
 DEFINE_double(min_time_spacing, -1.0,
               "If non-negative, for each input bag, keep only messages for a given topic which differ by no less than "
@@ -108,7 +108,7 @@ int main(int argc, char ** argv) {
     return 1;
   }
 
-  bool time_range_filter = (FLAGS_start_time >= 0 && FLAGS_end_time >= 0);
+  bool time_range_filter = (FLAGS_start_time >= 0 && FLAGS_stop_time >= 0);
 
   std::set<std::string> save_topics;
   std::istringstream iss(FLAGS_save_topics);
@@ -181,7 +181,7 @@ int main(int argc, char ** argv) {
       double curr_time = headerOrMessageTime(m);
 
       // Filter by time range, if specified
-      if (time_range_filter && (curr_time < FLAGS_start_time || curr_time >= FLAGS_end_time))
+      if (time_range_filter && (curr_time < FLAGS_start_time || curr_time >= FLAGS_stop_time))
         continue;
 
       // Filter by spacing

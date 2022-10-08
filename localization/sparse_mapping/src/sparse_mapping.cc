@@ -129,15 +129,15 @@ bool sparse_mapping::IsBinaryDescriptor(std::string const& descriptor) {
 }
 
 // Writes the NVM control network format.
-void sparse_mapping::WriteNVM(std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
+void sparse_mapping::WriteNVM(std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
                               std::vector<std::string> const& cid_to_filename,
-                              std::vector<std::map<int, int> > const& pid_to_cid_fid,
+                              std::vector<std::map<int, int>> const& pid_to_cid_fid,
                               std::vector<Eigen::Vector3d> const& pid_to_xyz,
                               std::vector<Eigen::Affine3d> const&
-                              cid_to_cam_t_global,
-                              double focal_length,
+                              cid_to_cam_t_global, double focal_length,
                               std::string const& output_filename) {
   std::fstream f(output_filename, std::ios::out);
+  f.precision(17);  // use high precision since we will write positions and orientations
   f << "NVM_V3\n";
 
   CHECK(cid_to_filename.size() == cid_to_keypoint_map.size())
