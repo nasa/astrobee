@@ -91,6 +91,11 @@ as follows:
     $ASTROBEE_BUILD_PATH/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
+This tool can also save images only in a given time range, and 
+filter out some images, for example, by keeping only one image per second.
+
+See \ref merge_bags for the full documentation.
+
 ### Extracting images
 
 To extract images from a bag file:
@@ -510,3 +515,6 @@ added back to it.
 \subpage granite_lab_registration
 \subpage faro
 \subpage theia_map
+\subpage import_map
+\subpage export_map
+\subpage merge_bags
