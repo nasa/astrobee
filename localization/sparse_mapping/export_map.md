@@ -7,10 +7,13 @@ file in Protobuf format to the plain text .nvm file format.
 
 This tool does not export the camera intrinsics and image descriptors,
 but only the list of images, the position and orientation of each
-camera, and the interest point matches (tracks). The obtained .nvm
-file can be imported back with the \ref import_map tool.
+camera, and the interest point matches (tracks). 
 
-The interest points are offset relative to the optical center.
+The obtained .nvm file can be imported back with the \ref import_map
+tool.
+
+The interest points are offset relative to the optical center, per the 
+NVM format convention.
 
 Example:
 
