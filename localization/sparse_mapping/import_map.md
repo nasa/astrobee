@@ -18,9 +18,7 @@ a map needs to be rebuilt after it is imported.
 Run:
 
     export ASTROBEE_ROBOT=bumble
-    astrobee/devel/lib/sparse_mapping/import_map                             \
-      -undistorted_camera_params "wid_x wid_y focal_len opt_ctr_x opt_ctr_y" \
-      <undistorted images>                                                   \
+    astrobee/devel/lib/sparse_mapping/import_map \
       -input_map map.nvm -output_map map.map
 
 See further down about how to rebuild the imported map.
@@ -47,7 +45,7 @@ program ``undistort_image``. The undistorted camera parameters to use
 should be as printed on the screen (and saved to disk) by
 ``undistort_image``.
 
-## Replace, on importing, the camera model and the images
+## Replace with distorted data
 
 If desired to replace on importing the undistorted images with the
 original distorted ones, and same for the camera parameters, as it is
@@ -67,8 +65,9 @@ the former are needed to look up camera poses and other data in the
 .nvm file before being replaced with the distorted ones.
 
 It is very important to note that the interest point matches will not
-be correct. Only the image names, robot camera parameters, and camera
-poses will be accurate. So, this map should be rebuilt right away. 
+be correct, as they are left undistorted. Only the image names, robot
+camera parameters, and camera poses will be accurate. So, this map
+should be rebuilt right away.
 
 # Rebuilding an imported map
 
@@ -91,7 +90,7 @@ Note that if the NVM file is created by Theia, it may have the image
 names be specified without the path to the directory having them (that
 is, instead of image_dir/image1.jpg it may list just image1.jpg). Then
 this NVM file needs to be edited manually to add the correct path to
-the images before running the import tool.
+the images before running the import tool. This is taken care of if
+both ``-undistorted_images_list`` and ``-distorted_images_list`` are
+specified.
 
-This is taken care of if both ``-undistorted_images_list`` and
-``-distorted_images_list`` are specified.
