@@ -64,6 +64,10 @@ important that both undistorted and distorted images be specified, as
 the former are needed to look up camera poses and other data in the
 .nvm file before being replaced with the distorted ones.
 
+This use case was tested only with a map exported by Theia, 
+which records the images without a directory path, so that is how
+they should be specified in the undistorted image list as well. 
+
 It is very important to note that the interest point matches will not
 be correct, as they are left undistorted. Only the image names, robot
 camera parameters, and camera poses will be accurate. So, this map
