@@ -701,7 +701,7 @@ void sparse_mapping::ParseHuginControlPoints(std::string const& hugin_file,
                                              Eigen::MatrixXd * points) {
   // Initialize the outputs
   (*images).clear();
-  *points = Eigen::MatrixXd(6, 1);
+  *points = Eigen::MatrixXd(6, 0);  // this will be resized as points are added
 
   std::ifstream hf(hugin_file.c_str());
   if (!hf.good())
