@@ -142,6 +142,12 @@ add_dependencies(import_map ${catkin_EXPORTED_TARGETS})
 target_link_libraries(import_map
   sparse_mapping gflags glog ${catkin_LIBRARIES})
 
+## Declare a C++ executable: export_map
+add_executable(export_map tools/export_map.cc)
+add_dependencies(export_map ${catkin_EXPORTED_TARGETS})
+target_link_libraries(export_map
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
 ## Declare a C++ executable: localize_cams
 add_executable(localize_cams tools/localize_cams.cc)
 add_dependencies(localize_cams ${catkin_EXPORTED_TARGETS})

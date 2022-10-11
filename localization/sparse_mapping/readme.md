@@ -91,6 +91,11 @@ as follows:
     $ASTROBEE_BUILD_PATH/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
+This tool can also save images only in a given time range, and 
+filter out some images, for example, by keeping only one image per second.
+
+See \ref merge_bags for the full documentation.
+
 ### Extracting images
 
 To extract images from a bag file:
@@ -326,12 +331,20 @@ the two maps can be first merged with the same small map of that
 shared location, and then the newly merged map which now will have
 shared images can be merged with the `-fast_merge` flags.
 
+The `-fast_merge` option assumes that a decent number of images
+are shared among the maps, and that those cover a reasonably large
+and representative portion of the desired environment, otherwise
+it may not give accurate results. In either case, bundle adjustment
+must be applied after the merge operations are done and before
+registration, which can be done either with ``merge_maps`` or
+``build_map``.
+  
 To summarize, with careful map surgery (extract submaps and merge
 submaps) large maps can be made from smaller or damaged ones within
 reasonable time.
 
-All these operations should be performed on maps with SURF features.
-Hence the general approach for building maps is to create small SURF
+All these operations should be applied on maps with SURF features.
+Hence, the general approach for building large maps is to create small SURF
 maps using the command:
 
     build_map -feature_detection -feature_matching -track_building    \
@@ -339,8 +352,8 @@ maps using the command:
      -histogram_equalization -num_subsequent_images 100               \
      images/*jpg -output_map <map file>
 
-examine them individually, merging them as appropriate, then
-performing bundle adjustment and registration as per the \ref
+Then, examine the maps individually, merge them as appropriate, and
+perform bundle adjustment and registration as per the \ref
 map_building section. Only when a good enough map is obtained, a
 renamed copy of it should be rebuilt with BRISK features and a
 vocabulary database to be used on the robot.
@@ -502,3 +515,6 @@ added back to it.
 \subpage granite_lab_registration
 \subpage faro
 \subpage theia_map
+\subpage import_map
+\subpage export_map
+\subpage merge_bags

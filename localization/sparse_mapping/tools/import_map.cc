@@ -50,7 +50,6 @@ DEFINE_string(distorted_images_list, "",
               "Replace the undistorted images specified on input with distorted images "
               "from this list (one file per line). The correct value of ASTROBEE_ROBOT "
               "must be set.");
-
 namespace {
   // Keep these utilities in a local namespace
 
@@ -87,7 +86,8 @@ namespace {
                  << "passed on the command line must be the same.\n";
 
     std::map<std::string, std::string> undist_to_dist;
-    for (size_t it = 0; it < undist_images.size(); it++) undist_to_dist[undist_images[it]] = distorted_images[it];
+    for (size_t it = 0; it < undist_images.size(); it++)
+      undist_to_dist[undist_images[it]] = distorted_images[it];
 
     // Replace the images in the map. Keep in mind that the map
     // may have just a subset of the input images.
@@ -105,7 +105,37 @@ int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  // Read the images from the .list or the command line
+  if (FLAGS_undistorted_images_list   == "" &&
+      FLAGS_distorted_images_list     == "" &&
+      FLAGS_undistorted_camera_params == "") {
+    std::cout << "No extra options were specified. Assuming that the sparse map "
+              << "was made with distorted (original) images.\n" << std::endl;
+
+    config_reader::ConfigReader config;
+    config.AddFile("cameras.config");
+    if (!config.ReadFiles()) {
+      LOG(FATAL) << "Failed to read the robot configuration.";
+      return 1;
+    }
+    camera::CameraParameters cam_params(&config, "nav_cam");
+
+    // Create a sparse map with the given camera parameters
+    sparse_mapping::SparseMap m(std::vector<std::string>(), "SURF", cam_params);
+    sparse_mapping::ReadNVM(FLAGS_input_map, &m.cid_to_keypoint_map_,
+                            &m.cid_to_filename_, &m.pid_to_cid_fid_,
+                            &m.pid_to_xyz_, &m.cid_to_cam_t_global_);
+
+    // Descriptors are not saved, so let them be empty
+    m.cid_to_descriptor_map_.resize(m.cid_to_keypoint_map_.size());
+
+    m.Save(FLAGS_output_map);
+
+    google::protobuf::ShutdownProtobufLibrary();
+
+    return 0;
+  }
+
+  // Read the images from a list file or individually specified on the command line
   std::vector<std::string> undist_images;
   if (FLAGS_undistorted_images_list != "") {
     readLines(FLAGS_undistorted_images_list, undist_images);
