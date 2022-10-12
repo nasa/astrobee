@@ -63,7 +63,10 @@ DEFINE_string(undistorted_crop_win, "",
               "After undistorting, apply a crop window of these dimensions "
               "centered at the undistorted image center. The adjusted "
               "dimensions and optical center will be printed on screen. "
-              "Specify as: 'crop_x crop_y'.");
+              "Specify as: 'crop_x crop_y'. Or specify 'loose' to use the "
+              "smallest crop window that contains all of the  "
+              "undistorted source pixels and keeps the optical center "
+              "centered.");
 
 DEFINE_bool(save_bgr, false,
             "Save the undistorted images as BGR instead of grayscale. (Some tools expect BGR.)");
@@ -73,6 +76,13 @@ DEFINE_bool(histogram_equalization, false,
 
 DEFINE_string(robot_camera, "nav_cam",
               "Which of bot's cameras to use. Tested with nav_cam and sci_cam.");
+
+DEFINE_bool(alpha, false,
+            "Add an alpha channel and make areas outside the remapped input transparent. Forces PNG output format. Not "
+            "compatible with save_bgr.");
+
+DEFINE_bool(cubic, false,
+            "Use more expensive cubic interpolation for best image quality.");
 
 int main(int argc, char ** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
@@ -227,13 +237,45 @@ int main(int argc, char ** argv) {
   // Handle the cropping
   cv::Rect cropROI;
   if (!FLAGS_undistorted_crop_win.empty()) {
-    std::vector<double> vals;
-    ff_common::parseStr(FLAGS_undistorted_crop_win, vals);
-    if (vals.size() < 2)
-      LOG(FATAL) << "Could not parse --undistorted_crop_win.";
+    int widx, widy;
 
-    int widx = vals[0];
-    int widy = vals[1];
+    if (FLAGS_undistorted_crop_win == "loose") {
+      // Figure out bounding box of undistorted pixels
+
+      // Create a white test image to undistort
+      cv::Mat white(dist_size[1], dist_size[0], CV_8UC1, 255);
+
+      // Expand the test image with a black border before interpolating into it
+      cv::Mat expanded_white;
+      cv::copyMakeBorder(white, expanded_white, border_top, border_bottom,
+                         border_left, border_right,
+                         cv::BORDER_CONSTANT, 0);
+
+      // Undistort the test image
+      cv::Mat undist_white;
+      cv::remap(expanded_white, undist_white, fixed_map, interp_map, cv::INTER_LINEAR);
+
+      // Get the bounding rectangle of the white pixels in the undistorted
+      // test image
+      cv::Rect rect = cv::boundingRect(undist_white);
+
+      // The resulting bounding box may not be centered on the optical
+      // center of the undistorted image. Grow the size of the rectangle
+      // as needed to keep the optical center in the middle of the final
+      // output.
+      int cx = optical_center[0];
+      int cy = optical_center[1];
+      widx = 2 * std::max(cx - rect.x, (rect.x + rect.width) - cx);
+      widy = 2 * std::max(cy - rect.y, (rect.y + rect.height) - cy);
+    } else {
+      std::vector<double> vals;
+      ff_common::parseStr(FLAGS_undistorted_crop_win, vals);
+      if (vals.size() < 2)
+        LOG(FATAL) << "Could not parse --undistorted_crop_win.";
+
+      widx = vals[0];
+      widy = vals[1];
+    }
 
     // A couple of sanity checks
     if (widx % 2 != 0 || widy % 2 != 0 )
@@ -275,6 +317,17 @@ int main(int argc, char ** argv) {
     if (image.rows != img_rows || image.cols != img_cols)
       LOG(FATAL) << "The input images have wrong dimensions.";
 
+    // Add alpha channel if user requested it
+    if (FLAGS_alpha) {
+      cv::Mat alpha(image.rows, image.cols, CV_8UC1, 255);
+      std::vector<cv::Mat> channels;
+      cv::split(image, channels);
+      channels.push_back(alpha);
+      cv::Mat tmp_image;
+      cv::merge(channels, tmp_image);
+      image = tmp_image;
+    }
+
     // Expand the image before interpolating into it
     cv::Scalar paddingColor = 0;
     cv::Mat expanded_image;
@@ -284,7 +337,8 @@ int main(int argc, char ** argv) {
 
     // Undistort it
     cv::Mat undist_image;
-    cv::remap(expanded_image, undist_image, fixed_map, interp_map, cv::INTER_LINEAR);
+    cv::InterpolationFlags interp_mode = FLAGS_cubic ? cv::INTER_CUBIC : cv::INTER_LINEAR;
+    cv::remap(expanded_image, undist_image, fixed_map, interp_map, interp_mode);
 
     // Crop, if desired
     if (!cropROI.empty()) {
@@ -298,12 +352,20 @@ int main(int argc, char ** argv) {
     if (!undist_images.empty()) {
       // Was specified via a list
       undist_file = undist_images[i];
-    } else if (!FLAGS_output_directory.empty()) {
-      // A separate output directory was specified
-      undist_file = FLAGS_output_directory + "/" + ff_common::basename(filename);
     } else {
-      // Save in same directory with new name
-      undist_file = filename.substr(0, filename.size() - 4) + "_undistort.jpg";
+      if (!FLAGS_output_directory.empty()) {
+        // A separate output directory was specified
+        undist_file = FLAGS_output_directory + "/" + ff_common::basename(filename);
+      } else {
+        // Save in same directory with new name
+        undist_file = filename.substr(0, filename.size() - 4) + "_undistort.jpg";
+      }
+      if (FLAGS_alpha) {
+        // Typical input format is JPEG that can't represent alpha
+        // channel, so let's switch default output format to PNG. User
+        // can override using undist_images if they need to.
+        undist_file = undist_file.substr(0, undist_file.size() - 4) + ".png";
+      }
     }
 
     // Save to disk the undistorted image
