@@ -13,13 +13,13 @@ undistorted optical center will be displayed on the screen.
 
 Usage:
 
-  export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
-  export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
-  export ASTROBEE_WORLD=granite
-  export ASTROBEE_ROBOT=p4d
+    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
+    export ASTROBEE_WORLD=granite
+    export ASTROBEE_ROBOT=p4d
 
-  undistort_image input_dir/*[0-9].jpg --output_directory output_dir \
-     --robot_camera nav_cam
+    undistort_image input_dir/*[0-9].jpg --output_directory output_dir \
+      --robot_camera nav_cam
 
 Options:
 
