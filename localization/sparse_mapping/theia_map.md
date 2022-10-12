@@ -188,38 +188,5 @@ That page also has information for how the map can be rebuilt to use
 BRISK features, and how it can be validated for localization by
 playing a bag against it.
 
-# Auxiliary import_map tool
-
-This tool is used to import a map from the NVM format, which Theia
-exports to. These operations are done automatically by the
-``build_theia_map.py`` tool. This documentation is provided for
-reference only.
- 
-An NVM map exported by Theia (or some other SfM tool) can be saved as
-an Astrobee sparse map with the command:
-
-    astrobee/devel/lib/sparse_mapping/import_map                             \
-      -undistorted_camera_params "wid_x wid_y focal_len opt_ctr_x opt_ctr_y" \
-      <undistorted images>                                                   \
-      -input_map map.nvm -output_map map.map
- 
-This assumes that the images were acquired with the nav camera of the
-robot given by $ASTROBEE_ROBOT and undistorted with the Astrobee
-program ``undistort_image``. The undistorted camera parameters to use
-should be as printed on the screen (and saved to disk) by
-``undistort_image``.
-
-If desired to replace on importing the undistorted images with the
-original distorted ones, as it is usually expected of a sparse map,
-the above command should be called instead as:
-  
-    astrobee/devel/lib/sparse_mapping/import_map \
-      -undistorted_images_list undist_list.txt   \
-      -distorted_images_list dist_list.txt       \
-      -input_map map.nvm -output_map map.map
-
-Here, the files ``undist_list.txt`` and ``dist_list.txt`` must have
-one image per line and be in one-to-one correspondence. It is
-important that both undistorted and distorted images be specified, as
-the former are needed to look up camera poses and other data in the
-.nvm file before being replaced with the distorted ones.
+The \ref import_map program is used by this tool to import a sparse
+map from Theia's format.

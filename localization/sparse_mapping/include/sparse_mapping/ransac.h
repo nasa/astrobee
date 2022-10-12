@@ -128,8 +128,8 @@ class RandomSampleConsensus {
           if (!m_reduce_min_num_output_inliers_if_no_fit)
             break;
           reduce_min_num_output_inliers();
-           // Can't possibly compute a transform with 1 or 0 samples!
-          if (m_min_num_output_inliers < 2)
+          // A similarity transform needs at least 3 samples
+          if (m_min_num_output_inliers < 3)
             break;
           LOG(INFO) << "Attempting RANSAC with " << m_min_num_output_inliers
                     << " output inliers.\n";
