@@ -418,7 +418,7 @@ int main(int argc, char ** argv) {
     std::cout << "Writing: " << intrinsics_file << std::endl;
     std::ofstream ofs(intrinsics_file.c_str());
     ofs.precision(17);
-    ofs << "# Unidistored width and height, focal length, undistorted optical center\n";
+    ofs << "# Undistorted width and height, focal length, undistorted optical center\n";
     ofs << undist_size.transpose() << " " << focal_length << " "
         << optical_center.transpose() << "\n";
     ofs.close();
