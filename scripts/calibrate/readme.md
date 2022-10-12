@@ -41,6 +41,12 @@ so some effort may be needed to install the Python 2 dependencies.
     cd $KALIBR_WS/src
     git clone git@github.com:oleg-alexandrov/Kalibr.git
 
+If the above cloning operation fails, it is likely due to some ssh settings on your machine not being as GitHub expects. Then try:
+
+    git clone https://github.com/oleg-alexandrov/Kalibr.git
+
+In either case, continue as follows:
+
     # This line takes care of catkin not finding numpy.
     ln -s /usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy \
       $KALIBR_WS/src/Kalibr/Schweizer-Messer/numpy_eigen/include
