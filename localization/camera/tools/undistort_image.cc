@@ -56,8 +56,10 @@ DEFINE_string(output_list, "", "Save the undistorted images with names given in 
 
 DEFINE_string(undistorted_intrinsics, "", "Save to this file the undistorted camera intrinsics.");
 
-DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their width "
-              "being a multiple of this scale compared to the camera model.");
+DEFINE_string(scale, "auto",
+              "Undistort images at different resolution, with their width "
+              "being a multiple of this scale compared to the camera model. Or set to "
+              "'auto' to select the integer scale factor based on the image size.");
 
 DEFINE_string(undistorted_crop_win, "",
               "After undistorting, apply a crop window of these dimensions "
@@ -134,9 +136,28 @@ int main(int argc, char ** argv) {
     }
   }
 
+  double scale;
+  if (FLAGS_scale == "auto") {
+    std::string test_image_path(images[0]);
+    cv::Mat test_image = cv::imread(test_image_path, cv::IMREAD_UNCHANGED);
+    int ref_cols = cam_params.GetDistortedSize()[0];
+    int ref_rows = cam_params.GetDistortedSize()[1];
+    if ((test_image.cols % ref_cols == 0)
+        && (test_image.rows % ref_rows == 0)
+        && ((test_image.cols / ref_cols) == (test_image.rows / ref_rows))) {
+      scale = test_image.cols / ref_cols;
+    } else {
+      LOG(FATAL) << "Input image dimensions " << test_image.cols << "x" << test_image.rows
+                 << " must be an integer multiple of camera model image dimensions " << ref_cols << "x" << ref_rows
+                 << ".";
+    }
+  } else {
+    scale = std::stod(FLAGS_scale);
+  }
+
   // Create the undistortion map
   cv::Mat floating_remap, fixed_map, interp_map;
-  cam_params.GenerateRemapMaps(&floating_remap, FLAGS_scale);
+  cam_params.GenerateRemapMaps(&floating_remap, scale);
 
   // We have to conform to the OpenCV API, which says:
   // undist_image(x, y) = dist_image(floating_remap(x, y)).
@@ -157,8 +178,8 @@ int main(int argc, char ** argv) {
   float max_extra = 100.0f;  // the furthest floating_remap(x, y) can deviate
 
   // The image dimensions
-  Eigen::Vector2i dims(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
-                       round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
+  Eigen::Vector2i dims(round(scale * cam_params.GetDistortedSize()[0]),
+                       round(scale * cam_params.GetDistortedSize()[1]));
   int img_cols = dims[0], img_rows = dims[1];
 
   cv::Vec2f start = floating_remap.at<cv::Vec2f>(0, 0);
@@ -227,12 +248,12 @@ int main(int argc, char ** argv) {
   // Convert the map for speed
   cv::convertMaps(floating_remap, cv::Mat(), fixed_map, interp_map, CV_16SC2);
 
-  Eigen::Vector2i dist_size(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
-                            round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
-  Eigen::Vector2i undist_size(round(FLAGS_scale*cam_params.GetUndistortedSize()[0]),
-                              round(FLAGS_scale*cam_params.GetUndistortedSize()[1]));
-  double focal_length            = FLAGS_scale*cam_params.GetFocalLength();
-  Eigen::Vector2d optical_center = FLAGS_scale*cam_params.GetUndistortedHalfSize();
+  Eigen::Vector2i dist_size(round(scale * cam_params.GetDistortedSize()[0]),
+                            round(scale * cam_params.GetDistortedSize()[1]));
+  Eigen::Vector2i undist_size(round(scale * cam_params.GetUndistortedSize()[0]),
+                              round(scale * cam_params.GetUndistortedSize()[1]));
+  double focal_length = scale * cam_params.GetFocalLength();
+  Eigen::Vector2d optical_center = scale * cam_params.GetUndistortedHalfSize();
 
   // Handle the cropping
   cv::Rect cropROI;
