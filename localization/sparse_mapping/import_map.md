@@ -21,6 +21,17 @@ Run:
     astrobee/devel/lib/sparse_mapping/import_map \
       -input_map map.nvm -output_map map.map
 
+The nvm file normally stores distorted interest points which are
+shifted relative to the optical center. The import operation unshifts
+these points, undistorts them, and shifts them relative to unidstored
+image center, per Astrobee sparse map conventions.
+
+If the interest points are saved with no shift relative to the optical
+center (such as done by ``export_map -no_shift), then invoke on
+importing the ``-no_shift`` option as well. The rest of the
+operations, of undistortion and shifting relative to the undistorted
+image center will still take place.
+
 See further down about how to rebuild the imported map.
     
 # Import an nvm map made with undistorted images
