@@ -154,25 +154,27 @@ void GncCtlAutocode::Step(void) {
   VarToCtlMsg();
 
   /***** Comparison Tests *****/
-  // TestFloats(ctl_.traj_error_pos, after_ctl_.traj_error_pos, 0.000002); //correct
-  // TestTwoArrays(cmd_.traj_quat, after_cmd_.traj_quat, 4, 0.000002); //correct
-  // TestFloats(ctl_.traj_error_vel, after_ctl_.traj_error_vel, 0.000001); //correct
-  // TestFloats(ctl_.traj_error_omega, after_ctl_.traj_error_omega, 0.000001); //correct
-  // TestFloats(ctl_.traj_error_att, after_ctl_.traj_error_att, 0.000005);//There is a bug here where some of my values
-  // are opposite of what the Simulink one is. Suspicion that there is a math error
+  TestFloats("traj_error_pos", ctl_.traj_error_pos, after_ctl_.traj_error_pos, 0.000002);  // correct
+  TestTwoArrays("traj_quat", cmd_.traj_quat, after_cmd_.traj_quat, 4, 0.000002);  // error when rotating
+  TestFloats("traj_error_vel", ctl_.traj_error_vel, after_ctl_.traj_error_vel, 0.000001);  // correct
+  TestFloats("traj_error_omega", ctl_.traj_error_omega, after_ctl_.traj_error_omega, 0.000001);  // correct
+  TestFloats("traj_error_att", ctl_.traj_error_att, after_ctl_.traj_error_att, 0.000001);  // correct
 
-  // TestFloats(ctl_.ctl_status, after_ctl_.ctl_status, 0); //correct
-  // TestTwoArrays(ctl_.pos_err, after_ctl_.pos_err, 3, 0.000002); //correct
-  // TestTwoArrays(ctl_.pos_err_int, after_ctl_.pos_err_int, 3, 0.00002); //correct
+  TestFloats("ctl_status", ctl_.ctl_status, after_ctl_.ctl_status, 0);  // correct
+  TestTwoArrays("pos_err", ctl_.pos_err, after_ctl_.pos_err, 3, 0.000002);  // correct
+  TestTwoArrays("pos_err_int", ctl_.pos_err_int, after_ctl_.pos_err_int, 3, 0.00002);  // correct
 
-  // TestTwoArrays(ctl_.body_force_cmd, after_ctl_.body_force_cmd, 3, 0.000002); //maybe: not sure of margin
-  // TestTwoArrays(ctl_.body_accel_cmd, after_ctl_.body_accel_cmd, 3, 0.000002); //tbd when force_cmd is solved
+  // TestTwoArrays("body_force_cmd", ctl_.body_force_cmd, after_ctl_.body_force_cmd, 3, 0.000002);
+  // //maybe: not sure of margin
+  // TestTwoArrays("body_accel_cmd", ctl_.body_accel_cmd, after_ctl_.body_accel_cmd, 3, 0.000002);
+  // //tbd when force_cmd is solved
 
-  // TestFloats(ctl_.att_err_mag, after_ctl_.att_err_mag, 0.000002); //wrong, math error suspicion--same bug as
-  // traj_error_Att
-  // TestTwoArrays(ctl_.body_alpha_cmd, after_ctl_.body_alpha_cmd, 3, 0.000002); //tbd when att_Err_mag
-  // is solved TestTwoArrays(ctl_.body_torque_cmd, after_ctl_.body_torque_cmd, 3, 0.000002); //tbd when body_alpha_cmd
-  // is fixed
+  // TestFloats("att_err_mag", ctl_.att_err_mag, after_ctl_.att_err_mag, 0.000002);
+  // wrong, math error suspicion--same bug as traj_error_Att
+  // TestTwoArrays("body_alpha_cmd", ctl_.body_alpha_cmd, after_ctl_.body_alpha_cmd, 3, 0.000002);
+  // tbd when att_Err_mag
+  // is solved TestTwoArrays(ctl_.body_torque_cmd, after_ctl_.body_torque_cmd, 3, 0.000002);
+  // tbd when body_alpha_cmd is fixed
 
   // revert back to Simulink after my controller
   memcpy(&ctl_input_, &after_ctl_input_, sizeof(after_ctl_input_));
@@ -385,23 +387,22 @@ void GncCtlAutocode::CmdSelector() {
 }
 
 /* Testing functions */
-void GncCtlAutocode::TestFloats(const float new_float, const float old_float, float tolerance) {
+void GncCtlAutocode::TestFloats(const char* name, const float new_float, const float old_float, float tolerance) {
   float difference = old_float - new_float;
   float perc_difference = difference / old_float;
     if (fabs(difference) > tolerance) {
-     ROS_ERROR("************ERROR************\n ******************************************");
+     ROS_ERROR("%s New: %f, Old: %f, Difference: %f", name, new_float, old_float, difference);
   }
-  ROS_ERROR("New: %f, Old: %f, Difference: %f", new_float, old_float, difference);
 }
 
-void GncCtlAutocode::TestTwoArrays(const float new_array[], const float old_array[], int length, float tolerance) {
+void GncCtlAutocode::TestTwoArrays(const char* name, const float new_array[],
+                                   const float old_array[], int length, float tolerance) {
   for (int i = 0; i < length; i++) {
     float difference = old_array[i] - new_array[i];
     float perc_difference = difference / old_array[i];
     if (fabs(difference) > tolerance) {
-      ROS_ERROR("************ERROR************\n ******************************************");
+      ROS_ERROR("%s Idx: %i New: %f, Old: %f Difference: %f", name, i, new_array[i], old_array[i], difference);
     }
-    ROS_ERROR("Idx: %i New: %f, Old: %f Difference: %f", i, new_array[i], old_array[i], difference);
   }
 }
 
@@ -886,36 +887,36 @@ void GncCtlAutocode::FindPosError() {
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
 void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
-Eigen::Quaternion<float> cmd;
-cmd.w() = q_cmd[3];
-cmd.x() = q_cmd[0];
-cmd.y() = q_cmd[1];
-cmd.z() = q_cmd[2];
+  Eigen::Quaternion<float> cmd;
+  cmd.w() = q_cmd[3];
+  cmd.x() = q_cmd[0];
+  cmd.y() = q_cmd[1];
+  cmd.z() = q_cmd[2];
 
-Eigen::Quaternion<float> actual;
-actual.w() = q_actual[3];
-actual.x() = q_actual[0];
-actual.y() = q_actual[1];
-actual.z() = q_actual[2];
+  Eigen::Quaternion<float> actual;
+  actual.w() = q_actual[3];
+  actual.x() = q_actual[0];
+  actual.y() = q_actual[1];
+  actual.z() = q_actual[2];
 
-Eigen::Quaternion<float> out = actual.inverse() * cmd;
+  Eigen::Quaternion<float> out = actual.conjugate() * cmd;
 
-// enfore positive scalar
-if (out.w() < 0) {
-  out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
-}
+  // enfore positive scalar
+  if (out.w() < 0) {
+    out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+  }
 
-double mag = sqrt(pow(out.x(), 2) + pow(out.y(), 2) + pow(out.z(), 2) + pow(out.w(), 2));
-double thresh = 1E-7;
-if (mag > thresh) {
-  out.normalize();
-}
+  float mag = sqrt(out.x() * out.x() + out.y() * out.y() + out.z() * out.z() + out.w() * out.w());
+  float thresh = 1E-7;
+  if (mag > thresh) {
+    out.x() = out.x() / mag; out.y() = out.y() / mag; out.z() = out.z() / mag; out.w() = out.w() / mag;
+  }
 
-output_vec[0] = out.x();
-output_vec[1] = out.y();
-output_vec[2] = out.z();
+  output_vec[0] = out.x();
+  output_vec[1] = out.y();
+  output_vec[2] = out.z();
 
-output_scalar = fabs(acos(out.w())) * 2;
+  output_scalar = fabs(acos(out.w())) * 2;
 }
 
 // updates the position and attitude command

@@ -190,8 +190,8 @@ class GncCtlAutocode {
   void PublishCmdInput();
 
 // for testing
-  void TestTwoArrays(const float new_array[], const float old_array[], int length, float tolerance);
-  void TestFloats(const float new_float, const float oldfloat, float tolerance);
+  void TestTwoArrays(const char*, const float new_array[], const float old_array[], int length, float tolerance);
+  void TestFloats(const char*, const float new_float, const float oldfloat, float tolerance);
 };
 }  // end namespace gnc_autocode
 
