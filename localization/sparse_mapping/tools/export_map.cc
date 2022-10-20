@@ -37,8 +37,11 @@
 
 DEFINE_string(input_map, "",
               "Input sparse map file, in Astrobee's protobuf format, with .map extension.");
-DEFINE_string(output_map, "output.nvm",
+DEFINE_string(output_map, "",
               "Output sparse map in NVM format.");
+DEFINE_bool(
+  no_shift, false,
+  "Save the features without shifting them relative to the optical center. That makes visualizing them easier.");
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
@@ -49,13 +52,43 @@ int main(int argc, char** argv) {
 
   sparse_mapping::SparseMap map(FLAGS_input_map);
 
+  camera::CameraParameters camera_params = map.GetCameraParameters();
+
+  // This is very important,
+  std::cout << "Saving the nvm file with interest point matches that ";
+  if (FLAGS_no_shift)
+    std::cout << "are NOT";
+  else
+    std::cout << "ARE";
+  std::cout << " shifted relative to the optical center." << std::endl;
+
+  Eigen::Vector2d optical_center = camera_params.GetOpticalOffset();
+  Eigen::Vector2d dist_pix;
+
+  for (size_t cid = 0; cid < map.cid_to_keypoint_map_.size(); cid++) {
+    for (int fid = 0; fid < map.cid_to_keypoint_map_[cid].cols(); fid++) {
+      // Distort and de-center
+      camera_params.Convert<camera::UNDISTORTED_C, camera::DISTORTED>
+        (map.cid_to_keypoint_map_[cid].col(fid), &dist_pix);
+
+      if (!FLAGS_no_shift) {
+        // Apply the shift. The Astrobee map had the shift relative to
+        // image center, but here the shift is relative to optical
+        // center.
+        dist_pix -= optical_center;
+      }
+
+      map.cid_to_keypoint_map_[cid].col(fid) = dist_pix;
+    }
+  }
+
   std::cout << "Writing: " << FLAGS_output_map << std::endl;
   sparse_mapping::WriteNVM(map.cid_to_keypoint_map_,
                            map.cid_to_filename_,
                            map.pid_to_cid_fid_,
                            map.pid_to_xyz_,
                            map.cid_to_cam_t_global_,
-                           map.camera_params_.GetFocalLength(),
+                           camera_params.GetFocalLength(),
                            FLAGS_output_map);
 
   google::protobuf::ShutdownProtobufLibrary();

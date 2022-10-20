@@ -34,8 +34,10 @@
 
 DEFINE_string(input_map, "",
               "Input map created with undistorted images, in a text file.");
-DEFINE_string(output_map, "output.map",
+DEFINE_string(output_map, "",
               "Output sparse map as expected by Astrobee software.");
+DEFINE_bool(no_shift, false,
+            "Import the features without shifting them relative to the optical center.");
 DEFINE_bool(bundler_map, false,
             "If true, read the Bundler format. This will be ignored for input .nvm files.");
 DEFINE_string(undistorted_camera_params, "",
@@ -74,8 +76,9 @@ namespace {
     config.AddFile("cameras.config");
     if (!config.ReadFiles()) LOG(FATAL) << "Failed to read config files.\n";
 
-    camera::CameraParameters cam_params(&config, "nav_cam");
-    map.SetCameraParameters(cam_params);
+    // Save the camera parameters for the given robot.
+    camera::CameraParameters camera_params(&config, "nav_cam");
+    map.SetCameraParameters(camera_params);
 
     // Replace the undistorted images with distorted ones
     std::vector<std::string> distorted_images;
@@ -105,6 +108,9 @@ int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  if (FLAGS_input_map == "" || FLAGS_output_map == "")
+    LOG(FATAL) << "The input and output maps were not specified.\n";
+
   if (FLAGS_undistorted_images_list   == "" &&
       FLAGS_distorted_images_list     == "" &&
       FLAGS_undistorted_camera_params == "") {
@@ -117,23 +123,46 @@ int main(int argc, char** argv) {
       LOG(FATAL) << "Failed to read the robot configuration.";
       return 1;
     }
-    camera::CameraParameters cam_params(&config, "nav_cam");
+    camera::CameraParameters camera_params(&config, "nav_cam");
 
     // Create a sparse map with the given camera parameters
-    sparse_mapping::SparseMap m(std::vector<std::string>(), "SURF", cam_params);
-    sparse_mapping::ReadNVM(FLAGS_input_map, &m.cid_to_keypoint_map_,
-                            &m.cid_to_filename_, &m.pid_to_cid_fid_,
-                            &m.pid_to_xyz_, &m.cid_to_cam_t_global_);
+    sparse_mapping::SparseMap map(std::vector<std::string>(), "SURF", camera_params);
+    sparse_mapping::ReadNVM(FLAGS_input_map, &map.cid_to_keypoint_map_,
+                            &map.cid_to_filename_, &map.pid_to_cid_fid_,
+                            &map.pid_to_xyz_, &map.cid_to_cam_t_global_);
+
+    Eigen::Vector2d optical_center = camera_params.GetOpticalOffset();
+    Eigen::Vector2d dist_pix, undist_pix;
+
+    for (size_t cid = 0; cid < map.cid_to_keypoint_map_.size(); cid++) {
+      Eigen::Vector2d dist_pix;
+      for (int fid = 0; fid < map.cid_to_keypoint_map_[cid].cols(); fid++) {
+        dist_pix = map.cid_to_keypoint_map_[cid].col(fid);
+
+        if (!FLAGS_no_shift) {
+          // Undo the shift relative to the optical center
+          dist_pix += optical_center;
+        }
+
+        // Undistort and center. Write the result to the map.
+        camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>
+          (dist_pix, &undist_pix);
+        map.cid_to_keypoint_map_[cid].col(fid) = undist_pix;
+      }
+    }
 
     // Descriptors are not saved, so let them be empty
-    m.cid_to_descriptor_map_.resize(m.cid_to_keypoint_map_.size());
+    map.cid_to_descriptor_map_.resize(map.cid_to_keypoint_map_.size());
 
-    m.Save(FLAGS_output_map);
+    map.Save(FLAGS_output_map);
 
     google::protobuf::ShutdownProtobufLibrary();
 
     return 0;
   }
+
+  if (FLAGS_no_shift)
+    LOG(FATAL) << "The --no_shift option does not work with undistorted images.\n";
 
   // Read the images from a list file or individually specified on the command line
   std::vector<std::string> undist_images;
@@ -156,11 +185,16 @@ int main(int argc, char** argv) {
     double widx = vals[0], widy = vals[1], f = vals[2], cx = vals[3], cy = vals[4];
     LOG(INFO) << "Using undistorted camera parameters: "
               << widx << ' ' << widy << ' ' << f << ' ' << cx << ' ' << cy;
-    camera::CameraParameters cam_params = camera::CameraParameters(Eigen::Vector2i(widx, widy),
-                                                                   Eigen::Vector2d::Constant(f),
-                                                                   Eigen::Vector2d(cx, cy));
-    map.SetCameraParameters(cam_params);
+
+    // Save the undistorted params in the map
+    camera::CameraParameters camera_params
+      = camera::CameraParameters(Eigen::Vector2i(widx, widy),
+                                 Eigen::Vector2d::Constant(f),
+                                 Eigen::Vector2d(cx, cy));
+    map.SetCameraParameters(camera_params);
+
   } else {
+    // Replace the images and robot camera params with distorted (original) ones
     replaceWithDistortedImages(undist_images, FLAGS_distorted_images_list, map);
   }
 
