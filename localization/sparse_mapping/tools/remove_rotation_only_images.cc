@@ -21,6 +21,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <sparse_mapping/ransac.h>
+#include <sparse_mapping/tensor.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/utilities.h>
 
@@ -34,6 +35,7 @@
 namespace fs = boost::filesystem;
 namespace lc = localization_common;
 namespace po = boost::program_options;
+namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
 boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
@@ -49,77 +51,56 @@ boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_imag
   return matches;
 }
 
-Eigen::Matrix3d Rotation(const std::vector<Eigen::Vector3d>& points_a, const std::vector<Eigen::Vector3d>& points_b) {
-  Eigen::Vector3d points_a_mean(Eigen::Vector3d::Zero());
-  Eigen::Vector3d points_b_mean(Eigen::Vector3d::Zero());
-  for (int i = 0; i < static_cast<int>(points_a.size()); ++i) {
-    points_a_mean += points_a[i];
-    points_b_mean += points_b[i];
-  }
-  points_a_mean /= static_cast<double>(points_a.size());
-  points_b_mean /= static_cast<double>(points_b.size());
-
-  Eigen::Matrix3d covariance(Eigen::Matrix3d::Zero());
-  for (int i = 0; i < static_cast<int>(points_a.size()); ++i) {
-    const Eigen::Vector3d point_a_mean_centered = points_a[i] - points_a_mean;
-    const Eigen::Vector3d point_b_mean_centered = points_b[i] - points_b_mean;
-    covariance += point_a_mean_centered * point_b_mean_centered.transpose();
-  }
-
-  Eigen::JacobiSVD<Eigen::Matrix3d> svd(covariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Eigen::Matrix3d rotation = svd.matrixU() * svd.matrixV().transpose();
-  if (rotation.determinant() < 0) rotation *= -1.0;
-  return rotation;
-}
-
-struct RotationFittingFunctor {
-  using result_type = Eigen::Matrix3d;
-  size_t min_elements_needed_for_fit() const { return 3; }
-  result_type operator()(const std::vector<Eigen::Vector3d>& points_a,
-                         const std::vector<Eigen::Vector3d>& points_b) const {
-    // TODO(rsoussan): Transpose here??
-    return Rotation(points_a, points_b).transpose();
-  }
-};
-
-struct RotationError {
-  double operator()(const Eigen::Matrix3d& rotation, const Eigen::Vector3d& point_a,
-                    const Eigen::Vector3d& point_b) const {
-    // TODO(rsoussan): is rotation frame correct here?
-    return (1.0 - (rotation * point_a).dot(point_b));
-  }
-};
-
-using RansacEstimateRotation = sparse_mapping::RandomSampleConsensus<RotationFittingFunctor, RotationError>;
-
-bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
-                               const double rotation_inlier_threshold, const double min_percent_rotation_inliers) {
-  // Backproject with unit depth
-  std::vector<Eigen::Vector3d> backprojected_points_a;
-  std::vector<Eigen::Vector3d> backprojected_points_b;
-  const Eigen::Matrix3d intrinsics = camera_params.GetIntrinsicMatrix<camera::DISTORTED>();
-  for (const auto& match : matches) {
+Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
+                                 std::vector<cv::DMatch>& inliers) {
+  Eigen::Matrix2Xd source_image_points(2, matches.size());
+  Eigen::Matrix2Xd target_image_points(2, matches.size());
+  std::vector<cv::DMatch> cv_matches;
+  for (int i = 0; i < matches.size(); ++i) {
+    const auto& match = matches[i];
     Eigen::Vector2d undistorted_source_point;
     Eigen::Vector2d undistorted_target_point;
     camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(match.source_point, &undistorted_source_point);
     camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(match.target_point, &undistorted_target_point);
-    backprojected_points_a.emplace_back(vc::Backproject(undistorted_source_point, intrinsics, 1.0));
-    backprojected_points_b.emplace_back(vc::Backproject(undistorted_target_point, intrinsics, 1.0));
+    source_image_points.col(i) = undistorted_source_point;
+    target_image_points.col(i) = undistorted_target_point;
+    cv_matches.emplace_back(cv::DMatch(i, i, i, 0));
   }
 
-  const int num_iterations = 1000;
-  const int min_num_output_inliers = matches.size() / 2;
-  const bool reduce_min_num_output_inliers_if_no_fit = false;
-  const bool increase_threshold_if_no_fit = false;
-  RansacEstimateRotation ransac(RotationFittingFunctor(), RotationError(), num_iterations, rotation_inlier_threshold,
-                                min_num_output_inliers, reduce_min_num_output_inliers_if_no_fit,
-                                increase_threshold_if_no_fit);
-  const Eigen::Matrix3d rotation = ransac(backprojected_points_a, backprojected_points_b);
-  LogError("rotation: " << rotation.matrix());
-  const auto inlier_indices = ransac.inlier_indices(rotation, backprojected_points_a, backprojected_points_b);
-  const double percent_inliers = static_cast<double>(inlier_indices.size()) / static_cast<double>(matches.size());
-  LogError("percent inliers: " << percent_inliers);
-  return percent_inliers >= min_percent_rotation_inliers;
+
+  std::mutex mutex;
+  sm::CIDPairAffineMap affines;
+  std::vector<cv::DMatch> inlier_matches;
+  sm::BuildMapFindEssentialAndInliers(source_image_points, target_image_points, cv_matches, camera_params, false, 0, 0,
+                                      &mutex, &affines, &inlier_matches, false, nullptr);
+}
+
+bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
+                               const double rotation_inlier_threshold, const double min_percent_rotation_inliers) {
+  std::vector<cv::DMatch> inliers;
+  // TODO(rsoussan): is affine3d scaled?
+  // TODO(rsoussan): source_T_target or target_T_source??
+  const auto source_T_target = EstimateAffine3d(matches, camera_params, inliers);
+  // TODO(rsoussan): check rotation inlier percentage! make sure small enough!
+  const Eigen::Matrix3d source_R_target = source_T_target.linear();
+  const Eigen::Isometry3d target_T_source_rotation_only =
+    lc::Isometry3d(Eigen::Vector3d::Zero(), source_R_target.transpose());
+  // TODO(rsoussan): undistorted here?
+  const Eigen::Matrix3d intrinsics = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED>();
+  double total_error = 0;
+  for (const auto& inlier_match : inliers) {
+    const auto& match = matches[inlier_match.imgIdx];
+    const Eigen::Vector2d& source_point = match.source_point;
+    Eigen::Vector2d undistorted_source_point;
+    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(source_point, &undistorted_source_point);
+    const auto source_t_source_point = vc::Backproject(undistorted_source_point, intrinsics, 1.0);
+    const Eigen::Vector3d target_t_source_point = target_T_source_rotation_only*source_t_source_point;
+    const Eigen::Vector2d projected_source_point = vc::Project(target_t_source_point, intrinsics);
+    const double error = (projected_source_point - match.target_point).norm();
+    total_error += error;
+  }
+  const double mean_error = total_error/static_cast<double>(inliers.size());
+  return mean_error < rotation_inlier_threshold;
 }
 
 vc::FeatureImage LoadImage(const int index, const std::vector<std::string>& image_names, cv::Feature2D& detector) {
