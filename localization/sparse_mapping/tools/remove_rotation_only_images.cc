@@ -70,9 +70,10 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
 
   std::mutex mutex;
   sm::CIDPairAffineMap affines;
-  std::vector<cv::DMatch> inlier_matches;
   sm::BuildMapFindEssentialAndInliers(source_image_points, target_image_points, cv_matches, camera_params, false, 0, 0,
-                                      &mutex, &affines, &inlier_matches, false, nullptr);
+                                      &mutex, &affines, &inliers, false, nullptr);
+  const Eigen::Affine3d source_T_target = affines[std::make_pair(0, 0)];
+  return source_T_target;
 }
 
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
@@ -97,9 +98,12 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     const Eigen::Vector3d target_t_source_point = target_T_source_rotation_only*source_t_source_point;
     const Eigen::Vector2d projected_source_point = vc::Project(target_t_source_point, intrinsics);
     const double error = (projected_source_point - match.target_point).norm();
+    // TODO(rsoussan): check error with triangulating and projected with full trafo! make sure this works!
     total_error += error;
   }
   const double mean_error = total_error/static_cast<double>(inliers.size());
+  static int count = 0;
+  std::cout << "img: " << count++ << ", num inliers: " << inliers.size() << ", mean error: " << mean_error << std::endl;
   return mean_error < rotation_inlier_threshold;
 }
 
