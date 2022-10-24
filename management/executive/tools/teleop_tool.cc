@@ -65,6 +65,7 @@ DEFINE_double(collision_distance, -1.0, "Desired collision distance");
 DEFINE_int32(berth, 1, "Berth to dock in");
 
 DEFINE_string(att, "", "Desired attitude in angle-axis format 'angle X Y Z'");
+DEFINE_string(set_check_zones, "", "Enable keepout zone checking");
 DEFINE_string(set_face_forward, "", "Plan in face-forward mode, on or off");
 DEFINE_string(mode, "", "Flight mode");
 DEFINE_string(ns, "", "Robot namespace");
@@ -72,8 +73,8 @@ DEFINE_string(set_planner, "", "Path planning algorithm");
 DEFINE_string(pos, "", "Desired position in cartesian format 'X Y Z'");
 
 bool get_face_forward, get_op_limits, get_planner, get_state, get_faults;
-bool reset_bias, reset_ekf, set_face_forward, set_planner, set_op_limits;
-bool send_mob_command, mob_command_finished;
+bool reset_bias, reset_ekf, set_check_zones, set_face_forward, set_planner;
+bool set_op_limits, send_mob_command, mob_command_finished;
 
 geometry_msgs::TransformStamped tfs;
 
@@ -83,8 +84,9 @@ uint8_t modeMove = 0, modeGetInfo = 0;
 
 bool Finished() {
   if (!get_face_forward && !get_op_limits && !get_planner && !get_state &&
-      !get_faults && !reset_bias && !reset_ekf && !set_face_forward &&
-      !set_planner && !set_op_limits && mob_command_finished) {
+      !get_faults && !reset_bias && !reset_ekf && !set_check_zones &&
+      !set_face_forward && !set_planner && !set_op_limits &&
+      mob_command_finished) {
     return true;
   }
 
@@ -396,6 +398,30 @@ bool SendResetEkf() {
   return true;
 }
 
+bool SendSetCheckZones() {
+  ff_msgs::CommandStamped cmd;
+  cmd.header.stamp = ros::Time::now();
+  cmd.subsys_name = "Astrobee";
+
+  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_CHECK_ZONES;
+  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_SET_CHECK_ZONES;
+
+  // Set check zones has one argument
+  cmd.args.resize(1);
+  cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_BOOL;
+  if (FLAGS_set_check_zones == "on") {
+    cmd.args[0].b = true;
+  } else {
+    cmd.args[0].b = false;
+  }
+
+  cmd_pub.publish(cmd);
+  // Change to false so we don't send the command again
+  set_check_zones = false;
+  std::cout << "\nSetting check zones.\n";
+  return true;
+}
+
 bool SendSetFaceForward() {
   ff_msgs::CommandStamped cmd;
   cmd.header.stamp = ros::Time::now();
@@ -507,7 +533,11 @@ bool SendNextCommand() {
     return SendResetEkf();
   }
 
-  // Sending the mobility setting is the next thing we should do
+  // Sending the mobility settings is the next thing we should do
+  if (set_check_zones) {
+    return SendSetCheckZones();
+  }
+
   if (set_face_forward) {
     return SendSetFaceForward();
   }
@@ -609,6 +639,7 @@ int main(int argc, char** argv) {
   get_faults =  FLAGS_get_faults;
   reset_bias = FLAGS_reset_bias;
   reset_ekf = FLAGS_reset_ekf;
+  set_check_zones = false;
   set_face_forward = false;
   set_planner = false;
   set_op_limits = FLAGS_set_op_limits;
@@ -627,6 +658,7 @@ int main(int argc, char** argv) {
   if (FLAGS_get_faults) modeGetInfo++;
   if (FLAGS_reset_bias) modeGetInfo++;
   if (FLAGS_reset_ekf) modeGetInfo++;
+  if (FLAGS_set_check_zones != "") modeGetInfo++;
   if (FLAGS_set_planner != "") modeGetInfo++;
   if (FLAGS_set_face_forward != "") modeGetInfo++;
   if (FLAGS_set_op_limits) modeGetInfo++;
@@ -662,6 +694,16 @@ int main(int argc, char** argv) {
       std::cout << "accel, alpha, omega, and vel flag.\n\n";
       return 1;
     }
+  }
+
+  // Check to see if the user specified check zones
+  if (FLAGS_set_check_zones != "") {
+    if (FLAGS_set_check_zones != "on" &&
+      FLAGS_set_check_zones != "off") {
+      std::cout << "The check zones flag must be on or off.\n\n";
+      return 1;
+    }
+    set_check_zones = true;
   }
 
   // Check to see if the user specified face forward mode
