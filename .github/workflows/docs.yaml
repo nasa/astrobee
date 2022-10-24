@@ -20,48 +20,16 @@ jobs:
       with:
         path: docs/
         ref: gh-pages
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y bison
-        sudo apt-get install -y flex
-        sudo apt-get install -y graphviz
-        sudo apt-get install -y python-setuptools
-    - name: Install doxygen
-      run: |
-        wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.20.src.tar.gz'
-        tar -zxvf doxygen-1.8.20.src.tar.gz
-        cd doxygen-1.8.20
-        mkdir build
-        cd build
-        cmake -G "Unix Makefiles" ..
-        make
-        sudo make install
-    - name: install xgds_planner2
-      run: |
-        sudo pip install iso8601
-        sudo pip install "django<2"
-        git clone https://github.com/geocam/geocamUtilWeb.git
-        cd geocamUtilWeb
-        sudo python setup.py install
-        cd ..
-        git clone https://github.com/xgds/xgds_planner2.git
-        cd xgds_planner2
-        sudo python setup.py install
-    - name: Generating command dictionary documentation
-      run: |
-        cd repo
-        mkdir doc/html
-        ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
-    - name: Build Documentation
-      run: |
-        cd repo/doc/diagrams/ && make && cd ../..
-        doxygen astrobee.doxyfile
-        cd ..
+    - name: Build docker image with dependencies + build docs
+      run: docker build repo -f repo/scripts/docker/documentation.Dockerfile
+                                 -t astrobee:documentation
+
     - name: Replace old documentation with new
       run: |
         [ -d docs ] || mkdir docs
         [ -d docs/html ] && rm -r docs/html
-        cp -r repo/doc/html docs
+        docker cp $(docker create --rm astrobee:documentation):/repo/doc/html docs/html
+
     - name: Commit and Push
       run: |
         cd docs
