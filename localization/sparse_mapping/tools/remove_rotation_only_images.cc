@@ -40,8 +40,7 @@ namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
 // TODO(rsoussan): remove this
-boost::optional<vc::FeatureImage> img1;
-boost::optional<vc::FeatureImage> img2;
+cv::Mat kImg;
 
 // TODO(rsoussan): put this in somewhere common
 cv::Point2f CvPoint2(const Eigen::Vector2d& point) { return cv::Point2f(point.x(), point.y()); }
@@ -108,8 +107,8 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   double total_rotation_corrected_error = 0;
   double total_optical_flow_error = 0;
   int good_triangulation_count = 0;
-  cv::Mat projection_img = img2->image().clone();
-  cv::Mat same_img = img2->image().clone();
+  cv::Mat projection_img;
+  cv::cvtColor(kImg.clone(), projection_img, cv::COLOR_GRAY2RGB);
   for (const auto& inlier_match : inliers) {
     const auto& match = matches[inlier_match.imgIdx];
     const Eigen::Vector2d& source_point = match.source_point;
@@ -126,14 +125,14 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     total_rotation_corrected_error += error;
     total_optical_flow_error += (match.source_point - match.target_point).norm();
     {
-      cv::circle(projection_img, CvPoint2(match.target_point), 1, cv::Scalar(0, 255, 0), -1, 8);
+      cv::circle(projection_img, CvPoint2(match.target_point), 1, cv::Scalar(255, 255, 255), -1, 8);
       Eigen::Vector2d distorted_projected_source_point;
       camera_params.Convert<camera::UNDISTORTED, camera::DISTORTED>(projected_source_point,
                                                                     &distorted_projected_source_point);
 
-      cv::circle(projection_img, CvPoint2(distorted_projected_source_point), 1, cv::Scalar(255, 0, 0), -1, 8);
+      cv::circle(projection_img, CvPoint2(distorted_projected_source_point), 1, cv::Scalar(255, 255, 255), -1, 8);
       cv::line(projection_img, CvPoint2(distorted_projected_source_point), CvPoint2(match.target_point),
-               cv::Scalar(255, 0, 0), 2, 8, 0);
+               cv::Scalar(255, 255, 255), 2, 8, 0);
     }
   }
 
@@ -141,26 +140,31 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const double mean_rotation_corrected_error = total_rotation_corrected_error / size;
   const double mean_optical_flow_error = total_optical_flow_error / size;
   const double error_ratio = mean_rotation_corrected_error / mean_optical_flow_error;
+  const bool remove_image = error_ratio < min_rotation_error_ratio;
   static int count = 0;
-  std::cout << "img: " << count++ << ", num inliers: " << inliers.size()
+  if (remove_image) std::cout << "Remove Image!" << std::endl;
+  std::cout << "img: " << count++ << ", num inliers: " << inliers.size() << ", ratio: " << error_ratio
             << ", mean rot error: " << mean_rotation_corrected_error << ", mean of error: " << mean_optical_flow_error
             << std::endl;
-
   {
     // Scale color to be more white for a lower error ratio
-    const int color = 20.0 / error_ratio;
+    // TODO(rsoussan): Use color image! Make red if above threshold!
+    const int color = 50.0 / error_ratio;
     cv::putText(projection_img,
                 "ratio: " + std::to_string(error_ratio) + ", rot: " + std::to_string(mean_rotation_corrected_error) +
                   ", of: " + std::to_string(mean_optical_flow_error),
-                cv::Point(projection_img.cols / 2 - 200, projection_img.rows - 20), CV_FONT_NORMAL, 0.5,
+                cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), CV_FONT_NORMAL, 0.9,
                 CV_RGB(color, color, color), 4, cv::LINE_AA);
-    cv::namedWindow("ratio_image");
-    cv::moveWindow("ratio_image", 0, 0);
-    cv::imshow("ratio_image", projection_img);
+    if (remove_image)
+      cv::putText(projection_img, "Remove!", cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 20),
+                  CV_FONT_NORMAL, 0.5, CV_RGB(color, color, color), 4, cv::LINE_AA);
+    cv::Mat resized_projection_img;
+    cv::resize(projection_img, resized_projection_img, cv::Size(projection_img.cols * 2, projection_img.rows * 2));
+    cv::imshow("ratio_image", resized_projection_img);
     cv::waitKey(0);
   }
 
-  return error_ratio < min_rotation_error_ratio;
+  return remove_image;
 }
 
 // TODO(rsoussan): put this in somwhere common
@@ -203,14 +207,11 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
   int next_image_index = 1;
   auto current_image = LoadImage(current_image_index, image_names, detector);
   auto next_image = LoadImage(next_image_index, image_names, detector);
-  img1 = current_image;
-  img2 = next_image;
   int num_removed_images = 0;
   while (current_image_index < image_names.size()) {
     bool removed_rotation_sequence = false;
     while (next_image_index < image_names.size()) {
-      img1 = current_image;
-      img2 = next_image;
+      kImg = next_image.image().clone();
       const auto matches = Matches(current_image, next_image, detector_and_matcher);
       if (matches && RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold,
                                                min_relative_pose_inliers_ratio)) {
