@@ -24,6 +24,7 @@
 #include <sparse_mapping/tensor.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/utilities.h>
+#include <gtsam/geometry/triangulation.h>
 
 #include <glog/logging.h>
 
@@ -38,6 +39,14 @@ namespace po = boost::program_options;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
+// TODO(rsoussan): remove this
+boost::optional<vc::FeatureImage> img1;
+boost::optional<vc::FeatureImage> img2;
+
+// TODO(rsoussan): put this in somewhere common
+cv::Point2f CvPoint2(const Eigen::Vector2d& point) { return cv::Point2f(point.x(), point.y()); }
+
+// TODO(rsoussan): put this in somewhere common
 boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
                                             vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
   const auto& matches = detector_and_matcher.Match(current_image, next_image);
@@ -51,6 +60,7 @@ boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_imag
   return matches;
 }
 
+// TODO(rsoussan): put this in somewhere common?
 Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
                                  std::vector<cv::DMatch>& inliers) {
   Eigen::Matrix2Xd source_image_points(2, matches.size());
@@ -60,53 +70,133 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
     const auto& match = matches[i];
     Eigen::Vector2d undistorted_source_point;
     Eigen::Vector2d undistorted_target_point;
-    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(match.source_point, &undistorted_source_point);
-    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(match.target_point, &undistorted_target_point);
+    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.source_point, &undistorted_source_point);
+    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.target_point, &undistorted_target_point);
     source_image_points.col(i) = undistorted_source_point;
     target_image_points.col(i) = undistorted_target_point;
     cv_matches.emplace_back(cv::DMatch(i, i, i, 0));
   }
 
-
   std::mutex mutex;
   sm::CIDPairAffineMap affines;
   sm::BuildMapFindEssentialAndInliers(source_image_points, target_image_points, cv_matches, camera_params, false, 0, 0,
                                       &mutex, &affines, &inliers, false, nullptr);
-  const Eigen::Affine3d source_T_target = affines[std::make_pair(0, 0)];
-  return source_T_target;
+  const Eigen::Affine3d target_T_source = affines[std::make_pair(0, 0)];
+  return target_T_source.inverse();
 }
 
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
-                               const double rotation_inlier_threshold, const double min_percent_rotation_inliers) {
+                               const double min_rotation_error_ratio, const double min_relative_pose_inliers_ratio) {
+  if (matches.size() < 10) {
+    std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
+    return false;
+  }
   std::vector<cv::DMatch> inliers;
-  // TODO(rsoussan): is affine3d scaled?
-  // TODO(rsoussan): source_T_target or target_T_source??
   const auto source_T_target = EstimateAffine3d(matches, camera_params, inliers);
-  // TODO(rsoussan): check rotation inlier percentage! make sure small enough!
+  const double relative_pose_inliers_ratio = static_cast<double>(inliers.size()) / static_cast<double>(matches.size());
+  if (relative_pose_inliers_ratio < min_relative_pose_inliers_ratio) {
+    std::cout << "Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
+              << ", ratio: " << relative_pose_inliers_ratio << ", threshold: " << min_relative_pose_inliers_ratio
+              << std::endl;
+    return false;
+  }
   const Eigen::Matrix3d source_R_target = source_T_target.linear();
   const Eigen::Isometry3d target_T_source_rotation_only =
     lc::Isometry3d(Eigen::Vector3d::Zero(), source_R_target.transpose());
-  // TODO(rsoussan): undistorted here?
   const Eigen::Matrix3d intrinsics = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED>();
   double total_error = 0;
+  double total_optical_flow_error = 0;
+  int good_triangulation_count = 0;
+  cv::Mat projection_img = img2->image().clone();
+  cv::Mat same_img = img2->image().clone();
   for (const auto& inlier_match : inliers) {
     const auto& match = matches[inlier_match.imgIdx];
     const Eigen::Vector2d& source_point = match.source_point;
     Eigen::Vector2d undistorted_source_point;
     camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(source_point, &undistorted_source_point);
+    /*{
+      Eigen::Vector2d undistorted_target_point;
+      camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED>(match.target_point, &undistorted_target_point);
+      std::vector<gtsam::Pose3> poses;
+      poses.emplace_back(gtsam::Pose3());
+      poses.emplace_back(lc::GtPose(Eigen::Isometry3d(source_T_target.matrix())));
+      std::vector<gtsam::Point2> measurements;
+      measurements.emplace_back(undistorted_source_point);
+      measurements.emplace_back(undistorted_target_point);
+      const auto calibration = boost::make_shared<gtsam::Cal3_S2>(intrinsics(0, 0), intrinsics(1, 1), 0, intrinsics(0,
+    2), intrinsics(1, 2)); Eigen::Vector3d source_t_point; try { source_t_point = gtsam::triangulatePoint3(poses,
+    calibration, measurements);
+      }
+      catch(...){
+        std::cout << "Bad triangulation!" << std::endl;
+        continue;
+      }
+      const Eigen::Vector2d projected_source_point = vc::Project(source_t_point, intrinsics);
+      const double error = (projected_source_point - match.source_point).norm();
+      // TODO(rsoussan): check error with triangulating and projected with full trafo! make sure this works!
+      std::cout << "Good triangulation! error: " << error << std::endl;
+      ++good_triangulation_count;
+      total_error += error;
+    }*/
     const auto source_t_source_point = vc::Backproject(undistorted_source_point, intrinsics, 1.0);
-    const Eigen::Vector3d target_t_source_point = target_T_source_rotation_only*source_t_source_point;
+    const Eigen::Vector3d target_t_source_point = target_T_source_rotation_only * source_t_source_point;
     const Eigen::Vector2d projected_source_point = vc::Project(target_t_source_point, intrinsics);
-    const double error = (projected_source_point - match.target_point).norm();
-    // TODO(rsoussan): check error with triangulating and projected with full trafo! make sure this works!
+    Eigen::Vector2d distorted_projected_source_point;
+    camera_params.Convert<camera::UNDISTORTED, camera::DISTORTED>(projected_source_point,
+                                                                  &distorted_projected_source_point);
+    // Compute error in distorted space since distorting a point is more accurate than undistorting it
+    const double error = (distorted_projected_source_point - match.target_point).norm();
     total_error += error;
+    total_optical_flow_error += (match.source_point - match.target_point).norm();
+    {
+      cv::circle(projection_img, CvPoint2(match.target_point), 1, cv::Scalar(0, 255, 0), -1, 8);
+      Eigen::Vector2d distorted_projected_source_point;
+      camera_params.Convert<camera::UNDISTORTED, camera::DISTORTED>(projected_source_point,
+                                                                    &distorted_projected_source_point);
+
+      cv::circle(projection_img, CvPoint2(distorted_projected_source_point), 1, cv::Scalar(255, 0, 0), -1, 8);
+      cv::line(projection_img, CvPoint2(distorted_projected_source_point), CvPoint2(match.target_point),
+               cv::Scalar(255, 0, 0), 2, 8, 0);
+    }
+    /*{
+    cv::circle(same_img, CvPoint2(match.target_point), 1, cv::Scalar(0, 255, 0), -1, 8);
+    cv::circle(same_img, CvPoint2(match.source_point), 1, cv::Scalar(255, 0, 0), -1, 8);
+    cv::line(same_img, CvPoint2(match.source_point), CvPoint2(match.target_point), cv::Scalar(255, 0, 0), 2, 8, 0);
+    }*/
   }
-  const double mean_error = total_error/static_cast<double>(inliers.size());
+
+  const double size = static_cast<double>(inliers.size());
+  const double mean_error = total_error / size;
+  const double mean_optical_flow_error = total_optical_flow_error / size;
+  const double error_ratio = mean_error / mean_optical_flow_error;
   static int count = 0;
-  std::cout << "img: " << count++ << ", num inliers: " << inliers.size() << ", mean error: " << mean_error << std::endl;
-  return mean_error < rotation_inlier_threshold;
+  std::cout << "img: " << count++ << ", num inliers: " << inliers.size() << ", mean error: " << mean_error
+            << ", mean of error: " << mean_optical_flow_error << std::endl;
+
+  {
+    // Scale color to be more white for a lower error ratio
+    const int color = 20.0 / error_ratio;
+    cv::putText(projection_img, "error_ratio: " + std::to_string(error_ratio) + ", proj: " + std::to_string(mean_error),
+                cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 20), CV_FONT_NORMAL, 1,
+                CV_RGB(color, color, color), 4, cv::LINE_AA);
+    /*cv::putText(same_img, "of: " + std::to_string(mean_optical_flow_error),
+                cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 20), CV_FONT_NORMAL, 1,
+                CV_RGB(255, 255, 255), 4, cv::LINE_AA);
+    cv::Mat detection_img1;
+    cv::Mat detection_img2;
+    cv::drawKeypoints(img1->image(), img1->keypoints(), detection_img1);
+    cv::drawKeypoints(img2->image(), img2->keypoints(), detection_img2);
+    imgs.emplace_back(projection_img);*/
+    cv::namedWindow("combined");
+    cv::moveWindow("combined", 0, 0);
+    cv::imshow("combined", projection_img);
+    cv::waitKey(0);
+  }
+
+  return error_ratio < min_rotation_error_ratio;
 }
 
+// TODO(rsoussan): put this in somwhere common
 vc::FeatureImage LoadImage(const int index, const std::vector<std::string>& image_names, cv::Feature2D& detector) {
   auto image = cv::imread(image_names[index], cv::IMREAD_GRAYSCALE);
   if (image.empty()) LogFatal("Failed to load image " << image_names[index]);
@@ -115,6 +205,7 @@ vc::FeatureImage LoadImage(const int index, const std::vector<std::string>& imag
   return vc::FeatureImage(image, detector);
 }
 
+// TODO(rsoussan): put this in somewhere common
 vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   vc::LKOpticalFlowFeatureDetectorAndMatcherParams params;
   // TODO(rsoussan): Add config file for these
@@ -135,7 +226,7 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
 }
 
 int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const camera::CameraParameters& camera_params,
-                             const double rotation_inlier_threshold, const double min_percent_rotation_inliers) {
+                             const double rotation_inlier_threshold, const double min_relative_pose_inliers_ratio) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
   auto& detector = *(detector_and_matcher.detector());
@@ -145,15 +236,21 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
   int next_image_index = 1;
   auto current_image = LoadImage(current_image_index, image_names, detector);
   auto next_image = LoadImage(next_image_index, image_names, detector);
+  img1 = current_image;
+  img2 = next_image;
   int num_removed_images = 0;
   while (current_image_index < image_names.size()) {
     bool removed_rotation_sequence = false;
     while (next_image_index < image_names.size()) {
+      img1 = current_image;
+      img2 = next_image;
       const auto matches = Matches(current_image, next_image, detector_and_matcher);
-      if (matches &&
-          RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold, min_percent_rotation_inliers)) {
+      if (matches && RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold,
+                                               min_relative_pose_inliers_ratio)) {
         LogDebug("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
-        std::remove((image_names[next_image_index]).c_str());
+        // std::remove((image_names[next_image_index]).c_str());
+        std::string new_name = "removed/" + image_names[next_image_index];
+        std::rename((image_names[next_image_index]).c_str(), new_name.c_str());
         ++num_removed_images;
         current_image = next_image;
         current_image_index = next_image_index;
@@ -175,6 +272,7 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
   return num_removed_images;
 }
 
+// TODO(rsoussan): put this in somwhere common
 std::vector<std::string> GetImageNames(const std::string& image_directory,
                                        const std::string& image_extension = ".jpg") {
   std::vector<std::string> image_names;
@@ -189,23 +287,20 @@ std::vector<std::string> GetImageNames(const std::string& image_directory,
 
 int main(int argc, char** argv) {
   double max_low_movement_mean_distance;
-  double rotation_inlier_threshold;
-  double min_percent_rotation_inliers;
+  double min_rotation_error_ratio;
+  double min_relative_pose_inliers_ratio;
   std::string robot_config_file;
-  po::options_description desc(
-    "Removes any rotation only image sequences. Splits images into subdirectories when a sequence is removed.");
+  po::options_description desc("Removes any rotation only image sequences.");
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--rotation-inlier-threshold,t", po::value<double>(&rotation_inlier_threshold)->default_value(0.01),
-    "Threshold for a point to be an inlier for the RANSAC rotation estimate. Computed using the dot "
-    "product of the rotated point and matching point, so perfect alignment yields a value of 0 and "
-    "the worst aligment yields a value of 1."
-    "sequential images to be classified as a rotation only pair.")(
-    "--min-rotation-only-inliers-percent,p", po::value<double>(&min_percent_rotation_inliers)->default_value(0.95),
-    "Min percent of matches that are inliers to rotation only movement between "
-    "sequential images to be classified as a rotation only pair.")("config-path,c",
-                                                                   po::value<std::string>()->required(), "Config path")(
+    "--min-rotation-error-ratio,r", po::value<double>(&min_rotation_error_ratio)->default_value(1e-9),
+    "Minimum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
+    "of images to be considered rotation only movement. The lower the ratio, the more the rotation fully explains "
+    "the movement between the images.")(
+    "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.95),
+    "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
+    "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "robot config file");
   po::positional_options_description p;
@@ -250,6 +345,6 @@ int main(int argc, char** argv) {
 
   const int num_original_images = image_names.size();
   const int num_removed_images =
-    RemoveRotationOnlyImages(image_names, camera_parameters, rotation_inlier_threshold, min_percent_rotation_inliers);
+    RemoveRotationOnlyImages(image_names, camera_parameters, min_rotation_error_ratio, min_relative_pose_inliers_ratio);
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
 }
