@@ -28,7 +28,8 @@
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
   <arg name="extra" default=""/>                <!-- Inject additional node  -->
   <arg name="debug" default=""/>                <!-- Debug node group        -->
-  <arg name="physics" default="ode"/>           <!-- Physics engine          -->
+  <!-- Physics engine options: ode (gazebo default), bullet, simbody, dart   -->
+  <arg name="physics" default="bullet"/>
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
