@@ -19,6 +19,8 @@
 #ifndef GNC_AUTOCODE_CTL_H_
 #define GNC_AUTOCODE_CTL_H_
 
+#include <Eigen/Dense>
+
 extern "C" {
 #include <ctl_controller0.h>
 }
@@ -30,6 +32,7 @@ namespace config_reader {
 // constants from here:
 // https://github.com/nasa/astrobee/blob/master/gnc/matlab/code_generation/ctl_controller0_ert_rtw/ctl_controller0_data.cpp
 namespace constants {
+  // TODO: load
 const unsigned int ase_status_converged = 0U;
 const unsigned int ctl_idle_mode = 0U;
 const unsigned int ctl_stopping_mode = 1U;
@@ -42,7 +45,7 @@ const auto tun_ctl_stopped_pos_thresh = 0.1F;
 const auto tun_ctl_stopped_quat_thresh = 0.174533F;
 const auto tun_ctl_pos_sat_upper = 0.1F;
 const auto tun_ctl_pos_sat_lower = -0.1F;
-const float tun_accel_gain[3] = {1.0F, 1.0F, 1.0F};
+Eigen::Vector3f tun_accel_gain;
 const float tun_ctl_linear_force_limit = 100.0F;
 const float tun_ctl_att_sat_upper = 0.5F;
 const float tun_ctl_att_sat_lower = -0.5F;
@@ -86,40 +89,36 @@ class GncCtlAutocode {
   // Simulink outports
   // cex_control_executive
   float att_command[4];
-  float position_command[3];
   float ctl_status;
-  float velocity_command[3];
   float omega_command[3];
-  float accel_command[3];
   float alpha_command[3];
 
   // clc_closed_loop controller
-  float Kp_lin[3];
-  float Ki_lin[3];
-  float Kd_lin[3];
+  Eigen::Vector3f Kp_lin;
+  Eigen::Vector3f Ki_lin;
+  Eigen::Vector3f Kd_lin;
   float Kp_rot[3];
   float Ki_rot[3];
   float Kd_rot[3];
-  float linear_int_err[3];
   float body_accel_cmd[3];
   float body_force_cmd[3];
-  float pos_err_outport[3];  // in closed loop controller
-  float CMD_P_B_ISS_ISS[3];
-  float CMD_V_B_ISS_ISS[3];
-  float CMD_A_B_ISS_ISS[3];
+  Eigen::Vector3f pos_err_outport;  // in closed loop controller
+  Eigen::Vector3f CMD_P_B_ISS_ISS;
+  Eigen::Vector3f CMD_V_B_ISS_ISS;
+  Eigen::Vector3f CMD_A_B_ISS_ISS;
   float CMD_Quat_ISS2B[4];
   float CMD_Omega_B_ISS_B[3];
   float CMD_Alpha_B_ISS_B[3];
   float linear_integrator[3];
   float rotational_integrator[3];  // accumulator
-  float linear_int_error[3];
+  Eigen::Vector3f linear_int_err;
   float att_err_mag;
   float att_err[3];
   float dummy[3];
   float rotate_int_err[3];
   float body_alpha_cmd[3];
-  float i_matrix[3][3];
-  float rate_error[3];  // helper in rot control
+  Eigen::Matrix<float, 3, 3> inertia;
+  Eigen::Vector3f rate_error;  // helper in rot control
   float body_torque_cmd[3];
   float traj_pos_previous[3];
 
@@ -157,21 +156,20 @@ class GncCtlAutocode {
   float SafeDivide(float num, float denom);
   void UpdateLinearPIDVals();
   void FindPosErr();
-  void discreteTimeIntegrator(float input[3], float output[3], float accumulator[3], float upper_limit,
+  Eigen::Vector3f discreteTimeIntegrator(Eigen::Vector3f input, float accumulator[3], float upper_limit,
                               float lower_limit);
   void FindLinearIntErr();
   void FindBodyForceCmd();
   void SkewSymetricMatrix(const float input[3], float output[3][3]);
   void QuaternionToDCM(float input_quat[4], float output[3][3]);
-  void RotateVectorAtoB(float v[3], float q[4], float output[3]);
+  Eigen::Vector3f RotateVectorAtoB(Eigen::Vector3f, Eigen::Quaternionf);
   void MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]);
-  void SaturateVector(const float u[3], float limit, float output[3]);
-  void FindBodyAccelCmd();
+  Eigen::Vector3f SaturateVector(Eigen::Vector3f, float limit);
   void UpdateRotationalPIDVals();
   void UpdateRotateIntErr();
   void MatrixMultiplication3x1(float three[3][3], float one[3], float output[3]);
   void FindBodyAlphaCmd();
-  void AngAccelHelper(float rate_error[3]);
+  Eigen::Vector3f AngAccelHelper();
   void FindBodyTorqueCmd();
   void CrossProduct(float vecA[3], float vecB[3], float vecOut[3]);
   void FindAttErr();
@@ -182,12 +180,13 @@ class GncCtlAutocode {
   void CmdSelector();
   void GenerateCmdPath();
   void GenerateCmdAttitude();
-  void CreateOmegaMatrix(float input[3], float output[4][4]);
-  void FindTrajQuat();
+  void FindTrajQuat(float omega_B_ISS_B[3], float alpha_B_ISS_B[3], float quat_ISS2B[4]);
   void MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]);
   void MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]);
-  void FindTrajErrors();
+  void FindTrajErrors(float traj_q[4]);
   void PublishCmdInput();
+
+  Eigen::Matrix<float, 4, 4> OmegaMatrix(float input[3]);
 
 // for testing
   void TestTwoArrays(const char*, const float new_array[], const float old_array[], int length, float tolerance);
