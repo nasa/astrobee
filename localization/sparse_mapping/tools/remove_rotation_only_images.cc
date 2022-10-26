@@ -294,9 +294,10 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   return params;
 }
 
-void SaveResultsToSubdirectories(const std::vector<Result>& results) {
+void SaveResultsToSubdirectories(const std::string& image_directory, const std::vector<Result>& results) {
   // Save continous sets of non-removed sequences to different subdirectories
   int subdirectory_index = 0;
+  CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
   bool previous_result_removed = false;
   for (const auto& result : results) {
     if (result.removed) {
@@ -304,6 +305,7 @@ void SaveResultsToSubdirectories(const std::vector<Result>& results) {
         continue;
       } else {
         ++subdirectory_index;
+        CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
         previous_result_removed = true;
       }
     } else {
@@ -467,6 +469,6 @@ int main(int argc, char** argv) {
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
   if (save_results_to_subdirectories) {
     LogInfo("Saving results to subdirectories.");
-    SaveResultsToSubdirectories(results);
+    SaveResultsToSubdirectories(image_directory, results);
   }
 }
