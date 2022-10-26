@@ -54,13 +54,24 @@ struct Result {
 // TODO(rsoussan): put this in somewhere common
 cv::Point2f CvPoint2(const Eigen::Vector2d& point) { return cv::Point2f(point.x(), point.y()); }
 
+void CreateSubdirectory(const std::string& directory, const std::string& subdirectory) {
+  const auto subdirectory_path = fs::path(directory) / fs::path(subdirectory);
+  if (!boost::filesystem::exists(subdirectory_path)) {
+    boost::filesystem::create_directories(subdirectory_path);
+  }
+}
+
+void Move(const std::string& image_name, const std::string& subdirectory) {
+  fs::path image_path(image_name);
+  const auto parent_directory = image_path.parent_path();
+  const auto subdirectory_parent_directory = parent_directory / fs::path(subdirectory);
+  const auto subdirectory_image_path = subdirectory_parent_directory / image_path.filename();
+  std::rename((image_name).c_str(), subdirectory_image_path.string().c_str());
+}
+
 void RemoveOrMove(const bool move, const std::string& image_name) {
   if (move) {
-    fs::path image_path(image_name);
-    const auto parent_directory = image_path.parent_path();
-    const auto removed_parent_directory = parent_directory / fs::path("removed");
-    const auto removed_image_path = removed_parent_directory / image_path.filename();
-    std::rename((image_name).c_str(), removed_image_path.string().c_str());
+    Move(image_name, "removed");
   } else {
     std::remove(image_name.c_str());
   }
@@ -112,8 +123,8 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
 
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
                                const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
-                               const std::string image_name, const bool remove_erroneous_images, const bool move_images,
-                               const bool view_images, std::vector<Result>& results) {
+                               const std::string image_name, const bool remove_erroneous_images,
+                               const bool move_removed_images, const bool view_images, std::vector<Result>& results) {
   if (matches.size() < 10) {
     std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
     results.emplace_back(Result(0, image_name, remove_erroneous_images));
@@ -211,7 +222,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   return remove_image;
 }
 
-int RemoveRotationSequences(const int max_distance_between_removed_images, const bool move_images,
+int RemoveRotationSequences(const int max_distance_between_removed_images, const bool move_removed_images,
                             std::vector<Result>& results) {
   // check for largest consecutive chunk in between removed images, keep going until chunk is too large
   int num_removed_images = 0;
@@ -239,7 +250,7 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
         for (int i = start_index; i < *end_index; ++i) {
           auto& result = results[i];
           if (!result.removed) {
-            RemoveOrMove(move_images, result);
+            RemoveOrMove(move_removed_images, result);
             std::cout << "Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
                       << ", start index: " << start_index << ", end index: " << *end_index << std::endl;
             ++num_removed_images;
@@ -284,15 +295,27 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
 }
 
 void SaveResultsToSubdirectories(const std::vector<Result>& results) {
-  /// Iterate through results, save continoues seqeunces to same subdirectories
-  /// go to new subdir when errorneous or removed result reached
-  // TODO(rsoussan): add errorneous field to result, account for this in code, remove repeat code, don't pass
-  // num_removed_images
+  // Save continous sets of non-removed sequences to different subdirectories
+  int subdirectory_index = 0;
+  bool previous_result_removed = false;
+  for (const auto& result : results) {
+    if (result.removed) {
+      if (previous_result_removed) {
+        continue;
+      } else {
+        ++subdirectory_index;
+        previous_result_removed = true;
+      }
+    } else {
+      previous_result_removed = false;
+      Move(result.image_name, std::to_string(subdirectory_index));
+    }
+  }
 }
 
 int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const camera::CameraParameters& camera_params,
                              const double rotation_inlier_threshold, const double min_relative_pose_inliers_ratio,
-                             const bool remove_erroneous_images, const bool move_images, const bool view_images,
+                             const bool remove_erroneous_images, const bool move_removed_images, const bool view_images,
                              std::vector<Result>& results) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
@@ -311,8 +334,8 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
       const auto matches = Matches(current_image, next_image, detector_and_matcher);
       if (matches && RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold,
                                                min_relative_pose_inliers_ratio, image_names[next_image_index],
-                                               remove_erroneous_images, move_images, view_images, results)) {
-        RemoveOrMove(move_images, results.back());
+                                               remove_erroneous_images, move_removed_images, view_images, results)) {
+        RemoveOrMove(move_removed_images, results.back());
         current_image = next_image;
         current_image_index = next_image_index;
         // Don't load next image if index is past the end of the sequence
@@ -353,11 +376,10 @@ int main(int argc, char** argv) {
   bool remove_sequences;
   int max_seperation_in_sequence;
   bool remove_erroneous_images;
-  bool move_images;
+  bool move_removed_images;
   bool view_images;
   bool save_results_to_subdirectories;
   po::options_description desc("Removes any rotation only image sequences.");
-  // TODO(rsoussan): Add option to split images into different subdirectories based on sequences!
   // TODO(rsoussan): Tune rotation sequence distance
   // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
@@ -369,14 +391,15 @@ int main(int argc, char** argv) {
     "the movement between the images.")(
     "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
-    "--remove-sequences,s", po::bool_switch(&remove_sequences)->default_value(true),
-    "Remove images between detected rotations. Use --max-seperation-in-sequence to set the max distance from detected "
+    "--keep-sequences,k", po::bool_switch(&remove_sequences)->default_value(true),
+    "Don't remove images between detected rotations. If enabled, use --max-seperation-in-sequence to set the max "
+    "distance from detected "
     "rotation images to classify an image as in a rotation sequence.")(
     "--max-seperation-in-sequence,d", po::value<int>(&max_seperation_in_sequence)->default_value(2),
     "Maximum distance between detected rotations for sequence removal. Only used if --remove-sequences enabled.")(
-    "--move-images,m", po::bool_switch(&move_images)->default_value(false),
-    "Move images to a directory called removed_images instead of deleting them.")(
-    "--remove-erroneous-images,i", po::bool_switch(&remove_erroneous_images)->default_value(false),
+    "--move-removed-images,m", po::bool_switch(&move_removed_images)->default_value(false),
+    "Move removed images to a directory called removed instead of deleting them.")(
+    "--remove-erroneous-images,x", po::bool_switch(&remove_erroneous_images)->default_value(false),
     "Remove images with too few relative pose inliers or too few matches between images.")(
     "--view-images,v", po::bool_switch(&view_images)->default_value(false),
     "View images with projected features and error ratios.")(
@@ -427,12 +450,8 @@ int main(int argc, char** argv) {
   const auto image_names = GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
-  // Create removed directory if needed
-  if (move_images) {
-    const auto removed_directory = fs::path(image_directory) / fs::path("removed");
-    if (!boost::filesystem::exists(removed_directory)) {
-      boost::filesystem::create_directories(removed_directory);
-    }
+  if (move_removed_images) {
+    CreateSubdirectory(image_directory, "removed");
   }
 
   const int num_original_images = image_names.size();
@@ -440,11 +459,14 @@ int main(int argc, char** argv) {
   LogInfo("Removing rotation only images, max rotation error ratio: " + std::to_string(max_rotation_error_ratio));
   int num_removed_images =
     RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio, min_relative_pose_inliers_ratio,
-                             remove_erroneous_images, move_images, view_images, results);
+                             remove_erroneous_images, move_removed_images, view_images, results);
   if (remove_sequences) {
     LogInfo("Removing rotation sequences, max allowed seperation: " + std::to_string(max_seperation_in_sequence));
-    num_removed_images += RemoveRotationSequences(max_seperation_in_sequence, move_images, results);
+    num_removed_images += RemoveRotationSequences(max_seperation_in_sequence, move_removed_images, results);
   }
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
-  if (save_results_to_subdirectories) SaveResultsToSubdirectories(results);
+  if (save_results_to_subdirectories) {
+    LogInfo("Saving results to subdirectories.");
+    SaveResultsToSubdirectories(results);
+  }
 }
