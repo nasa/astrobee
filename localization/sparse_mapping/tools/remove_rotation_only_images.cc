@@ -211,8 +211,8 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
       // Add all images from start to end that have a max distance less than the provided threshold to other rotation
       // images
       for (int query_index = start_index + 1;
-           query_index < (static_cast<int>(results.size()) &&
-                          (current_distance_between_removed_images < max_distance_between_removed_images));
+           (query_index < static_cast<int>(results.size()) &&
+            (current_distance_between_removed_images < max_distance_between_removed_images));
            ++query_index) {
         if (results[query_index].removed) {
           end_index = query_index;
@@ -227,14 +227,16 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
           auto& result = results[i];
           if (!result.removed) {
             RemoveOrMove(move_images, result);
+            std::cout << "Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
+                      << ", start index: " << start_index << ", end index: " << *end_index << std::endl;
             ++num_removed_images;
           }
         }
         start_index = *end_index + 1;
+        continue;
       }
-    } else {
-      ++start_index;
     }
+    ++start_index;
   }
   return num_removed_images;
 }
