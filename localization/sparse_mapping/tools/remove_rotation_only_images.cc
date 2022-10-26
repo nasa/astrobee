@@ -54,16 +54,20 @@ struct Result {
 // TODO(rsoussan): put this in somewhere common
 cv::Point2f CvPoint2(const Eigen::Vector2d& point) { return cv::Point2f(point.x(), point.y()); }
 
-void RemoveOrMove(const bool move, Result& result) {
+void RemoveOrMove(const bool move, const std::string& image_name) {
   if (move) {
-    fs::path image_path(result.image_name);
+    fs::path image_path(image_name);
     const auto parent_directory = image_path.parent_path();
     const auto removed_parent_directory = parent_directory / fs::path("removed");
     const auto removed_image_path = removed_parent_directory / image_path.filename();
-    std::rename((result.image_name).c_str(), removed_image_path.string().c_str());
+    std::rename((image_name).c_str(), removed_image_path.string().c_str());
   } else {
-    std::remove(result.image_name.c_str());
+    std::remove(image_name.c_str());
   }
+}
+
+void RemoveOrMove(const bool move, Result& result) {
+  RemoveOrMove(move, result.image_name);
   result.removed = true;
 }
 
@@ -108,9 +112,16 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
 
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
                                const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
-                               const std::string image_name, const bool view_images, std::vector<Result>& results) {
+                               const std::string image_name, const bool remove_erroneous_images, const bool move_images,
+                               const bool view_images, int& num_removed_images, std::vector<Result>& results) {
   if (matches.size() < 10) {
     std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
+    if (remove_erroneous_images) {
+      RemoveOrMove(move_images, image_name);
+      ++num_removed_images;
+      std::cout << "Removed erroneous image: " << image_name << std::endl;
+    }
+    // Don't add as a result so that erroneous images are ignored when later looking for rotation sequences
     return false;
   }
   std::vector<cv::DMatch> inliers;
@@ -120,6 +131,12 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     std::cout << "Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
               << ", ratio: " << relative_pose_inliers_ratio << ", threshold: " << min_relative_pose_inliers_ratio
               << std::endl;
+    if (remove_erroneous_images) {
+      RemoveOrMove(move_images, image_name);
+      ++num_removed_images;
+      std::cout << "Removed erroneous image: " << image_name << std::endl;
+    }
+    // Don't add as a result so that erroneous images are ignored when later looking for rotation sequences
     return false;
   }
   const Eigen::Matrix3d source_R_target = source_T_target.linear();
@@ -195,6 +212,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     cv::waitKey(0);
   }
 
+  if (remove_image) ++num_removed_images;
   return remove_image;
 }
 
@@ -272,7 +290,8 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
 
 int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const camera::CameraParameters& camera_params,
                              const double rotation_inlier_threshold, const double min_relative_pose_inliers_ratio,
-                             const bool move_images, const bool view_images, std::vector<Result>& results) {
+                             const bool remove_erroneous_images, const bool move_images, const bool view_images,
+                             std::vector<Result>& results) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
   auto& detector = *(detector_and_matcher.detector());
@@ -290,9 +309,9 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
       const auto matches = Matches(current_image, next_image, detector_and_matcher);
       if (matches &&
           RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold, min_relative_pose_inliers_ratio,
-                                    image_names[next_image_index], view_images, results)) {
+                                    image_names[next_image_index], remove_erroneous_images, move_images, view_images,
+                                    num_removed_images, results)) {
         RemoveOrMove(move_images, results.back());
-        ++num_removed_images;
         current_image = next_image;
         current_image_index = next_image_index;
         // Don't load next image if index is past the end of the sequence
@@ -332,9 +351,12 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   bool remove_sequences;
   int max_seperation_in_sequence;
+  bool remove_erroneous_images;
   bool move_images;
   bool view_images;
   po::options_description desc("Removes any rotation only image sequences.");
+  // TODO(rsoussan): Tune rotation sequence distance
+  // TODO(rsoussan): Add option to split images into different subdirectories based on sequences!
   // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
@@ -352,6 +374,8 @@ int main(int argc, char** argv) {
     "Maximum distance between detected rotations for sequence removal. Only used if --remove-sequences enabled.")(
     "--move-images,m", po::bool_switch(&move_images)->default_value(false),
     "Move images to a directory called removed_images instead of deleting them.")(
+    "--remove-erroneous-images,i", po::bool_switch(&remove_erroneous_images)->default_value(false),
+    "Remove images with too few relative pose inliers or too few matches between images.")(
     "--view-images,v", po::bool_switch(&view_images)->default_value(false),
     "View images with projected features and error ratios.")("config-path,c", po::value<std::string>()->required(),
                                                              "Config path")(
@@ -408,8 +432,9 @@ int main(int argc, char** argv) {
   const int num_original_images = image_names.size();
   std::vector<Result> results;
   LogInfo("Removing rotation only images, max rotation error ratio: " + std::to_string(max_rotation_error_ratio));
-  int num_removed_images = RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio,
-                                                    min_relative_pose_inliers_ratio, move_images, view_images, results);
+  int num_removed_images =
+    RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio, min_relative_pose_inliers_ratio,
+                             remove_erroneous_images, move_images, view_images, results);
   if (remove_sequences) {
     LogInfo("Removing rotation sequences, max allowed seperation: " + std::to_string(max_seperation_in_sequence));
     num_removed_images += RemoveRotationSequences(max_seperation_in_sequence, move_images, results);
