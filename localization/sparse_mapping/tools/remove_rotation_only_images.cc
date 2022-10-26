@@ -107,7 +107,7 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
 }
 
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
-                               const double min_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
+                               const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
                                const std::string image_name, const bool view_images, std::vector<Result>& results) {
   if (matches.size() < 10) {
     std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
@@ -162,13 +162,16 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const double mean_rotation_corrected_error = total_rotation_corrected_error / size;
   const double mean_optical_flow_error = total_optical_flow_error / size;
   const double error_ratio = mean_rotation_corrected_error / mean_optical_flow_error;
-  const bool remove_image = error_ratio < min_rotation_error_ratio;
+  const bool remove_image = error_ratio < max_rotation_error_ratio;
   results.emplace_back(Result(error_ratio, image_name, remove_image));
-  static int count = 0;
-  if (remove_image) std::cout << "Removing image." << std::endl;
-  std::cout << "Img: " << count++ << ", num inliers: " << inliers.size() << ", ratio: " << error_ratio
-            << ", mean rot error: " << mean_rotation_corrected_error << ", mean of error: " << mean_optical_flow_error
-            << std::endl;
+  static int index = 0;
+  if (remove_image)
+    std::cout << "Remove ";
+  else
+    std::cout << "Keep ";
+  std::cout << "img: " << image_name << ", index: " << index++ << ", num inliers: " << inliers.size()
+            << ", error ratio: " << error_ratio << ", mean rot error: " << mean_rotation_corrected_error
+            << ", mean of error: " << mean_optical_flow_error << std::endl;
   if (view_images) {
     // Scale color to be more white for a lower error ratio
     // TODO(rsoussan): Use color image! Make red if above threshold!
@@ -282,7 +285,6 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
       if (matches &&
           RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold, min_relative_pose_inliers_ratio,
                                     image_names[next_image_index], view_images, results)) {
-        LogInfo("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
         RemoveOrMove(move_images, results.back());
         ++num_removed_images;
         current_image = next_image;
@@ -319,7 +321,7 @@ std::vector<std::string> GetImageNames(const std::string& image_directory,
 
 int main(int argc, char** argv) {
   double max_low_movement_mean_distance;
-  double min_rotation_error_ratio;
+  double max_rotation_error_ratio;
   double min_relative_pose_inliers_ratio;
   std::string robot_config_file;
   bool remove_sequences;
@@ -327,11 +329,12 @@ int main(int argc, char** argv) {
   bool move_images;
   bool view_images;
   po::options_description desc("Removes any rotation only image sequences.");
+  // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--min-rotation-error-ratio,e", po::value<double>(&min_rotation_error_ratio)->default_value(1e-9),
-    "Minimum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
+    "--max-rotation-error-ratio,e", po::value<double>(&max_rotation_error_ratio)->default_value(0.1),
+    "Maximum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
     "of images to be considered rotation only movement. The lower the ratio, the more the rotation fully explains "
     "the movement between the images.")(
     "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
@@ -398,9 +401,11 @@ int main(int argc, char** argv) {
 
   const int num_original_images = image_names.size();
   std::vector<Result> results;
-  int num_removed_images = RemoveRotationOnlyImages(image_names, camera_parameters, min_rotation_error_ratio,
+  LogInfo("Removing rotation only images, max rotation error ratio: " + std::to_string(max_rotation_error_ratio));
+  int num_removed_images = RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio,
                                                     min_relative_pose_inliers_ratio, move_images, view_images, results);
   if (remove_sequences) {
+    LogInfo("Removing rotation sequences, max allowed seperation: " + std::to_string(max_seperation_in_sequence));
     num_removed_images += RemoveRotationSequences(max_seperation_in_sequence, move_images, results);
   }
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
