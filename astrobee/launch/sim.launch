@@ -29,13 +29,13 @@
   <arg name="extra" default=""/>                <!-- Inject additional node  -->
   <arg name="debug" default=""/>                <!-- Debug node group        -->
   <!-- Physics engine options: ode (gazebo default), bullet, simbody, dart   -->
-  <arg name="physics" default="bullet"/>
+  <arg name="physics" default="dart"/>
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
   <arg name="rec" default="" />                 <!-- Record local data       -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
-  <arg name="ground_truth_localizer" default="false" />  <!-- Use Ground Truth Localizer      -->
+  <arg name="gtloc" default="false" />          <!-- Use Ground Truth Localizer -->
 
   <!-- General options -->
   <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
@@ -163,7 +163,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
-      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
+      <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
   </group>
 
@@ -186,7 +186,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
-      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
+      <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
   </group>
 
@@ -209,7 +209,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
-      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
+      <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
   </group>
 
@@ -232,7 +232,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
-      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
+      <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
   </group>
 

@@ -19,7 +19,7 @@
 
 read -r -d '' usage_string <<EOF
 usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
-              [-a "arg1 arg2"]
+              [-a "arg1" -a "arg2"]
               -- [cmd [arg1] [arg2] ...]
 
 -h or --help: Print this help
@@ -28,9 +28,11 @@ usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
 -f or --focal: Use Ubuntu 20.04 docker image
 -r or --remote: Fetch pre-built remote docker image (vs. local image built by build.sh)
 -n or --no-display: Don't set up X forwarding. (For headless environment.)
+-g or --no-gpu: Don't use gpu. (For virtual machines.)
 -m or --mount: Mount the local checkout folder into the docker container.
 -d or --dry-run: Just what commands would be run
--a or --args "arg1 arg2": Pass extra args to sim
+-i or --image run a different image tag
+-a or --args "arg1" --args "arg2": Pass extra args to sim
 
 Run the specified command and args within a docker container.
 
@@ -55,15 +57,15 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,n,m,d,a:"
-longopts="help,xenial,bionic,focal,remote,no-display,mount,dry-run,args:"
-opts=$(getopt -a -n run.sh --options "$shortops" --longoptions "$longopts" -- "$@")
+shortopts="h,x,b,f,r,n,g,m,d,i:,a:"
+longopts="help,xenial,bionic,focal,remote,no-display,no-gpu,mount,dry-run,image:,args:"
+opts=$(getopt -a -n run.sh --options "$shortopts" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
     usage
     exit 1
 fi
-# echo "opts: $opts"
+echo "opts: $opts"
 
 eval set -- "$opts"
 
@@ -75,31 +77,38 @@ eval set -- "$opts"
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 sim_args="dds:=false robot:=sim_pub"
 display="true"
+gpu="true"
 mount="false"
 tagrepo="astrobee"
 dry_run="false"
+image=""
 
 # extract variables from options
 while [ "$1" != "" ]; do
     case $1 in
-        --help )                   usage
+        -h | --help )                   usage
                                    exit
                                    ;;
-        --xenial )                 os="xenial"
+        -x | --xenial )            os="xenial"
                                    ;;
-        --bionic )                 os="bionic"
+        -b | --bionic )            os="bionic"
                                    ;;
-        --focal )                  os="focal"
+        -f | --focal )             os="focal"
                                    ;;
-        --remote )                 tagrepo="ghcr.io/nasa"
+        -r | --remote )            tagrepo="ghcr.io/nasa"
                                    ;;
-        --no-display )             display="false"
+        -n | --no-display )        display="false"
                                    ;;
-        --mount )                  mount="true"
+        -g | --no-gpu)             gpu="false"
                                    ;;
-        --dry-run )                dry_run="true"
-				   ;;
-        --args )                   sim_args+=" $2"
+        -m | --mount )             mount="true"
+                                   ;;
+        -d | --dry-run )           dry_run="true"
+                                   ;;
+        -i | --image )             image="$2"
+                                   shift
+                                   ;;
+        -a | --args )              sim_args+=" $2"
                                    shift
                                    ;;
         -- )                       shift
@@ -138,11 +147,11 @@ fi
 ######################################################################
 
 if [ "$os" = "xenial" ]; then
-    tag=astrobee:latest-ubuntu16.04
+    tag=astrobee:latest-${image}ubuntu16.04
 elif [ "$os" = "bionic" ]; then
-    tag=astrobee:latest-ubuntu18.04
+    tag=astrobee:latest-${image}ubuntu18.04
 elif [ "$os" = "focal" ]; then
-    tag=astrobee:latest-ubuntu20.04
+    tag=astrobee:latest-${image}ubuntu20.04
 fi
 
 # check if local docker tag exists
@@ -173,7 +182,9 @@ if [ "$display" = "true" ]; then
     display_args+=" --volume="$XAUTH":"$XAUTH":rw"
     display_args+=" --env=XAUTHORITY="${XAUTH}
     display_args+=" --env=DISPLAY"
-    display_args+=" --gpus all"
+    if [ "$gpu" = "true" ]; then
+        display_args+=" --gpus all"
+    fi
 fi
 
 ######################################################################
