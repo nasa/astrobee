@@ -61,9 +61,9 @@ void NormalizeQuaternion(Eigen::Quaternionf & out) {
 }
 
 
-GncCtlAutocode::GncCtlAutocode(void) {
+Control::Control(void) {
   // TODO(bcoltin): remove
-  constants::tun_accel_gain << 1.0f, 1.0f, 1.0f;
+  tun_accel_gain << 1.0f, 1.0f, 1.0f;
   prev_filter_vel[0] = 0;
   prev_filter_vel[1] = 0;
   prev_filter_vel[2] = 0;
@@ -87,21 +87,9 @@ GncCtlAutocode::GncCtlAutocode(void) {
   rotational_integrator[0] = 0;
   rotational_integrator[1] = 0;
   rotational_integrator[2] = 0;
-
-  /****from Simulink Controller*****/
-  controller_ = ctl_controller0(&ctl_input_, &cmd_, &ctl_);
-  assert(controller_);
-  assert(rtmGetErrorStatus(controller_) == NULL);
 }
 
-GncCtlAutocode::~GncCtlAutocode() {
-  /****from Simulink Controller*****/
-  ctl_controller0_terminate(controller_);
-}
-
-
-
-void GncCtlAutocode::Step(void) {
+void Control::Step(void) {
 // copy of values before
   ctl_input_msg before_ctl_input_;
   cmd_msg before_cmd_;
@@ -109,18 +97,6 @@ void GncCtlAutocode::Step(void) {
   memcpy(&before_ctl_input_, &ctl_input_, sizeof(ctl_input_));
   memcpy(&before_cmd_, &cmd_, sizeof(cmd_));
   memcpy(&before_ctl_, &ctl_, sizeof(ctl_));
-
-/****from Simulink Controller*****/
-  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
-
-
-// copy of what it is after Simulink controller
-  ctl_input_msg after_ctl_input_;
-  cmd_msg after_cmd_;
-  ctl_msg after_ctl_;
-  memcpy(&after_ctl_input_, &ctl_input_, sizeof(ctl_input_));
-  memcpy(&after_cmd_, &cmd_, sizeof(cmd_));
-  memcpy(&after_ctl_, &ctl_, sizeof(ctl_));
 
   // revert back to before Simulink
   memcpy(&ctl_input_, &before_ctl_input_, sizeof(before_ctl_input_));
@@ -132,7 +108,7 @@ void GncCtlAutocode::Step(void) {
   CmdSelector();
   GenerateCmdPath();
   GenerateCmdAttitude();
-  FindTrajErrors(after_cmd_.traj_quat);
+  FindTrajErrors(traj_quat);
   PublishCmdInput();
 
   /*****cex_control_executive*****/
@@ -166,35 +142,10 @@ void GncCtlAutocode::Step(void) {
 
   /*Publish to ctl_msg */
   VarToCtlMsg();
-
-  /***** Comparison Tests *****/
-  TestFloats("traj_error_pos", ctl_.traj_error_pos, after_ctl_.traj_error_pos, 0.00001);  // correct
-  TestTwoArrays("traj_quat", cmd_.traj_quat, after_cmd_.traj_quat, 4, 0.00001);  // correct
-  TestFloats("traj_error_vel", ctl_.traj_error_vel, after_ctl_.traj_error_vel, 0.00001);  // correct
-  TestFloats("traj_error_omega", ctl_.traj_error_omega, after_ctl_.traj_error_omega, 0.00001);  // correct
-  TestFloats("traj_error_att", ctl_.traj_error_att, after_ctl_.traj_error_att, 0.001);  // correct
-
-  TestFloats("ctl_status", ctl_.ctl_status, after_ctl_.ctl_status, 0);  // correct
-  TestTwoArrays("pos_err", ctl_.pos_err, after_ctl_.pos_err, 3, 0.00001);  // correct
-  TestTwoArrays("pos_err_int", ctl_.pos_err_int, after_ctl_.pos_err_int, 3, 0.00001);  // correct
-
-  TestTwoArrays("body_force_cmd", ctl_.body_force_cmd, after_ctl_.body_force_cmd, 3, 0.001);  // correct
-  TestTwoArrays("body_accel_cmd", ctl_.body_accel_cmd, after_ctl_.body_accel_cmd, 3, 0.0001);
-
-  TestFloats("att_err_mag", ctl_.att_err_mag, after_ctl_.att_err_mag, 0.001);
-  TestTwoArrays("att_err", ctl_.att_err, after_ctl_.att_err, 3, 0.000002);
-  TestTwoArrays("body_alpha_cmd", ctl_.body_alpha_cmd, after_ctl_.body_alpha_cmd, 3, 0.0001);  // correct
-  // is solved TestTwoArrays(ctl_.body_torque_cmd, after_ctl_.body_torque_cmd, 3, 0.000002);
-  // tbd when body_alpha_cmd is fixed
-
-  // revert back to Simulink after my controller
-  memcpy(&ctl_input_, &after_ctl_input_, sizeof(after_ctl_input_));
-  memcpy(&cmd_, &after_cmd_, sizeof(after_cmd_));
-  memcpy(&ctl_, &after_ctl_, sizeof(after_ctl_));
 }
 
 /*Command Shaper */
-void GncCtlAutocode::PublishCmdInput() {
+void Control::PublishCmdInput() {
   cmd_.cmd_timestamp_sec = cmd_timestamp_sec;
   cmd_.cmd_timestamp_nsec = cmd_timestamp_nsec;
   cmd_.cmd_mode = ctl_input_.ctl_mode_cmd;
@@ -211,7 +162,7 @@ void GncCtlAutocode::PublishCmdInput() {
   cmd_.traj_quat[3] = traj_quat[3];  // since it is size 4
 }
 
-void GncCtlAutocode::FindTrajErrors(float traj_q[4]) {
+void Control::FindTrajErrors(float traj_q[4]) {
   float traj_error_pos_vec[3];
   float traj_error_vel_vec[3];
   float traj_error_omega_vec[3];
@@ -232,7 +183,7 @@ void GncCtlAutocode::FindTrajErrors(float traj_q[4]) {
 
 
 
-void GncCtlAutocode::GenerateCmdAttitude() {
+void Control::GenerateCmdAttitude() {
   if (state_cmd_switch_out) {
     for (int i = 0; i < 3; i++) {
       traj_alpha[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
@@ -253,7 +204,7 @@ void GncCtlAutocode::GenerateCmdAttitude() {
                  ctl_input_.cmd_state_b.quat_ISS2B);
 }
 
-void GncCtlAutocode::FindTrajQuat(float omega_B_ISS_B[3], float alpha_B_ISS_B[3], float quat_ISS2B[4]) {
+void Control::FindTrajQuat(float omega_B_ISS_B[3], float alpha_B_ISS_B[3], float quat_ISS2B[4]) {
   Eigen::Quaternion<float> quat_state_cmd;
   quat_state_cmd.x() = quat_ISS2B[0];
   quat_state_cmd.y() = quat_ISS2B[1];
@@ -277,7 +228,7 @@ void GncCtlAutocode::FindTrajQuat(float omega_B_ISS_B[3], float alpha_B_ISS_B[3]
   traj_quat[3] = out.w();
 }
 // Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
-Eigen::Matrix<float, 4, 4> GncCtlAutocode::OmegaMatrix(float input[3]) {
+Eigen::Matrix<float, 4, 4> Control::OmegaMatrix(float input[3]) {
   Eigen::Matrix<float, 4, 4> out;
   out(0, 0) = 0;
   out(1, 0) = -input[2];
@@ -302,7 +253,7 @@ Eigen::Matrix<float, 4, 4> GncCtlAutocode::OmegaMatrix(float input[3]) {
   return out;
 }
 
-void GncCtlAutocode::GenerateCmdPath() {
+void Control::GenerateCmdPath() {
   float test[3];
   if (state_cmd_switch_out) {  // true is A
     for (int i = 0; i < 3; i++) {
@@ -322,7 +273,7 @@ void GncCtlAutocode::GenerateCmdPath() {
   }
 }
 
-void GncCtlAutocode::CmdSelector() {
+void Control::CmdSelector() {
   float curr_sec = ctl_input_.current_time_sec;
   float curr_nsec = ctl_input_.current_time_nsec;
 
@@ -344,32 +295,7 @@ void GncCtlAutocode::CmdSelector() {
   cmd_B_inuse = !state_cmd_switch_out;
 }
 
-/* Testing functions */
-void GncCtlAutocode::TestFloats(const char* name, const float new_float, const float old_float, float tolerance) {
-  float difference = old_float - new_float;
-  float perc_difference = difference / old_float;
-    if (fabs(difference) > tolerance) {
-     ROS_ERROR("%s New: %f, Old: %f, Difference: %f", name, new_float, old_float, difference);
-  }
-}
-
-void GncCtlAutocode::TestTwoArrays(const char* name, const float new_array[],
-                                   const float old_array[], int length, float tolerance) {
-  for (int i = 0; i < length; i++) {
-    float difference = old_array[i] - new_array[i];
-    float perc_difference = difference / old_array[i];
-    if (fabs(difference) > tolerance) {
-      std::string p1, p2;
-      for (int i = 0; i < length; i++) {
-        p1 += " " + std::to_string(new_array[i]);
-        p2 += " " + std::to_string(old_array[i]);
-      }
-      ROS_ERROR("%s New: %s, Old: %s", name, p1.c_str(), p2.c_str());
-    }
-  }
-}
-
-void GncCtlAutocode::VarToCtlMsg() {
+void Control::VarToCtlMsg() {
   ctl_.pos_err[0] = pos_err_outport.x();
   ctl_.pos_err[1] = pos_err_outport.y();
   ctl_.pos_err[2] = pos_err_outport.z();
@@ -395,7 +321,7 @@ void GncCtlAutocode::VarToCtlMsg() {
 }
 
 /*****clc_closed_loop_controller functions*****/
-void GncCtlAutocode::FindAttErr() {
+void Control::FindAttErr() {
   Eigen::Quaternion<float> q_cmd;
   Eigen::Quaternion<float> q_actual;
   q_cmd.x() = CMD_Quat_ISS2B[0];
@@ -422,8 +348,8 @@ void GncCtlAutocode::FindAttErr() {
   att_err[2] = q_out.z();
 }
 
-void GncCtlAutocode::FindBodyTorqueCmd() {
-  if (ctl_status != 0) {
+void Control::FindBodyTorqueCmd() {
+  if (ctl_status == 0) {
     for (int i = 0; i < 3; i++) {
       body_torque_cmd[i] = 0;
     }
@@ -443,12 +369,12 @@ void GncCtlAutocode::FindBodyTorqueCmd() {
   }
 }
 
-void GncCtlAutocode::CrossProduct(float vecA[3], float vecB[3], float vecOut[3]) {
+void Control::CrossProduct(float vecA[3], float vecB[3], float vecOut[3]) {
   vecOut[0] = vecA[1] * vecB[2] - vecA[2] * vecB[1];
   vecOut[1] = -(vecA[0] * vecB[2] - vecA[2] * vecB[0]);
   vecOut[2] = vecA[0] * vecB[1] - vecA[1] * vecB[0];
 }
-void GncCtlAutocode::FindBodyAlphaCmd() {
+void Control::FindBodyAlphaCmd() {
   rate_error = AngAccelHelper();
   inertia << ctl_input_.inertia_matrix[0], ctl_input_.inertia_matrix[1], ctl_input_.inertia_matrix[2],
              ctl_input_.inertia_matrix[3], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[5],
@@ -459,7 +385,7 @@ void GncCtlAutocode::FindBodyAlphaCmd() {
     body_alpha_cmd[i] = v[i];
 }
 
-Eigen::Vector3f GncCtlAutocode::AngAccelHelper() {
+Eigen::Vector3f Control::AngAccelHelper() {
   float temp[3];
   if (ctl_status <= 1) {
     for (int i = 0; i < 3; i++) {
@@ -482,7 +408,7 @@ Eigen::Vector3f GncCtlAutocode::AngAccelHelper() {
   return rate_error;
 }
 
-void GncCtlAutocode::UpdateRotateIntErr() {
+void Control::UpdateRotateIntErr() {
   Eigen::Vector3f in; in << att_err[0] * Ki_rot[0], att_err[1] * Ki_rot[1], att_err[2] * Ki_rot[2];
   Eigen::Vector3f out = discreteTimeIntegrator(in, rotational_integrator, constants::tun_ctl_att_sat_upper,
                                             constants::tun_ctl_att_sat_lower);
@@ -491,7 +417,7 @@ void GncCtlAutocode::UpdateRotateIntErr() {
   rotate_int_err[2] = out.z();
 }
 
-void GncCtlAutocode::UpdateRotationalPIDVals() {
+void Control::UpdateRotationalPIDVals() {
   // reshape
   float inertia_vec[3] = {ctl_input_.inertia_matrix[0], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[8]};
 
@@ -502,7 +428,7 @@ void GncCtlAutocode::UpdateRotationalPIDVals() {
   }
 }
 
-void GncCtlAutocode::FindBodyForceCmd() {
+void Control::FindBodyForceCmd() {
   if (ctl_status == 0) {
     for (int i = 0; i < 3; i++) {
       body_force_cmd[i] = 0.0;
@@ -538,9 +464,9 @@ void GncCtlAutocode::FindBodyForceCmd() {
   a = ctl_input_.mass * (a.array() * Kd_lin.array()).matrix();
 
   float accel_err_tmp[3];
-  Eigen::Vector3f b = RotateVectorAtoB((CMD_A_B_ISS_ISS.array() * constants::tun_accel_gain.array()).matrix(),
+  Eigen::Vector3f b = RotateVectorAtoB((CMD_A_B_ISS_ISS.array() * tun_accel_gain.array()).matrix(),
                                        est_quat_ISS2B);
-  v = CMD_A_B_ISS_ISS.array() * constants::tun_accel_gain.array();
+  v = CMD_A_B_ISS_ISS.array() * tun_accel_gain.array();
   //  ROS_ERROR("newa %g %g %g", v[0], v[1], v[2]);
   //  ROS_ERROR("newa1 %g %g %g", CMD_A_B_ISS_ISS[0], CMD_A_B_ISS_ISS[1], CMD_A_B_ISS_ISS[2]);
   //  ROS_ERROR("new1 %g %g %g", b[0], b[1], b[2]);
@@ -555,7 +481,7 @@ void GncCtlAutocode::FindBodyForceCmd() {
   }
 }
 
-Eigen::Vector3f GncCtlAutocode::SaturateVector(Eigen::Vector3f v, float limit) {
+Eigen::Vector3f Control::SaturateVector(Eigen::Vector3f v, float limit) {
   float mag = v.norm();
 
   if (mag < limit) {
@@ -565,12 +491,12 @@ Eigen::Vector3f GncCtlAutocode::SaturateVector(Eigen::Vector3f v, float limit) {
   }
 }
 
-Eigen::Vector3f GncCtlAutocode::RotateVectorAtoB(const Eigen::Vector3f v, const Eigen::Quaternionf q) {
+Eigen::Vector3f Control::RotateVectorAtoB(const Eigen::Vector3f v, const Eigen::Quaternionf q) {
   return q.normalized().conjugate().toRotationMatrix() * v;
 }
 
 // 3x3 multiply by 1x3
-void GncCtlAutocode::MatrixMultiplication3x1(float three[3][3], float one[3], float output[3]) {
+void Control::MatrixMultiplication3x1(float three[3][3], float one[3], float output[3]) {
   // set output to all 0's
   for (int i = 0; i < 3; i++) {
     output[i]= 0;
@@ -583,7 +509,7 @@ void GncCtlAutocode::MatrixMultiplication3x1(float three[3][3], float one[3], fl
 }
 
 // 4x4 multiply by 1x4
-void GncCtlAutocode::MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]) {
+void Control::MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]) {
   // set output to all 0's
   for (int i = 0; i < 4; i++) {
     output[i]= 0;
@@ -595,7 +521,7 @@ void GncCtlAutocode::MatrixMultiplication4x1(float four[4][4], float one[4], flo
     }
 }
 
-void GncCtlAutocode::MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]) {
+void Control::MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]) {
   // make output all zeros
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -612,7 +538,7 @@ void GncCtlAutocode::MatrixMultiplication3x3(float inputA[3][3], float inputB[3]
   }
 }
 
-void GncCtlAutocode::MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]) {
+void Control::MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]) {
   // make output all zeros
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
@@ -628,7 +554,7 @@ void GncCtlAutocode::MatrixMultiplication4x4(float inputA[4][4], float inputB[4]
     }
   }
 }
-void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]) {
+void Control::SkewSymetricMatrix(const float input[3], float output[3][3]) {
   // from simulink diagram
   output[0][0] = 0;
   output[1][0] = input[2];
@@ -641,12 +567,12 @@ void GncCtlAutocode::SkewSymetricMatrix(const float input[3], float output[3][3]
   output[2][2] = 0;
 }
 
-void GncCtlAutocode::FindLinearIntErr() {
+void Control::FindLinearIntErr() {
   linear_int_err = discreteTimeIntegrator((Ki_lin.array() * pos_err_outport.array()).matrix(),
                    linear_integrator, constants::tun_ctl_pos_sat_upper, constants::tun_ctl_pos_sat_lower);
 }
 
-Eigen::Vector3f GncCtlAutocode::discreteTimeIntegrator(Eigen::Vector3f input, float accumulator[3], float upper_limit,
+Eigen::Vector3f Control::discreteTimeIntegrator(Eigen::Vector3f input, float accumulator[3], float upper_limit,
                                             float lower_limit) {
   Eigen::Vector3f output; output << 0.0f, 0.0f, 0.0f;
   if (ctl_status <= 1) {
@@ -668,7 +594,7 @@ Eigen::Vector3f GncCtlAutocode::discreteTimeIntegrator(Eigen::Vector3f input, fl
 }
 
 // shouldn't be needed but keeps naming consistant with simulink
-void GncCtlAutocode::VariablesTransfer() {
+void Control::VariablesTransfer() {
   for (int i = 0; i < 3; i++) {
     CMD_Quat_ISS2B[i] = att_command[i];
     CMD_Omega_B_ISS_B[i] = omega_command[i];
@@ -677,13 +603,13 @@ void GncCtlAutocode::VariablesTransfer() {
   CMD_Quat_ISS2B[3] = att_command[3];  // since quat has size 4
 }
 
-void GncCtlAutocode::FindPosErr() {
+void Control::FindPosErr() {
   Eigen::Vector3f t;
   t << ctl_input_.est_P_B_ISS_ISS[0], ctl_input_.est_P_B_ISS_ISS[1], ctl_input_.est_P_B_ISS_ISS[2];
   pos_err_outport = CMD_P_B_ISS_ISS - t;
 }
 
-void GncCtlAutocode::UpdateLinearPIDVals() {
+void Control::UpdateLinearPIDVals() {
   Kp_lin.x() = SafeDivide(ctl_input_.pos_kp[0], ctl_input_.vel_kd[0]);
   Kp_lin.y() = SafeDivide(ctl_input_.pos_kp[1], ctl_input_.vel_kd[1]);
   Kp_lin.z() = SafeDivide(ctl_input_.pos_kp[2], ctl_input_.vel_kd[2]);
@@ -695,7 +621,7 @@ void GncCtlAutocode::UpdateLinearPIDVals() {
   Kd_lin.z() = ctl_input_.vel_kd[2];
 }
 
-float GncCtlAutocode::SafeDivide(float num, float denom) {
+float Control::SafeDivide(float num, float denom) {
   if (denom == 0) {
     return 0;
   } else {
@@ -704,7 +630,7 @@ float GncCtlAutocode::SafeDivide(float num, float denom) {
 }
 
 /*****cex_control_executive functions *****/
-void GncCtlAutocode::BypassShaper() {
+void Control::BypassShaper() {
   if (stopped_mode) {
     CMD_V_B_ISS_ISS << 0.0f, 0.0f, 0.0f;
     CMD_A_B_ISS_ISS << 0.0f, 0.0f, 0.0f;
@@ -723,7 +649,7 @@ void GncCtlAutocode::BypassShaper() {
 }
 
 
-void GncCtlAutocode::UpdateCtlStatus() {
+void Control::UpdateCtlStatus() {
   if (CtlStatusSwitch()) {
     ctl_status = constants::ctl_stopping_mode;
   } else {
@@ -736,7 +662,7 @@ void GncCtlAutocode::UpdateCtlStatus() {
 }
 
 // determines if still in stopping; called by UpdateCtlStatus
-bool GncCtlAutocode::CtlStatusSwitch() {
+bool Control::CtlStatusSwitch() {
   // find sum of squares
   float pos_sum = 0;
   for (int i = 0; i < 3; i++) {
@@ -752,7 +678,7 @@ bool GncCtlAutocode::CtlStatusSwitch() {
 }
 
 // update the previous as the last part of the step if it is not in stopped mode
-void GncCtlAutocode::UpdatePrevious() {
+void Control::UpdatePrevious() {
   if (!stopped_mode) {
     for (int i = 0; i < 3; i++) {
       prev_position[i] =  ctl_input_.est_P_B_ISS_ISS[i];
@@ -762,7 +688,7 @@ void GncCtlAutocode::UpdatePrevious() {
   }
 }
 
-void GncCtlAutocode::FindPosError() {
+void Control::FindPosError() {
   for (int i = 0; i < 3; i++) {
     pos_err_parameter[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
   }
@@ -770,7 +696,7 @@ void GncCtlAutocode::FindPosError() {
 
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
 // Simulink q_cmd is of format x,y,z,w
-void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
+void Control::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
   Eigen::Quaternion<float> cmd;
   cmd.x() = q_cmd[0];
   cmd.y() = q_cmd[1];
@@ -797,7 +723,7 @@ void GncCtlAutocode::FindQuatError(float q_cmd[4], float q_actual[4], float& out
 }
 
 // updates the position and attitude command
-void GncCtlAutocode::UpdatePosAndQuat() {
+void Control::UpdatePosAndQuat() {
   if (stopped_mode) {
     CMD_P_B_ISS_ISS.x() = prev_position[0];
     CMD_P_B_ISS_ISS.y() = prev_position[1];
@@ -819,7 +745,7 @@ void GncCtlAutocode::UpdatePosAndQuat() {
 
 /*stopped mode is true when velocity and omega are below thresholds and
  mode_cmd is stopping for 4 cycles */
-void GncCtlAutocode::UpdateStoppedMode() {
+void Control::UpdateStoppedMode() {
   float velocity[3];
   float omega[3];
   for (int i = 0; i < 3; i++) {
@@ -838,7 +764,7 @@ void GncCtlAutocode::UpdateStoppedMode() {
   }
 }
 /*Butterworth filter implementation */
-float GncCtlAutocode::ButterWorthFilter(float input, float& delay_val) {
+float Control::ButterWorthFilter(float input, float& delay_val) {
   float tmp_out = input * constants::butterworth_gain_1;
   float previous_gain = delay_val * constants::butterworth_gain_2;
   tmp_out = tmp_out - previous_gain;
@@ -848,12 +774,12 @@ float GncCtlAutocode::ButterWorthFilter(float input, float& delay_val) {
 }
 /*determine if velocity (linear or angular) values are less than threshhold
   retruns true if it is less than the threshhold*/
-bool GncCtlAutocode::BelowThreshold(float velocity[], float threshhold, float previous[3]) {
+bool Control::BelowThreshold(float velocity[], float threshhold, float previous[3]) {
   float filter_out;
   float sum = 0;
   for (int i = 0; i < 3; i++) {
     filter_out =
-      GncCtlAutocode::ButterWorthFilter(velocity[i], previous[i]);  // previous[i] gets updated in this function
+      Control::ButterWorthFilter(velocity[i], previous[i]);  // previous[i] gets updated in this function
     filter_out = filter_out * filter_out;  // square the value
     sum = sum + filter_out;                // sum all of the values
   }
@@ -865,7 +791,7 @@ bool GncCtlAutocode::BelowThreshold(float velocity[], float threshhold, float pr
 }
 
 /*Determines if make conditions is met: if mode_cmd equals ctl_stopping_mode for 4 previous times*/
-bool GncCtlAutocode::CmdModeMakeCondition() {
+bool Control::CmdModeMakeCondition() {
   // shift exisitng elements to the right
   prev_mode_cmd[4] = prev_mode_cmd[3];
   prev_mode_cmd[3] = prev_mode_cmd[2];
@@ -883,7 +809,7 @@ bool GncCtlAutocode::CmdModeMakeCondition() {
 }
 
 /* triggers IDLE if est_confidence is 0; idles if diverged */
-void GncCtlAutocode::UpdateModeCmd() {
+void Control::UpdateModeCmd() {
   if (ctl_input_.est_confidence != constants::ase_status_converged) {
     mode_cmd = constants::ctl_idle_mode;
   } else {
@@ -892,14 +818,10 @@ void GncCtlAutocode::UpdateModeCmd() {
   }
 }
 
-void GncCtlAutocode::Initialize(void) {
-  /****from Simulink Controller*****/
-  ctl_controller0_initialize(controller_, &ctl_input_, &cmd_, &ctl_);
+void Control::Initialize(void) {
 }
 
-void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {
-  /****from Simulink Controller*****/
-  ctl_ReadParams(config, controller_);
+void Control::ReadParams(config_reader::ConfigReader* config) {
 }
 
 }  // end namespace gnc_autocode

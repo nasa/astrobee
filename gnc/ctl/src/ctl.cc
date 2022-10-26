@@ -101,11 +101,12 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
   // Set the operating mode to STOP by default, so that when the speed ramps
   // up we don't drift off position because of small forces and torques
   mutex_cmd_msg_.lock();
-  gnc_.ctl_input_.ctl_mode_cmd = ff_msgs::ControlCommand::MODE_STOP;
+  controller_.ctl_input_.ctl_mode_cmd = ff_msgs::ControlCommand::MODE_STOP;
   mutex_cmd_msg_.unlock();
 
   // Initialize GNC
   gnc_.Initialize();
+  controller_.Initialize();
 
   config_.AddFile("gnc.config");
   config_.AddFile("geometry.config");
@@ -239,7 +240,7 @@ void Ctl::UpdateCallback(FSM::State const& state, FSM::Event const& event) {
 void Ctl::EkfCallback(const ff_msgs::EkfState::ConstPtr& state) {
   if (!use_truth_) {
     mutex_cmd_msg_.lock();
-    auto & ctl = gnc_.ctl_input_;
+    auto & ctl = controller_.ctl_input_;
     msg_conversions::ros_to_array_vector(state->omega, ctl.est_omega_B_ISS_B);
     msg_conversions::ros_to_array_vector(state->velocity, ctl.est_V_B_ISS_ISS);
     msg_conversions::ros_to_array_point(state->pose.position, ctl.est_P_B_ISS_ISS);
@@ -277,7 +278,7 @@ void Ctl::EkfCallback(const ff_msgs::EkfState::ConstPtr& state) {
 void Ctl::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth) {
   if (use_truth_) {
     mutex_cmd_msg_.lock();
-    auto& ctl = gnc_.ctl_input_;
+    auto& ctl = controller_.ctl_input_;
     msg_conversions::ros_to_array_point(truth->pose.position, ctl.est_P_B_ISS_ISS);
     msg_conversions::ros_to_array_quat(truth->pose.orientation, ctl.est_quat_ISS2B);
     ctl.est_confidence = 0;  // Localization manager now deals with this
@@ -295,7 +296,7 @@ void Ctl::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth) {
 void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
   if (use_truth_) {
     mutex_cmd_msg_.lock();
-    auto& ctl = gnc_.ctl_input_;
+    auto& ctl = controller_.ctl_input_;
     mc::ros_to_array_vector(truth->twist.linear, ctl.est_V_B_ISS_ISS);
     mc::ros_to_array_vector(truth->twist.angular, ctl.est_omega_B_ISS_B);
     mutex_cmd_msg_.unlock();
@@ -306,7 +307,7 @@ void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
 // Called when management updates inertial info
 void Ctl::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
-  auto& input = gnc_.ctl_input_;
+  auto& input = controller_.ctl_input_;
   input.mass = inertia->inertia.m;
   // mc::ros_to_array_vector(inertia->com, input.center_of_mass);  // no longer exists
   input.inertia_matrix[0] = inertia->inertia.ixx;
@@ -324,7 +325,7 @@ void Ctl::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia
 // Called when choreographer updates the flight mode
 void Ctl::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
-  auto& input = gnc_.ctl_input_;
+  auto& input = controller_.ctl_input_;
   mc::ros_to_array_vector(mode->att_kp, input.att_kp);
   mc::ros_to_array_vector(mode->att_ki, input.att_ki);
   mc::ros_to_array_vector(mode->omega_kd, input.omega_kd);
@@ -468,7 +469,7 @@ void Ctl::PreemptCallback() {
 bool Ctl::Control(uint8_t const mode, ff_msgs::ControlCommand const& poseVel) {
   // Set the operating mode
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
-  auto& input= gnc_.ctl_input_;
+  auto& input = controller_.ctl_input_;
   input.ctl_mode_cmd = mode;
   if (mode != ff_msgs::ControlCommand::MODE_NOMINAL)
     return true;
@@ -504,6 +505,9 @@ bool Ctl::Control(uint8_t const mode, ff_msgs::ControlCommand const& poseVel) {
 }
 
 bool Ctl::Step(void) {
+  auto& input = controller_.ctl_input_;
+  auto& cmd = controller_.cmd_;
+  auto& ctl = controller_.ctl_;
   // Step GNC forward
   {
     if (!inertia_received_) {
@@ -515,13 +519,32 @@ bool Ctl::Step(void) {
       return false;
     }
     std::lock_guard<std::mutex> cmd_lock(mutex_cmd_msg_);
+
+    memcpy(&gnc_.ctl_input_, &input, sizeof(input));
+    memcpy(&gnc_.cmd_, &cmd, sizeof(cmd));
+    memcpy(&gnc_.ctl_, &ctl, sizeof(ctl));
+
+    controller_.Step();
     gnc_.Step();
   }
+  /***** Comparison Tests *****/
+  TestFloats("traj_error_pos", ctl.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.00001);  // correct
+  TestTwoArrays("traj_quat", cmd.traj_quat, gnc_.cmd_.traj_quat, 4, 0.00001);  // correct
+  TestFloats("traj_error_vel", ctl.traj_error_vel, gnc_.ctl_.traj_error_vel, 0.00001);  // correct
+  TestFloats("traj_error_omega", ctl.traj_error_omega, gnc_.ctl_.traj_error_omega, 0.00001);  // correct
+  TestFloats("traj_error_att", ctl.traj_error_att, gnc_.ctl_.traj_error_att, 0.001);  // correct
 
-  // Output of the Step() function is FAM control (ctl)
-  auto& cmd = gnc_.cmd_;
-  auto& ctl = gnc_.ctl_;
-  auto& input= gnc_.ctl_input_;
+  TestFloats("ctl_status", ctl.ctl_status, gnc_.ctl_.ctl_status, 0);  // correct
+  TestTwoArrays("pos_err", ctl.pos_err, gnc_.ctl_.pos_err, 3, 0.00001);  // correct
+  TestTwoArrays("pos_err_int", ctl.pos_err_int, gnc_.ctl_.pos_err_int, 3, 0.00001);  // correct
+
+  TestTwoArrays("body_force_cmd", ctl.body_force_cmd, gnc_.ctl_.body_force_cmd, 3, 0.001);  // correct
+  TestTwoArrays("body_accel_cmd", ctl.body_accel_cmd, gnc_.ctl_.body_accel_cmd, 3, 0.0001);
+
+  TestFloats("att_err_mag", ctl.att_err_mag, gnc_.ctl_.att_err_mag, 0.001);
+  TestTwoArrays("att_err", ctl.att_err, gnc_.ctl_.att_err, 3, 0.000002);
+  TestTwoArrays("body_alpha_cmd", ctl.body_alpha_cmd, gnc_.ctl_.body_alpha_cmd, 3, 0.0001);  // correct
+  TestTwoArrays("body_torque_cmd", ctl.body_torque_cmd, gnc_.ctl_.body_torque_cmd, 3, 0.0001);
 
   // Publish the FAM command
   static ff_msgs::FamCommand cmd_msg_;
@@ -588,6 +611,32 @@ bool Ctl::Step(void) {
   return true;
 }
 
+/* Testing functions */
+void Ctl::TestFloats(const char* name, const float new_float, const float old_float, float tolerance) {
+  float difference = old_float - new_float;
+  float perc_difference = difference / old_float;
+    if (fabs(difference) > tolerance) {
+     ROS_ERROR("%s New: %f, Old: %f, Difference: %f", name, new_float, old_float, difference);
+  }
+}
+
+void Ctl::TestTwoArrays(const char* name, const float new_array[],
+                                   const float old_array[], int length, float tolerance) {
+  for (int i = 0; i < length; i++) {
+    float difference = old_array[i] - new_array[i];
+    float perc_difference = difference / old_array[i];
+    if (fabs(difference) > tolerance) {
+      std::string p1, p2;
+      for (int i = 0; i < length; i++) {
+        p1 += " " + std::to_string(new_array[i]);
+        p2 += " " + std::to_string(old_array[i]);
+      }
+      ROS_ERROR("%s New: %s, Old: %s", name, p1.c_str(), p2.c_str());
+    }
+  }
+}
+
+
 std::string Ctl::getName() { return name_; }
 
 // Chainload the readparam call
@@ -597,6 +646,7 @@ void Ctl::ReadParams(void) {
     return;
   }
   gnc_.ReadParams(&config_);
+  controller_.ReadParams(&config_);
   if (!config_.GetBool("tun_debug_ctl_use_truth", &use_truth_))
     ROS_FATAL("tun_debug_ctl_use_truth not specified.");
   // Set linear- and angular velocity threshold for ekf

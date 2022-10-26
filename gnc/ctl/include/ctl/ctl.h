@@ -21,6 +21,7 @@
 
 // Autocode includes
 #include <gnc_autocode/ctl.h>
+#include <gnc_autocode/old_ctl.h>
 
 // For includes
 #include <ros/ros.h>
@@ -150,8 +151,8 @@ class Ctl {
   // Step control forward
   bool Step(void);
 
-  ctl_msg* GetCtlMsg(void) {return &gnc_.ctl_;}
-  cmd_msg* GetCmdMsg(void) {return &gnc_.cmd_;}
+  ctl_msg* GetCtlMsg(void) {return &controller_.ctl_;}
+  cmd_msg* GetCmdMsg(void) {return &controller_.cmd_;}
 
   // Read the control parameters from the LUA config file
   void ReadParams(void);
@@ -162,6 +163,7 @@ class Ctl {
  private:
   // Proxy to gnc
   gnc_autocode::GncCtlAutocode gnc_;
+  gnc_autocode::Control controller_;
 
   std::mutex mutex_cmd_msg_, mutex_segment_;
 
@@ -188,6 +190,10 @@ class Ctl {
   bool use_truth_;
   float stopping_vel_thresh_squared_;
   float stopping_omega_thresh_squared_;
+
+// for testing
+  void TestTwoArrays(const char*, const float new_array[], const float old_array[], int length, float tolerance);
+  void TestFloats(const char*, const float new_float, const float oldfloat, float tolerance);
 };
 
 }  // end namespace ctl
