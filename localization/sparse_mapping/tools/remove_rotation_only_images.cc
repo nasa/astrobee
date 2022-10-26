@@ -173,18 +173,19 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
             << ", error ratio: " << error_ratio << ", mean rot error: " << mean_rotation_corrected_error
             << ", mean of error: " << mean_optical_flow_error << std::endl;
   if (view_images) {
-    // Scale color to be more white for a lower error ratio
-    // TODO(rsoussan): Use color image! Make red if above threshold!
-    const int color = 50.0 / error_ratio;
+    const int color = 40.0 / error_ratio;
+    const cv::Mat gray_color(1, 1, CV_8UC1, color);
+    cv::Mat heatmap_color;
+    cv::applyColorMap(gray_color, heatmap_color, cv::COLORMAP_JET);
+    const cv::Scalar cv_color(heatmap_color.data[0], heatmap_color.data[1], heatmap_color.data[2]);
     cv::putText(projection_img,
                 "ratio: " + std::to_string(error_ratio) + ", rot: " + std::to_string(mean_rotation_corrected_error) +
                   ", of: " + std::to_string(mean_optical_flow_error),
-                cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), CV_FONT_NORMAL, 0.9,
-                CV_RGB(color, color, color), 4, cv::LINE_AA);
+                cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), CV_FONT_NORMAL, 0.9, cv_color, 4,
+                cv::LINE_AA);
     if (remove_image)
-      // TODO(rsoussan): clean this up! move higher and make bigger!
-      cv::putText(projection_img, "Remove!", cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 20),
-                  CV_FONT_NORMAL, 0.5, CV_RGB(color, color, color), 4, cv::LINE_AA);
+      cv::putText(projection_img, "Removing", cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 200),
+                  CV_FONT_NORMAL, 2, cv_color, 4, cv::LINE_AA);
     cv::Mat resized_projection_img;
     cv::resize(projection_img, resized_projection_img, cv::Size(projection_img.cols * 2, projection_img.rows * 2));
     cv::imshow("ratio_image", resized_projection_img);
