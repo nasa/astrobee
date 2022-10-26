@@ -108,7 +108,7 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
 
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
                                const double min_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
-                               const std::string image_name, std::vector<Result>& results) {
+                               const std::string image_name, const bool view_images, std::vector<Result>& results) {
   if (matches.size() < 10) {
     std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
     return false;
@@ -130,7 +130,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   double total_optical_flow_error = 0;
   int good_triangulation_count = 0;
   cv::Mat projection_img;
-  cv::cvtColor(kImg.clone(), projection_img, cv::COLOR_GRAY2RGB);
+  if (view_images) cv::cvtColor(kImg.clone(), projection_img, cv::COLOR_GRAY2RGB);
   for (const auto& inlier_match : inliers) {
     const auto& match = matches[inlier_match.imgIdx];
     const Eigen::Vector2d& source_point = match.source_point;
@@ -146,7 +146,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     const double error = (distorted_projected_source_point - match.target_point).norm();
     total_rotation_corrected_error += error;
     total_optical_flow_error += (match.source_point - match.target_point).norm();
-    {
+    if (view_images) {
       cv::circle(projection_img, CvPoint2(match.target_point), 1, cv::Scalar(255, 255, 255), -1, 8);
       Eigen::Vector2d distorted_projected_source_point;
       camera_params.Convert<camera::UNDISTORTED, camera::DISTORTED>(projected_source_point,
@@ -165,11 +165,11 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const bool remove_image = error_ratio < min_rotation_error_ratio;
   results.emplace_back(Result(error_ratio, image_name, remove_image));
   static int count = 0;
-  if (remove_image) std::cout << "Remove Image!" << std::endl;
-  std::cout << "img: " << count++ << ", num inliers: " << inliers.size() << ", ratio: " << error_ratio
+  if (remove_image) std::cout << "Removing image." << std::endl;
+  std::cout << "Img: " << count++ << ", num inliers: " << inliers.size() << ", ratio: " << error_ratio
             << ", mean rot error: " << mean_rotation_corrected_error << ", mean of error: " << mean_optical_flow_error
             << std::endl;
-  {
+  if (view_images) {
     // Scale color to be more white for a lower error ratio
     // TODO(rsoussan): Use color image! Make red if above threshold!
     const int color = 50.0 / error_ratio;
@@ -263,7 +263,7 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
 
 int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const camera::CameraParameters& camera_params,
                              const double rotation_inlier_threshold, const double min_relative_pose_inliers_ratio,
-                             const bool move_images, std::vector<Result>& results) {
+                             const bool move_images, const bool view_images, std::vector<Result>& results) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
   auto& detector = *(detector_and_matcher.detector());
@@ -281,7 +281,7 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
       const auto matches = Matches(current_image, next_image, detector_and_matcher);
       if (matches &&
           RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold, min_relative_pose_inliers_ratio,
-                                    image_names[next_image_index], results)) {
+                                    image_names[next_image_index], view_images, results)) {
         LogInfo("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
         RemoveOrMove(move_images, results.back());
         ++num_removed_images;
@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
   bool remove_sequences;
   int max_seperation_in_sequence;
   bool move_images;
-  // TODO(rsoussan): Add option to view images
+  bool view_images;
   po::options_description desc("Removes any rotation only image sequences.");
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
@@ -343,7 +343,9 @@ int main(int argc, char** argv) {
     "Maximum distance between detected rotations for sequence removal. Only used if --remove-sequences enabled.")(
     "--move-images,m", po::bool_switch(&move_images)->default_value(false),
     "Move images to a directory called removed_images instead of deleting them.")(
-    "config-path,c", po::value<std::string>()->required(), "Config path")(
+    "--view-images,v", po::bool_switch(&view_images)->default_value(false),
+    "View images with projected features and error ratios.")("config-path,c", po::value<std::string>()->required(),
+                                                             "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "robot config file");
   po::positional_options_description p;
@@ -397,7 +399,7 @@ int main(int argc, char** argv) {
   const int num_original_images = image_names.size();
   std::vector<Result> results;
   int num_removed_images = RemoveRotationOnlyImages(image_names, camera_parameters, min_rotation_error_ratio,
-                                                    min_relative_pose_inliers_ratio, move_images, results);
+                                                    min_relative_pose_inliers_ratio, move_images, view_images, results);
   if (remove_sequences) {
     num_removed_images += RemoveRotationSequences(max_seperation_in_sequence, move_images, results);
   }
