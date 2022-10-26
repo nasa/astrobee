@@ -42,6 +42,18 @@ namespace vc = vision_common;
 // TODO(rsoussan): remove this
 cv::Mat kImg;
 
+// TODO(rsoussan): rename this
+struct Result {
+  Result(const double ratio, const std::string& image_name, const bool removed)
+      : ratio(ratio), image_name(image_name), removed(removed) {}
+  double ratio;
+  std::string image_name;
+  bool removed;
+};
+
+// TODO(rsoussan): remove this
+std::vector<Result> kResults;
+
 // TODO(rsoussan): put this in somewhere common
 cv::Point2f CvPoint2(const Eigen::Vector2d& point) { return cv::Point2f(point.x(), point.y()); }
 
@@ -84,9 +96,9 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
   return target_T_source.inverse();
 }
 
-// TODO(rsoussan): Consider how to use a sequence to remove/better prune images?
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
-                               const double min_rotation_error_ratio, const double min_relative_pose_inliers_ratio) {
+                               const double min_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
+                               const std::string image_name) {
   if (matches.size() < 10) {
     std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
     return false;
@@ -141,6 +153,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const double mean_optical_flow_error = total_optical_flow_error / size;
   const double error_ratio = mean_rotation_corrected_error / mean_optical_flow_error;
   const bool remove_image = error_ratio < min_rotation_error_ratio;
+  kResults.emplace_back(Result(error_ratio, image_name, remove_image));
   static int count = 0;
   if (remove_image) std::cout << "Remove Image!" << std::endl;
   std::cout << "img: " << count++ << ", num inliers: " << inliers.size() << ", ratio: " << error_ratio
@@ -156,6 +169,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
                 cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), CV_FONT_NORMAL, 0.9,
                 CV_RGB(color, color, color), 4, cv::LINE_AA);
     if (remove_image)
+      // TODO(rsoussan): clean this up! move higher and make bigger!
       cv::putText(projection_img, "Remove!", cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 20),
                   CV_FONT_NORMAL, 0.5, CV_RGB(color, color, color), 4, cv::LINE_AA);
     cv::Mat resized_projection_img;
@@ -165,6 +179,49 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   }
 
   return remove_image;
+}
+
+int RemoveRotationSequences(const int max_distance_between_removed_images) {
+  // check for largest consecutive chunk in between removed images, keep going until chunk is too large
+  int num_removed_images = 0;
+  for (int start_index = 0; start_index < static_cast<int>(kResults.size());) {
+    const auto& result = kResults[start_index];
+    // Find end of rotation chunk after reaching the potential start of a chunk
+    if (result.removed) {
+      boost::optional<int> end_index;
+      int current_distance_between_removed_images = 0;
+      // Add all images from start to end that have a max distance less than the provided threshold to other rotation
+      // images
+      for (int query_index = start_index + 1;
+           query_index < (static_cast<int>(kResults.size()) &&
+                          (current_distance_between_removed_images < max_distance_between_removed_images));
+           ++query_index) {
+        if (kResults[query_index].removed) {
+          end_index = query_index;
+          current_distance_between_removed_images = 0;
+        } else {
+          ++current_distance_between_removed_images;
+        }
+      }
+      // Remove all images in between start and end index if end index found
+      if (end_index) {
+        for (int i = start_index; i < *end_index; ++i) {
+          auto& result = kResults[i];
+          if (!result.removed) {
+            // std::remove(result.image_name.c_str());
+            std::string new_name = "removed/" + result.image_name;
+            std::rename((result.image_name).c_str(), new_name.c_str());
+            result.removed = true;
+            ++num_removed_images;
+          }
+        }
+        start_index = *end_index + 1;
+      }
+    } else {
+      ++start_index;
+    }
+  }
+  return num_removed_images;
 }
 
 // TODO(rsoussan): put this in somwhere common
@@ -214,8 +271,8 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
       kImg = next_image.image().clone();
       const auto matches = Matches(current_image, next_image, detector_and_matcher);
       if (matches && RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold,
-                                               min_relative_pose_inliers_ratio)) {
-        LogDebug("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
+                                               min_relative_pose_inliers_ratio, image_names[next_image_index])) {
+        LogInfo("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
         // std::remove((image_names[next_image_index]).c_str());
         std::string new_name = "removed/" + image_names[next_image_index];
         std::rename((image_names[next_image_index]).c_str(), new_name.c_str());
@@ -236,7 +293,6 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
     if (current_image_index >= image_names.size() - 1) break;
     next_image = LoadImage(++next_image_index, image_names, detector);
   }
-
   return num_removed_images;
 }
 
@@ -258,16 +314,27 @@ int main(int argc, char** argv) {
   double min_rotation_error_ratio;
   double min_relative_pose_inliers_ratio;
   std::string robot_config_file;
+  bool remove_sequences;
+  int max_seperation_in_sequence;
+  // TODO(rsoussan): Add option to view images
+  // TODO(rsoussan): add option to move images to new directory instead of removing
+  // - make new directory
+  // - move there
   po::options_description desc("Removes any rotation only image sequences.");
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--min-rotation-error-ratio,r", po::value<double>(&min_rotation_error_ratio)->default_value(1e-9),
+    "--min-rotation-error-ratio,e", po::value<double>(&min_rotation_error_ratio)->default_value(1e-9),
     "Minimum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
     "of images to be considered rotation only movement. The lower the ratio, the more the rotation fully explains "
     "the movement between the images.")(
     "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
+    "--remove-sequences,r", po::bool_switch(&remove_sequences)->default_value(true),
+    "Remove images between detected rotations. Use --max-seperation-in-sequence to set the max distance from detected "
+    "rotation images to classify an image as in a rotation sequence.")(
+    "--max-seperation-in-sequence,m", po::value<int>(&max_seperation_in_sequence)->default_value(2),
+    "Maximum distance between detected rotations for sequence removal. Only used if --remove-sequences enabled.")(
     "config-path,c", po::value<std::string>()->required(), "Config path")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "robot config file");
@@ -312,7 +379,10 @@ int main(int argc, char** argv) {
   if (image_names.empty()) LogFatal("No images found.");
 
   const int num_original_images = image_names.size();
-  const int num_removed_images =
+  int num_removed_images =
     RemoveRotationOnlyImages(image_names, camera_parameters, min_rotation_error_ratio, min_relative_pose_inliers_ratio);
+  if (remove_sequences) {
+    num_removed_images += RemoveRotationSequences(max_seperation_in_sequence);
+  }
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
 }
