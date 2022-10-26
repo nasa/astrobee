@@ -188,7 +188,10 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
                   CV_FONT_NORMAL, 2, cv_color, 4, cv::LINE_AA);
     cv::Mat resized_projection_img;
     cv::resize(projection_img, resized_projection_img, cv::Size(projection_img.cols * 2, projection_img.rows * 2));
-    cv::imshow("ratio_image", resized_projection_img);
+    const std::string window_name("ratio_image");
+    cv::namedWindow(window_name);
+    cv::moveWindow(window_name, 0, 0);
+    cv::imshow(window_name, resized_projection_img);
     cv::waitKey(0);
   }
 
