@@ -154,7 +154,9 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   double total_optical_flow_error = 0;
   int good_triangulation_count = 0;
   cv::Mat projection_img;
-  if (view_images) cv::cvtColor(kImg.clone(), projection_img, cv::COLOR_GRAY2RGB);
+  if (view_images) {
+    cv::cvtColor(kImg.clone(), projection_img, cv::COLOR_GRAY2RGB);
+  }
   for (const auto& inlier_match : inliers) {
     const auto& match = matches[inlier_match.imgIdx];
     const Eigen::Vector2d& source_point = match.source_point;
@@ -212,10 +214,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
                   CV_FONT_NORMAL, 2, cv_color, 4, cv::LINE_AA);
     cv::Mat resized_projection_img;
     cv::resize(projection_img, resized_projection_img, cv::Size(projection_img.cols * 2, projection_img.rows * 2));
-    const std::string window_name("ratio_image");
-    cv::namedWindow(window_name);
-    cv::moveWindow(window_name, 0, 0);
-    cv::imshow(window_name, resized_projection_img);
+    cv::imshow("ratio_image", resized_projection_img);
     cv::waitKey(0);
   }
 
@@ -331,6 +330,14 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
   auto current_image = LoadImage(current_image_index, image_names, detector);
   auto next_image = LoadImage(next_image_index, image_names, detector);
   int num_removed_images = 0;
+  if (view_images) {
+    const std::string window_name("ratio_image");
+    cv::namedWindow(window_name);
+    cv::moveWindow(window_name, 50, 30);
+  }
+
+  // Manually add first image
+  results.emplace_back(Result(0, image_names[0], false));
   while (current_image_index < image_names.size()) {
     bool removed_rotation_sequence = false;
     while (next_image_index < image_names.size()) {
@@ -385,7 +392,6 @@ int main(int argc, char** argv) {
   bool save_results_to_subdirectories;
   int min_separation_between_sets;
   po::options_description desc("Removes any rotation only image sequences.");
-  // TODO(rsoussan): Tune rotation sequence distance
   // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
