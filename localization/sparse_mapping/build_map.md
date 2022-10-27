@@ -65,14 +65,16 @@ Remove low movement images:
 
 This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
 
-This is a non-reversible operation, so it should be invoked on a copy
+Remove rotation-only movement images:
+    rosrun sparse_mapping remove_rotation_only_images image_directory_name config_path
+
+Removes rotation only image sequences and optionally saves different movement sequences to different subdirectories.
+
+These are non-reversible operations, so they should be invoked on a copy
 of the images.
 
-It is important to avoid rotating the bot in place when acquiring
-images, as then the map could be of poor quality. Hence, the robot
-should have some translation motion (in addition to any rotation) when
+If possible, the robot should have some translation motion (in addition to any rotation) when
 the data is acquired.
-
 
 ## Building a map
 

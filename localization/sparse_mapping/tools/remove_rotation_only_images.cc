@@ -303,7 +303,11 @@ int main(int argc, char** argv) {
   bool view_images;
   bool save_results_to_subdirectories;
   int min_separation_between_sets;
-  po::options_description desc("Removes any rotation only image sequences.");
+  po::options_description desc(
+    "Removes any rotation-only image sequences. Checks sequential images and removes the subsequent image if it fits a "
+    "rotation-only movement model. Further prunes results by removing any images bounded within a provided threhsold "
+    "by detected rotations. Optionally saves results to subdirectories where each subdirectory contains a different "
+    "sequence of non-rotation movement, where each sequence is separated by a set of removed rotation images.");
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
@@ -389,11 +393,11 @@ int main(int argc, char** argv) {
   LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
   num_removed_images += RemoveRotationSequences(max_separation_in_sequence, move_removed_images, results);
 
-  LogInfo("Removed " << (num_removed_images - num_removed_rotation_only_images) << " of " << num_original_images
-                     << " images.");
+  LogInfo("Removed " << (num_removed_images - num_removed_rotation_only_images) << " of "
+                     << (num_original_images - num_removed_rotation_only_images) << " images.");
   if (save_results_to_subdirectories) {
     LogInfo("Saving results to subdirectories.");
     SaveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
   }
-  LogInfo("Total images removed: " << num_removed_images << " of " << num_original_images << " .");
+  LogInfo("Total images removed: " << num_removed_images << " of " << num_original_images << ".");
 }
