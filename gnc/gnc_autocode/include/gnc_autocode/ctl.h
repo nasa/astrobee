@@ -29,25 +29,12 @@ namespace config_reader {
   class ConfigReader;
 }
 
-// constants from here:
-// https://github.com/nasa/astrobee/blob/master/gnc/matlab/code_generation/ctl_controller0_ert_rtw/ctl_controller0_data.cpp
 namespace constants {
   // TODO(bcoltin): load
 const unsigned int ase_status_converged = 0U;
 const unsigned int ctl_idle_mode = 0U;
 const unsigned int ctl_stopping_mode = 1U;
 const unsigned int ctl_stopped_mode = 3U;
-const long double butterworth_gain_1 = 0.0031317642291927056;
-const long double butterworth_gain_2 = -0.993736471541614597;
-const auto tun_ctl_stopping_omega_thresh = 0.0004F;
-const auto tun_ctl_stopping_vel_thresh = 0.0004F;
-const auto tun_ctl_stopped_pos_thresh = 0.1F;
-const auto tun_ctl_stopped_quat_thresh = 0.174533F;
-const auto tun_ctl_pos_sat_upper = 0.1F;
-const auto tun_ctl_pos_sat_lower = -0.1F;
-const float tun_ctl_linear_force_limit = 100.0F;
-const float tun_ctl_att_sat_upper = 0.5F;
-const float tun_ctl_att_sat_lower = -0.5F;
 }  // namespace constants
 
 namespace gnc_autocode {
@@ -180,6 +167,16 @@ class Control {
   Eigen::Matrix<float, 4, 4> OmegaMatrix(float input[3]);
 
   Eigen::Vector3f tun_accel_gain;
+  Eigen::Vector3f tun_alpha_gain;
+  float tun_ctl_stopping_omega_thresh;
+  float tun_ctl_stopping_vel_thresh;
+  float tun_ctl_stopped_pos_thresh;
+  float tun_ctl_stopped_quat_thresh;
+  float tun_ctl_pos_sat_upper;
+  float tun_ctl_pos_sat_lower;
+  float tun_ctl_linear_force_limit;
+  float tun_ctl_att_sat_upper;
+  float tun_ctl_att_sat_lower;
 };
 }  // end namespace gnc_autocode
 

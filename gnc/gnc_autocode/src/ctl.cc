@@ -35,15 +35,16 @@
 #include <ros/assert.h>
 #include <gnc_autocode/ctl.h>
 #include <config_reader/config_reader.h>
+#include <msg_conversions/msg_conversions.h>
 #include <assert.h>
 #include <ctl_tunable_funcs.h>
 #include <Eigen/Dense>
-#include<unsupported/Eigen/MatrixFunctions>
-#include<iostream>
-#include<sstream>
-#include<string>
-#include<cstring>
-#include<cmath>
+#include <unsupported/Eigen/MatrixFunctions>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cstring>
+#include <cmath>
 
 namespace gnc_autocode {
 
@@ -62,8 +63,6 @@ void NormalizeQuaternion(Eigen::Quaternionf & out) {
 
 
 Control::Control(void) {
-  // TODO(bcoltin): remove
-  tun_accel_gain << 1.0f, 1.0f, 1.0f;
   prev_filter_vel[0] = 0;
   prev_filter_vel[1] = 0;
   prev_filter_vel[2] = 0;
@@ -358,6 +357,7 @@ void Control::FindBodyTorqueCmd() {
     float ang_accel_feed[3];
     Eigen::Vector3f alpha;
     alpha << CMD_Alpha_B_ISS_B[0], CMD_Alpha_B_ISS_B[1], CMD_Alpha_B_ISS_B[2];
+    alpha = (tun_alpha_gain.array() * alpha.array()).matrix();
     Eigen::Vector3f omega;
     omega << ctl_input_.est_omega_B_ISS_B[0], ctl_input_.est_omega_B_ISS_B[1], ctl_input_.est_omega_B_ISS_B[2];
 
@@ -410,8 +410,8 @@ Eigen::Vector3f Control::AngAccelHelper() {
 
 void Control::UpdateRotateIntErr() {
   Eigen::Vector3f in; in << att_err[0] * Ki_rot[0], att_err[1] * Ki_rot[1], att_err[2] * Ki_rot[2];
-  Eigen::Vector3f out = discreteTimeIntegrator(in, rotational_integrator, constants::tun_ctl_att_sat_upper,
-                                            constants::tun_ctl_att_sat_lower);
+  Eigen::Vector3f out = discreteTimeIntegrator(in, rotational_integrator, tun_ctl_att_sat_upper,
+                                               tun_ctl_att_sat_lower);
   rotate_int_err[0] = out.x();
   rotate_int_err[1] = out.y();
   rotate_int_err[2] = out.z();
@@ -442,12 +442,8 @@ void Control::FindBodyForceCmd() {
     v = CMD_V_B_ISS_ISS + (Kp_lin.array() * pos_err_outport.array()).matrix() + linear_int_err;
   }
   Eigen::Vector3f temp = (Kp_lin.array() * pos_err_outport.array()).matrix() + linear_int_err;
-  //  ROS_ERROR("new2a %g %g %g", linear_int_err[0], linear_int_err[1], linear_int_err[2]);
-  //  ROS_ERROR("new2a %g %g %g", CMD_V_B_ISS_ISS[0], CMD_V_B_ISS_ISS[1], CMD_V_B_ISS_ISS[2]);
-  //  ROS_ERROR("new2b %g %g %g", temp[0], temp[1], temp[2]);
   Eigen::Vector3f est_V_B_ISS_ISS;
   est_V_B_ISS_ISS << ctl_input_.est_V_B_ISS_ISS[0], ctl_input_.est_V_B_ISS_ISS[1], ctl_input_.est_V_B_ISS_ISS[2];
-  //  ROS_ERROR("new2c %g %g %g", est_V_B_ISS_ISS[0], est_V_B_ISS_ISS[1], est_V_B_ISS_ISS[2]);
   v -= est_V_B_ISS_ISS;
 
   float velo_err_tmp[3];
@@ -458,23 +454,15 @@ void Control::FindBodyForceCmd() {
   est_quat_ISS2B.z() = ctl_input_.est_quat_ISS2B[2];
   est_quat_ISS2B.w() = ctl_input_.est_quat_ISS2B[3];
   Eigen::Vector3f a = RotateVectorAtoB(v, est_quat_ISS2B);
-  //  ROS_ERROR("newt %g %g %g", v[0], v[1], v[2]);
-  //  ROS_ERROR("newq %g %g %g %g", est_quat_ISS2B.x(), est_quat_ISS2B.y(), est_quat_ISS2B.z(), est_quat_ISS2B.w());
-  //  ROS_ERROR("new2 %g %g %g", a[0], a[1], a[2]);
   a = ctl_input_.mass * (a.array() * Kd_lin.array()).matrix();
 
   float accel_err_tmp[3];
   Eigen::Vector3f b = RotateVectorAtoB((CMD_A_B_ISS_ISS.array() * tun_accel_gain.array()).matrix(),
                                        est_quat_ISS2B);
-  v = CMD_A_B_ISS_ISS.array() * tun_accel_gain.array();
-  //  ROS_ERROR("newa %g %g %g", v[0], v[1], v[2]);
-  //  ROS_ERROR("newa1 %g %g %g", CMD_A_B_ISS_ISS[0], CMD_A_B_ISS_ISS[1], CMD_A_B_ISS_ISS[2]);
-  //  ROS_ERROR("new1 %g %g %g", b[0], b[1], b[2]);
   b *= ctl_input_.mass;
   Eigen::Vector3f t = a + b;
-  //  ROS_ERROR("newt %g %g %g", t[0], t[1], t[2]);
 
-  Eigen::Vector3f out = SaturateVector(a + b, constants::tun_ctl_linear_force_limit);
+  Eigen::Vector3f out = SaturateVector(a + b, tun_ctl_linear_force_limit);
   for (int i = 0; i < 3; i++) {
     body_force_cmd[i] = out[i];
     body_accel_cmd[i] = body_force_cmd[i] / ctl_input_.mass;
@@ -569,7 +557,7 @@ void Control::SkewSymetricMatrix(const float input[3], float output[3][3]) {
 
 void Control::FindLinearIntErr() {
   linear_int_err = discreteTimeIntegrator((Ki_lin.array() * pos_err_outport.array()).matrix(),
-                   linear_integrator, constants::tun_ctl_pos_sat_upper, constants::tun_ctl_pos_sat_lower);
+                   linear_integrator, tun_ctl_pos_sat_upper, tun_ctl_pos_sat_lower);
 }
 
 Eigen::Vector3f Control::discreteTimeIntegrator(Eigen::Vector3f input, float accumulator[3], float upper_limit,
@@ -670,7 +658,7 @@ bool Control::CtlStatusSwitch() {
     pos_sum = pos_sum + tmp;
   }
 
-  if (((pos_sum > constants::tun_ctl_stopped_pos_thresh) || (abs(quat_err) > constants::tun_ctl_stopped_quat_thresh)) &&
+  if (((pos_sum > tun_ctl_stopped_pos_thresh) || (abs(quat_err) > tun_ctl_stopped_quat_thresh)) &&
       (mode_cmd == constants::ctl_stopped_mode)) {
     return true;
   }
@@ -754,8 +742,8 @@ void Control::UpdateStoppedMode() {
   }
 
   // need to run these outside of if condition to make sure that they are being ran every cycle
-  bool vel_below_threshold = BelowThreshold(velocity, constants::tun_ctl_stopping_vel_thresh, prev_filter_vel);
-  bool omega_below_threshold =  BelowThreshold(omega, constants::tun_ctl_stopping_omega_thresh, prev_filter_omega);
+  bool vel_below_threshold = BelowThreshold(velocity, tun_ctl_stopping_vel_thresh, prev_filter_vel);
+  bool omega_below_threshold =  BelowThreshold(omega, tun_ctl_stopping_omega_thresh, prev_filter_omega);
   bool cmd_make = CmdModeMakeCondition();
   if (vel_below_threshold && omega_below_threshold && cmd_make) {
     stopped_mode = true;
@@ -765,8 +753,10 @@ void Control::UpdateStoppedMode() {
 }
 /*Butterworth filter implementation */
 float Control::ButterWorthFilter(float input, float& delay_val) {
-  float tmp_out = input * constants::butterworth_gain_1;
-  float previous_gain = delay_val * constants::butterworth_gain_2;
+  const long double butterworth_gain_1 = 0.0031317642291927056;
+  const long double butterworth_gain_2 = -0.993736471541614597;
+  float tmp_out = input * butterworth_gain_1;
+  float previous_gain = delay_val * butterworth_gain_2;
   tmp_out = tmp_out - previous_gain;
   float output = tmp_out + delay_val;
   delay_val = tmp_out;
@@ -822,6 +812,31 @@ void Control::Initialize(void) {
 }
 
 void Control::ReadParams(config_reader::ConfigReader* config) {
+  Eigen::Vector3d temp;
+  if (!msg_conversions::config_read_vector(config, "tun_accel_gain", &temp))
+    ROS_FATAL("Unspecified tun_accel_gain.");
+  tun_accel_gain = temp.cast<float>();
+  if (!msg_conversions::config_read_vector(config, "tun_alpha_gain", &temp))
+    ROS_FATAL("Unspecified tun_alpha_gain.");
+  tun_alpha_gain = temp.cast<float>();
+  if (!config->GetReal("tun_ctl_stopped_pos_thresh", &tun_ctl_stopped_pos_thresh))
+    ROS_FATAL("Unspecified tun_ctl_stopped_pos_thresh.");
+  if (!config->GetReal("tun_ctl_stopped_quat_thresh", &tun_ctl_stopped_quat_thresh))
+    ROS_FATAL("Unspecified tun_ctl_stopped_quat_thresh.");
+  if (!config->GetReal("tun_ctl_stopping_omega_thresh", &tun_ctl_stopping_omega_thresh))
+    ROS_FATAL("Unspecified tun_ctl_stopping_omega_thresh.");
+  if (!config->GetReal("tun_ctl_stopping_vel_thresh", &tun_ctl_stopping_vel_thresh))
+    ROS_FATAL("Unspecified tun_ctl_stopping_vel_thresh.");
+  if (!config->GetReal("tun_ctl_att_sat_lower", &tun_ctl_att_sat_lower))
+    ROS_FATAL("Unspecified tun_ctl_att_sat_lower.");
+  if (!config->GetReal("tun_ctl_att_sat_upper", &tun_ctl_att_sat_upper))
+    ROS_FATAL("Unspecified tun_ctl_att_sat_upper.");
+  if (!config->GetReal("tun_ctl_linear_force_limit", &tun_ctl_linear_force_limit))
+    ROS_FATAL("Unspecified tun_ctl_linear_force_limit.");
+  if (!config->GetReal("tun_ctl_pos_sat_lower", &tun_ctl_pos_sat_lower))
+    ROS_FATAL("Unspecified tun_ctl_pos_sat_lower.");
+  if (!config->GetReal("tun_ctl_pos_sat_upper", &tun_ctl_pos_sat_upper))
+    ROS_FATAL("Unspecified tun_ctl_pos_sat_upper.");
 }
 
 }  // end namespace gnc_autocode
