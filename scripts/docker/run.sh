@@ -28,7 +28,7 @@ usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
 -f or --focal: Use Ubuntu 20.04 docker image
 -r or --remote: Fetch pre-built remote docker image (vs. local image built by build.sh)
 -n or --no-display: Don't set up X forwarding. (For headless environment.)
--g or --no-gpu: Don't use gpu. (For virtual machines.)
+-g or --gpu: Overwrite default gpu check. (For non nvidia gpu's.)
 -m or --mount: Mount the local checkout folder into the docker container.
 -d or --dry-run: Just what commands would be run
 -i or --image run a different image tag
@@ -57,8 +57,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,n,g,m,d,i:,a:"
-longopts="help,xenial,bionic,focal,remote,no-display,no-gpu,mount,dry-run,image:,args:"
+shortopts="h,x,b,f,r,n,g:,m,d,i:,a:"
+longopts="help,xenial,bionic,focal,remote,no-display,gpu:,mount,dry-run,image:,args:"
 opts=$(getopt -a -n run.sh --options "$shortopts" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -77,7 +77,11 @@ eval set -- "$opts"
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 sim_args="dds:=false robot:=sim_pub"
 display="true"
-gpu="true"
+if [[ $(lshw -C display | grep vendor) =~ Nvidia ]]; then
+  gpu="true"
+else
+  gpu="false"
+fi
 mount="false"
 tagrepo="astrobee"
 dry_run="false"
@@ -99,7 +103,8 @@ while [ "$1" != "" ]; do
                                    ;;
         -n | --no-display )        display="false"
                                    ;;
-        -g | --no-gpu)             gpu="false"
+        -g | --gpu)                gpu="$2"
+                                   shift
                                    ;;
         -m | --mount )             mount="true"
                                    ;;
