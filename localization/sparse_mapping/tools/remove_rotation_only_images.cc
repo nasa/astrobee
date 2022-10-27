@@ -294,25 +294,25 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   return params;
 }
 
-void SaveResultsToSubdirectories(const std::string& image_directory, const std::vector<Result>& results) {
-  constexpr int kMaxSeperationSize = 5;
+void SaveResultsToSubdirectories(const std::string& image_directory, const int min_separation_between_sets,
+                                 const std::vector<Result>& results) {
   int subdirectory_index = 0;
   CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
   bool previous_result_removed = false;
-  int current_seperation_size = 0;
+  int current_separation_size = 0;
   // Save continous sets of non-removed sequences to different subdirectories
   for (const auto& result : results) {
     if (result.removed) {
-      ++current_seperation_size;
+      ++current_separation_size;
       previous_result_removed = true;
     } else {
       // Only create new subdirectories when sequences are far enough apart to avoid adding many small
       // subdirectories
-      if (current_seperation_size > kMaxSeperationSize)
+      if (current_separation_size > min_separation_between_sets)
         CreateSubdirectory(image_directory, std::to_string(++subdirectory_index));
       Move(result.image_name, std::to_string(subdirectory_index));
       previous_result_removed = false;
-      current_seperation_size = 0;
+      current_separation_size = 0;
     }
   }
 }
@@ -378,14 +378,13 @@ int main(int argc, char** argv) {
   double min_relative_pose_inliers_ratio;
   std::string robot_config_file;
   bool remove_sequences;
-  int max_seperation_in_sequence;
+  int max_separation_in_sequence;
   bool remove_erroneous_images;
   bool move_removed_images;
   bool view_images;
   bool save_results_to_subdirectories;
+  int min_separation_between_subsets;
   po::options_description desc("Removes any rotation only image sequences.");
-  // TODO(rsoussan): ignore removed sequences that are too short when saving subdirectories!!
-  // Add this as a parameter???
   // TODO(rsoussan): Tune rotation sequence distance
   // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
@@ -398,11 +397,12 @@ int main(int argc, char** argv) {
     "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
     "--keep-sequences,k", po::bool_switch(&remove_sequences)->default_value(true),
-    "Don't remove images between detected rotations. If enabled, use --max-seperation-in-sequence to set the max "
+    "Don't remove images between detected rotations. If enabled, use --max-separation-in-sequence to set the max "
     "distance from detected "
     "rotation images to classify an image as in a rotation sequence.")(
-    "--max-seperation-in-sequence,d", po::value<int>(&max_seperation_in_sequence)->default_value(2),
-    "Maximum distance between detected rotations for sequence removal. Only used if --remove-sequences enabled.")(
+    "--min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
+    "Minimum separation between non-rotation image sets if --save-to-subdirectories enabled. Setting to a lower value "
+    "allows for smaller subdirectories.")(
     "--move-removed-images,m", po::bool_switch(&move_removed_images)->default_value(false),
     "Move removed images to a directory called removed instead of deleting them.")(
     "--remove-erroneous-images,x", po::bool_switch(&remove_erroneous_images)->default_value(false),
@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
     "--view-images,v", po::bool_switch(&view_images)->default_value(false),
     "View images with projected features and error ratios.")(
     "--save-to-subdirectories,s", po::bool_switch(&save_results_to_subdirectories)->default_value(false),
-    "Save results to subdirectories, where each continous set of images seperated by a rotation seqeunce is saved to a "
+    "Save results to subdirectories, where each continous set of images separated by a rotation seqeunce is saved to a "
     "different subdirectory.")
 
     ("config-path,c", po::value<std::string>()->required(), "Config path")(
@@ -467,12 +467,12 @@ int main(int argc, char** argv) {
     RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio, min_relative_pose_inliers_ratio,
                              remove_erroneous_images, move_removed_images, view_images, results);
   if (remove_sequences) {
-    LogInfo("Removing rotation sequences, max allowed seperation: " + std::to_string(max_seperation_in_sequence));
-    num_removed_images += RemoveRotationSequences(max_seperation_in_sequence, move_removed_images, results);
+    LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
+    num_removed_images += RemoveRotationSequences(max_separation_in_sequence, move_removed_images, results);
   }
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
   if (save_results_to_subdirectories) {
     LogInfo("Saving results to subdirectories.");
-    SaveResultsToSubdirectories(image_directory, results);
+    SaveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
   }
 }
