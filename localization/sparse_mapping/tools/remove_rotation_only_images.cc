@@ -295,22 +295,24 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
 }
 
 void SaveResultsToSubdirectories(const std::string& image_directory, const std::vector<Result>& results) {
-  // Save continous sets of non-removed sequences to different subdirectories
+  constexpr int kMaxSeperationSize = 5;
   int subdirectory_index = 0;
   CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
   bool previous_result_removed = false;
+  int current_seperation_size = 0;
+  // Save continous sets of non-removed sequences to different subdirectories
   for (const auto& result : results) {
     if (result.removed) {
-      if (previous_result_removed) {
-        continue;
-      } else {
-        ++subdirectory_index;
-        CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
-        previous_result_removed = true;
-      }
+      ++current_seperation_size;
+      previous_result_removed = true;
     } else {
-      previous_result_removed = false;
+      // Only create new subdirectories when sequences are far enough apart to avoid adding many small
+      // subdirectories
+      if (current_seperation_size > kMaxSeperationSize)
+        CreateSubdirectory(image_directory, std::to_string(++subdirectory_index));
       Move(result.image_name, std::to_string(subdirectory_index));
+      previous_result_removed = false;
+      current_seperation_size = 0;
     }
   }
 }
@@ -382,6 +384,8 @@ int main(int argc, char** argv) {
   bool view_images;
   bool save_results_to_subdirectories;
   po::options_description desc("Removes any rotation only image sequences.");
+  // TODO(rsoussan): ignore removed sequences that are too short when saving subdirectories!!
+  // Add this as a parameter???
   // TODO(rsoussan): Tune rotation sequence distance
   // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
