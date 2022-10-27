@@ -29,7 +29,7 @@
   <arg name="extra" default=""/>                <!-- Inject additional node  -->
   <arg name="debug" default=""/>                <!-- Debug node group        -->
   <!-- Physics engine options: ode (gazebo default), bullet, simbody, dart   -->
-  <arg name="physics" default="dart"/>
+  <arg name="physics" default="ode"/>
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
