@@ -2,19 +2,22 @@
 
 # Usage instructions for Docker
 
+Make sure you have Docker installed in your Ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+
 Here there are instructions on how to build and run the FSW using Docker.
 First, clone the flight software repository and media:
 
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
     git submodule update --init --depth 1 description/media
 
-The docker image for the astrobee FSW is divided throughout 2 docker files. 
+The docker image for the astrobee FSW is divided throughout 2 docker files:
 
-Available docker files:
-
-- `astrobee_base.Dockerfile` - Contains installation of all astrobee dependencies the Ubuntu + ROS setup.
+- `astrobee_base.Dockerfile` - Contains installation of all astrobee dependencies (Ubuntu + ROS setup).
 - `astrobee.Dockerfile` - Builds the astrobee FSW code on top of astrobee_base.
-- `astrobee_quick.Dockerfile` - Builds the astrobee FSW code using a previous astrobee image as a build cache. This dramatically speeds up build times for small changes.
+
+For rebuilding the FSW you can use:
+
+- `astrobee_quick.Dockerfile` - Builds the astrobee FSW code using a previous astrobee image as a build cache (if you want to clear the cache use astrobee.Dockerfile instead). This dramatically speeds up build times for small changes.
 
 The Docker files accept the following version args (note that they must match up):
 
@@ -31,6 +34,8 @@ The Docker files also accept args to use local or container registry images.
 - `REMOTE` - The repository where the dockerfile should derive its base. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 - `REMOTE_CACHED` - (Only for `astrobee_quick.dockerfile`, defaults to `${REMOTE}`). The repository for the build cache image. Valid values are `astrobee` (the default for local builds) or `ghcr.io/nasa` (the official repository).
 
+All pre-built remote images are available on [github here](https://github.com/nasa/astrobee/pkgs/container/astrobee)
+
 ## Optional: Build the docker image
 
 The fastest way to start running the software is to fetch a remote
@@ -38,8 +43,8 @@ docker image by using the `--remote` option with the `run.sh` script
 described below. Building the docker images is not required.
 
 However, if you need to build a local copy of the docker images, run:
-    
-    ./build.sh
+
+    ./scripts/docker/build.sh
 
 By default, the build script will automatically detect your host's
 Ubuntu OS version and configure the docker image to use the same
@@ -52,20 +57,25 @@ docker image Ubuntu version by specifying `--xenial`, `--bionic`, or
 `--focal` for Ubuntu 16.04, 18.04, or 20.04 docker images,
 respectively.
 
+For more information about all the arguments:
+
+    ./scripts/docker/build.sh -h
+
+
 ## Run the Astrobee simulator in the container
 
-*Note: To run the simulator within a docker container, the container
-generally needs to have hardware-accelerated graphics support. This
-requires compatible graphics hardware and may also require installing
-a special support package, such as `nvidia-container-toolkit`.*
+For some systems (with discrete graphics cards), you may need to install [additional software](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
 
 To run the Astrobee simulator in the container:
 
-    ./run.sh --remote
+    ./scripts/docker/run.sh --remote
 
-The default arguments to the sim are `dds:=false robot:=sim_pub`. To add more arguments:
+For more information about all the arguments:
 
-    ./run.sh --remote --args "rviz:=true sviz:=true"
+    ./scripts/docker/run.sh -h
+
+There are available options sucha as `--args` that allow you to add to the default sim arguments (`dds:=false robot:=sim_pub`) such as to open rviz or gazebo (`--args "rviz:=true sviz:=true"`).
+
 
 To open another terminal inside the same docker container:
 
@@ -77,18 +87,18 @@ specified command, in this case `bash`, to get an interactive shell.)
 
 To shutdown the docker container, run:
 
-    ./shutdown.sh
+    ./scripts/docker/shutdown.sh
 
 ## Run other commands in the container
 
 Besides the simulator, you can also run arbitrary commands with `run.sh`. To
 get an interactive shell:
 
-    ./run.sh --remote -- bash
+    ./scripts/docker/run.sh --remote -- bash
 
 Or run any other command:
 
-    ./run.sh --remote -- rosmsg info std_msgs/Header
+    ./scripts/docker/run.sh --remote -- rosmsg info std_msgs/Header
 
 (The `--` separator is usually not necessary, but makes the `run.sh`
 argument parsing more predictable.)
@@ -122,7 +132,7 @@ replicate and debug failed CI tests.
 
 Example usage:
 
-    host$ ./run.sh --remote --mount
+    host$ ./scripts/docker/run.sh --remote --mount
     docker# (cd /src/astrobee && catkin build [package])  # recompile local changes
     docker# /src/astrobee/src/scripts/run_tests.sh [package]
 
@@ -141,12 +151,12 @@ If you care about higher-fidelity replication of CI problems and are
 willing to wait through a full `astrobee` build, you can also use
 `build.sh` to invoke `test_astrobee.Dockerfile` itself, like this:
 
-    ./build.sh --remote astrobee test_astrobee
+    ./scripts/docker/build.sh --remote astrobee test_astrobee
 
 Or, if you made changes that affect `astrobee_base.Dockerfile`, you
 will need to rebuild that locally as well:
 
-    ./build.sh astrobee_base astrobee test_astrobee
+    ./scripts/docker/build.sh astrobee_base astrobee test_astrobee
 
 ## Cross-compile Astrobee (NASA users only)
 
