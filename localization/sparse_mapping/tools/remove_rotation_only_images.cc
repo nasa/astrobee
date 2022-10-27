@@ -383,34 +383,33 @@ int main(int argc, char** argv) {
   bool move_removed_images;
   bool view_images;
   bool save_results_to_subdirectories;
-  int min_separation_between_subsets;
+  int min_separation_between_sets;
   po::options_description desc("Removes any rotation only image sequences.");
   // TODO(rsoussan): Tune rotation sequence distance
   // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--max-rotation-error-ratio,e", po::value<double>(&max_rotation_error_ratio)->default_value(0.1),
+    "--max-rotation-error-ratio,e", po::value<double>(&max_rotation_error_ratio)->default_value(0.25),
     "Maximum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
     "of images to be considered rotation only movement. The lower the ratio, the more the rotation fully explains "
     "the movement between the images.")(
     "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
-    "--keep-sequences,k", po::bool_switch(&remove_sequences)->default_value(true),
-    "Don't remove images between detected rotations. If enabled, use --max-separation-in-sequence to set the max "
-    "distance from detected "
-    "rotation images to classify an image as in a rotation sequence.")(
+    "--max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
+    "Maximum distance between detected rotations for sequence removal.")(
     "--min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
     "Minimum separation between non-rotation image sets if --save-to-subdirectories enabled. Setting to a lower value "
     "allows for smaller subdirectories.")(
-    "--move-removed-images,m", po::bool_switch(&move_removed_images)->default_value(false),
-    "Move removed images to a directory called removed instead of deleting them.")(
-    "--remove-erroneous-images,x", po::bool_switch(&remove_erroneous_images)->default_value(false),
-    "Remove images with too few relative pose inliers or too few matches between images.")(
-    "--view-images,v", po::bool_switch(&view_images)->default_value(false),
-    "View images with projected features and error ratios.")(
-    "--save-to-subdirectories,s", po::bool_switch(&save_results_to_subdirectories)->default_value(false),
-    "Save results to subdirectories, where each continous set of images separated by a rotation seqeunce is saved to a "
+    "--remove-images,x", po::bool_switch(&move_removed_images)->default_value(true),
+    "Remove images. Default behavior saves these to a directory called removed instead of deleting them.")(
+    "--keep-erroneous-images,k", po::bool_switch(&remove_erroneous_images)->default_value(true),
+    "Keep images with too few relative pose inliers or too few matches between images. Default behavior removes "
+    "these.")("--view-images,v", po::bool_switch(&view_images)->default_value(false),
+              "View images with projected features and error ratios.")(
+    "--keep-images-in-directory,s", po::bool_switch(&save_results_to_subdirectories)->default_value(true),
+    "Keep non-removed images in original directory. Default behavior saves results to subdirectories, where each "
+    "continous set of images separated by a rotation seqeunce is saved to a "
     "different subdirectory.")
 
     ("config-path,c", po::value<std::string>()->required(), "Config path")(
@@ -466,10 +465,10 @@ int main(int argc, char** argv) {
   int num_removed_images =
     RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio, min_relative_pose_inliers_ratio,
                              remove_erroneous_images, move_removed_images, view_images, results);
-  if (remove_sequences) {
-    LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
-    num_removed_images += RemoveRotationSequences(max_separation_in_sequence, move_removed_images, results);
-  }
+
+  LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
+  num_removed_images += RemoveRotationSequences(max_separation_in_sequence, move_removed_images, results);
+
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
   if (save_results_to_subdirectories) {
     LogInfo("Saving results to subdirectories.");
