@@ -313,28 +313,34 @@ int main(int argc, char** argv) {
     "Directory containing images. Images are assumed to be named in sequential order.")(
     "max-rotation-error-ratio,e", po::value<double>(&max_rotation_error_ratio)->default_value(0.25),
     "Maximum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
-    "of images to be considered rotation only movement. The lower the ratio, the more the rotation fully explains "
-    "the movement between the images.")(
+    "of images to be considered rotation only movement. The lower the ratio, the more the rotation must fully explain "
+    "the movement between the images and the fewer images will be labeled as rotation only.")(
     "min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
-    "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
+    "Minimum ratio of matches that are inliers in the estimated relative pose between images. Setting to a lower value "
+    "enables less accurate pose estimates to be used to determine if movement is rotation only. Images that do not "
+    "have enough matches are labeled erroneous and are discared unless --keep-erroneous-images is provided.")(
     "max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
-    "Maximum distance between detected rotations for sequence removal.")(
+    "Maximum distance between detected rotations for sequence removal. Setting to a larger value removes more images "
+    "in between detected rotations.")(
     "min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
-    "Minimum separation between non-rotation image sets if --keep-images-in-directory not enabled. Setting to a lower "
-    "value "
-    "allows for smaller subdirectories.")(
+    "Minimum separation between non-rotation image sets if --keep-images-in-directory not enabled. Setting to a larger "
+    "value enables more movements separated by detected rotations to be combined into the same subdirectories. This is "
+    "useful if some of the rotations are short and the movements before and after the rotation should be considered "
+    "the same continous movement.")(
     "remove-images,x", po::bool_switch(&move_removed_images)->default_value(true),
     "Remove images. Default behavior saves these to a directory called removed instead of deleting them.")(
     "keep-erroneous-images,k", po::bool_switch(&remove_erroneous_images)->default_value(true),
     "Keep images with too few relative pose inliers or too few matches between images. Default behavior removes "
     "these.")("view-images,v", po::bool_switch(&view_images)->default_value(false),
-              "View images with projected features and error ratios.")(
+              "View images with projected features and error ratios for each provided image in the image directory. "
+              "Helpful for tuning the error ratio or visualizing rotation movement while the script is running.")(
     "keep-images-in-directory,s", po::bool_switch(&save_results_to_subdirectories)->default_value(true),
     "Keep non-removed images in original directory. Default behavior saves results to subdirectories, where each "
     "continous set of images separated by a rotation seqeunce is saved to a "
     "different subdirectory.")
 
-    ("config-path,c", po::value<std::string>()->required(), "Config path")(
+    ("config-path,c", po::value<std::string>()->required(),
+     "Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")(
       "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
       "robot config file");
   po::positional_options_description p;
