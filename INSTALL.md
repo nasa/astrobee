@@ -1,10 +1,8 @@
 # Install
 
-## Quick start using the Astrobee Docker image
+## Quick start using the remote Astrobee docker images
 
-*The following has been tested on native (non-VM) Ubuntu systems using X11 (the default). Please see [these ROS pages](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more resources.*
-
-If you just want to try out the astrobee simulator, you can use one of the Docker images in the [Github Container Registry](https://github.com/nasa/astrobee/pkgs/container/astrobee).
+*The following has been tested on native Ubuntu systems using X11 (the default). Please see [these ROS pages](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more resources.*
 
 Make sure you have Docker installed in your Ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
@@ -15,6 +13,8 @@ git clone https://github.com/nasa/astrobee.git
 cd astrobee
 ./scripts/docker/run.sh --remote
 ```
+
+For more options, see: \ref install-docker.
 
 ## Building the code natively
 
@@ -33,9 +33,11 @@ If you are a NASA user and want to install the cross-compiler for robot testing 
 
 \subpage install-NASA
 
-## Using Docker
+## Developing using Docker
 
 Docker builds are available for Ubuntu 16.04, 18.04 and 20.04.
+
+We recommend using Visual Studio Code Dev Containers extension that allows usage of a Docker container as a full-featured development environment. When you open the astrobee folder on vscode the prompt will show up to launch the dev container automatically.
 
 Instructions on how to build the images natively and run the containers are in:
 

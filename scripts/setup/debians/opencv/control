@@ -32,7 +32,7 @@ Build-Depends:
  libtbb-dev [amd64 arm64 armel armhf i386 mips mips64el mipsel ppc64el s390x powerpc powerpcspe ppc64 sh4 sparc64],
  libtiff-dev,
  libv4l-dev [linux-any],
- libvtk6-dev,
+ libvtk6-dev | libvtk7-dev,
  protobuf-compiler,
  dh-python,
  python3-dev,

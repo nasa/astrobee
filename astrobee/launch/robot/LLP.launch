@@ -24,7 +24,7 @@
   <arg name="extra" default=""/>              <!-- Inject an additional node -->
   <arg name="debug" default=""/>              <!-- Debug a node set          -->
   <arg name="output" default="log"/>          <!-- Where to log              -->
-  <arg name="ground_truth_localizer" default="false"/>    <!-- Runs ground_truth_localizer -->
+  <arg name="gtloc" default="false"/>         <!-- Runs ground_truth_localizer -->
 
   <!-- Launch all nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
@@ -47,7 +47,7 @@
   </group>
 
   <!-- Launch GNC nodes -->
-  <group unless="$(arg ground_truth_localizer)">
+  <group unless="$(arg gtloc)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
       <arg name="name" value="imu_aug" />
