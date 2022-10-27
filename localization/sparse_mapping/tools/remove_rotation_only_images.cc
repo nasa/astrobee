@@ -32,7 +32,7 @@
 
 #include <mutex>
 
-#include "utilities.h" // NOLINT
+#include "utilities.h"  // NOLINT
 
 namespace fs = boost::filesystem;
 namespace lc = localization_common;
@@ -75,10 +75,10 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
                                const bool move_removed_images, const bool view_images, const cv::Mat& image,
                                std::vector<Result>& results) {
   if (matches.size() < 10) {
-    std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
+    LogInfo("Too few matches found between images. Matches: " << matches.size());
     results.emplace_back(Result(0, image_name, remove_erroneous_images));
     if (remove_erroneous_images) {
-      std::cout << "Removed erroneous image: " << image_name << std::endl;
+      LogInfo("Removed erroneous image: " << image_name);
     }
     return remove_erroneous_images;
   }
@@ -86,12 +86,12 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const auto source_T_target = sm::EstimateAffine3d(matches, camera_params, inliers);
   const double relative_pose_inliers_ratio = static_cast<double>(inliers.size()) / static_cast<double>(matches.size());
   if (relative_pose_inliers_ratio < min_relative_pose_inliers_ratio) {
-    std::cout << "Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
-              << ", ratio: " << relative_pose_inliers_ratio << ", threshold: " << min_relative_pose_inliers_ratio
-              << std::endl;
+    LogInfo("Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
+                                               << ", ratio: " << relative_pose_inliers_ratio
+                                               << ", threshold: " << min_relative_pose_inliers_ratio);
     results.emplace_back(Result(0, image_name, remove_erroneous_images));
     if (remove_erroneous_images) {
-      std::cout << "Removed erroneous image: " << image_name << std::endl;
+      LogInfo("Removed erroneous image: " << image_name);
     }
     return remove_erroneous_images;
   }
@@ -140,13 +140,15 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const bool remove_image = error_ratio < max_rotation_error_ratio;
   results.emplace_back(Result(error_ratio, image_name, remove_image));
   static int index = 0;
+  std::stringstream ss;
   if (remove_image)
-    std::cout << "Remove ";
+    ss << "Remove ";
   else
-    std::cout << "Keep ";
-  std::cout << "img: " << image_name << ", index: " << index++ << ", num inliers: " << inliers.size()
-            << ", error ratio: " << error_ratio << ", mean rot error: " << mean_rotation_corrected_error
-            << ", mean of error: " << mean_optical_flow_error << std::endl;
+    ss << "Keep ";
+  ss << "img: " << image_name << ", index: " << index++ << ", num inliers: " << inliers.size()
+     << ", error ratio: " << error_ratio << ", mean rot error: " << mean_rotation_corrected_error
+     << ", mean of error: " << mean_optical_flow_error;
+  LogInfo(ss.str());
   if (view_images) {
     const int color = 40.0 / error_ratio;
     const cv::Mat gray_color(1, 1, CV_8UC1, color);
@@ -199,8 +201,9 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
           auto& result = results[i];
           if (!result.removed) {
             RemoveOrMove(move_removed_images, result);
-            std::cout << "Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
-                      << ", start index: " << start_index << ", end index: " << *end_index << std::endl;
+            LogInfo("Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
+                                                                << ", start index: " << start_index
+                                                                << ", end index: " << *end_index);
             ++num_removed_images;
           }
         }
@@ -299,7 +302,6 @@ int main(int argc, char** argv) {
   bool save_results_to_subdirectories;
   int min_separation_between_sets;
   po::options_description desc("Removes any rotation only image sequences.");
-  // TODO(rsoussan): Add option to print debug info? just use LogDebug!!!
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
