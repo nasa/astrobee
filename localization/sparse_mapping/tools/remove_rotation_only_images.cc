@@ -24,7 +24,6 @@
 #include <sparse_mapping/tensor.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/utilities.h>
-#include <gtsam/geometry/triangulation.h>
 
 #include <glog/logging.h>
 
@@ -33,16 +32,14 @@
 
 #include <mutex>
 
+#include "utilities.h" // NOLINT
+
 namespace fs = boost::filesystem;
 namespace lc = localization_common;
 namespace po = boost::program_options;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
-// TODO(rsoussan): remove this
-cv::Mat kImg;
-
-// TODO(rsoussan): rename this
 struct Result {
   Result(const double ratio, const std::string& image_name, const bool removed)
       : ratio(ratio), image_name(image_name), removed(removed) {}
@@ -50,16 +47,6 @@ struct Result {
   std::string image_name;
   bool removed;
 };
-
-// TODO(rsoussan): put this in somewhere common
-cv::Point2f CvPoint2(const Eigen::Vector2d& point) { return cv::Point2f(point.x(), point.y()); }
-
-void CreateSubdirectory(const std::string& directory, const std::string& subdirectory) {
-  const auto subdirectory_path = fs::path(directory) / fs::path(subdirectory);
-  if (!boost::filesystem::exists(subdirectory_path)) {
-    boost::filesystem::create_directories(subdirectory_path);
-  }
-}
 
 void Move(const std::string& image_name, const std::string& subdirectory) {
   fs::path image_path(image_name);
@@ -82,49 +69,11 @@ void RemoveOrMove(const bool move, Result& result) {
   result.removed = true;
 }
 
-// TODO(rsoussan): put this in somewhere common
-boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
-                                            vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
-  const auto& matches = detector_and_matcher.Match(current_image, next_image);
-  if (matches.size() < 5) {
-    LogError("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                                 << ", next image keypoints: " << next_image.keypoints().size());
-    return boost::none;
-  }
-  LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                             << ", next image keypoints: " << next_image.keypoints().size());
-  return matches;
-}
-
-// TODO(rsoussan): put this in somewhere common?
-Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
-                                 std::vector<cv::DMatch>& inliers) {
-  Eigen::Matrix2Xd source_image_points(2, matches.size());
-  Eigen::Matrix2Xd target_image_points(2, matches.size());
-  std::vector<cv::DMatch> cv_matches;
-  for (int i = 0; i < matches.size(); ++i) {
-    const auto& match = matches[i];
-    Eigen::Vector2d undistorted_source_point;
-    Eigen::Vector2d undistorted_target_point;
-    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.source_point, &undistorted_source_point);
-    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.target_point, &undistorted_target_point);
-    source_image_points.col(i) = undistorted_source_point;
-    target_image_points.col(i) = undistorted_target_point;
-    cv_matches.emplace_back(cv::DMatch(i, i, i, 0));
-  }
-
-  std::mutex mutex;
-  sm::CIDPairAffineMap affines;
-  sm::BuildMapFindEssentialAndInliers(source_image_points, target_image_points, cv_matches, camera_params, false, 0, 0,
-                                      &mutex, &affines, &inliers, false, nullptr);
-  const Eigen::Affine3d target_T_source = affines[std::make_pair(0, 0)];
-  return target_T_source.inverse();
-}
-
 bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
                                const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
                                const std::string image_name, const bool remove_erroneous_images,
-                               const bool move_removed_images, const bool view_images, std::vector<Result>& results) {
+                               const bool move_removed_images, const bool view_images, const cv::Mat& image,
+                               std::vector<Result>& results) {
   if (matches.size() < 10) {
     std::cout << "Too few matches found between images. Matches: " << matches.size() << std::endl;
     results.emplace_back(Result(0, image_name, remove_erroneous_images));
@@ -134,7 +83,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     return remove_erroneous_images;
   }
   std::vector<cv::DMatch> inliers;
-  const auto source_T_target = EstimateAffine3d(matches, camera_params, inliers);
+  const auto source_T_target = sm::EstimateAffine3d(matches, camera_params, inliers);
   const double relative_pose_inliers_ratio = static_cast<double>(inliers.size()) / static_cast<double>(matches.size());
   if (relative_pose_inliers_ratio < min_relative_pose_inliers_ratio) {
     std::cout << "Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
@@ -155,7 +104,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   int good_triangulation_count = 0;
   cv::Mat projection_img;
   if (view_images) {
-    cv::cvtColor(kImg.clone(), projection_img, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(image.clone(), projection_img, cv::COLOR_GRAY2RGB);
   }
   for (const auto& inlier_match : inliers) {
     const auto& match = matches[inlier_match.imgIdx];
@@ -173,13 +122,13 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     total_rotation_corrected_error += error;
     total_optical_flow_error += (match.source_point - match.target_point).norm();
     if (view_images) {
-      cv::circle(projection_img, CvPoint2(match.target_point), 1, cv::Scalar(255, 255, 255), -1, 8);
+      cv::circle(projection_img, sm::CvPoint2(match.target_point), 1, cv::Scalar(255, 255, 255), -1, 8);
       Eigen::Vector2d distorted_projected_source_point;
       camera_params.Convert<camera::UNDISTORTED, camera::DISTORTED>(projected_source_point,
                                                                     &distorted_projected_source_point);
 
-      cv::circle(projection_img, CvPoint2(distorted_projected_source_point), 1, cv::Scalar(255, 255, 255), -1, 8);
-      cv::line(projection_img, CvPoint2(distorted_projected_source_point), CvPoint2(match.target_point),
+      cv::circle(projection_img, sm::CvPoint2(distorted_projected_source_point), 1, cv::Scalar(255, 255, 255), -1, 8);
+      cv::line(projection_img, sm::CvPoint2(distorted_projected_source_point), sm::CvPoint2(match.target_point),
                cv::Scalar(255, 255, 255), 2, 8, 0);
     }
   }
@@ -264,39 +213,10 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
   return num_removed_images;
 }
 
-// TODO(rsoussan): put this in somwhere common
-vc::FeatureImage LoadImage(const int index, const std::vector<std::string>& image_names, cv::Feature2D& detector) {
-  auto image = cv::imread(image_names[index], cv::IMREAD_GRAYSCALE);
-  if (image.empty()) LogFatal("Failed to load image " << image_names[index]);
-  cv::resize(image, image, cv::Size(), 0.5, 0.5);
-  // TODO(rsoussan): Add option to undistort image, use histogram equalization
-  return vc::FeatureImage(image, detector);
-}
-
-// TODO(rsoussan): put this in somewhere common
-vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
-  vc::LKOpticalFlowFeatureDetectorAndMatcherParams params;
-  // TODO(rsoussan): Add config file for these
-  params.max_iterations = 10;
-  params.termination_epsilon = 0.03;
-  params.window_length = 31;
-  params.max_level = 3;
-  params.min_eigen_threshold = 0.001;
-  params.max_flow_distance = 180;
-  params.max_backward_match_distance = 0.5;
-  params.good_features_to_track.max_corners = 100;
-  params.good_features_to_track.quality_level = 0.01;
-  params.good_features_to_track.min_distance = 40;
-  params.good_features_to_track.block_size = 3;
-  params.good_features_to_track.use_harris_detector = false;
-  params.good_features_to_track.k = 0.04;
-  return params;
-}
-
 void SaveResultsToSubdirectories(const std::string& image_directory, const int min_separation_between_sets,
                                  const std::vector<Result>& results) {
   int subdirectory_index = 0;
-  CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
+  sm::CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
   bool previous_result_removed = false;
   int current_separation_size = 0;
   // Save continous sets of non-removed sequences to different subdirectories
@@ -308,7 +228,7 @@ void SaveResultsToSubdirectories(const std::string& image_directory, const int m
       // Only create new subdirectories when sequences are far enough apart to avoid adding many small
       // subdirectories
       if (current_separation_size > min_separation_between_sets)
-        CreateSubdirectory(image_directory, std::to_string(++subdirectory_index));
+        sm::CreateSubdirectory(image_directory, std::to_string(++subdirectory_index));
       Move(result.image_name, std::to_string(subdirectory_index));
       previous_result_removed = false;
       current_separation_size = 0;
@@ -320,15 +240,15 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
                              const double rotation_inlier_threshold, const double min_relative_pose_inliers_ratio,
                              const bool remove_erroneous_images, const bool move_removed_images, const bool view_images,
                              std::vector<Result>& results) {
-  const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
+  const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
   auto& detector = *(detector_and_matcher.detector());
   // Compare current image with subsequent image and mark subsequent image for removal if it displays rotation only
   // movement. Repeat and create image directories around rotation only sequences.
   int current_image_index = 0;
   int next_image_index = 1;
-  auto current_image = LoadImage(current_image_index, image_names, detector);
-  auto next_image = LoadImage(next_image_index, image_names, detector);
+  auto current_image = sm::LoadImage(current_image_index, image_names, detector);
+  auto next_image = sm::LoadImage(next_image_index, image_names, detector);
   int num_removed_images = 0;
   if (view_images) {
     const std::string window_name("ratio_image");
@@ -341,17 +261,17 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
   while (current_image_index < image_names.size()) {
     bool removed_rotation_sequence = false;
     while (next_image_index < image_names.size()) {
-      kImg = next_image.image().clone();
-      const auto matches = Matches(current_image, next_image, detector_and_matcher);
-      if (matches && RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold,
-                                               min_relative_pose_inliers_ratio, image_names[next_image_index],
-                                               remove_erroneous_images, move_removed_images, view_images, results)) {
+      const auto matches = sm::Matches(current_image, next_image, detector_and_matcher);
+      if (matches &&
+          RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold, min_relative_pose_inliers_ratio,
+                                    image_names[next_image_index], remove_erroneous_images, move_removed_images,
+                                    view_images, next_image.image(), results)) {
         RemoveOrMove(move_removed_images, results.back());
         current_image = next_image;
         current_image_index = next_image_index;
         // Don't load next image if index is past the end of the sequence
         if (++next_image_index >= image_names.size()) break;
-        next_image = LoadImage(next_image_index, image_names, detector);
+        next_image = sm::LoadImage(next_image_index, image_names, detector);
         removed_rotation_sequence = true;
       } else {
         break;
@@ -361,22 +281,9 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
     current_image_index = next_image_index;
     // Exit if current image is the last image in the sequence
     if (current_image_index >= image_names.size() - 1) break;
-    next_image = LoadImage(++next_image_index, image_names, detector);
+    next_image = sm::LoadImage(++next_image_index, image_names, detector);
   }
   return num_removed_images;
-}
-
-// TODO(rsoussan): put this in somwhere common
-std::vector<std::string> GetImageNames(const std::string& image_directory,
-                                       const std::string& image_extension = ".jpg") {
-  std::vector<std::string> image_names;
-  for (const auto& file : fs::recursive_directory_iterator(image_directory)) {
-    if (fs::is_regular_file(file) && file.path().extension() == image_extension)
-      image_names.emplace_back(fs::absolute(file.path()).string());
-  }
-  std::sort(image_names.begin(), image_names.end());
-  LogInfo("Found " << image_names.size() << " images.");
-  return image_names;
 }
 
 int main(int argc, char** argv) {
@@ -451,18 +358,18 @@ int main(int argc, char** argv) {
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  // TODO(rsoussan): Allow for other cameras?
+
   const camera::CameraParameters camera_parameters(&config, "nav_cam");
 
   if (!fs::exists(image_directory) || !fs::is_directory(image_directory)) {
     LogFatal("Image directory " << image_directory << " not found.");
   }
 
-  const auto image_names = GetImageNames(image_directory);
+  const auto image_names = sm::GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
   if (move_removed_images) {
-    CreateSubdirectory(image_directory, "removed");
+    sm::CreateSubdirectory(image_directory, "removed");
   }
 
   const int num_original_images = image_names.size();
