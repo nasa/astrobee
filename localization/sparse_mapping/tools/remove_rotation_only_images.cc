@@ -75,10 +75,10 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
                                const bool move_removed_images, const bool view_images, const cv::Mat& image,
                                std::vector<Result>& results) {
   if (matches.size() < 10) {
-    LogInfo("Too few matches found between images. Matches: " << matches.size());
+    LogDebug("Too few matches found between images. Matches: " << matches.size());
     results.emplace_back(Result(0, image_name, remove_erroneous_images));
     if (remove_erroneous_images) {
-      LogInfo("Removed erroneous image: " << image_name);
+      LogDebug("Removed erroneous image: " << image_name);
     }
     return remove_erroneous_images;
   }
@@ -86,12 +86,12 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const auto source_T_target = sm::EstimateAffine3d(matches, camera_params, inliers);
   const double relative_pose_inliers_ratio = static_cast<double>(inliers.size()) / static_cast<double>(matches.size());
   if (relative_pose_inliers_ratio < min_relative_pose_inliers_ratio) {
-    LogInfo("Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
-                                               << ", ratio: " << relative_pose_inliers_ratio
-                                               << ", threshold: " << min_relative_pose_inliers_ratio);
+    LogDebug("Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
+                                                << ", ratio: " << relative_pose_inliers_ratio
+                                                << ", threshold: " << min_relative_pose_inliers_ratio);
     results.emplace_back(Result(0, image_name, remove_erroneous_images));
     if (remove_erroneous_images) {
-      LogInfo("Removed erroneous image: " << image_name);
+      LogDebug("Removed erroneous image: " << image_name);
     }
     return remove_erroneous_images;
   }
@@ -148,7 +148,8 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   ss << "img: " << image_name << ", index: " << index++ << ", num inliers: " << inliers.size()
      << ", error ratio: " << error_ratio << ", mean rot error: " << mean_rotation_corrected_error
      << ", mean of error: " << mean_optical_flow_error;
-  LogInfo(ss.str());
+  const auto result_message = ss.str();
+  LogDebug(result_message);
   if (view_images) {
     const int color = 40.0 / error_ratio;
     const cv::Mat gray_color(1, 1, CV_8UC1, color);
@@ -201,9 +202,9 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
           auto& result = results[i];
           if (!result.removed) {
             RemoveOrMove(move_removed_images, result);
-            LogInfo("Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
-                                                                << ", start index: " << start_index
-                                                                << ", end index: " << *end_index);
+            LogDebug("Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
+                                                                 << ", start index: " << start_index
+                                                                 << ", end index: " << *end_index);
             ++num_removed_images;
           }
         }
@@ -270,6 +271,7 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
                                     image_names[next_image_index], remove_erroneous_images, move_removed_images,
                                     view_images, next_image.image(), results)) {
         RemoveOrMove(move_removed_images, results.back());
+        ++num_removed_images;
         current_image = next_image;
         current_image_index = next_image_index;
         // Don't load next image if index is past the end of the sequence
@@ -305,24 +307,25 @@ int main(int argc, char** argv) {
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--max-rotation-error-ratio,e", po::value<double>(&max_rotation_error_ratio)->default_value(0.25),
+    "max-rotation-error-ratio,e", po::value<double>(&max_rotation_error_ratio)->default_value(0.25),
     "Maximum ratio of rotation corrected error to optical flow error for matched points in a sequential set "
     "of images to be considered rotation only movement. The lower the ratio, the more the rotation fully explains "
     "the movement between the images.")(
-    "--min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
+    "min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images.")(
-    "--max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
+    "max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
     "Maximum distance between detected rotations for sequence removal.")(
-    "--min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
-    "Minimum separation between non-rotation image sets if --save-to-subdirectories enabled. Setting to a lower value "
+    "min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
+    "Minimum separation between non-rotation image sets if --keep-images-in-directory not enabled. Setting to a lower "
+    "value "
     "allows for smaller subdirectories.")(
-    "--remove-images,x", po::bool_switch(&move_removed_images)->default_value(true),
+    "remove-images,x", po::bool_switch(&move_removed_images)->default_value(true),
     "Remove images. Default behavior saves these to a directory called removed instead of deleting them.")(
-    "--keep-erroneous-images,k", po::bool_switch(&remove_erroneous_images)->default_value(true),
+    "keep-erroneous-images,k", po::bool_switch(&remove_erroneous_images)->default_value(true),
     "Keep images with too few relative pose inliers or too few matches between images. Default behavior removes "
-    "these.")("--view-images,v", po::bool_switch(&view_images)->default_value(false),
+    "these.")("view-images,v", po::bool_switch(&view_images)->default_value(false),
               "View images with projected features and error ratios.")(
-    "--keep-images-in-directory,s", po::bool_switch(&save_results_to_subdirectories)->default_value(true),
+    "keep-images-in-directory,s", po::bool_switch(&save_results_to_subdirectories)->default_value(true),
     "Keep non-removed images in original directory. Default behavior saves results to subdirectories, where each "
     "continous set of images separated by a rotation seqeunce is saved to a "
     "different subdirectory.")
@@ -380,13 +383,17 @@ int main(int argc, char** argv) {
   int num_removed_images =
     RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio, min_relative_pose_inliers_ratio,
                              remove_erroneous_images, move_removed_images, view_images, results);
+  const int num_removed_rotation_only_images = num_removed_images;
+  LogInfo("Removed " << num_removed_rotation_only_images << " of " << num_original_images << " images.");
 
   LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
   num_removed_images += RemoveRotationSequences(max_separation_in_sequence, move_removed_images, results);
 
-  LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
+  LogInfo("Removed " << (num_removed_images - num_removed_rotation_only_images) << " of " << num_original_images
+                     << " images.");
   if (save_results_to_subdirectories) {
     LogInfo("Saving results to subdirectories.");
     SaveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
   }
+  LogInfo("Total images removed: " << num_removed_images << " of " << num_original_images << " .");
 }

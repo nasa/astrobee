@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <mutex>
 
-#include "utilities.h" // NOLINT
+#include "utilities.h"  // NOLINT
 
 namespace fs = boost::filesystem;
 namespace sm = sparse_mapping;
@@ -47,7 +47,7 @@ boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_imag
                                             vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
   const auto& matches = detector_and_matcher.Match(current_image, next_image);
   if (matches.size() < 5) {
-    LogError("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
+    LogDebug("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
                                  << ", next image keypoints: " << next_image.keypoints().size());
     return boost::none;
   }
