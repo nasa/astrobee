@@ -179,10 +179,17 @@ target_link_libraries(parse_cam
   sparse_mapping gflags glog ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: remove_low_movement_images
-add_executable(remove_low_movement_images tools/remove_low_movement_images.cc)
+add_executable(remove_low_movement_images tools/remove_low_movement_images.cc tools/utilities.cc)
 add_dependencies(remove_low_movement_images ${catkin_EXPORTED_TARGETS})
 target_link_libraries(remove_low_movement_images
   sparse_mapping ${catkin_LIBRARIES})
+
+## Declare a C++ executable: remove_rotation_only_images
+add_executable(remove_rotation_only_images tools/remove_rotation_only_images.cc tools/utilities.cc)
+add_dependencies(remove_rotation_only_images ${catkin_EXPORTED_TARGETS})
+target_link_libraries(remove_rotation_only_images
+  sparse_mapping ${catkin_LIBRARIES})
+
 endif (NOT USE_CTC)
 
 

@@ -26,9 +26,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#include "utilities.h"  // NOLINT
+
 namespace fs = boost::filesystem;
 namespace lc = localization_common;
 namespace po = boost::program_options;
+namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
 bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
@@ -51,35 +54,8 @@ bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::F
   return false;
 }
 
-vc::FeatureImage LoadImage(const int index, const std::vector<std::string>& image_names, cv::Feature2D& detector) {
-  auto image = cv::imread(image_names[index], cv::IMREAD_GRAYSCALE);
-  if (image.empty()) LogFatal("Failed to load image " << image_names[index]);
-  cv::resize(image, image, cv::Size(), 0.5, 0.5);
-  // TODO(rsoussan): Add option to undistort image, use histogram equalization
-  return vc::FeatureImage(image, detector);
-}
-
-vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
-  vc::LKOpticalFlowFeatureDetectorAndMatcherParams params;
-  // TODO(rsoussan): Add config file for these
-  params.max_iterations = 10;
-  params.termination_epsilon = 0.03;
-  params.window_length = 31;
-  params.max_level = 3;
-  params.min_eigen_threshold = 0.001;
-  params.max_flow_distance = 180;
-  params.max_backward_match_distance = 0.5;
-  params.good_features_to_track.max_corners = 100;
-  params.good_features_to_track.quality_level = 0.01;
-  params.good_features_to_track.min_distance = 40;
-  params.good_features_to_track.block_size = 3;
-  params.good_features_to_track.use_harris_detector = false;
-  params.good_features_to_track.k = 0.04;
-  return params;
-}
-
 int RemoveLowMovementImages(const std::vector<std::string>& image_names, const double max_low_movement_mean_distance) {
-  const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = LoadParams();
+  const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
   auto& detector = *(detector_and_matcher.detector());
   // Compare current image with subsequent image and remove subsequent image if it has low movement.
@@ -87,8 +63,8 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
   // If a subsequent image does not have low movement, advance current image and start the process over.
   int current_image_index = 0;
   int next_image_index = 1;
-  auto current_image = LoadImage(current_image_index, image_names, detector);
-  auto next_image = LoadImage(next_image_index, image_names, detector);
+  auto current_image = sm::LoadImage(current_image_index, image_names, detector);
+  auto next_image = sm::LoadImage(next_image_index, image_names, detector);
   int num_removed_images = 0;
   while (current_image_index < image_names.size()) {
     while (next_image_index < image_names.size() &&
@@ -98,28 +74,16 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
       ++num_removed_images;
       // Don't load next image if index is past the end of the sequence
       if (next_image_index >= image_names.size()) break;
-      next_image = LoadImage(next_image_index, image_names, detector);
+      next_image = sm::LoadImage(next_image_index, image_names, detector);
     }
     current_image = next_image;
     current_image_index = next_image_index;
     // Exit if current image is the last image in the sequence
     if (current_image_index >= image_names.size() - 1) break;
-    next_image = LoadImage(++next_image_index, image_names, detector);
+    next_image = sm::LoadImage(++next_image_index, image_names, detector);
   }
 
   return num_removed_images;
-}
-
-std::vector<std::string> GetImageNames(const std::string& image_directory,
-                                       const std::string& image_extension = ".jpg") {
-  std::vector<std::string> image_names;
-  for (const auto& file : fs::recursive_directory_iterator(image_directory)) {
-    if (fs::is_regular_file(file) && file.path().extension() == image_extension)
-      image_names.emplace_back(fs::absolute(file.path()).string());
-  }
-  std::sort(image_names.begin(), image_names.end());
-  LogInfo("Found " << image_names.size() << " images.");
-  return image_names;
 }
 
 int main(int argc, char** argv) {
@@ -157,7 +121,7 @@ int main(int argc, char** argv) {
     LogFatal("Image directory " << image_directory << " not found.");
   }
 
-  const auto image_names = GetImageNames(image_directory);
+  const auto image_names = sm::GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
   const int num_original_images = image_names.size();
