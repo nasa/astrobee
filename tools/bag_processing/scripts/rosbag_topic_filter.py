@@ -130,7 +130,7 @@ if __name__ == "__main__":
         "-o",
         "--output",
         help="path for output bag",
-        default="debayer_{inbag}",
+        default="filtered_{inbag}",
     )
     parser.add_argument(
         "-a",
@@ -163,7 +163,11 @@ if __name__ == "__main__":
             print(("Bag file " + inbag_path + " does not exist."))
             sys.exit()
 
-        output_bag_name = args.output.format(inbag=inbag_path)
+        output_bag_name = (
+            os.path.dirname(inbag_path)
+            + "/"
+            + args.output.format(inbag=os.path.basename(inbag_path))
+        )
 
         # Check if output bag already exists
         if os.path.exists(output_bag_name):
