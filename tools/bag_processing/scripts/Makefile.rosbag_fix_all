@@ -89,7 +89,7 @@ migrate_check2-%: %.migrate_old.bag
 
 # Filter the rosbag topics
 %.fix_all.bag: %.depth_split.bag
-	${ROSBAG_FILTER} ${ROSBAG_FILTER_ARGS} $< -o $@
+	${ROSBAG_FILTER} ${ROSBAG_FILTER_ARGS} -o $@ $< 
 	if [ -f $< ]; then rm $< ; fi  # explicitly delete right away to save disk space
 
 .PRECIOUS: %.rewrite_types.bag %.migrate_old.bag %.debayer.bag %.depth_split.bag

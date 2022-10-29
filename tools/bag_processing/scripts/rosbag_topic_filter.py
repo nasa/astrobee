@@ -135,18 +135,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "-a",
         "--accept",
-        nargs="?",
+        nargs="*",
         help="Add topic pattern to accept list",
         default=[],
-        action="append",
     )
     parser.add_argument(
         "-r",
         "--reject",
-        nargs="?",
+        nargs="*",
         help="Add topic pattern to reject list",
         default=[],
-        action="append",
     )
     parser.add_argument(
         "-v",
@@ -163,10 +161,9 @@ if __name__ == "__main__":
             print(("Bag file " + inbag_path + " does not exist."))
             sys.exit()
 
-        output_bag_name = (
-            os.path.dirname(inbag_path)
-            + "/"
-            + args.output.format(inbag=os.path.basename(inbag_path))
+        output_bag_name = os.path.join(
+            os.path.dirname(inbag_path),
+            args.output.format(inbag=os.path.basename(inbag_path)),
         )
 
         # Check if output bag already exists

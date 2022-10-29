@@ -38,7 +38,7 @@ def dosys(cmd):
 
 
 def rosbag_fix_all(
-    inbag_paths_in, jobs, debayer, decode_haz, filter_topics, deserialize=False
+    inbag_paths_in, jobs, debayer, decode_haz, filter_args, deserialize=False
 ):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
@@ -92,7 +92,7 @@ def rosbag_fix_all(
             return 1
 
     # Rosbag filter
-    rosbag_filter_args = filter_topics
+    rosbag_filter_args = filter_args
 
     # Call entire pipeline on all the files
     # "1>&2": redirect stdout to stderr to see make's command echo in rostest output
@@ -174,15 +174,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--decode-haz",
-        default="",
         help="decode the extended haz cam topic into points and amplitude_int, argument is robot name",
+        default="",
         type=str,
     )
     parser.add_argument(
         "--filter",
-        help="filter the bagfile with only some topics",
+        help='filter the bagfile. Use with "" quotes. Example:  --filter "--accepts /hw/imu --regects /loc/ml/features"',
         default="",
-        action="store_true",
+        type=str,
     )
     parser.add_argument("inbag", nargs="+", help="input bag")
 
