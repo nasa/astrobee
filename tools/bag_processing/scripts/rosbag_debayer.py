@@ -16,7 +16,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Converts bayer encoded images from the provided bagfile to grayscale images in a new bagfile.
+Converts bayer encoded images from the provided bagfile to grayscale and color images in a new bagfile.
 """
 
 import argparse
@@ -40,14 +40,14 @@ def convert_bayer(
     gray_image_topic,
     color_image_topic,
     save_all_topics=False,
-    keep_bayer_topic=False,
 ):
     bridge = CvBridge()
     topics = dict((bayer_image_topic.replace("nav", cam), cam) for cam in list_cam)
     output_bag = rosbag.Bag(output_bag_name, "w")
+    topics_bag = [] if save_all_topics else topics
 
     with rosbag.Bag(bagfile, "r") as bag:
-        for topic, msg, t in bag.read_messages():
+        for topic, msg, t in bag.read_messages(topics_bag):
             if topic in topics:
                 # Check if we should save greyscale image
                 if gray_image_topic != "":
@@ -85,9 +85,7 @@ def convert_bayer(
                         color_image_msg,
                         t,
                     )
-                if keep_bayer_topic:
-                    output_bag.write(topic, msg, t)
-            elif save_all_topics:
+            if save_all_topics:
                 output_bag.write(topic, msg, t)
     output_bag.close()
 
@@ -153,13 +151,6 @@ if __name__ == "__main__":
         help="Save all topics from input bagfile to output bagfile.",
     )
     parser.add_argument(
-        "-k",
-        "--keep-bayer",
-        dest="keep_bayer_topic",
-        action="store_true",
-        help="Save bayer topic alongside converted image on the new bagfile",
-    )
-    parser.add_argument(
         "-n",
         dest="do_nothing",
         action="store_true",
@@ -194,7 +185,6 @@ if __name__ == "__main__":
                 args.gray_image_topic,
                 args.color_image_topic,
                 args.save_all_topics,
-                args.keep_bayer_topic,
             )
         else:
-            shutil.copy(inbag_path, output_bag_name)
+            os.rename(inbag_path, output_bag_name)

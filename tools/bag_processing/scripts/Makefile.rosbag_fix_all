@@ -68,23 +68,28 @@ endif
 # Fix old message definitions
 %.migrate_old.bag: %.rewrite_types.bag
 	rosbag fix $< $@ ${BMR}
-	rosbag check $@  # test: post-migration consistency
-	# compare with original bag to make sure data is there
-	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $@  $(@:.migrate_old.bag=.bag)
 	rm $<  # explicitly delete right away to save disk space
 
+migrate_check1-%: %.migrate_old.bag
+	rosbag check $<  # test: post-migration consistency
+
+migrate_check2-%: %.migrate_old.bag
+	# compare with original bag to make sure data is there
+	${ROSBAG_VERIFY} ${ROSBAG_VERIFY_ARGS} $< $(<:.migrate_old.bag=.bag)
+
 # Debayer the nav cam
-%.debayer.bag: %.migrate_old.bag
+%.debayer.bag: %.migrate_old.bag migrate_check1-% migrate_check2-%
 	${ROSBAG_DEBAYER} ${ROSBAG_DEBAYER_ARGS} $< -o $@
-	rm $<  # explicitly delete right away to save disk space
+	if [ -f $< ]; then rm $< ; fi  # explicitly delete right away to save disk space
 
 # Decode the haz cam into point cloud + image
 %.depth_split.bag: %.debayer.bag
 	${ROSBAG_SPLIT_DEPTH} ${ROSBAG_SPLIT_DEPTH_ARGS} $< -o $@
-	rm $<  # explicitly delete right away to save disk space
+	if [ -f $< ]; then rm $< ; fi  # explicitly delete right away to save disk space
 
-# Decode the haz cam into point cloud + image
+# Filter the rosbag topics
 %.fix_all.bag: %.depth_split.bag
 	${ROSBAG_FILTER} ${ROSBAG_FILTER_ARGS} $< -o $@
+	if [ -f $< ]; then rm $< ; fi  # explicitly delete right away to save disk space
 
-.PRECIOUS: rewrite_types_%.bag migrate_old_%.bag debayer_%.bag depth_split_%.bag
+.PRECIOUS: %.rewrite_types.bag %.migrate_old.bag %.debayer.bag %.depth_split.bag

@@ -54,7 +54,7 @@ def rosbag_fix_all(
     skip_count = len(inbag_paths_in) - len(inbag_paths)
     if skip_count:
         logging.info(
-            "Not trying to fix %d files that already starts with fix_all_", skip_count
+            "Not trying to fix %d files that already end in .fix_all.bag", skip_count
         )
 
     outbag_paths = [os.path.splitext(p)[0] + ".fix_all.bag" for p in inbag_paths]
@@ -75,14 +75,21 @@ def rosbag_fix_all(
         rosbag_debayer_args = "-n"
 
     # Rosbag decode haz cam
-    if decode_haz is "":
+    if decode_haz == "":
         rosbag_pico_split_extended_args = "-n"
     else:
         output_stream = os.popen("catkin_find --first-only bag_processing resources")
         coeff_path = (
             output_stream.read().rstrip() + "/" + decode_haz + "_haz_xyz_coeff.npy"
         )
-        rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
+        # Assert that coefficient file exists
+        if os.path.exists(coeff_path):
+            rosbag_pico_split_extended_args = "-s --in_npy " + coeff_path
+        else:
+            logging.warning(
+                "Depth cam robot coefficient file " + coeff_path + " does not exist."
+            )
+            return 1
 
     # Rosbag filter
     rosbag_filter_args = filter_topics
@@ -103,24 +110,9 @@ def rosbag_fix_all(
         )
     )
 
-    # Merge resulting bags
-    inbag_folders_in = list(set([os.path.split(p)[0] for p in inbag_paths_in]))
-    for inbag_folder_in in inbag_folders_in:
-        output_stream = os.popen(
-            "catkin_find --first-only bag_processing scripts/rosbag_merge.py"
-        )
-        if inbag_folder_in is "":
-            path = ""
-        else:
-            path = " -d " + inbag_folder_in
-        merge_bags_path = (
-            output_stream.read().rstrip() + path + " --input-bag-suffix .fix_all.bag"
-        )
-        ret2 = dosys(merge_bags_path)
-
     logging.info("")
     logging.info("====================")
-    if ret1 == 0 and ret2 == 0:
+    if ret1 == 0:
         logging.info("Fixed bags:")
         for outbag_path in outbag_paths:
             logging.info("  %s", outbag_path)
@@ -132,8 +124,24 @@ def rosbag_fix_all(
         logging.warning(
             "If you want to try again, clean first: rm *.fix_all_pre_check.bag"
         )
+        return ret1
 
-    return 0
+    # Merge resulting bags
+    inbag_folders_in = list(set([os.path.split(p)[0] for p in inbag_paths_in]))
+    for inbag_folder_in in inbag_folders_in:
+        output_stream = os.popen(
+            "catkin_find --first-only bag_processing scripts/rosbag_merge.py"
+        )
+        if inbag_folder_in == "":
+            path = ""
+        else:
+            path = " -d " + inbag_folder_in
+        merge_bags_path = (
+            output_stream.read().rstrip() + path + " --input-bag-suffix .fix_all.bag"
+        )
+        ret2 = dosys(merge_bags_path)
+
+    return ret2
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter):

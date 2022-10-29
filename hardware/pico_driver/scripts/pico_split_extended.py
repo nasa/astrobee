@@ -51,7 +51,6 @@ def pico_xyz_from_extended(
     verbose=False,
     cam=pico.DEFAULT_CAM,
     save_all_topics=False,
-    keep_extended_topic=False,
 ):
     with open(in_npy_path, "rb") as in_npy:
         xyz_coeff = np.load(in_npy)
@@ -60,12 +59,11 @@ def pico_xyz_from_extended(
     ext_topic = pico.get_ext_topic(cam)
     pts_topic = pico.get_pts_topic(cam)
     amp_topic = pico.get_amp_topic(cam)
+    topics_bag = [] if save_all_topics else ext_topic
 
-    out_bag = rosbag.Bag(out_bag_path, "w")
-
-    with rosbag.Bag(in_bag_path, "r") as bag:
+    with rosbag.Bag(in_bag_path, "r") as bag, rosbag.Bag(out_bag_path, "w") as out_bag:
         # for ext_msg in pico.get_msgs(in_bag_path, ext_topic, fast):
-        for topic, msg, t in bag.read_messages():
+        for topic, msg, t in bag.read_messages(topics_bag):
             if topic == ext_topic:
                 distance, amplitude, intensity, noise = pico.split_extended(msg)
 
@@ -78,12 +76,8 @@ def pico_xyz_from_extended(
 
                 k_logger.info("split %5d extended messages", k_logger.count + 1)
 
-                if keep_extended_topic:
-                    out_bag.write(topic, msg, t)
-
-            elif save_all_topics:
+            if save_all_topics:
                 out_bag.write(topic, msg, t)
-    out_bag.close()
     logging.info("wrote split messages to %s", out_bag_path)
 
 
@@ -131,13 +125,6 @@ def main():
         help="Save all topics from input bagfile to output bagfile.",
     )
     parser.add_argument(
-        "-k",
-        "--keep-extended",
-        dest="keep_extended_topic",
-        action="store_true",
-        help="Save extended topic alongside converted on the new bagfile",
-    )
-    parser.add_argument(
         "-n",
         dest="do_nothing",
         action="store_true",
@@ -170,10 +157,9 @@ def main():
                 args.verbose,
                 args.cam,
                 args.save_all_topics,
-                args.keep_extended_topic,
             )
         else:
-            shutil.copy(inbag_path, output_bag_name)
+            os.rename(inbag_path, output_bag_name)
 
     # suppress confusing ROS message at exit
     logging.getLogger().setLevel(logging.WARN)
