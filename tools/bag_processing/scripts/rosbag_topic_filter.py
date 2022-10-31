@@ -51,6 +51,7 @@ from __future__ import print_function
 import argparse
 import collections
 import fnmatch
+import os
 import re
 import sys
 
@@ -124,21 +125,26 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument("inbag", nargs="+", help="Input bagfile with bayer images.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="path for output bag",
+        default="filtered_{inbag}",
+    )
     parser.add_argument(
         "-a",
         "--accept",
-        nargs="?",
+        nargs="*",
         help="Add topic pattern to accept list",
         default=[],
-        action="append",
     )
     parser.add_argument(
         "-r",
         "--reject",
-        nargs="?",
+        nargs="*",
         help="Add topic pattern to reject list",
         default=[],
-        action="append",
     )
     parser.add_argument(
         "-v",
@@ -146,8 +152,24 @@ if __name__ == "__main__":
         help="Print debug info",
         action="store_true",
     )
-    parser.add_argument("inbag", help="Input bag")
-    parser.add_argument("outbag", help="Filtered output bag")
 
     args = parser.parse_args()
-    topic_filter(args.verbose, args.inbag, args.accept, args.reject, args.outbag)
+
+    for inbag_path in args.inbag:
+        # Check if input bag exists
+        if not os.path.isfile(inbag_path):
+            print(("Bag file " + inbag_path + " does not exist."))
+            sys.exit()
+
+        output_bag_name = os.path.join(
+            os.path.dirname(inbag_path),
+            args.output.format(inbag=os.path.basename(inbag_path)),
+        )
+
+        # Check if output bag already exists
+        if os.path.exists(output_bag_name):
+            parser.error("not replacing existing file %s" % output_bag_name)
+
+        topic_filter(
+            args.verbose, inbag_path, args.accept, args.reject, output_bag_name
+        )

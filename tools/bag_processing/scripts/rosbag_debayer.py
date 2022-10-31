@@ -16,37 +16,38 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Converts bayer encoded images from the provided bagfile to grayscale images in a new bagfile.
+Converts bayer encoded images from the provided bagfile to grayscale and color images in a new bagfile.
 """
 
 import argparse
 import os
+import shutil
 import sys
 
 import cv2
 import rosbag
 import rospy
-import utilities
+import utilities.utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
 
 def convert_bayer(
     bagfile,
+    output_bag_name,
     list_cam,
     bayer_image_topic,
     gray_image_topic,
     color_image_topic,
     save_all_topics=False,
-    keep_bayer_topic=False,
 ):
     bridge = CvBridge()
     topics = dict((bayer_image_topic.replace("nav", cam), cam) for cam in list_cam)
-    output_bag_name = os.path.splitext(bagfile)[0] + "_out.bag"
     output_bag = rosbag.Bag(output_bag_name, "w")
+    topics_bag = [] if save_all_topics else topics
 
     with rosbag.Bag(bagfile, "r") as bag:
-        for topic, msg, t in bag.read_messages():
+        for topic, msg, t in bag.read_messages(topics_bag):
             if topic in topics:
                 # Check if we should save greyscale image
                 if gray_image_topic != "":
@@ -84,9 +85,7 @@ def convert_bayer(
                         color_image_msg,
                         t,
                     )
-                if keep_bayer_topic:
-                    output_bag.write(topic, msg, t)
-            elif save_all_topics:
+            if save_all_topics:
                 output_bag.write(topic, msg, t)
     output_bag.close()
 
@@ -95,7 +94,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("bagfile", help="Input bagfile with bayer images.")
+    parser.add_argument(
+        "inbag",
+        nargs="+",
+        help="List of bags to convert. If none provided, all bags in the current directory are used.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="path for output bag",
+        default="debayer_{inbag}",
+    )
     parser.add_argument(
         "-l",
         "--list-cam",
@@ -142,28 +151,40 @@ if __name__ == "__main__":
         help="Save all topics from input bagfile to output bagfile.",
     )
     parser.add_argument(
-        "-k",
-        "--keep-bayer",
-        dest="keep_bayer_topic",
+        "-n",
+        dest="do_nothing",
         action="store_true",
-        help="Save bayer topic alongside converted image on the new bagfile",
+        help="Option to not debayer anything and write output",
     )
     args = parser.parse_args()
-    if not os.path.isfile(args.bagfile):
-        print(("Bag file " + args.bagfile + " does not exist."))
-        sys.exit()
 
     if args.disable_gray:
         args.gray_image_topic = ""
     if args.disable_color:
         args.color_image_topic = ""
 
-    convert_bayer(
-        args.bagfile,
-        args.list_cam,
-        args.bayer_image_topic,
-        args.gray_image_topic,
-        args.color_image_topic,
-        args.save_all_topics,
-        args.keep_bayer_topic,
-    )
+    inbag_paths = args.inbag if args.inbag is not None else glob.glob("*.bag")
+
+    for inbag_path in inbag_paths:
+        # Check if input bag exists
+        if not os.path.isfile(inbag_path):
+            print(("Bag file " + inbag_path + " does not exist."))
+            sys.exit()
+        output_bag_name = args.output.format(inbag=inbag_path)
+
+        # Check if output bag already exists
+        if os.path.exists(output_bag_name):
+            parser.error("not replacing existing file %s" % output_bag_name)
+        if not args.do_nothing:
+            # Conver bayer topic to black/white and color
+            convert_bayer(
+                inbag_path,
+                output_bag_name,
+                args.list_cam,
+                args.bayer_image_topic,
+                args.gray_image_topic,
+                args.color_image_topic,
+                args.save_all_topics,
+            )
+        else:
+            os.rename(inbag_path, output_bag_name)

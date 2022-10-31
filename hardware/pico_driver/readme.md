@@ -1,6 +1,10 @@
-\page picoflexx PicoFlexx ROS Driver
+\page picoflexx PicoFlexx
 
 The PMD PicoFlexx camera is a time of flight sensor that returns depth images, rather than RGB images. The sensor also comes factory calibrated with camera intrinsics and distortion parameters burned into its ROM. Using this information it is possible to project the depth measurements into a point cloud, which is represented in the optical axis. In order to project this into another frame (ISS, body) camera extrinsics are required.
+
+# Utility scripts
+\subpage picoflexx_python
+
 
 The objective of this page is to document an experiment to test the amount of computational resources (CPU load) required to run the PicoFlexx on our target architecture. For the sake of repeatability, this page provides description of the hardware and software setup, and includes attachments that may be of use to the reader.
 
