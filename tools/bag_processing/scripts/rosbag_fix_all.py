@@ -180,7 +180,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--filter",
-        help='filter the bagfile. Use with "" quotes. Example:  --filter "--accepts /hw/imu --regects /loc/ml/features"',
+        help='filter the bagfile. Use with "" quotes. Example:  --filter "--accept /loc/* --reject /loc/ml/features"',
         default="",
         type=str,
     )
