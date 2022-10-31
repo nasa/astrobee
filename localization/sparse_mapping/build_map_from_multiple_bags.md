@@ -7,7 +7,7 @@ use
 ## Steps
 ### 1. Convert bags from bayer to rgb if necessary  
 Assuming the bags are all in the same directory, from that directory use:   
-`rosrun bag_processing convert_all_bayer_bags.py`  
+`rosrun bag_processing convert_bayer.py`  
 
 The original bayer bags can now be removed or moved elsewhere.
 

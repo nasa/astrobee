@@ -1,4 +1,4 @@
-# Pico Flexx Python utilities
+\page picoflexx_python Pico Flexx Python utilities
 
 These Python utilities enable us to process logged
 `ff_msgs/PicoflexxIntermediateData` messages on the
