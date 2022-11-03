@@ -16,18 +16,6 @@
  * under the License.
  */
 
-/*
- About: This file contains code for the old Simulink controller and my new C++ controller. I kept the old controller functions in for testing. To test, I run both controllers in the 
- step function. To ensure they are running the same, I copy the input values before I run a controller. Then, I run the Simulink controller step, copy the values after, 
- revert to the orignal values, and then run my controller. Then, I compare the values. Testing is done in the simulator.
-  
-
-  Status: not all of the conversion is correct. The bug I am still working on is in the FindQuatError function which is implementing the quaternion_error block.
-    The new output is similar to old one: they are the same for some of the time, but then mine and the old trade off being a certain value and 0. For example, mine will be 0 and the 
-    old will be 0.5 and then mine will be 0.5 and the old will be 0. This seems like a simple fix, but I couln't find the fix by the end of my internship.  
-    There are a few values that rely on this function working, so these values are wrong and the values that use those are wrong as well.  
-*/
-
 #include <ros/console.h>
 #include <ros/static_assert.h>
 #include <ros/platform.h>
@@ -51,7 +39,7 @@ namespace gnc_autocode {
 void NormalizeQuaternion(Eigen::Quaternionf & out) {
   // enfore positive scalar
   if (out.w() < 0) {
-    out.coeffs() = -out.coeffs();  // coeffs is a vector (x,y,z,w)
+    out.coeffs() = -out.coeffs();
   }
   // out.normalize();
 
@@ -63,171 +51,31 @@ void NormalizeQuaternion(Eigen::Quaternionf & out) {
 
 
 Control::Control(void) {
-  prev_filter_vel[0] = 0;
-  prev_filter_vel[1] = 0;
-  prev_filter_vel[2] = 0;
-  prev_filter_omega[0] = 0;
-  prev_filter_omega[1] = 0;
-  prev_filter_omega[2] = 0;
-  prev_mode_cmd[0] = 0;
-  prev_mode_cmd[1] = 0;
-  prev_mode_cmd[2] = 0;
-  prev_mode_cmd[3] = 0;
-  prev_position[0] = 0;
-  prev_position[1] = 0;
-  prev_position[2] = 0;
-  prev_att[0] = 0;
-  prev_att[1] = 0;
-  prev_att[2] = 0;
-  prev_att[3] = 0;
-  linear_integrator[0] = 0;
-  linear_integrator[1] = 0;
-  linear_integrator[2] = 0;
-  rotational_integrator[0] = 0;
-  rotational_integrator[1] = 0;
-  rotational_integrator[2] = 0;
+  Initialize();
 }
 
-void Control::Step(void) {
-// copy of values before
-  ctl_input_msg before_ctl_input_;
-  cmd_msg before_cmd_;
-  ctl_msg before_ctl_;
-  memcpy(&before_ctl_input_, &ctl_input_, sizeof(ctl_input_));
-  memcpy(&before_cmd_, &cmd_, sizeof(cmd_));
-  memcpy(&before_ctl_, &ctl_, sizeof(ctl_));
+void Control::Step(float time_delta, ControlState & state, ControlCommand & cmd, ControlOutput* out) {
+  //  command shaper
+  ForwardTrajectory(time_delta, state, cmd, out);
 
-  // revert back to before Simulink
-  memcpy(&ctl_input_, &before_ctl_input_, sizeof(before_ctl_input_));
-  memcpy(&cmd_, &before_cmd_, sizeof(before_cmd_));
-  memcpy(&ctl_, &before_ctl_, sizeof(before_ctl_));
+  //  cex_control_executive
+  UpdateMode(state, cmd);
+  UpdateCtlStatus(state, out);
 
-/*****C++ Implementation*****/
-  /*****command_shaper*****/
-  CmdSelector();
-  GenerateCmdPath();
-  GenerateCmdAttitude();
-  FindTrajErrors(traj_quat);
-  PublishCmdInput();
-
-  /*****cex_control_executive*****/
-  UpdateModeCmd();
-  UpdateStoppedMode();
-  FindPosError();
-  FindQuatError(ctl_input_.est_quat_ISS2B, prev_att, quat_err, dummy);  // Fix this fxn
-  UpdatePosAndQuat();
-  UpdateCtlStatus();
-
-  BypassShaper();
-
-/*****clc_closed_loop_controller*****/
-  VariablesTransfer();
-
+  // clc_closed_loop_controller
   // Linear Control
-  UpdateLinearPIDVals();
-  FindPosErr();
-  FindLinearIntErr();
-  FindBodyForceCmd();
+  FindPosErr(state, cmd, out);
+  FindBodyForceCmd(state, out);
 
   // Rotational Control
-  UpdateRotationalPIDVals();
-  FindAttErr();  // same as FindQuatError(CMD_Quat_ISS2B, ctl_input_.est_quat_ISS2B, att_err_mag, att_err) // Finds
-                 // att_err_mag and att_err
-  UpdateRotateIntErr();
-  FindBodyAlphaCmd();
-  FindBodyTorqueCmd();
+  FindAttErr(state, out);
+  FindBodyAlphaTorqueCmd(state, out);
 
-  UpdatePrevious();  // this might need to go later
-
-  /*Publish to ctl_msg */
-  VarToCtlMsg();
+  UpdatePrevious(state);
 }
 
-/*Command Shaper */
-void Control::PublishCmdInput() {
-  cmd_.cmd_timestamp_sec = cmd_timestamp_sec;
-  cmd_.cmd_timestamp_nsec = cmd_timestamp_nsec;
-  cmd_.cmd_mode = ctl_input_.ctl_mode_cmd;
-  cmd_.speed_gain_cmd = ctl_input_.speed_gain_cmd;
-  cmd_.cmd_B_inuse = cmd_B_inuse;
-  for (int i = 0; i < 3; i++) {
-    cmd_.traj_pos[i] = traj_pos[i];
-    cmd_.traj_vel[i] = traj_vel[i];
-    cmd_.traj_accel[i] = traj_accel[i];
-    cmd_.traj_omega[i] = traj_omega[i];
-    cmd_.traj_alpha[i] = traj_alpha[i];
-    cmd_.traj_quat[i] = traj_quat[i];
-  }
-  cmd_.traj_quat[3] = traj_quat[3];  // since it is size 4
-}
-
-void Control::FindTrajErrors(float traj_q[4]) {
-  float traj_error_pos_vec[3];
-  float traj_error_vel_vec[3];
-  float traj_error_omega_vec[3];
-  for (int i = 0; i < 3; i++) {
-    traj_error_pos_vec[i] = traj_pos[i] - ctl_input_.est_P_B_ISS_ISS[i];
-    traj_error_vel_vec[i] = traj_vel[i] - ctl_input_.est_V_B_ISS_ISS[i];
-    traj_error_omega_vec[i] = traj_omega[i] - ctl_input_.est_omega_B_ISS_B[i];
-  }
-
-  // magnitude of the vectors
-  traj_error_pos = sqrt(pow(traj_error_pos_vec[0], 2) + pow(traj_error_pos_vec[1], 2) + pow(traj_error_pos_vec[2], 2));
-  traj_error_vel = sqrt(pow(traj_error_vel_vec[0], 2) + pow(traj_error_vel_vec[1], 2) + pow(traj_error_vel_vec[2], 2));
-  traj_error_omega =
-    sqrt(pow(traj_error_omega_vec[0], 2) + pow(traj_error_omega_vec[1], 2) + pow(traj_error_omega_vec[2], 2));
-
-  FindQuatError(traj_q, ctl_input_.est_quat_ISS2B, traj_error_att, dummy);
-}
-
-
-
-void Control::GenerateCmdAttitude() {
-  if (state_cmd_switch_out) {
-    for (int i = 0; i < 3; i++) {
-      traj_alpha[i] = ctl_input_.cmd_state_a.alpha_B_ISS_B[i];
-      traj_omega[i] = ctl_input_.cmd_state_a.omega_B_ISS_B[i] + (ctl_input_.cmd_state_a.alpha_B_ISS_B[i] * time_delta);
-    }
-  } else {  // false so cmd B
-    for (int i = 0; i < 3; i++) {
-      traj_alpha[i] = ctl_input_.cmd_state_b.alpha_B_ISS_B[i];
-      traj_omega[i] = ctl_input_.cmd_state_b.omega_B_ISS_B[i] + (ctl_input_.cmd_state_b.alpha_B_ISS_B[i] * time_delta);
-    }
-  }
-
-  if (state_cmd_switch_out)
-    FindTrajQuat(ctl_input_.cmd_state_a.omega_B_ISS_B, ctl_input_.cmd_state_a.alpha_B_ISS_B,
-                 ctl_input_.cmd_state_a.quat_ISS2B);
-  else
-    FindTrajQuat(ctl_input_.cmd_state_b.omega_B_ISS_B, ctl_input_.cmd_state_b.alpha_B_ISS_B,
-                 ctl_input_.cmd_state_b.quat_ISS2B);
-}
-
-void Control::FindTrajQuat(float omega_B_ISS_B[3], float alpha_B_ISS_B[3], float quat_ISS2B[4]) {
-  Eigen::Quaternion<float> quat_state_cmd;
-  quat_state_cmd.x() = quat_ISS2B[0];
-  quat_state_cmd.y() = quat_ISS2B[1];
-  quat_state_cmd.z() = quat_ISS2B[2];
-  quat_state_cmd.w() = quat_ISS2B[3];
-
-  Eigen::Matrix<float, 4, 4> omega_omega = OmegaMatrix(omega_B_ISS_B);
-  Eigen::Matrix<float, 4, 4> omega_alpha = OmegaMatrix(alpha_B_ISS_B);
-
-  Eigen::Matrix<float, 4, 4> a = 0.5 * time_delta * (0.5 * time_delta * omega_alpha + omega_omega);
-
-  a = a.exp();
-  a += (1.0/48) * time_delta * time_delta * time_delta * (omega_alpha * omega_omega - omega_omega * omega_alpha);
-  Eigen::Quaternion<float> out;
-  out.coeffs() = a * quat_state_cmd.coeffs();
-
-  NormalizeQuaternion(out);
-  traj_quat[0] = out.x();
-  traj_quat[1] = out.y();
-  traj_quat[2] = out.z();
-  traj_quat[3] = out.w();
-}
 // Defined in Indirect Kalman Filter for 3d attitude Estimation - Trawn, Roumeliotis eq 63
-Eigen::Matrix<float, 4, 4> Control::OmegaMatrix(float input[3]) {
+Eigen::Matrix<float, 4, 4> Control::OmegaMatrix(Eigen::Vector3f input) {
   Eigen::Matrix<float, 4, 4> out;
   out(0, 0) = 0;
   out(1, 0) = -input[2];
@@ -252,221 +100,107 @@ Eigen::Matrix<float, 4, 4> Control::OmegaMatrix(float input[3]) {
   return out;
 }
 
-void Control::GenerateCmdPath() {
-  float test[3];
-  if (state_cmd_switch_out) {  // true is A
-    for (int i = 0; i < 3; i++) {
-      traj_pos[i] = ctl_input_.cmd_state_a.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.V_B_ISS_ISS[i] * time_delta) +
-                    (0.5 * ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta * time_delta);
-      traj_vel[i] = ctl_input_.cmd_state_a.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_a.A_B_ISS_ISS[i] * time_delta);
-      traj_accel[i] = ctl_input_.cmd_state_a.A_B_ISS_ISS[i];
-    }
-  } else {  // false so cmd B
-      for (int i = 0; i < 3; i++) {
-        traj_pos[i] = ctl_input_.cmd_state_b.P_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.V_B_ISS_ISS[i] * time_delta) +
-                      (0.5 * ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta * time_delta);
+void Control::ForwardTrajectory(float time_delta, const ControlState & state, const ControlCommand & cmd,
+                                ControlOutput* out) {
+  // forward integrate
+  out->traj_pos = cmd.P_B_ISS_ISS + cmd.V_B_ISS_ISS * time_delta +
+                  0.5 * cmd.A_B_ISS_ISS * time_delta * time_delta;
+  out->traj_vel = cmd.V_B_ISS_ISS + cmd.A_B_ISS_ISS * time_delta;
+  out->traj_accel = cmd.A_B_ISS_ISS;
+  out->traj_alpha = cmd.alpha_B_ISS_ISS;
+  out->traj_omega = cmd.omega_B_ISS_ISS + cmd.alpha_B_ISS_ISS * time_delta;
 
-        traj_vel[i] = ctl_input_.cmd_state_b.V_B_ISS_ISS[i] + (ctl_input_.cmd_state_b.A_B_ISS_ISS[i] * time_delta);
-        traj_accel[i] = ctl_input_.cmd_state_b.A_B_ISS_ISS[i];
-    }
-  }
+  Eigen::Matrix<float, 4, 4> omega_omega = OmegaMatrix(cmd.omega_B_ISS_ISS);
+  Eigen::Matrix<float, 4, 4> omega_alpha = OmegaMatrix(cmd.alpha_B_ISS_ISS);
+
+  Eigen::Matrix<float, 4, 4> a = 0.5 * time_delta * (0.5 * time_delta * omega_alpha + omega_omega);
+  a = a.exp();
+  a += (1.0/48) * time_delta * time_delta * time_delta * (omega_alpha * omega_omega - omega_omega * omega_alpha);
+  out->traj_quat.coeffs() = a * cmd.quat_ISS2B.coeffs();
+  NormalizeQuaternion(out->traj_quat);
+
+  out->traj_error_pos =   (out->traj_pos - state.est_P_B_ISS_ISS).norm();
+  out->traj_error_vel =   (out->traj_vel - state.est_V_B_ISS_ISS).norm();
+  out->traj_error_omega = (out->traj_omega - state.est_omega_B_ISS_B).norm();
+
+  out->traj_error_att = QuatError(out->traj_quat, state.est_quat_ISS2B);
 }
 
-void Control::CmdSelector() {
-  float curr_sec = ctl_input_.current_time_sec;
-  float curr_nsec = ctl_input_.current_time_nsec;
+void Control::FindAttErr(const ControlState & state, ControlOutput* out) {
+  Eigen::Quaternionf q_cmd = out->traj_quat;
+  if (stopped_mode_)
+    q_cmd = prev_att_;
 
-  if ((ctl_input_.cmd_state_b.timestamp_sec > curr_sec) ||
-      ((ctl_input_.cmd_state_b.timestamp_sec == curr_sec) && (curr_nsec < ctl_input_.cmd_state_b.timestamp_nsec))) {
-    state_cmd_switch_out = true;
-    time_delta =
-      (curr_sec - ctl_input_.cmd_state_a.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_a.timestamp_nsec) * 1E-9);
-    cmd_timestamp_sec = ctl_input_.cmd_state_a.timestamp_sec;
-    cmd_timestamp_nsec = ctl_input_.cmd_state_a.timestamp_nsec;
-  } else {
-    state_cmd_switch_out = false;
-    time_delta =
-      (curr_sec - ctl_input_.cmd_state_b.timestamp_sec) + ((curr_nsec - ctl_input_.cmd_state_b.timestamp_nsec) * 1E-9);
-    cmd_timestamp_sec = ctl_input_.cmd_state_b.timestamp_sec;
-    cmd_timestamp_nsec = ctl_input_.cmd_state_b.timestamp_nsec;
-  }
+  Eigen::Quaternionf q_out = state.est_quat_ISS2B.conjugate() * q_cmd;
 
-  cmd_B_inuse = !state_cmd_switch_out;
-}
-
-void Control::VarToCtlMsg() {
-  ctl_.pos_err[0] = pos_err_outport.x();
-  ctl_.pos_err[1] = pos_err_outport.y();
-  ctl_.pos_err[2] = pos_err_outport.z();
-  ctl_.pos_err_int[0] = linear_int_err.x();
-  ctl_.pos_err_int[1] = linear_int_err.y();
-  ctl_.pos_err_int[2] = linear_int_err.z();
-  for (int i = 0; i < 3; i++) {
-    ctl_.body_force_cmd[i] = body_force_cmd[i];
-    ctl_.body_accel_cmd[i] = body_accel_cmd[i];
-
-    ctl_.body_torque_cmd[i] = body_torque_cmd[i];
-    ctl_.body_alpha_cmd[i] = body_alpha_cmd[i];
-    ctl_.att_err[i] = att_err[i];
-
-    ctl_.att_err_int[i] = rotate_int_err[i];
-  }
-  ctl_.att_err_mag = att_err_mag;
-  ctl_.ctl_status = ctl_status;
-  ctl_.traj_error_pos = traj_error_pos;
-  ctl_.traj_error_att = traj_error_att;
-  ctl_.traj_error_vel = traj_error_vel;
-  ctl_.traj_error_omega = traj_error_omega;
-}
-
-/*****clc_closed_loop_controller functions*****/
-void Control::FindAttErr() {
-  Eigen::Quaternion<float> q_cmd;
-  Eigen::Quaternion<float> q_actual;
-  q_cmd.x() = CMD_Quat_ISS2B[0];
-  q_cmd.y() = CMD_Quat_ISS2B[1];
-  q_cmd.z() = CMD_Quat_ISS2B[2];
-  q_cmd.w() = CMD_Quat_ISS2B[3];
-
-  q_actual.x() = ctl_input_.est_quat_ISS2B[0];
-  q_actual.y() = ctl_input_.est_quat_ISS2B[1];
-  q_actual.z() = ctl_input_.est_quat_ISS2B[2];
-  q_actual.w() = ctl_input_.est_quat_ISS2B[3];
-
-  Eigen::Quaternion<float> q_out = q_actual.conjugate() * q_cmd;
-
-  //  ROS_ERROR("newc %g %g %g %g", q_cmd.x(), q_cmd.y(), q_cmd.z(), q_cmd.w());
-  //  ROS_ERROR("newa %g %g %g %g", q_actual.x(), q_actual.y(), q_actual.z(), q_actual.w());
-  //  ROS_ERROR("newerr %g %g %g %.20g", q_out.x(), q_out.y(), q_out.z(), q_out.w());
   NormalizeQuaternion(q_out);
 
-  //  ROS_ERROR("newerr %g %g %g %.20g", q_out.x(), q_out.y(), q_out.z(), q_out.w());
-  att_err_mag = 2 * acos(static_cast<double>(q_out.w()));
-  att_err[0] = q_out.x();
-  att_err[1] = q_out.y();
-  att_err[2] = q_out.z();
-}
+  out->att_err_mag = 2 * acos(static_cast<double>(q_out.w()));
+  out->att_err << q_out.x(), q_out.y(), q_out.z();
 
-void Control::FindBodyTorqueCmd() {
-  if (ctl_status == 0) {
-    for (int i = 0; i < 3; i++) {
-      body_torque_cmd[i] = 0;
-    }
-  } else {
-    // feed forward accel
-    float ang_accel_feed[3];
-    Eigen::Vector3f alpha;
-    alpha << CMD_Alpha_B_ISS_B[0], CMD_Alpha_B_ISS_B[1], CMD_Alpha_B_ISS_B[2];
-    alpha = (tun_alpha_gain.array() * alpha.array()).matrix();
-    Eigen::Vector3f omega;
-    omega << ctl_input_.est_omega_B_ISS_B[0], ctl_input_.est_omega_B_ISS_B[1], ctl_input_.est_omega_B_ISS_B[2];
-
-    Eigen::Vector3f torque = inertia * alpha + rate_error - (inertia * omega).cross(omega);
-
-    for (int i = 0; i < 3; i++) {
-      body_torque_cmd[i] = torque[i];
-    }
-  }
-}
-
-void Control::CrossProduct(float vecA[3], float vecB[3], float vecOut[3]) {
-  vecOut[0] = vecA[1] * vecB[2] - vecA[2] * vecB[1];
-  vecOut[1] = -(vecA[0] * vecB[2] - vecA[2] * vecB[0]);
-  vecOut[2] = vecA[0] * vecB[1] - vecA[1] * vecB[0];
-}
-void Control::FindBodyAlphaCmd() {
-  rate_error = AngAccelHelper();
-  inertia << ctl_input_.inertia_matrix[0], ctl_input_.inertia_matrix[1], ctl_input_.inertia_matrix[2],
-             ctl_input_.inertia_matrix[3], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[5],
-             ctl_input_.inertia_matrix[6], ctl_input_.inertia_matrix[7], ctl_input_.inertia_matrix[8];
-
-  Eigen::Vector3f v = inertia.inverse() * rate_error;
-  for (int i = 0; i < 3; i++)
-    body_alpha_cmd[i] = v[i];
-}
-
-Eigen::Vector3f Control::AngAccelHelper() {
-  float temp[3];
-  if (ctl_status <= 1) {
-    for (int i = 0; i < 3; i++) {
-      rate_error[i] = -ctl_input_.est_omega_B_ISS_B[i];
-    }
-  } else {
-    for (int i = 0; i < 3; i++) {
-      rate_error[i] =
-        CMD_Omega_B_ISS_B[i] + rotate_int_err[i] + (Kp_rot[i] * att_err[i]) - ctl_input_.est_omega_B_ISS_B[i];
-      temp[i] = rotate_int_err[i] + (Kp_rot[i] * att_err[i]);
-    }
-  }
-  //  ROS_ERROR("newa %g %g %g", CMD_Omega_B_ISS_B[0], CMD_Omega_B_ISS_B[1], CMD_Omega_B_ISS_B[2]);
-  //  ROS_ERROR("newb %g %g %g", temp[0], temp[1], temp[2]);
-
-  for (int i = 0; i < 3; i++) {
-    rate_error[i] *= Kd_rot[i];
-  }
-  //  ROS_ERROR("newr %g %g %g", rate_error[0], rate_error[1], rate_error[2]);
-  return rate_error;
-}
-
-void Control::UpdateRotateIntErr() {
-  Eigen::Vector3f in; in << att_err[0] * Ki_rot[0], att_err[1] * Ki_rot[1], att_err[2] * Ki_rot[2];
-  Eigen::Vector3f out = discreteTimeIntegrator(in, rotational_integrator, tun_ctl_att_sat_upper,
+  Eigen::Vector3f Ki_rot = SafeDivide(state.att_ki, state.omega_kd);
+  Eigen::Vector3f in = (out->att_err.array() * Ki_rot.array()).matrix();
+  out->att_err_int = DiscreteTimeIntegrator(in, rotational_integrator_, out->ctl_status, tun_ctl_att_sat_upper,
                                                tun_ctl_att_sat_lower);
-  rotate_int_err[0] = out.x();
-  rotate_int_err[1] = out.y();
-  rotate_int_err[2] = out.z();
 }
 
-void Control::UpdateRotationalPIDVals() {
-  // reshape
-  float inertia_vec[3] = {ctl_input_.inertia_matrix[0], ctl_input_.inertia_matrix[4], ctl_input_.inertia_matrix[8]};
+void Control::FindBodyAlphaTorqueCmd(const ControlState & state, ControlOutput* out) {
+  Eigen::Vector3f cmd_omega = out->traj_omega;
+  Eigen::Vector3f cmd_alpha = out->traj_alpha;
+  if (stopped_mode_) {
+    cmd_omega.setZero();
+    cmd_alpha.setZero();
+  }
 
-  for (int i = 0; i < 3; i++) {
-    Kp_rot[i] = SafeDivide(ctl_input_.att_kp[i], ctl_input_.omega_kd[i]);
-    Ki_rot[i] = SafeDivide(ctl_input_.att_ki[i], ctl_input_.omega_kd[i]);
-    Kd_rot[i] = ctl_input_.omega_kd[i] * inertia_vec[i];
+  Eigen::Vector3f rate_error = -state.est_omega_B_ISS_B;
+  if (out->ctl_status > 1) {
+    Eigen::Vector3f Kp_rot = SafeDivide(state.att_kp, state.omega_kd);
+    rate_error = cmd_omega + out->att_err_int + (Kp_rot.array() * out->att_err.array()).matrix() -
+                 state.est_omega_B_ISS_B;
+  }
+
+  auto Kd_rot = state.omega_kd.array() * state.inertia.diagonal().array();
+  rate_error = (rate_error.array() * Kd_rot).matrix();
+
+  out->body_alpha_cmd = state.inertia.inverse() * rate_error;
+
+  if (out->ctl_status == 0) {
+    out->body_torque_cmd.setZero();
+  } else {
+    cmd_alpha = (tun_alpha_gain.array() * cmd_alpha.array()).matrix();
+
+    out->body_torque_cmd = state.inertia * cmd_alpha + rate_error -
+                           (state.inertia * state.est_omega_B_ISS_B).cross(state.est_omega_B_ISS_B);
   }
 }
 
-void Control::FindBodyForceCmd() {
-  if (ctl_status == 0) {
-    for (int i = 0; i < 3; i++) {
-      body_force_cmd[i] = 0.0;
-      body_accel_cmd[i] = 0.0;
-    }
+void Control::FindBodyForceCmd(const ControlState & state, ControlOutput* out) {
+  if (out->ctl_status == 0) {
+    out->body_force_cmd.setZero();
+    out->body_accel_cmd.setZero();
     return;
   }
-  Eigen::Vector3f v; v << 0.0f, 0.0f, 0.0f;
-  if (ctl_status > 1) {
+  Eigen::Vector3f target_vel = out->traj_vel;
+  Eigen::Vector3f target_accel = out->traj_accel;
+  if (stopped_mode_) {
+    target_vel.setZero();
+    target_accel.setZero();
+  }
+
+  Eigen::Vector3f Kp_lin = SafeDivide(state.pos_kp, state.vel_kd);
+  Eigen::Vector3f v = Eigen::Vector3f::Zero() - state.est_V_B_ISS_ISS;
+  if (out->ctl_status > 1) {
     // find desired velocity from position error
-    v = CMD_V_B_ISS_ISS + (Kp_lin.array() * pos_err_outport.array()).matrix() + linear_int_err;
+    v += target_vel + (Kp_lin.array() * out->pos_err.array()).matrix() + out->pos_err_int;
   }
-  Eigen::Vector3f temp = (Kp_lin.array() * pos_err_outport.array()).matrix() + linear_int_err;
-  Eigen::Vector3f est_V_B_ISS_ISS;
-  est_V_B_ISS_ISS << ctl_input_.est_V_B_ISS_ISS[0], ctl_input_.est_V_B_ISS_ISS[1], ctl_input_.est_V_B_ISS_ISS[2];
-  v -= est_V_B_ISS_ISS;
+  Eigen::Vector3f a = RotateVectorAtoB(v, state.est_quat_ISS2B);
+  a = (a.array() * state.vel_kd.array()).matrix();
 
-  float velo_err_tmp[3];
-  float feed_accel_tmp[3];
-  Eigen::Quaternionf est_quat_ISS2B;
-  est_quat_ISS2B.x() = ctl_input_.est_quat_ISS2B[0];
-  est_quat_ISS2B.y() = ctl_input_.est_quat_ISS2B[1];
-  est_quat_ISS2B.z() = ctl_input_.est_quat_ISS2B[2];
-  est_quat_ISS2B.w() = ctl_input_.est_quat_ISS2B[3];
-  Eigen::Vector3f a = RotateVectorAtoB(v, est_quat_ISS2B);
-  a = ctl_input_.mass * (a.array() * Kd_lin.array()).matrix();
+  Eigen::Vector3f b = RotateVectorAtoB((target_accel.array() * tun_accel_gain.array()).matrix(),
+                                       state.est_quat_ISS2B);
 
-  float accel_err_tmp[3];
-  Eigen::Vector3f b = RotateVectorAtoB((CMD_A_B_ISS_ISS.array() * tun_accel_gain.array()).matrix(),
-                                       est_quat_ISS2B);
-  b *= ctl_input_.mass;
-  Eigen::Vector3f t = a + b;
-
-  Eigen::Vector3f out = SaturateVector(a + b, tun_ctl_linear_force_limit);
-  for (int i = 0; i < 3; i++) {
-    body_force_cmd[i] = out[i];
-    body_accel_cmd[i] = body_force_cmd[i] / ctl_input_.mass;
-  }
+  out->body_force_cmd = SaturateVector(state.mass * (a + b), tun_ctl_linear_force_limit);
+  out->body_accel_cmd = out->body_force_cmd / state.mass;
 }
 
 Eigen::Vector3f Control::SaturateVector(Eigen::Vector3f v, float limit) {
@@ -483,95 +217,17 @@ Eigen::Vector3f Control::RotateVectorAtoB(const Eigen::Vector3f v, const Eigen::
   return q.normalized().conjugate().toRotationMatrix() * v;
 }
 
-// 3x3 multiply by 1x3
-void Control::MatrixMultiplication3x1(float three[3][3], float one[3], float output[3]) {
-  // set output to all 0's
-  for (int i = 0; i < 3; i++) {
-    output[i]= 0;
-    }
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        output[i] += three[i][j] * one[i];
-      }
-    }
-}
-
-// 4x4 multiply by 1x4
-void Control::MatrixMultiplication4x1(float four[4][4], float one[4], float output[4]) {
-  // set output to all 0's
-  for (int i = 0; i < 4; i++) {
-    output[i]= 0;
-    }
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        output[i] += four[i][j] * one[i];
-      }
-    }
-}
-
-void Control::MatrixMultiplication3x3(float inputA[3][3], float inputB[3][3], float output[3][3]) {
-  // make output all zeros
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      output[i][j] = 0;
-    }
-  }
-
-  for (int row = 0; row < 3; row++) {
-    for (int col = 0; col < 3; col++) {
-      for (int k = 0; k < 3; k++) {
-        output[row][col] +=inputA[row][k] * inputB[k][col];
-      }
-    }
-  }
-}
-
-void Control::MatrixMultiplication4x4(float inputA[4][4], float inputB[4][4], float output[4][4]) {
-  // make output all zeros
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      output[i][j] = 0;
-    }
-  }
-
-  for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 4; col++) {
-      for (int k = 0; k < 4; k++) {
-        output[row][col] +=inputA[row][k] * inputB[k][col];
-      }
-    }
-  }
-}
-void Control::SkewSymetricMatrix(const float input[3], float output[3][3]) {
-  // from simulink diagram
-  output[0][0] = 0;
-  output[1][0] = input[2];
-  output[2][0] = -input[1];
-  output[0][1] = -input[2];
-  output[1][1] = 0;
-  output[2][1] = input[0];
-  output[0][2] = input[1];
-  output[1][2] = -input[0];
-  output[2][2] = 0;
-}
-
-void Control::FindLinearIntErr() {
-  linear_int_err = discreteTimeIntegrator((Ki_lin.array() * pos_err_outport.array()).matrix(),
-                   linear_integrator, tun_ctl_pos_sat_upper, tun_ctl_pos_sat_lower);
-}
-
-Eigen::Vector3f Control::discreteTimeIntegrator(Eigen::Vector3f input, float accumulator[3], float upper_limit,
-                                            float lower_limit) {
-  Eigen::Vector3f output; output << 0.0f, 0.0f, 0.0f;
+Eigen::Vector3f Control::DiscreteTimeIntegrator(const Eigen::Vector3f input, Eigen::Vector3f & accumulator,
+                                    uint8_t ctl_status, float upper_limit, float lower_limit) {
+  Eigen::Vector3f output;
+  output.setZero();
   if (ctl_status <= 1) {
-    for (int i = 0; i < 3; i++) {
-      accumulator[0] = 0;
-    }
+    accumulator.setZero();
     return output;
   }
+  accumulator += input / 62.5;
+  output = accumulator;
   for (int i = 0; i < 3; i++) {
-    accumulator[i] += (input[i] / 62.5);
-    output[i] = accumulator[i];
     if (output[i] > upper_limit) {
       output[i] = upper_limit;
     } else if (output[i] < lower_limit) {
@@ -581,234 +237,117 @@ Eigen::Vector3f Control::discreteTimeIntegrator(Eigen::Vector3f input, float acc
   return output;
 }
 
-// shouldn't be needed but keeps naming consistant with simulink
-void Control::VariablesTransfer() {
+void Control::FindPosErr(const ControlState & state, const ControlCommand & cmd, ControlOutput* out) {
+  Eigen::Vector3f target = out->traj_pos;
+  if (stopped_mode_)
+    target = prev_position_;
+  out->pos_err = target - state.est_P_B_ISS_ISS;
+
+  Eigen::Vector3f Ki_lin = SafeDivide(state.pos_ki, state.vel_kd);
+  out->pos_err_int = DiscreteTimeIntegrator((Ki_lin.array() * out->pos_err.array()).matrix(),
+                   linear_integrator_, out->ctl_status, tun_ctl_pos_sat_upper, tun_ctl_pos_sat_lower);
+}
+
+Eigen::Vector3f Control::SafeDivide(const Eigen::Vector3f & num, const Eigen::Vector3f & denom) {
+  Eigen::Vector3f out;
   for (int i = 0; i < 3; i++) {
-    CMD_Quat_ISS2B[i] = att_command[i];
-    CMD_Omega_B_ISS_B[i] = omega_command[i];
-    CMD_Alpha_B_ISS_B[i] = alpha_command[i];
+    out[i] = (denom[i] == 0 ? 0 : num[i] / denom[i]);
   }
-  CMD_Quat_ISS2B[3] = att_command[3];  // since quat has size 4
+  return out;
 }
 
-void Control::FindPosErr() {
-  Eigen::Vector3f t;
-  t << ctl_input_.est_P_B_ISS_ISS[0], ctl_input_.est_P_B_ISS_ISS[1], ctl_input_.est_P_B_ISS_ISS[2];
-  pos_err_outport = CMD_P_B_ISS_ISS - t;
-}
 
-void Control::UpdateLinearPIDVals() {
-  Kp_lin.x() = SafeDivide(ctl_input_.pos_kp[0], ctl_input_.vel_kd[0]);
-  Kp_lin.y() = SafeDivide(ctl_input_.pos_kp[1], ctl_input_.vel_kd[1]);
-  Kp_lin.z() = SafeDivide(ctl_input_.pos_kp[2], ctl_input_.vel_kd[2]);
-  Ki_lin.x() = SafeDivide(ctl_input_.pos_ki[0], ctl_input_.vel_kd[0]);
-  Ki_lin.y() = SafeDivide(ctl_input_.pos_ki[1], ctl_input_.vel_kd[1]);
-  Ki_lin.z() = SafeDivide(ctl_input_.pos_ki[2], ctl_input_.vel_kd[2]);
-  Kd_lin.x() = ctl_input_.vel_kd[0];
-  Kd_lin.y() = ctl_input_.vel_kd[1];
-  Kd_lin.z() = ctl_input_.vel_kd[2];
-}
+void Control::UpdateCtlStatus(const ControlState & state, ControlOutput* out) {
+  float pos_err = (prev_position_ - state.est_P_B_ISS_ISS).squaredNorm();
+  float quat_err = QuatError(state.est_quat_ISS2B, prev_att_);
 
-float Control::SafeDivide(float num, float denom) {
-  if (denom == 0) {
-    return 0;
+  // is tun_ctl_stopped_pos_thresh supposed to be squared?
+  if (((pos_err > tun_ctl_stopped_pos_thresh) || (abs(quat_err) > tun_ctl_stopped_quat_thresh)) &&
+      (mode_cmd_ == constants::ctl_stopped_mode)) {
+    out->ctl_status = constants::ctl_stopping_mode;
   } else {
-    return num / denom;
-  }
-}
-
-/*****cex_control_executive functions *****/
-void Control::BypassShaper() {
-  if (stopped_mode) {
-    CMD_V_B_ISS_ISS << 0.0f, 0.0f, 0.0f;
-    CMD_A_B_ISS_ISS << 0.0f, 0.0f, 0.0f;
-    for (int i = 0; i < 3; i++) {
-      omega_command[i] = 0;
-      alpha_command[i] = 0;
-    }
-  } else {
-    for (int i = 0; i < 3; i++) {
-      CMD_V_B_ISS_ISS[i] = cmd_.traj_vel[i];
-      CMD_A_B_ISS_ISS[i] = cmd_.traj_accel[i];
-      omega_command[i] = cmd_.traj_omega[i];
-      alpha_command[i] = cmd_.traj_alpha[i];
-    }
-  }
-}
-
-
-void Control::UpdateCtlStatus() {
-  if (CtlStatusSwitch()) {
-    ctl_status = constants::ctl_stopping_mode;
-  } else {
-    if (stopped_mode) {
-      ctl_status = constants::ctl_stopped_mode;
+    if (stopped_mode_) {
+      out->ctl_status = constants::ctl_stopped_mode;
     } else {
-      ctl_status = mode_cmd;
+      out->ctl_status = mode_cmd_;
     }
   }
-}
-
-// determines if still in stopping; called by UpdateCtlStatus
-bool Control::CtlStatusSwitch() {
-  // find sum of squares
-  float pos_sum = 0;
-  for (int i = 0; i < 3; i++) {
-    float tmp = pos_err_parameter[i] * pos_err_parameter[i];
-    pos_sum = pos_sum + tmp;
-  }
-
-  if (((pos_sum > tun_ctl_stopped_pos_thresh) || (abs(quat_err) > tun_ctl_stopped_quat_thresh)) &&
-      (mode_cmd == constants::ctl_stopped_mode)) {
-    return true;
-  }
-    return false;
 }
 
 // update the previous as the last part of the step if it is not in stopped mode
-void Control::UpdatePrevious() {
-  if (!stopped_mode) {
-    for (int i = 0; i < 3; i++) {
-      prev_position[i] =  ctl_input_.est_P_B_ISS_ISS[i];
-      prev_att[i] = ctl_input_.est_quat_ISS2B[i];
-    }
-    prev_att[3] = ctl_input_.est_quat_ISS2B[3];  // this has 1 more element thatn pos.
-  }
-}
-
-void Control::FindPosError() {
-  for (int i = 0; i < 3; i++) {
-    pos_err_parameter[i] = prev_position[i] - ctl_input_.est_P_B_ISS_ISS[i];
+void Control::UpdatePrevious(const ControlState & state) {
+  if (!stopped_mode_) {
+    prev_position_ = state.est_P_B_ISS_ISS;
+    prev_att_ = state.est_quat_ISS2B;
   }
 }
 
 // the quaternian_error1 block that performs q_cmd - q_actual * q_error
-// Simulink q_cmd is of format x,y,z,w
-void Control::FindQuatError(float q_cmd[4], float q_actual[4], float& output_scalar, float output_vec[3]) {
-  Eigen::Quaternion<float> cmd;
-  cmd.x() = q_cmd[0];
-  cmd.y() = q_cmd[1];
-  cmd.z() = q_cmd[2];
-  cmd.w() = q_cmd[3];
-
-  Eigen::Quaternion<float> actual;
-  actual.x() = q_actual[0];
-  actual.y() = q_actual[1];
-  actual.z() = q_actual[2];
-  actual.w() = q_actual[3];
-
-  //  ROS_ERROR("newc %g %g %g %g", cmd.x(), cmd.y(), cmd.z(), cmd.w());
-  //  ROS_ERROR("newina %g %g %g %g", actual.x(), actual.y(), actual.z(), actual.w());
+float Control::QuatError(const Eigen::Quaternionf cmd, const Eigen::Quaternionf actual) {
   Eigen::Quaternion<float> out = actual.conjugate() * cmd;
-  //  ROS_ERROR("newa %g %g %g %g", out.x(), out.y(), out.z(), out.w());
   NormalizeQuaternion(out);
-
-  output_vec[0] = out.x();
-  output_vec[1] = out.y();
-  output_vec[2] = out.z();
-
-  output_scalar = fabs(acos(static_cast<double>(out.w()))) * 2;
+  return fabs(static_cast<float>(acos(static_cast<double>(out.w())))) * 2;
 }
 
-// updates the position and attitude command
-void Control::UpdatePosAndQuat() {
-  if (stopped_mode) {
-    CMD_P_B_ISS_ISS.x() = prev_position[0];
-    CMD_P_B_ISS_ISS.y() = prev_position[1];
-    CMD_P_B_ISS_ISS.z() = prev_position[2];
-    for (int i = 0; i < 3; i++) {
-      att_command[i] = prev_att[i];
-    }
-    att_command[3] = prev_att[3];
-  } else {
-    CMD_P_B_ISS_ISS.x() = cmd_.traj_pos[0];
-    CMD_P_B_ISS_ISS.y() = cmd_.traj_pos[1];
-    CMD_P_B_ISS_ISS.z() = cmd_.traj_pos[2];
-    for (int i = 0; i < 3; i++) {
-      att_command[i] = cmd_.traj_quat[i];
-    }
-    att_command[3] = cmd_.traj_quat[3];
-  }
-}
-
-/*stopped mode is true when velocity and omega are below thresholds and
- mode_cmd is stopping for 4 cycles */
-void Control::UpdateStoppedMode() {
-  float velocity[3];
-  float omega[3];
-  for (int i = 0; i < 3; i++) {
-    velocity[i]= ctl_input_.est_V_B_ISS_ISS[i];
-    omega[i] = ctl_input_.est_omega_B_ISS_B[i];
-  }
-
-  // need to run these outside of if condition to make sure that they are being ran every cycle
-  bool vel_below_threshold = BelowThreshold(velocity, tun_ctl_stopping_vel_thresh, prev_filter_vel);
-  bool omega_below_threshold =  BelowThreshold(omega, tun_ctl_stopping_omega_thresh, prev_filter_omega);
-  bool cmd_make = CmdModeMakeCondition();
-  if (vel_below_threshold && omega_below_threshold && cmd_make) {
-    stopped_mode = true;
-  } else {
-    stopped_mode = false;
-  }
-}
-/*Butterworth filter implementation */
-float Control::ButterWorthFilter(float input, float& delay_val) {
+float Control::ButterWorthFilter(float input, float delay_val, float* sum_out) {
   const long double butterworth_gain_1 = 0.0031317642291927056;
   const long double butterworth_gain_2 = -0.993736471541614597;
   float tmp_out = input * butterworth_gain_1;
   float previous_gain = delay_val * butterworth_gain_2;
   tmp_out = tmp_out - previous_gain;
   float output = tmp_out + delay_val;
-  delay_val = tmp_out;
-  return output;
+  *sum_out += output * output;
+  return tmp_out;
 }
-/*determine if velocity (linear or angular) values are less than threshhold
-  retruns true if it is less than the threshhold*/
-bool Control::BelowThreshold(float velocity[], float threshhold, float previous[3]) {
-  float filter_out;
+
+bool Control::FilterThreshold(Eigen::Vector3f vec, float threshold, Eigen::Vector3f & previous) {
   float sum = 0;
-  for (int i = 0; i < 3; i++) {
-    filter_out =
-      Control::ButterWorthFilter(velocity[i], previous[i]);  // previous[i] gets updated in this function
-    filter_out = filter_out * filter_out;  // square the value
-    sum = sum + filter_out;                // sum all of the values
-  }
+  for (int i = 0; i < 3; i++)
+    previous[i] = ButterWorthFilter(vec[i], previous[i], &sum);
 
-  if (sum < threshhold) {
-    return true;
-  }
-  return false;
+  return sum < threshold;
 }
 
-/*Determines if make conditions is met: if mode_cmd equals ctl_stopping_mode for 4 previous times*/
-bool Control::CmdModeMakeCondition() {
-  // shift exisitng elements to the right
-  prev_mode_cmd[4] = prev_mode_cmd[3];
-  prev_mode_cmd[3] = prev_mode_cmd[2];
-  prev_mode_cmd[2] = prev_mode_cmd[1];
-  prev_mode_cmd[1] = prev_mode_cmd[0];
-  // update index 0 with new value
-  prev_mode_cmd[0] = mode_cmd;
-  // Note: since i am shifting first, i don't account for the newest value in the comparison
-  // check if they all equal ctl_stopping_mode
-  if ((prev_mode_cmd[4] == constants::ctl_stopping_mode) && (prev_mode_cmd[4] == prev_mode_cmd[3]) &&
-      (prev_mode_cmd[3] == prev_mode_cmd[2]) && (prev_mode_cmd[2] == prev_mode_cmd[1])) {
-    return true;
-  }
-  return false;
-}
-
-/* triggers IDLE if est_confidence is 0; idles if diverged */
-void Control::UpdateModeCmd() {
-  if (ctl_input_.est_confidence != constants::ase_status_converged) {
-    mode_cmd = constants::ctl_idle_mode;
+void Control::UpdateMode(const ControlState & state, const ControlCommand & cmd) {
+  if (state.est_confidence != constants::ase_status_converged) {
+    mode_cmd_ = constants::ctl_idle_mode;
   } else {
-    // mode_cmd = cmd_.cmd_mode;
-    mode_cmd = ctl_input_.ctl_mode_cmd;
+    mode_cmd_ = cmd.mode;
+  }
+
+  // shift exisitng elements to the right
+  for (int i = 3; i >= 0; i--)
+    prev_mode_cmd_[i + 1] = prev_mode_cmd_[i];
+  prev_mode_cmd_[0] = mode_cmd_;
+
+  // need to run these outside of if condition to make sure that they are being ran every cycle
+  bool vel_below_threshold = FilterThreshold(state.est_V_B_ISS_ISS, tun_ctl_stopping_vel_thresh,
+                                             prev_filter_vel_);
+  bool omega_below_threshold =  FilterThreshold(state.est_omega_B_ISS_B, tun_ctl_stopping_omega_thresh,
+                                                prev_filter_omega_);
+
+  stopped_mode_ = false;
+  if (vel_below_threshold && omega_below_threshold) {
+    // weird that this doesn't use current command
+    if ((prev_mode_cmd_[4] == constants::ctl_stopping_mode) && (prev_mode_cmd_[4] == prev_mode_cmd_[3]) &&
+        (prev_mode_cmd_[3] == prev_mode_cmd_[2]) && (prev_mode_cmd_[2] == prev_mode_cmd_[1]))
+      stopped_mode_ = true;
   }
 }
 
 void Control::Initialize(void) {
+  mode_cmd_ = 0;
+  stopped_mode_ = false;
+  prev_filter_vel_.setZero();
+  prev_filter_omega_.setZero();
+  prev_mode_cmd_[0] = 0;
+  prev_mode_cmd_[1] = 0;
+  prev_mode_cmd_[2] = 0;
+  prev_mode_cmd_[3] = 0;
+  prev_position_.setZero();
+  prev_att_.x() = 0; prev_att_.y() = 0; prev_att_.z() = 0; prev_att_.w() = 0;
+  linear_integrator_.setZero();
+  rotational_integrator_.setZero();
 }
 
 void Control::ReadParams(config_reader::ConfigReader* config) {

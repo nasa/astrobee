@@ -149,10 +149,7 @@ class Ctl {
     ff_msgs::ControlCommand const& poseVel = ff_msgs::ControlCommand());
 
   // Step control forward
-  bool Step(void);
-
-  ctl_msg* GetCtlMsg(void) {return &controller_.ctl_;}
-  cmd_msg* GetCmdMsg(void) {return &controller_.cmd_;}
+  bool Step(ros::Time curr_time);
 
   // Read the control parameters from the LUA config file
   void ReadParams(void);
@@ -178,10 +175,14 @@ class Ctl {
   ff_util::Segment segment_;
   ff_util::Segment::iterator setpoint_;
   ff_msgs::ControlFeedback feedback_;
+  ff_msgs::ControlCommand command_;
 
   config_reader::ConfigReader config_;
   ff_util::PerfTimer pt_ctl_;
   ros::Timer config_timer_;
+
+  uint8_t mode_;
+  gnc_autocode::ControlState state_;
 
   std::string name_;
   bool inertia_received_;
@@ -191,8 +192,10 @@ class Ctl {
   float stopping_vel_thresh_squared_;
   float stopping_omega_thresh_squared_;
 
+  float GetCommand(gnc_autocode::ControlCommand* cmd, ros::Time tim);
 // for testing
-  void TestTwoArrays(const char*, const float new_array[], const float old_array[], int length, float tolerance);
+  void TestTwoVectors(const char*, const Eigen::Vector3f new_array, const float old_array[], float tolerance);
+  void TestTwoQuats(const char*, const Eigen::Quaternionf new_quat, const float old_array[], float tolerance);
   void TestFloats(const char*, const float new_float, const float oldfloat, float tolerance);
 };
 

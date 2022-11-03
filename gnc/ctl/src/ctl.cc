@@ -101,7 +101,7 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
   // Set the operating mode to STOP by default, so that when the speed ramps
   // up we don't drift off position because of small forces and torques
   mutex_cmd_msg_.lock();
-  controller_.ctl_input_.ctl_mode_cmd = ff_msgs::ControlCommand::MODE_STOP;
+  mode_ = ff_msgs::ControlCommand::MODE_STOP;
   mutex_cmd_msg_.unlock();
 
   // Initialize GNC
@@ -240,14 +240,18 @@ void Ctl::UpdateCallback(FSM::State const& state, FSM::Event const& event) {
 void Ctl::EkfCallback(const ff_msgs::EkfState::ConstPtr& state) {
   if (!use_truth_) {
     mutex_cmd_msg_.lock();
-    auto & ctl = controller_.ctl_input_;
+    state_.est_omega_B_ISS_B = msg_conversions::ros_to_eigen_vector(state->omega).cast<float>();
+    state_.est_V_B_ISS_ISS = msg_conversions::ros_to_eigen_vector(state->velocity).cast<float>();
+    state_.est_P_B_ISS_ISS = msg_conversions::ros_point_to_eigen_vector(state->pose.position).cast<float>();
+    state_.est_quat_ISS2B = msg_conversions::ros_to_eigen_quat(state->pose.orientation).cast<float>();
+    state_.est_confidence = state->confidence;
+
+    auto & ctl = gnc_.ctl_input_;
     msg_conversions::ros_to_array_vector(state->omega, ctl.est_omega_B_ISS_B);
     msg_conversions::ros_to_array_vector(state->velocity, ctl.est_V_B_ISS_ISS);
     msg_conversions::ros_to_array_point(state->pose.position, ctl.est_P_B_ISS_ISS);
     msg_conversions::ros_to_array_quat(state->pose.orientation, ctl.est_quat_ISS2B);
     ctl.est_confidence = state->confidence;
-    ctl.current_time_sec = state->header.stamp.sec;
-    ctl.current_time_nsec = state->header.stamp.nsec;
     mutex_cmd_msg_.unlock();
 
     // Check if Astrobee is dynamically stopped
@@ -269,7 +273,7 @@ void Ctl::EkfCallback(const ff_msgs::EkfState::ConstPtr& state) {
 
     // advance control forward whenever the pose is updated
     pt_ctl_.Tick();
-    Step();
+    Step(state->header.stamp);
     pt_ctl_.Tock();
   }
 }
@@ -278,16 +282,17 @@ void Ctl::EkfCallback(const ff_msgs::EkfState::ConstPtr& state) {
 void Ctl::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth) {
   if (use_truth_) {
     mutex_cmd_msg_.lock();
-    auto& ctl = controller_.ctl_input_;
+    state_.est_P_B_ISS_ISS = msg_conversions::ros_point_to_eigen_vector(truth->pose.position).cast<float>();
+    state_.est_quat_ISS2B = msg_conversions::ros_to_eigen_quat(truth->pose.orientation).cast<float>();
+    state_.est_confidence = 0;  // Localization manager now deals with this
+    auto& ctl = gnc_.ctl_input_;
     msg_conversions::ros_to_array_point(truth->pose.position, ctl.est_P_B_ISS_ISS);
     msg_conversions::ros_to_array_quat(truth->pose.orientation, ctl.est_quat_ISS2B);
     ctl.est_confidence = 0;  // Localization manager now deals with this
-    ctl.current_time_sec = truth->header.stamp.sec;
-    ctl.current_time_nsec = truth->header.stamp.nsec;
     mutex_cmd_msg_.unlock();
     // advance control forward whenever the pose is updated
     pt_ctl_.Tick();
-    Step();
+    Step(truth->header.stamp);
     pt_ctl_.Tock();
   }
 }
@@ -296,7 +301,9 @@ void Ctl::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth) {
 void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
   if (use_truth_) {
     mutex_cmd_msg_.lock();
-    auto& ctl = controller_.ctl_input_;
+    state_.est_V_B_ISS_ISS = mc::ros_to_eigen_vector(truth->twist.linear).cast<float>();
+    state_.est_omega_B_ISS_B = mc::ros_to_eigen_vector(truth->twist.angular).cast<float>();
+    auto& ctl = gnc_.ctl_input_;
     mc::ros_to_array_vector(truth->twist.linear, ctl.est_V_B_ISS_ISS);
     mc::ros_to_array_vector(truth->twist.angular, ctl.est_omega_B_ISS_B);
     mutex_cmd_msg_.unlock();
@@ -307,7 +314,10 @@ void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
 // Called when management updates inertial info
 void Ctl::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
-  auto& input = controller_.ctl_input_;
+  state_.mass = inertia->inertia.m;
+  auto& i = inertia->inertia;
+  state_.inertia << i.ixx, i.ixy, i.ixz, i.ixy, i.iyy, i.iyz, i.ixz, i.iyz, i.izz;
+  auto& input = gnc_.ctl_input_;
   input.mass = inertia->inertia.m;
   // mc::ros_to_array_vector(inertia->com, input.center_of_mass);  // no longer exists
   input.inertia_matrix[0] = inertia->inertia.ixx;
@@ -325,7 +335,13 @@ void Ctl::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia
 // Called when choreographer updates the flight mode
 void Ctl::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
-  auto& input = controller_.ctl_input_;
+  state_.att_kp = mc::ros_to_eigen_vector(mode->att_kp).cast<float>();
+  state_.att_ki = mc::ros_to_eigen_vector(mode->att_ki).cast<float>();
+  state_.omega_kd = mc::ros_to_eigen_vector(mode->omega_kd).cast<float>();
+  state_.pos_kp = mc::ros_to_eigen_vector(mode->pos_kp).cast<float>();
+  state_.pos_ki = mc::ros_to_eigen_vector(mode->pos_ki).cast<float>();
+  state_.vel_kd = mc::ros_to_eigen_vector(mode->vel_kd).cast<float>();
+  auto& input = gnc_.ctl_input_;
   mc::ros_to_array_vector(mode->att_kp, input.att_kp);
   mc::ros_to_array_vector(mode->att_ki, input.att_ki);
   mc::ros_to_array_vector(mode->omega_kd, input.omega_kd);
@@ -469,11 +485,13 @@ void Ctl::PreemptCallback() {
 bool Ctl::Control(uint8_t const mode, ff_msgs::ControlCommand const& poseVel) {
   // Set the operating mode
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
-  auto& input = controller_.ctl_input_;
-  input.ctl_mode_cmd = mode;
+  mode_ = mode;
   if (mode != ff_msgs::ControlCommand::MODE_NOMINAL)
     return true;
 
+  command_ = poseVel;
+
+  auto& input = gnc_.ctl_input_;
   // NOMINAL: Current setpoint
   auto& curr = poseVel.current;
   input.cmd_state_a.timestamp_sec = curr.when.sec;
@@ -504,98 +522,116 @@ bool Ctl::Control(uint8_t const mode, ff_msgs::ControlCommand const& poseVel) {
   return true;
 }
 
-bool Ctl::Step(void) {
-  auto& input = controller_.ctl_input_;
-  auto& cmd = controller_.cmd_;
-  auto& ctl = controller_.ctl_;
-  // Step GNC forward
-  {
-    if (!inertia_received_) {
-      NODELET_DEBUG_STREAM_THROTTLE(10, "GNC step waiting for inertia");
-      return false;
-    }
-    if (!flight_enabled_ || !control_enabled_) {
-      NODELET_DEBUG_STREAM_THROTTLE(10, "GNC control disabled in flight mode");
-      return false;
-    }
-    std::lock_guard<std::mutex> cmd_lock(mutex_cmd_msg_);
+float Ctl::GetCommand(gnc_autocode::ControlCommand* cmd, ros::Time tim) {
+  auto& curr = command_.next;
+  if (curr.when > tim)
+    curr = command_.current;
+  cmd->P_B_ISS_ISS = mc::ros_point_to_eigen_vector(curr.pose.position).cast<float>();
+  cmd->quat_ISS2B = mc::ros_to_eigen_quat(curr.pose.orientation).cast<float>();
+  cmd->V_B_ISS_ISS = mc::ros_to_eigen_vector(curr.twist.linear).cast<float>();
+  cmd->A_B_ISS_ISS = mc::ros_to_eigen_vector(curr.accel.linear).cast<float>();
+  cmd->omega_B_ISS_ISS = mc::ros_to_eigen_vector(curr.twist.angular).cast<float>();
+  cmd->alpha_B_ISS_ISS = mc::ros_to_eigen_vector(curr.accel.angular).cast<float>();
+  cmd->mode = mode_;
+  return (tim - curr.when).toSec();
+}
 
-    memcpy(&gnc_.ctl_input_, &input, sizeof(input));
-    memcpy(&gnc_.cmd_, &cmd, sizeof(cmd));
-    memcpy(&gnc_.ctl_, &ctl, sizeof(ctl));
-
-    controller_.Step();
-    gnc_.Step();
+bool Ctl::Step(ros::Time curr_time) {
+  if (!inertia_received_) {
+    NODELET_DEBUG_STREAM_THROTTLE(10, "GNC step waiting for inertia");
+    return false;
   }
+  if (!flight_enabled_ || !control_enabled_) {
+    NODELET_DEBUG_STREAM_THROTTLE(10, "GNC control disabled in flight mode");
+    return false;
+  }
+
+  gnc_autocode::ControlCommand command;
+  gnc_autocode::ControlOutput output;
+  float time_delta;
+  {
+    std::lock_guard<std::mutex> cmd_lock(mutex_cmd_msg_);
+    gnc_.ctl_input_.current_time_sec = curr_time.sec;
+    gnc_.ctl_input_.current_time_nsec = curr_time.nsec;
+    gnc_.ctl_input_.ctl_mode_cmd = mode_;
+
+    time_delta = GetCommand(&command, curr_time);
+  }
+
+  // Step GNC forward
+  controller_.Step(time_delta, state_, command, &output);
+  gnc_.Step();
+
   /***** Comparison Tests *****/
-  TestFloats("traj_error_pos", ctl.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.00001);  // correct
-  TestTwoArrays("traj_quat", cmd.traj_quat, gnc_.cmd_.traj_quat, 4, 0.00001);  // correct
-  TestFloats("traj_error_vel", ctl.traj_error_vel, gnc_.ctl_.traj_error_vel, 0.00001);  // correct
-  TestFloats("traj_error_omega", ctl.traj_error_omega, gnc_.ctl_.traj_error_omega, 0.00001);  // correct
-  TestFloats("traj_error_att", ctl.traj_error_att, gnc_.ctl_.traj_error_att, 0.001);  // correct
+  TestTwoVectors("traj_pos", output.traj_pos, gnc_.cmd_.traj_pos, 0.00001);  // correct
+  TestFloats("traj_error_pos", output.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.00001);  // correct
+  TestTwoQuats("traj_quat", output.traj_quat, gnc_.cmd_.traj_quat, 0.00001);  // correct
+  TestFloats("traj_error_vel", output.traj_error_vel, gnc_.ctl_.traj_error_vel, 0.00001);  // correct
+  TestFloats("traj_error_omega", output.traj_error_omega, gnc_.ctl_.traj_error_omega, 0.00001);  // correct
+  TestFloats("traj_error_att", output.traj_error_att, gnc_.ctl_.traj_error_att, 0.001);  // correct
 
-  TestFloats("ctl_status", ctl.ctl_status, gnc_.ctl_.ctl_status, 0);  // correct
-  TestTwoArrays("pos_err", ctl.pos_err, gnc_.ctl_.pos_err, 3, 0.00001);  // correct
-  TestTwoArrays("pos_err_int", ctl.pos_err_int, gnc_.ctl_.pos_err_int, 3, 0.00001);  // correct
+  TestFloats("ctl_status", output.ctl_status, gnc_.ctl_.ctl_status, 0);  // correct
+  TestTwoVectors("pos_err", output.pos_err, gnc_.ctl_.pos_err, 0.00001);  // correct
+  TestTwoVectors("pos_err_int", output.pos_err_int, gnc_.ctl_.pos_err_int, 0.00001);  // correct
 
-  TestTwoArrays("body_force_cmd", ctl.body_force_cmd, gnc_.ctl_.body_force_cmd, 3, 0.001);  // correct
-  TestTwoArrays("body_accel_cmd", ctl.body_accel_cmd, gnc_.ctl_.body_accel_cmd, 3, 0.0001);
+  TestTwoVectors("body_force_cmd", output.body_force_cmd, gnc_.ctl_.body_force_cmd, 0.001);  // correct
+  TestTwoVectors("body_accel_cmd", output.body_accel_cmd, gnc_.ctl_.body_accel_cmd, 0.0001);
 
-  TestFloats("att_err_mag", ctl.att_err_mag, gnc_.ctl_.att_err_mag, 0.001);
-  TestTwoArrays("att_err", ctl.att_err, gnc_.ctl_.att_err, 3, 0.000002);
-  TestTwoArrays("body_alpha_cmd", ctl.body_alpha_cmd, gnc_.ctl_.body_alpha_cmd, 3, 0.0001);  // correct
-  TestTwoArrays("body_torque_cmd", ctl.body_torque_cmd, gnc_.ctl_.body_torque_cmd, 3, 0.0001);
+  TestFloats("att_err_mag", output.att_err_mag, gnc_.ctl_.att_err_mag, 0.001);
+  TestTwoVectors("att_err", output.att_err, gnc_.ctl_.att_err, 0.000002);
+  TestTwoVectors("body_alpha_cmd", output.body_alpha_cmd, gnc_.ctl_.body_alpha_cmd, 0.0001);  // correct
+  TestTwoVectors("body_torque_cmd", output.body_torque_cmd, gnc_.ctl_.body_torque_cmd, 0.0001);
 
   // Publish the FAM command
   static ff_msgs::FamCommand cmd_msg_;
-  cmd_msg_.header.stamp = ros::Time::now();
+  cmd_msg_.header.stamp = curr_time;
   cmd_msg_.header.frame_id = "body";
-  cmd_msg_.wrench.force = mc::array_to_ros_vector(ctl.body_force_cmd);
-  cmd_msg_.wrench.torque = mc::array_to_ros_vector(ctl.body_torque_cmd);
-  cmd_msg_.accel = mc::array_to_ros_vector(ctl.body_accel_cmd);
-  cmd_msg_.alpha = mc::array_to_ros_vector(ctl.body_alpha_cmd);
-  cmd_msg_.position_error = mc::array_to_ros_vector(ctl.pos_err);
-  cmd_msg_.position_error_integrated = mc::array_to_ros_vector(ctl.pos_err_int);
-  cmd_msg_.attitude_error = mc::array_to_ros_vector(ctl.att_err);
-  cmd_msg_.attitude_error_integrated = mc::array_to_ros_vector(ctl.att_err_int);
-  cmd_msg_.attitude_error_mag = ctl.att_err_mag;
-  cmd_msg_.status = ctl.ctl_status;
-  cmd_msg_.control_mode = cmd.cmd_mode;
+  cmd_msg_.wrench.force = mc::eigen_to_ros_vector(output.body_force_cmd.cast<double>());
+  cmd_msg_.wrench.torque = mc::eigen_to_ros_vector(output.body_torque_cmd.cast<double>());
+  cmd_msg_.accel = mc::eigen_to_ros_vector(output.body_accel_cmd.cast<double>());
+  cmd_msg_.alpha = mc::eigen_to_ros_vector(output.body_alpha_cmd.cast<double>());
+  cmd_msg_.position_error = mc::eigen_to_ros_vector(output.pos_err.cast<double>());
+  cmd_msg_.position_error_integrated = mc::eigen_to_ros_vector(output.pos_err_int.cast<double>());
+  cmd_msg_.attitude_error = mc::eigen_to_ros_vector(output.att_err.cast<double>());
+  cmd_msg_.attitude_error_integrated = mc::eigen_to_ros_vector(output.att_err_int.cast<double>());
+  cmd_msg_.attitude_error_mag = output.att_err_mag;
+  cmd_msg_.status = output.ctl_status;
+  cmd_msg_.control_mode = mode_;
   ctl_pub_.publish(cmd_msg_);
 
   // Publish the traj message
   static ff_msgs::ControlState current;
-  current.when = cmd_msg_.header.stamp;
-  current.pose.position = msg_conversions::array_to_ros_point(cmd.traj_pos);
-  current.pose.orientation = msg_conversions::array_to_ros_quat(cmd.traj_quat);
-  current.twist.linear = msg_conversions::array_to_ros_vector(cmd.traj_vel);
-  current.twist.angular = msg_conversions::array_to_ros_vector(cmd.traj_omega);
-  current.accel.linear = msg_conversions::array_to_ros_vector(cmd.traj_accel);
-  current.accel.angular = msg_conversions::array_to_ros_vector(cmd.traj_alpha);
+  current.when = curr_time;
+  current.pose.position = msg_conversions::eigen_to_ros_point(output.traj_pos.cast<double>());
+  current.pose.orientation = msg_conversions::eigen_to_ros_quat(output.traj_quat.cast<double>());
+  current.twist.linear = msg_conversions::eigen_to_ros_vector(output.traj_vel.cast<double>());
+  current.twist.angular = msg_conversions::eigen_to_ros_vector(output.traj_omega.cast<double>());
+  current.accel.linear = msg_conversions::eigen_to_ros_vector(output.traj_accel.cast<double>());
+  current.accel.angular = msg_conversions::eigen_to_ros_vector(output.traj_alpha.cast<double>());
   traj_pub_.publish(current);
 
   // Publish the current setpoint,
   if ((fsm_.GetState() == NOMINAL) || (fsm_.GetState() == STOPPING)) {
     std::lock_guard<std::mutex> lock(mutex_segment_);
     static ff_msgs::ControlFeedback feedback;
-    feedback.setpoint.when = cmd_msg_.header.stamp;
-    feedback.setpoint.pose.position = mc::array_to_ros_point(cmd.traj_pos);
-    feedback.setpoint.pose.orientation = mc::array_to_ros_quat(cmd.traj_quat);
-    feedback.setpoint.twist.linear = mc::array_to_ros_vector(cmd.traj_vel);
-    feedback.setpoint.twist.angular = mc::array_to_ros_vector(cmd.traj_omega);
-    feedback.setpoint.accel.linear = mc::array_to_ros_vector(cmd.traj_accel);
-    feedback.setpoint.accel.angular = mc::array_to_ros_vector(cmd.traj_alpha);
+    feedback.setpoint.when = curr_time;
+    feedback.setpoint.pose.position = mc::eigen_to_ros_point(output.traj_pos.cast<double>());
+    feedback.setpoint.pose.orientation = mc::eigen_to_ros_quat(output.traj_quat.cast<double>());
+    feedback.setpoint.twist.linear = mc::eigen_to_ros_vector(output.traj_vel.cast<double>());
+    feedback.setpoint.twist.angular = mc::eigen_to_ros_vector(output.traj_omega.cast<double>());
+    feedback.setpoint.accel.linear = mc::eigen_to_ros_vector(output.traj_accel.cast<double>());
+    feedback.setpoint.accel.angular = mc::eigen_to_ros_vector(output.traj_alpha.cast<double>());
     feedback.index = std::distance(setpoint_, segment_.begin());
     // Sometimese segments arrive with a first setpoint that has a time stamp
     // sometime in the future. In this case we will be in STOPPED mode until
     // the callback timer sets the CMC mode to NOMINAL. In the interim the
     // errors being sent back from the controller make no sense.
-    switch (input.ctl_mode_cmd) {
+    switch (mode_) {
     case ff_msgs::ControlCommand::MODE_NOMINAL:
-      feedback.error_position = ctl.traj_error_pos;
-      feedback.error_attitude = ctl.traj_error_att;
-      feedback.error_velocity = ctl.traj_error_vel;
-      feedback.error_omega    = ctl.traj_error_omega;
+      feedback.error_position = output.traj_error_pos;
+      feedback.error_attitude = output.traj_error_att;
+      feedback.error_velocity = output.traj_error_vel;
+      feedback.error_omega    = output.traj_error_omega;
       break;
     default:
       feedback.error_position = 0;
@@ -620,14 +656,31 @@ void Ctl::TestFloats(const char* name, const float new_float, const float old_fl
   }
 }
 
-void Ctl::TestTwoArrays(const char* name, const float new_array[],
-                                   const float old_array[], int length, float tolerance) {
-  for (int i = 0; i < length; i++) {
+void Ctl::TestTwoVectors(const char* name, const Eigen::Vector3f new_array,
+                                   const float old_array[], float tolerance) {
+  for (int i = 0; i < 3; i++) {
     float difference = old_array[i] - new_array[i];
     float perc_difference = difference / old_array[i];
     if (fabs(difference) > tolerance) {
       std::string p1, p2;
-      for (int i = 0; i < length; i++) {
+      for (int i = 0; i < 3; i++) {
+        p1 += " " + std::to_string(new_array[i]);
+        p2 += " " + std::to_string(old_array[i]);
+      }
+      ROS_ERROR("%s New: %s, Old: %s", name, p1.c_str(), p2.c_str());
+    }
+  }
+}
+
+void Ctl::TestTwoQuats(const char* name, const Eigen::Quaternionf new_quat,
+                                   const float old_array[], float tolerance) {
+  float new_array[4] = {new_quat.x(), new_quat.y(), new_quat.z(), new_quat.w()};
+  for (int i = 0; i < 4; i++) {
+    float difference = old_array[i] - new_array[i];
+    float perc_difference = difference / old_array[i];
+    if (fabs(difference) > tolerance) {
+      std::string p1, p2;
+      for (int i = 0; i < 4; i++) {
         p1 += " " + std::to_string(new_array[i]);
         p2 += " " + std::to_string(old_array[i]);
       }
