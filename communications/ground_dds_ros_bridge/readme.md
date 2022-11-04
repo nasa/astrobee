@@ -3,10 +3,10 @@
 The ground DDS ROS bridge acts like a translator between DDS and ROS. It listensto DDS telemetry coming from the robot and converts it to ROS messages.
 Currently it only supports converting the access control state, guest science
 data, dock camera compressed image, navigation camera compressed image, science
-camera compressed image, and the robot position. It also converts messages
-published on the ros command topic to a dds command and publish them on the dds
-command topic. Please note that as of now, the ground dds ros bridge can only
-connect to one robot.
+camera compressed image, and the robot position messages. It also converts
+messages published on the ros command topic to a dds command and publishes them
+on the dds command topic. Please note that as of now, the ground dds ros bridge
+can only connect to one robot.
 
 The ground bridge will need to be configured for your specific situation. Please
 see the next section for more information.
@@ -43,8 +43,8 @@ is set to false.
 
 # Running the Ground DDS ROS Bridge
 
-To use the ground bridge, in a terminal with the astrobee setup sourced, run:
+The ground bridge is not run by default in simulation. To run it, you'll need to
+set the ASTROBEE_CONFIG_DIR environment variable. In a terminal with the
+astrobee setup sourced, run:
 
-
-
-
+ASTROBEE_CONFIG_DIR=$ASTROBEE_WS/src/astrobee/config/ rosrun ground_dds_ros_bridge ground_dds_ros_bridge_node
