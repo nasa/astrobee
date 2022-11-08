@@ -1,4 +1,6 @@
-FROM astrobee:latest-rolling-base
+
+ARG REMOTE=astrobee
+FROM ${REMOTE}/astrobee:latest-rolling-base
 
 ENV ROSDISTRO=rolling
 ENV ROS_PYTHON_VERSION=3

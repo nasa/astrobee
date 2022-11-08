@@ -1,4 +1,6 @@
-FROM astrobee:latest-rolling-base
+
+ARG REMOTE=astrobee
+FROM ${REMOTE}/astrobee:latest-rolling-base
 
 # install ros rolling + gazebo and dependencies
 RUN apt-get update && apt-get install -q -y --fix-missing \
