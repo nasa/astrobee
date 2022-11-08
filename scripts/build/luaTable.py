@@ -1,3 +1,20 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """
 Output Python data structure as a Lua table constructor.
 PLEASE NOTE: This script currently only works with python 2.
@@ -9,13 +26,15 @@ is no easy way to guarantee the python 3 compatibility changes
 continue to generate the fsw files correctly.
 """
 
-import sys
+try:
+    from cStringIO import StringIO  # fmt: skip
+except:
+    # Python 3
+    from io import StringIO
 
-if sys.version_info > (3, 0):
-    # exit if python 3
-    print("The lua table script is only compatible with python 2")
-    sys.exit(1)
-from cStringIO import StringIO  # fmt: skip
+if not hasattr(__builtins__, "basestring"):
+    # Python 3
+    basestring = (str, bytes)
 
 
 def q(s):
