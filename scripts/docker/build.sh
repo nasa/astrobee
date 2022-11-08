@@ -76,8 +76,12 @@ os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 build_astrobee_base="false"
 build_astrobee="false"
 build_test_astrobee="false"
+rolling_base="false"
+rolling="false"
 push_astrobee_base="false"
 push_astrobee="false"
+push_rolling_base="false"
+push_rolling="false"
 
 remote="false"
 owner="nasa"
@@ -130,9 +134,17 @@ while [ "$1" != "" ]; do
                                    ;;
         astrobee_quick )           astrobee_quick="true"
                                    ;;
+        rolling_base )             rolling_base="true"
+                                   ;;
+        rolling )                  rolling="true"
+                                   ;;
         push_astrobee_base )       push_astrobee_base="true"
                                    ;;
         push_astrobee )            push_astrobee="true"
+                                   ;;
+        push_rolling_base )        push_rolling_base="true"
+                                   ;;
+        push_rolling )             push_rolling="true"
                                    ;;
         * )                        echo "unknown target '$1'"
                                    usage
@@ -258,10 +270,26 @@ if [ "$astrobee_quick" = "true" ]; then
     build astrobee_quick "${revision}-" "quick-"
 fi
 
+if [ "$rolling_base" = "true" ]; then
+    build ros2/ros2_rolling_base "${revision}-" "rolling-base"
+fi
+
+if [ "$rolling" = "true" ]; then
+    build ros2/ros2_rolling_deb "${revision}-" "rolling-"
+fi
+
 if [ "$push_astrobee_base" = "true" ]; then
     push astrobee_base "${revision}-" "base-"
 fi
 
 if [ "$push_astrobee" = "true" ]; then
     push astrobee "${revision}-" ""
+fi
+
+if [ "$push_rolling_base" = "true" ]; then
+    build astrobee "${revision}-" ""
+fi
+
+if [ "$push_rolling" = "true" ]; then
+    build astrobee "${revision}-" ""
 fi
