@@ -271,7 +271,7 @@ if [ "$astrobee_quick" = "true" ]; then
 fi
 
 if [ "$rolling_base" = "true" ]; then
-    build ros2/ros2_rolling_base "${revision}-" "rolling-base-"
+    build ros2/ros2_rolling_base "${revision}-" "rolling_base-"
 fi
 
 if [ "$rolling" = "true" ]; then
@@ -287,7 +287,7 @@ if [ "$push_astrobee" = "true" ]; then
 fi
 
 if [ "$push_rolling_base" = "true" ]; then
-    push rolling_base "${revision}-" "rolling-base-"
+    push rolling_base "${revision}-" "rolling_base-"
 fi
 
 if [ "$push_rolling" = "true" ]; then
