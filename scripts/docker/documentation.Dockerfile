@@ -24,7 +24,7 @@ RUN apt-get update \
   git \
   graphviz \
   openjdk-8-jdk \
-  python-pip \
+  python3-pip \
   python-setuptools \
   unzip \
   wget
