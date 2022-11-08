@@ -13,35 +13,32 @@
 
 FROM ubuntu:focal
 
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set up time zone to avoid any prompts during install later
+RUN echo 'Etc/UTC' > /etc/timezone \
+  && ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime
+
 # Install dependencies
 RUN apt-get update \
   && apt-get install -y \
-  bison \
-  build-essential \
-  cmake \
-  flex \
-  git \
-  graphviz \
-  openjdk-8-jdk \
-  python3-iso8601 \
-  python3-pip \
-  python3-setuptools \
-  python3-six \
-  unzip \
-  wget
+    bison \
+    build-essential \
+    cmake \
+    doxygen \
+    flex \
+    git \
+    graphviz \
+    openjdk-8-jdk \
+    python3-iso8601 \
+    python3-pip \
+    python3-setuptools \
+    python3-six \
+    unzip \
+    wget
 
 # Set up so scripts starting with "#!/usr/bin/env python" run under python3 in focal
 RUN which python >/dev/null || update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-
-# Install doxygen
-RUN wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.20.src.tar.gz' \
-    && tar -zxvf doxygen-1.8.20.src.tar.gz \
-    && cd doxygen-1.8.20 \
-    && mkdir build \
-    && cd build \
-    && cmake -G "Unix Makefiles" .. \
-    && make \
-    && make install
 
 # Install xgds_planner
 RUN git clone --quiet --branch just_xpjson https://github.com/trey0/xgds_planner2.git \
