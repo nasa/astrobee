@@ -287,9 +287,9 @@ if [ "$push_astrobee" = "true" ]; then
 fi
 
 if [ "$push_rolling_base" = "true" ]; then
-    build astrobee "${revision}-" ""
+    push rolling_base "${revision}-" "rolling-base-"
 fi
 
 if [ "$push_rolling" = "true" ]; then
-    build astrobee "${revision}-" ""
+    push rolling "${revision}-" "rolling-"
 fi
