@@ -21,9 +21,9 @@ A library and command-line tool for generating a RAPID-style CommandConstants.id
 file from an XPJSON schema.
 """
 
+import argparse
 import logging
 import os
-import re
 import sys
 
 # hack to ensure xgds_planner2 submodule is at head of PYTHONPATH
@@ -32,7 +32,6 @@ ffroot = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 sys.path.insert(0, os.path.join(ffroot, "astrobee", "commands", "xgds_planner2"))
 
 import xpjsonAstrobee
-from xgds_planner2 import xpjson
 
 TEMPLATE_MAIN = """
 /*
@@ -204,22 +203,31 @@ def genCommandConstants(inSchemaPath, outCommandConstantsPath):
     logging.info("wrote command constants to %s", outCommandConstantsPath)
 
 
-def main():
-    import optparse
+class CustomFormatter(
+    argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
+):
+    pass
 
-    parser = optparse.OptionParser(
-        "usage: %prog <inSchemaPath> [outCommandConstantsPath]\n\n" + __doc__.strip()
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__ + "\n\n",
+        formatter_class=CustomFormatter,
     )
-    opts, args = parser.parse_args()
-    if len(args) == 2:
-        inSchemaPath, outCommandConstantsPath = args
-    elif len(args) == 1:
-        inSchemaPath = args[0]
-        outCommandConstantsPath = "AstrobeeCommandConstants.idl"
-    else:
-        parser.error("expected exactly 1 or 2 args")
+    parser.add_argument(
+        "inSchemaPath",
+        help="input XPJSON schema path",
+    )
+    parser.add_argument(
+        "outCommandConstantsPath",
+        help="output IDL command constants path",
+        nargs="?",
+        default="AstrobeeCommandConstants.idl",
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    genCommandConstants(inSchemaPath, outCommandConstantsPath)
+    genCommandConstants(args.inSchemaPath, args.outCommandConstantsPath)
 
 
 if __name__ == "__main__":

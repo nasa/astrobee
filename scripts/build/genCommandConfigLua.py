@@ -25,7 +25,6 @@ file from an XPJSON schema.
 import argparse
 import logging
 import os
-import re
 import sys
 
 # hack to set up PYTHONPATH
@@ -35,7 +34,6 @@ sys.path.insert(0, os.path.join(ffroot, "astrobee", "commands", "xgds_planner2")
 
 import luaTable
 import xpjsonAstrobee
-from xgds_planner2 import xpjson
 
 TEMPLATE_MAIN = """
 -- Copyright (c) 2015 United States Government as represented by the

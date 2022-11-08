@@ -21,6 +21,7 @@ A command-line tool for generating an HTML command dictionary from
 an XPJSON schema.
 """
 
+import argparse
 import logging
 import os
 import sys
@@ -33,20 +34,24 @@ from xgds_planner2 import commandDictionary
 
 
 def main():
-    import optparse
-
-    parser = optparse.OptionParser(
-        "usage: %prog <inSchemaPath> <outHtmlPath>\n\n" + __doc__.strip()
+    parser = argparse.ArgumentParser(
+        description=__doc__ + "\n\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    opts, args = parser.parse_args()
-    if len(args) == 2:
-        inSchemaPath, outHtmlPath = args
-    else:
-        parser.error("expected exactly 2 args")
+    parser.add_argument(
+        "inSchemaPath",
+        help="input XPJSON schema path",
+    )
+    parser.add_argument(
+        "outHtmlPath",
+        help="output HTML command dictionary path",
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.DEBUG, format="%(message)s")
     commandDictionary.writeCommandDictionary(
-        inSchemaPath,
-        outHtmlPath,
+        args.inSchemaPath,
+        args.outHtmlPath,
         includeCommandSpecNameField=False,
         includeCommandSpecNotesField=False,
     )

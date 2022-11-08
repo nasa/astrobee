@@ -22,9 +22,9 @@ A library and command-line tool for generating a ROS msg file containing
 declarations of command names, from the Astrobee XPJSON schema.
 """
 
+import argparse
 import logging
 import os
-import re
 import sys
 
 # hack to set up PYTHONPATH
@@ -33,7 +33,6 @@ ffroot = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 sys.path.insert(0, os.path.join(ffroot, "astrobee", "commands", "xgds_planner2"))
 
 import xpjsonAstrobee
-from xgds_planner2 import xpjson
 
 TEMPLATE_MAIN = """
 # Copyright (c) 2015 United States Government as represented by the
@@ -136,22 +135,31 @@ def genCommandNamesMsg(inSchemaPath, outCommandNamesPath):
     )
 
 
-def main():
-    import optparse
+class CustomFormatter(
+    argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
+):
+    pass
 
-    parser = optparse.OptionParser(
-        "usage: %prog <inSchema.json> [CommandConstants.msg]\n\n" + __doc__.strip()
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__ + "\n\n",
+        formatter_class=CustomFormatter,
     )
-    opts, args = parser.parse_args()
-    if len(args) == 2:
-        inSchemaPath, outCommandNamesPath = args
-    elif len(args) == 1:
-        inSchemaPath = args[0]
-        outCommandNamesPath = "CommandConstants.msg"
-    else:
-        parser.error("expected 1 or 2 args")
+    parser.add_argument(
+        "inSchemaPath",
+        help="input XPJSON schema path",
+    )
+    parser.add_argument(
+        "outCommandNamesPath",
+        help="output ROS command constants path",
+        nargs="?",
+        default="CommandConstants.msg",
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    genCommandNamesMsg(inSchemaPath, outCommandNamesPath)
+    genCommandNamesMsg(args.inSchemaPath, args.outCommandNamesPath)
 
 
 if __name__ == "__main__":

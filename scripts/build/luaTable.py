@@ -28,7 +28,7 @@ continue to generate the fsw files correctly.
 
 try:
     from cStringIO import StringIO  # fmt: skip
-except:
+except ImportError:
     # Python 3
     from io import StringIO
 
