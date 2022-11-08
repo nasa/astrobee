@@ -22,6 +22,7 @@ A library and command-line tool for generating a RAPID-style CommandConstants.id
 file from an XPJSON schema.
 """
 
+import argparse
 import logging
 import os
 import re
@@ -95,22 +96,32 @@ def genCommandConfigLua(inSchemaPath, outCommandConfigPath):
     logging.info("wrote command config Lua to %s", outCommandConfigPath)
 
 
-def main():
-    import optparse
+class CustomFormatter(
+    argparse.RawDescriptionHelpFormatter,
+    argparse.ArgumentDefaultsHelpFormatter
+):
+    pass
 
-    parser = optparse.OptionParser(
-        "usage: %prog <inSchemaPath> commands.config]\n\n" + __doc__.strip()
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__ + "\n\n",
+        formatter_class=CustomFormatter,
     )
-    opts, args = parser.parse_args()
-    if len(args) == 2:
-        inSchemaPath, outCommandConfigPath = args
-    elif len(args) == 1:
-        inSchemaPath = args[0]
-        outCommandConfigPath = "commands.config"
-    else:
-        parser.error("expected 1 or 2 args")
+    parser.add_argument(
+        "inSchemaPath",
+        help="input XPJSON schema path",
+    )
+    parser.add_argument(
+        "outCommandConfigPath",
+        help="output Lua command config file",
+        nargs="?",
+        default="commands.config",
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    genCommandConfigLua(inSchemaPath, outCommandConfigPath)
+    genCommandConfigLua(args.inSchemaPath, args.outCommandConfigPath)
 
 
 if __name__ == "__main__":
