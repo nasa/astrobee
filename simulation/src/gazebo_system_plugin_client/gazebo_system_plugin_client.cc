@@ -50,7 +50,7 @@ class SystemPluginClient : public SystemPlugin {
     if (!scene || !scene->Initialized())
       return;
     for (uint32_t l = 0; l < scene->LightCount(); l++) {
-    #if GAZEBO_MAJOR_VERSION > 8
+    #if GAZEBO_MAJOR_VERSION > 9
       rendering::LightPtr light = scene->LightByIndex(l);
     #else
       rendering::LightPtr light = scene->GetLight(l);

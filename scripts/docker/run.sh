@@ -90,7 +90,7 @@ image=""
 # extract variables from options
 while [ "$1" != "" ]; do
     case $1 in
-        -h | --help )                   usage
+        -h | --help )              usage
                                    exit
                                    ;;
         -x | --xenial )            os="xenial"
@@ -187,6 +187,7 @@ if [ "$display" = "true" ]; then
     display_args+=" --volume="$XAUTH":"$XAUTH":rw"
     display_args+=" --env=XAUTHORITY="${XAUTH}
     display_args+=" --env=DISPLAY"
+    display_args+=" --privileged"
     if [ "$gpu" = "true" ]; then
         display_args+=" --gpus all"
     fi
