@@ -11,7 +11,7 @@
 
 # This image generates doxygen documentation for the Astrobee project
 
-ARG UBUNTU_VERSION=18.04
+ARG UBUNTU_VERSION=20.04
 FROM ubuntu:${UBUNTU_VERSION}
 
 # Install dependencies
@@ -40,15 +40,12 @@ RUN wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.
     && make install
 
 # Install xgds_planner
-RUN pip install iso8601 \
-    && pip install "django<2" \
-    && git clone https://github.com/geocam/geocamUtilWeb.git \
-    && cd geocamUtilWeb \
-    && python setup.py install \
-    && cd .. \
-    && git clone https://github.com/xgds/xgds_planner2.git \
+RUN pip3 install \
+      iso8601 \
+      six \
+    && git clone --quiet --branch just_xpjson https://github.com/trey0/xgds_planner2.git \
     && cd xgds_planner2 \
-    && python setup.py install
+    && python3 setup.py install
 
 # Copy over the repo
 COPY . /repo
@@ -56,8 +53,10 @@ COPY . /repo
 # Generate command line dictionary
 RUN cd /repo \
     && mkdir -p doc/html \
-    && ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html
+    && python3 ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html
 
 # Build Documentation
-RUN cd /repo/doc/diagrams/ && make && cd ../.. \
+RUN cd /repo/doc/diagrams/ \
+    && make \
+    && cd ../.. \
     && doxygen astrobee.doxyfile
