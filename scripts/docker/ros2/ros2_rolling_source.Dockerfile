@@ -1,6 +1,7 @@
 
+ARG UBUNTU_VERSION=16.04
 ARG REMOTE=astrobee
-FROM ${REMOTE}/astrobee:latest-rolling-base
+FROM ${REMOTE}/astrobee:latest-rolling-base-ubuntu${UBUNTU_VERSION}
 
 ENV ROSDISTRO=rolling
 ENV ROS_PYTHON_VERSION=3
