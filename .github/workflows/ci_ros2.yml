@@ -1,6 +1,9 @@
 name: Build ROS2 base images
 
-on: ['workflow_dispatch']
+
+on:
+  push:
+    branches: [ 'ros2' ]
 
 jobs:
 
