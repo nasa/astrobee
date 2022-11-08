@@ -14,7 +14,7 @@ ARG REMOTE=astrobee
 ARG REMOTE_CACHED=${REMOTE}
 
 FROM ${REMOTE_CACHED}/astrobee:latest-ubuntu${UBUNTU_VERSION} AS build_cache
-FROM ${REMOTE}/astrobee:base-latest-ubuntu${UBUNTU_VERSION}
+FROM ${REMOTE}/astrobee:latest-base-ubuntu${UBUNTU_VERSION}
 
 ARG ROS_VERSION=kinetic
 
