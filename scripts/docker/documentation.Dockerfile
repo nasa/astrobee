@@ -9,10 +9,9 @@
 # to add `catkin clean --orphans` so you don't bloat the cache image down the
 # line.
 
-# This image generates doxygen documentation for the Astrobee project
+# This image generates documentation for the Astrobee project
 
-ARG UBUNTU_VERSION=20.04
-FROM ubuntu:${UBUNTU_VERSION}
+FROM ubuntu:focal
 
 # Install dependencies
 RUN apt-get update \
@@ -24,10 +23,15 @@ RUN apt-get update \
   git \
   graphviz \
   openjdk-8-jdk \
+  python3-iso8601 \
   python3-pip \
-  python-setuptools \
+  python3-setuptools \
+  python3-six \
   unzip \
   wget
+
+# Set up so scripts starting with "#!/usr/bin/env python" run under python3 in focal
+RUN which python >/dev/null || update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 # Install doxygen
 RUN wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.20.src.tar.gz' \
@@ -40,12 +44,9 @@ RUN wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.
     && make install
 
 # Install xgds_planner
-RUN pip3 install \
-      iso8601 \
-      six \
-    && git clone --quiet --branch just_xpjson https://github.com/trey0/xgds_planner2.git \
+RUN git clone --quiet --branch just_xpjson https://github.com/trey0/xgds_planner2.git \
     && cd xgds_planner2 \
-    && python3 setup.py install
+    && python setup.py install
 
 # Copy over the repo
 COPY . /repo
@@ -53,7 +54,7 @@ COPY . /repo
 # Generate command line dictionary
 RUN cd /repo \
     && mkdir -p doc/html \
-    && python3 ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html
+    && ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html
 
 # Build Documentation
 RUN cd /repo/doc/diagrams/ \
