@@ -1,0 +1,24 @@
+name: Build ROS2 base images
+
+
+on:
+  push:
+    branches: [ 'ros2' ]
+
+jobs:
+
+  rolling:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Log in to registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+    - name: Build, test, push docker
+      run: ./scripts/docker/build.sh --remote
+                                     --owner ${{ github.repository_owner }}
+                                     rolling_base rolling push_rolling_base push_rolling
+
