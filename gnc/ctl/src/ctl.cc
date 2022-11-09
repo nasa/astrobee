@@ -763,6 +763,8 @@ void Ctl::ReadParams(void) {
     ROS_FATAL("ctl_use_old not specified.");
   if (!config_.GetBool("ctl_compare_old", &compare_ctl_))
     ROS_FATAL("ctl_compare_old not specified.");
+  ROS_INFO("Use old controller: %d Compare old controller: %d", static_cast<int>(use_old_ctl_),
+           static_cast<int>(compare_ctl_));
 }
 
 }  // end namespace ctl
