@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(astrobee)
 
 set(ASTROBEE_VERSION 0.16.6)
@@ -29,14 +29,27 @@ execute_process(
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-)
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+  )
 
-catkin_package(
-    CATKIN_DEPENDS roscpp
-)
+  catkin_package(
+      CATKIN_DEPENDS roscpp
+  )
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+  # Find amend and libraries
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+
+  set(CATKIN_PACKAGE_SHARE_DESTINATION "share")
+  set(CATKIN_PACKAGE_BIN_DESTINATION "bin")
+
+endif()
+
 
 #############
 ## Install ##
