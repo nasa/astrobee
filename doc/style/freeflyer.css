@@ -249,7 +249,7 @@ ul {
   left: auto;
 }
 
-#main-nav ul {
+#main-nav ul div {
   overflow: visible; /* reset ul rule for the navigation bar drop down lists */
   /* Added mgouveia*/
   border-bottom: 1px solid #32363d;
