@@ -567,8 +567,8 @@ bool Ctl::Step(ros::Time curr_time) {
 
   /***** Comparison Tests *****/
   if (compare_ctl_) {
-    TestTwoVectors("traj_pos", output.traj_pos, gnc_.cmd_.traj_pos, 0.00001);  // correct
-    TestFloats("traj_error_pos", output.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.00001);  // correct
+    TestTwoVectors("traj_pos", output.traj_pos, gnc_.cmd_.traj_pos, 0.0001);  // correct
+    TestFloats("traj_error_pos", output.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.0001);  // correct
     TestTwoQuats("traj_quat", output.traj_quat, gnc_.cmd_.traj_quat, 0.00001);  // correct
     TestFloats("traj_error_vel", output.traj_error_vel, gnc_.ctl_.traj_error_vel, 0.00001);  // correct
     TestFloats("traj_error_omega", output.traj_error_omega, gnc_.ctl_.traj_error_omega, 0.00001);  // correct
