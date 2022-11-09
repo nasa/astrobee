@@ -27,13 +27,16 @@ jobs:
 
     - name: Replace old documentation with new
       run: |
-        [ -d docs ] || mkdir docs
-        [ -d docs/html ] && rm -r docs/html
+        (cd docs && git rm -r "*")
+        cp doc/documentation.html docs/index.html
+        cp doc/documentation.html docs/documentation.html
+        cp doc/README.md docs/README.md
         docker cp $(docker create --rm astrobee:documentation):/repo/doc/html docs/html
 
     - name: Commit and Push
       run: |
         cd docs
+        git add index.html documentation.html README.md
         git add --all html/
         EMAIL=`git show -s --format='%ae' HEAD`
         NAME=`git show -s --format='%an' HEAD`
