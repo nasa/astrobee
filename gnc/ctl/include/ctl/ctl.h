@@ -189,6 +189,8 @@ class Ctl {
   bool control_enabled_;
   bool flight_enabled_;
   bool use_truth_;
+  bool compare_ctl_;
+  bool use_old_ctl_;
   float stopping_vel_thresh_squared_;
   float stopping_omega_thresh_squared_;
 

@@ -42,7 +42,8 @@ namespace ctl {  // Nodehandle for <robot>/gnc/wrapper
 Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
   fsm_(WAITING, std::bind(&Ctl::UpdateCallback,
     this, std::placeholders::_1, std::placeholders::_2)),
-      name_(name), inertia_received_(false), control_enabled_(true), flight_enabled_(false) {
+      name_(name), inertia_received_(false), control_enabled_(true), flight_enabled_(false),
+    use_old_ctl_(false), compare_ctl_(false) {
   // Add the state transition lambda functions - refer to the FSM diagram
   // [0]
   fsm_.Add(WAITING,
@@ -559,79 +560,129 @@ bool Ctl::Step(ros::Time curr_time) {
   }
 
   // Step GNC forward
-  controller_.Step(time_delta, state_, command, &output);
-  gnc_.Step();
+  if (!use_old_ctl_ || compare_ctl_)
+    controller_.Step(time_delta, state_, command, &output);
+  if (use_old_ctl_ || compare_ctl_)
+    gnc_.Step();
 
   /***** Comparison Tests *****/
-  TestTwoVectors("traj_pos", output.traj_pos, gnc_.cmd_.traj_pos, 0.00001);  // correct
-  TestFloats("traj_error_pos", output.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.00001);  // correct
-  TestTwoQuats("traj_quat", output.traj_quat, gnc_.cmd_.traj_quat, 0.00001);  // correct
-  TestFloats("traj_error_vel", output.traj_error_vel, gnc_.ctl_.traj_error_vel, 0.00001);  // correct
-  TestFloats("traj_error_omega", output.traj_error_omega, gnc_.ctl_.traj_error_omega, 0.00001);  // correct
-  TestFloats("traj_error_att", output.traj_error_att, gnc_.ctl_.traj_error_att, 0.001);  // correct
+  if (compare_ctl_) {
+    TestTwoVectors("traj_pos", output.traj_pos, gnc_.cmd_.traj_pos, 0.00001);  // correct
+    TestFloats("traj_error_pos", output.traj_error_pos, gnc_.ctl_.traj_error_pos, 0.00001);  // correct
+    TestTwoQuats("traj_quat", output.traj_quat, gnc_.cmd_.traj_quat, 0.00001);  // correct
+    TestFloats("traj_error_vel", output.traj_error_vel, gnc_.ctl_.traj_error_vel, 0.00001);  // correct
+    TestFloats("traj_error_omega", output.traj_error_omega, gnc_.ctl_.traj_error_omega, 0.00001);  // correct
+    TestFloats("traj_error_att", output.traj_error_att, gnc_.ctl_.traj_error_att, 0.001);  // correct
 
-  TestFloats("ctl_status", output.ctl_status, gnc_.ctl_.ctl_status, 0);  // correct
-  TestTwoVectors("pos_err", output.pos_err, gnc_.ctl_.pos_err, 0.00001);  // correct
-  TestTwoVectors("pos_err_int", output.pos_err_int, gnc_.ctl_.pos_err_int, 0.00001);  // correct
+    TestFloats("ctl_status", output.ctl_status, gnc_.ctl_.ctl_status, 0);  // correct
+    TestTwoVectors("pos_err", output.pos_err, gnc_.ctl_.pos_err, 0.00001);  // correct
+    TestTwoVectors("pos_err_int", output.pos_err_int, gnc_.ctl_.pos_err_int, 0.00001);  // correct
 
-  TestTwoVectors("body_force_cmd", output.body_force_cmd, gnc_.ctl_.body_force_cmd, 0.001);  // correct
-  TestTwoVectors("body_accel_cmd", output.body_accel_cmd, gnc_.ctl_.body_accel_cmd, 0.0001);
+    TestTwoVectors("body_force_cmd", output.body_force_cmd, gnc_.ctl_.body_force_cmd, 0.001);  // correct
+    TestTwoVectors("body_accel_cmd", output.body_accel_cmd, gnc_.ctl_.body_accel_cmd, 0.0001);
 
-  TestFloats("att_err_mag", output.att_err_mag, gnc_.ctl_.att_err_mag, 0.001);
-  TestTwoVectors("att_err", output.att_err, gnc_.ctl_.att_err, 0.000002);
-  TestTwoVectors("body_alpha_cmd", output.body_alpha_cmd, gnc_.ctl_.body_alpha_cmd, 0.0001);  // correct
-  TestTwoVectors("body_torque_cmd", output.body_torque_cmd, gnc_.ctl_.body_torque_cmd, 0.0001);
+    TestFloats("att_err_mag", output.att_err_mag, gnc_.ctl_.att_err_mag, 0.001);
+    TestTwoVectors("att_err", output.att_err, gnc_.ctl_.att_err, 0.000002);
+    TestTwoVectors("body_alpha_cmd", output.body_alpha_cmd, gnc_.ctl_.body_alpha_cmd, 0.0001);  // correct
+    TestTwoVectors("body_torque_cmd", output.body_torque_cmd, gnc_.ctl_.body_torque_cmd, 0.0001);
+  }
 
   // Publish the FAM command
   static ff_msgs::FamCommand cmd_msg_;
-  cmd_msg_.header.stamp = curr_time;
-  cmd_msg_.header.frame_id = "body";
-  cmd_msg_.wrench.force = mc::eigen_to_ros_vector(output.body_force_cmd.cast<double>());
-  cmd_msg_.wrench.torque = mc::eigen_to_ros_vector(output.body_torque_cmd.cast<double>());
-  cmd_msg_.accel = mc::eigen_to_ros_vector(output.body_accel_cmd.cast<double>());
-  cmd_msg_.alpha = mc::eigen_to_ros_vector(output.body_alpha_cmd.cast<double>());
-  cmd_msg_.position_error = mc::eigen_to_ros_vector(output.pos_err.cast<double>());
-  cmd_msg_.position_error_integrated = mc::eigen_to_ros_vector(output.pos_err_int.cast<double>());
-  cmd_msg_.attitude_error = mc::eigen_to_ros_vector(output.att_err.cast<double>());
-  cmd_msg_.attitude_error_integrated = mc::eigen_to_ros_vector(output.att_err_int.cast<double>());
-  cmd_msg_.attitude_error_mag = output.att_err_mag;
-  cmd_msg_.status = output.ctl_status;
-  cmd_msg_.control_mode = mode_;
+  auto& input = gnc_.ctl_input_;
+  auto& cmd = gnc_.cmd_;
+  auto& ctl = gnc_.ctl_;
+  if (use_old_ctl_) {
+    cmd_msg_.header.stamp = ros::Time::now();
+    cmd_msg_.header.frame_id = "body";
+    cmd_msg_.wrench.force = mc::array_to_ros_vector(ctl.body_force_cmd);
+    cmd_msg_.wrench.torque = mc::array_to_ros_vector(ctl.body_torque_cmd);
+    cmd_msg_.accel = mc::array_to_ros_vector(ctl.body_accel_cmd);
+    cmd_msg_.alpha = mc::array_to_ros_vector(ctl.body_alpha_cmd);
+    cmd_msg_.position_error = mc::array_to_ros_vector(ctl.pos_err);
+    cmd_msg_.position_error_integrated = mc::array_to_ros_vector(ctl.pos_err_int);
+    cmd_msg_.attitude_error = mc::array_to_ros_vector(ctl.att_err);
+    cmd_msg_.attitude_error_integrated = mc::array_to_ros_vector(ctl.att_err_int);
+    cmd_msg_.attitude_error_mag = ctl.att_err_mag;
+    cmd_msg_.status = ctl.ctl_status;
+    cmd_msg_.control_mode = cmd.cmd_mode;
+  } else {
+    cmd_msg_.header.stamp = curr_time;
+    cmd_msg_.header.frame_id = "body";
+    cmd_msg_.wrench.force = mc::eigen_to_ros_vector(output.body_force_cmd.cast<double>());
+    cmd_msg_.wrench.torque = mc::eigen_to_ros_vector(output.body_torque_cmd.cast<double>());
+    cmd_msg_.accel = mc::eigen_to_ros_vector(output.body_accel_cmd.cast<double>());
+    cmd_msg_.alpha = mc::eigen_to_ros_vector(output.body_alpha_cmd.cast<double>());
+    cmd_msg_.position_error = mc::eigen_to_ros_vector(output.pos_err.cast<double>());
+    cmd_msg_.position_error_integrated = mc::eigen_to_ros_vector(output.pos_err_int.cast<double>());
+    cmd_msg_.attitude_error = mc::eigen_to_ros_vector(output.att_err.cast<double>());
+    cmd_msg_.attitude_error_integrated = mc::eigen_to_ros_vector(output.att_err_int.cast<double>());
+    cmd_msg_.attitude_error_mag = output.att_err_mag;
+    cmd_msg_.status = output.ctl_status;
+    cmd_msg_.control_mode = mode_;
+  }
   ctl_pub_.publish(cmd_msg_);
 
   // Publish the traj message
   static ff_msgs::ControlState current;
-  current.when = curr_time;
-  current.pose.position = msg_conversions::eigen_to_ros_point(output.traj_pos.cast<double>());
-  current.pose.orientation = msg_conversions::eigen_to_ros_quat(output.traj_quat.cast<double>());
-  current.twist.linear = msg_conversions::eigen_to_ros_vector(output.traj_vel.cast<double>());
-  current.twist.angular = msg_conversions::eigen_to_ros_vector(output.traj_omega.cast<double>());
-  current.accel.linear = msg_conversions::eigen_to_ros_vector(output.traj_accel.cast<double>());
-  current.accel.angular = msg_conversions::eigen_to_ros_vector(output.traj_alpha.cast<double>());
+  if (use_old_ctl_) {
+    current.when = cmd_msg_.header.stamp;
+    current.pose.position = msg_conversions::array_to_ros_point(cmd.traj_pos);
+    current.pose.orientation = msg_conversions::array_to_ros_quat(cmd.traj_quat);
+    current.twist.linear = msg_conversions::array_to_ros_vector(cmd.traj_vel);
+    current.twist.angular = msg_conversions::array_to_ros_vector(cmd.traj_omega);
+    current.accel.linear = msg_conversions::array_to_ros_vector(cmd.traj_accel);
+    current.accel.angular = msg_conversions::array_to_ros_vector(cmd.traj_alpha);
+  } else {
+    current.when = curr_time;
+    current.pose.position = msg_conversions::eigen_to_ros_point(output.traj_pos.cast<double>());
+    current.pose.orientation = msg_conversions::eigen_to_ros_quat(output.traj_quat.cast<double>());
+    current.twist.linear = msg_conversions::eigen_to_ros_vector(output.traj_vel.cast<double>());
+    current.twist.angular = msg_conversions::eigen_to_ros_vector(output.traj_omega.cast<double>());
+    current.accel.linear = msg_conversions::eigen_to_ros_vector(output.traj_accel.cast<double>());
+    current.accel.angular = msg_conversions::eigen_to_ros_vector(output.traj_alpha.cast<double>());
+  }
   traj_pub_.publish(current);
 
   // Publish the current setpoint,
   if ((fsm_.GetState() == NOMINAL) || (fsm_.GetState() == STOPPING)) {
     std::lock_guard<std::mutex> lock(mutex_segment_);
     static ff_msgs::ControlFeedback feedback;
-    feedback.setpoint.when = curr_time;
-    feedback.setpoint.pose.position = mc::eigen_to_ros_point(output.traj_pos.cast<double>());
-    feedback.setpoint.pose.orientation = mc::eigen_to_ros_quat(output.traj_quat.cast<double>());
-    feedback.setpoint.twist.linear = mc::eigen_to_ros_vector(output.traj_vel.cast<double>());
-    feedback.setpoint.twist.angular = mc::eigen_to_ros_vector(output.traj_omega.cast<double>());
-    feedback.setpoint.accel.linear = mc::eigen_to_ros_vector(output.traj_accel.cast<double>());
-    feedback.setpoint.accel.angular = mc::eigen_to_ros_vector(output.traj_alpha.cast<double>());
+    if (use_old_ctl_) {
+      feedback.setpoint.when = cmd_msg_.header.stamp;
+      feedback.setpoint.pose.position = mc::array_to_ros_point(cmd.traj_pos);
+      feedback.setpoint.pose.orientation = mc::array_to_ros_quat(cmd.traj_quat);
+      feedback.setpoint.twist.linear = mc::array_to_ros_vector(cmd.traj_vel);
+      feedback.setpoint.twist.angular = mc::array_to_ros_vector(cmd.traj_omega);
+      feedback.setpoint.accel.linear = mc::array_to_ros_vector(cmd.traj_accel);
+      feedback.setpoint.accel.angular = mc::array_to_ros_vector(cmd.traj_alpha);
+    } else {
+      feedback.setpoint.when = curr_time;
+      feedback.setpoint.pose.position = mc::eigen_to_ros_point(output.traj_pos.cast<double>());
+      feedback.setpoint.pose.orientation = mc::eigen_to_ros_quat(output.traj_quat.cast<double>());
+      feedback.setpoint.twist.linear = mc::eigen_to_ros_vector(output.traj_vel.cast<double>());
+      feedback.setpoint.twist.angular = mc::eigen_to_ros_vector(output.traj_omega.cast<double>());
+      feedback.setpoint.accel.linear = mc::eigen_to_ros_vector(output.traj_accel.cast<double>());
+      feedback.setpoint.accel.angular = mc::eigen_to_ros_vector(output.traj_alpha.cast<double>());
+    }
     feedback.index = std::distance(setpoint_, segment_.begin());
     // Sometimese segments arrive with a first setpoint that has a time stamp
     // sometime in the future. In this case we will be in STOPPED mode until
     // the callback timer sets the CMC mode to NOMINAL. In the interim the
     // errors being sent back from the controller make no sense.
-    switch (mode_) {
+    switch (use_old_ctl_ ? input.ctl_mode_cmd : mode_) {
     case ff_msgs::ControlCommand::MODE_NOMINAL:
-      feedback.error_position = output.traj_error_pos;
-      feedback.error_attitude = output.traj_error_att;
-      feedback.error_velocity = output.traj_error_vel;
-      feedback.error_omega    = output.traj_error_omega;
+      if (use_old_ctl_) {
+        feedback.error_position = ctl.traj_error_pos;
+        feedback.error_attitude = ctl.traj_error_att;
+        feedback.error_velocity = ctl.traj_error_vel;
+        feedback.error_omega    = ctl.traj_error_omega;
+      } else {
+        feedback.error_position = output.traj_error_pos;
+        feedback.error_attitude = output.traj_error_att;
+        feedback.error_velocity = output.traj_error_vel;
+        feedback.error_omega    = output.traj_error_omega;
+      }
       break;
     default:
       feedback.error_position = 0;
@@ -708,6 +759,10 @@ void Ctl::ReadParams(void) {
     ROS_FATAL("tun_ctl_stopping_vel_thresh not specified.");
   if (!config_.GetReal("tun_ctl_stopping_omega_thresh", &stopping_omega_thresh_squared_))
     ROS_FATAL("tun_ctl_stopping_omega_thresh not specified.");
+  if (!config_.GetBool("ctl_use_old", &use_old_ctl_))
+    ROS_FATAL("ctl_use_old not specified.");
+  if (!config_.GetBool("ctl_compare_old", &compare_ctl_))
+    ROS_FATAL("ctl_compare_old not specified.");
 }
 
 }  // end namespace ctl
