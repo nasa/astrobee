@@ -28,9 +28,9 @@ jobs:
     - name: Replace old documentation with new
       run: |
         (cd docs && git rm -r "*")
-        cp doc/documentation.html docs/index.html
-        cp doc/documentation.html docs/documentation.html
-        cp doc/README.md docs/README.md
+        cp repo/doc/documentation.html docs/index.html
+        cp repo/doc/documentation.html docs/documentation.html
+        cp repo/doc/README.md docs/README.md
         docker cp $(docker create --rm astrobee:documentation):/repo/doc/html docs/html
 
     - name: Commit and Push
