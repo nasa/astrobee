@@ -160,9 +160,13 @@ module rapid {
       //@copy-declaration /** This command is the equivalent to issuing the stop guest science command and then the start guest science command. Sometimes guest science APKs become unresponsive and this is a quick way to try to get it work again. <p/>See GuestScience.startGuestScience for more on the guest science life cycle. */
       const rapid::String32 GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE = "restartGuestScience";
 
-      //@copy-declaration /** Which guest science APK to terminae */
+      //@copy-declaration /** Which guest science APK to restart */
       const rapid::String32 GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE_PARAM_APK_NAME = "apkName";
       const rapid::DataType GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE_DTYPE_APK_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** The time in seconds the guest science manager waits in between sending the stop and start commands to the guest science apk. */
+      const rapid::String32 GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE_PARAM_WAIT = "wait";
+      const rapid::DataType GUESTSCIENCE_METHOD_RESTART_GUEST_SCIENCE_DTYPE_WAIT = rapid::RAPID_INT;
 
       //@copy-declaration /** Starts a guest science app (APK) running on the Astrobee HLP. This command is part of the guest science app life cycle, implemented by the guest science manager node on the HLP. Steps of the life cycle include:<p/><ul><li>startGuestScience: Starts a guest science app, making it available to receive commands.</li><li>customGuestScience: Routes a command to a running guest science app.</li><li>stopGuestScience: Terminates a running guest science app.</li></ul> */
       const rapid::String32 GUESTSCIENCE_METHOD_START_GUEST_SCIENCE = "startGuestScience";

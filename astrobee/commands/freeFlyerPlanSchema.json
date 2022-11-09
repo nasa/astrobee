@@ -856,7 +856,13 @@
           "type": "ParamSpec",
           "id": "apkName",
           "valueType": "string",
-          "notes": "Which guest science APK to terminae"
+          "notes": "Which guest science APK to restart"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "wait",
+          "valueType": "long",
+          "notes": "The time in seconds the guest science manager waits in between sending the stop and start commands to the guest science apk."
         }
       ]
     },
