@@ -68,4 +68,5 @@ def loadDocument(path):
     """
     xpjson.CHECK_UNKNOWN_FIELDS = False  # suppress some warnings
     xpjson.KEEP_PARAM_SPECS = True  # inhibit deletion of paramSpecs during load
+    xpjson.KEEP_PARAM_PARENT = True  # inhibit deletion of paramSpec parent during load
     return xpjson.loadDocument(path)
