@@ -26,14 +26,15 @@ is no easy way to guarantee the python 3 compatibility changes
 continue to generate the fsw files correctly.
 """
 
+import sys
+
 try:
     from cStringIO import StringIO  # fmt: skip
 except ImportError:
     # Python 3
     from io import StringIO
 
-if not hasattr(__builtins__, "basestring"):
-    # Python 3
+if sys.version_info.major > 2:
     basestring = (str, bytes)
 
 
