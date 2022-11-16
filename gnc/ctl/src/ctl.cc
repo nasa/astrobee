@@ -524,17 +524,17 @@ bool Ctl::Control(uint8_t const mode, ff_msgs::ControlCommand const& poseVel) {
 }
 
 float Ctl::GetCommand(gnc_autocode::ControlCommand* cmd, ros::Time tim) {
-  auto& curr = command_.next;
-  if (curr.when > tim)
-    curr = command_.current;
-  cmd->P_B_ISS_ISS = mc::ros_point_to_eigen_vector(curr.pose.position).cast<float>();
-  cmd->quat_ISS2B = mc::ros_to_eigen_quat(curr.pose.orientation).cast<float>();
-  cmd->V_B_ISS_ISS = mc::ros_to_eigen_vector(curr.twist.linear).cast<float>();
-  cmd->A_B_ISS_ISS = mc::ros_to_eigen_vector(curr.accel.linear).cast<float>();
-  cmd->omega_B_ISS_ISS = mc::ros_to_eigen_vector(curr.twist.angular).cast<float>();
-  cmd->alpha_B_ISS_ISS = mc::ros_to_eigen_vector(curr.accel.angular).cast<float>();
+  auto* curr = &command_.next;
+  if (curr->when > tim)
+    curr = &command_.current;
+  cmd->P_B_ISS_ISS = mc::ros_point_to_eigen_vector(curr->pose.position).cast<float>();
+  cmd->quat_ISS2B = mc::ros_to_eigen_quat(curr->pose.orientation).cast<float>();
+  cmd->V_B_ISS_ISS = mc::ros_to_eigen_vector(curr->twist.linear).cast<float>();
+  cmd->A_B_ISS_ISS = mc::ros_to_eigen_vector(curr->accel.linear).cast<float>();
+  cmd->omega_B_ISS_ISS = mc::ros_to_eigen_vector(curr->twist.angular).cast<float>();
+  cmd->alpha_B_ISS_ISS = mc::ros_to_eigen_vector(curr->accel.angular).cast<float>();
   cmd->mode = mode_;
-  return (tim - curr.when).toSec();
+  return (tim - curr->when).toSec();
 }
 
 bool Ctl::Step(ros::Time curr_time) {
