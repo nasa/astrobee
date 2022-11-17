@@ -236,22 +236,15 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
     // GNC_EKF configuration
     // ---------------------
     if (item_name == "TOPIC_GNC_EKF" && enable) {
-      BuildRosToRapid<ff::RosEkfToRapid>(item_name, TOPIC_GNC_EKF,
-                            "", "", nh_);
-
-      if (ros_sub_rapid_pubs_.count(item_name) == 0) {
-        read_params_error_ = "AstrobeeAstrobeeBridge: ";
-        read_params_error_ += item_name.c_str();
-        read_params_error_ += " not added and it is needed.";
-        return false;
-      }
-
       if (rate < 0) {
         read_params_error_ = "AstrobeeAstrobeeBridge: ";
         read_params_error_ += item_name.c_str();
         read_params_error_ += " requires a non-negative rate.";
         return false;
       }
+
+      BuildRosToRapid<ff::RosEkfToRapid>(item_name, TOPIC_GNC_EKF,
+                            "", "", nh_);
 
       ff::RosEkfToRapid *ekf_to_rapid = static_cast<ff::RosEkfToRapid *>
                                         (ros_sub_rapid_pubs_[item_name].get());
