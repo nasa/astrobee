@@ -157,9 +157,9 @@ Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::Camera
   static int index = 0;
   std::stringstream ss;
   if (result.Rotation())
-    ss << "Remove ";
+    ss << "Rotation";
   else
-    ss << "Keep ";
+    ss << "Valid ";
   ss << "img: " << image_name << ", index: " << index++ << ", num inliers: " << inliers.size()
      << ", error ratio: " << error_ratio << ", mean rot error: " << mean_rotation_corrected_error
      << ", mean of error: " << mean_optical_flow_error;
@@ -188,30 +188,31 @@ Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::Camera
   return result;
 }
 
-void RemoveRotationSequences(const int max_distance_between_removed_images, std::vector<Result>& results) {
-  // check for largest consecutive chunk in between removed images, keep going until chunk is too large
-  int num_removed_images = 0;
+void GroupRotationOrInvalidSequences(const int max_distance_between_rotation_or_invalid_images,
+                                     std::vector<Result>& results) {
+  // check for largest consecutive chunk in between rotation or invalid images, keep going until chunk is too large
+  int num_rotation_or_invalid_images = 0;
   for (int start_index = 0; start_index < static_cast<int>(results.size());) {
     const auto& result = results[start_index];
     // Find end of non-valid chunk after reaching the potential start of a chunk
     if (!result.Valid()) {
       const auto type = result.type;
       boost::optional<int> end_index;
-      int current_distance_between_removed_images = 0;
-      // Add all images from start to end that have a max distance less than the provided threshold to other rotation
-      // images
+      int current_distance_between_rotation_or_invalid_images = 0;
+      // Add all images from start to end that have a max distance less than the provided threshold to other rotation or
+      // invalid images
       for (int query_index = start_index + 1;
            (query_index < static_cast<int>(results.size()) &&
-            (current_distance_between_removed_images < max_distance_between_removed_images));
+            (current_distance_between_rotation_or_invalid_images < max_distance_between_rotation_or_invalid_images));
            ++query_index) {
         if (results[query_index].type == type) {
           end_index = query_index;
-          current_distance_between_removed_images = 0;
+          current_distance_between_rotation_or_invalid_images = 0;
         } else {
-          ++current_distance_between_removed_images;
+          ++current_distance_between_rotation_or_invalid_images;
         }
       }
-      // Remove all images in between start and end index if end index found
+      // Mark all images in between start and end index as rotation or invalid if end index found
       if (end_index) {
         for (int i = start_index; i < *end_index; ++i) {
           auto& result = results[i];
@@ -303,13 +304,11 @@ void MarkSmallSequencesInvalid(const int min_sequence_size, std::vector<Result>&
 }
 
 void MoveResultsToSubdirectories(const std::string& image_directory, const int min_separation_between_sets,
-                                 std::vector<Result>& results) {
+                                 const int min_sequence_size, std::vector<Result>& results) {
   ClusterResults(min_separation_between_sets, ResultType::kValid, results);
   ClusterResults(min_separation_between_sets, ResultType::kRotation, results);
   ClusterResults(min_separation_between_sets, ResultType::kInvalid, results);
   OrderClusters(results);
-  // TODO(rsoussan): make this a param
-  const int min_sequence_size = 5;
   MarkSmallSequencesInvalid(min_sequence_size, results);
   std::unordered_set<int> created_cluster_directories;
   for (const auto& result : results) {
@@ -320,10 +319,10 @@ void MoveResultsToSubdirectories(const std::string& image_directory, const int m
   }
 }
 
-std::vector<Result> RemoveRotationOnlyImages(const std::vector<std::string>& image_names,
-                                             const camera::CameraParameters& camera_params,
-                                             const double rotation_inlier_threshold,
-                                             const double min_relative_pose_inliers_ratio, const bool view_images) {
+std::vector<Result> IdentifyImageTypes(const std::vector<std::string>& image_names,
+                                       const camera::CameraParameters& camera_params,
+                                       const double rotation_inlier_threshold,
+                                       const double min_relative_pose_inliers_ratio, const bool view_images) {
   std::vector<Result> results;
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
@@ -334,7 +333,6 @@ std::vector<Result> RemoveRotationOnlyImages(const std::vector<std::string>& ima
   int next_image_index = 1;
   auto current_image = sm::LoadImage(current_image_index, image_names, detector);
   auto next_image = sm::LoadImage(next_image_index, image_names, detector);
-  int num_removed_images = 0;
   if (view_images) {
     const std::string window_name("ratio_image");
     cv::namedWindow(window_name);
@@ -382,11 +380,14 @@ int main(int argc, char** argv) {
   int max_separation_in_sequence;
   bool view_images;
   int min_separation_between_sets;
+  int min_sequence_size;
   po::options_description desc(
-    "Removes any rotation-only image sequences. Checks sequential images and removes the subsequent image if it fits a "
-    "rotation-only movement model. Further prunes results by removing any images bounded within a provided threhsold "
-    "by detected rotations. By default saves results to subdirectories where each subdirectory contains a different "
-    "sequence of non-rotation movement, where each sequence is separated by a set of rotation or erroneous images.");
+    "Splits a set of images into valid, rotation, and invalid sequences. Checks sequential images and marks the "
+    "subsequent image as a rotation if it fits a "
+    "rotation-only movement model. Marks images with too few matches as invalid. Optionally joins consecutive "
+    "sequences of the same type if they are separated by less than --min-separation-in-sequence images and marks "
+    "sequences smaller than --min-sequence-size as invalid. Valid sequences are saved in the parent directory and "
+    "rotation and invalid sequences are saved in subdirectories named rotation and invalid respectively.");
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
@@ -397,15 +398,18 @@ int main(int argc, char** argv) {
     "min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images. Setting to a lower value "
     "enables less accurate pose estimates to be used to determine if movement is rotation only. Images that do not "
-    "have enough matches are labeled erroneous.")(
-    "max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
-    "Maximum distance between detected rotations for sequence removal. Setting to a larger value removes more images "
-    "in between detected rotations.")(
+    "have enough matches are labeled erroneous.")("max-separation-in-sequence,d",
+                                                  po::value<int>(&max_separation_in_sequence)->default_value(10),
+                                                  "Maximum distance between detected rotations for sequence removal. "
+                                                  "Setting to a larger value marks more images as rotations"
+                                                  "in between already detected rotations.")(
     "min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
     "Minimum separation between non-rotation image sets. Setting to a larger "
     "value enables more movements separated by detected rotations to be combined into the same subdirectories. This is "
     "useful if some of the rotations are short and the movements before and after the rotation should be considered "
-    "the same continous movement.")(
+    "the same continous movement.")("min-sequence-size,s", po::value<int>(&min_sequence_size)->default_value(10),
+                                    "Minimum sequence size for a valid or rotation sequence, sequences smaller than "
+                                    "this value will be marked as invalid.")(
     "view-images,v", po::bool_switch(&view_images)->default_value(false),
     "View images with projected features and error ratios for each provided image in the image directory. "
     "Helpful for tuning the error ratio or visualizing rotation movement while the script is running.")(
@@ -456,22 +460,16 @@ int main(int argc, char** argv) {
   sm::CreateSubdirectory(image_directory, "invalid");
 
   const int num_original_images = image_names.size();
-  LogInfo("Removing rotation only images, max rotation error ratio: " + std::to_string(max_rotation_error_ratio));
+  LogInfo("Identifying image types, max rotation error ratio: " + std::to_string(max_rotation_error_ratio));
 
-  auto results = RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio,
-                                          min_relative_pose_inliers_ratio, view_images);
+  auto results = IdentifyImageTypes(image_names, camera_parameters, max_rotation_error_ratio,
+                                    min_relative_pose_inliers_ratio, view_images);
 
-  LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
-  RemoveRotationSequences(max_separation_in_sequence, results);
-  {
-    const int valid_count = CountResults(results, ResultType::kValid);
-    const int invalid_count = CountResults(results, ResultType::kInvalid);
-    const int rotation_count = CountResults(results, ResultType::kRotation);
-    LogInfo("pre small seq Valid images: " << valid_count << " , rotation images: " << rotation_count
-                                           << ", invalid images: " << invalid_count);
-  }
+  LogInfo("Grouping rotation and invalid sequences, max allowed separation: " +
+          std::to_string(max_separation_in_sequence));
+  GroupRotationOrInvalidSequences(max_separation_in_sequence, results);
   LogInfo("Moving results to subdirectories.");
-  MoveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
+  MoveResultsToSubdirectories(image_directory, min_separation_between_sets, min_sequence_size, results);
   const int valid_count = CountResults(results, ResultType::kValid);
   const int invalid_count = CountResults(results, ResultType::kInvalid);
   const int rotation_count = CountResults(results, ResultType::kRotation);
