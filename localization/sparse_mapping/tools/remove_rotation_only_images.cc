@@ -241,9 +241,8 @@ void ClusterResults(const int min_separation_between_sets, const ResultType& typ
       result.cluster_start_index = *start_index;
       current_separation = 0;
       continue;
-    } else if (++current_separation > min_separation_between_sets) {
+    } else if (++current_separation > min_separation_between_sets) {  // NOLINT
       start_index = boost::none;
-    } else {
     }
   }
 }
