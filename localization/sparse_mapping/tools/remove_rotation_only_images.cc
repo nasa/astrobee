@@ -31,6 +31,8 @@
 #include <boost/program_options.hpp>
 
 #include <mutex>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "utilities.h"  // NOLINT
 
@@ -40,47 +42,63 @@ namespace po = boost::program_options;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
+enum class ResultType { kValid, kInvalid, kRotation };
+
 struct Result {
-  Result(const double ratio, const std::string& image_name, const bool removed)
-      : ratio(ratio), image_name(image_name), removed(removed) {}
+  Result(const double ratio, const std::string& image_name, const ResultType& type)
+      : ratio(ratio), image_name(image_name), type(type) {}
+  static Result InvalidResult(const std::string& image_name) { return Result(0, image_name, ResultType::kInvalid); }
+  static Result RotationResult(const double ratio, const std::string& image_name) {
+    return Result(ratio, image_name, ResultType::kRotation);
+  }
+  static Result ValidResult(const double ratio, const std::string& image_name) {
+    return Result(ratio, image_name, ResultType::kValid);
+  }
+  bool Valid() const { return type == ResultType::kValid; }
+  bool Rotation() const { return type == ResultType::kRotation; }
   double ratio;
   std::string image_name;
-  bool removed;
+  ResultType type;
+  int cluster_id = 0;
+  int cluster_start_index = 0;
 };
 
-void Move(const std::string& image_name, const std::string& subdirectory) {
+void Move(const std::string& image_name, const std::string& cluster_id, const ResultType type) {
   fs::path image_path(image_name);
-  const auto parent_directory = image_path.parent_path();
-  const auto subdirectory_parent_directory = parent_directory / fs::path(subdirectory);
-  const auto subdirectory_image_path = subdirectory_parent_directory / image_path.filename();
-  std::rename((image_name).c_str(), subdirectory_image_path.string().c_str());
-}
-
-void RemoveOrMove(const bool move, const std::string& image_name) {
-  if (move) {
-    Move(image_name, "removed");
-  } else {
-    std::remove(image_name.c_str());
+  const auto parent_directory_path = image_path.parent_path();
+  auto subdirectory_path = parent_directory_path;
+  // Save rotation and invalid images in separate subdirectories.
+  // Valid images go in parent subdirectory.
+  if (type == ResultType::kRotation) {
+    subdirectory_path = subdirectory_path / fs::path("rotation");
+  } else if (type == ResultType::kInvalid) {
+    subdirectory_path = subdirectory_path / fs::path("invalid");
   }
+
+  subdirectory_path = subdirectory_path / fs::path(cluster_id);
+  const auto new_image_path = subdirectory_path / image_path.filename();
+  std::rename((image_name).c_str(), new_image_path.string().c_str());
 }
 
-void RemoveOrMove(const bool move, Result& result) {
-  RemoveOrMove(move, result.image_name);
-  result.removed = true;
+void CreateSubdirectory(const std::string& directory, const std::string& cluster_directory, const ResultType type) {
+  auto parent_directory_path = fs::path(directory);
+  // Save rotation and invalid images in separate subdirectories.
+  // Valid images go in parent subdirectory.
+  if (type == ResultType::kRotation) {
+    parent_directory_path = parent_directory_path / fs::path("rotation");
+  } else if (type == ResultType::kInvalid) {
+    parent_directory_path = parent_directory_path / fs::path("invalid");
+  }
+  sm::CreateSubdirectory(parent_directory_path.string(), cluster_directory);
 }
 
-bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
-                               const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
-                               const std::string image_name, const bool remove_erroneous_images,
-                               const bool move_removed_images, const bool view_images, const cv::Mat& image,
-                               std::vector<Result>& results) {
+Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
+                         const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
+                         const std::string image_name, const bool view_images, const cv::Mat& image) {
   if (matches.size() < 10) {
     LogDebug("Too few matches found between images. Matches: " << matches.size());
-    results.emplace_back(Result(0, image_name, remove_erroneous_images));
-    if (remove_erroneous_images) {
-      LogDebug("Removed erroneous image: " << image_name);
-    }
-    return remove_erroneous_images;
+    const auto result = Result::InvalidResult(image_name);
+    return result;
   }
   std::vector<cv::DMatch> inliers;
   const auto source_T_target = sm::EstimateAffine3d(matches, camera_params, inliers);
@@ -89,11 +107,8 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     LogDebug("Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()
                                                 << ", ratio: " << relative_pose_inliers_ratio
                                                 << ", threshold: " << min_relative_pose_inliers_ratio);
-    results.emplace_back(Result(0, image_name, remove_erroneous_images));
-    if (remove_erroneous_images) {
-      LogDebug("Removed erroneous image: " << image_name);
-    }
-    return remove_erroneous_images;
+    const auto result = Result::InvalidResult(image_name);
+    return result;
   }
   const Eigen::Matrix3d source_R_target = source_T_target.linear();
   const Eigen::Isometry3d target_T_source_rotation_only =
@@ -137,11 +152,11 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
   const double mean_rotation_corrected_error = total_rotation_corrected_error / size;
   const double mean_optical_flow_error = total_optical_flow_error / size;
   const double error_ratio = mean_rotation_corrected_error / mean_optical_flow_error;
-  const bool remove_image = error_ratio < max_rotation_error_ratio;
-  results.emplace_back(Result(error_ratio, image_name, remove_image));
+  const ResultType type = error_ratio < max_rotation_error_ratio ? ResultType::kRotation : ResultType::kValid;
+  const Result result(error_ratio, image_name, type);
   static int index = 0;
   std::stringstream ss;
-  if (remove_image)
+  if (result.Rotation())
     ss << "Remove ";
   else
     ss << "Keep ";
@@ -161,7 +176,7 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
                   ", of: " + std::to_string(mean_optical_flow_error),
                 cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), CV_FONT_NORMAL, 0.9, cv_color, 4,
                 cv::LINE_AA);
-    if (remove_image)
+    if (result.Rotation())
       cv::putText(projection_img, "Removing", cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 200),
                   CV_FONT_NORMAL, 2, cv_color, 4, cv::LINE_AA);
     cv::Mat resized_projection_img;
@@ -170,17 +185,17 @@ bool RotationOnlyImageSequence(const vc::FeatureMatches& matches, const camera::
     cv::waitKey(0);
   }
 
-  return remove_image;
+  return result;
 }
 
-int RemoveRotationSequences(const int max_distance_between_removed_images, const bool move_removed_images,
-                            std::vector<Result>& results) {
+void RemoveRotationSequences(const int max_distance_between_removed_images, std::vector<Result>& results) {
   // check for largest consecutive chunk in between removed images, keep going until chunk is too large
   int num_removed_images = 0;
   for (int start_index = 0; start_index < static_cast<int>(results.size());) {
     const auto& result = results[start_index];
-    // Find end of rotation chunk after reaching the potential start of a chunk
-    if (result.removed) {
+    // Find end of non-valid chunk after reaching the potential start of a chunk
+    if (!result.Valid()) {
+      const auto type = result.type;
       boost::optional<int> end_index;
       int current_distance_between_removed_images = 0;
       // Add all images from start to end that have a max distance less than the provided threshold to other rotation
@@ -189,7 +204,7 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
            (query_index < static_cast<int>(results.size()) &&
             (current_distance_between_removed_images < max_distance_between_removed_images));
            ++query_index) {
-        if (results[query_index].removed) {
+        if (results[query_index].type == type) {
           end_index = query_index;
           current_distance_between_removed_images = 0;
         } else {
@@ -200,13 +215,12 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
       if (end_index) {
         for (int i = start_index; i < *end_index; ++i) {
           auto& result = results[i];
-          if (!result.removed) {
-            RemoveOrMove(move_removed_images, result);
-            LogDebug("Removed image in rotation sequence. Img: " << result.image_name << ", index: " << i
-                                                                 << ", start index: " << start_index
-                                                                 << ", end index: " << *end_index);
-            ++num_removed_images;
+          if (result.type != type) {
+            LogDebug("Rotation or invalid image in rotation sequence. Img: " << result.image_name << ", index: " << i
+                                                                             << ", start index: " << start_index
+                                                                             << ", end index: " << *end_index);
           }
+          result.type = type;
         }
         start_index = *end_index + 1;
         continue;
@@ -214,36 +228,58 @@ int RemoveRotationSequences(const int max_distance_between_removed_images, const
     }
     ++start_index;
   }
-  return num_removed_images;
 }
 
-void SaveResultsToSubdirectories(const std::string& image_directory, const int min_separation_between_sets,
-                                 const std::vector<Result>& results) {
-  int subdirectory_index = 0;
-  sm::CreateSubdirectory(image_directory, std::to_string(subdirectory_index));
-  bool previous_result_removed = false;
-  int current_separation_size = 0;
-  // Save continous sets of non-removed sequences to different subdirectories
-  for (const auto& result : results) {
-    if (result.removed) {
-      ++current_separation_size;
-      previous_result_removed = true;
+// Cluster results using the start index of each cluster
+void ClusterResults(const int min_separation_between_sets, const ResultType& type, std::vector<Result>& results) {
+  boost::optional<int> start_index;
+  int current_separation = 0;
+  for (int i = 0; i < results.size(); ++i) {
+    auto& result = results[i];
+    if (result.type == type) {
+      if (!start_index) start_index = i;
+      result.cluster_start_index = *start_index;
+      current_separation = 0;
+      continue;
+    } else if (++current_separation > min_separation_between_sets) {
+      start_index = boost::none;
     } else {
-      // Only create new subdirectories when sequences are far enough apart to avoid adding many small
-      // subdirectories
-      if (current_separation_size > min_separation_between_sets)
-        sm::CreateSubdirectory(image_directory, std::to_string(++subdirectory_index));
-      Move(result.image_name, std::to_string(subdirectory_index));
-      previous_result_removed = false;
-      current_separation_size = 0;
     }
   }
 }
 
-int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const camera::CameraParameters& camera_params,
-                             const double rotation_inlier_threshold, const double min_relative_pose_inliers_ratio,
-                             const bool remove_erroneous_images, const bool move_removed_images, const bool view_images,
-                             std::vector<Result>& results) {
+// Assign cluster ids to results ordered using the start index of each cluster
+void OrderClusters(std::vector<Result>& results) {
+  int cluster_id = -1;
+  std::unordered_map<int, int> start_index_to_cluster_id;
+  for (auto& result : results) {
+    if (start_index_to_cluster_id.count(result.cluster_start_index) == 0) {
+      start_index_to_cluster_id.emplace(result.cluster_start_index, ++cluster_id);
+    }
+    result.cluster_id = start_index_to_cluster_id[result.cluster_start_index];
+  }
+}
+
+void MoveResultsToSubdirectories(const std::string& image_directory, const int min_separation_between_sets,
+                                 std::vector<Result>& results) {
+  ClusterResults(min_separation_between_sets, ResultType::kValid, results);
+  ClusterResults(min_separation_between_sets, ResultType::kRotation, results);
+  ClusterResults(min_separation_between_sets, ResultType::kInvalid, results);
+  OrderClusters(results);
+  std::unordered_set<int> created_cluster_directories;
+  for (const auto& result : results) {
+    if (created_cluster_directories.count(result.cluster_id) == 0) {
+      CreateSubdirectory(image_directory, std::to_string(result.cluster_id), result.type);
+    }
+    Move(result.image_name, std::to_string(result.cluster_id), result.type);
+  }
+}
+
+std::vector<Result> RemoveRotationOnlyImages(const std::vector<std::string>& image_names,
+                                             const camera::CameraParameters& camera_params,
+                                             const double rotation_inlier_threshold,
+                                             const double min_relative_pose_inliers_ratio, const bool view_images) {
+  std::vector<Result> results;
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
   auto& detector = *(detector_and_matcher.detector());
@@ -261,24 +297,25 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
   }
 
   // Manually add first image
-  results.emplace_back(Result(0, image_names[0], false));
+  results.emplace_back(Result::ValidResult(0, image_names[0]));
   while (current_image_index < image_names.size()) {
-    bool removed_rotation_sequence = false;
     while (next_image_index < image_names.size()) {
       const auto matches = sm::Matches(current_image, next_image, detector_and_matcher);
-      if (matches &&
-          RotationOnlyImageSequence(*matches, camera_params, rotation_inlier_threshold, min_relative_pose_inliers_ratio,
-                                    image_names[next_image_index], remove_erroneous_images, move_removed_images,
-                                    view_images, next_image.image(), results)) {
-        RemoveOrMove(move_removed_images, results.back());
-        ++num_removed_images;
+      const auto& image_name = image_names[next_image_index];
+      if (!matches)
+        results.emplace_back(Result::InvalidResult(image_name));
+      else
+        results.emplace_back(RotationOnlyImage(*matches, camera_params, rotation_inlier_threshold,
+                                               min_relative_pose_inliers_ratio, image_name, view_images,
+                                               next_image.image()));
+      // If valid, try next image
+      if (results.back().Valid()) {
         current_image = next_image;
         current_image_index = next_image_index;
         // Don't load next image if index is past the end of the sequence
         if (++next_image_index >= image_names.size()) break;
         next_image = sm::LoadImage(next_image_index, image_names, detector);
-        removed_rotation_sequence = true;
-      } else {
+      } else {  // Move on to next image and test a new sequence
         break;
       }
     }
@@ -288,7 +325,6 @@ int RemoveRotationOnlyImages(const std::vector<std::string>& image_names, const 
     if (current_image_index >= image_names.size() - 1) break;
     next_image = sm::LoadImage(++next_image_index, image_names, detector);
   }
-  return num_removed_images;
 }
 
 int main(int argc, char** argv) {
@@ -296,18 +332,14 @@ int main(int argc, char** argv) {
   double max_rotation_error_ratio;
   double min_relative_pose_inliers_ratio;
   std::string robot_config_file;
-  bool remove_sequences;
   int max_separation_in_sequence;
-  bool remove_erroneous_images;
-  bool move_removed_images;
   bool view_images;
-  bool save_results_to_subdirectories;
   int min_separation_between_sets;
   po::options_description desc(
     "Removes any rotation-only image sequences. Checks sequential images and removes the subsequent image if it fits a "
     "rotation-only movement model. Further prunes results by removing any images bounded within a provided threhsold "
-    "by detected rotations. Optionally saves results to subdirectories where each subdirectory contains a different "
-    "sequence of non-rotation movement, where each sequence is separated by a set of removed rotation images.");
+    "by detected rotations. By default saves results to subdirectories where each subdirectory contains a different "
+    "sequence of non-rotation movement, where each sequence is separated by a set of rotation or erroneous images.");
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
@@ -318,31 +350,22 @@ int main(int argc, char** argv) {
     "min-relative-pose-inliers-ratio,p", po::value<double>(&min_relative_pose_inliers_ratio)->default_value(0.7),
     "Minimum ratio of matches that are inliers in the estimated relative pose between images. Setting to a lower value "
     "enables less accurate pose estimates to be used to determine if movement is rotation only. Images that do not "
-    "have enough matches are labeled erroneous and are discared unless --keep-erroneous-images is provided.")(
+    "have enough matches are labeled erroneous.")(
     "max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
     "Maximum distance between detected rotations for sequence removal. Setting to a larger value removes more images "
     "in between detected rotations.")(
     "min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
-    "Minimum separation between non-rotation image sets if --keep-images-in-directory not enabled. Setting to a larger "
+    "Minimum separation between non-rotation image sets. Setting to a larger "
     "value enables more movements separated by detected rotations to be combined into the same subdirectories. This is "
     "useful if some of the rotations are short and the movements before and after the rotation should be considered "
     "the same continous movement.")(
-    "remove-images,x", po::bool_switch(&move_removed_images)->default_value(true),
-    "Remove images. Default behavior saves these to a directory called removed instead of deleting them.")(
-    "keep-erroneous-images,k", po::bool_switch(&remove_erroneous_images)->default_value(true),
-    "Keep images with too few relative pose inliers or too few matches between images. Default behavior removes "
-    "these.")("view-images,v", po::bool_switch(&view_images)->default_value(false),
-              "View images with projected features and error ratios for each provided image in the image directory. "
-              "Helpful for tuning the error ratio or visualizing rotation movement while the script is running.")(
-    "keep-images-in-directory,s", po::bool_switch(&save_results_to_subdirectories)->default_value(true),
-    "Keep non-removed images in original directory. Default behavior saves results to subdirectories, where each "
-    "continous set of images separated by a rotation seqeunce is saved to a "
-    "different subdirectory.")
-
-    ("config-path,c", po::value<std::string>()->required(),
-     "Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")(
-      "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-      "robot config file");
+    "view-images,v", po::bool_switch(&view_images)->default_value(false),
+    "View images with projected features and error ratios for each provided image in the image directory. "
+    "Helpful for tuning the error ratio or visualizing rotation movement while the script is running.")(
+    "config-path,c", po::value<std::string>()->required(),
+    "Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")(
+    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+    "robot config file");
   po::positional_options_description p;
   p.add("image-directory", 1);
   p.add("config-path", 1);
@@ -369,7 +392,6 @@ int main(int argc, char** argv) {
   lc::SetEnvironmentConfigs(config_path, "iss", robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
-  config.AddFile("geometry.config");
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
@@ -383,27 +405,20 @@ int main(int argc, char** argv) {
   const auto image_names = sm::GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
-  if (move_removed_images) {
-    sm::CreateSubdirectory(image_directory, "removed");
-  }
+  sm::CreateSubdirectory(image_directory, "rotation");
+  sm::CreateSubdirectory(image_directory, "invalid");
 
   const int num_original_images = image_names.size();
-  std::vector<Result> results;
   LogInfo("Removing rotation only images, max rotation error ratio: " + std::to_string(max_rotation_error_ratio));
-  int num_removed_images =
-    RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio, min_relative_pose_inliers_ratio,
-                             remove_erroneous_images, move_removed_images, view_images, results);
-  const int num_removed_rotation_only_images = num_removed_images;
-  LogInfo("Removed " << num_removed_rotation_only_images << " of " << num_original_images << " images.");
+
+  auto results = RemoveRotationOnlyImages(image_names, camera_parameters, max_rotation_error_ratio,
+                                          min_relative_pose_inliers_ratio, view_images);
 
   LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
-  num_removed_images += RemoveRotationSequences(max_separation_in_sequence, move_removed_images, results);
-
-  LogInfo("Removed " << (num_removed_images - num_removed_rotation_only_images) << " of "
-                     << (num_original_images - num_removed_rotation_only_images) << " images.");
-  if (save_results_to_subdirectories) {
-    LogInfo("Saving results to subdirectories.");
-    SaveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
-  }
-  LogInfo("Total images removed: " << num_removed_images << " of " << num_original_images << ".");
+  RemoveRotationSequences(max_separation_in_sequence, results);
+  LogInfo("Moving results to subdirectories.");
+  MoveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
+  const int num_rotation_or_invalid_images = 0;
+  LogInfo("Total rotation or invalid images: " << num_rotation_or_invalid_images << " of " << num_original_images
+                                               << ".");
 }
