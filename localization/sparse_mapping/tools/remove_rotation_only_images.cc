@@ -259,6 +259,47 @@ void OrderClusters(std::vector<Result>& results) {
   }
 }
 
+int CountResults(const std::vector<Result>& results, const ResultType type) {
+  int count = 0;
+  for (const auto& result : results) {
+    if (result.type == type) ++count;
+  }
+  return count;
+}
+
+void MarkSmallSequencesInvalid(const int min_sequence_size, std::vector<Result>& results) {
+  std::vector<ResultType> types = {ResultType::kValid, ResultType::kRotation};
+  for (const auto type : types) {
+    int current_cluster_size = 0;
+    boost::optional<int> first_cluster_index;
+    int last_cluster_index;
+    for (int i = 0; i < results.size(); ++i) {
+      const auto& result = results[i];
+      if (result.type == type) {
+        if (!first_cluster_index) {
+          first_cluster_index = result.cluster_start_index;
+          ++current_cluster_size;
+        } else if (result.cluster_start_index !=
+                   *first_cluster_index) {  // New cluster started, check size of previous cluster
+          // Mark cluster as invalid if it is too small
+          if (current_cluster_size < min_sequence_size) {
+            for (int j = *first_cluster_index; j <= last_cluster_index; ++j) {
+              auto& result = results[j];
+              if (result.type == type) {
+                result.type = ResultType::kInvalid;
+              }
+            }
+          }
+          first_cluster_index = result.cluster_start_index;
+          current_cluster_size = 1;
+        } else {
+          ++current_cluster_size;
+        }
+      }
+    }
+  }
+}
+
 void MoveResultsToSubdirectories(const std::string& image_directory, const int min_separation_between_sets,
                                  std::vector<Result>& results) {
   ClusterResults(min_separation_between_sets, ResultType::kValid, results);
@@ -417,9 +458,21 @@ int main(int argc, char** argv) {
 
   LogInfo("Removing rotation sequences, max allowed separation: " + std::to_string(max_separation_in_sequence));
   RemoveRotationSequences(max_separation_in_sequence, results);
+  {
+    const int valid_count = CountResults(results, ResultType::kValid);
+    const int invalid_count = CountResults(results, ResultType::kInvalid);
+    const int rotation_count = CountResults(results, ResultType::kRotation);
+    LogInfo("pre small seq Valid images: " << valid_count << " , rotation images: " << rotation_count
+                                           << ", invalid images: " << invalid_count);
+  }
+  // TODO(rsoussan): make this a param
+  const int min_sequence_size = 5;
+  MarkSmallSequencesInvalid(min_sequence_size, results);
   LogInfo("Moving results to subdirectories.");
+  const int valid_count = CountResults(results, ResultType::kValid);
+  const int invalid_count = CountResults(results, ResultType::kInvalid);
+  const int rotation_count = CountResults(results, ResultType::kRotation);
   MoveResultsToSubdirectories(image_directory, min_separation_between_sets, results);
-  const int num_rotation_or_invalid_images = 0;
-  LogInfo("Total rotation or invalid images: " << num_rotation_or_invalid_images << " of " << num_original_images
-                                               << ".");
+  LogInfo("Valid images: " << valid_count << " , rotation images: " << rotation_count
+                           << ", invalid images: " << invalid_count);
 }
