@@ -324,6 +324,8 @@ std::vector<Result> RemoveRotationOnlyImages(const std::vector<std::string>& ima
     if (current_image_index >= image_names.size() - 1) break;
     next_image = sm::LoadImage(++next_image_index, image_names, detector);
   }
+
+  return results;
 }
 
 int main(int argc, char** argv) {
