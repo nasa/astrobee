@@ -1,0 +1,211 @@
+# <!-- Copyright (c) 2017, United States Government, as represented by the     -->
+# <!-- Administrator of the National Aeronautics and Space Administration.     -->
+# <!--                                                                         -->
+# <!-- All rights reserved.                                                    -->
+# <!--                                                                         -->
+# <!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+# <!-- (the "License"); you may not use this file except in compliance with    -->
+# <!-- the License. You may obtain a copy of the License at                    -->
+# <!--                                                                         -->
+# <!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+# <!--                                                                         -->
+# <!-- Unless required by applicable law or agreed to in writing, software     -->
+# <!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+# <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+# <!-- implied. See the License for the specific language governing            -->
+# <!-- permissions and limitations under the License.                          -->
+
+# <launch>
+
+#   <!-- Additional options -->
+#   <arg name="drivers"/>                       <!-- Should we launch drivers? -->
+#   <arg name="spurn" default=""/>              <!-- PRevent a specific node   -->
+#   <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
+#   <arg name="extra" default=""/>              <!-- Inject an additional node -->
+#   <arg name="debug" default=""/>              <!-- Debug a node set          -->
+#   <arg name="output" default="log"/>          <!-- Where to log              -->
+#   <arg name="gtloc" default="false"/>         <!-- Runs ground_truth_localizer -->
+
+#   <!-- Launch all nodelet managers -->
+#   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#           name="llp_gnc" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#           name="llp_imu_aug" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#         name="llp_monitors" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#         name="llp_i2c" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#         name="llp_serial" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#         name="llp_pmc" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#         name="llp_imu" output="$(arg output)"/>
+#     <node pkg="nodelet" type="nodelet" args="manager"
+#         name="llp_lights" output="$(arg output)"/>
+#   </group>
+
+#   <!-- Launch GNC nodes -->
+#   <group unless="$(arg gtloc)">
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
+#       <arg name="name" value="imu_aug" />
+#       <arg name="manager" value="llp_imu_aug" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#   </group>
+#   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#     <arg name="class" value="ctl/ctl" />
+#     <arg name="name" value="ctl" />
+#     <arg name="manager" value="llp_gnc" />
+#     <arg name="spurn" value="$(arg spurn)" />
+#     <arg name="nodes" value="$(arg nodes)" />
+#     <arg name="extra" value="$(arg extra)" />
+#     <arg name="debug" value="$(arg debug)" />
+#     <arg name="default" value="true" />
+#   </include>
+#   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#     <arg name="class" value="fam/fam" />
+#     <arg name="name" value="fam" />
+#     <arg name="manager" value="llp_gnc" />
+#     <arg name="spurn" value="$(arg spurn)" />
+#     <arg name="nodes" value="$(arg nodes)" />
+#     <arg name="extra" value="$(arg extra)" />
+#     <arg name="debug" value="$(arg debug)" />
+#     <arg name="default" value="true" />
+#   </include>
+
+#   <!-- Launch driver nodes, if required -->
+#   <group if="$(arg drivers)">
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="epson_imu/EpsonImuNodelet" />
+#       <arg name="name" value="epson_imu" />
+#       <arg name="manager" value="llp_imu" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="epson_imu/EpsonImuNodelet" />
+#       <arg name="name" value="calibration_imu" />
+#       <arg name="manager" value="llp_imu" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="false" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="pmc_actuator/PmcActuatorNodelet" />
+#       <arg name="name" value="pmc_actuator" />
+#       <arg name="manager" value="llp_pmc" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="eps_driver/EpsDriverNode" />
+#       <arg name="name" value="eps_driver" />
+#       <arg name="manager" value="llp_i2c" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="laser/LaserNodelet" />
+#       <arg name="name" value="laser" />
+#       <arg name="manager" value="llp_i2c" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="flashlight/FlashlightNodelet" />
+#       <arg name="name" value="flashlight_front" />
+#       <arg name="manager" value="llp_i2c" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="flashlight/FlashlightNodelet" />
+#       <arg name="name" value="flashlight_aft" />
+#       <arg name="manager" value="llp_i2c" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="signal_lights/SignalLightsNodelet" />
+#       <arg name="name" value="signal_lights" />
+#       <arg name="manager" value="llp_lights" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="light_flow/LightFlowNodelet" />
+#       <arg name="name" value="light_flow" />
+#       <arg name="manager" value="llp_lights" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="speed_cam/SpeedCamNode" />
+#       <arg name="name" value="speed_cam" />
+#       <arg name="manager" value="llp_serial" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
+#       <arg name="name" value="llp_cpu_mem_monitor" />
+#       <arg name="manager" value="llp_monitors" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
+#       <arg name="class" value="disk_monitor/DiskMonitor" />
+#       <arg name="name" value="llp_disk_monitor" />
+#       <arg name="manager" value="llp_monitors" />
+#       <arg name="spurn" value="$(arg spurn)" />
+#       <arg name="nodes" value="$(arg nodes)" />
+#       <arg name="extra" value="$(arg extra)" />
+#       <arg name="debug" value="$(arg debug)" />
+#       <arg name="default" value="true" />
+#     </include>
+
+#   </group>
+
+# </launch>

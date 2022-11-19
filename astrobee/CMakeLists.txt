@@ -74,10 +74,16 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
 
+# Mark resource files for installation
+install(DIRECTORY resources/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/resources
+  PATTERN ".svn" EXCLUDE)
+
 install(PROGRAMS scripts/apk_print_version.sh
 				  scripts/check_env.sh
           scripts/print_version.sh
           scripts/cpu_print_version.sh
+          scripts/launch_gds.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # install the version.txt file when install target is run
