@@ -112,14 +112,17 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
 
   // Called on every discrete time tick in the simulated world
   void TimerCallback(ros::TimerEvent const& event) {
-    msg_.header.stamp = ros::Time::now();
+    msg_.header.stamp = event.current_real;
     // If the rate is higher than the sim time, prevent repeated timestamps
-    if (msg_.header.stamp == last_time_)
-      return;
-    last_time_ = msg_.header.stamp;
+    bool publish_tf = true;
+    if (msg_.header.stamp == last_time_) {
+      publish_tf = false;
+    } else {
+      last_time_ = msg_.header.stamp;
+    }
 
     #if GAZEBO_MAJOR_VERSION > 7
-    if (tf_) {
+    if (tf_ && publish_tf) {
       static tf2_ros::TransformBroadcaster br;
       msg_.transform.translation.x = GetModel()->WorldPose().Pos().X();
       msg_.transform.translation.y = GetModel()->WorldPose().Pos().Y();
@@ -148,13 +151,13 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
       ros_truth_twist_.twist.linear.x = GetModel()->WorldLinearVel().X();
       ros_truth_twist_.twist.linear.y = GetModel()->WorldLinearVel().Y();
       ros_truth_twist_.twist.linear.z = GetModel()->WorldLinearVel().Z();
-      ros_truth_twist_.twist.angular.x = GetModel()->WorldAngularVel().X();
-      ros_truth_twist_.twist.angular.y = GetModel()->WorldAngularVel().Y();
-      ros_truth_twist_.twist.angular.z = GetModel()->WorldAngularVel().Z();
+      ros_truth_twist_.twist.angular.x = GetModel()->RelativeAngularVel().X();
+      ros_truth_twist_.twist.angular.y = GetModel()->RelativeAngularVel().Y();
+      ros_truth_twist_.twist.angular.z = GetModel()->RelativeAngularVel().Z();
       pub_truth_twist_.publish(ros_truth_twist_);
     }
     #else
-    if (tf_) {
+    if (tf_ && publish_tf) {
       static tf2_ros::TransformBroadcaster br;
       msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
       msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;

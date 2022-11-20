@@ -24,7 +24,7 @@ import os
 import sys
 
 import rosbag
-import utilities
+import utilities.utilities
 
 
 def trim_bag(bag_name, start_time_to_trim, end_time_to_trim):

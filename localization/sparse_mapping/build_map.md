@@ -58,21 +58,25 @@ temporarily modify the above files to reflect your camera's parameters
 More details on these and other environmental variables can be found
 in the \ref astrobee configuration documentation.
 
-## Reduce the number of images
+## Reduce the number of images and remove images that might cause errors during bundle-adjustment 
 
 Remove low movement images:
     rosrun sparse_mapping remove_low_movement_images image_directory_name
 
 This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
 
-This is a non-reversible operation, so it should be invoked on a copy
+Remove rotation-only movement images:
+    rosrun sparse_mapping remove_rotation_only_images image_directory_name config_path
+
+Removes rotation only image sequences and optionally saves different movement sequences to different subdirectories. See 'rosrun sparse_mapping remove_rotation_only_images -h' for more usage details, options, and instructions.
+
+These are non-reversible operations, so they should be invoked on a copy
 of the images.
 
-It is important to avoid rotating the bot in place when acquiring
-images, as then the map could be of poor quality. Hence, the robot
-should have some translation motion (in addition to any rotation) when
+If possible, the robot should have some translation motion (in addition to any rotation) when
 the data is acquired.
 
+Removing low movement and rotation only movement images helps the accuracy of bundle adjustment, which struggles to optimize camera poses with small or no translation changes.
 
 ## Building a map
 
@@ -261,7 +265,20 @@ the map in Hugin, such as:
 
 It will ask to enter a value for the FoV (field of view). That value
 is not important since we won't use it. One can input 10 degrees,
-for example. 
+for example.
+
+Alternatively you can use the generate hugin tool that reads the
+images from a map and imports them automatically (all images will
+be added).
+
+    rosrun sparse_mapping generate_hugin.py -map_name <map_name_surf.map> \
+      -input_hugin <input_hugin.pto -- OPTIONAL ARGUMENT> 
+      -output_hugin <output_hugin.pto>
+
+If you desire to update an existing hugin file for a new map keeping the
+already defined control points (when adding images to a map) you can
+specify the -input_hugin argument (if there are images in the input
+hugin that are not on the map, they will be automatically removed)
 
 Go to the "Expert" interface, then select matching control points
 across a pair of images (make sure the left and right image are not

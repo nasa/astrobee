@@ -91,6 +91,11 @@ as follows:
     $ASTROBEE_BUILD_PATH/devel/lib/localization_node/merge_bags \
       -output_bag <output bag> <input bags>
 
+This tool can also save images only in a given time range, and 
+filter out some images, for example, by keeping only one image per second.
+
+See \ref merge_bags for the full documentation.
+
 ### Extracting images
 
 To extract images from a bag file:
@@ -257,6 +262,8 @@ need to be rebuilt for the extracted submap using
 
 ### Merge maps
 
+#### General usage
+
 Given a set of SURF maps, they can be merged using the command:
 
     merge_maps <input maps> -output_map merged.map \
@@ -277,9 +284,7 @@ in particular, if some of the same images show up at the endpoints of
 both maps. A larger value of `-num_image_overlaps_at_endpoints` may
 result in higher success but will take more time.
 
-Registration to the real-world coordinate system must be (re-)done
-after the maps are merged, as the bundle adjustment done during merging
-may move things somewhat.
+#### Registration and bundle adjustment
 
 The input maps to be merged need not be registered, but that may help
 improve the success of merging. Also, it may be preferable that
@@ -287,6 +292,10 @@ the images at the beginning and end of the maps to merge be close
 to points used in registration. The implication here is that the
 more geometrically correct the input maps are, and the more similar
 to each other, the more likely merging will succeed.
+
+Registration to the real-world coordinate system must be (re-)done
+after the maps are merged, as the bundle adjustment done during merging
+may move things somewhat.
 
 After a merged map is created and registered, it can be rebuilt with
 the BRISK detector to be used on the robot. 
@@ -297,12 +306,23 @@ be skipped during merging, using the
     -skip_bundle_adjustment
 
 option until the final map is computed, as this step can be
-time-consuming.
+time-consuming. Bundle adjustment must happen however eventually,
+before any map registration and rebuilding.
 
-If the first of the two maps to merge is already registered, it may be
-desirable to keep that portion fixed during merging when bundle
-adjustment happens. That is accomplished with the flag -fix_first_map.
-  
+#### Keeping first map fixed
+
+If there are only two maps to merge, and the first of the two maps to
+merge is already registered, it may be desirable to keep that portion
+fixed during merging when bundle adjustment happens, to avoid redoing
+the registration, and perhaps to keep consistency with other work
+already done, such as a dense map product.
+
+Then, use the flag `-fix_first_map` when merging the maps. In this case,
+if an image shows in both maps, then, once the maps are merged, the
+camera poses of the shared images will be replaced with the ones from
+the first map, before reoptimizing the remaining camera poses from the
+second map.
+
 ### How to build a map efficiently
 
 Often times map-building can take a long time, or it can fail. A
@@ -326,12 +346,20 @@ the two maps can be first merged with the same small map of that
 shared location, and then the newly merged map which now will have
 shared images can be merged with the `-fast_merge` flags.
 
+The `-fast_merge` option assumes that a decent number of images
+are shared among the maps, and that those cover a reasonably large
+and representative portion of the desired environment, otherwise
+it may not give accurate results. In either case, bundle adjustment
+must be applied after the merge operations are done and before
+registration, which can be done either with ``merge_maps`` or
+``build_map``.
+  
 To summarize, with careful map surgery (extract submaps and merge
 submaps) large maps can be made from smaller or damaged ones within
 reasonable time.
 
-All these operations should be performed on maps with SURF features.
-Hence the general approach for building maps is to create small SURF
+All these operations should be applied on maps with SURF features.
+Hence, the general approach for building large maps is to create small SURF
 maps using the command:
 
     build_map -feature_detection -feature_matching -track_building    \
@@ -339,8 +367,8 @@ maps using the command:
      -histogram_equalization -num_subsequent_images 100               \
      images/*jpg -output_map <map file>
 
-examine them individually, merging them as appropriate, then
-performing bundle adjustment and registration as per the \ref
+Then, examine the maps individually, merge them as appropriate, and
+perform bundle adjustment and registration as per the \ref
 map_building section. Only when a good enough map is obtained, a
 renamed copy of it should be rebuilt with BRISK features and a
 vocabulary database to be used on the robot.
@@ -502,3 +530,6 @@ added back to it.
 \subpage granite_lab_registration
 \subpage faro
 \subpage theia_map
+\subpage import_map
+\subpage export_map
+\subpage merge_bags

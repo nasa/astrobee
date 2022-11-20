@@ -37,20 +37,19 @@ if [ -z "${ARMHF_CHROOT_DIR}" ]; then echo ARMHF_CHROOT_DIR is not set, please c
 echo "Build context for cross: "${DIR}/../../..
 
 if [ -z "${INSTALL_PATH}" ]
-then
-  if [ -d "${DIR}/../../../../astrobee_install/armhf/" ] # Checks if this folder is defined otherwise defaults to standard
-  then export INSTALL_PATH=${DIR}/../../../../astrobee_install/armhf/
-  else export INSTALL_PATH=$HOME/astrobee_build/armhf
-  fi
+then export INSTALL_PATH=${DIR}/../../../../armhf/opt/astrobee
 fi
 echo "Saving the cross-compiled code in: "${INSTALL_PATH}
 
 # Setup the build context
-docker build $ARMHF_TOOLCHAIN -f scripts/docker/cross_compile/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
-docker build $ARMHF_CHROOT_DIR -f scripts/docker/cross_compile/astrobee_base_rootfs.Dockerfile -t astrobee/astrobee:base-cross
+docker build $ARMHF_TOOLCHAIN -f ${DIR}/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
+docker build $ARMHF_CHROOT_DIR -f ${DIR}/astrobee_base_rootfs.Dockerfile -t astrobee/astrobee:base-cross
 
 # Cross-compiles the code
-docker build ${DIR}/../../.. -f scripts/docker/cross_compile/astrobee_cross.Dockerfile -t astrobee/astrobee:cross
+docker build ${DIR}/../../.. -f ${DIR}/astrobee_cross.Dockerfile -t astrobee/astrobee:cross
+
+# Create install dir if it doesn't exist
+mkdir -p ${INSTALL_PATH}
 
 # Save the code
-docker run --rm --entrypoint tar astrobee/astrobee:cross cC /opt/astrobee . | tar xvC ${INSTALL_PATH}
+docker run --rm --entrypoint tar astrobee/astrobee:cross cC /src/astrobee/armhf/opt/astrobee . | tar xvC ${INSTALL_PATH}
