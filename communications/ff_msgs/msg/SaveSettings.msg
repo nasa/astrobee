@@ -29,7 +29,7 @@ uint8 IMMEDIATE   = 0
 uint8 DELAYED     = 1
 
 # Downlink option indicates if and when the data in the rostopic is downlinked
-uint8 downlinkOption
+uint8 downlink_option
 
 # Times per second to save the data (Hz)
 float32 frequency

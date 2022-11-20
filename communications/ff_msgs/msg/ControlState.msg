@@ -23,7 +23,7 @@
 # twist {Vector3 linear, Vector3 angular}
 # accel {Vector3 linear, Vector3 angular}
 
-time when
+builtin_interfaces/Time when
 geometry_msgs/Pose pose
 geometry_msgs/Twist twist
 geometry_msgs/Twist accel

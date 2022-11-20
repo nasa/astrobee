@@ -16,7 +16,7 @@
 # under the License.
 #
 
-time source_time 
-time target_time
-geometry_msgs/PoseWithCovariance sensor_F_source_T_target
-geometry_msgs/PoseWithCovariance body_F_source_T_target
+builtin_interfaces/Time source_time 
+builtin_interfaces/Time target_time
+geometry_msgs/PoseWithCovariance sensor_f_source_t_target
+geometry_msgs/PoseWithCovariance body_f_source_t_target

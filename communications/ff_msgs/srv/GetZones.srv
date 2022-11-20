@@ -18,5 +18,5 @@
 # This message allows the MOBILITY::MAPPER zones to be retrieved
 
 ---
-time timestamp                           # When these zones were updated
+builtin_interfaces/Time timestamp                           # When these zones were updated
 ff_msgs/Zone[] zones                     # A vector of zones

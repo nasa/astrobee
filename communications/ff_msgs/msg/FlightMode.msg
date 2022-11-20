@@ -17,7 +17,7 @@
 #
 # This message captures all information in a flight mode
 
-Header header                     # Metadata
+std_msgs/Header header                     # Metadata
 
 string name                       # Name of the flight mode
 

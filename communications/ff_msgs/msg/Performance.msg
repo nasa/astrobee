@@ -17,7 +17,7 @@
 #
 # Statistics used to measure performance.
 
-time stamp
+builtin_interfaces/Time stamp
 float32 count
 float32 last
 float32 min

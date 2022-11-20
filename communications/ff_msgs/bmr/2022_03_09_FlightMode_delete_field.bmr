@@ -20,7 +20,7 @@ class update_ff_msgs_FlightMode_64fef5727fd56589af93ac307057592a(MessageUpdateRu
 #
 # This message captures all information in a flight mode
 
-Header header                     # Metadata
+std_msgs/Header header                     # Metadata
 
 string name                       # Name of the flight mode
 
@@ -71,7 +71,7 @@ uint32 seq
 # * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
 # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
 # time-handling sugar is provided by the client library
-time stamp
+builtin_interfaces/Time stamp
 #Frame this data is associated with
 string frame_id
 
@@ -110,7 +110,7 @@ float64 z
 #
 # This message captures all information in a flight mode
 
-Header header                     # Metadata
+std_msgs/Header header                     # Metadata
 
 string name                       # Name of the flight mode
 
@@ -159,7 +159,7 @@ uint32 seq
 # * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
 # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
 # time-handling sugar is provided by the client library
-time stamp
+builtin_interfaces/Time stamp
 #Frame this data is associated with
 string frame_id
 

@@ -28,8 +28,8 @@ uint8 DATA_TYPE_FLOAT    = 2
 uint8 DATA_TYPE_INT      = 3
 uint8 DATA_TYPE_LONGLONG = 4
 uint8 DATA_TYPE_STRING   = 5
-uint8 DATA_TYPE_VEC3d    = 6
-uint8 DATA_TYPE_MAT33f   = 7
+uint8 DATA_TYPE_VEC3D    = 6
+uint8 DATA_TYPE_MAT33F   = 7
 
 uint8 data_type
 

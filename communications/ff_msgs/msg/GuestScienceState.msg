@@ -24,4 +24,4 @@ std_msgs/Header header
 int64 serial
 
 # Tells which apks are running. Used in conjection with the guest science config
-bool[] runningApks
+bool[] running_apks

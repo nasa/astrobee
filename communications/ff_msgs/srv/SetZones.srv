@@ -17,7 +17,7 @@
 #
 # This message allows the MOBILITY::MAPPER zones to be set
 
-time timestamp                           # When these zones were created
+builtin_interfaces/Time timestamp                           # When these zones were created
 ff_msgs/Zone[] zones                     # A vector of new zones
 ---
 bool success                             # Did the update work?

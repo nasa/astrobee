@@ -111,7 +111,7 @@ ff_msgs/ControlState[] segment
 ff_msgs/MotionState state
 
 # Control progress
-ff_msgs/ControlFeedback progress
+# ff_msgs/ControlFeedback progress  # TODO(@Pedro-Roque, @@trey0): Add this back in
 
 # Planner progress
 float32 perc_complete

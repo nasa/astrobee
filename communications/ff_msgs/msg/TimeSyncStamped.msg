@@ -24,7 +24,7 @@ std_msgs/Header header
 string remote_processor
 
 # Current time on the mlp
-time mlp_time
+builtin_interfaces/Time mlp_time
 
 # Time in the incoming heartbeat
-time remote_time
+builtin_interfaces/Time remote_time

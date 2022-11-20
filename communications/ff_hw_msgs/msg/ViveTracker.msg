@@ -21,7 +21,7 @@ geometry_msgs/Vector3 acc_bias          # Acceleromater bias
 geometry_msgs/Vector3 acc_scale         # Accelerometer scale
 geometry_msgs/Vector3 gyr_bias          # Gyro bias
 geometry_msgs/Vector3 gyr_scale         # Gyro scale
-geometry_msgs/Transform pTi             # Transform: IMU -> PHOTODIODE
-geometry_msgs/Transform pTh             # Transform: HEAD -> PHOTODIODE
+geometry_msgs/Transform pti             # Transform: IMU -> PHOTODIODE
+geometry_msgs/Transform pth             # Transform: HEAD -> PHOTODIODE
 uint32 lastcount                        # Last count
 uint32 overflows                        # Number of overflows

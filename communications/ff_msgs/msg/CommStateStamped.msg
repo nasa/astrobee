@@ -19,11 +19,11 @@
 
 std_msgs/Header header
 
-bool wirelessConnected
-string apName
+bool wireless_connected
+string ap_name
 string bssid
 float32 rssi
 float32 frequency
 uint16 channel
 
-bool lanConnected
+bool lan_connected

@@ -17,7 +17,7 @@
 #
 # Fault message is used to provide all the information about an occurring fault
 
-time time_of_fault        # Time when fault occurred
+builtin_interfaces/Time time_of_fault        # Time when fault occurred
 
 uint32 id                 # id specifying fault
 

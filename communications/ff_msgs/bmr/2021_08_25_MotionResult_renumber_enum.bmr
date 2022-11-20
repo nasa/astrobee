@@ -3,7 +3,7 @@ import sys
 
 bre_folder = subprocess.check_output(["catkin_find", "--first-only", "bag_processing", "scripts"]).decode("utf-8").strip()
 sys.path.insert(0, bre_folder)
-import bmr_renumber_enum as bre
+import utilities.bmr_renumber_enum as bre
 
 OLD_RESPONSE_ENUM = """
 int32 ALREADY_THERE                =   2  # MOVE: We are already at the location
@@ -176,7 +176,7 @@ MSG: ff_msgs/FlightMode
 #
 # This message captures all information in a flight mode
 
-Header header                     # Metadata
+std_msgs/Header header                     # Metadata
 
 string name                       # Name of the flight mode
 
@@ -226,7 +226,7 @@ uint32 seq
 # * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
 # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
 # time-handling sugar is provided by the client library
-time stamp
+builtin_interfaces/Time stamp
 #Frame this data is associated with
 # 0: no frame
 # 1: global frame
@@ -271,7 +271,7 @@ MSG: ff_msgs/ControlState
 # twist {Vector3 linear, Vector3 angular}
 # accel {Vector3 linear, Vector3 angular}
 
-time when
+builtin_interfaces/Time when
 geometry_msgs/Pose pose
 geometry_msgs/Twist twist
 geometry_msgs/Twist accel
@@ -385,7 +385,7 @@ MSG: ff_msgs/FlightMode
 #
 # This message captures all information in a flight mode
 
-Header header                     # Metadata
+std_msgs/Header header                     # Metadata
 
 string name                       # Name of the flight mode
 
@@ -436,7 +436,7 @@ uint32 seq
 # * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
 # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
 # time-handling sugar is provided by the client library
-time stamp
+builtin_interfaces/Time stamp
 #Frame this data is associated with
 string frame_id
 
@@ -479,7 +479,7 @@ MSG: ff_msgs/ControlState
 # twist {Vector3 linear, Vector3 angular}
 # accel {Vector3 linear, Vector3 angular}
 
-time when
+builtin_interfaces/Time when
 geometry_msgs/Pose pose
 geometry_msgs/Twist twist
 geometry_msgs/Twist accel
