@@ -107,13 +107,24 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   return params;
 }
 
+// Order absolute paths using just the filename
+struct filename_ordering {
+  inline bool operator()(const std::string& filepath_a, const std::string& filepath_b) {
+    const auto path_a = fs::path(filepath_a);
+    const std::string file_a = path_a.filename().string();
+    const auto path_b = fs::path(filepath_b);
+    const std::string file_b = path_b.filename().string();
+    return (file_a < file_b);
+  }
+};
+
 std::vector<std::string> GetImageNames(const std::string& image_directory, const std::string& image_extension) {
   std::vector<std::string> image_names;
   for (const auto& file : fs::recursive_directory_iterator(image_directory)) {
     if (fs::is_regular_file(file) && file.path().extension() == image_extension)
       image_names.emplace_back(fs::absolute(file.path()).string());
   }
-  std::sort(image_names.begin(), image_names.end());
+  std::sort(image_names.begin(), image_names.end(), filename_ordering());
   LogInfo("Found " << image_names.size() << " images.");
   return image_names;
 }
