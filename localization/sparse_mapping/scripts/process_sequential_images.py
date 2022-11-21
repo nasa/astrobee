@@ -19,7 +19,7 @@
 """
 Removes standstill images, partitions images into valid, rotation, and invalid sequences, and finally removes low-movement images from each of these sequences. This helps limit the number of images before running bundle-adjustment while also separating the images into sequences to allow for a more intelligent bundle-adjustment strategy.
 For more information on each script called, see:
-'rosrun sparse_mapping remove_standstill_images -h'
+'rosrun sparse_mapping remove_standstill_images.py -h'
 'rosrun sparse_mapping partition_image_sequences -h'
 'rosrun sparse_mapping remove_low_movement_images -h'
 """
@@ -37,11 +37,11 @@ if __name__ == "__main__":
         "image_directory", help="Directory containing images. Images are assumed to be named in sequential order."
     )
     parser.add_argument(
-        "config-path", help="Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")
+        "config_path", help="Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")
     args = parser.parse_args()
 
     remove_standstill_images_command = (
-        "rosrun sparse_mapping remove_standstill_images "
+        "rosrun sparse_mapping remove_standstill_images.py "
         + args.image_directory 
     )
     lu.run_command_and_save_output(remove_standstill_images_command, "remove_standstill_images.txt")
