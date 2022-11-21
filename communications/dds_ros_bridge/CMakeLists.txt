@@ -65,7 +65,7 @@ find_package(Soracore REQUIRED)
 
 
 catkin_package(
-  LIBRARIES dds_ros_bridge astrobee_astrobee_bridge
+  LIBRARIES dds_ros_bridge
   CATKIN_DEPENDS nodelet config_reader ff_util ff_msgs ff_hw_msgs dds_msgs
 )
 
@@ -102,18 +102,6 @@ else ()
   target_link_libraries(dds_ros_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 endif ()
 
-add_library(astrobee_astrobee_bridge
-  src/astrobee_astrobee_bridge.cc
-)
-target_compile_definitions(astrobee_astrobee_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
-add_dependencies(astrobee_astrobee_bridge ${catkin_EXPORTED_TARGETS})
-if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
-  target_link_libraries(astrobee_astrobee_bridge Qt5::Xml rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
-else ()
-  target_link_libraries(astrobee_astrobee_bridge rapidIo ${Boost_LIBRARIES} ${catkin_LIBRARIES})
-endif ()
-
-
 #############
 ## Install ##
 #############
@@ -130,11 +118,6 @@ install(CODE "execute_process(
 
 # Mark libraries for installation
 install(TARGETS dds_ros_bridge
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-install(TARGETS astrobee_astrobee_bridge
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
