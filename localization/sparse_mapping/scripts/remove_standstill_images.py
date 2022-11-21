@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "image_directory", help="Directory containing images. Images are assumed to be named in sequential order."
     )
-    parser.add_argument("-m", "--max-standstill-mean-distance", type=float, default=0.01, help="Max mean distance for optical flow tracks between sequential images to be classified as a standstill pair.")
+    parser.add_argument("-m", "--max-standstill-mean-distance", type=float, default=0.075, help="Max mean distance for optical flow tracks between sequential images to be classified as a standstill pair.")
     args = parser.parse_args()
     remove_standstill_images_command = (
         "rosrun sparse_mapping remove_low_movement_images "
