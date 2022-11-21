@@ -15,6 +15,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#include <localization_common/averager.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <sparse_mapping/tensor.h>
@@ -30,6 +31,7 @@
 #include "utilities.h"  // NOLINT
 
 namespace fs = boost::filesystem;
+namespace lc = localization_common;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
@@ -105,6 +107,22 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   params.good_features_to_track.use_harris_detector = false;
   params.good_features_to_track.k = 0.04;
   return params;
+}
+
+bool LowMovementImageSequence(const vision_common::FeatureMatches& matches,
+                              const double max_low_movement_mean_distance) {
+  if (matches.size() < 5) {
+    LogDebug("Too few matches: " << matches.size());
+    return false;
+  }
+  LogDebug("Found matches: " << matches.size());
+  lc::Averager distance_averager;
+  for (const auto& match : matches) {
+    distance_averager.Update(match.distance);
+  }
+  LogDebug("Mean distance: " << distance_averager.average());
+  if (distance_averager.average() <= max_low_movement_mean_distance) return true;
+  return false;
 }
 
 // Order absolute paths using just the filename

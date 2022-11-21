@@ -16,7 +16,6 @@
  * under the License.
  */
 #include <ff_common/init.h>
-#include <localization_common/averager.h>
 #include <localization_common/logger.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 
@@ -29,7 +28,6 @@
 #include "utilities.h"  // NOLINT
 
 namespace fs = boost::filesystem;
-namespace lc = localization_common;
 namespace po = boost::program_options;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
@@ -45,13 +43,7 @@ bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::F
   }
   LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
                              << ", next image keypoints: " << next_image.keypoints().size());
-  lc::Averager distance_averager;
-  for (const auto& match : matches) {
-    distance_averager.Update(match.distance);
-  }
-  LogDebug("Mean distance: " << distance_averager.average());
-  if (distance_averager.average() <= max_low_movement_mean_distance) return true;
-  return false;
+  return sm::LowMovementImageSequence(matches, max_low_movement_mean_distance);
 }
 
 int RemoveLowMovementImages(const std::vector<std::string>& image_names, const double max_low_movement_mean_distance) {

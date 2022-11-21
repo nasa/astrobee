@@ -45,6 +45,9 @@ vision_common::FeatureImage LoadImage(const int index, const std::vector<std::st
 
 vision_common::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams();
 
+bool LowMovementImageSequence(const vision_common::FeatureMatches& matches,
+                              const double max_low_movement_mean_distance);
+
 std::vector<std::string> GetImageNames(const std::string& image_directory, const std::string& image_extension = ".jpg");
 }  // namespace sparse_mapping
 
