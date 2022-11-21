@@ -92,6 +92,12 @@ void CreateSubdirectory(const std::string& directory, const std::string& cluster
   sm::CreateSubdirectory(parent_directory_path.string(), cluster_directory);
 }
 
+bool StandstillImage(const vc::FeatureMatches& matches) {
+  // TODO(rsoussan): Make this a param?
+  constexpr double kMaxStandstillMeanDistance = 0.05;
+  return sm::LowMovementImageSequence(matches, kMaxStandstillMeanDistance);
+}
+
 Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
                          const double max_rotation_error_ratio, const double min_relative_pose_inliers_ratio,
                          const std::string image_name, const bool view_images, const cv::Mat& image) {
@@ -345,12 +351,17 @@ std::vector<Result> IdentifyImageTypes(const std::vector<std::string>& image_nam
     while (next_image_index < image_names.size()) {
       const auto matches = sm::Matches(current_image, next_image, detector_and_matcher);
       const auto& image_name = image_names[next_image_index];
-      if (!matches)
+      if (!matches) {
         results.emplace_back(Result::InvalidResult(image_name));
-      else
+      } else if (StandstillImage(*matches)) {  // Delete standstill images so they don't add partitions to sequences
+        LogInfo("Standstill image: " << image_name);
+        std::remove(image_name.c_str());
+        break;
+      } else {
         results.emplace_back(RotationOnlyImage(*matches, camera_params, rotation_inlier_threshold,
                                                min_relative_pose_inliers_ratio, image_name, view_images,
                                                next_image.image()));
+      }
       // If valid, try next image
       if (results.back().Valid()) {
         current_image = next_image;
