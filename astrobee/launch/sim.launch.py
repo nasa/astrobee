@@ -40,7 +40,13 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 
 
+def get_launch_file(path, package="astrobee"):
+    return PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package), path)])
+
+
 def generate_launch_description():
+
+
     return LaunchDescription(
         [
             launch_arg(
@@ -199,48 +205,20 @@ def generate_launch_description():
             #     <machine name ="local" address="localhost" default="true"/>
             # Start the descriptions (ISS, dock, granite) for visualization purposes
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/descriptions.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/descriptions.launch.py"),
                 launch_arguments={"world": LaunchConfiguration("world")}.items(),
             ),
             # Start ground controller services
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/stats.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/stats.launch.py"),
                 condition=IfCondition(LaunchConfiguration("stats")),
             ),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/gviz.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/gviz.launch.py"),
                 condition=IfCondition(LaunchConfiguration("gviz")),
             ),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/gds.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/gds.launch.py"),
                 condition=IfCondition(LaunchConfiguration("gds")),
                 launch_arguments={
                     "world": LaunchConfiguration("world"),
@@ -250,38 +228,17 @@ def generate_launch_description():
                 }.items(),
             ),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/rqt.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/rqt.launch.py"),
                 condition=IfCondition(LaunchConfiguration("rqt")),
             ),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/rviz.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/rviz.launch.py"),
                 condition=IfCondition(LaunchConfiguration("rviz")),
                 launch_arguments={"world": LaunchConfiguration("world")}.items(),
             ),
             # Launch a recorder for this robot
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/bagrecord.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/bagrecord.launch.py"),
                 condition=LaunchConfigurationNotEquals("rec", ""),
                 launch_arguments={"bag": LaunchConfiguration("rec")}.items(),
             ),
@@ -303,14 +260,7 @@ def generate_launch_description():
             #        name="ROS_IP" value="$(arg sim)"/>
             # Start the simulator
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/sim_start.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/controller/sim_start.launch.py"),
                 launch_arguments={
                     "world": LaunchConfiguration("world"),
                     "sviz": LaunchConfiguration("sviz"),
@@ -322,113 +272,85 @@ def generate_launch_description():
             ),
             # Auto-inert platform #1 at a desired initial location
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/spawn.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/spawn.launch.py"),
                 launch_arguments={
-                    "robot": LaunchConfiguration("robot"),  # Type of robot
-                    "world": LaunchConfiguration("world"),  # Execution context
-                    "ns": LaunchConfiguration("ns"),  # Robot namespace
-                    "output": LaunchConfiguration("output"),  # Output for logging
-                    "pose": LaunchConfiguration("pose"),  # Initial robot pose
-                    "spurn": LaunchConfiguration("spurn"),  # Prevent node
-                    "nodes": LaunchConfiguration("nodes"),  # Launch node group
-                    "extra": LaunchConfiguration("extra"),  # Inject extra nodes
-                    "debug": LaunchConfiguration("debug"),  # Debug a node set
-                    "sim": LaunchConfiguration("sim"),  # SIM IP address
-                    "llp": LaunchConfiguration("llp"),  # LLP IP address
-                    "mlp": LaunchConfiguration("mlp"),  # MLP IP address
-                    "dds": LaunchConfiguration("dds"),  # Enable DDS
-                    "gtloc": LaunchConfiguration("gtloc"),  # Use Ground Truth Localizer
+                    "robot": LaunchConfiguration("robot"),      # Type of robot
+                    "world": LaunchConfiguration("world"),      # Execution context
+                    "ns": LaunchConfiguration("ns"),            # Robot namespace
+                    "output": LaunchConfiguration("output"),    # Output for logging
+                    "pose": LaunchConfiguration("pose"),        # Initial robot pose
+                    "spurn": LaunchConfiguration("spurn"),      # Prevent node
+                    "nodes": LaunchConfiguration("nodes"),      # Launch node group
+                    "extra": LaunchConfiguration("extra"),      # Inject extra nodes
+                    "debug": LaunchConfiguration("debug"),      # Debug a node set
+                    "sim": LaunchConfiguration("sim"),          # SIM IP address
+                    "llp": LaunchConfiguration("llp"),          # LLP IP address
+                    "mlp": LaunchConfiguration("mlp"),          # MLP IP address
+                    "dds": LaunchConfiguration("dds"),          # Enable DDS
+                    "gtloc": LaunchConfiguration("gtloc"),      # Use Ground Truth Localizer
                 }.items(),
                 condition=IfCondition(LaunchConfiguration("default_robot")),
             ),
             # Auto-insert honey at a canned location
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/spawn.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/spawn.launch.py"),
                 launch_arguments={
-                    "robot": LaunchConfiguration("robot"),  # Type of robot
-                    "world": LaunchConfiguration("world"),  # Execution context
+                    "robot": LaunchConfiguration("robot"),      # Type of robot
+                    "world": LaunchConfiguration("world"),      # Execution context
                     "ns": "honey",  # Robot namespace
-                    "output": LaunchConfiguration("output"),  # Output for logging
+                    "output": LaunchConfiguration("output"),    # Output for logging
                     "pose": LaunchConfiguration("honey_pose"),  # Initial robot pose
-                    "spurn": LaunchConfiguration("spurn"),  # Prevent node
-                    "nodes": LaunchConfiguration("nodes"),  # Launch node group
-                    "extra": LaunchConfiguration("extra"),  # Inject extra nodes
-                    "debug": LaunchConfiguration("debug"),  # Debug a node set
-                    "sim": LaunchConfiguration("sim"),  # SIM IP address
-                    "llp": LaunchConfiguration("llp"),  # LLP IP address
-                    "mlp": LaunchConfiguration("mlp"),  # MLP IP address
-                    "dds": LaunchConfiguration("dds"),  # Enable DDS
-                    "gtloc": LaunchConfiguration("gtloc"),  # Use Ground Truth Localizer
+                    "spurn": LaunchConfiguration("spurn"),      # Prevent node
+                    "nodes": LaunchConfiguration("nodes"),      # Launch node group
+                    "extra": LaunchConfiguration("extra"),      # Inject extra nodes
+                    "debug": LaunchConfiguration("debug"),      # Debug a node set
+                    "sim": LaunchConfiguration("sim"),          # SIM IP address
+                    "llp": LaunchConfiguration("llp"),          # LLP IP address
+                    "mlp": LaunchConfiguration("mlp"),          # MLP IP address
+                    "dds": LaunchConfiguration("dds"),          # Enable DDS
+                    "gtloc": LaunchConfiguration("gtloc"),      # Use Ground Truth Localizer
                 }.items(),
                 condition=IfCondition(LaunchConfiguration("honey")),
             ),
             # Auto-insert bumble at a canned location
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/spawn.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/spawn.launch.py"),
                 launch_arguments={
-                    "robot": LaunchConfiguration("robot"),  # Type of robot
-                    "world": LaunchConfiguration("world"),  # Execution context
+                    "robot": LaunchConfiguration("robot"),      # Type of robot
+                    "world": LaunchConfiguration("world"),      # Execution context
                     "ns": "bumble",  # Robot namespace
-                    "output": LaunchConfiguration("output"),  # Output for logging
-                    "pose": LaunchConfiguration("bumble_pose"),  # Initial robot pose
-                    "spurn": LaunchConfiguration("spurn"),  # Prevent node
-                    "nodes": LaunchConfiguration("nodes"),  # Launch node group
-                    "extra": LaunchConfiguration("extra"),  # Inject extra nodes
-                    "debug": LaunchConfiguration("debug"),  # Debug a node set
-                    "sim": LaunchConfiguration("sim"),  # SIM IP address
-                    "llp": LaunchConfiguration("llp"),  # LLP IP address
-                    "mlp": LaunchConfiguration("mlp"),  # MLP IP address
-                    "dds": LaunchConfiguration("dds"),  # Enable DDS
-                    "gtloc": LaunchConfiguration("gtloc"),  # Use Ground Truth Localizer
+                    "output": LaunchConfiguration("output"),    # Output for logging
+                    "pose": LaunchConfiguration("bumble_pose"), # Initial robot pose
+                    "spurn": LaunchConfiguration("spurn"),      # Prevent node
+                    "nodes": LaunchConfiguration("nodes"),      # Launch node group
+                    "extra": LaunchConfiguration("extra"),      # Inject extra nodes
+                    "debug": LaunchConfiguration("debug"),      # Debug a node set
+                    "sim": LaunchConfiguration("sim"),          # SIM IP address
+                    "llp": LaunchConfiguration("llp"),          # LLP IP address
+                    "mlp": LaunchConfiguration("mlp"),          # MLP IP address
+                    "dds": LaunchConfiguration("dds"),          # Enable DDS
+                    "gtloc": LaunchConfiguration("gtloc"),      # Use Ground Truth Localizer
                 }.items(),
                 condition=IfCondition(LaunchConfiguration("bumble")),
             ),
             # Auto-insert queen at a canned location
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/spawn.launch.py",
-                        )
-                    ]
-                ),
+                get_launch_file("launch/spawn.launch.py"),
                 launch_arguments={
-                    "robot": LaunchConfiguration("robot"),  # Type of robot
-                    "world": LaunchConfiguration("world"),  # Execution context
+                    "robot": LaunchConfiguration("robot"),      # Type of robot
+                    "world": LaunchConfiguration("world"),      # Execution context
                     "ns": "queen",  # Robot namespace
-                    "output": LaunchConfiguration("output"),  # Output for logging
+                    "output": LaunchConfiguration("output"),    # Output for logging
                     "pose": LaunchConfiguration("queen_pose"),  # Initial robot pose
-                    "spurn": LaunchConfiguration("spurn"),  # Prevent node
-                    "nodes": LaunchConfiguration("nodes"),  # Launch node group
-                    "extra": LaunchConfiguration("extra"),  # Inject extra nodes
-                    "debug": LaunchConfiguration("debug"),  # Debug a node set
-                    "sim": LaunchConfiguration("sim"),  # SIM IP address
-                    "llp": LaunchConfiguration("llp"),  # LLP IP address
-                    "mlp": LaunchConfiguration("mlp"),  # MLP IP address
-                    "dds": LaunchConfiguration("dds"),  # Enable DDS
-                    "gtloc": LaunchConfiguration("gtloc"),  # Use Ground Truth Localizer
+                    "spurn": LaunchConfiguration("spurn"),      # Prevent node
+                    "nodes": LaunchConfiguration("nodes"),      # Launch node group
+                    "extra": LaunchConfiguration("extra"),      # Inject extra nodes
+                    "debug": LaunchConfiguration("debug"),      # Debug a node set
+                    "sim": LaunchConfiguration("sim"),          # SIM IP address
+                    "llp": LaunchConfiguration("llp"),          # LLP IP address
+                    "mlp": LaunchConfiguration("mlp"),          # MLP IP address
+                    "dds": LaunchConfiguration("dds"),          # Enable DDS
+                    "gtloc": LaunchConfiguration("gtloc"),      # Use Ground Truth Localizer
                 }.items(),
                 condition=IfCondition(LaunchConfiguration("queen")),
             ),
