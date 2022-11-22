@@ -16,7 +16,7 @@
 # under the License.
 #
 
-Header header
+std_msgs/Header header
 ff_msgs/Odometry odometry
 ff_msgs/DepthCorrespondence[] correspondences
 bool valid_image_points

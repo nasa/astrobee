@@ -24,4 +24,8 @@ std_msgs/Header header
 int64 serial
 
 # Tells which apks are running. Used in conjection with the guest science config
+{%- if USE_ROS1 -%}
 bool[] runningApks
+{%- else -%}
+bool[] running_apks
+{%- endif -%}

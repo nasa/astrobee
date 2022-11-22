@@ -15,30 +15,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# An argument to a command sent through RAPID
-#
-# Note that this is approximating a union in DDS. However, this is an
-# inefficient union, and thus each instance will take up at least 89 bytes.
-# However, even with the maximum of 16 arguments to a command, we only have
-# about 1k extra data. I, tfmorse, am ok with that. Commands are rarely sent.
+# Statistics used to measure performance.
 
-uint8 DATA_TYPE_BOOL     = 0
-uint8 DATA_TYPE_DOUBLE   = 1
-uint8 DATA_TYPE_FLOAT    = 2
-uint8 DATA_TYPE_INT      = 3
-uint8 DATA_TYPE_LONGLONG = 4
-uint8 DATA_TYPE_STRING   = 5
-uint8 DATA_TYPE_VEC3d    = 6
-uint8 DATA_TYPE_MAT33f   = 7
-
-uint8 data_type
-
-bool b
-float64 d
-float32 f
-int32 i
-int64 ll
-string s
-float64[3] vec3d
-float32[9] mat33f
-
+{%- if USE_ROS1 -%}
+time stamp
+{%- else -%}
+builtin_interfaces/Time stamp
+{%- endif -%}
+float32 count
+float32 last
+float32 min
+float32 max
+float32 mean
+float32 stddev
+float32 var

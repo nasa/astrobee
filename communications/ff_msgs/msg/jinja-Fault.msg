@@ -15,9 +15,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# This message allows the MOBILITY::MAPPER zones to be set
+# Fault message is used to provide all the information about an occurring fault
+    
+{%- if USE_ROS1 -%}
+time time_of_fault # Time when fault occurred
+{%- else -%}
+builtin_interfaces/Time time_of_fault # Time when fault occurred
+{%- endif -%}
+uint32 id                 # id specifying fault
 
-time timestamp                           # When these zones were created
-ff_msgs/Zone[] zones                     # A vector of new zones
----
-bool success                             # Did the update work?
+string msg                # string specifying why the fault occurred
+
+ff_msgs/FaultData[] data  # Data used for fault analysis

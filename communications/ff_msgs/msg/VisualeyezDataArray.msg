@@ -17,5 +17,5 @@
 #
 # Raw Visualeyez data array and timestamp.
 
-Header header                           # Header with timestamp
+std_msgs/Header header                           # Header with timestamp
 ff_msgs/VisualeyezData[] measurements   # List of all measurements
