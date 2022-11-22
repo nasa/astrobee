@@ -17,6 +17,7 @@
  */
 #include <camera/camera_params.h>
 #include <ff_common/init.h>
+#include <ff_common/utils.h>
 #include <localization_common/averager.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -193,6 +194,7 @@ void GroupRotationOrInvalidSequences(const int max_distance_between_rotation_or_
   // check for largest consecutive chunk in between rotation or invalid images, keep going until chunk is too large
   int num_rotation_or_invalid_images = 0;
   for (int start_index = 0; start_index < static_cast<int>(results.size());) {
+    ff_common::PrintProgressBar(stdout, static_cast<float>(start_index) / static_cast<float>(results.size() - 1));
     const auto& result = results[start_index];
     // Find end of non-valid chunk after reaching the potential start of a chunk
     if (!result.Valid()) {
@@ -342,6 +344,8 @@ std::vector<Result> IdentifyImageTypes(const std::vector<std::string>& image_nam
   // Manually add first image
   results.emplace_back(Result::ValidResult(0, image_names[0]));
   while (current_image_index < image_names.size()) {
+    ff_common::PrintProgressBar(stdout,
+                                static_cast<float>(current_image_index) / static_cast<float>(image_names.size() - 1));
     while (next_image_index < image_names.size()) {
       const auto matches = sm::Matches(current_image, next_image, detector_and_matcher);
       const auto& image_name = image_names[next_image_index];
