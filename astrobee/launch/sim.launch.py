@@ -15,41 +15,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
-
-from ament_index_python import get_package_share_directory
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument as launch_arg
-from launch.actions import (
-    ExecuteProcess,
-    IncludeLaunchDescription,
-    SetEnvironmentVariable,
-)
-from launch.conditions import (
-    IfCondition,
-    LaunchConfigurationEquals,
-    LaunchConfigurationNotEquals,
-)
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import (
-    EnvironmentVariable,
-    FindExecutable,
-    LaunchConfiguration,
-    TextSubstitution,
-)
-from launch_ros.actions import Node
-
-
-def get_launch_file(path, package="astrobee"):
-    return PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package), path)])
-def get_path(path, package="astrobee"):
-    return os.path.join(get_package_share_directory(package), path)
+from utilities.utilities import *
 
 
 def generate_launch_description():
+    robot=launch_arg( "robot", default_value=os.getenv("ASTROBEE_ROBOT", "sim"),
+                             description="Robot name")
     return LaunchDescription([
-        launch_arg( "robot", default_value=os.getenv("ASTROBEE_ROBOT", "sim"), description="Robot name"),
-        launch_arg("world",  default_value=os.getenv("ASTROBEE_WORLD", "iss"), description="World name"),
+        robot,
+        launch_arg("world",  default_value=os.getenv("ASTROBEE_WORLD", "iss"),
+                            description="World name"),
 
         launch_arg("ns",     default_value="",    description="Robot namespace prefix"),
         launch_arg("output", default_value="log", description="Where nodes should log"),
@@ -91,14 +66,14 @@ def generate_launch_description():
                            condition=LaunchConfigurationEquals("world", "iss")),
         launch_arg("pose", default_value="0 0 -0.7 0 0 0 1",
                            condition=LaunchConfigurationEquals("world", "granite")),
-        
+
         # Multi-robot simulation
         launch_arg("honey", default_value="false", description="Insert honey robot"),
         launch_arg("bumble", default_value="false", description="Insert bumble robot"),
         launch_arg("queen", default_value="false", description="Insert queen robot"),
 
-        launch_arg("honey_pose",  default_value="11 -7 4.8 0 0 0 1",  description="Use to overwrite honey's pose"),
-        launch_arg("bumble_pose", default_value="11 -4 4.8 0 0 0 1",  description="Use to overwrite bumble's pose"),
+        launch_arg("honey_pose",  default_value="11 -7 4.8 0 0 0 1",  description="Overwrite honey's pose"),
+        launch_arg("bumble_pose", default_value="11 -4 4.8 0 0 0 1",  description="Overwrite bumble's pose"),
         launch_arg("queen_pose",  default_value="11 -10 4.8 0 0 0 1", description="Use to overwrite queen's pose"),
 
         # Make sure all environment variables are set for controller
@@ -160,22 +135,11 @@ def generate_launch_description():
             condition=LaunchConfigurationNotEquals("rec", ""),
             launch_arguments={"bag": LaunchConfiguration("rec")}.items(),
         ),
-        #   </group>
+
         #   <!-- Allow the simulator to be optionally launched remotely-->
         #   <!-- Connect and update environment variables if required -->
         #   <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
         #            address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
-        #   <!-- Update the environment variables relating to absolute paths -->
-        #   <env unless="$(eval arg('sim')=='local')"
-        #        name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
-        #   <env unless="$(eval arg('sim')=='local')"
-        #        name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
-        #   <env unless="$(eval arg('sim')=='local')"
-        #        name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
-        #   <env unless="$(eval arg('sim')=='local')"
-        #        name="DISPLAY" value=":0"/>
-        #   <env unless="$(eval arg('sim')=='local')"
-        #        name="ROS_IP" value="$(arg sim)"/>
         # Start the simulator
         IncludeLaunchDescription(
             get_launch_file("launch/controller/sim_start.launch.py"),
@@ -276,8 +240,8 @@ def generate_launch_description():
         #     cmd=[[
         #         FindExecutable(name='ros2'),
         #         " service call ",
-        #         "/gnc/ekf/init_bias",
-        #         "/init/bias/msg",
+        #         "/gnc/ekf/init_bias ",
+        #         "/init/bias/msg ",
         #         '"{}"',
         #     ]],
         #     shell=True

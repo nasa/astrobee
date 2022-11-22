@@ -15,102 +15,47 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
 
-import launch
-from ament_index_python import get_package_share_directory
-from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
-from launch.conditions import LaunchConfigurationNotEquals
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import EnvironmentVariable, LaunchConfiguration
+from utilities.utilities import *
 
 
 def generate_launch_description():
 
-    return LaunchDescription(
-        [
+    #     <!-- Connect and update environment variables if required -->
+    #     <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
+    #              address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
+
+    if LaunchConfigurationNotEquals("bag", ""):
+        return LaunchDescription([
+
             #   <group if="$(eval arg('bag')=='')" >
-            SetEnvironmentVariable(
-                name="ASTROBEE_CONFIG_DIR",
-                value="/home/astrobee/native/config",
-                condition=LaunchConfigurationNotEquals("sim", "local"),
-            ),
-            SetEnvironmentVariable(
-                name="ASTROBEE_RESOURCE_DIR",
-                value=os.getenv(
-                    "ASTROBEE_RESOURCE_DIR",
-                    get_package_share_directory("astrobee", "/resources"),
-                ),
-            ),
-            SetEnvironmentVariable(
-                name="ROSCONSOLE_CONFIG_FILE",
-                value=os.getenv(
-                    "ROSCONSOLE_CONFIG_FILE",
-                    get_package_share_directory(
-                        "astrobee", "/resources/logging.config"
-                    ),
-                ),
-            ),
-            # Declare our global logging format
-            SetEnvironmentVariable(
-                name="RCUTILS_CONSOLE_OUTPUT_FORMAT",
-                value="[{severity} {time}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})",
-            ),
+            SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",
+                                   value="/home/astrobee/native/config",
+                                   condition=LaunchConfigurationNotEquals("sim", "local")),
+            SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",
+                                   value=os.getenv("ASTROBEE_RESOURCE_DIR", get_path("/resources")),
+                                   condition=LaunchConfigurationNotEquals("sim", "local")),
+            SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE",
+                                   value=os.getenv( "ROSCONSOLE_CONFIG_FILE", get_path("/resources/logging.config")),
+                                   condition=LaunchConfigurationNotEquals("sim", "local")),
+            SetEnvironmentVariable(name="DISPLAY", value=":0",
+                                   condition=LaunchConfigurationNotEquals("sim", "local")),
+            SetEnvironmentVariable(name="ROS_IP", value=LaunchConfiguration("sim"),
+                                   condition=LaunchConfigurationNotEquals("sim", "local")),
+
+            # IncludeLaunchDescription(
+            #     get_launch_file("/launch/spawn_astrobee.launch", "astrobee_gazebo"),
+            #     launch_arguments={
+            #         "ns"  : LaunchConfiguration("ns"),
+            #         "pose": LaunchConfiguration("pose"),
+            #     }.items(),
+            # ),
+        
+        ])
+    else:
+        return LaunchDescription([
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/controller/rqt.spawn_astrobee.py",
-                        )
-                    ]
-                ),
-                launch_arguments={
-                    "ns": LaunchConfiguration("ns"),
-                    "pose": LaunchConfiguration("pose"),
-                }.items(),
+                get_launch_file("/launch/controller/bagreplay.launch"),
+                launch_arguments={"bag": LaunchConfiguration("bag")}.items()
             ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "/launch/controller/bagreplay.launch",
-                        )
-                    ]
-                ),
-                condition=LaunchConfigurationNotEquals("bag", ""),
-                launch_arguments={"bag": LaunchConfiguration("bag")}.items(),
-            ),
-        ]
-    )
-
-
-# <launch>
-#   <arg name="world" />      <!-- World name                -->
-#   <arg name="ns" />         <!-- Robot namespace           -->
-#   <arg name="sim" />        <!-- SIM IP address            -->
-#   <arg name="pose" />       <!-- Initial pose (sim only)   -->
-#   <arg name="bag" />        <!-- Bag to replay             -->
-
-#     <!-- Connect and update environment variables if required -->
-#     <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
-#              address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
-
-#     <!-- Update the environment variables relating to absolute paths -->
-#     <env unless="$(eval arg('sim')=='local')"
-#          name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
-#     <env unless="$(eval arg('sim')=='local')"
-#          name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
-#     <env unless="$(eval arg('sim')=='local')"
-#          name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
-#     <env unless="$(eval arg('sim')=='local')"
-#          name="DISPLAY" value=":0"/>
-#     <env unless="$(eval arg('sim')=='local')"
-#          name="ROS_IP" value="$(arg sim)"/>
-
-
-#   </group>
-
-#  </launch>
+        ])

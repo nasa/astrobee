@@ -20,20 +20,32 @@ import os
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument as launch_arg
+from launch.actions import (
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    SetEnvironmentVariable,
+)
+from launch.conditions import (
+    IfCondition,
+    LaunchConfigurationEquals,
+    LaunchConfigurationNotEquals,
+    UnlessCondition,
+)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import (
+    Command,
+    EnvironmentVariable,
+    FindExecutable,
+    LaunchConfiguration,
+    PythonExpression,
+    TextSubstitution,
+)
 from launch_ros.actions import Node
+from launch_ros.descriptions import ParameterValue
 
 
-def generate_launch_description():
-
-    return LaunchDescription([
-        DeclareLaunchArgument("rviz_file", default_value=[LaunchConfiguration("world"), "_ros2.rviz"]),
-        Node(
-            package="rviz2",
-            namespace="",
-            executable="rviz2",
-            name="rviz_node",
-            arguments=["-d", PathJoinSubstitution([get_package_share_directory("astrobee"),"resources/rviz",LaunchConfiguration("rviz_file")])],
-            respawn=True,
-        ),
-    ])
+def get_launch_file(path, package="astrobee"):
+    return PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package), path)])
+def get_path(path, package="astrobee"):
+    return os.path.join(get_package_share_directory(package), path)

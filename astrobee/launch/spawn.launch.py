@@ -15,126 +15,56 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
 
-import launch
-from ament_index_python import get_package_share_directory
-from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    IncludeLaunchDescription,
-    SetEnvironmentVariable,
-)
-from launch.conditions import IfCondition, LaunchConfigurationEquals
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import EnvironmentVariable, LaunchConfiguration
-from launch_ros.actions import Node
+from utilities.utilities import *
 
 
 def generate_launch_description():
 
-    return LaunchDescription(
-        [
-            DeclareLaunchArgument(
-                "robot", default_value=os.getenv("ASTROBEE_ROBOT", "sim")
-            ),
-            DeclareLaunchArgument(
-                "world", default_value=os.getenv("ASTROBEE_WORLD", "iss")
-            ),
-            DeclareLaunchArgument(
-                "pose",
-                default_value="9.92 -9.54 4.50 0 0 0 1",
-                condition=LaunchConfigurationEquals("world", "iss"),
-            ),
-            DeclareLaunchArgument(
-                "pose",
-                default_value="9.92 -9.54 4.50 0 0 0 1",
-                condition=LaunchConfigurationEquals("world", "granite"),
-            ),
-            # Make sure all environment variables are set for controller
-            # Override the robot and world environment variables all the time. The
-            # environment variables are the default if they are set. So in this
-            # case we are overriding the environment variables with themselves.
-            # Ros launch arguments override the environment variable which is what
-            # this will do.
-            SetEnvironmentVariable(
-                name="ASTROBEE_ROBOT",
-                value=os.getenv("ASTROBEE_ROBOT", LaunchConfiguration("robot")),
-            ),
-            SetEnvironmentVariable(
-                name="ASTROBEE_WORLD",
-                value=os.getenv("ASTROBEE_WORLD", LaunchConfiguration("world")),
-            ),
-            SetEnvironmentVariable(
-                name="ASTROBEE_CONFIG_DIR",
-                value=os.getenv(
-                    "ASTROBEE_CONFIG_DIR",
-                    get_package_share_directory("astrobee", "/config"),
-                ),
-            ),
-            SetEnvironmentVariable(
-                name="ASTROBEE_RESOURCE_DIR",
-                value=os.getenv(
-                    "ASTROBEE_RESOURCE_DIR",
-                    get_package_share_directory("astrobee", "/resources"),
-                ),
-            ),
-            SetEnvironmentVariable(
-                name="ROSCONSOLE_CONFIG_FILE",
-                value=os.getenv(
-                    "ROSCONSOLE_CONFIG_FILE",
-                    get_package_share_directory(
-                        "astrobee", "/resources/logging.config"
-                    ),
-                ),
-            ),
-            # Declare our global logging format
-            SetEnvironmentVariable(
-                name="RCUTILS_CONSOLE_OUTPUT_FORMAT",
-                value="[{severity} {time}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})",
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        os.path.join(
-                            get_package_share_directory("astrobee"),
-                            "launch/astrobee.launch.py",
-                        )
-                    ]
-                ),
-                launch_arguments={
-                    "robot": LaunchConfiguration("robot"),  # Type of robot
-                    "world": LaunchConfiguration("world"),  # Execution context
-                    "ns": LaunchConfiguration("ns", default=""),  # Robot namespace
-                    "output": LaunchConfiguration(
-                        "output", default="log"
-                    ),  # Output for logging
-                    "pose": LaunchConfiguration("pose"),  # Initial robot pose
-                    "drivers": "false",  # Don't start driver nodes
-                    "spurn": LaunchConfiguration("spurn", default=""),  # Prevent node
-                    "nodes": LaunchConfiguration(
-                        "nodes", default=""
-                    ),  # Launch node group
-                    "extra": LaunchConfiguration(
-                        "extra", default=""
-                    ),  # Inject extra nodes
-                    "debug": LaunchConfiguration(
-                        "debug", default=""
-                    ),  # Debug a node set
-                    "sim": LaunchConfiguration(
-                        "sim", default="local"
-                    ),  # SIM IP address
-                    "llp": LaunchConfiguration(
-                        "llp", default="local"
-                    ),  # LLP IP address
-                    "mlp": LaunchConfiguration(
-                        "mlp", default="local"
-                    ),  # MLP IP address
-                    "dds": LaunchConfiguration("dds", default="false"),  # Enable DDS
-                    "gtloc": LaunchConfiguration(
-                        "gtloc", default="false"
-                    ),  # Use Ground Truth Localizer
-                }.items(),
-            ),
-        ]
-    )
+    return LaunchDescription([
+        DeclareLaunchArgument("robot", default_value=os.getenv("ASTROBEE_ROBOT", "sim")),
+        DeclareLaunchArgument("world", default_value=os.getenv("ASTROBEE_WORLD", "iss")),
+        DeclareLaunchArgument("pose",  default_value="9.92 -9.54 4.50 0 0 0 1",
+                                       condition=LaunchConfigurationEquals("world", "iss")),
+        DeclareLaunchArgument("pose",  default_value="9.92 -9.54 4.50 0 0 0 1",
+                                       condition=LaunchConfigurationEquals("world", "granite")),
+
+        # Make sure all environment variables are set for controller
+        # Override the robot and world environment variables all the time. The
+        # environment variables are the default if they are set. So in this
+        # case we are overriding the environment variables with themselves.
+        # Ros launch arguments override the environment variable which is what
+        # this will do.
+        SetEnvironmentVariable(name="ASTROBEE_ROBOT", value=os.getenv("ASTROBEE_ROBOT", LaunchConfiguration("robot"))),
+        SetEnvironmentVariable(name="ASTROBEE_WORLD", value=os.getenv("ASTROBEE_WORLD", LaunchConfiguration("world"))),
+
+        SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",    value=os.getenv("ASTROBEE_CONFIG_DIR",    get_path("config"))),
+        SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",  value=os.getenv("ASTROBEE_RESOURCE_DIR",  get_path("resources"))),
+        SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE", value=os.getenv("ROSCONSOLE_CONFIG_FILE", get_path("resources/logging.config"))),
+
+        # Declare our global logging format
+        SetEnvironmentVariable(name="RCUTILS_CONSOLE_OUTPUT_FORMAT",
+            value="[{severity} {time}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})"),
+        
+        IncludeLaunchDescription(
+            get_launch_file("launch/astrobee.launch.py"),
+            launch_arguments={
+                "robot"  : LaunchConfiguration("robot"),                   # Type of robot
+                "world"  : LaunchConfiguration("world"),                   # Execution context
+                "ns"     : LaunchConfiguration("ns",     default=""),      # Robot namespace
+                "output" : LaunchConfiguration("output", default="log"),   # Output for logging
+                "pose"   : LaunchConfiguration("pose"),                    # Initial robot pose
+                "drivers": "false",                                        # Don't start driver nodes
+                "spurn"  : LaunchConfiguration("spurn", default=""),       # Prevent node
+                "nodes"  : LaunchConfiguration("nodes", default=""),       # Launch node group
+                "extra"  : LaunchConfiguration("extra", default=""),       # Inject extra nodes
+                "debug"  : LaunchConfiguration("debug", default=""),       # Debug a node set
+                "sim"    : LaunchConfiguration("sim",   default="local"),  # SIM IP address
+                "llp"    : LaunchConfiguration("llp",   default="local"),  # LLP IP address
+                "mlp"    : LaunchConfiguration("mlp",   default="local"),  # MLP IP address
+                "dds"    : LaunchConfiguration("dds",   default="false"),  # Enable DDS
+                "gtloc"  : LaunchConfiguration("gtloc", default="false"),  # Use Ground Truth Localizer
+            }.items(),
+                
+        ),
+    ])

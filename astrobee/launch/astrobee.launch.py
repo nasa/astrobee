@@ -16,165 +16,113 @@
 # under the License.
 
 
-import os
-
-import launch
-from ament_index_python import get_package_share_directory
-from launch import LaunchDescription
-from launch_ros.actions import Node
+from utilities.utilities import *
 
 
 def generate_launch_description():
 
-    return LaunchDescription([])
+    return LaunchDescription([
+        # Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
+        # Set world and world correctly; environment variable over rule default -->
+        DeclareLaunchArgument("robot", default_value=os.getenv("ASTROBEE_ROBOT", "p4d")),
+        DeclareLaunchArgument("world", default_value=os.getenv("ASTROBEE_WORLD", "granite")),
 
+        DeclareLaunchArgument("ns",    default_value=""),     # Robot namespace
+        DeclareLaunchArgument("spurn", default_value=""),     # Prevent a specific node
+        DeclareLaunchArgument("nodes", default_value=""),     # Launch specific nodes
+        DeclareLaunchArgument("extra", default_value=""),     # Inject an additional node
+        DeclareLaunchArgument("debug", default_value=""),     # Debug node group
+        DeclareLaunchArgument("dds",   default_value="true"), # Enable DDS
+        
+        # Remaining options
+        DeclareLaunchArgument("output",  default_value="log"),    # Output to screen or log
+        DeclareLaunchArgument("gtloc",   default_value="false"),  # Use Ground Truth Localizer
+        DeclareLaunchArgument("drivers", default_value="true"),   # Should we launch drivers?
+        DeclareLaunchArgument("sim",     default_value="local"),  # SIM IP address
+        DeclareLaunchArgument("llp",     default_value="local"),  # LLP IP address
+        DeclareLaunchArgument("mlp",     default_value="local"),  # MLP IP address
 
-# <launch>
-#   <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
-#   <!-- Set world and world correctly; environment variable over rule default -->
-#   <arg name="robot" default="$(optenv ASTROBEE_ROBOT p4d)" />
-#   <arg name="world" default="$(optenv ASTROBEE_WORLD granite)" />
-#   <arg name="ns" default="" />                <!-- Robot namespace           -->
-#   <arg name="spurn" default=""/>              <!-- PRevent a specific node   -->
-#   <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
-#   <arg name="extra" default=""/>              <!-- Inject an additional node -->
-#   <arg name="debug" default=""/>              <!-- Debug node group          -->
-#   <arg name="dds" default="true" />           <!-- Enable DDS                -->
+        # Payload options
+        DeclareLaunchArgument("top_aft",   default_value="perching_arm"), # Payload bays
+        DeclareLaunchArgument("bot_aft",   default_value="empty"),        # Payload bays
+        DeclareLaunchArgument("bot_front", default_value="empty"),        # Payload bays
 
-#   <!-- Remaining options -->
-#   <arg name="output" default="log" />         <!-- Output to screen or log   -->
-#   <arg name="gtloc" default="false" />        <!-- Use Ground Truth Localizer -->
-#   <arg name="drivers" default="true" />       <!-- Should we launch drivers? -->
-#   <arg name="sim" default="local" />          <!-- SIM IP address            -->
-#   <arg name="llp" default="local" />          <!-- LLP IP address            -->
-#   <arg name="mlp" default="local" />          <!-- MLP IP address            -->
+        # Simulation options only -->
+        DeclareLaunchArgument("pose", default_value="0 0 0 0 0 0 1"),  # Initial pose (sim only)
 
-#   <!-- Payload options -->
-#   <arg name="top_aft" default="perching_arm" /> <!-- Payload bays            -->
-#   <arg name="bot_aft" default="empty" />        <!-- Payload bays            -->
-#   <arg name="bot_front" default="empty" />      <!-- Payload bays            -->
+        # Path to the bag file
+        DeclareLaunchArgument("bag", default_value=""),
 
-#   <!-- Simulation options only -->
-#   <arg name="pose" default="0 0 0 0 0 0 1" /> <!-- Initial pose (sim only)   -->
+        # Set the TF prefix, create a robot description and joint state publisher
+        # Node(
+        #     package="robot_state_publisher",
+        #     namespace="",
+        #     executable="robot_state_publisher",
+        #     name="astrobee_state_publisher",
+        #     parameters=[{'robot_description': ParameterValue(Command(['xacro ',         get_path('urdf/model.urdf.xacro', 'description'),
+        #                                                               'world:="',       LaunchConfiguration('world'),
+        #                                                               '" top_aft:="',   LaunchConfiguration('top_aft'),
+        #                                                               '" bot_aft:="',   LaunchConfiguration('bot_aft'),
+        #                                                               '" bot_front:="', LaunchConfiguration('bot_front'),
+        #                                                               '" ns:="_',       LaunchConfiguration('ns'),
+        #                                                               '" prefix:="',    LaunchConfiguration('ns'), '/']), value_type=str)}]
+        # ),
 
-#   <!-- Path to the bag file -->
-#   <arg name="bag" default="" />
+        # If we need to load synthetic drivers (we are not running on a real robot)
+        # TODO(asymingt) - pass nodes, spurn and extra into gazebo
+        IncludeLaunchDescription(
+            get_launch_file("launch/controller/synthetic.launch.py"),
+            launch_arguments={
+                "world": LaunchConfiguration("world"),   # Don't start driver nodes
+                "ns"   : LaunchConfiguration("ns"),      # Prevent node
+                "sim"  : LaunchConfiguration("sim"),     # Launch node group
+                "pose" : LaunchConfiguration("pose"),    # Inject extra nodes
+                "bag"  : LaunchConfiguration("bag"),     # Debug a node set
+            }.items(), 
+            condition=UnlessCondition(LaunchConfiguration("drivers"))
+        ),
 
-#   <!-- It doesn't matter that the calling launch file (granite, mtff, etc.) sets these
-#        environment variables in the same way. They will be compeletely overridden here. -->
-#   <!-- Override the robot and world environment variables all the time. The -->
-#   <!-- environment variables are the default if they are set. So in this -->
-#   <!-- case we are overriding the environment variables with themselves. -->
-#   <!-- Roslaunch arguments override the environment variable which is what -->
-#   <!-- this will do. -->
-#   <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
-#   <env name="ASTROBEE_WORLD" value="$(arg world)" />
-#   <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
-#        name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-#   <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
-#        name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-#   <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')"
-#        name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
-
-#   <!-- Launch the platform on its own namespace -->
-#   <group ns="/$(arg ns)">
-
-#     <!-- Set the TF prefix, create a robot description and joint state publisher -->
-#     <param name="robot_description"
-#            command='$(find xacro)/xacro --inorder $(find description)/urdf/model.urdf.xacro world:="$(arg world)" top_aft:="$(arg top_aft)" bot_aft:="$(arg bot_aft)" bot_front:="$(arg bot_front)" ns:="_$(arg ns)" prefix:="$(arg ns)/"'/>
-#     <node pkg="robot_state_publisher" type="robot_state_publisher"
-#           name="astrobee_state_publisher" />
-
-#     <!-- If we need to load synthetic drivers (we are not running on a real robot) -->
-#     <!-- TODO(asymingt) - pass nodes, spurn and extra into gazebo                  -->
-#     <include unless="$(arg drivers)"
-#            file="$(find astrobee)/launch/controller/synthetic.launch">
-#       <arg name="world" value="$(arg world)" />   <!-- World name                -->
-#       <arg name="ns" value="$(arg ns)" />         <!-- Robot namespace           -->
-#       <arg name="sim" value="$(arg sim)" />       <!-- SIM IP address            -->
-#       <arg name="pose" value="$(arg pose)" />     <!-- Initial pose (sim only)   -->
-#       <arg name="bag" value="$(arg bag)" />       <!-- Bag to replay             -->
-#     </include>
-
-#     <!-- LLP -->
-#     <group unless="$(eval arg('llp')=='disabled')">
-
+        # LLP
 #       <!-- Connect and update environment variables if required -->
 #       <machine unless="$(eval arg('llp')=='local')" timeout="10"
 #                name="llp" address="$(arg llp)" user="astrobee" password="astrobee"
 #                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
 #       </machine>
-#       <env unless="$(eval arg('llp')=='local')"
-#            name="ROS_HOSTNAME" value="$(arg llp)" />
+        IncludeLaunchDescription(
+            get_launch_file("launch/robot/LLP.launch.py"),
+            launch_arguments={
+                "drivers": LaunchConfiguration("drivers"),  # Don't start driver nodes
+                "spurn"  : LaunchConfiguration("spurn"),    # Prevent node
+                "nodes"  : LaunchConfiguration("nodes"),    # Launch node group
+                "extra"  : LaunchConfiguration("extra"),    # Inject extra nodes
+                "debug"  : LaunchConfiguration("debug"),    # Debug a node set
+                "output" : LaunchConfiguration("output"), 
+                "gtloc"  : LaunchConfiguration("gtloc"),    # Use Ground Truth Localizer
+            }.items(),
+            condition=LaunchConfigurationNotEquals("llp", "disabled"),
+        ),
 
-#       <!-- Update the environment variables relating to absolute paths -->
-#       <env unless="$(eval arg('llp')=='local')"
-#            name="ASTROBEE_ROBOT" value="$(arg robot)" />
-#       <env unless="$(eval arg('llp')=='local')"
-#            name="ASTROBEE_WORLD" value="$(arg world)" />
-#       <env unless="$(eval arg('llp')=='local')"
-#            name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />
-#       <env unless="$(eval arg('llp')=='local')"
-#            name="ASTROBEE_RESOURCE_DIR" value="/res" />
-#       <env unless="$(eval arg('llp')=='local')"
-#            name="ROSCONSOLE_CONFIG_FILE" value="/res/logging.config"/>
-
-#       <!-- If we have specified a bag, then play it back into flight software-->
-#       <include file="$(find astrobee)/launch/robot/LLP.launch" >
-#         <arg name="drivers" value="$(arg drivers)"/>
-#         <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
-#         <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
-#         <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
-#         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
-#         <arg name="output" value="$(arg output)" />
-#         <arg name="gtloc" value="$(arg gtloc)" />
-#       </include>
-
-#       <!-- If we have specified a bag, then play it back into flight software-->
-#       <!-- node pkg="astrobee" type="check_env.sh" name="llp_check_env" output="screen" -->
-
-#     </group>
-
-#     <!-- MLP -->
-#     <group unless="$(eval arg('mlp')=='disabled')">
-
+        # MLP
 #       <!-- Connect and update environment variables if required -->
 #       <machine unless="$(eval arg('mlp')=='local')" timeout="10"
 #                name="mlp" address="$(arg mlp)" user="astrobee" password="astrobee"
 #                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
 #       </machine>
-#       <env unless="$(eval arg('mlp')=='local')"
-#            name="ROS_HOSTNAME" value="$(arg mlp)" />
+        IncludeLaunchDescription(
+            get_launch_file("launch/robot/MLP.launch.py"),
+            launch_arguments={
+                "drivers": LaunchConfiguration("drivers"), # Don't start driver nodes
+                "spurn"  : LaunchConfiguration("spurn"),   # Prevent node
+                "nodes"  : LaunchConfiguration("nodes"),   # Launch node group
+                "extra"  : LaunchConfiguration("extra"),   # Inject extra nodes
+                "debug"  : LaunchConfiguration("debug"),   # Debug a node set
+                "output" : LaunchConfiguration("output"), 
+                "gtloc"  : LaunchConfiguration("gtloc"),   # Use Ground Truth Localizer
+            }.items(),
+            condition=LaunchConfigurationNotEquals("llp", "disabled"),
+        ),
+    ])
 
-#       <!-- Update the environment variables relating to absolute paths -->
-#       <env unless="$(eval arg('mlp')=='local')"
-#            name="ASTROBEE_ROBOT" value="$(arg robot)" />
-#       <env unless="$(eval arg('mlp')=='local')"
-#            name="ASTROBEE_WORLD" value="$(arg world)" />
-#       <env unless="$(eval arg('mlp')=='local')"
-#            name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />
-#       <env unless="$(eval arg('mlp')=='local')"
-#            name="ASTROBEE_RESOURCE_DIR" value="/res" />
-#       <env unless="$(eval arg('mlp')=='local')"
-#            name="ROSCONSOLE_CONFIG_FILE" value="/res/logging.config"/>
 
-#       <!-- If we have specified a bag, then play it back into flight software-->
-#       <include file="$(find astrobee)/launch/robot/MLP.launch" >
-#         <arg name="drivers" value="$(arg drivers)"/>
-#         <arg name="dds" value="$(arg dds)"/>
-#         <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
-#         <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
-#         <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
-#         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
-#         <arg name="output" value="$(arg output)" />
-#         <arg name="gtloc" value="$(arg gtloc)" />
-#       </include>
 
-#       <!-- If we have specified a bag, then play it back into flight software-->
-#       <!-- node pkg="astrobee" type="check_env.sh" name="mlp_check_env" output="screen" -->
 
-#     </group>
-
-#   </group>
-
-# </launch>

@@ -1,19 +1,152 @@
-# <!-- Copyright (c) 2017, United States Government, as represented by the     -->
-# <!-- Administrator of the National Aeronautics and Space Administration.     -->
-# <!--                                                                         -->
-# <!-- All rights reserved.                                                    -->
-# <!--                                                                         -->
-# <!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
-# <!-- (the "License"); you may not use this file except in compliance with    -->
-# <!-- the License. You may obtain a copy of the License at                    -->
-# <!--                                                                         -->
-# <!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
-# <!--                                                                         -->
-# <!-- Unless required by applicable law or agreed to in writing, software     -->
-# <!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
-# <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
-# <!-- implied. See the License for the specific language governing            -->
-# <!-- permissions and limitations under the License.                          -->
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+#
+# All rights reserved.
+#
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
+from utilities.utilities import *
+
+
+def generate_launch_description():
+
+    return LaunchDescription([
+        # Update the environment variables relating to absolute paths
+        SetEnvironmentVariable(name="ASTROBEE_ROBOT",         condition=LaunchConfigurationNotEquals("mlp", "local"),
+                               value=os.getenv("ASTROBEE_ROBOT", LaunchConfiguration("robot"))),
+        SetEnvironmentVariable(name="ASTROBEE_WORLD",         condition=LaunchConfigurationNotEquals("mlp", "local"),
+                               value=os.getenv("ASTROBEE_WORLD", LaunchConfiguration("world"))),
+        SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",    condition=LaunchConfigurationNotEquals("mlp", "local"),
+                               value=os.getenv("ASTROBEE_CONFIG_DIR", "/opt/astrobee/config")),
+        SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",  condition=LaunchConfigurationNotEquals("mlp", "local"),
+                               value=os.getenv("ASTROBEE_RESOURCE_DIR", "/res")),
+        SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE", condition=LaunchConfigurationNotEquals("mlp", "local"),
+                               value=os.getenv("ROSCONSOLE_CONFIG_FILE", "/res/logging.config")),
+        
+        SetEnvironmentVariable(name="ROS_HOSTNAME", condition=LaunchConfigurationNotEquals("mlp", "local"),
+                               value=LaunchConfiguration("mlp")),
+        #     ComposableNodeContainer(
+        #     name='mlp_localization',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ComposableNode(
+        #             package='depth_odometry',
+        #             plugin='depth_odometry::DepthOdometryNodelet',
+        #             name='depth_odometry',
+        #             remappings=[('/image', '/burgerimage')],
+        #             parameters=[{'history': 'keep_last'}],
+        #             extra_arguments=[{'use_intra_process_comms': True}])
+        #         ]
+        #     ),
+        #     ComposableNodeContainer(
+        #     name='mlp_graph_localization',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ComposableNode(
+        #             package='depth_odometry',
+        #             plugin='depth_odometry::DepthOdometryNodelet',
+        #             name='depth_odometry',
+        #             remappings=[('/image', '/burgerimage')],
+        #             parameters=[{'history': 'keep_last'}],
+        #             extra_arguments=[{'use_intra_process_comms': True}])
+        #         ]
+        #     ),
+        #     ComposableNodeContainer(
+        #     name='mlp_vision',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ]
+        #     ),
+        #     ComposableNodeContainer(
+        #     name='mlp_depth_cam',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ]
+        #     ),
+        #     ComposableNodeContainer(
+        #     name='mlp_mapper',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ]
+        #     ),
+        #     ComposableNodeContainer(
+        #     name='mlp_management',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ]
+        #     ),
+        #     ComposableNodeContainer(
+        #     name='mlp_recording',
+        #     namespace='',
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     composable_node_descriptions=[
+        #         ComposableNode(
+        #             package='localization_manager',
+        #             plugin='localization_manager::LocalizationManagerNodelet',
+        #             name='localization_manager',
+        #             extra_arguments=[{'use_intra_process_comms': True}]),
+        #         ]
+        #     ),
+    ])
+
+
+
+
+
 
 # <launch>
 
@@ -29,20 +162,6 @@
 
 #   <!-- Setup nodelet managers -->
 #   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_localization" output="$(arg output)"/>
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_graph_localization" output="$(arg output)"/>
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_vision" output="$(arg output)"/>
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_depth_cam" output="$(arg output)"/>
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_mapper" output="$(arg output)" launch-prefix="nice -n 5"/>
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_management" output="$(arg output)"/>
-#     <node pkg="nodelet" type="nodelet" args="manager"
-#           name="mlp_recording" output="$(arg output)"/>
 #     <node pkg="nodelet" type="nodelet" args="manager"
 #           name="mlp_monitors" output="$(arg output)"/>
 #     <node pkg="nodelet" type="nodelet" args="manager"

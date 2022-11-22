@@ -53,11 +53,14 @@ message(STATUS "------------------------------------------")
   find_package(ament_cmake REQUIRED)
   find_package(rclcpp REQUIRED)
 
-  ament_package()
 
   set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
   set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
 
+  # Install Python modules
+  ament_python_install_package("utilities")
+
+  ament_package()
 endif()
 
 
