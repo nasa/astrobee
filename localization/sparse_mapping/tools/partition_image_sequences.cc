@@ -94,7 +94,7 @@ void CreateSubdirectory(const std::string& directory, const std::string& cluster
 
 bool StandstillImage(const vc::FeatureMatches& matches) {
   // TODO(rsoussan): Make this a param?
-  constexpr double kMaxStandstillMeanDistance = 0.05;
+  constexpr double kMaxStandstillMeanDistance = 0.01;
   return sm::LowMovementImageSequence(matches, kMaxStandstillMeanDistance);
 }
 
@@ -353,10 +353,10 @@ std::vector<Result> IdentifyImageTypes(const std::vector<std::string>& image_nam
       const auto& image_name = image_names[next_image_index];
       if (!matches) {
         results.emplace_back(Result::InvalidResult(image_name));
-      } else if (StandstillImage(*matches)) {  // Delete standstill images so they don't add partitions to sequences
-        LogInfo("Standstill image: " << image_name);
-        std::remove(image_name.c_str());
-        break;
+      } else if (StandstillImage(*matches)) {
+        // Mark standstill images as valid so sequences aren't broken up as frequently
+        // The rotation model might otherwise mark standstill sequences as rotations
+        results.emplace_back(Result::ValidResult(0, image_name));
       } else {
         results.emplace_back(RotationOnlyImage(*matches, camera_params, rotation_inlier_threshold,
                                                min_relative_pose_inliers_ratio, image_name, view_images,
