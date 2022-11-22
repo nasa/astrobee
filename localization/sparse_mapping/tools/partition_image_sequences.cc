@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
     "Minimum separation between non-rotation image sets. Setting to a larger "
     "value enables more movements separated by detected rotations to be combined into the same subdirectories. This is "
     "useful if some of the rotations are short and the movements before and after the rotation should be considered "
-    "the same continous movement.")("min-sequence-size,s", po::value<int>(&min_sequence_size)->default_value(10),
+    "the same continous movement.")("min-sequence-size,s", po::value<int>(&min_sequence_size)->default_value(30),
                                     "Minimum sequence size for a valid or rotation sequence, sequences smaller than "
                                     "this value will be marked as invalid.")(
     "view-images,v", po::bool_switch(&view_images)->default_value(false),
