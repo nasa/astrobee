@@ -16,6 +16,8 @@
  * under the License.
  */
 #include <ff_common/init.h>
+#include <ff_common/utils.h>
+#include <localization_common/averager.h>
 #include <localization_common/logger.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 
@@ -59,6 +61,8 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
   auto next_image = sm::LoadImage(next_image_index, image_names, detector);
   int num_removed_images = 0;
   while (current_image_index < image_names.size()) {
+    ff_common::PrintProgressBar(stdout,
+                                static_cast<float>(current_image_index) / static_cast<float>(image_names.size() - 1));
     while (next_image_index < image_names.size() &&
            LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
       LogDebug("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
@@ -116,6 +120,7 @@ int main(int argc, char** argv) {
   const auto image_names = sm::GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
+  LogInfo("Removing low movement images, max low movement mean distance: " << max_low_movement_mean_distance);
   const int num_original_images = image_names.size();
   const int num_removed_images = RemoveLowMovementImages(image_names, max_low_movement_mean_distance);
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");
