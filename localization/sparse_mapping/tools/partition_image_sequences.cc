@@ -262,7 +262,11 @@ void OrderClusters(std::vector<Result>& results) {
   std::unordered_map<int, int> start_index_to_cluster_id;
   for (auto& result : results) {
     if (start_index_to_cluster_id.count(result.cluster_start_index) == 0) {
-      start_index_to_cluster_id.emplace(result.cluster_start_index, ++cluster_id);
+      // Don't iterate cluster id if cluster is invalid to keep valid and rotation clusters sequential
+      if (result.type != ResultType::kInvalid)
+        start_index_to_cluster_id.emplace(result.cluster_start_index, ++cluster_id);
+      else
+        start_index_to_cluster_id.emplace(result.cluster_start_index, 0);
     }
     result.cluster_id = start_index_to_cluster_id[result.cluster_start_index];
   }
@@ -274,6 +278,32 @@ int CountResults(const std::vector<Result>& results, const ResultType type) {
     if (result.type == type) ++count;
   }
   return count;
+}
+
+void PrintClusterStats(const std::vector<Result>& results, const ResultType type, const std::string& type_name) {
+  lc::Averager cluster_size_averager(type_name + " cluster size", "", "", true);
+  int cluster_size = 0;
+  int num_clusters = 0;
+  boost::optional<int> first_cluster_index;
+  for (int i = 0; i < results.size(); ++i) {
+    const auto& result = results[i];
+    if (result.type == type) {
+      if (!first_cluster_index) {
+        first_cluster_index = result.cluster_start_index;
+        ++cluster_size;
+        ++num_clusters;
+      } else if (result.cluster_start_index != *first_cluster_index ||
+                 i == results.size() - 1) {  // New cluster started or last images, check size of previous cluster
+        first_cluster_index = result.cluster_start_index;
+        cluster_size_averager.Update(cluster_size);
+        cluster_size = 1;
+        ++num_clusters;
+      } else {
+        ++cluster_size;
+      }
+    }
+  }
+  LogInfo(type_name << " num clusters: " << num_clusters);
 }
 
 void MarkSmallSequencesInvalid(const int min_sequence_size, std::vector<Result>& results) {
@@ -298,6 +328,7 @@ void MarkSmallSequencesInvalid(const int min_sequence_size, std::vector<Result>&
               auto& result = results[j];
               if (result.type == type) {
                 result.type = ResultType::kInvalid;
+                result.cluster_id = 0;
               }
             }
           }
@@ -316,8 +347,8 @@ void MoveResultsToSubdirectories(const std::string& image_directory, const int m
   ClusterResults(min_separation_between_sets, ResultType::kValid, results);
   ClusterResults(min_separation_between_sets, ResultType::kRotation, results);
   ClusterResults(min_separation_between_sets, ResultType::kInvalid, results);
-  OrderClusters(results);
   MarkSmallSequencesInvalid(min_sequence_size, results);
+  OrderClusters(results);
   std::unordered_set<int> created_cluster_directories;
   for (const auto& result : results) {
     if (created_cluster_directories.count(result.cluster_id) == 0) {
@@ -387,6 +418,16 @@ std::vector<Result> IdentifyImageTypes(const std::vector<std::string>& image_nam
   return results;
 }
 
+void PrintStats(const std::vector<Result>& results) {
+  PrintClusterStats(results, ResultType::kValid, "Valid");
+  PrintClusterStats(results, ResultType::kRotation, "Rotation");
+  const int valid_count = CountResults(results, ResultType::kValid);
+  const int invalid_count = CountResults(results, ResultType::kInvalid);
+  const int rotation_count = CountResults(results, ResultType::kRotation);
+  LogInfo("Valid images: " << valid_count << " , rotation images: " << rotation_count
+                           << ", invalid images: " << invalid_count);
+}
+
 int main(int argc, char** argv) {
   double max_low_movement_mean_distance;
   double max_rotation_error_ratio;
@@ -418,7 +459,7 @@ int main(int argc, char** argv) {
                                                   "Maximum distance between detected rotations for sequence removal. "
                                                   "Setting to a larger value marks more images as rotations"
                                                   "in between already detected rotations.")(
-    "min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(10),
+    "min-separation-between-sets,b", po::value<int>(&min_separation_between_sets)->default_value(30),
     "Minimum separation between non-rotation image sets. Setting to a larger "
     "value enables more movements separated by detected rotations to be combined into the same subdirectories. This is "
     "useful if some of the rotations are short and the movements before and after the rotation should be considered "
@@ -480,14 +521,10 @@ int main(int argc, char** argv) {
   auto results = IdentifyImageTypes(image_names, camera_parameters, max_rotation_error_ratio,
                                     min_relative_pose_inliers_ratio, view_images);
 
-  LogInfo("Grouping rotation and invalid sequences, max allowed separation: " +
-          std::to_string(max_separation_in_sequence));
+  LogInfo("Grouping rotation and invalid sequences, max allowed separation: " << max_separation_in_sequence);
   GroupRotationOrInvalidSequences(max_separation_in_sequence, results);
-  LogInfo("Moving results to subdirectories.");
+  LogInfo("Moving results to subdirectories, min separation bewteen valid sets: "
+          << min_separation_between_sets << ", min valid/rotation sequence size: " << min_sequence_size);
   MoveResultsToSubdirectories(image_directory, min_separation_between_sets, min_sequence_size, results);
-  const int valid_count = CountResults(results, ResultType::kValid);
-  const int invalid_count = CountResults(results, ResultType::kInvalid);
-  const int rotation_count = CountResults(results, ResultType::kRotation);
-  LogInfo("Valid images: " << valid_count << " , rotation images: " << rotation_count
-                           << ", invalid images: " << invalid_count);
+  PrintStats(results);
 }
