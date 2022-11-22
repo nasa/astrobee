@@ -59,15 +59,9 @@ More details on these and other environmental variables can be found
 in the \ref astrobee configuration documentation.
 
 ## Partition the files into movement sequences and reduce the number of images to improve bundle-adjustment accuracy
-Partition image files into sequences:
-    rosrun sparse_mapping partition_image_sequences image_directory_name config_path
+    rosrun sparse_mapping process_sequential_images.py image_directory_name config_path
 
-Partitions a sequentially ordered set of image files into valid, rotation, and invalid sequences. During bundle adjustment, it is useful to avoid adding pure rotation sequences initially as these cause errors for monocular systems. The resulting sequences can be individually bundle-adjusted and merged as described later, generally starting with the valid (non-rotation) sequences and optionally adding rotations at the end once enough matches exist in the map. See 'rosrun sparse_mapping partition_image_sequences -h' for more usage details, options, and instructions.
-
-Remove low movement images:
-    rosrun sparse_mapping remove_low_movement_images image_directory_name
-
-This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
+Partitions a sequentially ordered set of image files into valid, rotation, and invalid sequences. During bundle adjustment, it is useful to avoid adding pure rotation sequences initially as these cause errors for monocular systems. The resulting sequences can be individually bundle-adjusted and merged as described later, generally starting with the valid (non-rotation) sequences and optionally adding rotations at the end once enough matches exist in the map. Also deletes subsequent images with low movement from that directory to improve mapping performance and accuracy. See 'rosrun sparse_mapping process_sequential_images.py -h' for more usage details, options, and instructions.
 
 These are non-reversible operations, so they should be invoked on a copy
 of the images.
