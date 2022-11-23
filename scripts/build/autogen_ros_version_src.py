@@ -52,19 +52,11 @@ The transformation behavior is:
     boolean variable USE_ROS1 that can be used in Jinja2 conditionals to
     modify the content between ROS versions.
 This transformation has the following nice properties:
-<<<<<<< HEAD
 - It is performing an out-of-source build such that the ".astrobee" folder used
   with git is not polluted with auto-generated files or auto-selected symlinks.
 - The "src" folder is not precious and can be automatically regenerated from
   ".astrobee" at any time.
 - A single ".astrobee" git checkout folder can be used with both ROS1 and ROS2
-=======
-- It is performing an out-of-source build such that the "git_src" folder used
-  with git is not polluted with auto-generated files or auto-selected symlinks.
-- The "src" folder is not precious and can be automatically regenerated from
-  "git_src" at any time.
-- A single "git_src" git checkout folder can be used with both ROS1 and ROS2
->>>>>>> 4063ddf68c55752012d5a594da87b7396358b210
   workspaces, so you can make a modification once and test it in both
   workspaces before you push it.
 This script is fancier than the bare minimum because it tries to make the
