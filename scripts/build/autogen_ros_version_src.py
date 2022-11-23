@@ -20,27 +20,28 @@
 """
 Auto-generates / auto-selects files depending on whether --use-ros1 is
 specified (ROS1) or not (ROS2).
-Specifically, transforms a raw git checkout "git_src" folder to a
+Specifically, transforms a raw git checkout ".astrobee" folder to a
 ROS-version-specific "src" folder designed to be used in a catkin (ROS1)
-or colcon (ROS2) workspace.
+or colcon (ROS2) workspace. The git checkout needs to be a hidden folder,
+otherwise its contents will clash with "src" during colcon build.
 Example usage:
   cd ~/astrobee
-  git clone https://github.com/nasa/astrobee.git git_src
+  git clone https://github.com/nasa/astrobee.git .astrobee
   # Auto-generate ROS1 version of src directory. Normally this script is
   # called by configure.sh, but you could run it manually.
-  ./git_src/scripts/build/autogen_ros_version_src.py --use-ros1
+  ./.astrobee/scripts/build/autogen_ros_version_src.py --use-ros1
   # ... continue with ROS1 build.
   cd ~/astrobee_ros2
   # ROS2 workspace can share git checkout with ROS1 workspace if desired
-  ln -s ~/astrobee/git_src git_src
+  ln -s ~/astrobee/.astrobee .astrobee
   # Auto-generate ROS2 version of src directory. ROS2 is the default if
   # --use-ros1 is not specified.
-  ./git_src/scripts/build/autogen_ros_version_src.py
+  ./.astrobee/scripts/build/autogen_ros_version_src.py
   # ... continue with ROS2 build.
 The transformation behavior is:
-- The hierarchical folder structure of git_src is copied to src. (The .git
+- The hierarchical folder structure of .astrobee is copied to src. (The .git
   subfolder is skipped.)
-- Plain files in git_src are symlinked to the identical locations in src, but
+- Plain files in .astrobee are symlinked to the identical locations in src, but
   with the following transformations applied:
   - Any file starting with a "ros1-" or "ros2-" prefix is (1) only symlinked if
     it the prefix matches the current ROS version, and (2) the symlinked
@@ -51,11 +52,19 @@ The transformation behavior is:
     boolean variable USE_ROS1 that can be used in Jinja2 conditionals to
     modify the content between ROS versions.
 This transformation has the following nice properties:
+<<<<<<< HEAD
+- It is performing an out-of-source build such that the ".astrobee" folder used
+  with git is not polluted with auto-generated files or auto-selected symlinks.
+- The "src" folder is not precious and can be automatically regenerated from
+  ".astrobee" at any time.
+- A single ".astrobee" git checkout folder can be used with both ROS1 and ROS2
+=======
 - It is performing an out-of-source build such that the "git_src" folder used
   with git is not polluted with auto-generated files or auto-selected symlinks.
 - The "src" folder is not precious and can be automatically regenerated from
   "git_src" at any time.
 - A single "git_src" git checkout folder can be used with both ROS1 and ROS2
+>>>>>>> 4063ddf68c55752012d5a594da87b7396358b210
   workspaces, so you can make a modification once and test it in both
   workspaces before you push it.
 This script is fancier than the bare minimum because it tries to make the
@@ -82,7 +91,7 @@ def src_path(git_src_path):
     Return the path under "src" corresponding to the specified path
     under "git_src".
     """
-    return git_src_path.replace("git_src", "src", 1)
+    return git_src_path.replace(".astrobee", "src", 1)
 
 
 def rel_symlink(src, dst):
@@ -126,7 +135,6 @@ def get_current_state():
             else:
                 with open(src_f, "r") as stream:
                     result[src_f] = {"type": "f", "content": stream.read()}
-
     return result
 
 
@@ -137,8 +145,8 @@ def get_desired_state(use_ros1):
     content.
     """
     result = {}
-    for dir_path, dir_names, file_names in os.walk("git_src", followlinks=True):
-        if dir_path == "git_src" and ".git" in dir_names:
+    for dir_path, dir_names, file_names in os.walk(".astrobee", followlinks=True):
+        if dir_path == ".astrobee" and ".git" in dir_names:
             dir_names.remove(".git")  # skip .git subfolder
 
         for d in dir_names:
@@ -163,7 +171,7 @@ def get_desired_state(use_ros1):
                     src_f = src_f.replace("ros2-", "", 1)
                     result[src_f] = rel_symlink(git_src_f, src_f)
 
-            elif f.startswith("jinja-"):
+            elif f.startswith("jinja-") or ".jinja." in f:
                 src_f = src_f.replace("jinja-", "", 1)
                 result[src_f] = {
                     "type": "f",
@@ -291,7 +299,7 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.isdir("git_src"):
+    if not os.path.isdir(".astrobee"):
         parser.error("this script must be run from parent directory of git_src!")
     if os.path.exists("src/.git"):
         parser.error("src directory must not be a git checkout!")
