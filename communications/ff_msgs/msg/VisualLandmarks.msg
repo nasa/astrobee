@@ -18,7 +18,7 @@
 # The observation from a camera image, of image coordinates
 # and associated 3D coordinates. Used for sparse mapping and AR tags.
 
-Header header # header with timestamp
+std_msgs/Header header # header with timestamp
 uint32 camera_id # image ID, associated with registration pulse
 geometry_msgs/Pose pose # estimated camera pose from features
 ff_msgs/VisualLandmark[] landmarks # list of all landmarks

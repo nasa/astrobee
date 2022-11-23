@@ -1,35 +1,31 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+{%- if USE_ROS1 -%}
+time source_time 
+time target_time
 
-# The save settings message contains information about the topics currently
-# being recorded.
+geometry_msgs/PoseWithCovariance sensor_F_source_T_target
+geometry_msgs/PoseWithCovariance body_F_source_T_target
+{%- else -%}
+builtin_interfaces/Time source_time
+builtin_interfaces/Time target_time
 
-# Name of topic
-string topic_name
+geometry_msgs/PoseWithCovariance sensor_f_source_t_target
+geometry_msgs/PoseWithCovariance body_f_source_t_target
+{%- endif -%}
 
-# Topic saved to disk; upon docking it is downlinked
-uint8 IMMEDIATE   = 0
-
-# Topic saved to disk; upon docking it is transferred to ISS server for later
-# downlink
-uint8 DELAYED     = 1
-
-# Downlink option indicates if and when the data in the rostopic is downlinked
-uint8 downlinkOption
-
-# Times per second to save the data (Hz)
-float32 frequency
