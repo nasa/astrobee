@@ -20,11 +20,11 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
+    """Generate launch description for synthetic."""
 
     #     <!-- Connect and update environment variables if required -->
     #     <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
     #              address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
-
     if LaunchConfigurationNotEquals("bag", ""):
         return LaunchDescription([
 
@@ -52,10 +52,10 @@ def generate_launch_description():
             # ),
         
         ])
-    else:
-        return LaunchDescription([
-            IncludeLaunchDescription(
-                get_launch_file("/launch/controller/bagreplay.launch"),
-                launch_arguments={"bag": LaunchConfiguration("bag")}.items()
-            ),
-        ])
+    
+    return LaunchDescription([
+        IncludeLaunchDescription(
+            get_launch_file("/launch/controller/bagreplay.launch"),
+            launch_arguments={"bag": LaunchConfiguration("bag")}.items()
+        ),
+    ])
