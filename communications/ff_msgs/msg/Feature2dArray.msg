@@ -17,6 +17,6 @@
 #
 # An observation of image points and associated ids, for optical flow.
 
-Header header # header with timestamp
+std_msgs/Header header # header with timestamp
 uint32 camera_id # image ID, linked to registration pulse
 Feature2d[] feature_array # list of observed features

@@ -69,6 +69,7 @@ def generate_launch_description():
                                                                       '" prefix:="',    LaunchConfiguration('ns'), '/"' ]))}]
         ),
 
+
         # If we need to load synthetic drivers (we are not running on a real robot)
         # TODO(asymingt) - pass nodes, spurn and extra into gazebo
         IncludeLaunchDescription(
