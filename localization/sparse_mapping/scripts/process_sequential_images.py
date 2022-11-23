@@ -44,7 +44,7 @@ if __name__ == "__main__":
         "rosrun sparse_mapping remove_standstill_images.py "
         + args.image_directory 
     )
-    lu.run_command_and_save_output(remove_standstill_images_command, "remove_standstill_images.txt")
+    #lu.run_command_and_save_output(remove_standstill_images_command, "remove_standstill_images.txt")
 
     partition_image_sequences_command = (
         "rosrun sparse_mapping partition_image_sequences "
@@ -59,3 +59,9 @@ if __name__ == "__main__":
         + args.image_directory 
     )
     lu.run_command_and_save_output(remove_low_movement_images_command, "remove_low_movement_images.txt")
+
+    prune_partitioned_directores_command = (
+        "rosrun sparse_mapping prune_partitioned_directories.py "
+        + args.image_directory 
+    )
+    lu.run_command_and_save_output(prune_partitioned_directores_command, "prune_partitioned_directores_command.txt")
