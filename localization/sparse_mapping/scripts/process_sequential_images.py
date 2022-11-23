@@ -22,6 +22,7 @@ For more information on each script called, see:
 'rosrun sparse_mapping remove_standstill_images.py -h'
 'rosrun sparse_mapping partition_image_sequences -h'
 'rosrun sparse_mapping remove_low_movement_images -h'
+'rosrun sparse_mapping prune_partitioned_directories.py -h'
 """
 
 import argparse

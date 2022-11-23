@@ -35,14 +35,13 @@ def remove_or_move_directories(directory, invalid_path, min_directory_size):
         if subdirectory == "invalid" or subdirectory == "rotation":
             continue
         subdirectory_path = os.path.join(directory, subdirectory)
-        print(subdirectory)
         num_files = len([name for name in os.listdir(subdirectory_path) if os.path.isfile(os.path.join(subdirectory_path, name))])
         if num_files == 0:
+            print("Removing empty directory: " + subdirectory_path)
             os.rmdir(subdirectory_path)
         elif num_files < min_directory_size:
             invalid_path = os.path.join(invalid_path, subdirectory)
-            print("invalid: ")
-            print(invalid_path)
+            print("Moving small directory: " + subdirectory_path + ", num images: " + str(num_files))
             shutil.move(subdirectory_path, invalid_path)
         
 
