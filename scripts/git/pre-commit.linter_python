@@ -46,7 +46,8 @@ fi
 echo "=================================================="
 echo "  Analysing python code style with 'black'."
 # This check the files but they will not be commited
-if `black . --include ${files} --check --quiet`; then
+black . --include ${files} --check --quiet
+if [ "$?" -eq "1" ]; then
     echo "Linter checks using 'black' passed."
 else
     echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."

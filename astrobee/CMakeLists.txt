@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(astrobee)
 
 set(ASTROBEE_VERSION 0.16.6)
@@ -29,14 +29,40 @@ execute_process(
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-)
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+message(STATUS "------------------------------------------")
+message(STATUS "Astrobee is being built using ROS1.")
+message(STATUS "------------------------------------------")
 
-catkin_package(
-    CATKIN_DEPENDS roscpp
-)
+
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+  )
+
+  catkin_package(
+      CATKIN_DEPENDS roscpp
+  )
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+message(STATUS "------------------------------------------")
+message(STATUS "Astrobee is being built using ROS2.")
+message(STATUS "------------------------------------------")
+  # Find amend and libraries
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+
+
+  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
+
+  # Install Python modules
+  ament_python_install_package("utilities")
+
+  ament_package()
+endif()
+
 
 #############
 ## Install ##
@@ -51,10 +77,16 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
 
+# Mark resource files for installation
+install(DIRECTORY resources/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/resources
+  PATTERN ".svn" EXCLUDE)
+
 install(PROGRAMS scripts/apk_print_version.sh
-				 scripts/check_env.sh
-                 scripts/print_version.sh
-                 scripts/cpu_print_version.sh
+				  scripts/check_env.sh
+          scripts/print_version.sh
+          scripts/cpu_print_version.sh
+          scripts/launch_gds.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # install the version.txt file when install target is run
