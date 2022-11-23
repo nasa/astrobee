@@ -19,12 +19,36 @@
 # dont do this if we are cross-compiling, as there is no need for it. We must
 # also make sure the media is copied in a native install to a simulator.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(description)
 
-find_package(catkin REQUIRED COMPONENTS
-)
+
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+message(STATUS "------------------------------------------")
+message(STATUS "Astrobee is being built using ROS1.")
+message(STATUS "------------------------------------------")
+
+find_package(catkin REQUIRED COMPONENTS)
 
 catkin_package()
+
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+message(STATUS "------------------------------------------")
+message(STATUS "Astrobee is being built using ROS2.")
+message(STATUS "------------------------------------------")
+  # Find amend and libraries
+  find_package(ament_cmake REQUIRED)
+
+  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
+
+  ament_package()
+endif()
+
+
+#############
+## Install ##
+#############
 
 install(DIRECTORY urdf DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
