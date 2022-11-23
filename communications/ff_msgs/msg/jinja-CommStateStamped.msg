@@ -15,13 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Statistics used to measure performance.
+# CommState, based off of rapid::ext::astrobee::CommState
 
-time stamp
-float32 count
-float32 last
-float32 min
-float32 max
-float32 mean
-float32 stddev
-float32 var
+std_msgs/Header header
+{% if USE_ROS1 %}
+bool wirelessConnected
+string apName
+bool lanConnected
+{% else %}
+bool wireless_connected
+string ap_name
+bool lan_connected
+{% endif %}
+string bssid
+float32 rssi
+float32 frequency
+uint16 channel
+

@@ -15,8 +15,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# This message allows the MOBILITY::MAPPER zones to be retrieved
+# This message allows the MOBILITY::MAPPER zones to be set
 
+{% if USE_ROS1 %}
+time timestamp                          # When these zones were created
+{% else %}
+builtin_interfaces/Time timestamp                          # When these zones were created
+{% endif %}
+ff_msgs/Zone[] zones                     # A vector of new zones
 ---
-time timestamp                           # When these zones were updated
-ff_msgs/Zone[] zones                     # A vector of zones
+bool success                             # Did the update work?

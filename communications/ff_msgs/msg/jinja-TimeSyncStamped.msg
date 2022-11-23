@@ -15,15 +15,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# CommState, based off of rapid::ext::astrobee::CommState
+# Message to send time difference between the mlp and llp
 
+# Header with timestamp
 std_msgs/Header header
 
-bool wirelessConnected
-string apName
-string bssid
-float32 rssi
-float32 frequency
-uint16 channel
+# Processor that the heartbeat came from
+string remote_processor
 
-bool lanConnected
+{%- if USE_ROS1 -%}
+# Current time on the mlp
+time mlp_time
+
+# Time in the incoming heartbeat
+time remote_time
+{%- else -%}
+# Current time on the mlp
+builtin_interfaces/Time mlp_time
+
+# Time in the incoming heartbeat
+builtin_interfaces/Time remote_time
+{%- endif -%}

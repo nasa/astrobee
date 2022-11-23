@@ -27,8 +27,11 @@ float32 desired_accel                         # Desired (max) accel
 float32 desired_omega                         # Desired (max) omega
 float32 desired_alpha                         # Desired (max) alpha
 float32 desired_rate                          # Desired rate
-
+{%- if USE_ROS1 -%}
 duration max_time                             # Max generation time
+{%- else -%}
+builtin_interfaces/Duration max_time
+{% endif %}
 
 ---
 

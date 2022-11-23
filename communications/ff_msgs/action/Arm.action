@@ -35,7 +35,7 @@ float32 gripper                               # SET from 20 to 45
 
 ---
 
-# Machine-readable reseult code
+# Machine-readable result code
 int32 response
 int32 SUCCESS             =  1                # Successfully completed
 int32 PREEMPTED           =  0                # Action was preempted

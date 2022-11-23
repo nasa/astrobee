@@ -15,16 +15,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Message to send time difference between the mlp and llp
+# Full state vector containing Time, Pose, Vel, and Accel
+# 
+# when {time}
+# flight_mode {string} - disctates, gains, tolerances, etc.
+# pose {Point position, Quaternion orientation}
+# twist {Vector3 linear, Vector3 angular}
+# accel {Vector3 linear, Vector3 angular}
 
-# Header with timestamp
-std_msgs/Header header
-
-# Processor that the heartbeat came from
-string remote_processor
-
-# Current time on the mlp
-time mlp_time
-
-# Time in the incoming heartbeat
-time remote_time
+{%- if USE_ROS1 -%}
+time when
+{%- else -%}
+builtin_interfaces/Time when
+{%- endif -%}
+geometry_msgs/Pose pose
+geometry_msgs/Twist twist
+geometry_msgs/Twist accel
