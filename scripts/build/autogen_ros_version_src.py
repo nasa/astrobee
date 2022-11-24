@@ -165,6 +165,7 @@ def get_desired_state(use_ros1):
 
             elif f.startswith("jinja-") or ".jinja." in f:
                 src_f = src_f.replace("jinja-", "", 1)
+                src_f = src_f.replace(".jinja", "", 1)
                 result[src_f] = {
                     "type": "f",
                     "content": jinja_render(git_src_f, use_ros1),

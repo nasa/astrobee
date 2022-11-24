@@ -15,5 +15,5 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-Header header
+std_msgs/Header header
 ff_hw_msgs/ViveTracker[] trackers
