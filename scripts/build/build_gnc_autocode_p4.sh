@@ -18,7 +18,7 @@
 # under the License.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-pushd $DIR/../../gnc/matlab/Prototypes/Proto_4/ > /dev/null
+pushd "$DIR"/../../gnc/matlab/Prototypes/Proto_4/ > /dev/null || exit
 matlab-2016b -nosplash -nodisplay -r "build_Proto4; exit"
-popd > /dev/null
+popd > /dev/null || exit
 
