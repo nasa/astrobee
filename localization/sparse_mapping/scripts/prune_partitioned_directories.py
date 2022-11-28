@@ -38,8 +38,8 @@ def absolute_path_subdirectories(directory):
     return subdirs 
 
 def remove_or_move_directories(directory, invalid_path, min_directory_size):
-    subdirectories = subdirectories(directory)
-    for subdirectory in subdirectories:
+    subdirs = subdirectories(directory)
+    for subdirectory in subdirs:
         if subdirectory == "invalid" or subdirectory == "rotation":
             continue
         subdirectory_path = os.path.join(directory, subdirectory)
