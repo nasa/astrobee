@@ -49,7 +49,6 @@ void GroupStandstillSequences(const int max_distance_between_standstill_images, 
   // check for largest consecutive chunk in between standstill images, keep going until chunk is too large
   int num_standstill_images = 0;
   for (int start_index = 0; start_index < static_cast<int>(standstill_images.size());) {
-    // ff_common::PrintProgressBar(stdout, static_cast<float>(start_index) / static_cast<float>(results.size() - 1));
     // Find end of standstill chunk after reaching the potential start of a chunk
     if (standstill_images[start_index]) {
       boost::optional<int> end_index;
@@ -179,7 +178,7 @@ int main(int argc, char** argv) {
   const auto image_names = sm::GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
-  LogInfo("Removing standstill image sequences, max low movement mean distance: " << max_standstill_mean_distance);
+  LogInfo("Removing standstill image sequences, max standstill mean distance: " << max_standstill_mean_distance);
   const int num_original_images = image_names.size();
   auto standstill_images = IdentifyStandstillImages(image_names, max_standstill_mean_distance);
   GroupStandstillSequences(max_separation_in_sequence, standstill_images);
