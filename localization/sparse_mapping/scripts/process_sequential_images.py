@@ -35,34 +35,43 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "image_directory", help="Directory containing images. Images are assumed to be named in sequential order."
+        "image_directory",
+        help="Directory containing images. Images are assumed to be named in sequential order.",
     )
     parser.add_argument(
-        "config_path", help="Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")
+        "config_path",
+        help="Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.",
+    )
     args = parser.parse_args()
 
     remove_standstill_sequences_command = (
-        "rosrun sparse_mapping remove_standstill_sequences "
-        + args.image_directory 
+        "rosrun sparse_mapping remove_standstill_sequences " + args.image_directory
     )
-    lu.run_command_and_save_output(remove_standstill_sequences_command, "remove_standstill_sequences.txt")
+    lu.run_command_and_save_output(
+        remove_standstill_sequences_command, "remove_standstill_sequences.txt"
+    )
 
     partition_image_sequences_command = (
         "rosrun sparse_mapping partition_image_sequences "
-        + args.image_directory 
+        + args.image_directory
         + " "
         + args.config_path
     )
-    lu.run_command_and_save_output(partition_image_sequences_command, "partition_image_sequences.txt")
+    lu.run_command_and_save_output(
+        partition_image_sequences_command, "partition_image_sequences.txt"
+    )
 
     remove_low_movement_images_command = (
-        "rosrun sparse_mapping remove_low_movement_images "
-        + args.image_directory 
+        "rosrun sparse_mapping remove_low_movement_images " + args.image_directory
     )
-    lu.run_command_and_save_output(remove_low_movement_images_command, "remove_low_movement_images.txt")
+    lu.run_command_and_save_output(
+        remove_low_movement_images_command, "remove_low_movement_images.txt"
+    )
 
     prune_partitioned_directores_command = (
-        "rosrun sparse_mapping prune_partitioned_directories.py "
-        + args.image_directory 
+        "rosrun sparse_mapping prune_partitioned_directories.py " + args.image_directory
     )
-    lu.run_command_and_save_output(prune_partitioned_directores_command, "prune_partitioned_directories_command.txt")
+    lu.run_command_and_save_output(
+        prune_partitioned_directores_command,
+        "prune_partitioned_directories_command.txt",
+    )
