@@ -143,9 +143,9 @@ int main(int argc, char** argv) {
   desc.add_options()("help,h", "produce help message")(
     "image-directory", po::value<std::string>()->required(),
     "Directory containing images. Images are assumed to be named in sequential order.")(
-    "--max-standstill-mean-distance,m", po::value<double>(&max_standstill_mean_distance)->default_value(0.05),
+    "--max-standstill-mean-distance,m", po::value<double>(&max_standstill_mean_distance)->default_value(0.006),
     "Max mean distance for optical flow tracks between sequential images to be classified as a standstill pair.")(
-    "max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(10),
+    "max-separation-in-sequence,d", po::value<int>(&max_separation_in_sequence)->default_value(5),
     "Maximum distance between detected standstill images for sequence removal. "
     "Setting to a larger value marks more images as standstill"
     "in between already detected standstill images.");
