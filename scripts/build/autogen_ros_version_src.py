@@ -20,47 +20,53 @@
 """
 Auto-generates / auto-selects files depending on whether --use-ros1 is
 specified (ROS1) or not (ROS2).
-Specifically, transforms a raw git checkout ".astrobee" folder to a
-ROS-version-specific "src" folder designed to be used in a catkin (ROS1)
-or colcon (ROS2) workspace. The git checkout needs to be a hidden folder,
-otherwise its contents will clash with "src" during colcon build.
+
+Specifically, transforms a raw git checkout folder (default: "git_src")
+to a ROS-version-specific workspace folder (default: "src") designed to
+be used in a catkin (ROS1) or colcon (ROS2) workspace.
+
 Example usage:
   cd ~/astrobee
-  git clone https://github.com/nasa/astrobee.git .astrobee
+  git clone https://github.com/nasa/astrobee.git git_src
   # Auto-generate ROS1 version of src directory. Normally this script is
   # called by configure.sh, but you could run it manually.
-  ./.astrobee/scripts/build/autogen_ros_version_src.py --use-ros1
+  ROS_VERSION=1 ./git_src/scripts/build/autogen_ros_version_src.py
   # ... continue with ROS1 build.
   cd ~/astrobee_ros2
   # ROS2 workspace can share git checkout with ROS1 workspace if desired
-  ln -s ~/astrobee/.astrobee .astrobee
-  # Auto-generate ROS2 version of src directory. ROS2 is the default if
-  # --use-ros1 is not specified.
-  ./.astrobee/scripts/build/autogen_ros_version_src.py
+  ln -s ~/astrobee/git_src git_src
+  # Auto-generate ROS2 version of src directory.
+  ROS_VERSION=2 ./git_src/scripts/build/autogen_ros_version_src.py
   # ... continue with ROS2 build.
+
 The transformation behavior is:
-- The hierarchical folder structure of .astrobee is copied to src. (The .git
-  subfolder is skipped.)
-- Plain files in .astrobee are symlinked to the identical locations in src, but
-  with the following transformations applied:
-  - Any file starting with a "ros1-" or "ros2-" prefix is (1) only symlinked if
-    it the prefix matches the current ROS version, and (2) the symlinked
-    filename has the prefix stripped.
-  - Any file that starts with "jinja-" is interpreted as a Jinja2
-    template, which is rendered and output to the same filename with the
-    "jinja-" prefix stripped.  The Jinja2 rendering context contains the
-    boolean variable USE_ROS1 that can be used in Jinja2 conditionals to
-    modify the content between ROS versions.
+- The hierarchical folder structure of the checkout folder is copied to
+  the workspace folder. (The .git subfolder is skipped.)
+- Plain files in the checkout folder are symlinked to the identical
+  locations in the workspace folder, but with the following
+  transformations applied:
+  - Any file that starts with the patterns "ros1-" or "ros2-" or contains
+    the patterns ".ros1" or ".ros2" is (1) only symlinked if it the
+    pattern matches the current ROS version, and (2) the symlinked
+    filename has the pattern stripped out.
+  - Any file that starts with the pattern "jinja-" or contains the
+    pattern ".jinja" is interpreted as a Jinja2 template, which is
+    rendered and output to the same filename with the pattern stripped
+    out.  The Jinja2 rendering context contains the boolean variable
+    ROS1 that can be used in Jinja2 conditionals to modify the content
+    between ROS versions.
+
 This transformation has the following nice properties:
-- It is performing an out-of-source build such that the ".astrobee" folder used
-  with git is not polluted with auto-generated files or auto-selected symlinks.
-- The "src" folder is not precious and can be automatically regenerated from
-  ".astrobee" at any time.
-- A single ".astrobee" git checkout folder can be used with both ROS1 and ROS2
+- It is performing an out-of-source build such that the checkout folder
+  is not polluted with auto-generated files or auto-selected symlinks.
+- The workspace folder is not precious and can be automatically
+  regenerated from the checkout folder at any time.
+- A single checkout folder can be used with both ROS1 and ROS2
   workspaces, so you can make a modification once and test it in both
   workspaces before you push it.
+
 This script is fancier than the bare minimum because it tries to make the
-minimum possible changes to "src" each time it is run, so as not to disturb the
+least possible changes to "src" each time it is run, so as not to disturb the
 modification times of files (which could cause unnecessary recompilation).
 """
 
@@ -78,12 +84,12 @@ EXPAND_TYPE = {
 }
 
 
-def src_path(git_src_path):
+def ws_path(checkout_path, checkout_dir, workspace_dir):
     """
-    Return the path under "src" corresponding to the specified path
-    under "git_src".
+    Return the path under workspace_dir corresponding to the specified
+    path under checkout_path.
     """
-    return git_src_path.replace(".astrobee", "src", 1)
+    return checkout_path.replace(checkout_dir, workspace_dir, 1)
 
 
 def rel_symlink(src, dst):
@@ -97,82 +103,101 @@ def rel_symlink(src, dst):
 def jinja_render(path, use_ros1):
     """
     Return the result of rendering the Jinja2 template file found at
-    path. Set the USE_ROS1 variable in the Jinja2 rendering context
-    based on the value of use_ros1.
+    path. Set the ROS1 variable in the Jinja2 rendering context based
+    on the value of use_ros1.
     """
     jinja_env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(os.path.dirname(path))
+        loader=jinja2.FileSystemLoader(os.path.dirname(path)),
+        trim_blocks=True,
+        lstrip_blocks=True,
     )
     tmpl = jinja_env.get_template(os.path.basename(path))
-    return tmpl.render({"USE_ROS1": use_ros1})
+    return tmpl.render({"ROS1": use_ros1})
 
 
-def get_current_state():
+def get_current_state(workspace_dir):
     """
-    Return the current state of the "src" folder, expressed as a
-    dictionary mapping paths under "src" to their current type and
-    content.
+    Return the current state of workspace_dir, expressed as a dictionary
+    mapping paths under workspace_dir to their current type and content.
     """
     result = {}
-    for dir_path, dir_names, file_names in os.walk("src", followlinks=False):
+    for dir_path, dir_names, file_names in os.walk(workspace_dir, followlinks=False):
         for d in dir_names:
-            src_d = os.path.join(dir_path, d)
-            result[src_d] = {"type": "d"}
+            ws_d = os.path.join(dir_path, d)
+            result[ws_d] = {"type": "d"}
 
         for f in file_names:
-            src_f = os.path.join(dir_path, f)
+            ws_f = os.path.join(dir_path, f)
 
-            if os.path.islink(src_f):
-                result[src_f] = {"type": "l", "target": os.readlink(src_f)}
+            if os.path.islink(ws_f):
+                result[ws_f] = {"type": "l", "target": os.readlink(ws_f)}
             else:
-                with open(src_f, "r") as stream:
-                    result[src_f] = {"type": "f", "content": stream.read()}
+                with open(ws_f, "r") as stream:
+                    result[ws_f] = {"type": "f", "content": stream.read()}
+
     return result
 
 
-def get_desired_state(use_ros1):
+def strip_pattern(path, substr):
     """
-    Return the desired state of the "src" folder, expressed as a
-    dictionary mapping paths under "src" to their desired type and
-    content.
+    If fname either starts with the pattern "<substr>-" or contains the
+    pattern ".<substr>", return fname with the pattern stripped
+    out. Otherwise, return None.
+    """
+    d = os.path.dirname(path)
+    f = os.path.basename(path)
+    if f.startswith(substr + "-"):
+        return os.path.join(d, f.replace(substr + "-", "", 1))
+    elif ("." + substr) in f:
+        return os.path.join(d, f.replace("." + substr, "", 1))
+    else:
+        return None
+
+
+def get_desired_state(checkout_dir, workspace_dir, use_ros1):
+    """
+    Return the desired state of workspace_dir, expressed as a dictionary
+    mapping paths under workspace_dir to their desired type and content.
     """
     result = {}
-    for dir_path, dir_names, file_names in os.walk(".astrobee", followlinks=True):
-        if dir_path == ".astrobee" and ".git" in dir_names:
+    for dir_path, dir_names, file_names in os.walk(checkout_dir, followlinks=True):
+        if dir_path == checkout_dir and ".git" in dir_names:
             dir_names.remove(".git")  # skip .git subfolder
 
         for d in dir_names:
-            src_d = os.path.join(src_path(dir_path), d)
-            result[src_d] = {"type": "d"}
+            ws_d = os.path.join(ws_path(dir_path, checkout_dir, workspace_dir), d)
+            result[ws_d] = {"type": "d"}
 
         for f in file_names:
-            git_src_f = os.path.join(dir_path, f)
-            src_f = src_path(git_src_f)
+            checkout_f = os.path.join(dir_path, f)
+            ws_f = ws_path(checkout_f, checkout_dir, workspace_dir)
 
-            if f.startswith("ros1-"):
+            stripped_ws_f = strip_pattern(ws_f, "ros1")
+            if stripped_ws_f is not None:
                 if use_ros1:
-                    src_f = src_f.replace("ros1-", "", 1)
-                    result[src_f] = rel_symlink(git_src_f, src_f)
+                    result[stripped_ws_f] = rel_symlink(checkout_f, stripped_ws_f)
                 else:
                     pass  # don't symlink
+                continue
 
-            elif f.startswith("ros2-"):
+            stripped_ws_f = strip_pattern(ws_f, "ros2")
+            if stripped_ws_f is not None:
                 if use_ros1:
                     pass  # don't symlink
                 else:
-                    src_f = src_f.replace("ros2-", "", 1)
-                    result[src_f] = rel_symlink(git_src_f, src_f)
+                    result[stripped_ws_f] = rel_symlink(checkout_f, stripped_ws_f)
+                continue
 
-            elif f.startswith("jinja-") or ".jinja." in f:
-                src_f = src_f.replace("jinja-", "", 1)
-                src_f = src_f.replace(".jinja", "", 1)
-                result[src_f] = {
+            stripped_ws_f = strip_pattern(ws_f, "jinja")
+            if stripped_ws_f is not None:
+                result[stripped_ws_f] = {
                     "type": "f",
-                    "content": jinja_render(git_src_f, use_ros1),
+                    "content": jinja_render(checkout_f, use_ros1),
                 }
+                continue
 
             else:
-                result[src_f] = rel_symlink(git_src_f, src_f)
+                result[ws_f] = rel_symlink(checkout_f, ws_f)
 
     return result
 
@@ -185,11 +210,11 @@ def get_update_map(current_state, desired_state):
     and desired states, plus an description of the required update
     action.
     """
-    src_paths = set(current_state.keys())
-    src_paths.update(desired_state.keys())
+    ws_paths = set(current_state.keys())
+    ws_paths.update(desired_state.keys())
     update_map = {
         p: {"current": current_state.get(p), "desired": desired_state.get(p)}
-        for p in src_paths
+        for p in ws_paths
     }
     update_map = {
         p: val for p, val in update_map.items() if val["current"] != val["desired"]
@@ -248,13 +273,20 @@ def apply_update_map(update_map, dry_run):
         logging.info("applied %s updates", len(update_map))
 
 
-def autogen_ros_version_src(use_ros1, dry_run):
-    logging.warning("generating src directory from git_src...")
-    current_state = get_current_state()
-    desired_state = get_desired_state(use_ros1)
+def autogen_ros_version_src(use_ros1, dry_run, checkout_dir, workspace_dir):
+    checkout_dir = os.path.realpath(checkout_dir)
+    workspace_dir = os.path.realpath(workspace_dir)
+
+    logging.warning(
+        "generating %s directory from %s..." % (workspace_dir, checkout_dir)
+    )
+    current_state = get_current_state(workspace_dir)
+    desired_state = get_desired_state(checkout_dir, workspace_dir, use_ros1)
     update_map = get_update_map(current_state, desired_state)
     apply_update_map(update_map, dry_run)
-    logging.warning("generating src directory from git_src... done")
+    logging.warning(
+        "generating %s directory from %s... done" % (workspace_dir, checkout_dir)
+    )
 
 
 class CustomFormatter(
@@ -276,11 +308,10 @@ def main():
         default=[],
     )
     parser.add_argument(
-        "-1",
-        "--use-ros1",
-        help="use ROS1 (ROS2 is used by default)",
-        default=False,
-        action="store_true",
+        "-r",
+        "--ros-version",
+        help="override ROS_VERSION environment variable (specify '1' or '2')",
+        default=os.getenv("ROS_VERSION"),
     )
     parser.add_argument(
         "-d",
@@ -289,17 +320,37 @@ def main():
         default=False,
         action="store_true",
     )
+    parser.add_argument(
+        "-c",
+        "--checkout-dir",
+        help="specify location of git source checkout (outside workspace src folder)",
+        default="git_src",
+    )
+    parser.add_argument(
+        "-w",
+        "--workspace-dir",
+        help="specify location where output will be written (workspace src folder or a subfolder)",
+        default="src",
+    )
 
     args = parser.parse_args()
 
-    if not os.path.isdir(".astrobee"):
-        parser.error("this script must be run from parent directory of git_src!")
-    if os.path.exists("src/.git"):
-        parser.error("src directory must not be a git checkout!")
+    if not args.ros_version in ("1", "2"):
+        parser.error(
+            "ROS_VERSION environment variable or --ros-version arg must be specified with value '1' or '2'"
+        )
+    if not os.path.isdir(args.checkout_dir):
+        parser.error("checkout dir %s is not a directory" % args.checkout_dir)
+    if os.path.exists(os.path.join(args.workspace_dir, ".git")):
+        parser.error(
+            "workspace dir %s must not be a git checkout!" % args.workspace_dir
+        )
 
     level = logging.WARNING - (10 * sum(args.verbose))
     logging.basicConfig(level=level, format="%(message)s")
-    autogen_ros_version_src(args.use_ros1, args.dry_run)
+    autogen_ros_version_src(
+        args.ros_version == "1", args.dry_run, args.checkout_dir, args.workspace_dir
+    )
 
 
 if __name__ == "__main__":

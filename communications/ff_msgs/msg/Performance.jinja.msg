@@ -1,31 +1,31 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-#
+# 
 # All rights reserved.
-#
+# 
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-#
+# 
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-{%- if USE_ROS1 -%}
-time source_time 
-time target_time
+# Statistics used to measure performance.
 
-geometry_msgs/PoseWithCovariance sensor_F_source_T_target
-geometry_msgs/PoseWithCovariance body_F_source_T_target
-{%- else -%}
-builtin_interfaces/Time source_time
-builtin_interfaces/Time target_time
-
-geometry_msgs/PoseWithCovariance sensor_f_source_t_target
-geometry_msgs/PoseWithCovariance body_f_source_t_target
-{%- endif -%}
-
+{% if ROS1 %}
+time stamp
+{% else %}
+builtin_interfaces/Time stamp
+{% endif %}
+float32 count
+float32 last
+float32 min
+float32 max
+float32 mean
+float32 stddev
+float32 var

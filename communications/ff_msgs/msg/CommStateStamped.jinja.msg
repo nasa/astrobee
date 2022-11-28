@@ -18,7 +18,7 @@
 # CommState, based off of rapid::ext::astrobee::CommState
 
 std_msgs/Header header
-{% if USE_ROS1 %}
+{% if ROS1 %}
 bool wirelessConnected
 string apName
 bool lanConnected
