@@ -65,4 +65,4 @@ if __name__ == "__main__":
         "rosrun sparse_mapping prune_partitioned_directories.py "
         + args.image_directory 
     )
-    lu.run_command_and_save_output(prune_partitioned_directores_command, "prune_partitioned_directores_command.txt")
+    lu.run_command_and_save_output(prune_partitioned_directores_command, "prune_partitioned_directories_command.txt")
