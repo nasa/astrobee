@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Removes valid or rotation subdirectories with no files and moves too small subdirectories to invalid
+Removes valid or rotation subdirectories with no files and moves too small subdirectories to invalid. Reorders valid and rotation directories so they are sequential.
 """
 
 import argparse
