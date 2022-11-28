@@ -301,6 +301,9 @@ void PrintClusterStats(const std::vector<Result>& results, const ResultType type
       } else {
         ++cluster_size;
       }
+    } else if (i == results.size() - 1) {  // Corner case, update cluster average size when finish iterating but a new
+                                           // cluster hasn't started yet
+      cluster_size_averager.Update(cluster_size);
     }
   }
   LogInfo(type_name << " num clusters: " << num_clusters);
