@@ -43,23 +43,23 @@ if [ "$ans" -ne "0" ]; then
     exit 0
 fi
 
-echo "=================================================="
-echo "  Analysing python code style with 'black'."
+if false; then
+    echo "=================================================="
+    echo "  Analysing python code style with 'black'."
 
-# Remove 'build' from black's default exclusions. It causes this script
-# to fail in an obscure way when a folder named build contains a Python
-# script.
-default_black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|build|dist)/"
-black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|dist)/"
+    # Remove 'build' from black's default exclusions. We have
+    # a Python script in a 'build' folder.
+    default_black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|build|dist)/"
+    black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|dist)/"
 
-# This check the files but they will not be commited
-black . --include ${files} --exclude "$black_exclude" --check --quiet
-if [ "$?" -eq "1" ]; then
-    echo "Linter checks using 'black' passed."
-else
-    echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
-    black . --include ${files} --exclude "$black_exclude"
-    failed_lint=true
+    # This check the files but they will not be commited
+    if $(black . --include ${files} --exclude "$black_exclude" --check --quiet); then
+        echo "Linter checks using 'black' passed."
+    else
+        echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
+        black . --include ${files} --exclude "$black_exclude"
+        failed_lint=true
+    fi
 fi
 
 echo "=================================================="
