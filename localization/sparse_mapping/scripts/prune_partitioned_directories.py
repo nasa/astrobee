@@ -81,10 +81,14 @@ if __name__ == "__main__":
         "image_directory", help="Directory containing images. Images are assumed to be named in sequential order."
     )
     parser.add_argument(
-        "-m", "--min-directory-size", type=float, default=10, help="Min valid or rotation directory size, otherwise the directory is moved to invalid."
+        "-v", "--min-valid-directory-size", type=float, default=20, help="Min valid directory size, otherwise the directory is moved to invalid."
+    )
+ 
+    parser.add_argument(
+        "-r", "--min-rotation-directory-size", type=float, default=10, help="Min rotation directory size, otherwise the directory is moved to invalid."
     )
     args = parser.parse_args()
     invalid_path = os.path.join(args.image_directory, "invalid")
-    remove_or_move_directories(args.image_directory, invalid_path, args.min_directory_size)
-    remove_or_move_directories(os.path.join(args.image_directory, "rotation"), invalid_path, args.min_directory_size)
+    remove_or_move_directories(args.image_directory, invalid_path, args.min_valid_directory_size)
+    remove_or_move_directories(os.path.join(args.image_directory, "rotation"), invalid_path, args.min_rotation_directory_size)
     reorder_directories(args.image_directory)
