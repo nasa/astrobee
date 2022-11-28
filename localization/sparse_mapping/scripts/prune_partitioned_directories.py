@@ -24,13 +24,21 @@ import argparse
 import os
 import shutil
 
-
-def remove_or_move_directories(directory, invalid_path, min_directory_size):
+def subdirectories(directory):
     subdirectories = []
     try:
         _, subdirectories, _ = next(os.walk(directory))
     except:
-        return 
+        pass
+    return subdirectories
+
+def absolute_path_subdirectories(directory):
+    subdirs = subdirectories(directory)
+    subdirs = [os.path.join(directory, subdirectory) for subdirectory in subdirs]
+    return subdirs 
+
+def remove_or_move_directories(directory, invalid_path, min_directory_size):
+    subdirectories = subdirectories(directory)
     for subdirectory in subdirectories:
         if subdirectory == "invalid" or subdirectory == "rotation":
             continue
@@ -43,6 +51,26 @@ def remove_or_move_directories(directory, invalid_path, min_directory_size):
             invalid_path = os.path.join(invalid_path, subdirectory)
             print("Moving small directory: " + subdirectory_path + ", num images: " + str(num_files))
             shutil.move(subdirectory_path, invalid_path)
+
+def reorder_directories(directory):
+    valid_subdirectories = absolute_path_subdirectories(directory) 
+    # Ignore non-sequence directories
+    try:
+        valid_subdirectories.remove(os.path.join(directory, "rotation"))
+    except:
+        pass
+    try:
+        valid_subdirectories.remove(os.path.join(directory, "invalid"))
+    except: 
+        pass
+    rotation_subdirectories = absolute_path_subdirectories(os.path.join(directory, "rotation")) 
+    all_subdirectories = valid_subdirectories + rotation_subdirectories
+    all_subdirectories = sorted(all_subdirectories, key=lambda i: int(os.path.basename(i)))
+    count = 0
+    for subdirectory in all_subdirectories:
+        new_path = os.path.join(os.path.dirname(subdirectory), str(count))
+        shutil.move(subdirectory, new_path)
+        count += 1
         
 
 if __name__ == "__main__":
@@ -59,3 +87,4 @@ if __name__ == "__main__":
     invalid_path = os.path.join(args.image_directory, "invalid")
     remove_or_move_directories(args.image_directory, invalid_path, args.min_directory_size)
     remove_or_move_directories(os.path.join(args.image_directory, "rotation"), invalid_path, args.min_directory_size)
+    reorder_directories(args.image_directory)
