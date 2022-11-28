@@ -109,7 +109,7 @@ vc::LKOpticalFlowFeatureDetectorAndMatcherParams LoadParams() {
   return params;
 }
 
-bool LowMovementImageSequence(const vision_common::FeatureMatches& matches,
+bool LowMovementImagePair(const vision_common::FeatureMatches& matches,
                               const double max_low_movement_mean_distance) {
   if (matches.size() < 5) {
     LogDebug("Too few matches: " << matches.size());
@@ -123,6 +123,20 @@ bool LowMovementImageSequence(const vision_common::FeatureMatches& matches,
   LogDebug("Mean distance: " << distance_averager.average());
   if (distance_averager.average() <= max_low_movement_mean_distance) return true;
   return false;
+}
+
+bool LowMovementImagePair(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
+                          const double max_low_movement_mean_distance,
+                          vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
+  const auto& matches = detector_and_matcher.Match(current_image, next_image);
+  if (matches.size() < 5) {
+    LogDebug("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
+                                 << ", next image keypoints: " << next_image.keypoints().size());
+    return false;
+  }
+  LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
+                             << ", next image keypoints: " << next_image.keypoints().size());
+  return LowMovementImagePair(matches, max_low_movement_mean_distance);
 }
 
 // Order absolute paths using just the filename

@@ -34,20 +34,6 @@ namespace po = boost::program_options;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
 
-bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
-                              const double max_low_movement_mean_distance,
-                              vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
-  const auto& matches = detector_and_matcher.Match(current_image, next_image);
-  if (matches.size() < 5) {
-    LogDebug("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                                 << ", next image keypoints: " << next_image.keypoints().size());
-    return false;
-  }
-  LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                             << ", next image keypoints: " << next_image.keypoints().size());
-  return sm::LowMovementImageSequence(matches, max_low_movement_mean_distance);
-}
-
 int RemoveLowMovementImages(const std::vector<std::string>& image_names, const double max_low_movement_mean_distance) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
   vc::LKOpticalFlowFeatureDetectorAndMatcher detector_and_matcher(params);
@@ -64,7 +50,7 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
     ff_common::PrintProgressBar(stdout,
                                 static_cast<float>(current_image_index) / static_cast<float>(image_names.size() - 1));
     while (next_image_index < image_names.size() &&
-           LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
+           sm::LowMovementImagePair(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
       LogDebug("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
       std::remove((image_names[next_image_index++]).c_str());
       ++num_removed_images;

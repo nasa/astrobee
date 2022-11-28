@@ -95,8 +95,8 @@ void CreateSubdirectory(const std::string& directory, const std::string& cluster
 
 bool StandstillImage(const vc::FeatureMatches& matches) {
   // TODO(rsoussan): Make this a param?
-  constexpr double kMaxStandstillMeanDistance = 0.01;
-  return sm::LowMovementImageSequence(matches, kMaxStandstillMeanDistance);
+  constexpr double kMaxStandstillMeanDistance = 0.0075;
+  return sm::LowMovementImagePair(matches, kMaxStandstillMeanDistance);
 }
 
 Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,

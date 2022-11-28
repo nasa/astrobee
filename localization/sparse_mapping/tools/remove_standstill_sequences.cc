@@ -83,22 +83,6 @@ void GroupStandstillSequences(const int max_distance_between_standstill_images, 
   }
 }
 
-// TODO(rsoussan): move this to utils, update remove low movemnet images
-bool LowMovementImagePair(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
-                          const double max_low_movement_mean_distance,
-                          vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
-  const auto& matches = detector_and_matcher.Match(current_image, next_image);
-  if (matches.size() < 5) {
-    LogDebug("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                                 << ", next image keypoints: " << next_image.keypoints().size());
-    return false;
-  }
-  LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                             << ", next image keypoints: " << next_image.keypoints().size());
-  // TODO(rsoussan): rename this pair
-  return sm::LowMovementImageSequence(matches, max_low_movement_mean_distance);
-}
-
 std::vector<bool> IdentifyStandstillImages(const std::vector<std::string>& image_names,
                                            const double max_standstill_mean_distance) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
@@ -117,7 +101,7 @@ std::vector<bool> IdentifyStandstillImages(const std::vector<std::string>& image
     ff_common::PrintProgressBar(stdout,
                                 static_cast<float>(current_image_index) / static_cast<float>(image_names.size() - 1));
     while (next_image_index < image_names.size() &&
-           LowMovementImagePair(current_image, next_image, max_standstill_mean_distance, detector_and_matcher)) {
+           sm::LowMovementImagePair(current_image, next_image, max_standstill_mean_distance, detector_and_matcher)) {
       LogDebug("Standstill image index: " << next_image_index << ", current image index: " << current_image_index);
       standstill_images[next_image_index++] = true;
       // Don't load next image if index is past the end of the sequence
