@@ -231,23 +231,46 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
     cloud_.point_step = sizeof(struct royale::DepthPoint);
     cloud_.row_step = cloud_.width * cloud_.point_step;
     cloud_.data.resize(cloud_.row_step * cloud_.height);
-    // X, Y and Z
+
+    // Fill metadata about available fields in point cloud
     sensor_msgs::PointField field;
+
     field.name = "x";
     field.offset = offsetof(struct royale::DepthPoint, x);
     field.datatype = sensor_msgs::PointField::FLOAT32;
     field.count = 1;  // Number of ELEMENTS, not bytes!
     cloud_.fields.push_back(field);
+
     field.name = "y";
     field.offset = offsetof(struct royale::DepthPoint, y);
     field.datatype = sensor_msgs::PointField::FLOAT32;
     field.count = 1;  // Number of ELEMENTS, not bytes!
     cloud_.fields.push_back(field);
+
     field.name = "z";
     field.offset = offsetof(struct royale::DepthPoint, z);
     field.datatype = sensor_msgs::PointField::FLOAT32;
     field.count = 1;  // Number of ELEMENTS, not bytes!
     cloud_.fields.push_back(field);
+
+    field.name = "noise";
+    field.offset = offsetof(struct royale::DepthPoint, noise);
+    field.datatype = sensor_msgs::PointField::FLOAT32;
+    field.count = 1;  // Number of ELEMENTS, not bytes!
+    cloud_.fields.push_back(field);
+
+    field.name = "grayValue";
+    field.offset = offsetof(struct royale::DepthPoint, grayValue);
+    field.datatype = sensor_msgs::PointField::UINT16;
+    field.count = 1;  // Number of ELEMENTS, not bytes!
+    cloud_.fields.push_back(field);
+
+    field.name = "depthConfidence";
+    field.offset = offsetof(struct royale::DepthPoint, depthConfidence);
+    field.datatype = sensor_msgs::PointField::UINT8;
+    field.count = 1;  // Number of ELEMENTS, not bytes!
+    cloud_.fields.push_back(field);
+
     // Generate a nice readable name for the camera
     std::string topic_name_c = (std::string) TOPIC_HARDWARE_PICOFLEXX_PREFIX
                              + (std::string) topic
