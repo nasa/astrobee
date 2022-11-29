@@ -27,6 +27,7 @@
   <build_depend condition="$ROS_VERSION == 2">std_msgs</build_depend>
   <exec_depend condition="$ROS_VERSION == 2">rclcpp</run_depend>
   <exec_depend condition="$ROS_VERSION == 2">std_msgs</run_depend>
+  <test_depend condition="$ROS_VERSION == 2">ament_cmake_gtest</test_depend>
   <export>
     <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
   </export>
