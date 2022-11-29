@@ -100,9 +100,9 @@ find_package(Luajit20 REQUIRED)
 
 # Specify additional locations of header files
 # Your package locations should be listed before other locations
-message("LUAJIT_INCLUDE_DIR: ${LUAJIT_INCLUDE_DIR}")
 include_directories(
   include
+  ${ff_common_INCLUDE_DIRS}
   ${LUAJIT_INCLUDE_DIR}
 )
 
@@ -111,6 +111,8 @@ add_library(config_reader
   src/config_reader.cc
   src/watch_files.cc
 )
+
+ament_target_dependencies(config_reader ff_common)
 target_link_libraries(config_reader gflags glog)
 ament_export_targets(config_reader_export HAS_LIBRARY_TARGET)
 
@@ -129,10 +131,10 @@ install(TARGETS ${PROJECT_NAME}
 
 # Mark cpp header files for installation
 install(DIRECTORY include/
-  DESTINATION include/
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
+  DESTINATION include
 )
+
+ament_export_include_directories(include)
 
 ament_package()
 

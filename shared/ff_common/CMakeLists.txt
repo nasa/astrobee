@@ -154,11 +154,11 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION include/${PROJECT_NAME}/
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
+install(DIRECTORY include/
+  DESTINATION include
 )
+
+ament_export_include_directories(include)
 
 ament_package()
 
