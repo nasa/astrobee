@@ -14,25 +14,25 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# Message to send time difference between the mlp and llp
 
-# The save settings message contains information about the topics currently
-# being recorded.
+# Header with timestamp
+std_msgs/Header header
 
-# Name of topic
-string topic_name
+# Processor that the heartbeat came from
+string remote_processor
 
-# Topic saved to disk; upon docking it is downlinked
-uint8 IMMEDIATE   = 0
+{% if ROS1 %}
+# Current time on the mlp
+time mlp_time
 
-# Topic saved to disk; upon docking it is transferred to ISS server for later
-# downlink
-uint8 DELAYED     = 1
+# Time in the incoming heartbeat
+time remote_time
+{% else %}
+# Current time on the mlp
+builtin_interfaces/Time mlp_time
 
-# Downlink option indicates if and when the data in the rostopic is downlinked
-{%- if USE_ROS1 -%}
-uint8 downlinkOption
-{%- else -%}
-uint8 downlink_option
-{%- endif -%}
-# Times per second to save the data (Hz)
-float32 frequency
+# Time in the incoming heartbeat
+builtin_interfaces/Time remote_time
+{% endif %}
