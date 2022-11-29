@@ -94,8 +94,13 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ff_common REQUIRED)
 
+## System dependencies are found with CMake's conventions
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(Luajit20 REQUIRED)
+
 # Specify additional locations of header files
 # Your package locations should be listed before other locations
+message("LUAJIT_INCLUDE_DIR: ${LUAJIT_INCLUDE_DIR}")
 include_directories(
   include
   ${LUAJIT_INCLUDE_DIR}
@@ -123,8 +128,8 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION include/${PROJECT_NAME}/
+install(DIRECTORY include/
+  DESTINATION include/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
