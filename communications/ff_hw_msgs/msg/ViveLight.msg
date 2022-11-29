@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-Header header               # Header includes tracker serial and time
+std_msgs/Header header               # Header includes tracker serial and time
 uint8 lighthouse            # Lighthouse ID
 uint8 axis                  # Motor axis
 uint8 AXIS_0 = 0

@@ -17,7 +17,7 @@
 #
 # High-level state of each PMC
 
-Header header                    # Time, frame, etc.
+std_msgs/Header header                    # Time, frame, etc.
 
 int32[] states                   # States of all PMCs
 int32 UNKNOWN      = 0           # Unknown
