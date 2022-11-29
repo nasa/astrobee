@@ -41,9 +41,9 @@ Example usage:
 
 The transformation behavior is:
 - The hierarchical folder structure of the checkout folder is copied to
-  the workspace folder. (The .git subfolder is skipped.)
+  the autogen output folder. (The .git subfolder is skipped.)
 - Plain files in the checkout folder are symlinked to the identical
-  locations in the workspace folder, but with the following
+  locations in the autogen output folder, but with the following
   transformations applied:
   - Any file that starts with the patterns "ros1-" or "ros2-" or contains
     the patterns ".ros1" or ".ros2" is (1) only symlinked if it the
@@ -59,7 +59,7 @@ The transformation behavior is:
 This transformation has the following nice properties:
 - It is performing an out-of-source build such that the checkout folder
   is not polluted with auto-generated files or auto-selected symlinks.
-- The workspace folder is not precious and can be automatically
+- The autogen output folder is not precious and can be automatically
   regenerated from the checkout folder at any time.
 - A single checkout folder can be used with both ROS1 and ROS2
   workspaces, so you can make a modification once and test it in both
@@ -84,12 +84,12 @@ EXPAND_TYPE = {
 }
 
 
-def ws_path(checkout_path, checkout_dir, workspace_dir):
+def autogen_path(checkout_path, checkout_dir, autogen_dir):
     """
-    Return the path under workspace_dir corresponding to the specified
+    Return the path under autogen_dir corresponding to the specified
     path under checkout_path.
     """
-    return checkout_path.replace(checkout_dir, workspace_dir, 1)
+    return checkout_path.replace(checkout_dir, autogen_dir, 1)
 
 
 def rel_symlink(src, dst):
@@ -115,25 +115,25 @@ def jinja_render(path, use_ros1):
     return tmpl.render({"ROS1": use_ros1})
 
 
-def get_current_state(workspace_dir):
+def get_current_state(autogen_dir):
     """
-    Return the current state of workspace_dir, expressed as a dictionary
-    mapping paths under workspace_dir to their current type and content.
+    Return the current state of autogen_dir, expressed as a dictionary
+    mapping paths under autogen_dir to their current type and content.
     """
     result = {}
-    for dir_path, dir_names, file_names in os.walk(workspace_dir, followlinks=False):
+    for dir_path, dir_names, file_names in os.walk(autogen_dir, followlinks=False):
         for d in dir_names:
-            ws_d = os.path.join(dir_path, d)
-            result[ws_d] = {"type": "d"}
+            autogen_d = os.path.join(dir_path, d)
+            result[autogen_d] = {"type": "d"}
 
         for f in file_names:
-            ws_f = os.path.join(dir_path, f)
+            autogen_f = os.path.join(dir_path, f)
 
-            if os.path.islink(ws_f):
-                result[ws_f] = {"type": "l", "target": os.readlink(ws_f)}
+            if os.path.islink(autogen_f):
+                result[autogen_f] = {"type": "l", "target": os.readlink(autogen_f)}
             else:
-                with open(ws_f, "r") as stream:
-                    result[ws_f] = {"type": "f", "content": stream.read()}
+                with open(autogen_f, "r") as stream:
+                    result[autogen_f] = {"type": "f", "content": stream.read()}
 
     return result
 
@@ -154,10 +154,10 @@ def strip_pattern(path, substr):
         return None
 
 
-def get_desired_state(checkout_dir, workspace_dir, use_ros1):
+def get_desired_state(checkout_dir, autogen_dir, use_ros1):
     """
-    Return the desired state of workspace_dir, expressed as a dictionary
-    mapping paths under workspace_dir to their desired type and content.
+    Return the desired state of autogen_dir, expressed as a dictionary
+    mapping paths under autogen_dir to their desired type and content.
     """
     result = {}
     for dir_path, dir_names, file_names in os.walk(checkout_dir, followlinks=True):
@@ -165,39 +165,39 @@ def get_desired_state(checkout_dir, workspace_dir, use_ros1):
             dir_names.remove(".git")  # skip .git subfolder
 
         for d in dir_names:
-            ws_d = os.path.join(ws_path(dir_path, checkout_dir, workspace_dir), d)
-            result[ws_d] = {"type": "d"}
+            autogen_d = os.path.join(autogen_path(dir_path, checkout_dir, autogen_dir), d)
+            result[autogen_d] = {"type": "d"}
 
         for f in file_names:
             checkout_f = os.path.join(dir_path, f)
-            ws_f = ws_path(checkout_f, checkout_dir, workspace_dir)
+            autogen_f = autogen_path(checkout_f, checkout_dir, autogen_dir)
 
-            stripped_ws_f = strip_pattern(ws_f, "ros1")
-            if stripped_ws_f is not None:
+            stripped_autogen_f = strip_pattern(autogen_f, "ros1")
+            if stripped_autogen_f is not None:
                 if use_ros1:
-                    result[stripped_ws_f] = rel_symlink(checkout_f, stripped_ws_f)
+                    result[stripped_autogen_f] = rel_symlink(checkout_f, stripped_autogen_f)
                 else:
                     pass  # don't symlink
                 continue
 
-            stripped_ws_f = strip_pattern(ws_f, "ros2")
-            if stripped_ws_f is not None:
+            stripped_autogen_f = strip_pattern(autogen_f, "ros2")
+            if stripped_autogen_f is not None:
                 if use_ros1:
                     pass  # don't symlink
                 else:
-                    result[stripped_ws_f] = rel_symlink(checkout_f, stripped_ws_f)
+                    result[stripped_autogen_f] = rel_symlink(checkout_f, stripped_autogen_f)
                 continue
 
-            stripped_ws_f = strip_pattern(ws_f, "jinja")
-            if stripped_ws_f is not None:
-                result[stripped_ws_f] = {
+            stripped_autogen_f = strip_pattern(autogen_f, "jinja")
+            if stripped_autogen_f is not None:
+                result[stripped_autogen_f] = {
                     "type": "f",
                     "content": jinja_render(checkout_f, use_ros1),
                 }
                 continue
 
             else:
-                result[ws_f] = rel_symlink(checkout_f, ws_f)
+                result[autogen_f] = rel_symlink(checkout_f, autogen_f)
 
     return result
 
@@ -210,11 +210,11 @@ def get_update_map(current_state, desired_state):
     and desired states, plus an description of the required update
     action.
     """
-    ws_paths = set(current_state.keys())
-    ws_paths.update(desired_state.keys())
+    autogen_paths = set(current_state.keys())
+    autogen_paths.update(desired_state.keys())
     update_map = {
         p: {"current": current_state.get(p), "desired": desired_state.get(p)}
-        for p in ws_paths
+        for p in autogen_paths
     }
     update_map = {
         p: val for p, val in update_map.items() if val["current"] != val["desired"]
@@ -273,19 +273,19 @@ def apply_update_map(update_map, dry_run):
         logging.info("applied %s updates", len(update_map))
 
 
-def autogen_ros_version_src(use_ros1, dry_run, checkout_dir, workspace_dir):
+def autogen_ros_version_src(use_ros1, dry_run, checkout_dir, autogen_dir):
     checkout_dir = os.path.realpath(checkout_dir)
-    workspace_dir = os.path.realpath(workspace_dir)
+    autogen_dir = os.path.realpath(autogen_dir)
 
     logging.warning(
-        "generating %s directory from %s..." % (workspace_dir, checkout_dir)
+        "generating %s directory from %s..." % (autogen_dir, checkout_dir)
     )
-    current_state = get_current_state(workspace_dir)
-    desired_state = get_desired_state(checkout_dir, workspace_dir, use_ros1)
+    current_state = get_current_state(autogen_dir)
+    desired_state = get_desired_state(checkout_dir, autogen_dir, use_ros1)
     update_map = get_update_map(current_state, desired_state)
     apply_update_map(update_map, dry_run)
     logging.warning(
-        "generating %s directory from %s... done" % (workspace_dir, checkout_dir)
+        "generating %s directory from %s... done" % (autogen_dir, checkout_dir)
     )
 
 
@@ -323,13 +323,13 @@ def main():
     parser.add_argument(
         "-c",
         "--checkout-dir",
-        help="specify location of git source checkout (outside workspace src folder)",
+        help="specify location of git source checkout (must be outside <workspace>/src)",
         default="git_src",
     )
     parser.add_argument(
-        "-w",
-        "--workspace-dir",
-        help="specify location where output will be written (workspace src folder or a subfolder)",
+        "-a",
+        "--autogen-dir",
+        help="specify where to write autogen output (<workspace>/src or a subfolder)",
         default="src",
     )
 
@@ -341,15 +341,15 @@ def main():
         )
     if not os.path.isdir(args.checkout_dir):
         parser.error("checkout dir %s is not a directory" % args.checkout_dir)
-    if os.path.exists(os.path.join(args.workspace_dir, ".git")):
+    if os.path.exists(os.path.join(args.autogen_dir, ".git")):
         parser.error(
-            "workspace dir %s must not be a git checkout!" % args.workspace_dir
+            "autogen output dir %s must not be a git checkout!" % args.autogen_dir
         )
 
     level = logging.WARNING - (10 * sum(args.verbose))
     logging.basicConfig(level=level, format="%(message)s")
     autogen_ros_version_src(
-        args.ros_version == "1", args.dry_run, args.checkout_dir, args.workspace_dir
+        args.ros_version == "1", args.dry_run, args.checkout_dir, args.autogen_dir
     )
 
 
