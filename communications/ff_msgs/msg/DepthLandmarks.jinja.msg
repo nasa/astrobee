@@ -21,11 +21,11 @@ std_msgs/Header header                                  # Image header, with tim
 uint32 camera_id                               # Image ID, associated with registration
 uint8 end_seen                                 # Whether the handrail endpoint was detected
 uint8 update_global_pose                       # Whether to update the global pose
-{%- if USE_ROS1 -%}
+{% if ROS1 %}
 geometry_msgs/Pose sensor_T_handrail           # Handrail center in the sensor frame
-{%- else -%}
+{% else %}
 geometry_msgs/Pose sensor_t_handrail           # Handrail center in the sensor frame
-{%- endif -%}
+{% endif %}
 geometry_msgs/Point32[] sensor_t_line_points   # Detected line points
 geometry_msgs/Point[] sensor_t_line_endpoints  # Detected line endpoints
 geometry_msgs/Point32[] sensor_t_plane_points  # Detected plane points

@@ -14,16 +14,25 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-#
-# Fault message is used to provide all the information about an occurring fault
-    
-{%- if USE_ROS1 -%}
-time time_of_fault # Time when fault occurred
-{%- else -%}
-builtin_interfaces/Time time_of_fault # Time when fault occurred
-{%- endif -%}
-uint32 id                 # id specifying fault
 
-string msg                # string specifying why the fault occurred
+# The save settings message contains information about the topics currently
+# being recorded.
 
-ff_msgs/FaultData[] data  # Data used for fault analysis
+# Name of topic
+string topic_name
+
+# Topic saved to disk; upon docking it is downlinked
+uint8 IMMEDIATE   = 0
+
+# Topic saved to disk; upon docking it is transferred to ISS server for later
+# downlink
+uint8 DELAYED     = 1
+
+# Downlink option indicates if and when the data in the rostopic is downlinked
+{% if ROS1 %}
+uint8 downlinkOption
+{% else %}
+uint8 downlink_option
+{% endif %}
+# Times per second to save the data (Hz)
+float32 frequency

@@ -71,6 +71,14 @@ clean_cache=1
 # Default debug mode is off
 debug_mode=0
 
+# Autogen defaults
+if [[ "${ASTROBEE_WS}" == "" ]]; then
+    autogen_path="src"
+else
+    autogen_path="${ASTROBEE_WS}/src"
+fi
+skip_autogen=0
+
 # Build target
 target="install"
 
@@ -83,11 +91,11 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>] [-n <profile 
  [-k <use ccache if available>] [-K <do not use ccache>]\
  [-v <with VIVE>] [-V <without VIVE>]\
  [-t <with integration tests, requires gpu>] [-T <without integration test>]\
- [-g <print debug information only>]"
+ [-g <print debug information only>] [-z autogen_path] [-Z <without autogen>]"
 #[-t make_target]
 
 # options to parse
-optstring="hlan:p:w:B:cCdDrRfFkKvVtTg"
+optstring="hlan:p:w:B:cCdDrRfFkKvVtTgz:Z"
 
 # Print the script usage
 print_usage()
@@ -128,6 +136,9 @@ print_help()
     #    echo -e "\t   default (when ommited) is 'install'"
     echo -e "\t   when -t is specified, the configure processs is skipped!"
     echo -e "\t-g prints some debug information and exit"
+    echo -e "\t-z autogen_path specify the autogen output path"
+    echo -e "\t   default=${autogen_path}"
+    echo -e "\t-Z skip autogen step"
     echo
     echo "Warning 1: -p and -b, unlike the other flags that are sticky (because"
     echo "cmake cache them), need to be re-issued at each invocation of the"
@@ -191,6 +202,10 @@ parse_args()
         "T") enable_integration_testing=" -DENABLE_INTEGRATION_TESTING=off"
          ;;
         "g") debug_mode=1
+         ;;
+        "z") autogen_path="${OPTARG}/"
+         ;;
+        "Z") skip_autogen=1
          ;;
         *) print_usage
            exit 1
@@ -257,6 +272,8 @@ canonicalize()
     esac
 }
 
+args_copy=("$@")
+
 # Start the real work here...
 parse_args $@
 
@@ -302,6 +319,46 @@ if [[ $native_build == 1 && $armhf_build == 1 ]] ; then
     echo " dropping any option -p and -b!"
     workspace_path=""
     install_path=""
+fi
+
+if [ $skip_autogen == 0 ] ; then
+    if [[ "$workspace_path" == "" ]]; then
+        workspace_path="."
+    fi
+    workspace_path=`canonicalize "${workspace_path}"`
+
+    autogen_path=`canonicalize "${autogen_path}"`
+
+    if [[ "${ROS_VERSION}" == "1" ]]; then
+        build_cmd=catkin
+    elif [[ "${ROS_VERSION}" == "2" ]]; then
+        build_cmd=colcon
+    else
+        echo "ROS_VERSION environment variable must be set to '1' or '2' for autogen!"
+        exit 1
+    fi
+
+    echo "running autogen_ros_version_src.py to configure ROS version..."
+    "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
+
+    echo "running child instance of configure.sh in new autogen location..."
+    "${autogen_path}/scripts/configure.sh" "${args_copy[@]}" -Z
+
+    echo "setting alias so ${build_cmd} runs autogen first on subsequent runs..."
+    cat >>"${workspace_path}/devel/setup.sh" <<EOF
+
+${build_cmd}_function () {
+    echo 'ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"'
+    ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" -v --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
+    \\${build_cmd} "\$@"
+}
+
+alias ${build_cmd}=${build_cmd}_function
+EOF
+
+    echo "(to suppress alias that invokes autogen, run \\${build_cmd} instead of ${build_cmd}.)"
+
+    exit 0
 fi
 
 if [ $native_build == 1 ] ; then

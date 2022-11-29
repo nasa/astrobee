@@ -15,17 +15,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Message used to tell which guest science apks are running
+# Full state vector containing Time, Pose, Vel, and Accel
+# 
+# when {time}
+# flight_mode {string} - disctates, gains, tolerances, etc.
+# pose {Point position, Quaternion orientation}
+# twist {Vector3 linear, Vector3 angular}
+# accel {Vector3 linear, Vector3 angular}
 
-# Header with timestamp
-std_msgs/Header header
-
-# Used for guest science config and state message synchronization on the ground
-int64 serial
-
-# Tells which apks are running. Used in conjection with the guest science config
-{%- if USE_ROS1 -%}
-bool[] runningApks
-{%- else -%}
-bool[] running_apks
-{%- endif -%}
+{% if ROS1 %}
+time when
+{% else %}
+builtin_interfaces/Time when
+{% endif %}
+geometry_msgs/Pose pose
+geometry_msgs/Twist twist
+geometry_msgs/Twist accel

@@ -28,7 +28,7 @@ uint8 DATA_TYPE_FLOAT    = 2
 uint8 DATA_TYPE_INT      = 3
 uint8 DATA_TYPE_LONGLONG = 4
 uint8 DATA_TYPE_STRING   = 5
-{% if USE_ROS1 %}
+{% if ROS1 %}
 uint8 DATA_TYPE_VEC3d    = 6
 uint8 DATA_TYPE_MAT33f   = 7
 {% else %}
