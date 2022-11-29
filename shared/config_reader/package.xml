@@ -24,6 +24,10 @@
   <exec_depend condition="$ROS_VERSION == 1">ff_common</exec_depend>
 
   <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+  <build_depend condition="$ROS_VERSION == 2">ff_common</build_depend>
+  <build_depend condition="$ROS_VERSION == 2">roscpp</build_depend>
+  <exec_depend condition="$ROS_VERSION == 2">ff_common</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 2">roscpp</exec_depend>
   <export>
     <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
   </export>

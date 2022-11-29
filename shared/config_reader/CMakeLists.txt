@@ -91,9 +91,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(ff_common REQUIRED)
 
- Specify additional locations of header files
+# Specify additional locations of header files
 # Your package locations should be listed before other locations
 include_directories(
   include
@@ -106,7 +107,7 @@ add_library(config_reader
   src/watch_files.cc
 )
 target_link_libraries(config_reader gflags glog)
-ament_export_targets(config_reader HAS_LIBRARY_TARGET)
+ament_export_targets(config_reader_export HAS_LIBRARY_TARGET)
 
 
 #############
@@ -115,6 +116,7 @@ ament_export_targets(config_reader HAS_LIBRARY_TARGET)
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
+  EXPORT config_reader_export
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -127,5 +129,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
 )
 
+ament_package()
 
 endif()

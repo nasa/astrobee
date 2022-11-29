@@ -127,7 +127,7 @@ add_library(ff_common
 )
 # add_dependencies(ff_common)
 target_link_libraries(ff_common gflags glog)
-ament_export_targets(ff_common HAS_LIBRARY_TARGET)
+ament_export_targets(ff_common_export HAS_LIBRARY_TARGET)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
@@ -147,6 +147,7 @@ endif()
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
+  EXPORT ff_common_export
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -159,5 +160,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
 )
 
+ament_package()
 
 endif()
