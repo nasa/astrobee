@@ -348,8 +348,8 @@ if [ $skip_autogen == 0 ] ; then
     cat >>"${workspace_path}/devel/setup.sh" <<EOF
 
 ${build_cmd}_function () {
-    echo 'ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --workspace-dir="${autogen_path}"'
-    ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" -v --checkout-dir="${ff_path}" --workspace-dir="${autogen_path}"
+    echo 'ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"'
+    ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" -v --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
     \\${build_cmd} "\$@"
 }
 
