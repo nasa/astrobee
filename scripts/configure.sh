@@ -344,7 +344,11 @@ if [ $skip_autogen == 0 ] ; then
     echo "running child instance of configure.sh in new autogen location..."
     "${autogen_path}/scripts/configure.sh" "${args_copy[@]}" -Z
 
-    echo "setting alias so ${build_cmd} runs autogen first on subsequent runs..."
+    echo "doing minimal build (just astrobee package) to force creation of devel/setup.sh..."
+    echo '"${build_cmd}" build astrobee'
+    "${build_cmd}" build astrobee
+
+    echo "adding alias to devel/setup.sh so ${build_cmd} runs autogen first on subsequent runs..."
     cat >>"${workspace_path}/devel/setup.sh" <<EOF
 
 ${build_cmd}_function () {

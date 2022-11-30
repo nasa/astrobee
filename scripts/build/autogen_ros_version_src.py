@@ -83,6 +83,8 @@ EXPAND_TYPE = {
     "f": "auto-generated file",
 }
 
+ABSOLUTE_SYMLINKS = True
+
 
 def autogen_path(checkout_path, checkout_dir, autogen_dir):
     """
@@ -92,12 +94,14 @@ def autogen_path(checkout_path, checkout_dir, autogen_dir):
     return checkout_path.replace(checkout_dir, autogen_dir, 1)
 
 
-def rel_symlink(src, dst):
+def symlink_descriptor(src, dst):
     """
-    Return a relative symlink descriptor that if written to dst will
-    point to src.
+    Return a symlink descriptor pointing to src.
     """
-    return {"type": "l", "target": os.path.relpath(src, os.path.dirname(dst))}
+    if ABSOLUTE_SYMLINKS:
+        return {"type": "l", "target": src}
+    else:
+        return {"type": "l", "target": os.path.relpath(src, os.path.dirname(dst))}
 
 
 def jinja_render(path, use_ros1):
@@ -165,7 +169,9 @@ def get_desired_state(checkout_dir, autogen_dir, use_ros1):
             dir_names.remove(".git")  # skip .git subfolder
 
         for d in dir_names:
-            autogen_d = os.path.join(autogen_path(dir_path, checkout_dir, autogen_dir), d)
+            autogen_d = os.path.join(
+                autogen_path(dir_path, checkout_dir, autogen_dir), d
+            )
             result[autogen_d] = {"type": "d"}
 
         for f in file_names:
@@ -175,7 +181,9 @@ def get_desired_state(checkout_dir, autogen_dir, use_ros1):
             stripped_autogen_f = strip_pattern(autogen_f, "ros1")
             if stripped_autogen_f is not None:
                 if use_ros1:
-                    result[stripped_autogen_f] = rel_symlink(checkout_f, stripped_autogen_f)
+                    result[stripped_autogen_f] = symlink_descriptor(
+                        checkout_f, stripped_autogen_f
+                    )
                 else:
                     pass  # don't symlink
                 continue
@@ -185,7 +193,9 @@ def get_desired_state(checkout_dir, autogen_dir, use_ros1):
                 if use_ros1:
                     pass  # don't symlink
                 else:
-                    result[stripped_autogen_f] = rel_symlink(checkout_f, stripped_autogen_f)
+                    result[stripped_autogen_f] = symlink_descriptor(
+                        checkout_f, stripped_autogen_f
+                    )
                 continue
 
             stripped_autogen_f = strip_pattern(autogen_f, "jinja")
@@ -197,7 +207,7 @@ def get_desired_state(checkout_dir, autogen_dir, use_ros1):
                 continue
 
             else:
-                result[autogen_f] = rel_symlink(checkout_f, autogen_f)
+                result[autogen_f] = symlink_descriptor(checkout_f, autogen_f)
 
     return result
 
@@ -277,9 +287,7 @@ def autogen_ros_version_src(use_ros1, dry_run, checkout_dir, autogen_dir):
     checkout_dir = os.path.realpath(checkout_dir)
     autogen_dir = os.path.realpath(autogen_dir)
 
-    logging.warning(
-        "generating %s directory from %s..." % (autogen_dir, checkout_dir)
-    )
+    logging.warning("generating %s directory from %s..." % (autogen_dir, checkout_dir))
     current_state = get_current_state(autogen_dir)
     desired_state = get_desired_state(checkout_dir, autogen_dir, use_ros1)
     update_map = get_update_map(current_state, desired_state)
