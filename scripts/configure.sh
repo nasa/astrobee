@@ -345,8 +345,8 @@ if [ $skip_autogen == 0 ] ; then
     "${autogen_path}/scripts/configure.sh" "${args_copy[@]}" -Z
 
     echo "doing minimal build (just astrobee package) to force creation of devel/setup.sh..."
-    echo '"${build_cmd}" build astrobee'
-    "${build_cmd}" build astrobee
+    echo ${build_cmd} build astrobee
+    ${build_cmd} build astrobee
 
     echo "adding alias to devel/setup.sh so ${build_cmd} runs autogen first on subsequent runs..."
     cat >>"${workspace_path}/devel/setup.sh" <<EOF
