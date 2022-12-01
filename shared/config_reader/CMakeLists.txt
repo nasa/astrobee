@@ -91,7 +91,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(ff_common REQUIRED)
 
 ## System dependencies are found with CMake's conventions
@@ -100,7 +99,6 @@ find_package(Luajit20 REQUIRED)
 
 # Specify additional locations of header files
 # Your package locations should be listed before other locations
-message("LUAJIT_INCLUDE_DIR: ${LUAJIT_INCLUDE_DIR}")
 include_directories(
   include
   ${ff_common_INCLUDE_DIRS}
@@ -131,9 +129,7 @@ install(TARGETS ${PROJECT_NAME}
 
 # Mark cpp header files for installation
 install(DIRECTORY include/
-  DESTINATION include/
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
+  DESTINATION include
 )
 
 ament_export_include_directories(include)

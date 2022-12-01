@@ -90,14 +90,14 @@ install(PROGRAMS scripts/apk_print_version.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # install the version.txt file when install target is run
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.txt
-  COMMAND ${CMAKE_COMMAND}
-  -D OUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/version.txt
-  -D ASTROBEE_VERSION=${ASTROBEE_VERSION}
-  -D GIT_MODULE_FILE="${CMAKE_SOURCE_DIR}/../cmake/GetGitRevisionDescription.cmake"
-  -P ${CMAKE_SOURCE_DIR}/../cmake/SetVersion.cmake)
-add_custom_target(version DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/version.txt)
-install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_CURRENT_BINARY_DIR}\" --target version)")
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.txt DESTINATION ${CMAKE_INSTALL_PREFIX} )
+# add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.txt
+#   COMMAND ${CMAKE_COMMAND}
+#   -D OUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/version.txt
+#   -D ASTROBEE_VERSION=${ASTROBEE_VERSION}
+#   -D GIT_MODULE_FILE="${CMAKE_SOURCE_DIR}/../cmake/GetGitRevisionDescription.cmake"
+#   -P ${CMAKE_SOURCE_DIR}/../cmake/SetVersion.cmake)
+# add_custom_target(version DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/version.txt)
+# install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_CURRENT_BINARY_DIR}\" --target version)")
+# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.txt DESTINATION ${CMAKE_INSTALL_PREFIX} )
 
 install(PROGRAMS scripts/env_wrapper.sh DESTINATION ${CMAKE_INSTALL_PREFIX} )
