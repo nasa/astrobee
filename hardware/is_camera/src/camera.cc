@@ -493,9 +493,16 @@ namespace is_camera {
         xioctl(v4l_->fd, VIDIOC_QBUF, &v4l_->buf);
       else
         camera_running = false;
-      ros::Time timestamp = ros::Time::now();
 
       if (!failed) {
+        // our camera driver gives monotonic time, convert to wall time
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        ros::Time now = ros::Time::now();
+        ros::Time now_monotonic(ts.tv_sec, ts.tv_nsec);
+        ros::Time timestamp(v4l_->buf.timestamp.tv_sec, 1000 * v4l_->buf.timestamp.tv_usec);
+        timestamp = now + (timestamp - now_monotonic);
+
         if (pub_.getNumSubscribers() > 0) {
           sensor_msgs::ImagePtr& out_image = img_msg_buffer_[img_msg_buffer_idx_];
 
