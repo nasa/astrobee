@@ -25,7 +25,7 @@
 
 scriptdir=$(dirname "$(readlink -f "$0")")
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
-DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+DIST=$(cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*")
 
 pkg_files=${1:-$scriptdir/packages_base_"${DIST}".lst $scriptdir/packages_desktop_${DIST}.lst}
 echo "$pkg_files ${DIST}"
@@ -76,7 +76,7 @@ if ! sudo apt-get install -m -y $pkgs; then
   }
 fi
 
-DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+DIST=$(cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*")
 if [ "$DIST" == "focal" ]; then
   echo "Ubuntu 20.04 Focal Fossa detected"
 
