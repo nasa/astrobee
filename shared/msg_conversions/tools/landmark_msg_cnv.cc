@@ -1,24 +1,59 @@
-// Copyright 2015 Intelligent Robotics Group, NASA ARC
-
-#include <ff_msgs/VisualLandmarks.h>
+/* Copyright (c) 2017, United States Government, as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ *
+ * All rights reserved.
+ *
+ * The Astrobee platform is licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 
 #include <ff_common/init.h>
 #include <ff_common/utils.h>
+#include <ff_common/ros.h>
+
 #include <gflags/gflags.h>
-#include <ros/ros.h>
+
+#ifdef ROS1
+#include <ff_msgs/VisualLandmarks.h>
 #include <sensor_msgs/PointCloud2.h>
+
+#else
+#include <ff_msgs/msg/visual_landmarks.hpp>
+namespace ff_msgs {
+typedef msg::VisualLandmarks VisualLandmarks;
+typedef msg::VisualLandmarks::SharedPtr VisualLandmarksPtr;
+}  // namespace ff_msgs
+#include <sensor_msgs/msg/point_cloud2.hpp>
+namespace sensor_msgs {
+typedef msg::PointCloud2 PointCloud2;
+}
+namespace std_msgs {
+typedef msg::Header Header;
+}
+
+#endif
 
 DEFINE_string(input_topic, "/loc/ml/features",
               "The input features topic to convert.");
 DEFINE_string(output_topic, "/loc/rviz",
               "The output topic suitable for rviz.");
 
-ros::Publisher landmarks_pub;
+Publisher<sensor_msgs::PointCloud2> landmarks_pub = NULL;
+// auto landmarks_pub;
 
-void landmarks_callback(ff_msgs::VisualLandmarksPtr const & l) {
+void landmarks_callback(ff_msgs::VisualLandmarksPtr const l) {
   sensor_msgs::PointCloud2 out;
   out.header = std_msgs::Header();
-  out.header.stamp = ros::Time::now();
+  out.header.stamp = ROS_TIME_NOW();
   out.header.frame_id = "world";
   out.height = 1;
   out.width = l->landmarks.size();
@@ -49,18 +84,18 @@ void landmarks_callback(ff_msgs::VisualLandmarksPtr const & l) {
     memcpy(&out.data[out.point_step * i + 8], &l->landmarks[i].z, 4);
   }
 
-  landmarks_pub.publish(out);
+  landmarks_pub->publish(out);
 }
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
-  ros::init(argc, argv, "landmark_msg_cnv");
+  ROS_CREATE_NODE("landmark_msg_cnv");
 
-  ros::NodeHandle nh;
+  auto landmarks_sub = ROS_CREATE_SUBSCRIBER(ff_msgs::VisualLandmarks, FLAGS_input_topic, 5, landmarks_callback);
 
-  ros::Subscriber landmarks_sub = nh.subscribe(FLAGS_input_topic, 5, &landmarks_callback);
-  landmarks_pub = nh.advertise<sensor_msgs::PointCloud2>(FLAGS_output_topic, 5);
-  ros::spin();
+  landmarks_pub = ROS_CREATE_PUBLISHER(sensor_msgs::PointCloud2, FLAGS_output_topic, 5);
+
+  ROS_SPIN();
 
   return 0;
 }

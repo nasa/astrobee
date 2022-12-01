@@ -15,15 +15,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#include <tf2_ros/transform_broadcaster.h>  // NOLINT
 
-#include <ff_common/init.h>
-#include <ff_common/utils.h>
-#include <gflags/gflags.h>
+#include <ff_common/init.h>                 // NOLINT
+#include <ff_common/utils.h>                // NOLINT
+#include <ff_common/ros.h>        // NOLINT
+#include <gflags/gflags.h>                  // NOLINT
 
+#ifdef ROS1
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <ros/ros.h>
-#include <tf2_ros/transform_broadcaster.h>
+
+#else
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::PoseStamped PoseStamped;
+typedef msg::PoseStamped::SharedPtr PoseStampedPtr;
+typedef msg::TransformStamped TransformStamped;
+}  // namespace geometry_msgs
+
+#endif
 
 DEFINE_string(input_topic, "/loc/ground_truth",
               "The ground truth topic name.");
@@ -34,9 +46,9 @@ DEFINE_string(output_frame, "ground_truth",
 
 std::shared_ptr<tf2_ros::TransformBroadcaster> transform_pub;
 
-void odometry_callback(geometry_msgs::PoseStampedPtr const & odometry) {
+void odometry_callback(geometry_msgs::PoseStampedPtr const odometry) {
   geometry_msgs::TransformStamped transform;
-  transform.header.stamp = ros::Time::now();
+  transform.header.stamp = ROS_TIME_NOW();
   transform.header.frame_id = FLAGS_input_frame;
   transform.child_frame_id = FLAGS_output_frame;
   transform.transform.translation.x = odometry->pose.position.x;
@@ -48,12 +60,12 @@ void odometry_callback(geometry_msgs::PoseStampedPtr const & odometry) {
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
-  ros::init(argc, argv, "pose_stamped_msg_cnv");
+  ROS_CREATE_NODE("pose_stamped_msg_cnv");
 
-  ros::NodeHandle nh;
-  ros::Subscriber odometry_sub = nh.subscribe(FLAGS_input_topic, 5, &odometry_callback);
-  transform_pub.reset(new tf2_ros::TransformBroadcaster());
-  ros::spin();
+
+  auto odometry_sub = ROS_CREATE_SUBSCRIBER(geometry_msgs::PoseStamped, FLAGS_input_topic, 5, odometry_callback);
+  // transform_pub.reset(new tf2_ros::TransformBroadcaster());
+  ROS_SPIN();
 
   return 0;
 }

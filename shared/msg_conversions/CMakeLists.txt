@@ -15,31 +15,57 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(msg_conversions)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  message_runtime
-  std_msgs
-  geometry_msgs
-  config_reader
-  ff_msgs
-  tf2
-  tf2_ros
-)
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+  add_compile_definitions(ROS1)
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+    message_runtime
+    std_msgs
+    geometry_msgs
+    config_reader
+    ff_msgs
+    tf2
+    tf2_ros
+  )
 
-find_package(Eigen3 REQUIRED)
+  find_package(Eigen3 REQUIRED)
 
-catkin_package(
-  LIBRARIES ${PROJECT_NAME}
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs config_reader tf2 tf2_ros
-)
+  catkin_package(
+    LIBRARIES ${PROJECT_NAME}
+    INCLUDE_DIRS include
+    CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs config_reader tf2 tf2_ros
+  )
+
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+  add_compile_definitions(ROS2)
+  # Find amend and libraries
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+
+  find_package(std_msgs REQUIRED)
+  find_package(geometry_msgs REQUIRED)
+  find_package(config_reader REQUIRED)
+  find_package(ff_common REQUIRED)
+  find_package(ff_msgs REQUIRED)
+  find_package(tf2 REQUIRED)
+  find_package(tf2_ros REQUIRED)
+
+
+  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_LIB_DESTINATION "lib/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include")
+
+endif()
 
 ###########
 ## Build ##
@@ -49,27 +75,42 @@ catkin_package(
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}         # ROS1
+  ${config_reader_INCLUDE_DIRS}  # ROS2
 )
 
 # Declare C++ libraries
 add_library(msg_conversions
   src/msg_conversions.cc
 )
-add_dependencies(msg_conversions ${catkin_EXPORTED_TARGETS})
 target_link_libraries(msg_conversions ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: landmark_msg_cnv
 add_executable(landmark_msg_cnv tools/landmark_msg_cnv.cc)
-add_dependencies(landmark_msg_cnv ${catkin_EXPORTED_TARGETS})
 target_link_libraries(landmark_msg_cnv
   msg_conversions gflags ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: pose_stamped_msg_cnv
 add_executable(pose_stamped_msg_cnv tools/pose_stamped_msg_cnv.cc)
-add_dependencies(pose_stamped_msg_cnv ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pose_stamped_msg_cnv
   msg_conversions gflags ${catkin_LIBRARIES})
+
+
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+add_dependencies(msg_conversions ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(landmark_msg_cnv ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(pose_stamped_msg_cnv ${catkin_EXPORTED_TARGETS})
+
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs)
+
+ament_target_dependencies(landmark_msg_cnv rclcpp ff_common)
+
+ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
+
+endif()
 
 #############
 ## Install ##
