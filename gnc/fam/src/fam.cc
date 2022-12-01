@@ -36,21 +36,21 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
       config_.CheckFilesUpdated(std::bind(&Fam::ReadParams, this));}, false, true);
 
   float units_in_2_m = 0.0254;
-  abp_PM1_P_nozzle_B_B << 6.00,  4.01, -1.56,  // [m]  PM1: Position vector of the nozzle locations in the body frame
+  abp_PM1_P_nozzle_B_B << 6.00,  4.01, -1.56,
                          -6.00,  4.01,  1.56,
                           2.83,  6.00,  2.83,
                          -2.83,  6.00, -2.83,
                          -2.66,  4.01,  6.00,
                           2.66,  4.01, -6.00;
-  abp_PM1_P_nozzle_B_B *= units_in_2_m;
+  abp_PM1_P_nozzle_B_B *= units_in_2_m;  // [m]  PM1: Position vector of the nozzle locations in the body frame
 
-  abp_PM2_P_nozzle_B_B << -6.00, -4.01, -1.56,  // [m] PM2: Position vector of the nozzle locations in the body frame
+  abp_PM2_P_nozzle_B_B << -6.00, -4.01, -1.56,
                            6.00, -4.01,  1.56,
                           -2.83, -6.00,  2.83,
                            2.83, -6.00, -2.83,
                            2.66, -4.01,  6.00,
                           -2.66, -4.01, -6.00;
-  abp_PM2_P_nozzle_B_B *= units_in_2_m;
+  abp_PM2_P_nozzle_B_B *= units_in_2_m;  // [m] PM2: Position vector of the nozzle locations in the body frame
 
   abp_PM1_nozzle_orientations << 1, 0,  0,  //  [unit vec] PM1: Pointing Direction of each nozzle
                                 -1, 0,  0,
