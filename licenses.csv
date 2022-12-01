@@ -34,7 +34,6 @@ Library (external),MAVLink: Micro Air Vehicle Message Marshalling Library, https
 Library (external),libsurvive: An open source tool for working with Lighthouse data,https://github.com/cnlohr/libsurvive, MIT, YES, See hardware/vive
 Library (optional),RTI DDS SDK,http://www.rti.com/,Source license,NO,None
 Library (optional),PicoFlexx SDK,http://pmdtec.com/picoflexx/software,Closed source,YES,None
-Library (optional),Flycapture SDK,https://www.ptgrey.com/flycapture-sdk ,Closed source,NO,None
 ROS package,ros_core,https://github.com/ros/metapackages,BSD-3-Clause,NO,None
 ROS package,common_msgs,https://github.com/ros/common_msgs ,BSD-3-Clause,NO,None
 ROS package,nodelet,https://github.com/ros/nodelet_core,BSD-3-Clause,NO,None

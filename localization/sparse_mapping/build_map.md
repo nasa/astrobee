@@ -58,17 +58,10 @@ temporarily modify the above files to reflect your camera's parameters
 More details on these and other environmental variables can be found
 in the \ref astrobee configuration documentation.
 
-## Reduce the number of images and remove images that might cause errors during bundle-adjustment 
+## Partition the files into movement sequences and reduce the number of images to improve bundle-adjustment accuracy
+    rosrun sparse_mapping process_sequential_images.py image_directory_name config_path
 
-Remove low movement images:
-    rosrun sparse_mapping remove_low_movement_images image_directory_name
-
-This will delete subsequent images with low movement from that directory to improve mapping performance and accuracy. 
-
-Remove rotation-only movement images:
-    rosrun sparse_mapping remove_rotation_only_images image_directory_name config_path
-
-Removes rotation only image sequences and optionally saves different movement sequences to different subdirectories. See 'rosrun sparse_mapping remove_rotation_only_images -h' for more usage details, options, and instructions.
+Partitions a sequentially ordered set of image files into valid, rotation, and invalid sequences. During bundle adjustment, it is useful to avoid adding pure rotation sequences initially as these cause errors for monocular systems. The resulting sequences can be individually bundle-adjusted and merged as described later, generally starting with the valid (non-rotation) sequences and optionally adding rotations at the end once enough matches exist in the map. Also deletes subsequent images with low movement from that directory to improve mapping performance and accuracy. See 'rosrun sparse_mapping process_sequential_images.py -h' for more usage details, options, and instructions.
 
 These are non-reversible operations, so they should be invoked on a copy
 of the images.
@@ -76,7 +69,7 @@ of the images.
 If possible, the robot should have some translation motion (in addition to any rotation) when
 the data is acquired.
 
-Removing low movement and rotation only movement images helps the accuracy of bundle adjustment, which struggles to optimize camera poses with small or no translation changes.
+Removing low movement images and initially only adding valid movement images helps the accuracy of bundle adjustment, which struggles to optimize camera poses with small or no translation changes.
 
 ## Building a map
 

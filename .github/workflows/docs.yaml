@@ -5,6 +5,7 @@ name: Build and Push Documentation to gh-pages Branch
 on:
   push:
     branches: ['develop']
+  workflow_dispatch:
 
 jobs:
   build_and_push_docs:
@@ -26,13 +27,16 @@ jobs:
 
     - name: Replace old documentation with new
       run: |
-        [ -d docs ] || mkdir docs
-        [ -d docs/html ] && rm -r docs/html
+        (cd docs && git rm -r "*")
+        cp repo/doc/documentation.html docs/index.html
+        cp repo/doc/documentation.html docs/documentation.html
+        cp repo/doc/README.md docs/README.md
         docker cp $(docker create --rm astrobee:documentation):/repo/doc/html docs/html
 
     - name: Commit and Push
       run: |
         cd docs
+        git add index.html documentation.html README.md
         git add --all html/
         EMAIL=`git show -s --format='%ae' HEAD`
         NAME=`git show -s --format='%an' HEAD`
