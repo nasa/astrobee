@@ -160,10 +160,9 @@ install(TARGETS ${PROJECT_NAME}
 #   PATTERN ".svn" EXCLUDE
 # )
 install(DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/
 )
 
-ament_export_include_directories(include)
 ament_package()
 
 endif()
