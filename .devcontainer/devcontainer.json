@@ -25,7 +25,7 @@
 				"path": "/bin/zsh"
 			}
 		},
-		"terminal.integrated.defaultProfile.linux": "zsh"
+		"terminal.integrated.defaultProfile.linux": "bash"
 	},
 	"extensions": [
 		// "althack.ament-task-provider",
@@ -41,5 +41,8 @@
 		"zachflower.uncrustify"
 	],
 	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/src,type=bind",
+	"mounts": [
+		"source=${localEnv:HOME}/gds,target=${localEnv:HOME}/gds,type=bind,consistency=bind"
+	],
 	"workspaceFolder": "/src/astrobee/src"
 }

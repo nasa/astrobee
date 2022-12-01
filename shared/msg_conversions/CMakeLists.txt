@@ -63,7 +63,7 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
   set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
   set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
   set(CATKIN_PACKAGE_LIB_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include")
+  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
 
 endif()
 
@@ -109,6 +109,9 @@ ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs)
 ament_target_dependencies(landmark_msg_cnv rclcpp ff_common)
 
 ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
+
+ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
+ament_package()
 
 endif()
 

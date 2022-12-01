@@ -91,6 +91,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(ff_common REQUIRED)
 
 ## System dependencies are found with CMake's conventions
@@ -101,7 +102,8 @@ find_package(Luajit20 REQUIRED)
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${ff_common_INCLUDE_DIRS}
+  ${rclcpp_INCLUDE_DIRS}    # ROS2
+  ${ff_common_INCLUDE_DIRS} # ROS2
   ${LUAJIT_INCLUDE_DIR}
 )
 
@@ -110,7 +112,8 @@ add_library(config_reader
   src/config_reader.cc
   src/watch_files.cc
 )
-ament_target_dependencies(config_reader ff_common)
+
+ament_target_dependencies(config_reader rclcpp ff_common)
 target_link_libraries(config_reader gflags glog)
 ament_export_targets(config_reader_export HAS_LIBRARY_TARGET)
 
@@ -132,7 +135,7 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-ament_export_include_directories(include)
+ament_export_include_directories(include ${ff_common_INCLUDE_DIRS} ${LUAJIT_INCLUDE_DIR})
 
 ament_package()
 

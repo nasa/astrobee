@@ -25,9 +25,6 @@ project(description)
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
-message(STATUS "------------------------------------------")
-message(STATUS "Astrobee is being built using ROS1.")
-message(STATUS "------------------------------------------")
 
 find_package(catkin REQUIRED COMPONENTS)
 
@@ -35,9 +32,6 @@ catkin_package()
 
 # Build for ROS2
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-message(STATUS "------------------------------------------")
-message(STATUS "Astrobee is being built using ROS2.")
-message(STATUS "------------------------------------------")
   # Find amend and libraries
   find_package(ament_cmake REQUIRED)
 
