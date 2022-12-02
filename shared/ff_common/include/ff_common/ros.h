@@ -31,9 +31,12 @@
   ros::NodeHandle nh;          \
   ros::NodeHandle private_nh("~");
 
+template<class MessageType>
 using Publisher = ros::Publisher*;
 
-#define ROS_CREATE_PUBLISHER(msg, topic, queue)             private_nh.advertise<msg>(topic, queue)
+#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)               \
+  ros::Publisher __publ = private_nh.advertise<msg>(topic, queue); \
+  pub = &__publ
 #define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  private_nh.subscribe(topic, queue, callback)
 
 #define ROS_TIME_NOW()  ros::Time::now()
@@ -53,8 +56,15 @@ namespace ros = rclcpp;
 template<class MessageType>
 using Publisher = std::shared_ptr<ros::Publisher<MessageType>>;
 
-#define ROS_CREATE_PUBLISHER(msg, topic, queue)             node->create_publisher<msg>(topic, queue)
+#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)        pub = node->create_publisher<msg>(topic, queue)
 #define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  node->create_subscription<msg>(topic, queue, callback)
+
+#define ROS_INFO_STREAM(...)    RCLCPP_INFO_STREAM(LOGGER, __VA_ARGS__)
+#define ROS_DEBUG_STREAM(...)   RCLCPP_DEBUG_STREAM(LOGGER, __VA_ARGS__)
+#define ROS_ERROR_STREAM(...)   RCLCPP_ERROR_STREAM(LOGGER, __VA_ARGS__)
+#define ROS_FATAL_STREAM(...)   RCLCPP_FATAL_STREAM(LOGGER, __VA_ARGS__)
+
+#define toSec() seconds()
 
 #define ROS_TIME_NOW()  rclcpp::Clock().now()
 #define ROS_SPIN()      rclcpp::spin(node)

@@ -41,7 +41,7 @@ namespace ff_util {
   State::State() {}
 
   State::State(Setpoint const& msg) {
-    t = msg.when.toSec();
+    t = ros::Time(msg.when).toSec();
     q = msg_conversions::ros_to_eigen_quat(msg.pose.orientation);
     p = msg_conversions::ros_point_to_eigen_vector(msg.pose.position);
     w = msg_conversions::ros_to_eigen_vector(msg.twist.angular);
@@ -51,7 +51,7 @@ namespace ff_util {
   }
 
   State::State(Estimate const& msg)  {
-    t = msg.header.stamp.toSec();
+    t = ros::Time(msg.header.stamp).toSec();
     q = msg_conversions::ros_to_eigen_quat(msg.pose.orientation);
     p = msg_conversions::ros_point_to_eigen_vector(msg.pose.position);
     w = msg_conversions::ros_to_eigen_vector(msg.omega);

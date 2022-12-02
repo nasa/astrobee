@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 
   auto landmarks_sub = ROS_CREATE_SUBSCRIBER(ff_msgs::VisualLandmarks, FLAGS_input_topic, 5, landmarks_callback);
 
-  landmarks_pub = ROS_CREATE_PUBLISHER(sensor_msgs::PointCloud2, FLAGS_output_topic, 5);
+  ROS_CREATE_PUBLISHER(landmarks_pub, sensor_msgs::PointCloud2, FLAGS_output_topic, 5);
 
   ROS_SPIN();
 

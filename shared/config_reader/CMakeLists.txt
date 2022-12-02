@@ -17,7 +17,8 @@
 
 project(config_reader)
 
-if(ENV{ROS_VERSION} STREQUAL "1")
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
 cmake_minimum_required(VERSION 3.0)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -77,7 +78,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
 )
 
-else()
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
 
 cmake_minimum_required(VERSION 3.5)
 

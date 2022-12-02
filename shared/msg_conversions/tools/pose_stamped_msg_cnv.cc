@@ -19,10 +19,10 @@
 
 #include <ff_common/init.h>                 // NOLINT
 #include <ff_common/utils.h>                // NOLINT
-#include <ff_common/ros.h>        // NOLINT
+#include <ff_common/ros.h>                  // NOLINT
 #include <gflags/gflags.h>                  // NOLINT
 
-#ifdef ROS1
+#if ROS1
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 

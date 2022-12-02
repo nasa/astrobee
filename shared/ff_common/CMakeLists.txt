@@ -19,11 +19,13 @@ project(ff_common)
 
 cmake_minimum_required(VERSION 3.5)
 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+find_package(Eigen3 REQUIRED)
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
-  ## Compile as C++14, supported in ROS Kinetic and newer
-  add_compile_options(-std=c++14)
 
   ## Find catkin macros and libraries
   find_package(catkin2 REQUIRED COMPONENTS
@@ -31,8 +33,6 @@ if("$ENV{ROS_VERSION}" STREQUAL "1")
     std_msgs
     nodelet
   )
-
-  find_package(Eigen3 REQUIRED)
 
   catkin_package(
     INCLUDE_DIRS include
@@ -106,6 +106,8 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
     )
   endif()
 
+  ament_export_include_directories(include)
+  ament_package()
 
 endif()
 
@@ -127,5 +129,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-ament_export_include_directories(include)
-ament_package()

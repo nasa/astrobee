@@ -21,6 +21,8 @@ project(msg_conversions)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
+find_package(Eigen3 REQUIRED)
+
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
   add_compile_definitions(ROS1)
@@ -36,7 +38,6 @@ if("$ENV{ROS_VERSION}" STREQUAL "1")
     tf2_ros
   )
 
-  find_package(Eigen3 REQUIRED)
 
   catkin_package(
     LIBRARIES ${PROJECT_NAME}

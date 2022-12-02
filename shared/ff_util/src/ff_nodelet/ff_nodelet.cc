@@ -21,10 +21,19 @@
 
 #include <boost/filesystem.hpp>
 
+#ifdef ROS1
+
 #include <ros/ros.h>
 #include <nodelet/nodelet.h>
 #include <diagnostic_msgs/DiagnosticStatus.h>
 #include <diagnostic_msgs/DiagnosticArray.h>
+
+#else
+
+#include "diagnostic_msgs/msg/diagnostic_status.hpp"
+#include "diagnostic_msgs/msg/diagnostic_array.hpp"
+
+#endif
 
 #include <cstdint>
 #include <string>

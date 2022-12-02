@@ -20,6 +20,8 @@
 #define FF_UTIL_FF_NODELET_H_
 
 // ROS includes
+
+#ifdef ROS1
 #include <ros/ros.h>
 #include <ros/callback_queue.h>
 #include <nodelet/nodelet.h>
@@ -31,6 +33,15 @@
 #include <ff_msgs/Fault.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/Trigger.h>
+
+#else
+#include "rclcpp/rclcpp.hpp"
+
+#include "ff_msgs/msg/fault.hpp"
+#include "ff_msgs/msg/heartbeat.hpp"
+#include "ff_msgs/srv/trigger.hpp"
+
+#endif
 
 #include <ff_util/ff_faults.h>
 #include <ff_util/ff_names.h>
