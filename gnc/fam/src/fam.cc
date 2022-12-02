@@ -35,14 +35,14 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
   config_timer_ = nh->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
       config_.CheckFilesUpdated(std::bind(&Fam::ReadParams, this));}, false, true);
 
-  float units_in_2_m = 0.0254;
+  const float units_inches_to_meters = 0.0254;
   abp_PM1_P_nozzle_B_B << 6.00,  4.01, -1.56,
                          -6.00,  4.01,  1.56,
                           2.83,  6.00,  2.83,
                          -2.83,  6.00, -2.83,
                          -2.66,  4.01,  6.00,
                           2.66,  4.01, -6.00;
-  abp_PM1_P_nozzle_B_B *= units_in_2_m;  // [m]  PM1: Position vector of the nozzle locations in the body frame
+  abp_PM1_P_nozzle_B_B *= units_inches_to_meters;  // [m] PM1: Position vector of the nozzle locations in the body frame
 
   abp_PM2_P_nozzle_B_B << -6.00, -4.01, -1.56,
                            6.00, -4.01,  1.56,
@@ -50,7 +50,7 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
                            2.83, -6.00, -2.83,
                            2.66, -4.01,  6.00,
                           -2.66, -4.01, -6.00;
-  abp_PM2_P_nozzle_B_B *= units_in_2_m;  // [m] PM2: Position vector of the nozzle locations in the body frame
+  abp_PM2_P_nozzle_B_B *= units_inches_to_meters;  // [m] PM2: Position vector of the nozzle locations in the body frame
 
   abp_PM1_nozzle_orientations << 1, 0,  0,  //  [unit vec] PM1: Pointing Direction of each nozzle
                                 -1, 0,  0,
@@ -186,8 +186,8 @@ float Fam::ComputePlenumDeltaPressure(float impeller_speed, Eigen::Matrix<float,
   float total_thrust = (nozzle_thrusts.array() / discharge_coeff.array()).sum();
   float cdp = Lookup(THRUST_LOOKUP_SIZE, THRUST_LOOKUP_CDP, THRUST_LOOKUP_BREAKPOINTS,
                      total_thrust / (impeller_speed * impeller_speed));
-  const float units_in_2_m = 0.0254;
-  const float impeller_diameter = 5.5 * units_in_2_m;
+  const float units_inches_to_meters = 0.0254;
+  const float impeller_diameter = 5.5 * units_inches_to_meters;
   const float air_density = 1.2;  //  [kg/m^3]   Air density inside of the ISS (some places in code this was 1.225?)
   return impeller_speed * impeller_speed * impeller_diameter * impeller_diameter * air_density * cdp;
 }
@@ -206,8 +206,8 @@ void Fam::CalcPMServoCmd(bool is_pmc1, uint8_t speed_gain_cmd, const Eigen::Matr
   else
     discharge_coeff << 0.947114008, 0.764468916, 1.000000000, 0.90480943 , 0.936555627, 0.893794766;
   nozzle_widths << 5.0, 5.0, 2.8, 2.8, 2.8, 2.8;
-  const float units_in_2_m = 0.0254;
-  nozzle_widths *= units_in_2_m;
+  const float units_inches_to_meters = 0.0254;
+  nozzle_widths *= units_inches_to_meters;
 
   float impeller_speed = 0.0f, plenum_delta_pressure = 0.0f;
   impeller_speed_cmd = 0;
@@ -221,8 +221,8 @@ void Fam::CalcPMServoCmd(bool is_pmc1, uint8_t speed_gain_cmd, const Eigen::Matr
                                       plenum_delta_pressure;
   command_area_per_nozzle = (nozzle_thrusts.array() / normalized_pressure_density.array()).matrix();
   const int nozzle_flap_count = 2;
-  const float nozzle_intake_height = 0.5154 * units_in_2_m;
-  const float nozzle_flap_length = 0.5353 * units_in_2_m;
+  const float nozzle_intake_height = 0.5154 * units_inches_to_meters;
+  const float nozzle_flap_length = 0.5353 * units_inches_to_meters;
   Eigen::Matrix<float, 6, 1> openings = (nozzle_intake_height - (1.0 / nozzle_flap_count) *
                        command_area_per_nozzle.array() / nozzle_widths.array()).matrix() / nozzle_flap_length;
   const float nozzle_min_angle = 15.68 * M_PI / 180;
