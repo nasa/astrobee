@@ -80,10 +80,10 @@ include_directories(
 
 
 # Declare C++ libraries
-# add_library(ff_nodelet
-#   src/ff_nodelet/ff_nodelet.cc
-# )
-# target_link_libraries(ff_nodelet ${catkin_LIBRARIES})
+add_library(ff_nodelet
+  src/ff_nodelet/ff_nodelet.cc
+)
+target_link_libraries(ff_nodelet ${catkin_LIBRARIES})
 
 # Declare C++ libraries
 add_library(ff_flight
@@ -111,7 +111,7 @@ target_link_libraries(ff_flight ${catkin_LIBRARIES})
 
 
 if("$ENV{ROS_VERSION}" STREQUAL "1")
-# add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
+add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
 
@@ -122,7 +122,7 @@ add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
 # add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
 
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-# ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
+ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
 # ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)

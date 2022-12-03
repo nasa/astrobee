@@ -29,15 +29,35 @@
 #define ROS_CREATE_NODE(name)  \
   ros::init(argc, argv, name); \
   ros::NodeHandle nh;          \
-  ros::NodeHandle private_nh("~");
+  ros::NodeHandle nh_private_("~");
 
 template<class MessageType>
 using Publisher = ros::Publisher*;
 
-#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)               \
-  ros::Publisher __publ = private_nh.advertise<msg>(topic, queue); \
+#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)                \
+  ros::Publisher __publ = nh_private_.advertise<msg>(topic, queue); \
   pub = &__publ
 #define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  private_nh.subscribe(topic, queue, callback)
+
+
+template<class MessageType>
+using Service = ros::Service*;
+#define ROS_CREATE_SERVICE(serv, msg, topic, callback)                       \
+  ros::Service __serv = nh_private_.advertiseService(topic, callback); \
+  serv = &__serv
+
+#define FF_DEBUG(...)   ROS_DEBUG_NAMED(getName(), __VA_ARGS__)
+#define FF_INFO(...)    ROS_INFO_NAMED(getName(), __VA_ARGS__)
+#define FF_WARN(...)    ROS_WARN_NAMED(getName(), __VA_ARGS__)
+#define FF_ERROR(...)   ROS_ERROR_NAMED(getName(), __VA_ARGS__)
+#define FF_FATAL(...)   ROS_FATAL_NAMED(getName(), __VA_ARGS__)
+
+#define FF_DEBUG_STREAM(...)   ROS_DEBUG_STREAM_NAMED(getName(), __VA_ARGS__)
+#define FF_INFO_STREAM(...)    ROS_INFO_STREAM_NAMED(getName(), __VA_ARGS__)
+#define FF_WARN_STREAM(...)    ROS_WARN_STREAM_NAMED(getName(), __VA_ARGS__)
+#define FF_ERROR_STREAM(...)   ROS_ERROR_STREAM_NAMED(getName(), __VA_ARGS__)
+#define FF_FATAL_STREAM(...)   ROS_FATAL_STREAM_NAMED(getName(), __VA_ARGS__)
+
 
 #define ROS_TIME_NOW()  ros::Time::now()
 #define ROS_SPIN()      ros::spin()
@@ -51,24 +71,36 @@ namespace ros = rclcpp;
 
 #define ROS_CREATE_NODE(name) \
   rclcpp::init(argc, argv);   \
-  auto node = rclcpp::Node::make_shared(name, "/" name);
+  auto node_ = rclcpp::Node::make_shared(name, "/" name);
 
 template<class MessageType>
 using Publisher = std::shared_ptr<ros::Publisher<MessageType>>;
 
-#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)        pub = node->create_publisher<msg>(topic, queue)
-#define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  node->create_subscription<msg>(topic, queue, callback)
+#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)        pub = node_->create_publisher<msg>(topic, queue)
+#define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  node_->create_subscription<msg>(topic, queue, callback)
 
-#define ROS_INFO_STREAM(...)    RCLCPP_INFO_STREAM(LOGGER, __VA_ARGS__)
-#define ROS_DEBUG_STREAM(...)   RCLCPP_DEBUG_STREAM(LOGGER, __VA_ARGS__)
-#define ROS_ERROR_STREAM(...)   RCLCPP_ERROR_STREAM(LOGGER, __VA_ARGS__)
-#define ROS_FATAL_STREAM(...)   RCLCPP_FATAL_STREAM(LOGGER, __VA_ARGS__)
+
+template<class MessageType>
+using Service = rclcpp::Service<MessageType>;
+#define ROS_CREATE_SERVICE(serv, msg, topic, callback)  serv = node_->create_service<msg>(topic, callback)
+
+#define FF_DEBUG(...)   RCLCPP_DEBUG(LOGGER, __VA_ARGS__)
+#define FF_INFO(...)    RCLCPP_INFO(LOGGER, __VA_ARGS__)
+#define FF_WARN(...)    RCLCPP_WARN(LOGGER, __VA_ARGS__)
+#define FF_ERROR(...)   RCLCPP_ERROR(LOGGER, __VA_ARGS__)
+#define FF_FATAL(...)   RCLCPP_FATAL(LOGGER, __VA_ARGS__)
+
+#define FF_DEBUG_STREAM(...)   RCLCPP_DEBUG_STREAM(LOGGER, __VA_ARGS__)
+#define FF_INFO_STREAM(...)    RCLCPP_INFO_STREAM(LOGGER, __VA_ARGS__)
+#define FF_WARN_STREAM(...)    RCLCPP_WARN_STREAM(LOGGER, __VA_ARGS__)
+#define FF_ERROR_STREAM(...)   RCLCPP_ERROR_STREAM(LOGGER, __VA_ARGS__)
+#define FF_FATAL_STREAM(...)   RCLCPP_FATAL_STREAM(LOGGER, __VA_ARGS__)
 
 #define toSec() seconds()
 
 #define ROS_TIME_NOW()  rclcpp::Clock().now()
-#define ROS_SPIN()      rclcpp::spin(node)
-#define ROS_SPIN_ONCE() rclcpp::spin_some(node)
+#define ROS_SPIN()      rclcpp::spin(node_)
+#define ROS_SPIN_ONCE() rclcpp::spin_some(node_)
 #define ROS_OK()        rclcpp::ok()
 #define ROS_SHUTDOWN()  rclcpp::shutdown()
 
