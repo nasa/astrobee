@@ -46,6 +46,12 @@ using Service = ros::Service*;
   ros::Service __serv = nh_private_.advertiseService(topic, callback); \
   serv = &__serv
 
+using Timer = ros::Timer*;
+#define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart)                                \
+  ros::Timer __timer = nh_private_.createTimer(ros::Duration(duration), callback, oneshot, autostart); \
+  timer = &__timer
+
+
 #define FF_DEBUG(...)   ROS_DEBUG_NAMED(getName(), __VA_ARGS__)
 #define FF_INFO(...)    ROS_INFO_NAMED(getName(), __VA_ARGS__)
 #define FF_WARN(...)    ROS_WARN_NAMED(getName(), __VA_ARGS__)
@@ -74,15 +80,19 @@ namespace ros = rclcpp;
   auto node_ = rclcpp::Node::make_shared(name, "/" name);
 
 template<class MessageType>
-using Publisher = std::shared_ptr<ros::Publisher<MessageType>>;
+using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 
 #define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)        pub = node_->create_publisher<msg>(topic, queue)
 #define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  node_->create_subscription<msg>(topic, queue, callback)
 
 
 template<class MessageType>
-using Service = rclcpp::Service<MessageType>;
+using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 #define ROS_CREATE_SERVICE(serv, msg, topic, callback)  serv = node_->create_service<msg>(topic, callback)
+
+using Timer = std::shared_ptr<rclcpp::TimerBase>;
+#define ROS_CREATE_TIMER(timer, duration, args) \
+  timer = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(duration), args)
 
 #define FF_DEBUG(...)   RCLCPP_DEBUG(LOGGER, __VA_ARGS__)
 #define FF_INFO(...)    RCLCPP_INFO(LOGGER, __VA_ARGS__)

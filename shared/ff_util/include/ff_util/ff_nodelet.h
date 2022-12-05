@@ -61,6 +61,7 @@ typedef srv::Trigger Trigger;
 #include <string>
 #include <vector>
 #include <thread>
+#include <chrono>
 
 // Constants
 #define DEFAULT_ACTION_WAIT_TIME    30.0
@@ -186,15 +187,15 @@ class FreeFlyerNodelet {
   #endif
 
   // Timer
-  rclcpp::TimerBase::SharedPtr timer_heartbeat_;
-  rclcpp::TimerBase::SharedPtr timer_deferred_init_;
+  Timer timer_heartbeat_;
+  Timer timer_deferred_init_;
 
   // Publishers
   Publisher<ff_msgs::Heartbeat> pub_heartbeat_;
   Publisher<diagnostic_msgs::DiagnosticArray> pub_diagnostics_;
 
   // Reset service
-  Service<ff_msgs::Trigger>::SharedPtr srv_trigger_;
+  Service<ff_msgs::Trigger> srv_trigger_;
 
   // Name and subsystem
   std::string platform_;
