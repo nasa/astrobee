@@ -111,7 +111,7 @@ ff_msgs/ControlState[] segment
 ff_msgs/MotionState state
 
 # Control progress
-{% if USE_ROS1 %}
+{% if ROS1 %}
 ff_msgs/ControlFeedback progress                    # TODO(@trey0): ROS2 does not allow this
 {% endif %}
 

@@ -17,7 +17,8 @@
 
 project(ff_hw_msgs)
 
-if(ENV{ROS_VERSION} STREQUAL "1")
+if($ENV{ROS_VERSION} STREQUAL "1")  # begin ROS1 version
+
 cmake_minimum_required(VERSION 3.0)
 find_package(catkin REQUIRED COMPONENTS
   message_generation
@@ -56,7 +57,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-else()
+else()  # begin ROS2 version
+
 cmake_minimum_required(VERSION 3.5)
 
 # Default to C++14
@@ -105,4 +107,4 @@ ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()
 
-endif()
+endif()  # end ROS2 version
