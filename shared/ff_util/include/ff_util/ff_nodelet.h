@@ -24,18 +24,19 @@
 
 #include <config_reader/config_reader.h>
 
-#ifdef ROS1
+#if ROS1
 #include <ros/callback_queue.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 
 #include <diagnostic_msgs/KeyValue.h>
+#include <diagnostic_msgs/DiagnosticArray.h>
 
 #include <ff_msgs/Fault.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/Trigger.h>
 
-#else
+#else  // ROS2
 #include <diagnostic_msgs/msg/key_value.hpp>
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
@@ -150,8 +151,10 @@ class FreeFlyerNodelet {
   void InitCallback();
 
   // Called when a trigger action is called
-  void TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
-                       std::shared_ptr<ff_msgs::Trigger::Response> res);
+  // void TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
+  //                      std::shared_ptr<ff_msgs::Trigger::Response> res);
+  bool TriggerCallback(
+  ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res);
 
   // Called in heartbeat callback or by nodes that do not to use the hb timer
   void PublishHeartbeat();

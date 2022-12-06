@@ -115,7 +115,7 @@ add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
+# add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
 
 # add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
 

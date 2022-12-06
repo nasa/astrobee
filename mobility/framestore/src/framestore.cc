@@ -67,8 +67,12 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
 
  protected:
   void Initialize(NodeHandle node) {
-    NodeHandle ROS_NODE_VAR = node;
-    tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(ROS_NODE_VAR);
+  #if ROS1
+    NodeHandle nh_private_ = node;
+    tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>();
+  #else
+    tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node);
+  #endif
 
     // Set custom config path
     char *path;
@@ -80,9 +84,9 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
     if (!ReadParams())
       return InitFault("Could not read config");
 
-    ROS_CREATE_TIMER(timer_, 1.0, [this]() {
-      config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
-      false, true);
+    // ROS_CREATE_TIMER_REF(timer_, 1.0, [this]() {
+    //   config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
+    //   false, true);
   }
 
   bool ReadParams() {

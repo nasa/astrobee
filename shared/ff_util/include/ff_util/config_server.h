@@ -26,13 +26,13 @@
 
 #include <config_reader/config_reader.h>
 
-#include <dynamic_reconfigure/Reconfigure.h>
-#include <dynamic_reconfigure/Config.h>
-#include <dynamic_reconfigure/ConfigDescription.h>
 
 #ifdef ROS1
 #include <diagnostic_msgs/KeyValue.h>
 
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/Config.h>
+#include <dynamic_reconfigure/ConfigDescription.h>
 #else
 #include <diagnostic_msgs/msg/key_value.hpp>
 namespace diagnostic_msgs {
@@ -40,6 +40,10 @@ typedef msg::KeyValue KeyValue;
 typedef msg::DiagnosticStatus DiagnosticStatus;
 typedef msg::DiagnosticArray DiagnosticArray;
 }  // namespace diagnostic_msgs
+
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/Config.h>
+#include <dynamic_reconfigure/ConfigDescription.h>
 #endif
 
 #include <climits>

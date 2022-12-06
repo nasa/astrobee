@@ -27,9 +27,9 @@
 #ifdef ROS1
 #include <ros/ros.h>
 
-using NodeHandle ros::NodeHandle*
+using NodeHandle = ros::NodeHandle*;
 
-#define ROS_NODE_VAR nh_private_
+// #define ROS_NODE_VAR &nh_private_
 
 #define ROS_CREATE_NODE(name)  \
   ros::init(argc, argv, name); \
@@ -42,32 +42,38 @@ using Publisher = ros::Publisher*;
 #define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)                \
   ros::Publisher __publ = nh_private_.advertise<msg>(topic, queue); \
   pub = &__publ
-#define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  private_nh.subscribe(topic, queue, callback)
+#define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  nh_private_.subscribe(topic, queue, callback)
 
 
 template<class MessageType>
-using Service = ros::Service*;
+using Service = ros::ServiceServer*;
 #define ROS_CREATE_SERVICE(serv, msg, topic, callback)                       \
-  ros::Service __serv = nh_private_.advertiseService(topic, callback); \
+  ros::ServiceServer __serv = nh_private_.advertiseService(topic, callback, this); \
   serv = &__serv
+
+
 
 using Timer = ros::Timer*;
 #define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart)                                \
   ros::Timer __timer = nh_private_.createTimer(ros::Duration(duration), callback, oneshot, autostart); \
   timer = &__timer
+#define ROS_CREATE_TIMER_REF(timer, duration, callback, oneshot, autostart)                                \
+  ros::Timer __timer = nh_private_->createTimer(ros::Duration(duration), callback, oneshot, autostart); \
+  timer = &__timer
+#define STOP_TIMER()   stop()
 
 
-#define FF_DEBUG(...)   ROS_DEBUG_NAMED(getName(), __VA_ARGS__)
-#define FF_INFO(...)    ROS_INFO_NAMED(getName(), __VA_ARGS__)
-#define FF_WARN(...)    ROS_WARN_NAMED(getName(), __VA_ARGS__)
-#define FF_ERROR(...)   ROS_ERROR_NAMED(getName(), __VA_ARGS__)
-#define FF_FATAL(...)   ROS_FATAL_NAMED(getName(), __VA_ARGS__)
+#define FF_DEBUG(...)   ROS_DEBUG_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_INFO(...)    ROS_INFO_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_WARN(...)    ROS_WARN_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_ERROR(...)   ROS_ERROR_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_FATAL(...)   ROS_FATAL_NAMED(ros::this_node::getName(), __VA_ARGS__)
 
-#define FF_DEBUG_STREAM(...)   ROS_DEBUG_STREAM_NAMED(getName(), __VA_ARGS__)
-#define FF_INFO_STREAM(...)    ROS_INFO_STREAM_NAMED(getName(), __VA_ARGS__)
-#define FF_WARN_STREAM(...)    ROS_WARN_STREAM_NAMED(getName(), __VA_ARGS__)
-#define FF_ERROR_STREAM(...)   ROS_ERROR_STREAM_NAMED(getName(), __VA_ARGS__)
-#define FF_FATAL_STREAM(...)   ROS_FATAL_STREAM_NAMED(getName(), __VA_ARGS__)
+#define FF_DEBUG_STREAM(...)   ROS_DEBUG_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_INFO_STREAM(...)    ROS_INFO_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_WARN_STREAM(...)    ROS_WARN_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_ERROR_STREAM(...)   ROS_ERROR_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
+#define FF_FATAL_STREAM(...)   ROS_FATAL_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
 
 
 #define ROS_TIME_NOW()  ros::Time::now()
@@ -97,11 +103,13 @@ using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
-#define ROS_CREATE_SERVICE(serv, msg, topic, callback)  serv = node_->create_service<msg>(topic, callback)
+#define ROS_CREATE_SERVICE(serv, msg, topic, callback) \
+  serv = node_->create_service<msg>(topic, std::bind(callback, this, std::placeholders::_1, std::placeholders::_2))
 
 using Timer = std::shared_ptr<rclcpp::TimerBase>;
 #define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart) \
   timer = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(duration), callback)
+#define STOP_TIMER()   cancel()
 
 #define FF_DEBUG(...)   RCLCPP_DEBUG(LOGGER, __VA_ARGS__)
 #define FF_INFO(...)    RCLCPP_INFO(LOGGER, __VA_ARGS__)

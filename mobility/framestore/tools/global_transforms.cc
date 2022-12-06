@@ -44,7 +44,11 @@ int main(int argc, char **argv) {
     return 1;
   }
   // Read all transforms, broadcasting only world -> xxx
+#if ROS1
+  tf2_ros::StaticTransformBroadcaster bc;
+#else
   tf2_ros::StaticTransformBroadcaster bc(ROS_NODE_VAR);
+#endif
   geometry_msgs::TransformStamped tf;
   Eigen::Vector3d trans;
   Eigen::Quaterniond rot;

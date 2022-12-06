@@ -26,11 +26,9 @@
 #include <ros/ros.h>
 #include <nodelet/nodelet.h>
 #include <diagnostic_msgs/DiagnosticStatus.h>
-#include <diagnostic_msgs/DiagnosticArray.h>
 
 #else
 #include "diagnostic_msgs/msg/diagnostic_status.hpp"
-#include "diagnostic_msgs/msg/diagnostic_array.hpp"
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_nodelet");
 #endif
@@ -126,10 +124,14 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
 
   // Immediately, setup a publisher for faults coming from this node
   // Topic needs to be latched for initialization faults
+  {
   ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
+  }
   // pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
   //   TOPIC_HEARTBEAT, heartbeat_queue_size_, true!!!!!!!!!);
+  {
   ROS_CREATE_PUBLISHER(pub_diagnostics_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5);
+  }
 
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
@@ -366,7 +368,7 @@ void FreeFlyerNodelet::PrintFaults() {
 // Not sure if we need this functionality but I added it just in case
 void FreeFlyerNodelet::StopHeartbeat() {
   // Stop heartbeat timer
-  timer_heartbeat_->cancel();
+  timer_heartbeat_->STOP_TIMER();
 }
 
 // void FreeFlyerNodelet::HeartbeatCallback(ros::TimerEvent const& ev) {
@@ -381,7 +383,11 @@ void FreeFlyerNodelet::HeartbeatCallback() {
 void FreeFlyerNodelet::InitCallback() {
   // Return a single threaded nodehandle by default
   initialized_ = false;
-  Initialize(ROS_NODE_VAR);
+#if ROS1
+  Initialize(&nh_);
+#else
+  Initialize(node_);
+#endif
   initialized_ = true;
 
   // Check if there was an initialization fault and send the heartbeat if there
@@ -401,9 +407,46 @@ void FreeFlyerNodelet::InitCallback() {
 
   // Start a trigger service on the private nodehandle /platform/pvt/name
   ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
-                     std::bind(&FreeFlyerNodelet::TriggerCallback, this, std::placeholders::_1, std::placeholders::_2));
+                     &FreeFlyerNodelet::TriggerCallback);
 }
 
+#if ROS1
+bool FreeFlyerNodelet::TriggerCallback(
+  ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res) {
+  switch (req.event) {
+  // Allow a reset from woken state only
+  case ff_msgs::Trigger::Request::RESTART:
+    if (!sleeping_) {
+      ClearAllFaults();
+      Reset();
+      return true;
+    }
+    break;
+  // Allow sleep from woken state only
+  case ff_msgs::Trigger::Request::SLEEP:
+    if (!sleeping_) {
+      Sleep();
+      sleeping_ = true;
+      return true;
+    }
+    break;
+  // Allow wakeup from sleeping state only
+  case ff_msgs::Trigger::Request::WAKEUP:
+    if (sleeping_) {
+      Wakeup();
+      sleeping_ = false;
+      return true;
+    }
+    break;
+  // For all other events that might be sent incorrectly
+  default:
+    FF_WARN_STREAM("Unknown trigger event" << req.event);
+    return false;
+  }
+  FF_WARN_STREAM("Invalid state transition for trigger " << req.event);
+  return false;
+}
+#else
 void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
                                              std::shared_ptr<ff_msgs::Trigger::Response> res) {
   switch (req->event) {
@@ -412,7 +455,7 @@ void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::R
     if (!sleeping_) {
       ClearAllFaults();
       Reset();
-      return;  // true;
+      return;
     }
     break;
   // Allow sleep from woken state only
@@ -420,7 +463,7 @@ void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::R
     if (!sleeping_) {
       Sleep();
       sleeping_ = true;
-      return;  // true;
+      return;
     }
     break;
   // Allow wakeup from sleeping state only
@@ -428,17 +471,19 @@ void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::R
     if (sleeping_) {
       Wakeup();
       sleeping_ = false;
-      return;  // true;
+      return;
     }
     break;
   // For all other events that might be sent incorrectly
   default:
     FF_WARN_STREAM("Unknown trigger event" << req->event);
-    return;  // false;
+    return;
   }
   FF_WARN_STREAM("Invalid state transition for trigger " << req->event);
-  return;  // false;
+  return;
 }
+#endif
+
 
 void FreeFlyerNodelet::PublishHeartbeat() {
   if (initialized_) {
@@ -489,7 +534,7 @@ ros::NodeHandle* FreeFlyerNodelet::GetPlatformHandle(bool multithreaded) {
   return (multithreaded ? &nh_mt_ : &nh_);
 }
 
-NodeHandle management
+// NodeHandle management
 ros::NodeHandle* FreeFlyerNodelet::GetPrivateHandle(bool multithreaded) {
   return (multithreaded ? &nh_private_ : &nh_private_mt_);
 }

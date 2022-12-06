@@ -23,22 +23,23 @@ add_compile_options(-std=c++14)
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  pluginlib
-  ff_util
-  tf2_ros
-  geometry_msgs
-  config_reader
-)
+  add_compile_definitions(ROS1)
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+    nodelet
+    pluginlib
+    ff_util
+    tf2_ros
+    geometry_msgs
+    config_reader
+  )
 
-# Call catkin
-catkin_package(
-  CATKIN_DEPENDS
-    roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
-)
+  # Call catkin
+  catkin_package(
+    CATKIN_DEPENDS
+      roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
+  )
 
 # Build for ROS2
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
