@@ -322,7 +322,7 @@ if [[ $native_build == 1 && $armhf_build == 1 ]] ; then
 fi
 
 if [ $skip_autogen == 0 ] ; then
-    if [[ "$workspace_path" == "" ]]; then
+        if [[ "$workspace_path" == "" ]]; then
         workspace_path="."
     fi
     workspace_path=`canonicalize "${workspace_path}"`
@@ -331,8 +331,12 @@ if [ $skip_autogen == 0 ] ; then
 
     if [[ "${ROS_VERSION}" == "1" ]]; then
         build_cmd=catkin
+        extras_cmd=build
+        source_folder=devel
     elif [[ "${ROS_VERSION}" == "2" ]]; then
         build_cmd=colcon
+        extras_cmd="build --packages-select"
+        source_folder=install
     else
         echo "ROS_VERSION environment variable must be set to '1' or '2' for autogen!"
         exit 1
@@ -342,16 +346,31 @@ if [ $skip_autogen == 0 ] ; then
     "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
 
     echo "running child instance of configure.sh in new autogen location..."
-    "${autogen_path}/scripts/configure.sh" "${args_copy[@]}" -Z
+    "${autogen_path}/scripts/configure.sh -Z" "${args_copy[@]}"
 
-    echo "doing minimal build (just astrobee package) to force creation of devel/setup.sh..."
-    echo ${build_cmd} build astrobee
-    ${build_cmd} build astrobee
+    echo "doing minimal build (just astrobee package) to force creation of ${source_folder}/setup.sh..."
+    echo ${build_cmd} ${extras_cmd} astrobee
+    ${build_cmd} ${extras_cmd} astrobee
 
-    echo "adding alias to devel/setup.sh so ${build_cmd} runs autogen first on subsequent runs..."
-    cat >>"${workspace_path}/devel/setup.sh" <<EOF
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        echo "Adding symlink to zsh setup file"
+        shell="zsh"
+    elif [[ "$SHELL" == *"bash"* ]]; then
+        echo "Adding symlink to bash setup file"
+        shell="bash"
+    elif [[ "$SHELL" == *"sh"* ]]; then
+        echo "Adding symlink to sh setup file"
+        shell="sh"
+    else
+        echo "Shell not supported!"
+        exit 1
+    fi 
+
+    echo "adding alias to ${source_folder}/setup.${shell} so ${build_cmd} runs autogen first on subsequent runs..."
+    cat >>"${workspace_path}/${source_folder}/setup.${shell}" << EOF
 
 ${build_cmd}_function () {
+    echo "Symlinking..."
     echo 'ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"'
     ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" -v --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
     \\${build_cmd} "\$@"
@@ -360,45 +379,47 @@ ${build_cmd}_function () {
 alias ${build_cmd}=${build_cmd}_function
 EOF
 
-    echo "(to suppress alias that invokes autogen, run \\${build_cmd} instead of ${build_cmd}.)"
+    echo "(to suppress alias that invokes autogen, run \\${build_cmd} instead of ${build_cmd})"
 
     exit 0
 fi
 
 if [ $native_build == 1 ] ; then
     echo "configuring for native linux..."
-    catkin init
-    enable_gazebo=" -DENABLE_GAZEBO=on"
 
-    # Add our cmake to paths and bashrc
-    grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
-    cmake_astrobee_path=`catkin locate -s`/cmake
-    grep -qF ${cmake_astrobee_path} ~/.bashrc || {
-      echo -e '\n' >> ~/.bashrc
-      echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
-    }
-    source ~/.bashrc
+    if [[ "${ROS_VERSION}" == "1" ]]; then
+        catkin init
+        enable_gazebo=" -DENABLE_GAZEBO=on"
 
-    shell="$SHELL"
-    if [[ ${shell}  == *"zsh"* ]]; then
-        echo "Setting .zshrc with environment variables..."
-        grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
-        grep -qF ${cmake_astrobee_path} ~/.zshrc || {
-            echo -e '\n' >> ~/.zshrc
-            echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+        # Add our cmake to paths and bashrc
+        grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
+        cmake_astrobee_path=`catkin locate -s`/cmake
+        grep -qF ${cmake_astrobee_path} ~/.bashrc || {
+        echo -e '\n' >> ~/.bashrc
+        echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
         }
+        source ~/.bashrc
+
+        shell="$SHELL"
+        if [[ ${shell}  == *"zsh"* ]]; then
+            echo "Setting .zshrc with environment variables..."
+            grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
+            grep -qF ${cmake_astrobee_path} ~/.zshrc || {
+                echo -e '\n' >> ~/.zshrc
+                echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+            }
+        fi
+
+        catkin profile add ${profile:-native}
+        catkin profile set ${profile:-native}
+        catkin config --no-extend \
+            --build-space ${workspace_path}build \
+            --install-space ${install_path:-${workspace_path}install} \
+            --devel-space ${workspace_path}devel \
+            --log-space ${workspace_path}log \
+            --no-install \
+            --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
     fi
-
-    catkin profile add ${profile:-native}
-    catkin profile set ${profile:-native}
-    catkin config --no-extend \
-        --build-space ${workspace_path}build \
-        --install-space ${install_path:-${workspace_path}install} \
-        --devel-space ${workspace_path}devel \
-        --log-space ${workspace_path}log \
-        --no-install \
-        --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
 
 fi
 
