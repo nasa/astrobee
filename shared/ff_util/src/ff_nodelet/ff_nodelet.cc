@@ -134,7 +134,7 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
   // > https://github.com/ros/nodelet_core/issues/46
-  ROS_CREATE_TIMER(timer_deferred_init_, 0.1, std::bind(&FreeFlyerNodelet::InitCallback, this, true, true));
+  ROS_CREATE_TIMER(timer_deferred_init_, 0.1, std::bind(&FreeFlyerNodelet::InitCallback, this), true, true);
 }
 
 #else  // ROS2
@@ -173,17 +173,16 @@ void FreeFlyerNodelet::Setup(std::string plugin_name) {
 
   // Immediately, setup a publisher for faults coming from this node
   // Topic needs to be latched!!!! for initialization faults
-    ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
+  ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
   // pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
   //   TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
-    ROS_CREATE_PUBLISHER(pub_diagnostics_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5);
-
+  ROS_CREATE_PUBLISHER(pub_diagnostics_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5);
 
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
   // > https://github.com/ros/nodelet_core/issues/46
-    ROS_CREATE_TIMER(timer_deferred_init_, 0.1,
-      std::bind(&FreeFlyerNodelet::InitCallback, this));
+  ROS_CREATE_TIMER(timer_deferred_init_, 0.1,
+      std::bind(&FreeFlyerNodelet::InitCallback, this), true, true);
 }
 #endif
 
@@ -382,7 +381,7 @@ void FreeFlyerNodelet::HeartbeatCallback() {
 void FreeFlyerNodelet::InitCallback() {
   // Return a single threaded nodehandle by default
   initialized_ = false;
-  // Initialize(&nh_);
+  Initialize(ROS_NODE_VAR);
   initialized_ = true;
 
   // Check if there was an initialization fault and send the heartbeat if there

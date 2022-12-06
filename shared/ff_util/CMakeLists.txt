@@ -15,8 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-project(ff_util)
 cmake_minimum_required(VERSION 3.5)
+project(ff_util)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -115,7 +115,7 @@ add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
 
-# add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
+add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
 
 # add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
 
@@ -126,6 +126,8 @@ ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
 # ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)
+
+# ament_target_dependencies(config_server rclcpp diagnostic_msgs)
 
 # ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
 

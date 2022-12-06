@@ -116,7 +116,7 @@ add_library(config_reader
 )
 
 ament_target_dependencies(config_reader rclcpp ff_common)
-target_link_libraries(config_reader gflags glog)
+target_link_libraries(config_reader gflags glog ${LUAJIT_LIBRARY})
 ament_export_targets(config_reader_export HAS_LIBRARY_TARGET)
 
 

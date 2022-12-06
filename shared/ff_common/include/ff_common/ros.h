@@ -26,6 +26,11 @@
 
 #ifdef ROS1
 #include <ros/ros.h>
+
+using NodeHandle ros::NodeHandle*
+
+#define ROS_NODE_VAR nh_private_
+
 #define ROS_CREATE_NODE(name)  \
   ros::init(argc, argv, name); \
   ros::NodeHandle nh;          \
@@ -75,6 +80,10 @@ using Timer = ros::Timer*;
 #include "rclcpp/rclcpp.hpp"
 namespace ros = rclcpp;
 
+using NodeHandle = std::shared_ptr<rclcpp::Node>;
+
+#define ROS_NODE_VAR node_
+
 #define ROS_CREATE_NODE(name) \
   rclcpp::init(argc, argv);   \
   auto node_ = rclcpp::Node::make_shared(name, "/" name);
@@ -91,8 +100,8 @@ using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 #define ROS_CREATE_SERVICE(serv, msg, topic, callback)  serv = node_->create_service<msg>(topic, callback)
 
 using Timer = std::shared_ptr<rclcpp::TimerBase>;
-#define ROS_CREATE_TIMER(timer, duration, args) \
-  timer = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(duration), args)
+#define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart) \
+  timer = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(duration), callback)
 
 #define FF_DEBUG(...)   RCLCPP_DEBUG(LOGGER, __VA_ARGS__)
 #define FF_INFO(...)    RCLCPP_INFO(LOGGER, __VA_ARGS__)

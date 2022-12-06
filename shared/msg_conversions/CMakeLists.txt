@@ -106,6 +106,7 @@ add_dependencies(pose_stamped_msg_cnv ${catkin_EXPORTED_TARGETS})
 
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
 ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs)
+ament_export_targets(msg_conversions_export HAS_LIBRARY_TARGET)
 
 ament_target_dependencies(landmark_msg_cnv rclcpp ff_common)
 
@@ -122,6 +123,7 @@ endif()
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
+  EXPORT msg_conversions_export
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

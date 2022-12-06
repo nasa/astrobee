@@ -85,11 +85,11 @@ class FreeFlyerNodelet {
 
   // Use default name from freeflyer
   // COMPOSITION_PUBLIC
-  #if ROS1
+#if ROS1
   explicit FreeFlyerNodelet(bool autostart_hb_timer = true);
   // Explicitly specift the name
   explicit FreeFlyerNodelet(std::string const& name, bool autostart_hb_timer = true);
-  #else
+#else
   explicit FreeFlyerNodelet(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
   // Explicitly specift the name
   explicit FreeFlyerNodelet(const rclcpp::NodeOptions& options, std::string const& name,
@@ -118,7 +118,7 @@ class FreeFlyerNodelet {
  protected:
   // Virtual methods that *can* be implemented by FF nodes. We don't make
   // these mandatory, as there is already a load callback in Gazebo.
-  // virtual void Initialize(ros::NodeHandle *nh) {}
+  virtual void Initialize(NodeHandle node) {}
   virtual void Reset() {}
   virtual void Sleep() {}
   virtual void Wakeup() {}
