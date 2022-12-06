@@ -34,7 +34,7 @@
 // TF2
 #include <tf2_ros/static_transform_broadcaster.h>
 
-#ifdef ROS1
+#if ROS1
 
 #include <geometry_msgs/TransformStamped.h>
 #else
@@ -68,7 +68,7 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
  protected:
   void Initialize(NodeHandle node) {
   #if ROS1
-    NodeHandle nh_private_ = node;
+    ros::NodeHandle nh_private_ = *node;
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>();
   #else
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node);
@@ -84,9 +84,15 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
     if (!ReadParams())
       return InitFault("Could not read config");
 
-    // ROS_CREATE_TIMER_REF(timer_, 1.0, [this]() {
-    //   config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
-    //   false, true);
+#if ROS1
+    ROS_CREATE_TIMER(timer_, 1.0, [this](ros::TimerEvent e) {
+      config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
+      false, true);
+#else  // TODO(@mgouveia): need to figure out cleaner way for timers
+    ROS_CREATE_TIMER(timer_, 1.0, [this]() {
+      config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
+      false, true);
+#endif
   }
 
   bool ReadParams() {

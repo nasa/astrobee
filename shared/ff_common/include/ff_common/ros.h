@@ -57,9 +57,6 @@ using Timer = ros::Timer*;
 #define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart)                                \
   ros::Timer __timer = nh_private_.createTimer(ros::Duration(duration), callback, oneshot, autostart); \
   timer = &__timer
-#define ROS_CREATE_TIMER_REF(timer, duration, callback, oneshot, autostart)                                \
-  ros::Timer __timer = nh_private_->createTimer(ros::Duration(duration), callback, oneshot, autostart); \
-  timer = &__timer
 #define STOP_TIMER()   stop()
 
 
