@@ -184,10 +184,16 @@ add_dependencies(remove_low_movement_images ${catkin_EXPORTED_TARGETS})
 target_link_libraries(remove_low_movement_images
   sparse_mapping ${catkin_LIBRARIES})
 
-## Declare a C++ executable: remove_rotation_only_images
-add_executable(remove_rotation_only_images tools/remove_rotation_only_images.cc tools/utilities.cc)
-add_dependencies(remove_rotation_only_images ${catkin_EXPORTED_TARGETS})
-target_link_libraries(remove_rotation_only_images
+## Declare a C++ executable: remove_standstill_sequences
+add_executable(remove_standstill_sequences tools/remove_standstill_sequences.cc tools/utilities.cc)
+add_dependencies(remove_standstill_sequences ${catkin_EXPORTED_TARGETS})
+target_link_libraries(remove_standstill_sequences
+  sparse_mapping ${catkin_LIBRARIES})
+
+## Declare a C++ executable: partition_image_sequences
+add_executable(partition_image_sequences tools/partition_image_sequences.cc tools/utilities.cc)
+add_dependencies(partition_image_sequences ${catkin_EXPORTED_TARGETS})
+target_link_libraries(partition_image_sequences
   sparse_mapping ${catkin_LIBRARIES})
 
 endif (NOT USE_CTC)
