@@ -43,23 +43,24 @@ if [ "$ans" -ne "0" ]; then
     exit 0
 fi
 
-if false; then
-    echo "=================================================="
-    echo "  Analysing python code style with 'black'."
+echo "=================================================="
+echo "  Analysing python code style with 'black'."
 
-    # Remove 'build' from black's default exclusions. We have
-    # a Python script in a 'build' folder.
-    default_black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|build|dist)/"
-    black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|dist)/"
+# Change black's default files to exclude:
+# - Remove 'build' folder. We have a Python script in a 'build' folder.
+# - Add '*.launch.py'. Black's styling doesn't work well for ROS2
+#   Python launch files. The ROS2 examples use a more compact
+#   style that is much easier to read.
+# default_black_exclude="/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|build|dist)/"
+black_exclude="(/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|dist)/|\.launch\.py\$)"
 
-    # This check the files but they will not be commited
-    if $(black . --include ${files} --exclude "$black_exclude" --check --quiet); then
-        echo "Linter checks using 'black' passed."
-    else
-        echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
-        black . --include ${files} --exclude "$black_exclude"
-        failed_lint=true
-    fi
+# This check the files but they will not be commited
+if $(black . --include ${files} --exclude "$black_exclude" --check --quiet); then
+    echo "Linter checks using 'black' passed."
+else
+    echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
+    black . --include ${files} --exclude "$black_exclude"
+    failed_lint=true
 fi
 
 echo "=================================================="
