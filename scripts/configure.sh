@@ -352,8 +352,22 @@ if [ $skip_autogen == 0 ] ; then
     echo ${build_cmd} ${extras_cmd} astrobee
     ${build_cmd} ${extras_cmd} astrobee
 
-    echo "adding alias to ${source_folder}/setup.sh so ${build_cmd} runs autogen first on subsequent runs..."
-    cat >>"${workspace_path}/${source_folder}/setup.sh" << EOF
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        echo "Adding symlink to zsh setup file"
+        shell="zsh"
+    elif [[ "$SHELL" == *"bash"* ]]; then
+        echo "Adding symlink to bash setup file"
+        shell="bash"
+    elif [[ "$SHELL" == *"sh"* ]]; then
+        echo "Adding symlink to sh setup file"
+        shell="sh"
+    else
+        echo "Shell not supported!"
+        exit 1
+    fi 
+
+    echo "adding alias to ${source_folder}/setup.${shell} so ${build_cmd} runs autogen first on subsequent runs..."
+    cat >>"${workspace_path}/${source_folder}/setup.${shell}" << EOF
 
 ${build_cmd}_function () {
     echo "Symlinking..."
