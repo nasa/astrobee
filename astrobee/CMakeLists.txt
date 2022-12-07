@@ -24,10 +24,12 @@ set(ASTROBEE_VERSION 0.16.6)
 add_compile_options(-std=c++14)
 
 # Verify the user has the pre-commit hook
-execute_process(
-  COMMAND cp ../scripts/git/pre-commit ../.git/hooks
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  )
+# (This functionality has been moved to configure.sh to avoid
+# depending on having the .git folder present.)
+#execute_process(
+#  COMMAND cp ../scripts/git/pre-commit ../.git/hooks
+#  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#  )
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
