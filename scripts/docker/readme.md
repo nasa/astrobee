@@ -1,28 +1,65 @@
 \page install-docker Developing with Docker
 
-# System requirements
+# Preliminaries
 
-The instructions below assume your host OS is Ubuntu 16.04, 18.04, or 20.04. As of this writing, Ubuntu 20.04 is the preferred host OS for most Astrobee developers to use, at least until you get to the point of needing to cross-compile your code for the robot hardware.
+Before running these instructions, make sure you visit the main Astrobee INSTALL page and:
+- Check the system requirements.
+- Follow the Docker-option install steps 1-2 (install Docker and check out the Astrobee Robot Software).
 
-Make sure you have Docker installed in your system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+# Option 1: Using Visual Studio Code (experimental!)
 
-# Clone the Astrobee Robot Software
+You may find it helpful to use VSCode's Docker integration to help you interactively develop inside a Docker container.
 
-The instructions below assume you have cloned the software with:
+Our team is tentatively moving in the direction of encouraging all developers to work this way, but our VSCode approach is still considered highly experimental and could change a lot.
 
-    export ASTROBEE_WS=$HOME/astrobee  # your choice where
-    git clone https://github.com/nasa/astrobee.git $ASTROBEE_WS/src
-    cd $ASTROBEE_WS/src
-    git submodule update --init --depth 1 description/media
+## Install VSCode and the Dev Containers plugin
 
-# Quick start
+There are many valid ways to install VSCode. These commands are for an APT-style installation on Ubuntu:
+
+```bash
+wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+sudo apt-get update
+sudo apt-get install -y code
+```
+
+Docker integration is based on the Dev Containers plugin, which you can install with:
+
+```bash
+code --install-extension ms-vscode-remote.remote-containers
+```
+
+## Use VSCode to open the folder inside the Docker container
+
+You can open the Astrobee folder inside the Docker container like this ([per the discussion here](https://github.com/microsoft/vscode-remote-release/issues/2133#issuecomment-1212180962)):
+
+```bash
+cd $ASTROBEE_WS/src
+(path=$(pwd) && p=$(printf "%s" "$path" | xxd -p) && code --folder-uri "vscode-remote://dev-container+${p//[[:space:]]/}/src/astrobee/src")
+```
+
+Or you can open the `$ASTROBEE_WS/src` folder through the VSCode graphical interface, and you should then see a popup dialog from the Dev Containers plugin. Click the "Reopen in Container" button.
+
+Either way, the Dev Containers plugin will download a pre-built Astrobee Robot Software Docker image from our official repository, start it running, and provide you with a development environment running inside the container.
+
+You can manage your Dev Containers configuration using the files in the `.devcontainer` folder at the top level. For example, you can select a different Docker image to install from [the list on GitHub](https://github.com/nasa/astrobee/pkgs/container/astrobee) using the `FROM` command in the `Dockerfile`.
+
+## Interactively develop inside the Docker container
+
+You can start by selecting `View->Terminal` in the VSCode graphical interface. This will display a terminal session inside the Docker container where you can run arbitrary commands. Your container will persist throughout your VSCode session, and changes you make using the VSCode editor will be reflected inside the container, making it easy to do quick interactive edit/build/test cycles.
+
+(Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
+
+# Option 2: Using the Docker support scripts
 
 ## Quick start run
 
-You can immediately run a software simulation of Astrobee as follows:
+You can install Astrobee Robot Software inside a Docker container and run a software simulation with:
 
-    cd $ASTROBEE_WS/src
-    ./scripts/docker/run.sh --remote
+```bash
+cd $ASTROBEE_WS/src
+./scripts/docker/run.sh --remote
+```
 
 Invoking `run.sh --remote` calls Docker with the right arguments such that it will download the latest pre-built complete Astrobee Robot Software image from our official Docker image repository, start it as a container, and invoke a default command inside the container (which runs the software simulation).
 
@@ -30,11 +67,13 @@ Invoking `run.sh --remote` calls Docker with the right arguments such that it wi
 
 The fastest way to recompile the ARS software to reflect your local changes is:
 
-    ./scripts/docker/build.sh --remote astrobee_quick
+```bash
+./scripts/docker/build.sh --remote astrobee_quick
+```
 
 Invoking `build.sh --remote` calls Docker with the right arguments such that it will download the latest pre-built complete Astrobee Robot Software image from our official Docker image repository. Then it will build the `astrobee_quick` target, which does a quick recompile of the ARS software to reflect your changes, accelerated by using previously cached compilation results.
 
-# Overview of Docker scripts
+# Overview of Docker support scripts
 
 The Astrobee Robot Software provides two main support scripts for working with Docker.
 
@@ -59,13 +98,14 @@ For all of these cases, each new build stage starts from the results of the prev
 
 If you've made changes to ARS, here's how to figure out what `build.sh` target to specify:
 
-- Most commonly, you can build `astrobee_quick`. This should rebuild the ARS instance within your container to reflect your changes, taking advantage of cached results from the most recent build of the `astrobee` image to speed up compilation. The ARS build system is designed to detect when cached results need to be rebuilt by comparing file timestamps. However, the detection is not perfect in all cases, and invalid cache contents can occasionally cause build errors.
-- You would most likely build the `astrobee` target when building `astrobee_quick` generates errors that might be due to invalid cache contents. Because building `astrobee` starts from the `astrobee_base` image with no previous ARS compilation results, building it effectively clears the cache. Another good use for the `astrobee` target is in continuous integration workflows where we want to have strict configuration management to make the output products more deterministic.
-- As an external developer, you generally shouldn't need to build the `astrobee_base` target. That's a good thing, because building the external libraries from source typically takes hours. As a NASA-internal developer, you may rarely need to build `astrobee_base` if you are modifying `astrobee_base.Dockerfile` to install new external dependencies needed by the `develop` and `master` branches.
-- The `test_astrobee` target is most commonly used in continuous integration workflows to check that software changes didn't introduce errors. Because it always runs on top of the `astrobee` image, the test results will not reflect any changes that you compiled only by building `astrobee_quick`. You can manually run the same tests in the `astrobee_quick` container like this:
-
-    $ ./scripts/docker/run.sh -i "quick-" -- bash  # enter astrobee_quick container
-    # /src/astrobee/src/scripts/run_tests.sh
+- `astrobee_quick`: This is the most common target. It rebuilds the ARS instance within your container to reflect your changes, taking advantage of cached results from the most recent build of the `astrobee` image to speed up compilation. The ARS build system is designed to detect when cached results need to be rebuilt by comparing file timestamps. However, the detection is not perfect in all cases, and invalid cache contents can occasionally cause build errors.
+- `astrobee`: You can use this target when building `astrobee_quick` generates errors that might be due to invalid cache contents. Because building `astrobee` starts from the `astrobee_base` image with no previous ARS compilation results, building it effectively clears the cache. It is also used in continuous integration workflows where we want to have strict configuration management to make the output products more deterministic.
+- `astrobee_base`: As an external developer, you generally shouldn't need to build this target. That's good, because building the external libraries from source typically takes hours. As a NASA-internal developer, you may rarely need to build `astrobee_base` if you are modifying `astrobee_base.Dockerfile` to install new external dependencies needed by the `develop` and `master` branches.
+- `test_astrobee`: This target is mostly used in continuous integration workflows. Something to watch out for: because it always runs on top of the `astrobee` image, the test results will not reflect any changes that you compiled only by building `astrobee_quick`. You can manually run the same tests in the `astrobee_quick` container like this:
+    ```bash
+    host$ ./scripts/docker/run.sh -i "quick-" -- bash
+    docker# /src/astrobee/src/scripts/run_tests.sh
+    ```
 
 In order to execute each of these build stages, `build.sh` invokes `docker build` on the corresponding `Dockerfile` in the `scripts/docker` folder, such as `astrobee_base.Dockerfile`. These files can give you insight into the detailed build steps at each stage.
 
@@ -78,7 +118,7 @@ The `build.sh` script provides two other targets that are not build stages, but 
 
 These targets are mostly used in continuous integration workflows.
 
-All pre-built remote images are available on [github here](https://github.com/nasa/astrobee/pkgs/container/astrobee)
+All pre-built remote images are available on [GitHub here](https://github.com/nasa/astrobee/pkgs/container/astrobee).
 
 ## Other build options
 
@@ -88,7 +128,9 @@ However, there is no requirement for the host OS and the Docker image OS to matc
 
 For more information about all the build arguments:
 
-    ./scripts/docker/build.sh -h
+```bash
+./scripts/docker/build.sh -h
+```
 
 The `build.sh` script normally manages these `Dockerfile` `ARGS` but you can set them yourself if you run `docker build` manually:
 
@@ -96,9 +138,10 @@ The `build.sh` script normally manages these `Dockerfile` `ARGS` but you can set
 - `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic".
 - `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3".
 
-If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
-If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
-If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
+Constraints:
+- If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
+- If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
+- If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
 
 The Docker files also accept args to use local or container registry images.
 
@@ -109,21 +152,25 @@ The Docker files also accept args to use local or container registry images.
 
 ## Run the Astrobee simulator in the container
 
-For some systems (with discrete graphics cards), you may need to install [additional software for hardware acceleration](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
-
 To run the Astrobee simulator in the container:
 
-    ./scripts/docker/run.sh --remote
+```bash
+./scripts/docker/run.sh --remote
+```
 
 For more information about all the arguments:
 
-    ./scripts/docker/run.sh -h
+```bash
+./scripts/docker/run.sh -h
+```
 
 There are available options such as `--args` that allow you to add to the default sim arguments (`dds:=false robot:=sim_pub`) such as to open rviz or gazebo (`--args "rviz:=true sviz:=true"`).
 
 To open another terminal inside the same docker container:
 
-    docker exec -it astrobee /astrobee_init.sh bash
+```bash
+docker exec -it astrobee /astrobee_init.sh bash
+```
 
 (The `/astrobee_init.sh` script configures the shell in the container
 to know about the Astrobee development environment, then runs the
@@ -131,18 +178,24 @@ specified command, in this case `bash`, to get an interactive shell.)
 
 To shutdown the docker container, run:
 
-    ./scripts/docker/shutdown.sh
+```bash
+./scripts/docker/shutdown.sh
+```
 
 ## Run other commands in the container
 
 Besides the simulator, you can also run arbitrary commands with `run.sh`. To
 get an interactive shell:
 
-    ./scripts/docker/run.sh --remote -- bash
+```bash
+./scripts/docker/run.sh --remote -- bash
+```
 
 Or run any other command:
 
-    ./scripts/docker/run.sh --remote -- rosmsg info std_msgs/Header
+```bash
+./scripts/docker/run.sh --remote -- rosmsg info std_msgs/Header
+```
 
 (The `--` separator is usually not necessary, but makes the `run.sh`
 argument parsing more predictable.)
@@ -176,9 +229,11 @@ replicate and debug failed CI tests.
 
 Example usage:
 
-    host$ ./scripts/docker/run.sh --remote --mount
-    docker# (cd /src/astrobee && catkin build [package])  # recompile local changes
-    docker# /src/astrobee/src/scripts/run_tests.sh [package]
+```bash
+host$ ./scripts/docker/run.sh --remote --mount
+docker# (cd /src/astrobee && catkin build [package])  # recompile local changes
+docker# /src/astrobee/src/scripts/run_tests.sh [package]
+```
 
 The package argument is optional. The default is to build/test all
 packages.
@@ -195,46 +250,16 @@ If you care about higher-fidelity replication of CI problems and are
 willing to wait through a full `astrobee` build, you can also use
 `build.sh` to invoke `test_astrobee.Dockerfile` itself, like this:
 
-    ./scripts/docker/build.sh --remote astrobee test_astrobee
+```bash
+./scripts/docker/build.sh --remote astrobee test_astrobee
+```
 
 Or, if you made changes that affect `astrobee_base.Dockerfile`, you
 will need to rebuild that locally as well:
 
-    ./scripts/docker/build.sh astrobee_base astrobee test_astrobee
-
-# Using Visual Studio Code to develop inside a Docker container (experimental!)
-
-You may find it helpful to use VSCode's Docker integration to help you interactively develop inside the Docker container.
-
-Our team is tentatively moving in the direction of encouraging all developers to work this way, but our VSCode approach is still considered highly experimental and could change a lot.
-
-## Install VSCode and plugin
-
-There are many valid ways to install VSCode. These commands are for an APT-style installation on Ubuntu:
-
-    wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
-    sudo apt-get update
-    sudo apt-get install -y code
-
-Docker integration is based on the Remote Containers plugin, which you can install with:
-
-    code --install-extension ms-vscode-remote.remote-containers
-
-## Use VSCode to open the folder inside the Docker container
-
-You can open the Astrobee folder inside the Docker container like this ([per the discussion here](https://github.com/microsoft/vscode-remote-release/issues/2133#issuecomment-1212180962)):
-
-    cd $ASTROBEE_WS/src
-    (path=$(pwd) && p=$(printf "%s" "$path" | xxd -p) && code --folder-uri "vscode-remote://dev-container+${p//[[:space:]]/}/src/astrobee/src")
-
-Or you can open the folder through the VSCode graphical interface, and you should then see a popup dialog from the Remote Containers plugin. Click the "Reopen in Container" button.
-
-## Interactively develop inside the Docker container
-
-A starting point is selecting `View->Terminal` in the VSCode graphical interface. This will display a terminal session inside the Docker container, much like `run.sh`, where you can run arbitrary commands. Your container will persist throughout your VSCode session, and changes you make using the VSCode editor will be reflected inside the container, making it easy to do quick interactive edit/build/test cycles.
-
-(Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
+```bash
+./scripts/docker/build.sh astrobee_base astrobee test_astrobee
+```
 
 # Advanced build options (NASA users only)
 
@@ -244,45 +269,55 @@ To cross-compile Astrobee, you will need
 to install a cross-compile chroot and toolchain. Select two directories for
 these:
 
-    export ARMHF_CHROOT_DIR=$HOME/arm_cross/rootfs
-    export ARMHF_TOOLCHAIN=$HOME/arm_cross/toolchain/gcc
+```bash
+export ARMHF_CHROOT_DIR=$HOME/arm_cross/rootfs
+export ARMHF_TOOLCHAIN=$HOME/arm_cross/toolchain/gcc
+```
 
-Append these lines to your .bashrc file, as you will need these two variables
+Append these lines to your `.bashrc` file, as you will need these two variables
 every time you cross compile.
 
 Next, download the cross toolchain and install the chroot:
 
-    mkdir -p $ARMHF_TOOLCHAIN
-    cd $HOME/arm_cross
-    $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
-    $SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+```bash
+mkdir -p $ARMHF_TOOLCHAIN
+cd $HOME/arm_cross
+$SOURCE_PATH/submodules/platform/fetch_toolchain.sh
+$SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+```
 
 From the root of the repository, run:
 
-    ./scripts/docker/cross_compile/cross_compile.sh
+```bash
+./scripts/docker/cross_compile/cross_compile.sh
+```
 
 The code will be cross-compiles inside the docker container in /opt/astrobee, and
 can be copied to the robot.
 
 After the debian files are generated inside the docker image, they are copied to
 in order of priority:
-1) To the INSTALL_PATH, if defined
-2) To ${DIR}/../../../../astrobee_install/armhf/, if the directoy already exists,
-where $DIR is the directory where the cross_compile.sh script is located.
-3) To $HOME/astrobee_build/armhf otherwise
+1) To the `INSTALL_PATH`, if defined.
+2) To `${DIR}/../../../../astrobee_install/armhf/`, if the directory already exists,
+where `$DIR` is the directory where the cross_compile.sh script is located.
+3) To `$HOME/astrobee_build/armhf` otherwise.
 
 If you already cross-compiled once and just wish to rebuild the code, run:
 
-    ./scripts/docker/cross_compile/rebuild_cross_compile.sh
+```bash
+./scripts/docker/cross_compile/rebuild_cross_compile.sh
+```
 
 ## Building an Astrobee Debian (NASA users only)
 
-This step assumes that the cross compile setup was successful and that ARMHF_CHROOT_DIR
-and ARMHF_TOOLCHAIN are defined. If not, please follow the cross-compile instructions.
+This step assumes that the cross compile setup was successful and that `ARMHF_CHROOT_DIR`
+and `ARMHF_TOOLCHAIN` are defined. If not, please follow the cross-compile instructions.
 
 To generate the debians, from the root of the repository, run:
 
-    ./scripts/docker/cross_compile/debian_compile.sh
+```bash
+./scripts/docker/cross_compile/debian_compile.sh
+```
 
 After the debian files are generated inside the docker image, they are copied to the
-folder before the root of the repository, ${DIR}/../../../../, where $DIR is the directory where the debian_compile.sh script is located.
+folder before the root of the repository, `${DIR}/../../../../`, where `$DIR` is the directory where the `debian_compile.sh` script is located.
