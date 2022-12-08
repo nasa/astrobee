@@ -1,12 +1,12 @@
 # Install
 
-## Quick start using the remote Astrobee docker images
+## Quick start using the remote Astrobee Docker images
 
 *The following has been tested on native Ubuntu systems using X11 (the default). Please see [these ROS pages](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more resources.*
 
 Make sure you have Docker installed in your Ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
-For some systems (with discrete graphics cards), you may need to install [additional software](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
+For some systems (with discrete graphics cards), you may need to install [additional software for hardware acceleration](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
 
 ``` bash
 git clone https://github.com/nasa/astrobee.git
@@ -14,7 +14,7 @@ cd astrobee
 ./scripts/docker/run.sh --remote
 ```
 
-For more options, see: \ref install-docker.
+For much more discussion, see: \subpage install-docker.
 
 ## Building the code natively
 
@@ -29,7 +29,7 @@ If you are a non-NASA user the preferred supported method is to use Ubuntu 16 an
 
 ### NASA users
 
-If you are a NASA user and want to install the cross-compiler for robot testing follow these instructions: 
+If you are a NASA user and want to install the cross-compiler for robot testing follow these instructions:
 
 \subpage install-NASA
 
