@@ -4,7 +4,7 @@
 
 Before running these instructions, make sure you visit the main Astrobee INSTALL page and:
 - Check the system requirements.
-- Follow the Docker-option install steps 1-2 (install Docker and check out the Astrobee Robot Software).
+- Follow the Docker-option install steps 1-2, install Docker and check out the Astrobee Robot Software (ARS).
 
 # Option 1: Using Visual Studio Code (experimental!)
 
@@ -40,7 +40,7 @@ cd $ASTROBEE_WS/src
 
 Or you can open the `$ASTROBEE_WS/src` folder through the VSCode graphical interface, and you should then see a popup dialog from the Dev Containers plugin. Click the "Reopen in Container" button.
 
-Either way, the Dev Containers plugin will download a pre-built Astrobee Robot Software Docker image from our official repository, start it running, and provide you with a development environment running inside the container.
+Either way, the Dev Containers plugin will download a pre-built ARS Docker image from our official repository, start it running, and provide you with a development environment running inside the container.
 
 You can manage your Dev Containers configuration using the files in the `.devcontainer` folder at the top level. For example, you can select a different Docker image to install from [the list on GitHub](https://github.com/nasa/astrobee/pkgs/container/astrobee) using the `FROM` command in the `Dockerfile`.
 
@@ -54,28 +54,28 @@ You can start by selecting `View->Terminal` in the VSCode graphical interface. T
 
 ## Quick start run
 
-You can install Astrobee Robot Software inside a Docker container and run a software simulation with:
+You can install ARS inside a Docker container and run a software simulation with:
 
 ```bash
 cd $ASTROBEE_WS/src
 ./scripts/docker/run.sh --remote
 ```
 
-Invoking `run.sh --remote` calls Docker with the right arguments such that it will download the latest pre-built complete Astrobee Robot Software image from our official Docker image repository, start it as a container, and invoke a default command inside the container (which runs the software simulation).
+Invoking `run.sh --remote` calls Docker with the right arguments such that it will download the latest pre-built complete ARS image from our official Docker image repository, start it as a container, and invoke a default command inside the container (which runs the software simulation).
 
 ## Quick start build (if needed)
 
-The fastest way to recompile the ARS software to reflect your local changes is:
+The fastest way to recompile ARS to reflect your local changes is:
 
 ```bash
 ./scripts/docker/build.sh --remote astrobee_quick
 ```
 
-Invoking `build.sh --remote` calls Docker with the right arguments such that it will download the latest pre-built complete Astrobee Robot Software image from our official Docker image repository. Then it will build the `astrobee_quick` target, which does a quick recompile of the ARS software to reflect your changes, accelerated by using previously cached compilation results.
+Invoking `build.sh --remote` calls Docker with the right arguments such that it will download the latest pre-built complete ARS image from our official Docker image repository. Then it will build the `astrobee_quick` target, which does a quick recompile of the ARS software to reflect your changes, accelerated by using previously cached compilation results.
 
 # Overview of Docker support scripts
 
-The Astrobee Robot Software provides two main support scripts for working with Docker.
+ARS provides two main support scripts for working with Docker.
 
 The `build.sh` script builds new ARS Docker images, with many configuration options described later. As discussed in the "Quick start run" section, you can always start by running one of our pre-built images. You only need to build your own new image if you've modified the software.
 
