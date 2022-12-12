@@ -18,7 +18,7 @@
 # This message allows the MOBILITY::MAPPER zones to be retrieved
 
 ---
-{% if USE_ROS1 %}
+{% if ROS1 %}
 time timestamp                          # When these zones were updated
 {% else %}
 builtin_interfaces/Time timestamp                          # When these zones were updated

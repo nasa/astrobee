@@ -331,8 +331,12 @@ if [ $skip_autogen == 0 ] ; then
 
     if [[ "${ROS_VERSION}" == "1" ]]; then
         build_cmd=catkin
+        extras_cmd=build
+        source_folder=devel
     elif [[ "${ROS_VERSION}" == "2" ]]; then
         build_cmd=colcon
+        extras_cmd="build --packages-select"
+        source_folder=install
     else
         echo "ROS_VERSION environment variable must be set to '1' or '2' for autogen!"
         exit 1
@@ -342,12 +346,31 @@ if [ $skip_autogen == 0 ] ; then
     "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
 
     echo "running child instance of configure.sh in new autogen location..."
-    "${autogen_path}/scripts/configure.sh" "${args_copy[@]}" -Z
+    "${autogen_path}/scripts/configure.sh -Z" "${args_copy[@]}"
 
-    echo "setting alias so ${build_cmd} runs autogen first on subsequent runs..."
-    cat >>"${workspace_path}/devel/setup.sh" <<EOF
+    echo "doing minimal build (just astrobee package) to force creation of ${source_folder}/setup.sh..."
+    echo ${build_cmd} ${extras_cmd} astrobee
+    ${build_cmd} ${extras_cmd} astrobee
+
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        echo "Adding symlink to zsh setup file"
+        shell="zsh"
+    elif [[ "$SHELL" == *"bash"* ]]; then
+        echo "Adding symlink to bash setup file"
+        shell="bash"
+    elif [[ "$SHELL" == *"sh"* ]]; then
+        echo "Adding symlink to sh setup file"
+        shell="sh"
+    else
+        echo "Shell not supported!"
+        exit 1
+    fi
+
+    echo "adding alias to ${source_folder}/setup.${shell} so ${build_cmd} runs autogen first on subsequent runs..."
+    cat >>"${workspace_path}/${source_folder}/setup.${shell}" << EOF
 
 ${build_cmd}_function () {
+    echo "Symlinking..."
     echo 'ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"'
     ROS_VERSION=${ROS_VERSION} "${ff_path}/scripts/build/autogen_ros_version_src.py" -v --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
     \\${build_cmd} "\$@"
@@ -356,65 +379,72 @@ ${build_cmd}_function () {
 alias ${build_cmd}=${build_cmd}_function
 EOF
 
-    echo "(to suppress alias that invokes autogen, run \\${build_cmd} instead of ${build_cmd}.)"
+    echo "(to suppress alias that invokes autogen, run \\${build_cmd} instead of ${build_cmd})"
 
     exit 0
 fi
 
-if [ $native_build == 1 ] ; then
-    echo "configuring for native linux..."
-    catkin init
-    enable_gazebo=" -DENABLE_GAZEBO=on"
+if [[ "${ROS_VERSION}" == "1" ]]; then
+    if [ $native_build == 1 ] ; then
+        echo "configuring for native linux..."
 
-    # Add our cmake to paths and bashrc
-    grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
-    cmake_astrobee_path=`catkin locate -s`/cmake
-    grep -qF ${cmake_astrobee_path} ~/.bashrc || {
-      echo -e '\n' >> ~/.bashrc
-      echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
-    }
-    source ~/.bashrc
+        catkin init
+        enable_gazebo=" -DENABLE_GAZEBO=on"
 
-    shell="$SHELL"
-    if [[ ${shell}  == *"zsh"* ]]; then
-        echo "Setting .zshrc with environment variables..."
-        grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
-        grep -qF ${cmake_astrobee_path} ~/.zshrc || {
-            echo -e '\n' >> ~/.zshrc
-            echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+        # Add our cmake to paths and bashrc
+        grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
+        cmake_astrobee_path=`catkin locate -s`/cmake
+        grep -qF ${cmake_astrobee_path} ~/.bashrc || {
+        echo -e '\n' >> ~/.bashrc
+        echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
         }
+        source ~/.bashrc
+
+        shell="$SHELL"
+        if [[ ${shell}  == *"zsh"* ]]; then
+            echo "Setting .zshrc with environment variables..."
+            grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
+            grep -qF ${cmake_astrobee_path} ~/.zshrc || {
+                echo -e '\n' >> ~/.zshrc
+                echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+            }
+        fi
+
+        catkin profile add ${profile:-native}
+        catkin profile set ${profile:-native}
+        catkin config --no-extend \
+            --build-space ${workspace_path}build \
+            --install-space ${install_path:-${workspace_path}install} \
+            --devel-space ${workspace_path}devel \
+            --log-space ${workspace_path}log \
+            --no-install \
+            --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
     fi
 
-    catkin profile add ${profile:-native}
-    catkin profile set ${profile:-native}
-    catkin config --no-extend \
-        --build-space ${workspace_path}build \
-        --install-space ${install_path:-${workspace_path}install} \
-        --devel-space ${workspace_path}devel \
-        --log-space ${workspace_path}log \
-        --no-install \
-        --cmake-args ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    if [ $armhf_build == 1 ] ; then
+        echo "configuring for armhf..."
+        catkin init
+        armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake -DARMHF_ROS_DISTRO=${ros_version} -DCATKIN_ENABLE_TESTING=off"
+        use_ctc=" -DUSE_CTC=on"
+        enable_gazebo=""
+        build_loc_rviz_plugins=""
+        catkin profile add ${profile:-armhf}
+        catkin profile set ${profile:-armhf}
+        catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/$ros_version \
+            --build-space ${workspace_path:-armhf/}build \
+            --install-space ${install_path:-${workspace_path:-armhf/}}opt/astrobee \
+            --devel-space ${workspace_path:-armhf/}devel \
+            --log-space ${workspace_path:-armhf/}logs \
+            --install \
+            --blacklist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
+                astrobee_dock astrobee_freeflyer astrobee_gazebo localization_rviz_plugins ground_dds_ros_bridge \
+            --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} \
+                -DCMAKE_BUILD_TYPE=Release
+    fi
 
+else  # begin ROS2 version
 
-fi
+    echo "WARNING: configure.sh has not been fully ported to support ROS2 yet"
+    echo "completing the rest of the configuration is up to you!"
 
-if [ $armhf_build == 1 ] ; then
-    echo "configuring for armhf..."
-    catkin init
-    armhf_opts="-DCMAKE_TOOLCHAIN_FILE=${ff_path}/scripts/build/ubuntu_cross.cmake -DARMHF_ROS_DISTRO=${ros_version} -DCATKIN_ENABLE_TESTING=off"
-    use_ctc=" -DUSE_CTC=on"
-    enable_gazebo=""
-    build_loc_rviz_plugins=""
-    catkin profile add ${profile:-armhf}
-    catkin profile set ${profile:-armhf}
-    catkin config --extend $ARMHF_CHROOT_DIR/opt/ros/$ros_version \
-        --build-space ${workspace_path:-armhf/}build \
-        --install-space ${install_path:-${workspace_path:-armhf/}}opt/astrobee \
-        --devel-space ${workspace_path:-armhf/}devel \
-        --log-space ${workspace_path:-armhf/}logs \
-        --install \
-        --blacklist astrobee_handrail_8_5 astrobee_handrail_21_5 astrobee_handrail_30 astrobee_handrail_41_5 astrobee_iss astrobee_granite \
-            astrobee_dock astrobee_freeflyer astrobee_gazebo localization_rviz_plugins ground_dds_ros_bridge \
-        --cmake-args -DARMHF_CHROOT_DIR=$ARMHF_CHROOT_DIR ${armhf_opts} ${use_ctc} ${enable_gazebo} ${build_loc_rviz_plugins} ${extra_opts} \
-            -DCMAKE_BUILD_TYPE=Release
-fi
+fi  # end ROS2 version

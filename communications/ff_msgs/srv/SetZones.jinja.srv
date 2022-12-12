@@ -17,7 +17,7 @@
 #
 # This message allows the MOBILITY::MAPPER zones to be set
 
-{% if USE_ROS1 %}
+{% if ROS1 %}
 time timestamp                          # When these zones were created
 {% else %}
 builtin_interfaces/Time timestamp                          # When these zones were created
