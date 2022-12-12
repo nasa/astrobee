@@ -170,10 +170,7 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
           (ns.empty() ? "body" : ns + "/" + std::string(FRAME_NAME_BODY)),
           ros::Time(0));
         state.header = tfs.header;
-        state.pose.position.x = tfs.transform.translation.x;
-        state.pose.position.y = tfs.transform.translation.y;
-        state.pose.position.z = tfs.transform.translation.z;
-        state.pose.orientation = tfs.transform.rotation;
+        state.pose = ros_transform_to_ros_pose(tfs.transform);
       } catch (tf2::TransformException &ex) {
         std::cout << "Could not query the pose of the robot: "
                   << ex.what() << std::endl;

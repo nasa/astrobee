@@ -58,10 +58,6 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
   FrameStore() : ff_util::FreeFlyerNodelet() {}
 #else
   explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerNodelet(options) {}
-
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
-    return node_->get_node_base_interface();
-  }
 #endif
   ~FrameStore() {}
 

@@ -137,6 +137,11 @@ class FreeFlyerNodelet {
   void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name);
   #else
   void Setup(std::string plugin_name);
+
+  // Necessary ROS2 function for components
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
+    return node_->get_node_base_interface();
+  }
   #endif
 
   std::map<std::string, int> faults_;
