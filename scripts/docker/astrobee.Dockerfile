@@ -7,6 +7,7 @@ ARG REMOTE=astrobee
 FROM ${REMOTE}/astrobee:latest-base-ubuntu${UBUNTU_VERSION}
 
 ARG ROS_VERSION=kinetic
+ARG PYTHON=''
 
 RUN apt-get update \
   && apt-get install -y python${PYTHON}-jinja2 \
