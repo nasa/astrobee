@@ -79,3 +79,6 @@ RUN pip3 install -U \
 #     x-window-system \
 #     ros-rolling-gazebo-ros-pkgs \
 #     && rm -rf /var/lib/apt/lists/*
+
+# make python run python3 for compatibility with astrobee scripts
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
