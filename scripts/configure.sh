@@ -342,29 +342,40 @@ if [ $skip_autogen == 0 ] ; then
         exit 1
     fi
 
-    echo "running autogen_ros_version_src.py to configure ROS version..."
-    "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
-
-    echo "running child instance of configure.sh in new autogen location..."
-    "${autogen_path}/scripts/configure.sh -Z" "${args_copy[@]}"
-
-    echo "doing minimal build (just astrobee package) to force creation of ${source_folder}/setup.sh..."
-    echo ${build_cmd} ${extras_cmd} astrobee
-    ${build_cmd} ${extras_cmd} astrobee
-
     if [[ "$SHELL" == *"zsh"* ]]; then
-        echo "Adding symlink to zsh setup file"
         shell="zsh"
     elif [[ "$SHELL" == *"bash"* ]]; then
-        echo "Adding symlink to bash setup file"
         shell="bash"
     elif [[ "$SHELL" == *"sh"* ]]; then
-        echo "Adding symlink to sh setup file"
         shell="sh"
     else
         echo "Shell not supported!"
         exit 1
     fi
+
+    echo "installing git pre-commit hook..."
+    # this can't be done in the autogen folder which lacks a .git subfolder
+    cp "${ff_path}/scripts/git/pre-commit" "${ff_path}/.git/hooks"
+
+    echo "running autogen_ros_version_src.py to configure ROS version..."
+    "${ff_path}/scripts/build/autogen_ros_version_src.py" --checkout-dir="${ff_path}" --autogen-dir="${autogen_path}"
+
+    echo "running child instance of configure.sh in new autogen location..."
+    "${autogen_path}/scripts/configure.sh" -Z "${args_copy[@]}"
+
+    if [[ "${ROS_VERSION}" == "1" ]]; then
+        echo "child configure.sh complete, picking up CMAKE_PREFIX_PATH..."
+        # it should have been possible to pick up the extended
+        # CMAKE_PREFIX_PATH by sourcing .bashrc here, but when tested that
+        # mysteriously failed. instead copy/paste the path setup from
+        # below. this is needed before invoking 'catkin build'.
+        cmake_astrobee_path=`catkin locate -s`/cmake
+        if [[ ":$CMAKE_PREFIX_PATH:" != *":${cmake_astrobee_path}:"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}${cmake_astrobee_path}"; fi
+    fi
+
+    echo "doing minimal build (just astrobee package) to force creation of ${source_folder}/setup.sh..."
+    echo ${build_cmd} ${extras_cmd} astrobee
+    ${build_cmd} ${extras_cmd} astrobee
 
     echo "adding alias to ${source_folder}/setup.${shell} so ${build_cmd} runs autogen first on subsequent runs..."
     cat >>"${workspace_path}/${source_folder}/setup.${shell}" << EOF
