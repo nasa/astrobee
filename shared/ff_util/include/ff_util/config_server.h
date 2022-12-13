@@ -27,7 +27,7 @@
 #include <config_reader/config_reader.h>
 
 
-#ifdef ROS1
+#if ROS1
 #include <diagnostic_msgs/KeyValue.h>
 
 #include <dynamic_reconfigure/Reconfigure.h>

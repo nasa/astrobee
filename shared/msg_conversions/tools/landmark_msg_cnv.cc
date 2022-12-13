@@ -22,7 +22,7 @@
 
 #include <gflags/gflags.h>
 
-#ifdef ROS1
+#if ROS1
 #include <ff_msgs/VisualLandmarks.h>
 #include <sensor_msgs/PointCloud2.h>
 

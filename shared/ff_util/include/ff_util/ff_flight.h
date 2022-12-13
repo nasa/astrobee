@@ -22,7 +22,7 @@
 // ROS includes
 #include <ff_common/ros.h>
 
-#ifdef ROS1
+#if ROS1
 // General information
 #include <geometry_msgs/InertiaStamped.h>
 

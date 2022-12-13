@@ -18,7 +18,7 @@
 
 #include <msg_conversions/msg_conversions.h>
 
-#ifdef ROS1
+#if ROS1
 #include <ros/console.h>
 #else
 // Setup logging for ROS2
