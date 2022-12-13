@@ -20,6 +20,7 @@ project(dds_ros_bridge)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+add_definitions(-DROS1)
 
 if (USE_DDS)
 ## Find catkin macros and libraries

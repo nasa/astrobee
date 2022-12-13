@@ -20,10 +20,11 @@ project(framestore)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+add_definitions(-DROS1)
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_compile_definitions(ROS1)
+  add_definitions(-DROS1)
   ## Find catkin macros and libraries
   find_package(catkin2 REQUIRED COMPONENTS
     roscpp
@@ -43,7 +44,7 @@ if("$ENV{ROS_VERSION}" STREQUAL "1")
 
 # Build for ROS2
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  add_compile_definitions(ROS2)
+  add_definitions(-DROS2)
 
   # Find amend and libraries
   find_package(ament_cmake REQUIRED)

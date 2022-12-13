@@ -23,7 +23,7 @@ add_compile_options(-std=c++14)
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_compile_definitions(ROS1)
+  add_definitions(-DROS1)
   ## Find catkin macros and libraries
   find_package(catkin2 REQUIRED COMPONENTS
     config_reader
@@ -44,7 +44,7 @@ if("$ENV{ROS_VERSION}" STREQUAL "1")
 
 # Build for ROS2
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  add_compile_definitions(ROS2)
+  add_definitions(-DROS2)
 
   # Find amend and libraries
   find_package(ament_cmake REQUIRED)
@@ -91,35 +91,37 @@ add_library(ff_flight
 )
 target_link_libraries(ff_flight ${catkin_LIBRARIES})
 
-# Declare C++ libraries
-# add_library(config_server
-#   src/config_server/config_server.cc
-# )
-# target_link_libraries(config_server ${catkin_LIBRARIES})
-
-# Declare C++ libraries
-# add_library(config_client
-#   src/config_client/config_client.cc
-# )
-# target_link_libraries(config_client ${catkin_LIBRARIES})
-
-# Declare C++ libraries
-# add_library(perf_timer
-#   src/perf_timer/perf_timer.cc
-# )
-# target_link_libraries(perf_timer ${catkin_LIBRARIES})
-
 
 if("$ENV{ROS_VERSION}" STREQUAL "1")
+
+# Declare C++ libraries
+add_library(config_server
+  src/config_server/config_server.cc
+)
+target_link_libraries(config_server ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(config_client
+  src/config_client/config_client.cc
+)
+target_link_libraries(config_client ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(perf_timer
+  src/perf_timer/perf_timer.cc
+)
+target_link_libraries(perf_timer ${catkin_LIBRARIES})
+
+
 add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
 
-# add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
+add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
 
-# add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
+add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
 
-# add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
+add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
 
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
 ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
