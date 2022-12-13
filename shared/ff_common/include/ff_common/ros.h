@@ -24,7 +24,7 @@
 #ifndef FF_COMMON_ROS_H_
 #define FF_COMMON_ROS_H_
 
-#ifdef ROS1
+#if ROS1
 #include <ros/ros.h>
 
 using NodeHandle = ros::NodeHandle*;

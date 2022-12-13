@@ -108,7 +108,7 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   ros::master::execute("lookupNode", args, result, payload, true);
   monitor_host_ = getHostfromURI(result[2]);
   if (monitor_host_.empty()) {
-    FF_ERROR("URI of the memory monitor not valid");
+    FF_ERROR_STREAM("URI of the memory monitor not valid");
     return;
   }
 
@@ -120,14 +120,14 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   // Intialize cpu freq class
   if (!freq_cpus_.Init()) {
     err_msg = "CPU Monitor: Cpu.init failed: " + (*std::strerror(errno));
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return;
   }
 
   if (ncpus_ != freq_cpus_.GetNumCores()) {
     err_msg = "CPU Monitor: Number of CPUs doesn't match!";
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return;
   }
@@ -164,7 +164,7 @@ bool CpuMemMonitor::ReadParams() {
   // Read config files into lua
   if (!config_params_.ReadFiles()) {
     err_msg = "CPU monitor: Unable to read configuration files.";
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -177,7 +177,7 @@ bool CpuMemMonitor::ReadParams() {
   if (!processor_config.GetPosReal("update_pid_hz", &update_pid_hz_)) {
     err_msg = "CPU monitor: Update PID frequency not specified for " +
                                                                 processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -186,7 +186,7 @@ bool CpuMemMonitor::ReadParams() {
   if (!processor_config.GetPosReal("update_freq_hz", &update_freq_hz_)) {
     err_msg = "CPU monitor: Update frequency not specified for " +
                                                                 processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -194,7 +194,7 @@ bool CpuMemMonitor::ReadParams() {
   if (!processor_config.GetPosReal("temperature_scale", &temperature_scale_)) {
     err_msg = "CPU monitor: Temperature scale not specified for " +
                                                                 processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -203,7 +203,7 @@ bool CpuMemMonitor::ReadParams() {
   if (!processor_config.GetInt("cpu_avg_load_limit", &cpu_avg_load_limit_)) {
     err_msg = "CPU monitor: CPU average load limit not specified for " +
                                                                 processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -212,7 +212,7 @@ bool CpuMemMonitor::ReadParams() {
   if (!processor_config.GetInt("cpu_temp_limit", &cpu_temp_limit_)) {
     err_msg = "CPU monitor: CPU temperature limit not specified for " +
                                                                 processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -221,7 +221,7 @@ bool CpuMemMonitor::ReadParams() {
   if (!processor_config.GetReal("mem_load_limit", &mem_load_limit_)) {
     err_msg = "Memory monitor: Memory percentage high load not specified for " +
                                                                 processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -232,7 +232,7 @@ bool CpuMemMonitor::ReadParams() {
     err_msg = "CPU monitor: CPU assert load high fault timeout seconds not ";
     err_msg += "specified for ";
     err_msg += processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -243,7 +243,7 @@ bool CpuMemMonitor::ReadParams() {
     err_msg = "CPU monitor: CPU clear load high fault timeout seconds not ";
     err_msg += "specified for ";
     err_msg += processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
@@ -254,13 +254,13 @@ bool CpuMemMonitor::ReadParams() {
     err_msg = "CPU Memory monitor: Nodes for inspection not in config file ";
     err_msg += "specified for ";
     err_msg += processor_name_;
-    FF_ERROR(err_msg);
+    FF_ERROR_STREAM(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
   }
   for (int i = 0; i < nodes.GetSize(); i++) {
     config_reader::ConfigReader::Table node;
     if (!nodes.GetTable(i + 1, &node)) {
-      FF_ERROR("Could not get node table");
+      FF_ERROR_STREAM("Could not get node table");
       return false;
     }
     std::string name;
@@ -279,7 +279,7 @@ void CpuMemMonitor::AssertCPULoadHighFaultCallback(ros::TimerEvent const& te) {
                         std::to_string(avg_cpu_load_high_value_) +
                         " which is greater than " +
                         std::to_string(cpu_avg_load_limit_) + ".";
-  FF_ERROR(err_msg);
+  FF_ERROR_STREAM(err_msg);
   this->AssertFault(ff_util::LOAD_TOO_HIGH, err_msg);
   load_fault_state_ = ASSERTED;
 }
@@ -298,7 +298,7 @@ void CpuMemMonitor::AssertMemLoadHighFaultCallback(ros::TimerEvent const& te) {
                         std::to_string(mem_load_value_) +
                         " which is greater than " +
                         std::to_string(mem_load_limit_) + ".";
-  FF_ERROR(err_msg);
+  FF_ERROR_STREAM(err_msg);
   this->AssertFault(ff_util::MEMORY_USAGE_TOO_HIGH, err_msg);
   load_fault_state_ = ASSERTED;
 }
@@ -338,7 +338,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host_ +
                               " and not in the same cpu as manager " + monitor_host_ + ".";
-        FF_ERROR(err_msg);
+        FF_ERROR_STREAM(err_msg);
         continue;
       }
 
@@ -350,7 +350,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       if (!pipe) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Could not open rosnode process for node " + it->first;
-        FF_ERROR(err_msg);
+        FF_ERROR_STREAM(err_msg);
         continue;
       }
       while (fgets(buffer.data(), 128, pipe) != NULL) {
@@ -362,7 +362,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " +
                               it->first + "does not have a PID.";
-        FF_ERROR(err_msg);
+        FF_ERROR_STREAM(err_msg);
         continue;
       }
       pclose(pipe);

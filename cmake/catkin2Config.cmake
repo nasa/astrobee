@@ -28,6 +28,9 @@
 #    contains the include dirs / library dirs / libraries of the searched component <comp>.
 
 find_package(catkin REQUIRED)  # defines catkin_DIR
+
+add_compile_definitions(ROS1)
+
 if(CATKIN_TOPLEVEL_FIND_PACKAGE OR NOT CATKIN_TOPLEVEL)
   set(catkin_EXTRAS_DIR "${catkin_DIR}")
 

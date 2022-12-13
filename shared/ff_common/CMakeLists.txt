@@ -26,6 +26,7 @@ find_package(Eigen3 REQUIRED)
 
 # Build for ROS1
 if("$ENV{ROS_VERSION}" STREQUAL "1")
+  add_compile_definitions(ROS1)
 
   ## Find catkin macros and libraries
   find_package(catkin2 REQUIRED COMPONENTS
@@ -42,6 +43,7 @@ if("$ENV{ROS_VERSION}" STREQUAL "1")
 
 # Build for ROS2
 elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+  add_compile_definitions(ROS2)
 
   find_package(ament_cmake REQUIRED)
   find_package(rclcpp REQUIRED)

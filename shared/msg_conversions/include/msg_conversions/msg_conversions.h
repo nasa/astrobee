@@ -24,7 +24,7 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
-#ifdef ROS1
+#if ROS1
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Point.h>

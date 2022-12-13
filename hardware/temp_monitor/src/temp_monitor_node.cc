@@ -58,56 +58,56 @@ class TempMonitorNode : public ff_util::FreeFlyerNodelet {
     // Read the device information from the config table
     config_reader::ConfigReader::Table tm;
     if (!config_params.GetTable("temp_monitor", &tm))
-      FF_FATAL("Could get temp_monitor item in config file");
+      FF_FATAL_STREAM("Could get temp_monitor item in config file");
 
     // Read the device information from the config table
     config_reader::ConfigReader::Table devices;
     if (!tm.GetTable("devices", &devices))
-      FF_FATAL("Could get devices item in temp_monitor config file");
+      FF_FATAL_STREAM("Could get devices item in temp_monitor config file");
 
     // Iterate over all devices
     for (int i = 0; i < devices.GetSize(); i++) {
       config_reader::ConfigReader::Table device_info;
       if (!devices.GetTable(i + 1, &device_info))
-        FF_FATAL("Could get row in table table");
+        FF_FATAL_STREAM("Could get row in table table");
 
       // Get the name of the device and check it matches the name of this node
       std::string name;
       if (!device_info.GetStr("name", &name))
-        FF_FATAL("Could not find row 'name' in table");
+        FF_FATAL_STREAM("Could not find row 'name' in table");
       std::string type;
       if (!device_info.GetStr("type", &type))
-        FF_FATAL("Could not find row 'type' in table");
+        FF_FATAL_STREAM("Could not find row 'type' in table");
 
       // Get the name of the device and check it matches the name of this node
       config_reader::ConfigReader::Table i2c_info;
       if (!device_info.GetTable("i2c", &i2c_info))
-        FF_FATAL("Could not find table 'i2c' in table");
+        FF_FATAL_STREAM("Could not find table 'i2c' in table");
       std::string dev;
       if (!i2c_info.GetStr("device", &dev))
-        FF_FATAL("Could not read the i2c device from the config");
+        FF_FATAL_STREAM("Could not read the i2c device from the config");
       uint32_t address;
       if (!i2c_info.GetUInt("address", &address))
-        FF_FATAL("Could not read the i2c address from the config");
+        FF_FATAL_STREAM("Could not read the i2c address from the config");
       uint32_t retries;
       if (!i2c_info.GetUInt("retries", &retries))
-        FF_FATAL("Could read the i2c retry count from the config");
+        FF_FATAL_STREAM("Could read the i2c retry count from the config");
 
       // Try and open the bus
       i2c::Error err;
       auto bus = i2c::Open(dev, &err);
       if (!bus)
-        FF_FATAL("Could not open the i2c bus");
+        FF_FATAL_STREAM("Could not open the i2c bus");
       bus->SetRetries(retries);
       // Try and contact the slave device
       auto device = bus->DeviceAt(address);
       if (!device)
-        FF_FATAL("Could not find the i2c slave address");
+        FF_FATAL_STREAM("Could not find the i2c slave address");
 
       // Check if we already have this bus open
       TempMonitorPtr temp_sensor = TempMonitorFactory::Create(type, device);
       if (temp_sensor == nullptr) {
-        FF_ERROR("Unable to create sensor " << name);
+        FF_ERROR_STREAM("Unable to create sensor " << name);
         continue;
       }
 
@@ -119,7 +119,7 @@ class TempMonitorNode : public ff_util::FreeFlyerNodelet {
     // Start the rate timer for temperature publishing
     double rate;
     if (!tm.GetReal("rate", &rate))
-      FF_FATAL("Could not find row 'rate' in table");
+      FF_FATAL_STREAM("Could not find row 'rate' in table");
     timer_ = nh->createTimer(ros::Duration(ros::Rate(rate)),
       &TempMonitorNode::TimerCallback, this, false, true);
   }
