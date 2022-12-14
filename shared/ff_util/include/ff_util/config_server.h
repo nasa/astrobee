@@ -20,7 +20,7 @@
 #define FF_UTIL_CONFIG_SERVER_H_
 
 // ROS includes
-#include <ff_common/ros.h>
+#include <ff_common/ff_ros.h>
 
 #include <ff_util/ff_names.h>
 

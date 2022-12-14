@@ -49,7 +49,6 @@ FreeFlyerNodelet::FreeFlyerNodelet(std::string const& node, bool autostart_hb_ti
   sleeping_(false),
   heartbeat_queue_size_(5),
   node_name_(node) {
-  ROS_ERROR_STREAM("FreeFlyerNodelet1");
 }
 
 FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer) :
@@ -57,7 +56,6 @@ FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer) :
   autostart_hb_timer_(autostart_hb_timer),
   initialized_(false),
   node_name_("") {
-  ROS_ERROR_STREAM("FreeFlyerNodelet2");
 }
 #else
 FreeFlyerNodelet::FreeFlyerNodelet(
@@ -84,7 +82,6 @@ FreeFlyerNodelet::~FreeFlyerNodelet() {
 #if ROS1
 // Called directly by Gazebo and indirectly through onInit() by nodelet
 void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name) {
-  ROS_ERROR_STREAM("Setup");
   // Copy the node handles
   nh_ = nh;
   nh_mt_ = nh_mt;
@@ -384,7 +381,6 @@ void FreeFlyerNodelet::StopHeartbeat() {
 
 #if ROS1
 void FreeFlyerNodelet::HeartbeatCallback(ros::TimerEvent const& ev) {
-  ROS_ERROR_STREAM("HeartbeatCallback");
   double s = (ev.last_real - ev.last_expected).toSec();
   if (s > 1.0)
     FF_INFO_STREAM(node_name_.c_str() << ": " << s);
@@ -429,7 +425,7 @@ void FreeFlyerNodelet::HeartbeatCallback() {
   //   FF_INFO_STREAM(node_name_.c_str() << ": " << s);
   PublishHeartbeat();
 }
-void InitCallback() {
+void FreeFlyerNodelet::InitCallback() {
   // Return a single threaded nodehandle by default
   initialized_ = false;
   Initialize(node_);
@@ -444,8 +440,8 @@ void InitCallback() {
 
   // Start timer that was setup earlier
   if (autostart_hb_timer_) {
-    timer_heartbeat_ = node_->create_wall_timer(1s,
-      &FreeFlyerNodelet::HeartbeatCallback, this);
+    timer_heartbeat_ = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(1.0),
+        std::bind(&FreeFlyerNodelet::HeartbeatCallback, this));
   }
 
   Reset();
@@ -532,11 +528,13 @@ void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::R
 
 
 void FreeFlyerNodelet::PublishHeartbeat() {
-  ROS_ERROR_STREAM("pub heartbeat0");
   if (initialized_) {
     heartbeat_.header.stamp = ROS_TIME_NOW();
+    #if ROS1
     pub_heartbeat_.publish(heartbeat_);
-  ROS_ERROR_STREAM("pub heartbeat1");
+    #else
+    pub_heartbeat_->publish(heartbeat_);
+    #endif
   }
 }
 

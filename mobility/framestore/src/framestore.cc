@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <ff_common/ros.h>
+#include <ff_common/ff_ros.h>
 // Standard includes
 #include <ff_util/ff_nodelet.h>
 // #include <ff_util/config_server.h>

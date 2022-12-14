@@ -20,7 +20,7 @@
 #define FF_UTIL_FF_FLIGHT_H_
 
 // ROS includes
-#include <ff_common/ros.h>
+#include <ff_common/ff_ros.h>
 
 #if ROS1
 // General information

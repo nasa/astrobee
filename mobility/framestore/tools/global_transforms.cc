@@ -17,7 +17,7 @@
  */
 
 // General ROS
-#include <ff_common/ros.h>
+#include <ff_common/ff_ros.h>
 
 // Static transform broadcaster
 #include <tf2_ros/static_transform_broadcaster.h>

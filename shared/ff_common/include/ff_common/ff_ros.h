@@ -21,8 +21,8 @@
  * It should be included in any file that uses ROS.
  **/
 
-#ifndef FF_COMMON_ROS_H_
-#define FF_COMMON_ROS_H_
+#ifndef FF_COMMON_FF_ROS_H_
+#define FF_COMMON_FF_ROS_H_
 
 #if ROS1
 #include <ros/ros.h>
@@ -129,4 +129,4 @@ using Timer = std::shared_ptr<rclcpp::TimerBase>;
 #define ROS_SHUTDOWN()  rclcpp::shutdown()
 
 #endif
-#endif  // FF_COMMON_ROS_H_
+#endif  // FF_COMMON_FF_ROS_H_

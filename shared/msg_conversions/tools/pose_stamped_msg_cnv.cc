@@ -19,7 +19,7 @@
 
 #include <ff_common/init.h>
 #include <ff_common/utils.h>
-#include <ff_common/ros.h>
+#include <ff_common/ff_ros.h>
 #include <gflags/gflags.h>
 
 #if ROS1

@@ -20,7 +20,7 @@
 #define FF_UTIL_FF_NODELET_H_
 
 // ROS includes
-#include <ff_common/ros.h>
+#include <ff_common/ff_ros.h>
 
 #include <config_reader/config_reader.h>
 
@@ -95,6 +95,10 @@ class FreeFlyerNodelet {
   // Explicitly specift the name
   explicit FreeFlyerNodelet(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
+  // Necessary ROS2 function for components
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
+    return node_->get_node_base_interface();
+  }
 #endif
   virtual ~FreeFlyerNodelet();
 
@@ -106,10 +110,10 @@ class FreeFlyerNodelet {
   void PrintFaults();
 
   // NodeHandle management
-  #if ROS1
+#if ROS1
   ros::NodeHandle* GetPlatformHandle(bool multithreaded = false);
   ros::NodeHandle* GetPrivateHandle(bool multithreaded = false);
-  #endif
+#endif
 
   // Get the name of this node (mainly useful for drivers)
   std::string GetName();
@@ -133,16 +137,11 @@ class FreeFlyerNodelet {
   // The set function does all of the internal work. We have moved this out
   // of the onInit() call, so that it can be invoked when a nodelet is not used
   // for example, in simulation, where the dynamic loading is within gazebo...
-  #if ROS1
+#if ROS1
   void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name);
-  #else
+#else
   void Setup(std::string plugin_name);
-
-  // Necessary ROS2 function for components
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
-    return node_->get_node_base_interface();
-  }
-  #endif
+#endif
 
   std::map<std::string, int> faults_;
 
@@ -152,24 +151,24 @@ class FreeFlyerNodelet {
   void HeartbeatCallback(ros::TimerEvent const& ev);
   // Called when nodelet should be initialized
   void InitCallback(ros::TimerEvent const& ev);
-  #else
-  void HeartbeatCallback();
-  void InitCallback();
-  #endif
-
   // Called when a trigger action is called
-  // void TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
-  //                      std::shared_ptr<ff_msgs::Trigger::Response> res);
   bool TriggerCallback(
   ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res);
+#else
+  void HeartbeatCallback();
+  void InitCallback();
+  void TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
+                       std::shared_ptr<ff_msgs::Trigger::Response> res);
+
+#endif
 
   // Called in heartbeat callback or by nodes that do not to use the hb timer
   void PublishHeartbeat();
 
   // We capture the init function and start up heartbeats, etc, then call Initialize()
-  #if ROS1
+#if ROS1
   void onInit();
-  #endif
+#endif
 
   // Called in onInit to read in the config values associated with the node
   void ReadConfig();
@@ -187,32 +186,32 @@ class FreeFlyerNodelet {
   ff_msgs::Heartbeat heartbeat_;
 
   // Node handles
-  #if ROS1
+#if ROS1
   ros::NodeHandle nh_;
   ros::NodeHandle nh_mt_;
   ros::NodeHandle nh_private_;
   ros::NodeHandle nh_private_mt_;
-  #else  // ROS2
+#else  // ROS2
   rclcpp::Node::SharedPtr node_;
-  #endif
+#endif
 
   // Timer
-  #if ROS1
+#if ROS1
   ros::Timer timer_heartbeat_;
   ros::Timer timer_deferred_init_;
-  #else  // ROS2
+#else  // ROS2
   Timer timer_heartbeat_;
   Timer timer_deferred_init_;
-  #endif
+#endif
 
   // Publishers
-  #if ROS1
+#if ROS1
   ros::Publisher pub_heartbeat_;
   Publisher<diagnostic_msgs::DiagnosticArray> pub_diagnostics_;
-  #else  // ROS2
+#else  // ROS2
   Publisher<ff_msgs::Heartbeat> pub_heartbeat_;
   Publisher<diagnostic_msgs::DiagnosticArray> pub_diagnostics_;
-  #endif
+#endif
 
   // Reset service
   Service<ff_msgs::Trigger> srv_trigger_;
