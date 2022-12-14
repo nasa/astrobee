@@ -5,6 +5,7 @@ RUN apt-get update \
   && apt-get install -y \
   libgoogle-glog-dev libgflags-dev libgtest-dev \
   libluajit-5.1-dev \
+  python3-jinja2 \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /src && mkdir /src/astrobee

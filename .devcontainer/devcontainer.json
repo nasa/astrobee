@@ -40,9 +40,9 @@
 		"yzhang.markdown-all-in-one",
 		"zachflower.uncrustify"
 	],
-	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/src,type=bind",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/.astrobee,type=bind",
 	"mounts": [
 		"source=${localEnv:HOME}/gds,target=${localEnv:HOME}/gds,type=bind,consistency=bind"
 	],
-	"workspaceFolder": "/src/astrobee/src"
+	"workspaceFolder": "/src/astrobee/.astrobee"
 }
