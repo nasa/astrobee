@@ -147,13 +147,15 @@ class FreeFlyerNodelet {
   std::map<std::string, int> faults_;
 
  private:
+#if ROS1
   // Called on a heartbeat event
-  // void HeartbeatCallback(ros::TimerEvent const& ev);
-  void HeartbeatCallback();
-
+  void HeartbeatCallback(ros::TimerEvent const& ev);
   // Called when nodelet should be initialized
-  // void InitCallback(ros::TimerEvent const& ev);
+  void InitCallback(ros::TimerEvent const& ev);
+  #else
+  void HeartbeatCallback();
   void InitCallback();
+  #endif
 
   // Called when a trigger action is called
   // void TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
@@ -195,12 +197,22 @@ class FreeFlyerNodelet {
   #endif
 
   // Timer
+  #if ROS1
+  ros::Timer timer_heartbeat_;
+  ros::Timer timer_deferred_init_;
+  #else  // ROS2
   Timer timer_heartbeat_;
   Timer timer_deferred_init_;
+  #endif
 
   // Publishers
+  #if ROS1
+  ros::Publisher pub_heartbeat_;
+  Publisher<diagnostic_msgs::DiagnosticArray> pub_diagnostics_;
+  #else  // ROS2
   Publisher<ff_msgs::Heartbeat> pub_heartbeat_;
   Publisher<diagnostic_msgs::DiagnosticArray> pub_diagnostics_;
+  #endif
 
   // Reset service
   Service<ff_msgs::Trigger> srv_trigger_;

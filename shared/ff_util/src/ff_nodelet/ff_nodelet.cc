@@ -49,6 +49,7 @@ FreeFlyerNodelet::FreeFlyerNodelet(std::string const& node, bool autostart_hb_ti
   sleeping_(false),
   heartbeat_queue_size_(5),
   node_name_(node) {
+  ROS_ERROR_STREAM("FreeFlyerNodelet1");
 }
 
 FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer) :
@@ -56,6 +57,7 @@ FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer) :
   autostart_hb_timer_(autostart_hb_timer),
   initialized_(false),
   node_name_("") {
+  ROS_ERROR_STREAM("FreeFlyerNodelet2");
 }
 #else
 FreeFlyerNodelet::FreeFlyerNodelet(
@@ -82,6 +84,7 @@ FreeFlyerNodelet::~FreeFlyerNodelet() {
 #if ROS1
 // Called directly by Gazebo and indirectly through onInit() by nodelet
 void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name) {
+  ROS_ERROR_STREAM("Setup");
   // Copy the node handles
   nh_ = nh;
   nh_mt_ = nh_mt;
@@ -125,10 +128,10 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   // Immediately, setup a publisher for faults coming from this node
   // Topic needs to be latched for initialization faults
   {
-  ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
+  // ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
+  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
+    TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
   }
-  // pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
-  //   TOPIC_HEARTBEAT, heartbeat_queue_size_, true!!!!!!!!!);
   {
   ROS_CREATE_PUBLISHER(pub_diagnostics_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5);
   }
@@ -136,7 +139,8 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
   // > https://github.com/ros/nodelet_core/issues/46
-  ROS_CREATE_TIMER(timer_deferred_init_, 0.1, std::bind(&FreeFlyerNodelet::InitCallback, this), true, true);
+    timer_deferred_init_ = nh_.createTimer(ros::Duration(0.1),
+    &FreeFlyerNodelet::InitCallback, this, true, true);
 }
 
 #else  // ROS2
@@ -368,26 +372,29 @@ void FreeFlyerNodelet::PrintFaults() {
 // Not sure if we need this functionality but I added it just in case
 void FreeFlyerNodelet::StopHeartbeat() {
   // Stop heartbeat timer
+  #if ROS1
+  timer_heartbeat_.STOP_TIMER();
+  #else
   timer_heartbeat_->STOP_TIMER();
+
+  #endif
 }
 
-// void FreeFlyerNodelet::HeartbeatCallback(ros::TimerEvent const& ev) {
-void FreeFlyerNodelet::HeartbeatCallback() {
-  // double s = (ev.last_real - ev.last_expected).toSec();
-  // if (s > 1.0)
-  //   FF_INFO_STREAM(node_name_.c_str() << ": " << s);
+
+
+#if ROS1
+void FreeFlyerNodelet::HeartbeatCallback(ros::TimerEvent const& ev) {
+  ROS_ERROR_STREAM("HeartbeatCallback");
+  double s = (ev.last_real - ev.last_expected).toSec();
+  if (s > 1.0)
+    FF_INFO_STREAM(node_name_.c_str() << ": " << s);
   PublishHeartbeat();
 }
-
-// void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
-void FreeFlyerNodelet::InitCallback() {
+void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
+  ROS_ERROR("InitCallback");
   // Return a single threaded nodehandle by default
   initialized_ = false;
-#if ROS1
   Initialize(&nh_);
-#else
-  Initialize(node_);
-#endif
   initialized_ = true;
 
   // Check if there was an initialization fault and send the heartbeat if there
@@ -399,8 +406,46 @@ void FreeFlyerNodelet::InitCallback() {
 
   // Start timer that was setup earlier
   if (autostart_hb_timer_) {
-    // timer_heartbeat_ = node_->create_wall_timer(1s,
-    //   &FreeFlyerNodelet::HeartbeatCallback, this);
+    // timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
+    //   &FreeFlyerNodelet::HeartbeatCallback, this, false, true);
+    // ROS_CREATE_TIMER(timer_heartbeat_, 1.0, std::bind(&FreeFlyerNodelet::HeartbeatCallback, this), false, true);
+    timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
+      &FreeFlyerNodelet::HeartbeatCallback, this, false, true);
+  }
+
+  Reset();
+
+  // Start a trigger service on the private nodehandle /platform/pvt/name
+  // srv_trigger_ = nh_private_.advertiseService(TOPIC_TRIGGER,
+  //   &FreeFlyerNodelet::TriggerCallback, this);
+  ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
+                     &FreeFlyerNodelet::TriggerCallback);
+  ROS_ERROR("InitCallback end");
+}
+#else
+void FreeFlyerNodelet::HeartbeatCallback() {
+  // double s = (ev.last_real - ev.last_expected).toSec();
+  // if (s > 1.0)
+  //   FF_INFO_STREAM(node_name_.c_str() << ": " << s);
+  PublishHeartbeat();
+}
+void InitCallback() {
+  // Return a single threaded nodehandle by default
+  initialized_ = false;
+  Initialize(node_);
+  initialized_ = true;
+
+  // Check if there was an initialization fault and send the heartbeat if there
+  // was
+  if (heartbeat_.faults.size() > 0) {
+    PublishHeartbeat();
+    return;
+  }
+
+  // Start timer that was setup earlier
+  if (autostart_hb_timer_) {
+    timer_heartbeat_ = node_->create_wall_timer(1s,
+      &FreeFlyerNodelet::HeartbeatCallback, this);
   }
 
   Reset();
@@ -409,6 +454,7 @@ void FreeFlyerNodelet::InitCallback() {
   ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
                      &FreeFlyerNodelet::TriggerCallback);
 }
+#endif
 
 #if ROS1
 bool FreeFlyerNodelet::TriggerCallback(
@@ -486,9 +532,11 @@ void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::R
 
 
 void FreeFlyerNodelet::PublishHeartbeat() {
+  ROS_ERROR_STREAM("pub heartbeat0");
   if (initialized_) {
     heartbeat_.header.stamp = ROS_TIME_NOW();
-    pub_heartbeat_->publish(heartbeat_);
+    pub_heartbeat_.publish(heartbeat_);
+  ROS_ERROR_STREAM("pub heartbeat1");
   }
 }
 
