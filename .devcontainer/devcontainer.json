@@ -41,8 +41,5 @@
 		"zachflower.uncrustify"
 	],
 	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/.astrobee,type=bind",
-	"mounts": [
-		"source=${localEnv:HOME}/gds,target=${localEnv:HOME}/gds,type=bind,consistency=bind"
-	],
 	"workspaceFolder": "/src/astrobee/.astrobee"
 }
