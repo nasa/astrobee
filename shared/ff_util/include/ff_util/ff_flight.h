@@ -20,8 +20,9 @@
 #define FF_UTIL_FF_FLIGHT_H_
 
 // ROS includes
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
+#if ROS1
 // General information
 #include <geometry_msgs/InertiaStamped.h>
 
@@ -29,6 +30,27 @@
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/ControlState.h>
 #include <ff_msgs/FlightMode.h>
+
+#else
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_flight");
+// General information
+#include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/inertia_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::Pose Pose;
+typedef msg::InertiaStamped InertiaStamped;
+}  // namespace geometry_msgs
+
+// Message includes
+#include <ff_msgs/msg/ekf_state.hpp>
+#include <ff_msgs/msg/control_state.hpp>
+#include <ff_msgs/msg/flight_mode.hpp>
+namespace ff_msgs {
+typedef msg::EkfState EkfState;
+typedef msg::ControlState ControlState;
+typedef msg::FlightMode FlightMode;
+}  // namespace ff_msgs
+#endif
 
 // Eigen includes
 #include <Eigen/Dense>

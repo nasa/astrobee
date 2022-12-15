@@ -95,8 +95,7 @@ def genCommandConfigLua(inSchemaPath, outCommandConfigPath):
 
 
 class CustomFormatter(
-    argparse.RawDescriptionHelpFormatter,
-    argparse.ArgumentDefaultsHelpFormatter
+    argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
 ):
     pass
 

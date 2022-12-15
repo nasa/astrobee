@@ -15,29 +15,54 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(ff_util)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  config_reader
-  roscpp
-  nodelet
-  dynamic_reconfigure
-  ff_msgs diagnostic_msgs
-  tf2_geometry_msgs
-  actionlib
-  msg_conversions
-)
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+  add_definitions(-DROS1)
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    config_reader
+    roscpp
+    nodelet
+    dynamic_reconfigure
+    ff_msgs diagnostic_msgs
+    tf2_geometry_msgs
+    actionlib
+    msg_conversions
+  )
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer
-  CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
-)
+  catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer
+    CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
+  )
+
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+  add_definitions(-DROS2)
+
+  # Find amend and libraries
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+
+  find_package(ff_common REQUIRED)
+  find_package(ff_msgs REQUIRED)
+  find_package(msg_conversions REQUIRED)
+  find_package(geometry_msgs REQUIRED)
+  find_package(diagnostic_msgs REQUIRED)
+  find_package(tf2_geometry_msgs REQUIRED)
+  # find_package(actionlib REQUIRED)
+
+  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
+
+endif()
 
 ###########
 ## Build ##
@@ -48,43 +73,72 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${msg_conversions_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
+
+
 
 # Declare C++ libraries
 add_library(ff_nodelet
   src/ff_nodelet/ff_nodelet.cc
 )
-add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ff_nodelet ${catkin_LIBRARIES})
 
 # Declare C++ libraries
 add_library(ff_flight
   src/ff_flight/ff_flight.cc
 )
-add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ff_flight ${catkin_LIBRARIES})
+
+
+if("$ENV{ROS_VERSION}" STREQUAL "1")
 
 # Declare C++ libraries
 add_library(config_server
   src/config_server/config_server.cc
 )
-add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
 target_link_libraries(config_server ${catkin_LIBRARIES})
 
 # Declare C++ libraries
 add_library(config_client
   src/config_client/config_client.cc
 )
-add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
 target_link_libraries(config_client ${catkin_LIBRARIES})
 
 # Declare C++ libraries
 add_library(perf_timer
   src/perf_timer/perf_timer.cc
 )
-add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
 target_link_libraries(perf_timer ${catkin_LIBRARIES})
+
+
+add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
+
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
+# ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
+
+ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)
+
+# ament_target_dependencies(config_server rclcpp diagnostic_msgs)
+
+# ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
+
+ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
+ament_package()
+
+endif()
+
+
 
 ##########
 ## Test ##
@@ -146,11 +200,11 @@ endif()
 #############
 
 # Mark libraries for installation
-install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+# install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

@@ -19,17 +19,32 @@
 #ifndef FF_UTIL_CONFIG_SERVER_H_
 #define FF_UTIL_CONFIG_SERVER_H_
 
-#include <ros/ros.h>
+// ROS includes
+#include <ff_common/ff_ros.h>
 
 #include <ff_util/ff_names.h>
 
 #include <config_reader/config_reader.h>
 
+
+#if ROS1
+#include <diagnostic_msgs/KeyValue.h>
+
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/Config.h>
 #include <dynamic_reconfigure/ConfigDescription.h>
+#else
+#include <diagnostic_msgs/msg/key_value.hpp>
+namespace diagnostic_msgs {
+typedef msg::KeyValue KeyValue;
+typedef msg::DiagnosticStatus DiagnosticStatus;
+typedef msg::DiagnosticArray DiagnosticArray;
+}  // namespace diagnostic_msgs
 
-#include <diagnostic_msgs/KeyValue.h>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/Config.h>
+#include <dynamic_reconfigure/ConfigDescription.h>
+#endif
 
 #include <climits>
 #include <cfloat>

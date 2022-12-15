@@ -15,11 +15,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
 project(config_reader)
 
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+cmake_minimum_required(VERSION 3.0)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+add_definitions(-DROS1)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
@@ -75,3 +78,68 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+
+cmake_minimum_required(VERSION 3.5)
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(ff_common REQUIRED)
+
+## System dependencies are found with CMake's conventions
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(Luajit20 REQUIRED)
+
+# Specify additional locations of header files
+# Your package locations should be listed before other locations
+include_directories(
+  include
+  ${rclcpp_INCLUDE_DIRS}    # ROS2
+  ${ff_common_INCLUDE_DIRS} # ROS2
+  ${LUAJIT_INCLUDE_DIR}
+)
+
+# Declare C++ libraries
+add_library(config_reader
+  src/config_reader.cc
+  src/watch_files.cc
+)
+
+ament_target_dependencies(config_reader rclcpp ff_common)
+target_link_libraries(config_reader gflags glog ${LUAJIT_LIBRARY})
+ament_export_targets(config_reader_export HAS_LIBRARY_TARGET)
+
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  EXPORT config_reader_export
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+ament_export_include_directories(include ${ff_common_INCLUDE_DIRS} ${LUAJIT_INCLUDE_DIR})
+
+ament_package()
+
+endif()

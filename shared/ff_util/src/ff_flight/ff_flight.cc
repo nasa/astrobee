@@ -41,7 +41,7 @@ namespace ff_util {
   State::State() {}
 
   State::State(Setpoint const& msg) {
-    t = msg.when.toSec();
+    t = ros::Time(msg.when).toSec();
     q = msg_conversions::ros_to_eigen_quat(msg.pose.orientation);
     p = msg_conversions::ros_point_to_eigen_vector(msg.pose.position);
     w = msg_conversions::ros_to_eigen_vector(msg.twist.angular);
@@ -51,7 +51,7 @@ namespace ff_util {
   }
 
   State::State(Estimate const& msg)  {
-    t = msg.header.stamp.toSec();
+    t = ros::Time(msg.header.stamp).toSec();
     q = msg_conversions::ros_to_eigen_quat(msg.pose.orientation);
     p = msg_conversions::ros_point_to_eigen_vector(msg.pose.position);
     w = msg_conversions::ros_to_eigen_vector(msg.omega);
@@ -333,7 +333,7 @@ namespace ff_util {
     // four points of trapezoid. What we want as an output is the segment
     Segment::const_iterator it;
     Segment::const_iterator jt;
-    // ROS_INFO_STREAM("***");
+    // FF_INFO_STREAM("***");
     for (Segment::const_iterator it = in.begin(); it != in.end(); it++) {
       // Convert the angular velocity and angular acceleration from the
       // world to the body frame, avoiding a GDS / FSW incompatibility
@@ -347,8 +347,8 @@ namespace ff_util {
         State js(*jt);
         // Debug for clarity
         /*
-        ROS_INFO_STREAM("---");
-        ROS_INFO_STREAM("PREV: "
+        FF_INFO_STREAM("---");
+        FF_INFO_STREAM("PREV: "
                           << " t: "  << is.t
                           << " qw: " << is.q.w()
                           << " qx: " << is.q.x()
@@ -360,7 +360,7 @@ namespace ff_util {
                           << " bx: " << is.b[0]
                           << " by: " << is.b[1]
                           << " bz: " << is.b[2]);
-        ROS_INFO_STREAM("NEXT: "
+        FF_INFO_STREAM("NEXT: "
                           << " t: "  << js.t
                           << " qw: " << js.q.w()
                           << " qx: " << js.q.x()
@@ -379,7 +379,7 @@ namespace ff_util {
         // Add the first
         State state = is;
         /*
-        ROS_INFO_STREAM("SAMP: "
+        FF_INFO_STREAM("SAMP: "
                           << " t: "  << state.t
                           << " qw: " << state.q.w()
                           << " qx: " << state.q.x()
@@ -416,7 +416,7 @@ namespace ff_util {
             state.t += dt;
           }
           /*
-          ROS_INFO_STREAM("SAMP: "
+          FF_INFO_STREAM("SAMP: "
                             << " t: "  << state.t
                             << " qw: " << state.q.w()
                             << " qx: " << state.q.x()
@@ -513,13 +513,13 @@ namespace ff_util {
     // We are not tolerant with respect to our intital attitude
     double att_err = State::QuaternionMagnitude(qd * qa.inverse());
     if (att_err > tolerance_att) {
-      ROS_DEBUG_STREAM("Attitude violation: " << att_err);
+      FF_DEBUG_STREAM("Attitude violation: " << att_err);
       return false;
     }
     // We are not tolerant with respect to our initial position
     double pos_err = State::VectorMagnitude(va - vd);
     if (pos_err > tolerance_pos) {
-      ROS_DEBUG_STREAM("Position violation: " << pos_err);
+      FF_DEBUG_STREAM("Position violation: " << pos_err);
       return false;
     }
     // Yes, we are consistent

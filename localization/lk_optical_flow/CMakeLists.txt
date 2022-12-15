@@ -20,6 +20,7 @@ project(lk_optical_flow)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+add_definitions(-DROS1)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS

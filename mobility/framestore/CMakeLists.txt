@@ -15,28 +15,55 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(framestore)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  pluginlib
-  ff_util
-  tf2_ros
-  geometry_msgs
-  config_reader
-)
+# Build for ROS1
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+  add_definitions(-DROS1)
+  ## Find catkin macros and libraries
+  find_package(catkin2 REQUIRED COMPONENTS
+    roscpp
+    nodelet
+    pluginlib
+    ff_util
+    tf2_ros
+    geometry_msgs
+    config_reader
+  )
 
-# Call catkin
-catkin_package(
-  CATKIN_DEPENDS
-    roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
-)
+  # Call catkin
+  catkin_package(
+    CATKIN_DEPENDS
+      roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
+  )
+
+# Build for ROS2
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+  add_definitions(-DROS2)
+
+  # Find amend and libraries
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+  find_package(rclcpp_components REQUIRED)
+  find_package(rcutils REQUIRED)
+
+  find_package(ff_common REQUIRED)
+  find_package(ff_util REQUIRED)
+  find_package(ff_msgs REQUIRED)
+  find_package(tf2_ros REQUIRED)
+  find_package(geometry_msgs REQUIRED)
+  find_package(config_reader REQUIRED)
+  find_package(msg_conversions REQUIRED)
+
+  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
+  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
+
+endif()
 
 ###########
 ## Build ##
@@ -45,22 +72,38 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}         # ROS1
+  ${ff_common_INCLUDE_DIRS}      # ROS2
+  ${config_reader_INCLUDE_DIRS}  # ROS2
+  ${msg_conversions_INCLUDE_DIRS}  # ROS2
 )
 
 # Declare C++ libraries
 add_library(framestore
   src/framestore.cc
 )
-add_dependencies(framestore ${catkin_EXPORTED_TARGETS})
 target_link_libraries(framestore ${catkin_LIBRARIES})
 
 
 ## Declare a C++ executable: global_transforms
 add_executable(global_transforms tools/global_transforms.cc)
-add_dependencies(global_transforms ${catkin_EXPORTED_TARGETS})
 target_link_libraries(global_transforms
   framestore gflags glog ${catkin_LIBRARIES})
+
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+add_dependencies(framestore ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(global_transforms ${catkin_EXPORTED_TARGETS})
+
+elseif("$ENV{ROS_VERSION}" STREQUAL "2")
+ament_target_dependencies(framestore rclcpp rclcpp_components ff_util config_reader msg_conversions)
+
+ament_target_dependencies(global_transforms rclcpp config_reader msg_conversions tf2_ros)
+
+ament_export_include_directories(include)
+ament_package()
+
+endif()
 
 #############
 ## Install ##

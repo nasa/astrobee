@@ -17,7 +17,7 @@
  */
 
 // General ROS
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // Static transform broadcaster
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -26,19 +26,29 @@
 #include <config_reader/config_reader.h>
 #include <msg_conversions/msg_conversions.h>
 
+#ifdef ROS2
+namespace geometry_msgs {
+typedef msg::TransformStamped TransformStamped;
+}  // namespace geometry_msgs
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("framestore");
+#endif
 // Main entry point of application
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "global_transforms");
-  ros::NodeHandle n("~");
+  ROS_CREATE_NODE("global_transforms");
   // Parse the framestore config
   config_reader::ConfigReader cfg;
   cfg.AddFile("transforms.config");
   if (!cfg.ReadFiles()) {
-    ROS_FATAL("Error loading global transform parameters.");
+    FF_FATAL("Error loading global transform parameters.");
     return 1;
   }
   // Read all transforms, broadcasting only world -> xxx
+#if ROS1
   tf2_ros::StaticTransformBroadcaster bc;
+#else
+  tf2_ros::StaticTransformBroadcaster bc(ROS_NODE_VAR);
+#endif
   geometry_msgs::TransformStamped tf;
   Eigen::Vector3d trans;
   Eigen::Quaterniond rot;
@@ -59,7 +69,7 @@ int main(int argc, char **argv) {
           && msg_conversions::config_read_vector(&t_trans, &trans)) {
           // Only send global transforms
           if (global) {
-            tf.header.stamp = ros::Time::now();
+            tf.header.stamp = ROS_TIME_NOW();
             tf.header.frame_id = parent;
             tf.child_frame_id = child;
             tf.transform.translation =
@@ -72,6 +82,6 @@ int main(int argc, char **argv) {
       }
     }
   }
-  ros::spin();
+  ROS_SPIN();
   return 0;
 }
