@@ -65,6 +65,8 @@ if __name__ == "__main__":
         default=None,
         help="Prefix for generated map names. Defaults to bagfile name.",
     )
+    parser.add_argument("-l", "--max-low-movement-mean-distance", type=float, default=0.02, help="Threshold for sequential image removal, the higher the more images removed.")
+    p
     parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",
@@ -170,6 +172,8 @@ if __name__ == "__main__":
         + loc_csv
         + " -g "
         + groundtruth_bag
+        + " -l "
+        + str(args.max_low_movement_mean_distance)
     )
     if not args.use_image_features:
         get_loc_results_command += " --generate-image-features"
