@@ -114,6 +114,7 @@ if __name__ == "__main__":
         args.world,
         args.robot_name,
         args.histogram_equalization,
+        args.max_low_movement_mean_distance,
         base_surf_map,
         maps_directory,
     )
