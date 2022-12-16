@@ -172,8 +172,6 @@ if __name__ == "__main__":
         + loc_csv
         + " -g "
         + groundtruth_bag
-        + " -l "
-        + str(args.max_low_movement_mean_distance)
     )
     if not args.use_image_features:
         get_loc_results_command += " --generate-image-features"
