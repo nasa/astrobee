@@ -277,10 +277,7 @@ geometry_msgs::Pose ros_transform_to_ros_pose(const geometry_msgs::Transform& p)
       transform.position.x = p.translation.x;
       transform.position.y = p.translation.y;
       transform.position.z = p.translation.z;
-      transform.orientation.x = p.rotation.x;
-      transform.orientation.y = p.rotation.y;
-      transform.orientation.z = p.rotation.z;
-      transform.orientation.w = p.rotation.w;
+      transform.orientation = p.rotation;
   return transform;
 }
 
