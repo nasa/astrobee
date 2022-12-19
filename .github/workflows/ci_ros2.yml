@@ -15,13 +15,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build, test, push docker
-<<<<<<< HEAD
-        run: |
-          ./scripts/docker/build.sh --remote --owner ${{ github.repository_owner }} rolling_base rolling
-          if [ "${{ github.repository_owner }}" = "nasa" ]; then ./scripts/docker/build.sh --remote --owner ${{ github.repository_owner }}  push_rolling_base push_rolling; fi;
-=======
         run: ./scripts/docker/build.sh --remote
           --owner ${{ github.repository_owner }}
           rolling_base rolling # push_rolling_base push_rolling
->>>>>>> fix: disable docker push on ci_ros2
 
