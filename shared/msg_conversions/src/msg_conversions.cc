@@ -254,6 +254,15 @@ Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform& p) {
   return transform;
 }
 
+geometry_msgs::Pose ros_transform_to_ros_pose(const geometry_msgs::Transform& p) {
+  geometry_msgs::Pose transform;
+      transform.position.x = p.translation.x;
+      transform.position.y = p.translation.y;
+      transform.position.z = p.translation.z;
+      transform.orientation = p.rotation;
+  return transform;
+}
+
 geometry_msgs::Quaternion tf2_quat_to_ros_quat(const tf2::Quaternion& q) {
   geometry_msgs::Quaternion out;
       out.x = q.x();
@@ -269,15 +278,6 @@ geometry_msgs::Pose tf2_transform_to_ros_pose(const tf2::Transform& p) {
       transform.position.y = p.getOrigin().y();
       transform.position.z = p.getOrigin().z();
       transform.orientation = tf2_quat_to_ros_quat(p.getRotation());
-  return transform;
-}
-
-geometry_msgs::Pose ros_transform_to_ros_pose(const geometry_msgs::Transform& p) {
-  geometry_msgs::Pose transform;
-      transform.position.x = p.translation.x;
-      transform.position.y = p.translation.y;
-      transform.position.z = p.translation.z;
-      transform.orientation = p.rotation;
   return transform;
 }
 
