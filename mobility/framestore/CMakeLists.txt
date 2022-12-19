@@ -58,6 +58,7 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
   find_package(geometry_msgs REQUIRED)
   find_package(config_reader REQUIRED)
   find_package(msg_conversions REQUIRED)
+  find_package(diagnostic_msgs REQUIRED)
 
   set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
   set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")

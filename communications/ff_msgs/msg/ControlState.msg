@@ -14,25 +14,17 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# Full state vector containing Time, Pose, Vel, and Accel
+# 
+# when {time}
+# flight_mode {string} - disctates, gains, tolerances, etc.
+# pose {Point position, Quaternion orientation}
+# twist {Vector3 linear, Vector3 angular}
+# accel {Vector3 linear, Vector3 angular}
 
-# The save settings message contains information about the topics currently
-# being recorded.
+builtin_interfaces/Time when
 
-# Name of topic
-string topic_name
-
-# Topic saved to disk; upon docking it is downlinked
-uint8 IMMEDIATE   = 0
-
-# Topic saved to disk; upon docking it is transferred to ISS server for later
-# downlink
-uint8 DELAYED     = 1
-
-# Downlink option indicates if and when the data in the rostopic is downlinked
-{% if ROS1 %}
-uint8 downlinkOption
-{% else %}
-uint8 downlink_option
-{% endif %}
-# Times per second to save the data (Hz)
-float32 frequency
+geometry_msgs/Pose pose
+geometry_msgs/Twist twist
+geometry_msgs/Twist accel

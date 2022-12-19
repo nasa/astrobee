@@ -74,6 +74,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${msg_conversions_INCLUDE_DIRS}
+  ${diagnostic_msgs_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
 

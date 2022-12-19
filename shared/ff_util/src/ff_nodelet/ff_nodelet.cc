@@ -16,7 +16,6 @@
  * under the License.
  */
 
-
 #include <ff_util/ff_nodelet.h>
 
 #include <boost/filesystem.hpp>
@@ -40,55 +39,44 @@ namespace ff_util {
 
 namespace fs = boost::filesystem;
 
-
 #if ROS1
-FreeFlyerNodelet::FreeFlyerNodelet(std::string const& node, bool autostart_hb_timer) :
-  nodelet::Nodelet(),
-  autostart_hb_timer_(autostart_hb_timer),
-  initialized_(false),
-  sleeping_(false),
-  heartbeat_queue_size_(5),
-  node_name_(node) {
-}
+FreeFlyerNodelet::FreeFlyerNodelet(std::string const& node, bool autostart_hb_timer)
+    : nodelet::Nodelet(),
+      autostart_hb_timer_(autostart_hb_timer),
+      initialized_(false),
+      sleeping_(false),
+      heartbeat_queue_size_(5),
+      node_name_(node) {}
 
-FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer) :
-  nodelet::Nodelet(),
-  autostart_hb_timer_(autostart_hb_timer),
-  initialized_(false),
-  node_name_("") {
-}
+FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer)
+    : nodelet::Nodelet(), autostart_hb_timer_(autostart_hb_timer), initialized_(false), node_name_("") {}
 #else
-FreeFlyerNodelet::FreeFlyerNodelet(
-  const rclcpp::NodeOptions & options, std::string const& node, bool autostart_hb_timer) :
-  node_(std::make_shared<rclcpp::Node>(node, options)),
-  autostart_hb_timer_(autostart_hb_timer),
-  initialized_(false),
-  sleeping_(false),
-  heartbeat_queue_size_(5),
-  node_name_(node) {
-}
+FreeFlyerNodelet::FreeFlyerNodelet(const rclcpp::NodeOptions& options, std::string const& node, bool autostart_hb_timer)
+    : node_(std::make_shared<rclcpp::Node>(node, options)),
+      autostart_hb_timer_(autostart_hb_timer),
+      initialized_(false),
+      sleeping_(false),
+      heartbeat_queue_size_(5),
+      node_name_(node) {}
 
-FreeFlyerNodelet::FreeFlyerNodelet(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
-  node_(std::make_shared<rclcpp::Node>("", options)),
-  autostart_hb_timer_(autostart_hb_timer),
-  initialized_(false),
-  node_name_("") {
-}
+FreeFlyerNodelet::FreeFlyerNodelet(const rclcpp::NodeOptions& options, bool autostart_hb_timer)
+    : node_(std::make_shared<rclcpp::Node>("", options)),
+      autostart_hb_timer_(autostart_hb_timer),
+      initialized_(false),
+      node_name_("") {}
 #endif
 
-FreeFlyerNodelet::~FreeFlyerNodelet() {
-}
+FreeFlyerNodelet::~FreeFlyerNodelet() {}
 
 #if ROS1
 // Called directly by Gazebo and indirectly through onInit() by nodelet
-void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name) {
+void FreeFlyerNodelet::Setup(ros::NodeHandle& nh, ros::NodeHandle& nh_mt, std::string plugin_name) {
   // Copy the node handles
   nh_ = nh;
   nh_mt_ = nh_mt;
 
   // Get the platform name from the node handle (roslaunch group name attribute)
-  if (nh_.getNamespace().length() > 1)
-    platform_ = nh_.getNamespace().substr(1);
+  if (nh_.getNamespace().length() > 1) platform_ = nh_.getNamespace().substr(1);
 
   // If not set, try and grab the node name from the launch file
   if (node_name_.empty()) {
@@ -113,10 +101,8 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   ReadConfig();
 
   // Setup the private node handles
-  nh_private_ =
-    ros::NodeHandle(ros::NodeHandle(nh_, PRIVATE_PREFIX), node_name_);
-  nh_private_mt_ =
-    ros::NodeHandle(ros::NodeHandle(nh_mt_, PRIVATE_PREFIX), node_name_);
+  nh_private_ = ros::NodeHandle(ros::NodeHandle(nh_, PRIVATE_PREFIX), node_name_);
+  nh_private_mt_ = ros::NodeHandle(ros::NodeHandle(nh_mt_, PRIVATE_PREFIX), node_name_);
 
   // Set node name and manager in heartbeat message since it won't change
   heartbeat_.node = node_name_;
@@ -125,19 +111,15 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   // Immediately, setup a publisher for faults coming from this node
   // Topic needs to be latched for initialization faults
   {
-  // ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
-  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
-    TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
+    // ROS_CREATE_PUBLISHER(pub_heartbeat_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
+    pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
   }
-  {
-  ROS_CREATE_PUBLISHER(pub_diagnostics_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5);
-  }
+  { ROS_CREATE_PUBLISHER(pub_diagnostics_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5); }
 
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
   // > https://github.com/ros/nodelet_core/issues/46
-    timer_deferred_init_ = nh_.createTimer(ros::Duration(0.1),
-    &FreeFlyerNodelet::InitCallback, this, true, true);
+  timer_deferred_init_ = nh_.createTimer(ros::Duration(0.1), &FreeFlyerNodelet::InitCallback, this, true, true);
 }
 
 #else  // ROS2
@@ -145,8 +127,7 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
 // Called directly by Gazebo and indirectly through onInit() by nodelet
 void FreeFlyerNodelet::Setup(std::string plugin_name) {
   // Get the platform name from the node handle (roslaunch group name attribute)
-  if (std::string(node_->get_namespace()).size() > 1)
-    platform_ = std::string(node_->get_namespace()).substr(1);
+  if (std::string(node_->get_namespace()).size() > 1) platform_ = std::string(node_->get_namespace()).substr(1);
 
   // If not set, try and grab the node name from the launch file
   if (node_name_.empty()) {
@@ -184,23 +165,20 @@ void FreeFlyerNodelet::Setup(std::string plugin_name) {
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
   // > https://github.com/ros/nodelet_core/issues/46
-  ROS_CREATE_TIMER(timer_deferred_init_, 0.1,
-      std::bind(&FreeFlyerNodelet::InitCallback, this), true, true);
+  ROS_CREATE_TIMER(timer_deferred_init_, 0.1, std::bind(&FreeFlyerNodelet::InitCallback, this), true, true);
 }
 #endif
 
 #if ROS1
 // Called by the nodelet framework to initialize the nodelet. Note that this is
 // *NOT* called by the Gazebo plugins They enter directly via a Setup(...) call.
-void FreeFlyerNodelet::onInit() {
-  Setup(getNodeHandle(), getMTNodeHandle(), "");
-}
+void FreeFlyerNodelet::onInit() { Setup(getNodeHandle(), getMTNodeHandle(), ""); }
 #endif
 void FreeFlyerNodelet::ReadConfig() {
   // Read fault config file into lua
   if (!param_config_.ReadFiles()) {
-    FF_ERROR_STREAM(node_name_ << ": Couldn't open faults.config! Make sure it " <<
-             "is in the astrobee/config folder!");
+    FF_ERROR_STREAM(node_name_ << ": Couldn't open faults.config! Make sure it "
+                               << "is in the astrobee/config folder!");
     return;
   }
 
@@ -212,8 +190,7 @@ void FreeFlyerNodelet::ReadConfig() {
   // Check if there is a fault table for this node, some nodes may not have
   // faults
   if (param_config_.CheckValExists(node_name_.c_str())) {
-    config_reader::ConfigReader::Table fault_table(&param_config_,
-                                                   node_name_.c_str());
+    config_reader::ConfigReader::Table fault_table(&param_config_, node_name_.c_str());
     int fault_id;
     std::string fault_key;
     // Lua indices start at one
@@ -222,15 +199,13 @@ void FreeFlyerNodelet::ReadConfig() {
 
       // Get the fault id
       if (!fault_entry.GetInt("id", &fault_id)) {
-        FF_ERROR_STREAM(node_name_ << ": Fault id at index " << i <<
-                 " not specified in the node's fault table.");
+        FF_ERROR_STREAM(node_name_ << ": Fault id at index " << i << " not specified in the node's fault table.");
         return;
       }
 
       // Get fault key
       if (!fault_entry.GetStr("key", &fault_key)) {
-        FF_ERROR_STREAM(node_name_ << ": Fault key at index " << i <<
-                 " not specified in the node's fault table.");
+        FF_ERROR_STREAM(node_name_ << ": Fault key at index " << i << " not specified in the node's fault table.");
         return;
       }
 
@@ -252,15 +227,13 @@ void FreeFlyerNodelet::ReadConfig() {
 
       // Get fault id
       if (!all_fault_entry.GetInt("id", &fault_id)) {
-        FF_ERROR_STREAM(node_name_ << ": Fault id at index " << i <<
-                 " not specified in the all fault table.");
+        FF_ERROR_STREAM(node_name_ << ": Fault id at index " << i << " not specified in the all fault table.");
         return;
       }
 
       // Get fault key
       if (!all_fault_entry.GetStr("key", &fault_key)) {
-        FF_ERROR_STREAM(node_name_ <<": Fault key at index " << i <<
-                 " not specified in the all fault table.");
+        FF_ERROR_STREAM(node_name_ << ": Fault key at index " << i << " not specified in the all fault table.");
         return;
       }
 
@@ -273,9 +246,7 @@ void FreeFlyerNodelet::ReadConfig() {
   return;
 }
 
-void FreeFlyerNodelet::AssertFault(FaultKeys enum_key,
-                                   std::string const& message,
-                                   ros::Time time_fault_occurred) {
+void FreeFlyerNodelet::AssertFault(FaultKeys enum_key, std::string const& message, ros::Time time_fault_occurred) {
   std::string key = fault_keys[enum_key];
   std::string err_msg;
   bool found = false;
@@ -286,9 +257,9 @@ void FreeFlyerNodelet::AssertFault(FaultKeys enum_key,
     id = faults_[key];
     err_msg = message;
   } else {
-    FF_ERROR_STREAM(node_name_ << ": Asserting fault " << key << " failed! " <<
-             "Fault doesn't exist for this node. Trying to assert unknown " <<
-             "key fault ...");
+    FF_ERROR_STREAM(node_name_ << ": Asserting fault " << key << " failed! "
+                               << "Fault doesn't exist for this node. Trying to assert unknown "
+                               << "key fault ...");
     // Check to make sure the fault key is valid
     if (faults_.count("UNKNOWN_FAULT_KEY") > 0) {
       id = faults_["UNKNOWN_FAULT_KEY"];
@@ -334,9 +305,9 @@ void FreeFlyerNodelet::ClearFault(FaultKeys enum_key) {
   if (faults_.count(key) > 0) {
     id = faults_[key];
   } else {
-    FF_ERROR_STREAM(node_name_ << ": Clearing fault " << key << " failed! " <<
-             "Fault doesn't exist for this node. Trying to clear unknown " <<
-             "key fault ...");
+    FF_ERROR_STREAM(node_name_ << ": Clearing fault " << key << " failed! "
+                               << "Fault doesn't exist for this node. Trying to clear unknown "
+                               << "key fault ...");
     // Check to make sure the fault key is valid
     if (faults_.count("UNKNOWN_FAULT_KEY") > 0) {
       id = faults_["UNKNOWN_FAULT_KEY"];
@@ -360,30 +331,26 @@ void FreeFlyerNodelet::ClearFault(FaultKeys enum_key) {
 
 void FreeFlyerNodelet::PrintFaults() {
   FF_INFO_STREAM(node_name_ << "'s faults:");
-  for (std::map<std::string, int>::iterator it = faults_.begin();
-                                                    it != faults_.end(); ++it) {
+  for (std::map<std::string, int>::iterator it = faults_.begin(); it != faults_.end(); ++it) {
     FF_INFO_STREAM("  id: " << it->second << " key: " << it->first);
   }
 }
 
 // Not sure if we need this functionality but I added it just in case
 void FreeFlyerNodelet::StopHeartbeat() {
-  // Stop heartbeat timer
-  #if ROS1
+// Stop heartbeat timer
+#if ROS1
   timer_heartbeat_.STOP_TIMER();
-  #else
+#else
   timer_heartbeat_->STOP_TIMER();
 
-  #endif
+#endif
 }
-
-
 
 #if ROS1
 void FreeFlyerNodelet::HeartbeatCallback(ros::TimerEvent const& ev) {
   double s = (ev.last_real - ev.last_expected).toSec();
-  if (s > 1.0)
-    FF_INFO_STREAM(node_name_.c_str() << ": " << s);
+  if (s > 1.0) FF_INFO_STREAM(node_name_.c_str() << ": " << s);
   PublishHeartbeat();
 }
 void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
@@ -405,8 +372,7 @@ void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
     // timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
     //   &FreeFlyerNodelet::HeartbeatCallback, this, false, true);
     // ROS_CREATE_TIMER(timer_heartbeat_, 1.0, std::bind(&FreeFlyerNodelet::HeartbeatCallback, this), false, true);
-    timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
-      &FreeFlyerNodelet::HeartbeatCallback, this, false, true);
+    timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0), &FreeFlyerNodelet::HeartbeatCallback, this, false, true);
   }
 
   Reset();
@@ -414,8 +380,7 @@ void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
   // Start a trigger service on the private nodehandle /platform/pvt/name
   // srv_trigger_ = nh_private_.advertiseService(TOPIC_TRIGGER,
   //   &FreeFlyerNodelet::TriggerCallback, this);
-  ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
-                     &FreeFlyerNodelet::TriggerCallback);
+  ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER, &FreeFlyerNodelet::TriggerCallback);
   ROS_ERROR("InitCallback end");
 }
 #else
@@ -440,106 +405,102 @@ void FreeFlyerNodelet::InitCallback() {
 
   // Start timer that was setup earlier
   if (autostart_hb_timer_) {
-    timer_heartbeat_ = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(1.0),
-        std::bind(&FreeFlyerNodelet::HeartbeatCallback, this));
+    timer_heartbeat_ = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration::from_seconds(1.0),
+                                            std::bind(&FreeFlyerNodelet::HeartbeatCallback, this));
   }
 
   Reset();
 
   // Start a trigger service on the private nodehandle /platform/pvt/name
-  ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
-                     &FreeFlyerNodelet::TriggerCallback);
+  ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER, &FreeFlyerNodelet::TriggerCallback);
 }
 #endif
 
 #if ROS1
-bool FreeFlyerNodelet::TriggerCallback(
-  ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res) {
+bool FreeFlyerNodelet::TriggerCallback(ff_msgs::Trigger::Request& req, ff_msgs::Trigger::Response& res) {
   switch (req.event) {
-  // Allow a reset from woken state only
-  case ff_msgs::Trigger::Request::RESTART:
-    if (!sleeping_) {
-      ClearAllFaults();
-      Reset();
-      return true;
-    }
-    break;
-  // Allow sleep from woken state only
-  case ff_msgs::Trigger::Request::SLEEP:
-    if (!sleeping_) {
-      Sleep();
-      sleeping_ = true;
-      return true;
-    }
-    break;
-  // Allow wakeup from sleeping state only
-  case ff_msgs::Trigger::Request::WAKEUP:
-    if (sleeping_) {
-      Wakeup();
-      sleeping_ = false;
-      return true;
-    }
-    break;
-  // For all other events that might be sent incorrectly
-  default:
-    FF_WARN_STREAM("Unknown trigger event" << req.event);
-    return false;
+    // Allow a reset from woken state only
+    case ff_msgs::Trigger::Request::RESTART:
+      if (!sleeping_) {
+        ClearAllFaults();
+        Reset();
+        return true;
+      }
+      break;
+    // Allow sleep from woken state only
+    case ff_msgs::Trigger::Request::SLEEP:
+      if (!sleeping_) {
+        Sleep();
+        sleeping_ = true;
+        return true;
+      }
+      break;
+    // Allow wakeup from sleeping state only
+    case ff_msgs::Trigger::Request::WAKEUP:
+      if (sleeping_) {
+        Wakeup();
+        sleeping_ = false;
+        return true;
+      }
+      break;
+    // For all other events that might be sent incorrectly
+    default:
+      FF_WARN_STREAM("Unknown trigger event" << req.event);
+      return false;
   }
   FF_WARN_STREAM("Invalid state transition for trigger " << req.event);
   return false;
 }
 #else
 void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
-                                             std::shared_ptr<ff_msgs::Trigger::Response> res) {
+                                       std::shared_ptr<ff_msgs::Trigger::Response> res) {
   switch (req->event) {
-  // Allow a reset from woken state only
-  case ff_msgs::Trigger::Request::RESTART:
-    if (!sleeping_) {
-      ClearAllFaults();
-      Reset();
+    // Allow a reset from woken state only
+    case ff_msgs::Trigger::Request::RESTART:
+      if (!sleeping_) {
+        ClearAllFaults();
+        Reset();
+        return;
+      }
+      break;
+    // Allow sleep from woken state only
+    case ff_msgs::Trigger::Request::SLEEP:
+      if (!sleeping_) {
+        Sleep();
+        sleeping_ = true;
+        return;
+      }
+      break;
+    // Allow wakeup from sleeping state only
+    case ff_msgs::Trigger::Request::WAKEUP:
+      if (sleeping_) {
+        Wakeup();
+        sleeping_ = false;
+        return;
+      }
+      break;
+    // For all other events that might be sent incorrectly
+    default:
+      FF_WARN_STREAM("Unknown trigger event" << req->event);
       return;
-    }
-    break;
-  // Allow sleep from woken state only
-  case ff_msgs::Trigger::Request::SLEEP:
-    if (!sleeping_) {
-      Sleep();
-      sleeping_ = true;
-      return;
-    }
-    break;
-  // Allow wakeup from sleeping state only
-  case ff_msgs::Trigger::Request::WAKEUP:
-    if (sleeping_) {
-      Wakeup();
-      sleeping_ = false;
-      return;
-    }
-    break;
-  // For all other events that might be sent incorrectly
-  default:
-    FF_WARN_STREAM("Unknown trigger event" << req->event);
-    return;
   }
   FF_WARN_STREAM("Invalid state transition for trigger " << req->event);
   return;
 }
 #endif
 
-
 void FreeFlyerNodelet::PublishHeartbeat() {
   if (initialized_) {
     heartbeat_.header.stamp = ROS_TIME_NOW();
-    #if ROS1
+#if ROS1
     pub_heartbeat_.publish(heartbeat_);
-    #else
+#else
     pub_heartbeat_->publish(heartbeat_);
-    #endif
+#endif
   }
 }
 
-void FreeFlyerNodelet::SendDiagnostics(
-  const std::vector<diagnostic_msgs::KeyValue> &keyval) {
+void FreeFlyerNodelet::SendDiagnostics(const std::vector<diagnostic_msgs::KeyValue>& keyval) {
   // Setup the diagnostics skeleton
   diagnostic_msgs::DiagnosticStatus ds;
   if (heartbeat_.faults.size() == 0) {
@@ -550,18 +511,16 @@ void FreeFlyerNodelet::SendDiagnostics(
     ds.message = "Node is in a fault state";
   }
   ds.name = node_name_;
-  if (!platform_.empty())
-    ds.name = platform_ + "::" + ds.name;
+  if (!platform_.empty()) ds.name = platform_ + "::" + ds.name;
   ds.values = keyval;
   // Append the faults to the KV
   for (unsigned int i = 0; i < heartbeat_.faults.size(); i++) {
     diagnostic_msgs::KeyValue fault;
-    fault.key = "FAULT" + std::to_string(i+1);
+    fault.key = "FAULT" + std::to_string(i + 1);
     // Find message in key value pairs
     for (unsigned int j = 0; j < heartbeat_.faults[i].data.size(); j++) {
       if (heartbeat_.faults[i].data[j].key.compare("message") == 0) {
-        fault.value = heartbeat_.faults[i].data[j].s + "(" +
-                                  std::to_string(heartbeat_.faults[i].id) + ")";
+        fault.value = heartbeat_.faults[i].data[j].s + "(" + std::to_string(heartbeat_.faults[i].id) + ")";
         break;
       }
     }
@@ -576,9 +535,7 @@ void FreeFlyerNodelet::SendDiagnostics(
 
 // NodeHandle management
 #if ROS1
-ros::NodeHandle* FreeFlyerNodelet::GetPlatformHandle(bool multithreaded) {
-  return (multithreaded ? &nh_mt_ : &nh_);
-}
+ros::NodeHandle* FreeFlyerNodelet::GetPlatformHandle(bool multithreaded) { return (multithreaded ? &nh_mt_ : &nh_); }
 
 // NodeHandle management
 ros::NodeHandle* FreeFlyerNodelet::GetPrivateHandle(bool multithreaded) {
@@ -586,20 +543,15 @@ ros::NodeHandle* FreeFlyerNodelet::GetPrivateHandle(bool multithreaded) {
 }
 #endif
 
-std::string FreeFlyerNodelet::GetName() {
-  return node_name_;
-}
+std::string FreeFlyerNodelet::GetName() { return node_name_; }
 
 // Get the name of this node (mainly useful for drivers)
-std::string FreeFlyerNodelet::GetPlatform() {
-  return platform_;
-}
+std::string FreeFlyerNodelet::GetPlatform() { return platform_; }
 
 // Get a platform prefixed frame name
 std::string FreeFlyerNodelet::GetTransform(std::string const& child) {
   std::string frame = child;
-  if (!platform_.empty())
-    frame = platform_ + "/" + child;
+  if (!platform_.empty()) frame = platform_ + "/" + child;
   return frame;
 }
 

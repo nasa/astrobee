@@ -57,37 +57,35 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
 #if ROS1
   FrameStore() : ff_util::FreeFlyerNodelet() {}
 #else
-  explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerNodelet(options) {}
+  explicit FrameStore(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerNodelet(options) {}
 #endif
   ~FrameStore() {}
 
  protected:
   void Initialize(NodeHandle node) {
-  #if ROS1
+#if ROS1
     ros::NodeHandle nh_private_ = *node;
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>();
-  #else
+#else
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node);
-  #endif
+#endif
 
     // Set custom config path
-    char *path;
+    char* path;
     if ((path = getenv("CUSTOM_CONFIG_DIR")) != NULL) {
       config_.SetPath(path);
     }
     // Read the config
     config_.AddFile("transforms.config");
-    if (!ReadParams())
-      return InitFault("Could not read config");
+    if (!ReadParams()) return InitFault("Could not read config");
 
 #if ROS1
-    ROS_CREATE_TIMER(timer_, 1.0, [this](ros::TimerEvent e) {
-      config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
+    ROS_CREATE_TIMER(
+      timer_, 1.0, [this](ros::TimerEvent e) { config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this)); },
       false, true);
 #else  // TODO(@mgouveia): need to figure out cleaner way for timers
-    ROS_CREATE_TIMER(timer_, 1.0, [this]() {
-      config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
-      false, true);
+    ROS_CREATE_TIMER(
+      timer_, 1.0, [this]() { config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this)); }, false, true);
 #endif
   }
 
@@ -110,14 +108,10 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
     if (config_.GetTable("transforms", &table)) {
       for (int i = 0; i < table.GetSize(); i++) {
         if (table.GetTable(i + 1, &group)) {
-          if ( group.GetBool("global", &global)
-            && group.GetStr("parent", &parent)
-            && group.GetStr("child", &child)
-            && group.GetTable("transform", &t_tf)
-            && t_tf.GetTable("rot", &t_rot)
-            && t_tf.GetTable("trans", &t_trans)
-            && msg_conversions::config_read_quat(&t_rot, &rot)
-            && msg_conversions::config_read_vector(&t_trans, &trans)) {
+          if (group.GetBool("global", &global) && group.GetStr("parent", &parent) && group.GetStr("child", &child) &&
+              group.GetTable("transform", &t_tf) && t_tf.GetTable("rot", &t_rot) && t_tf.GetTable("trans", &t_trans) &&
+              msg_conversions::config_read_quat(&t_rot, &rot) &&
+              msg_conversions::config_read_vector(&t_trans, &trans)) {
             // Add the transform
             tf.header.stamp = ROS_TIME_NOW();
             // GLobal transforms
@@ -129,10 +123,8 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
               tf.child_frame_id = platform + "/" + child;
             }
             // Transform conversion
-            tf.transform.translation =
-              msg_conversions::eigen_to_ros_vector(trans);
-            tf.transform.rotation =
-              msg_conversions::eigen_to_ros_quat(rot.normalized());
+            tf.transform.translation = msg_conversions::eigen_to_ros_vector(trans);
+            tf.transform.rotation = msg_conversions::eigen_to_ros_quat(rot.normalized());
             // Broadcast!
             tf_->sendTransform(tf);
           }
@@ -144,7 +136,7 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
   }
 
   // Deal with a fault in a responsible manner
-  void InitFault(std::string const& msg ) {
+  void InitFault(std::string const& msg) {
     FF_ERROR_STREAM(msg);
     AssertFault(ff_util::INITIALIZATION_FAILED, msg);
     return;

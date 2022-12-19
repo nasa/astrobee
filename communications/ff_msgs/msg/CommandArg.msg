@@ -15,17 +15,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Message used to tell which guest science apks are running
+# An argument to a command sent through RAPID
+#
+# Note that this is approximating a union in DDS. However, this is an
+# inefficient union, and thus each instance will take up at least 89 bytes.
+# However, even with the maximum of 16 arguments to a command, we only have
+# about 1k extra data. I, tfmorse, am ok with that. Commands are rarely sent.
 
-# Header with timestamp
-std_msgs/Header header
+uint8 DATA_TYPE_BOOL     = 0
+uint8 DATA_TYPE_DOUBLE   = 1
+uint8 DATA_TYPE_FLOAT    = 2
+uint8 DATA_TYPE_INT      = 3
+uint8 DATA_TYPE_LONGLONG = 4
+uint8 DATA_TYPE_STRING   = 5
+uint8 DATA_TYPE_VEC3D    = 6
+uint8 DATA_TYPE_MAT33F   = 7
 
-# Used for guest science config and state message synchronization on the ground
-int64 serial
+uint8 data_type
 
-# Tells which apks are running. Used in conjection with the guest science config
-{% if ROS1 %}
-bool[] runningApks
-{% else %}
-bool[] running_apks
-{% endif %}
+bool b
+float64 d
+float32 f
+int32 i
+int64 ll
+string s
+float64[3] vec3d
+float32[9] mat33f
+

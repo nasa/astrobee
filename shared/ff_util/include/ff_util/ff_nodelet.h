@@ -65,9 +65,9 @@ typedef srv::Trigger Trigger;
 #include <chrono>
 
 // Constants
-#define DEFAULT_ACTION_WAIT_TIME    30.0
-#define DEFAULT_SERVICE_WAIT_TIME   30.0
-#define DEFAULT_DIAGNOSTICS_RATE    1.0
+#define DEFAULT_ACTION_WAIT_TIME 30.0
+#define DEFAULT_SERVICE_WAIT_TIME 30.0
+#define DEFAULT_DIAGNOSTICS_RATE 1.0
 
 namespace ff_util {
 
@@ -78,11 +78,7 @@ class FreeFlyerNodelet {
 #endif
 
  public:
-  enum ResolveType : uint8_t {
-    NAMESPACE = 0,
-    TRANSFORM = 1,
-    RESOURCE  = 1
-  };
+  enum ResolveType : uint8_t { NAMESPACE = 0, TRANSFORM = 1, RESOURCE = 1 };
 
   // Use default name from freeflyer
   // COMPOSITION_PUBLIC
@@ -91,7 +87,7 @@ class FreeFlyerNodelet {
   // Explicitly specift the name
   explicit FreeFlyerNodelet(std::string const& name, bool autostart_hb_timer = true);
 #else
-  explicit FreeFlyerNodelet(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
+  explicit FreeFlyerNodelet(const rclcpp::NodeOptions& options, bool autostart_hb_timer = true);
   // Explicitly specift the name
   explicit FreeFlyerNodelet(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
@@ -102,9 +98,7 @@ class FreeFlyerNodelet {
 #endif
   virtual ~FreeFlyerNodelet();
 
-  void AssertFault(FaultKeys enum_key,
-                   std::string const& message,
-                   ros::Time time_fault_occurred = ROS_TIME_NOW());
+  void AssertFault(FaultKeys enum_key, std::string const& message, ros::Time time_fault_occurred = ROS_TIME_NOW());
   void ClearAllFaults();
   void ClearFault(FaultKeys enum_key);
   void PrintFaults();
@@ -132,13 +126,13 @@ class FreeFlyerNodelet {
   void StopHeartbeat();
 
   // Diagnostic management
-  void SendDiagnostics(const std::vector<diagnostic_msgs::KeyValue> &keyval);
+  void SendDiagnostics(const std::vector<diagnostic_msgs::KeyValue>& keyval);
 
   // The set function does all of the internal work. We have moved this out
   // of the onInit() call, so that it can be invoked when a nodelet is not used
   // for example, in simulation, where the dynamic loading is within gazebo...
 #if ROS1
-  void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std::string plugin_name);
+  void Setup(ros::NodeHandle& nh, ros::NodeHandle& nh_mt, std::string plugin_name);
 #else
   void Setup(std::string plugin_name);
 #endif
@@ -152,8 +146,7 @@ class FreeFlyerNodelet {
   // Called when nodelet should be initialized
   void InitCallback(ros::TimerEvent const& ev);
   // Called when a trigger action is called
-  bool TriggerCallback(
-  ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res);
+  bool TriggerCallback(ff_msgs::Trigger::Request& req, ff_msgs::Trigger::Response& res);
 #else
   void HeartbeatCallback();
   void InitCallback();

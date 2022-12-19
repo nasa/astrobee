@@ -37,6 +37,7 @@
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>config_reader</exec_depend>
+  <exec_depend>diagnostic_msgs</exec_depend>
   <export>
     <build_type condition="$ROS_VERSION == 1">catkin</build_type>
     <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>

@@ -14,13 +14,21 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-#
-# This message allows the MOBILITY::MAPPER zones to be retrieved
 
----
-{% if ROS1 %}
-time timestamp                          # When these zones were updated
-{% else %}
-builtin_interfaces/Time timestamp                          # When these zones were updated
-{% endif %}
-ff_msgs/Zone[] zones                     # A vector of zones
+# The save settings message contains information about the topics currently
+# being recorded.
+
+# Name of topic
+string topic_name
+
+# Topic saved to disk; upon docking it is downlinked
+uint8 IMMEDIATE   = 0
+
+# Topic saved to disk; upon docking it is transferred to ISS server for later
+# downlink
+uint8 DELAYED     = 1
+
+# Downlink option indicates if and when the data in the rostopic is downlinked
+uint8 downlink_option
+# Times per second to save the data (Hz)
+float32 frequency

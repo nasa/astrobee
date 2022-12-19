@@ -15,24 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Message to send time difference between the mlp and llp
+# This message allows the MOBILITY::MAPPER zones to be set
 
-# Header with timestamp
-std_msgs/Header header
-
-# Processor that the heartbeat came from
-string remote_processor
-
-{% if ROS1 %}
-# Current time on the mlp
-time mlp_time
-
-# Time in the incoming heartbeat
-time remote_time
-{% else %}
-# Current time on the mlp
-builtin_interfaces/Time mlp_time
-
-# Time in the incoming heartbeat
-builtin_interfaces/Time remote_time
-{% endif %}
+builtin_interfaces/Time timestamp                          # When these zones were created
+ff_msgs/Zone[] zones                     # A vector of new zones
+---
+bool success                             # Did the update work?

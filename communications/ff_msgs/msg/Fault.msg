@@ -16,12 +16,8 @@
 # under the License.
 #
 # Fault message is used to provide all the information about an occurring fault
-    
-{% if ROS1 %}
-time time_of_fault # Time when fault occurred
-{% else %}
+
 builtin_interfaces/Time time_of_fault # Time when fault occurred
-{% endif %}
 uint32 id                 # id specifying fault
 
 string msg                # string specifying why the fault occurred
