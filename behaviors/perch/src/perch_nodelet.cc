@@ -768,17 +768,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     ROS_WARN("[Perch] Saving Approach Pose");
 
     // Save the transform
-    // Position - Cartesian
-    approach_position_(0) = tf.transform.translation.x;
-    approach_position_(1) = tf.transform.translation.y;
-    approach_position_(2) = tf.transform.translation.z;
-
-    // Orientation - Quaternions
-    Eigen::Quaterniond quat(tf.transform.rotation.w,
-                            tf.transform.rotation.x,
-                            tf.transform.rotation.y,
-                            tf.transform.rotation.z);
-    approach_orientation_ = quat;
+    approach_pose_ = tf.transform;
   }
 
   // Enable or disable optical flow
@@ -874,14 +864,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
          * TL;DR: This is good if we don't lose localization while perched,
          * otherwise relative movements are needed to securely move away.
          */
-          pose.pose.orientation.w = approach_orientation_.w();
-          pose.pose.orientation.x = approach_orientation_.x();
-          pose.pose.orientation.y = approach_orientation_.y();
-          pose.pose.orientation.z = approach_orientation_.z();
+          pose.pose = msg_conversions::ros_transform_to_ros_pose(approach_pose_);
 
-          pose.pose.position.x = approach_position_(0);
-          pose.pose.position.y = approach_position_(1);
-          pose.pose.position.z = approach_position_(2);
         } else {
           /*
            * Any other movement implies a copy of a transform
@@ -891,14 +875,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
           "world", pose.header.frame_id, ros::Time(0));
 
           // Copy the transform
-          pose.pose.orientation.w = tf.transform.rotation.w;
-          pose.pose.orientation.x = tf.transform.rotation.x;
-          pose.pose.orientation.y = tf.transform.rotation.y;
-          pose.pose.orientation.z = tf.transform.rotation.z;
-
-          pose.pose.position.x = tf.transform.translation.x;
-          pose.pose.position.y = tf.transform.translation.y;
-          pose.pose.position.z = tf.transform.translation.z;
+          pose.pose = msg_conversions::ros_transform_to_ros_pose(tf.transform);
         }
       } catch (tf2::TransformException &ex) {
         NODELET_WARN_STREAM("Transform failed" << ex.what());
@@ -1026,8 +1003,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
   ros::ServiceServer server_set_state_;
   ros::ServiceClient client_service_of_enable_;
   ros::ServiceClient client_service_hr_reset_;
-  Eigen::Quaterniond approach_orientation_;
-  Eigen::Vector3d approach_position_;
+  geometry_msgs::Transform approach_pose_;
   int32_t err_;
   std::string err_msg_;
   std::string platform_name_;
