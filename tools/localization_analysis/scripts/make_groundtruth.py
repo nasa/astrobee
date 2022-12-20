@@ -65,7 +65,13 @@ if __name__ == "__main__":
         default=None,
         help="Prefix for generated map names. Defaults to bagfile name.",
     )
-    parser.add_argument("-l", "--max-low-movement-mean-distance", type=float, default=0.09, help="Threshold for sequential image removal, the higher the more images removed.")
+    parser.add_argument(
+        "-l",
+        "--max-low-movement-mean-distance",
+        type=float,
+        default=0.09,
+        help="Threshold for sequential image removal, the higher the more images removed.",
+    )
     parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",

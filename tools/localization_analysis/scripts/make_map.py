@@ -53,7 +53,10 @@ def make_map(
     lu.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
     remove_low_movement_images_command = (
-        "rosrun sparse_mapping remove_low_movement_images " + bag_images + ' -m ' + str(max_low_movement_mean_distance)
+        "rosrun sparse_mapping remove_low_movement_images "
+        + bag_images
+        + " -m "
+        + str(max_low_movement_mean_distance)
     )
     lu.run_command_and_save_output(
         remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
@@ -69,7 +72,6 @@ def make_map(
         astrobee_path, "config/robots/bumble.config"
     )
     os.environ["ASTROBEE_WORLD"] = world
-
 
     # Build map
     bag_surf_map = map_name + ".map"
@@ -165,7 +167,13 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
     parser.add_argument("-m", "--map-name", default="bag_map")
-    parser.add_argument("-l", "--max-low-movement-mean-distance", type=float, default=0.15, help="Threshold for sequential image removal, the higher the more images removed.")
+    parser.add_argument(
+        "-l",
+        "--max-low-movement-mean-distance",
+        type=float,
+        default=0.15,
+        help="Threshold for sequential image removal, the higher the more images removed.",
+    )
     parser.add_argument(
         "-n",
         "--no-histogram_equalization",
