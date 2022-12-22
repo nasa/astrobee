@@ -52,7 +52,7 @@ using Service = ros::ServiceServer*;
   serv = &__serv
 
 
-
+using Duration = ros::Duration*;
 using Timer = ros::Timer*;
 #define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart)                                \
   ros::Timer __timer = nh_private_.createTimer(ros::Duration(duration), callback, oneshot, autostart); \
@@ -103,6 +103,7 @@ using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 #define ROS_CREATE_SERVICE(serv, msg, topic, callback) \
   serv = node_->create_service<msg>(topic, std::bind(callback, this, std::placeholders::_1, std::placeholders::_2))
 
+using Duration = std::shared_ptr<rclcpp::Duration>;
 using Timer = std::shared_ptr<rclcpp::TimerBase>;
 #define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart) \
   timer = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(duration), callback)
