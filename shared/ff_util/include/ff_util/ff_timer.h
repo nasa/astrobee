@@ -27,7 +27,7 @@
 
 namespace ff_util {
 
-//////////////////////////////////////// TIMER CODE ////////////////////////////////////////////////
+////////////////////////////// TIMER CODE //////////////////////////////////////
 
 // This is a simple wrapper around the ROS2 timer. The ROS2 timer API is a bit
 // different than the ROS1 timer. This wrapper will attempt to
@@ -38,7 +38,7 @@ class FreeFlyerTimer {
   typedef std::function < void (void) > TimerCallbackType;
 
   // Setters for callbacks
-  void SetTimerCallback(TimerCallbackType cb_timer)          { cb_timer_ = cb_timer;     }
+  void SetTimerCallback(TimerCallbackType cb_timer) { cb_timer_ = cb_timer; }
 
   // Constructor
   FreeFlyerTimer() : one_shot_(false),
@@ -48,7 +48,10 @@ class FreeFlyerTimer {
   // Destructor
   ~FreeFlyerTimer() {}
 
-  void createTimer(double period_sec, TimerCallbackType cb_timer, rclcpp::Node::SharedPtr node, bool one_shot = false,
+  void createTimer(double period_sec,
+                   TimerCallbackType cb_timer,
+                   rclcpp::Node::SharedPtr node,
+                   bool one_shot = false,
                    bool auto_start = true) {
     period_ = period_sec;
     cb_timer_ = cb_timer;
@@ -61,8 +64,12 @@ class FreeFlyerTimer {
     }
   }
 
-  void createTimer(double period_sec, TimerCallbackType cb_timer, rclcpp::Node::SharedPtr node,
-                   rclcpp::Clock::SharedPtr clock, bool one_shot = false, bool auto_start = true) {
+  void createTimer(double period_sec,
+                   TimerCallbackType cb_timer,
+                   rclcpp::Node::SharedPtr node,
+                   rclcpp::Clock::SharedPtr clock,
+                   bool one_shot = false,
+                   bool auto_start = true) {
     period_ = period_sec;
     cb_timer_ = cb_timer;
     one_shot_ = one_shot;
@@ -80,7 +87,8 @@ class FreeFlyerTimer {
     }
   }
 
-  // Follows the ros1 one convention that it doesn't do anything if the timer is already started
+  // Follows the ros1 one convention that it doesn't do anything if the timer
+  // is already started
   void start() {
     if (!auto_start_) {
       createStartTimer();

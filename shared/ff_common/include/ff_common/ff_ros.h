@@ -53,12 +53,6 @@ using Service = ros::ServiceServer*;
 
 
 using Duration = ros::Duration*;
-using Timer = ros::Timer*;
-#define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart)                                \
-  ros::Timer __timer = nh_private_.createTimer(ros::Duration(duration), callback, oneshot, autostart); \
-  timer = &__timer
-#define STOP_TIMER()   stop()
-
 
 #define FF_DEBUG(...)   ROS_DEBUG_NAMED(ros::this_node::getName(), __VA_ARGS__)
 #define FF_INFO(...)    ROS_INFO_NAMED(ros::this_node::getName(), __VA_ARGS__)
@@ -97,17 +91,12 @@ using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 #define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)        pub = node_->create_publisher<msg>(topic, queue)
 #define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  node_->create_subscription<msg>(topic, queue, callback)
 
-
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 #define ROS_CREATE_SERVICE(serv, msg, topic, callback) \
   serv = node_->create_service<msg>(topic, std::bind(callback, this, std::placeholders::_1, std::placeholders::_2))
 
 using Duration = std::shared_ptr<rclcpp::Duration>;
-using Timer = std::shared_ptr<rclcpp::TimerBase>;
-#define ROS_CREATE_TIMER(timer, duration, callback, oneshot, autostart) \
-  timer = rclcpp::create_timer(node_, node_->get_clock(), rclcpp::Duration(duration), callback)
-#define STOP_TIMER()   cancel()
 
 #define FF_DEBUG(...)   RCLCPP_DEBUG(LOGGER, __VA_ARGS__)
 #define FF_INFO(...)    RCLCPP_INFO(LOGGER, __VA_ARGS__)

@@ -21,12 +21,6 @@
 #include <ff_util/ff_nodelet.h>
 // #include <ff_util/config_server.h>
 
-// For plugin loading
-#if ROS1
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
-#endif
-
 // Config reader
 #include <config_reader/config_reader.h>
 #include <msg_conversions/msg_conversions.h>
@@ -34,16 +28,11 @@
 // TF2
 #include <tf2_ros/static_transform_broadcaster.h>
 
-#if ROS1
-
-#include <geometry_msgs/TransformStamped.h>
-#else
 #include <geometry_msgs/msg/transform_stamped.h>
 namespace geometry_msgs {
 typedef msg::TransformStamped TransformStamped;
 }  // namespace geometry_msgs
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("framestore");
-#endif
 
 #include <memory>
 
@@ -54,21 +43,12 @@ namespace mobility {
 
 class FrameStore : public ff_util::FreeFlyerNodelet {
  public:
-#if ROS1
-  FrameStore() : ff_util::FreeFlyerNodelet() {}
-#else
   explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerNodelet(options) {}
-#endif
   ~FrameStore() {}
 
  protected:
   void Initialize(NodeHandle node) {
-  #if ROS1
-    ros::NodeHandle nh_private_ = *node;
-    tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>();
-  #else
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node);
-  #endif
 
     // Set custom config path
     char *path;
@@ -80,15 +60,9 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
     if (!ReadParams())
       return InitFault("Could not read config");
 
-#if ROS1
-    ROS_CREATE_TIMER(timer_, 1.0, [this](ros::TimerEvent e) {
+    timer_.createTimer(1.0, [this]() {
       config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
-      false, true);
-#else  // TODO(@mgouveia): need to figure out cleaner way for timers
-    ROS_CREATE_TIMER(timer_, 1.0, [this]() {
-      config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
-      false, true);
-#endif
+      node_, false, true);
   }
 
   bool ReadParams() {
@@ -152,22 +126,16 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
 
  protected:
   NodeHandle ROS_NODE_VAR;
-  Timer timer_;
+  ff_util::FreeFlyerTimer timer_;
   config_reader::ConfigReader config_;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_;
 };
 
-#if ROS1
-PLUGINLIB_EXPORT_CLASS(mobility::FrameStore, nodelet::Nodelet);
-#endif
-
 }  // namespace mobility
 
-#if ROS2
 #include "rclcpp_components/register_node_macro.hpp"
 
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
 RCLCPP_COMPONENTS_REGISTER_NODE(mobility::FrameStore)
-#endif
