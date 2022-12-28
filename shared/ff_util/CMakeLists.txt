@@ -51,10 +51,10 @@ include_directories(
 )
 
 # Declare C++ libraries
-add_library(ff_nodelet
-  src/ff_nodelet/ff_nodelet.cc
+add_library(ff_component
+  src/ff_component/ff_component.cc
 )
-target_link_libraries(ff_nodelet ${catkin_LIBRARIES})
+target_link_libraries(ff_component ${catkin_LIBRARIES})
 
 # Declare C++ libraries
 add_library(ff_flight
@@ -62,7 +62,7 @@ add_library(ff_flight
 )
 target_link_libraries(ff_flight ${catkin_LIBRARIES})
 
-ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
+ament_target_dependencies(ff_component rclcpp ff_msgs diagnostic_msgs)
 # ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)
@@ -85,7 +85,8 @@ if(BUILD_TESTING)
     test/test_ff_timer.test
     test/test_ff_timer.cc
   )
-  target_link_libraries(test_ff_timer ff_nodelet)
+  target_link_libraries(test_ff_timer ff_component
+  )
   # ff_action
  # ament_add_gtest(ff_action_nominal_behaviour
  #   test/ff_action_nominal_behaviour.test

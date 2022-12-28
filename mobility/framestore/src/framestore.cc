@@ -18,7 +18,7 @@
 
 #include <ff_common/ff_ros.h>
 // Standard includes
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 // #include <ff_util/config_server.h>
 
 // Config reader
@@ -41,9 +41,9 @@ static const rclcpp::Logger LOGGER = rclcpp::get_logger("framestore");
  */
 namespace mobility {
 
-class FrameStore : public ff_util::FreeFlyerNodelet {
+class FrameStore : public ff_util::FreeFlyerComponent {
  public:
-  explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerNodelet(options) {}
+  explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options) {}
   ~FrameStore() {}
 
  protected:

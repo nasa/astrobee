@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef FF_UTIL_FF_NODELET_H_
-#define FF_UTIL_FF_NODELET_H_
+#ifndef FF_UTIL_FF_COMPONENT_H_
+#define FF_UTIL_FF_COMPONENT_H_
 
 #include <ff_common/ff_ros.h>
 
@@ -62,7 +62,7 @@ typedef srv::Trigger Trigger;
 
 namespace ff_util {
 
-class FreeFlyerNodelet {
+class FreeFlyerComponent {
  public:
   enum ResolveType : uint8_t {
     NAMESPACE = 0,
@@ -72,16 +72,16 @@ class FreeFlyerNodelet {
 
   // Use default name from freeflyer
   // COMPOSITION_PUBLIC
-  explicit FreeFlyerNodelet(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
+  explicit FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
   // Explicitly specift the name
-  explicit FreeFlyerNodelet(const rclcpp::NodeOptions& options, std::string const& name,
+  explicit FreeFlyerComponent(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
   // Necessary ROS2 function for components
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
     return node_->get_node_base_interface();
   }
 
-  virtual ~FreeFlyerNodelet();
+  virtual ~FreeFlyerComponent();
 
   void AssertFault(FaultKeys enum_key,
                    std::string const& message,
@@ -159,4 +159,4 @@ class FreeFlyerNodelet {
 
 }  // namespace ff_util
 
-#endif  // FF_UTIL_FF_NODELET_H_
+#endif  // FF_UTIL_FF_COMPONENT_H_

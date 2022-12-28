@@ -16,8 +16,7 @@
  * under the License.
  */
 
-
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_nodelet");
 
@@ -25,7 +24,7 @@ namespace ff_util {
 
 namespace fs = boost::filesystem;
 
-FreeFlyerNodelet::FreeFlyerNodelet(
+FreeFlyerComponent::FreeFlyerComponent(
   const rclcpp::NodeOptions & options, std::string const& node, bool autostart_hb_timer) :
   node_(std::make_shared<rclcpp::Node>(node, options)),
   autostart_hb_timer_(autostart_hb_timer),
@@ -35,18 +34,18 @@ FreeFlyerNodelet::FreeFlyerNodelet(
   node_name_(node) {
 }
 
-FreeFlyerNodelet::FreeFlyerNodelet(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
+FreeFlyerComponent::FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
   node_(std::make_shared<rclcpp::Node>("", options)),
   autostart_hb_timer_(autostart_hb_timer),
   initialized_(false),
   node_name_("") {
 }
 
-FreeFlyerNodelet::~FreeFlyerNodelet() {
+FreeFlyerComponent::~FreeFlyerComponent() {
 }
 
 // Called directly by Gazebo and indirectly through onInit() by nodelet
-void FreeFlyerNodelet::Setup(std::string plugin_name) {
+void FreeFlyerComponent::Setup(std::string plugin_name) {
   // Get the platform name from the node handle (roslaunch group name attribute)
   if (std::string(node_->get_namespace()).size() > 1)
     platform_ = std::string(node_->get_namespace()).substr(1);
@@ -88,7 +87,7 @@ void FreeFlyerNodelet::Setup(std::string plugin_name) {
   // Setup a heartbeat timer for this node if auto start was requested
   if (autostart_hb_timer_) {
       timer_heartbeat_.createTimer(1.0,
-          std::bind(&FreeFlyerNodelet::HeartbeatCallback, this), node_, false, false);
+          std::bind(&FreeFlyerComponent::HeartbeatCallback, this), node_, false, false);
   }
 
   // TODO(Katie or Marina) Is this needed for component registration
@@ -96,10 +95,10 @@ void FreeFlyerNodelet::Setup(std::string plugin_name) {
   // nodelet registration. See this issue for more details:
   // > https://github.com/ros/nodelet_core/issues/46
   timer_deferred_init_.createTimer(1.0,
-      std::bind(&FreeFlyerNodelet::InitCallback, this), node_, true, true);
+      std::bind(&FreeFlyerComponent::InitCallback, this), node_, true, true);
 }
 
-void FreeFlyerNodelet::ReadConfig() {
+void FreeFlyerComponent::ReadConfig() {
   // Read fault config file into lua
   if (!param_config_.ReadFiles()) {
     FF_ERROR_STREAM(node_name_ << ": Couldn't open faults.config! Make sure it " <<
@@ -176,7 +175,7 @@ void FreeFlyerNodelet::ReadConfig() {
   return;
 }
 
-void FreeFlyerNodelet::AssertFault(FaultKeys enum_key,
+void FreeFlyerComponent::AssertFault(FaultKeys enum_key,
                                    std::string const& message,
                                    ros::Time time_fault_occurred) {
   std::string key = fault_keys[enum_key];
@@ -224,13 +223,13 @@ void FreeFlyerNodelet::AssertFault(FaultKeys enum_key,
   }
 }
 
-void FreeFlyerNodelet::ClearAllFaults() {
+void FreeFlyerComponent::ClearAllFaults() {
   heartbeat_.faults.clear();
   // Publish heartbeat so that the system monitor is notified immediately
   PublishHeartbeat();
 }
 
-void FreeFlyerNodelet::ClearFault(FaultKeys enum_key) {
+void FreeFlyerComponent::ClearFault(FaultKeys enum_key) {
   std::string key = fault_keys[enum_key];
   unsigned int id;
   // Check to make sure the fault key is valid for this nodelet
@@ -261,7 +260,7 @@ void FreeFlyerNodelet::ClearFault(FaultKeys enum_key) {
   FF_WARN_STREAM(node_name_ << ": Fault (" << key << ") has been cleared!");
 }
 
-void FreeFlyerNodelet::PrintFaults() {
+void FreeFlyerComponent::PrintFaults() {
   FF_INFO_STREAM(node_name_ << "'s faults:");
   for (std::map<std::string, int>::iterator it = faults_.begin();
                                                     it != faults_.end(); ++it) {
@@ -270,15 +269,15 @@ void FreeFlyerNodelet::PrintFaults() {
 }
 
 // Not sure if we need this functionality but I added it just in case
-void FreeFlyerNodelet::StopHeartbeat() {
+void FreeFlyerComponent::StopHeartbeat() {
   // Stop heartbeat timer
   timer_heartbeat_.stop();
 }
 
-void FreeFlyerNodelet::HeartbeatCallback() {
+void FreeFlyerComponent::HeartbeatCallback() {
   PublishHeartbeat();
 }
-void FreeFlyerNodelet::InitCallback() {
+void FreeFlyerComponent::InitCallback() {
   // Return a single threaded nodehandle by default
   initialized_ = false;
   Initialize(node_);
@@ -300,10 +299,10 @@ void FreeFlyerNodelet::InitCallback() {
 
   // Start a trigger service on the private nodehandle /platform/pvt/name
   ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
-                     &FreeFlyerNodelet::TriggerCallback);
+                     &FreeFlyerComponent::TriggerCallback);
 }
 
-void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
+void FreeFlyerComponent::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,
                                              std::shared_ptr<ff_msgs::Trigger::Response> res) {
   switch (req->event) {
   // Allow a reset from woken state only
@@ -339,14 +338,14 @@ void FreeFlyerNodelet::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::R
   return;
 }
 
-void FreeFlyerNodelet::PublishHeartbeat() {
+void FreeFlyerComponent::PublishHeartbeat() {
   if (initialized_) {
     heartbeat_.header.stamp = ROS_TIME_NOW();
     pub_heartbeat_->publish(heartbeat_);
   }
 }
 
-void FreeFlyerNodelet::SendDiagnostics(
+void FreeFlyerComponent::SendDiagnostics(
   const std::vector<diagnostic_msgs::KeyValue> &keyval) {
   // Setup the diagnostics skeleton
   diagnostic_msgs::DiagnosticStatus ds;
@@ -382,17 +381,17 @@ void FreeFlyerNodelet::SendDiagnostics(
   pub_diagnostics_->publish(da);
 }
 
-std::string FreeFlyerNodelet::GetName() {
+std::string FreeFlyerComponent::GetName() {
   return node_name_;
 }
 
 // Get the name of this node (mainly useful for drivers)
-std::string FreeFlyerNodelet::GetPlatform() {
+std::string FreeFlyerComponent::GetPlatform() {
   return platform_;
 }
 
 // Get a platform prefixed frame name
-std::string FreeFlyerNodelet::GetTransform(std::string const& child) {
+std::string FreeFlyerComponent::GetTransform(std::string const& child) {
   std::string frame = child;
   if (!platform_.empty())
     frame = platform_ + "/" + child;
