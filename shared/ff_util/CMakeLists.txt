@@ -56,14 +56,14 @@ add_library(ff_component
 )
 target_link_libraries(ff_component ${catkin_LIBRARIES})
 
+ament_target_dependencies(ff_component rclcpp ff_msgs diagnostic_msgs)
+# ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
+
 # Declare C++ libraries
 add_library(ff_flight
   src/ff_flight/ff_flight.cc
 )
 target_link_libraries(ff_flight ${catkin_LIBRARIES})
-
-ament_target_dependencies(ff_component rclcpp ff_msgs diagnostic_msgs)
-# ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)
 
