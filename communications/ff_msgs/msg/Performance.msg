@@ -15,17 +15,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Message used to tell which guest science apks are running
+# Statistics used to measure performance.
 
-# Header with timestamp
-std_msgs/Header header
-
-# Used for guest science config and state message synchronization on the ground
-int64 serial
-
-# Tells which apks are running. Used in conjection with the guest science config
-{% if ROS1 %}
-bool[] runningApks
-{% else %}
-bool[] running_apks
-{% endif %}
+builtin_interfaces/Time stamp
+float32 count
+float32 last
+float32 min
+float32 max
+float32 mean
+float32 stddev
+float32 var

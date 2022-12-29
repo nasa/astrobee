@@ -15,15 +15,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Fault message is used to provide all the information about an occurring fault
-    
-{% if ROS1 %}
-time time_of_fault # Time when fault occurred
-{% else %}
-builtin_interfaces/Time time_of_fault # Time when fault occurred
-{% endif %}
-uint32 id                 # id specifying fault
+# An argument to a command sent through RAPID
+#
+# Note that this is approximating a union in DDS. However, this is an
+# inefficient union, and thus each instance will take up at least 89 bytes.
+# However, even with the maximum of 16 arguments to a command, we only have
+# about 1k extra data. I, tfmorse, am ok with that. Commands are rarely sent.
 
-string msg                # string specifying why the fault occurred
+uint8 DATA_TYPE_BOOL     = 0
+uint8 DATA_TYPE_DOUBLE   = 1
+uint8 DATA_TYPE_FLOAT    = 2
+uint8 DATA_TYPE_INT      = 3
+uint8 DATA_TYPE_LONGLONG = 4
+uint8 DATA_TYPE_STRING   = 5
+uint8 DATA_TYPE_VEC3D    = 6
+uint8 DATA_TYPE_MAT33F   = 7
 
-ff_msgs/FaultData[] data  # Data used for fault analysis
+uint8 data_type
+
+bool b
+float64 d
+float32 f
+int32 i
+int64 ll
+string s
+float64[3] vec3d
+float32[9] mat33f
+

@@ -15,17 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-{% if ROS1 %}
-time source_time 
-time target_time
-
-geometry_msgs/PoseWithCovariance sensor_F_source_T_target
-geometry_msgs/PoseWithCovariance body_F_source_T_target
-{% else %}
 builtin_interfaces/Time source_time
 builtin_interfaces/Time target_time
 
 geometry_msgs/PoseWithCovariance sensor_f_source_t_target
 geometry_msgs/PoseWithCovariance body_f_source_t_target
-{% endif %}
 

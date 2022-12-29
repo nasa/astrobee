@@ -15,19 +15,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Full state vector containing Time, Pose, Vel, and Accel
-# 
-# when {time}
-# flight_mode {string} - disctates, gains, tolerances, etc.
-# pose {Point position, Quaternion orientation}
-# twist {Vector3 linear, Vector3 angular}
-# accel {Vector3 linear, Vector3 angular}
+# Fault message is used to provide all the information about an occurring fault
+    
+builtin_interfaces/Time time_of_fault  # Time when fault occurred
+uint32 id                              # id specifying fault
 
-{% if ROS1 %}
-time when
-{% else %}
-builtin_interfaces/Time when
-{% endif %}
-geometry_msgs/Pose pose
-geometry_msgs/Twist twist
-geometry_msgs/Twist accel
+string msg                # string specifying why the fault occurred
+
+ff_msgs/FaultData[] data  # Data used for fault analysis

@@ -18,12 +18,5 @@
 # This message allows the MOBILITY::MAPPER zones to be retrieved
 
 ---
-{% if ROS1 %}
-time timestamp                          # When these zones were updated
-{% else %}
-builtin_interfaces/Time timestamp                          # When these zones were updated
-{% endif %}
-int8[] map                              # Occupancy map
-geometry_msgs/Vector3 origin            # Map origin
-geometry_msgs/Vector3 dim	              # Map dimentions
-float32 resolution                      # Map resolution
+builtin_interfaces/Time timestamp        # When these zones were updated
+ff_msgs/Zone[] zones                     # A vector of zones
