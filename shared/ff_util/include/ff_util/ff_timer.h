@@ -30,7 +30,8 @@ namespace ff_util {
 ////////////////////////////// TIMER CODE //////////////////////////////////////
 
 // This is a simple wrapper around the ROS2 timer. The ROS2 timer API is a bit
-// different than the ROS1 timer. This wrapper will attempt to
+// different than the ROS1 timer. This wrapper provides ROS1 timer functionality
+// using ROS2 timers.
 
 class FreeFlyerTimer {
  public:
