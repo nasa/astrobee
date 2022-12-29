@@ -21,48 +21,21 @@ project(ff_util)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
-# Build for ROS1
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_definitions(-DROS1)
-  ## Find catkin macros and libraries
-  find_package(catkin2 REQUIRED COMPONENTS
-    config_reader
-    roscpp
-    nodelet
-    dynamic_reconfigure
-    ff_msgs diagnostic_msgs
-    tf2_geometry_msgs
-    actionlib
-    msg_conversions
-  )
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 
-  catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer
-    CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
-  )
+find_package(ff_common REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(msg_conversions REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+# find_package(actionlib REQUIRED)
 
-# Build for ROS2
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  add_definitions(-DROS2)
-
-  # Find amend and libraries
-  find_package(ament_cmake REQUIRED)
-  find_package(rclcpp REQUIRED)
-
-  find_package(ff_common REQUIRED)
-  find_package(ff_msgs REQUIRED)
-  find_package(msg_conversions REQUIRED)
-  find_package(geometry_msgs REQUIRED)
-  find_package(diagnostic_msgs REQUIRED)
-  find_package(tf2_geometry_msgs REQUIRED)
-  # find_package(actionlib REQUIRED)
-
-  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
-
-endif()
+set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
+set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
+set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
 
 ###########
 ## Build ##
@@ -77,55 +50,20 @@ include_directories(
   ${JSONCPP_INCLUDE_DIRS}
 )
 
-
-
 # Declare C++ libraries
-add_library(ff_nodelet
-  src/ff_nodelet/ff_nodelet.cc
+add_library(ff_component
+  src/ff_component/ff_component.cc
 )
-target_link_libraries(ff_nodelet ${catkin_LIBRARIES})
+target_link_libraries(ff_component ${catkin_LIBRARIES})
+
+ament_target_dependencies(ff_component rclcpp ff_msgs diagnostic_msgs)
+# ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 # Declare C++ libraries
 add_library(ff_flight
   src/ff_flight/ff_flight.cc
 )
 target_link_libraries(ff_flight ${catkin_LIBRARIES})
-
-
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-
-# Declare C++ libraries
-add_library(config_server
-  src/config_server/config_server.cc
-)
-target_link_libraries(config_server ${catkin_LIBRARIES})
-
-# Declare C++ libraries
-add_library(config_client
-  src/config_client/config_client.cc
-)
-target_link_libraries(config_client ${catkin_LIBRARIES})
-
-# Declare C++ libraries
-add_library(perf_timer
-  src/perf_timer/perf_timer.cc
-)
-target_link_libraries(perf_timer ${catkin_LIBRARIES})
-
-
-add_dependencies(ff_nodelet ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(ff_flight ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(config_server ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(config_client ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
-
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-ament_target_dependencies(ff_nodelet rclcpp ff_msgs diagnostic_msgs)
-# ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)
 
@@ -136,62 +74,65 @@ ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_ms
 ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
 ament_package()
 
-endif()
-
-
-
 ##########
 ## Test ##
 ##########
 
-# Only test if it is enabled
-if (CATKIN_ENABLE_TESTING)
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
 
-  find_package(rostest REQUIRED)
-
-  include_directories(${catkin_INCLUDE_DIRS} include)
+  ament_add_gtest(test_ff_timer
+    test/test_ff_timer.test
+    test/test_ff_timer.cc
+  )
+  target_link_libraries(test_ff_timer ff_component
+  )
+  # ff_action
+ # ament_add_gtest(ff_action_nominal_behaviour
+ #   test/ff_action_nominal_behaviour.test
+ #   test/ff_action_nominal_behaviour.cc)
+ # target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
 
   # ff_action
-  add_rostest_gtest(ff_action_nominal_behaviour
-    test/ff_action_nominal_behaviour.test
-    test/ff_action_nominal_behaviour.cc)
-  target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
+#  ament_add_gtest(ff_action_nominal_behaviour
+#    test/ff_action_nominal_behaviour.test
+#    test/ff_action_nominal_behaviour.cc)
+#  target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_active_timeout
-    test/ff_action_active_timeout.test
-    test/ff_action_active_timeout.cc)
-  target_link_libraries(ff_action_active_timeout ff_nodelet ${catkin_LIBRARIES})
+#  add_rostest_gtest(ff_action_active_timeout
+#    test/ff_action_active_timeout.test
+#    test/ff_action_active_timeout.cc)
+#  target_link_libraries(ff_action_active_timeout ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_cancel_own_goal
-    test/ff_action_cancel_own_goal.test
-    test/ff_action_cancel_own_goal.cc)
-  target_link_libraries(ff_action_cancel_own_goal ff_nodelet ${catkin_LIBRARIES})
+#  add_rostest_gtest(ff_action_cancel_own_goal
+#    test/ff_action_cancel_own_goal.test
+#    test/ff_action_cancel_own_goal.cc)
+#  target_link_libraries(ff_action_cancel_own_goal ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_connect_timeout
-    test/ff_action_connect_timeout.test
-    test/ff_action_connect_timeout.cc)
-  target_link_libraries(ff_action_connect_timeout ff_nodelet ${catkin_LIBRARIES})
+#  add_rostest_gtest(ff_action_connect_timeout
+#    test/ff_action_connect_timeout.test
+#    test/ff_action_connect_timeout.cc)
+#  target_link_libraries(ff_action_connect_timeout ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_deadline_timeout
-    test/ff_action_deadline_timeout.test
-    test/ff_action_deadline_timeout.cc)
-  target_link_libraries(ff_action_deadline_timeout ff_nodelet ${catkin_LIBRARIES})
+#  add_rostest_gtest(ff_action_deadline_timeout
+#    test/ff_action_deadline_timeout.test
+#    test/ff_action_deadline_timeout.cc)
+#  target_link_libraries(ff_action_deadline_timeout ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_preempt_others_goal
-    test/ff_action_preempt_others_goal.test
-    test/ff_action_preempt_others_goal.cc)
-  target_link_libraries(ff_action_preempt_others_goal ff_nodelet ${catkin_LIBRARIES})
+#  add_rostest_gtest(ff_action_preempt_others_goal
+#    test/ff_action_preempt_others_goal.test
+#    test/ff_action_preempt_others_goal.cc)
+#  target_link_libraries(ff_action_preempt_others_goal ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_preempt_own_goal
-    test/ff_action_preempt_own_goal.test
-    test/ff_action_preempt_own_goal.cc)
-  target_link_libraries(ff_action_preempt_own_goal ff_nodelet ${catkin_LIBRARIES})
+#  add_rostest_gtest(ff_action_preempt_own_goal
+#    test/ff_action_preempt_own_goal.test
+#    test/ff_action_preempt_own_goal.cc)
+#  target_link_libraries(ff_action_preempt_own_goal ff_nodelet ${catkin_LIBRARIES})
 
-  add_rostest_gtest(ff_action_response_timeout
-    test/ff_action_response_timeout.test
-    test/ff_action_response_timeout.cc)
-  target_link_libraries(ff_action_response_timeout ff_nodelet ${catkin_LIBRARIES})
-
+#  add_rostest_gtest(ff_action_response_timeout
+#    test/ff_action_response_timeout.test
+#    test/ff_action_response_timeout.cc)
+#  target_link_libraries(ff_action_response_timeout ff_nodelet ${catkin_LIBRARIES})
 
 endif()
 
