@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#include <graph_localizer/feature_tracker.h>
+#include <graph_vio/feature_tracker.h>
 #include <localization_common/logger.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 FeatureTracker::FeatureTracker(const FeatureTrackerParams& params) : params_(params) {}
@@ -145,4 +145,4 @@ boost::optional<const FeatureTrack&> FeatureTracker::LongestFeatureTrack() const
   if (empty()) return boost::none;
   return *(feature_track_length_map_.rbegin()->second.get());
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

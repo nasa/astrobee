@@ -16,15 +16,15 @@
  * under the License.
  */
 
-#include <graph_localizer/smart_projection_cumulative_factor_adder.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/smart_projection_cumulative_factor_adder.h>
+#include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -142,4 +142,4 @@ bool SmartProjectionCumulativeFactorAdder::TooClose(
 const gtsam::SmartProjectionParams& SmartProjectionCumulativeFactorAdder::smart_projection_params() const {
   return smart_projection_params_;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

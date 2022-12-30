@@ -16,15 +16,15 @@
  * under the License.
  */
 
-#include <graph_localizer/standstill_factor_adder.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/standstill_factor_adder.h>
+#include <graph_vio/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/nonlinear/PriorFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -80,4 +80,4 @@ std::vector<go::FactorsToAdd> StandstillFactorAdder::AddFactors(
   }
   return factors_to_add;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

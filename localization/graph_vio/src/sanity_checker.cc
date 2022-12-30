@@ -16,11 +16,11 @@
  * under the License.
  */
 
-#include <graph_localizer/sanity_checker.h>
+#include <graph_vio/sanity_checker.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/utilities.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace lc = localization_common;
 SanityChecker::SanityChecker(const SanityCheckerParams& params) : params_(params), num_consecutive_failures_(0) {}
 
@@ -44,4 +44,4 @@ bool SanityChecker::CheckCovarianceSanity(const lc::CombinedNavStateCovariances&
 
 void SanityChecker::Reset() { num_consecutive_failures_ = 0; }
 
-}  // namespace graph_localizer
+}  // namespace graph_vio

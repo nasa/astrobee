@@ -16,9 +16,9 @@
  * under the License.
  */
 
-#include <graph_localizer/combined_nav_state_node_updater.h>
-#include <graph_localizer/loc_pose_factor.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/combined_nav_state_node_updater.h>
+#include <graph_vio/loc_pose_factor.h>
+#include <graph_vio/utilities.h>
 #include <imu_integration/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -27,7 +27,7 @@
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/slam/PriorFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -399,4 +399,4 @@ bool CombinedNavStateNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(const 
   factors.push_back(combined_imu_factor);
   return true;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

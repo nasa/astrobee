@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_PARAMS_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_PARAMS_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_PARAMS_H_
+#define GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 
 #include <graph_localizer/calibration_params.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
@@ -49,4 +49,4 @@ struct GraphLocalizerParams {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_PARAMS_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_PARAMS_H_

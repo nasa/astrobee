@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_H_
+#define GRAPH_VIO_GRAPH_VIO_H_
 
 #include <graph_localizer/combined_nav_state_node_updater.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
@@ -184,4 +184,4 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_H_

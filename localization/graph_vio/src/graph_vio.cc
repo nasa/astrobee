@@ -16,16 +16,16 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/loc_projection_factor.h>
-#include <graph_localizer/loc_pose_factor.h>
-#include <graph_localizer/point_to_handrail_endpoint_factor.h>
-#include <graph_localizer/point_to_line_factor.h>
-#include <graph_localizer/point_to_line_segment_factor.h>
-#include <graph_localizer/point_to_plane_factor.h>
-#include <graph_localizer/point_to_point_between_factor.h>
-#include <graph_localizer/pose_rotation_factor.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/graph_vio.h>
+#include <graph_vio/loc_projection_factor.h>
+#include <graph_vio/loc_pose_factor.h>
+#include <graph_vio/point_to_handrail_endpoint_factor.h>
+#include <graph_vio/point_to_line_factor.h>
+#include <graph_vio/point_to_line_segment_factor.h>
+#include <graph_vio/point_to_plane_factor.h>
+#include <graph_vio/point_to_point_between_factor.h>
+#include <graph_vio/pose_rotation_factor.h>
+#include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
@@ -46,7 +46,7 @@
 #include <chrono>
 #include <unordered_set>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -497,7 +497,7 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
   return num_factors;
 }
 
-const GraphLocalizerStats& GraphLocalizer::graph_localizer_stats() const {
+const GraphLocalizerStats& GraphLocalizer::graph_vio_stats() const {
   return *(static_cast<const GraphLocalizerStats*>(graph_stats()));
 }
 
@@ -519,4 +519,4 @@ bool GraphLocalizer::DoPostOptimizeActions() {
   latest_imu_integrator_->ResetPimIntegrationAndSetBias(latest_bias->first);
   return true;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

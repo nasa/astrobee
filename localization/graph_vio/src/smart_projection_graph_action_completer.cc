@@ -16,15 +16,15 @@
  * under the License.
  */
 
-#include <graph_localizer/smart_projection_graph_action_completer.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/smart_projection_graph_action_completer.h>
+#include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -79,4 +79,4 @@ void SmartProjectionGraphActionCompleter::SplitSmartFactorsIfNeeded(const Combin
     LogDebug("SplitSmartFactorsIfNeeded: Failed to fix smart factor");
   }
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

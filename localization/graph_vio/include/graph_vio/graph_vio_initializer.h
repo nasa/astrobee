@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_INITIALIZER_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_INITIALIZER_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_INITIALIZER_H_
+#define GRAPH_VIO_GRAPH_VIO_INITIALIZER_H_
 
 #include <camera/camera_params.h>
 #include <config_reader/config_reader.h>
@@ -76,4 +76,4 @@ class GraphLocalizerInitializer {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_INITIALIZER_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_INITIALIZER_H_

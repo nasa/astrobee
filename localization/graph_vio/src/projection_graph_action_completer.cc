@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#include <graph_localizer/projection_graph_action_completer.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/projection_graph_action_completer.h>
+#include <graph_vio/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/ProjectionFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace sym = gtsam::symbol_shorthand;
 ProjectionGraphActionCompleter::ProjectionGraphActionCompleter(
@@ -99,4 +99,4 @@ bool ProjectionGraphActionCompleter::TriangulateNewPoint(go::FactorsToAdd& facto
   }
   return true;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

@@ -16,9 +16,9 @@
  * under the License.
  */
 
-#include <graph_localizer/feature_track.h>
-#include <graph_localizer/serialization.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/feature_track.h>
+#include <graph_vio/serialization.h>
+#include <graph_vio/utilities.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -27,7 +27,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -108,7 +108,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   return loc_msg;
 }
 
-ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer) {
+ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_vio) {
   ff_msgs::LocalizationGraph graph_msg;
 
   // Set Header Frames
@@ -118,7 +118,7 @@ ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer) {
   // TODO(rsoussan): set correct time
   lc::TimeToHeader(5, graph_msg.header);
 
-  graph_msg.serialized_graph = SerializeBinary(graph_localizer);
+  graph_msg.serialized_graph = SerializeBinary(graph_vio);
   return graph_msg;
 }
 
@@ -274,4 +274,4 @@ int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const gtsa
   }
   return num_of_factors;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

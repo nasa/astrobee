@@ -15,12 +15,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <graph_localizer/test_utilities.h>
+#include <graph_vio/test_utilities.h>
 #include <localization_common/test_utilities.h>
 
 #include <gtsam/geometry/Point3.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace go = graph_optimizer;
@@ -127,4 +127,4 @@ DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams() {
   params.enabled = true;
   return params;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

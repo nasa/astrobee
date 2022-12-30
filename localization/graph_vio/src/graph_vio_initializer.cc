@@ -16,15 +16,15 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_localizer_initializer.h>
-#include <graph_localizer/parameter_reader.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/graph_vio_initializer.h>
+#include <graph_vio/parameter_reader.h>
+#include <graph_vio/utilities.h>
 #include <localization_common/utilities.h>
 
 #include <iostream>
 #include <string>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 GraphLocalizerInitializer::GraphLocalizerInitializer()
@@ -178,7 +178,7 @@ void GraphLocalizerInitializer::RemoveGravityFromBias(const gtsam::Vector3& glob
 }
 
 void GraphLocalizerInitializer::LoadGraphLocalizerParams(config_reader::ConfigReader& config) {
-  graph_localizer::LoadGraphLocalizerParams(config, params_);
+  graph_vio::LoadGraphLocalizerParams(config, params_);
   has_params_ = true;
 }
 
@@ -199,4 +199,4 @@ bool GraphLocalizerInitializer::RemovedGravityFromBiasIfNecessary() const {
 
 const GraphLocalizerParams& GraphLocalizerInitializer::params() const { return params_; }
 
-}  // namespace graph_localizer
+}  // namespace graph_vio

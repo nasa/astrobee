@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_NODELET_PARAMS_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_
+#define GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_
 
 namespace graph_localizer {
 struct GraphLocalizerNodeletParams {
@@ -32,4 +32,4 @@ struct GraphLocalizerNodeletParams {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_

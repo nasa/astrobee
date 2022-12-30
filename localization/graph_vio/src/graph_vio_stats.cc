@@ -15,13 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <graph_localizer/graph_localizer_stats.h>
-#include <graph_localizer/point_to_point_between_factor.h>
-#include <graph_localizer/loc_projection_factor.h>
-#include <graph_localizer/loc_pose_factor.h>
-#include <graph_localizer/pose_rotation_factor.h>
-#include <graph_localizer/robust_smart_projection_pose_factor.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/graph_vio_stats.h>
+#include <graph_vio/point_to_point_between_factor.h>
+#include <graph_vio/loc_projection_factor.h>
+#include <graph_vio/loc_pose_factor.h>
+#include <graph_vio/pose_rotation_factor.h>
+#include <graph_vio/robust_smart_projection_pose_factor.h>
+#include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
@@ -31,7 +31,7 @@
 #include <gtsam/slam/ProjectionFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_states_averager_);
@@ -172,4 +172,4 @@ void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_f
   num_standstill_between_factors_averager_.Update(go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors));
   num_vel_prior_factors_averager_.Update(go::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(graph_factors));
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

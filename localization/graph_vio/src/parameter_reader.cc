@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#include <graph_localizer/parameter_reader.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/parameter_reader.h>
+#include <graph_vio/utilities.h>
 #include <graph_optimizer/parameter_reader.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -270,4 +270,4 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_depth_odometry_buffer_size = mc::LoadInt(config, "max_depth_odometry_buffer_size");
   params.max_dl_buffer_size = mc::LoadInt(config, "max_dl_buffer_size");
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

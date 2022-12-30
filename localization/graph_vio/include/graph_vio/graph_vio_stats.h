@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_STATS_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_STATS_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_STATS_H_
+#define GRAPH_VIO_GRAPH_VIO_STATS_H_
 
 #include <graph_localizer/combined_nav_state_graph_values.h>
 #include <graph_optimizer/graph_stats.h>
@@ -71,4 +71,4 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_STATS_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_STATS_H_

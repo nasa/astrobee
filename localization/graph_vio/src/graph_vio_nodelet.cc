@@ -19,16 +19,16 @@
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_util/ff_names.h>
-#include <graph_localizer/graph_localizer_nodelet.h>
-#include <graph_localizer/parameter_reader.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/graph_vio_nodelet.h>
+#include <graph_vio/parameter_reader.h>
+#include <graph_vio/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <std_msgs/Empty.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 
@@ -108,11 +108,11 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
       last_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
     LogInfo("SetMode: Switching to AR_TAG mode.");
-    graph_localizer_wrapper_.MarkWorldTDockForResettingIfNecessary();
+    graph_vio_wrapper_.MarkWorldTDockForResettingIfNecessary();
   } else if (input_mode == ff_msgs::SetEkfInputRequest::MODE_HANDRAIL &&
              last_mode_ != ff_msgs::SetEkfInputRequest::MODE_HANDRAIL) {
     LogInfo("SetMode: Switching to Handrail mode.");
-    graph_localizer_wrapper_.MarkWorldTHandrailForResetting();
+    graph_vio_wrapper_.MarkWorldTHandrailForResetting();
   }
 
   last_mode_ = input_mode;
@@ -127,7 +127,7 @@ bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled
 
 bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   DisableLocalizer();
-  graph_localizer_wrapper_.ResetBiasesAndLocalizer();
+  graph_vio_wrapper_.ResetBiasesAndLocalizer();
   PublishReset();
   EnableLocalizer();
   return true;
@@ -151,7 +151,7 @@ bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
   DisableLocalizer();
-  graph_localizer_wrapper_.ResetBiasesFromFileAndResetLocalizer();
+  graph_vio_wrapper_.ResetBiasesFromFileAndResetLocalizer();
   PublishReset();
   EnableLocalizer();
   return true;
@@ -164,7 +164,7 @@ bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_sr
 
 void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
   DisableLocalizer();
-  graph_localizer_wrapper_.ResetLocalizer();
+  graph_vio_wrapper_.ResetLocalizer();
   PublishReset();
   EnableLocalizer();
 }
@@ -174,7 +174,7 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
   of_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
+  graph_vio_wrapper_.OpticalFlowCallback(*feature_array_msg);
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -182,7 +182,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   vl_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
+  graph_vio_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
   if (ValidVLMsg(*visual_landmarks_msg, params_.loc_adder_min_num_matches)) PublishSparseMappingPose();
 }
 
@@ -191,7 +191,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   ar_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
+  graph_vio_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
   if (ValidVLMsg(*visual_landmarks_msg, params_.ar_tag_loc_adder_min_num_matches)) PublishARTagPose();
 }
@@ -201,7 +201,7 @@ void GraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::
   depth_odometry_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.DepthOdometryCallback(*depth_odometry_msg);
+  graph_vio_wrapper_.DepthOdometryCallback(*depth_odometry_msg);
 }
 
 void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks::ConstPtr& depth_landmarks_msg) {
@@ -209,7 +209,7 @@ void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   depth_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
+  graph_vio_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
   PublishWorldTHandrailTF();
   if (ValidDepthMsg(*depth_landmarks_msg)) PublishHandrailPose();
 }
@@ -219,15 +219,15 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
   imu_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.ImuCallback(*imu_msg);
+  graph_vio_wrapper_.ImuCallback(*imu_msg);
 }
 
 void GraphLocalizerNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
-  graph_localizer_wrapper_.FlightModeCallback(*mode);
+  graph_vio_wrapper_.FlightModeCallback(*mode);
 }
 
 void GraphLocalizerNodelet::PublishLocalizationState() {
-  auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
+  auto latest_localization_state_msg = graph_vio_wrapper_.LatestLocalizationStateMsg();
   if (!latest_localization_state_msg) {
     LogDebugEveryN(100, "PublishLocalizationState: Failed to get latest localization state msg.");
     return;
@@ -238,7 +238,7 @@ void GraphLocalizerNodelet::PublishLocalizationState() {
 }
 
 void GraphLocalizerNodelet::PublishLocalizationGraph() {
-  const auto latest_localization_graph_msg = graph_localizer_wrapper_.LatestLocalizationGraphMsg();
+  const auto latest_localization_graph_msg = graph_vio_wrapper_.LatestLocalizationGraphMsg();
   if (!latest_localization_graph_msg) {
     LogDebugEveryN(100, "PublishLocalizationGraph: Failed to get latest localization graph msg.");
     return;
@@ -247,7 +247,7 @@ void GraphLocalizerNodelet::PublishLocalizationGraph() {
 }
 
 void GraphLocalizerNodelet::PublishSparseMappingPose() const {
-  const auto latest_sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
+  const auto latest_sparse_mapping_pose_msg = graph_vio_wrapper_.LatestSparseMappingPoseMsg();
   if (!latest_sparse_mapping_pose_msg) {
     LogWarning("PublishSparseMappingPose: Failed to get latest sparse mapping pose msg.");
     return;
@@ -256,7 +256,7 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
 }
 
 void GraphLocalizerNodelet::PublishARTagPose() const {
-  const auto latest_ar_tag_pose_msg = graph_localizer_wrapper_.LatestARTagPoseMsg();
+  const auto latest_ar_tag_pose_msg = graph_vio_wrapper_.LatestARTagPoseMsg();
   if (!latest_ar_tag_pose_msg) {
     LogDebug("PublishARTagPose: Failed to get latest ar tag pose msg.");
     return;
@@ -265,7 +265,7 @@ void GraphLocalizerNodelet::PublishARTagPose() const {
 }
 
 void GraphLocalizerNodelet::PublishHandrailPose() const {
-  const auto latest_handrail_pose_msg = graph_localizer_wrapper_.LatestHandrailPoseMsg();
+  const auto latest_handrail_pose_msg = graph_vio_wrapper_.LatestHandrailPoseMsg();
   if (!latest_handrail_pose_msg) {
     LogWarning("PublishHandrailPose: Failed to get latest handrail pose msg.");
     return;
@@ -274,7 +274,7 @@ void GraphLocalizerNodelet::PublishHandrailPose() const {
 }
 
 void GraphLocalizerNodelet::PublishWorldTBodyTF() {
-  const auto latest_combined_nav_state = graph_localizer_wrapper_.LatestCombinedNavState();
+  const auto latest_combined_nav_state = graph_vio_wrapper_.LatestCombinedNavState();
   if (!latest_combined_nav_state) {
     LogErrorEveryN(100, "PublishWorldTBodyTF: Failed to get world_T_body.");
     return;
@@ -286,7 +286,7 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
 }
 
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
-  const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
+  const auto world_T_dock = graph_vio_wrapper_.estimated_world_T_dock();
   const auto world_T_dock_tf =
     lc::PoseToTF(world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   // If the rate is higher than the sim time, prevent repeated timestamps
@@ -296,7 +296,7 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
 }
 
 void GraphLocalizerNodelet::PublishWorldTHandrailTF() {
-  const auto world_T_handrail = graph_localizer_wrapper_.estimated_world_T_handrail();
+  const auto world_T_handrail = graph_vio_wrapper_.estimated_world_T_handrail();
   if (!world_T_handrail) return;
   const auto world_T_handrail_tf = lc::PoseToTF(world_T_handrail->pose, "world", "handrail/body",
                                                 lc::TimeFromRosTime(ros::Time::now()), platform_name_);
@@ -323,9 +323,9 @@ void GraphLocalizerNodelet::PublishGraphMessages() {
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishLocalizationState();
-  if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
-  if (graph_localizer_wrapper_.save_localization_graph_dot_file())
-    graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
+  if (graph_vio_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
+  if (graph_vio_wrapper_.save_localization_graph_dot_file())
+    graph_vio_wrapper_.SaveLocalizationGraphDotFile();
 }
 
 void GraphLocalizerNodelet::Run() {
@@ -338,13 +338,13 @@ void GraphLocalizerNodelet::Run() {
     callbacks_timer_.Start();
     private_queue_.callAvailable();
     callbacks_timer_.Stop();
-    graph_localizer_wrapper_.Update();
+    graph_vio_wrapper_.Update();
     nodelet_runtime_timer_.Stop();
     PublishGraphMessages();
     PublishHeartbeat();
     rate.sleep();
   }
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
-PLUGINLIB_EXPORT_CLASS(graph_localizer::GraphLocalizerNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(graph_vio::GraphLocalizerNodelet, nodelet::Nodelet);

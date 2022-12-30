@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_NODELET_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_NODELET_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_NODELET_H_
+#define GRAPH_VIO_GRAPH_VIO_NODELET_H_
 
 #include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/DepthLandmarks.h>
@@ -142,4 +142,4 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_NODELET_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_NODELET_H_

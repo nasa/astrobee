@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#include <graph_localizer/feature_track.h>
+#include <graph_vio/feature_track.h>
 #include <localization_common/logger.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 FeatureTrack::FeatureTrack(const localization_measurements::FeatureId id) : id_(id) {}
@@ -125,4 +125,4 @@ boost::optional<lc::Time> FeatureTrack::OldestTimestamp() const {
   if (empty()) return boost::none;
   return points_.cbegin()->first;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio

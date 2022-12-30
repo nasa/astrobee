@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_localizer/serialization.h>
+#include <graph_vio/serialization.h>
 
 #include <gtsam/base/serialization.h>
 
@@ -32,14 +32,14 @@
 #include <gtsam/navigation/NavState.h>
 
 // Factors used in NonlinearFactorGraph
-#include <graph_localizer/loc_pose_factor.h>
-#include <graph_localizer/loc_projection_factor.h>
-#include <graph_localizer/point_to_handrail_endpoint_factor.h>
-#include <graph_localizer/point_to_line_factor.h>
-#include <graph_localizer/point_to_line_segment_factor.h>
-#include <graph_localizer/point_to_plane_factor.h>
-#include <graph_localizer/pose_rotation_factor.h>
-#include <graph_localizer/robust_smart_projection_pose_factor.h>
+#include <graph_vio/loc_pose_factor.h>
+#include <graph_vio/loc_projection_factor.h>
+#include <graph_vio/point_to_handrail_endpoint_factor.h>
+#include <graph_vio/point_to_line_factor.h>
+#include <graph_vio/point_to_line_segment_factor.h>
+#include <graph_vio/point_to_plane_factor.h>
+#include <graph_vio/pose_rotation_factor.h>
+#include <graph_vio/robust_smart_projection_pose_factor.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/slam/BetweenFactor.h>
@@ -95,7 +95,7 @@ BOOST_CLASS_EXPORT_GUID(gtsam::noiseModel::mEstimator::Tukey, "gtsam_noiseModel_
 BOOST_CLASS_EXPORT_GUID(gtsam::SharedNoiseModel, "gtsam_SharedNoiseModel");
 BOOST_CLASS_EXPORT_GUID(gtsam::SharedDiagonal, "gtsam_SharedDiagonal");
 
-namespace graph_localizer {
+namespace graph_vio {
 
-std::string SerializeBinary(const GraphLocalizer& graph_localizer) { return gtsam::serializeBinary(graph_localizer); }
-}  // namespace graph_localizer
+std::string SerializeBinary(const GraphLocalizer& graph_vio) { return gtsam::serializeBinary(graph_vio); }
+}  // namespace graph_vio

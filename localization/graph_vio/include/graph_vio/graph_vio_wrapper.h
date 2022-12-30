@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_GRAPH_LOCALIZER_WRAPPER_H_
-#define GRAPH_VIO_GRAPH_LOCALIZER_WRAPPER_H_
+#ifndef GRAPH_VIO_GRAPH_VIO_WRAPPER_H_
+#define GRAPH_VIO_GRAPH_VIO_WRAPPER_H_
 
 #include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/DepthLandmarks.h>
@@ -146,4 +146,4 @@ class GraphLocalizerWrapper {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_VIO_GRAPH_LOCALIZER_WRAPPER_H_
+#endif  // GRAPH_VIO_GRAPH_VIO_WRAPPER_H_

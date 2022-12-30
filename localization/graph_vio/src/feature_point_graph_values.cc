@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_localizer/feature_point_graph_values.h>
+#include <graph_vio/feature_point_graph_values.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
@@ -25,7 +25,7 @@
 
 #include <iomanip>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -118,4 +118,4 @@ void FeaturePointGraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys
   }
 }
 
-}  // namespace graph_localizer
+}  // namespace graph_vio

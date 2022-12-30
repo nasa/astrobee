@@ -16,13 +16,13 @@
  * under the License.
  */
 
-#include <graph_localizer/feature_point_node_updater.h>
-#include <graph_localizer/utilities.h>
+#include <graph_vio/feature_point_node_updater.h>
+#include <graph_vio/utilities.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/slam/PriorFactor.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
@@ -111,4 +111,4 @@ std::shared_ptr<FeaturePointGraphValues> FeaturePointNodeUpdater::shared_feature
 const FeaturePointGraphValues& FeaturePointNodeUpdater::feature_point_graph_values() const {
   return *feature_point_graph_values_;
 }
-}  // namespace graph_localizer
+}  // namespace graph_vio
