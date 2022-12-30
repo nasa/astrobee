@@ -19,7 +19,7 @@
 #define GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_
 
 namespace graph_localizer {
-struct GraphLocalizerNodeletParams {
+struct GraphVIONodeletParams {
   int max_imu_buffer_size;
   int max_optical_flow_buffer_size;
   int max_vl_buffer_size;

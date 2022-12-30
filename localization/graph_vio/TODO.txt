@@ -1,3 +1,11 @@
+- update graph_vio.cc
+- update graph_vio_wrapper.cc
+- update graph_vio_nodelet.cc
+- update graph_vio_initializer
+- update params, param reader
+
+- update graph_localizer package!!
+
 move factors to new package
 move factor adders to new package
 move node updaters to new package

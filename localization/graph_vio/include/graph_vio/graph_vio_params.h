@@ -31,7 +31,7 @@
 #include <string>
 
 namespace graph_localizer {
-struct GraphLocalizerParams {
+struct GraphVIOParams {
   CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
   CalibrationParams calibration;
   FactorParams factor;

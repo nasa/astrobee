@@ -48,9 +48,9 @@ namespace graph_localizer {
 // localizer.  Provides callbacks that can be used by a ROS or non-ROS system
 // (i.e. graph_bag, which does not use a ROS core, vs. graph_localizer_nodelet,
 // which is used when running live).
-class GraphLocalizerWrapper {
+class GraphVIOWrapper {
  public:
-  explicit GraphLocalizerWrapper(const std::string& graph_config_path_prefix = "");
+  explicit GraphVIOWrapper(const std::string& graph_config_path_prefix = "");
 
   // Assumes previous bias estimates are available and uses these.
   void ResetLocalizer();
@@ -91,7 +91,7 @@ class GraphLocalizerWrapper {
 
   boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
 
-  boost::optional<const GraphLocalizer&> graph_localizer() const;
+  boost::optional<const GraphVIO&> graph_localizer() const;
 
   void MarkWorldTDockForResettingIfNecessary();
 
@@ -107,7 +107,7 @@ class GraphLocalizerWrapper {
 
   void SaveLocalizationGraphDotFile() const;
 
-  boost::optional<const GraphLocalizerStats&> graph_localizer_stats() const;
+  boost::optional<const GraphVIOStats&> graph_localizer_stats() const;
 
   bool publish_localization_graph() const;
 
@@ -120,12 +120,12 @@ class GraphLocalizerWrapper {
 
   bool CheckCovarianceSanity() const;
 
-  std::unique_ptr<GraphLocalizer> graph_localizer_;
+  std::unique_ptr<GraphVIO> graph_localizer_;
   // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
-  GraphLocalizerInitializer graph_localizer_initializer_;
+  GraphVIOInitializer graph_localizer_initializer_;
   FeatureCounts feature_counts_;
   // world_T_body poses using sensor measurements
   // TODO(rsoussan): Rename these? world_T_body_sensor_name?

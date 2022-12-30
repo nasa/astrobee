@@ -34,9 +34,9 @@
 #include <vector>
 
 namespace graph_localizer {
-class GraphLocalizerInitializer {
+class GraphVIOInitializer {
  public:
-  GraphLocalizerInitializer();
+  GraphVIOInitializer();
   void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias, const bool loaded_from_previous_estimate = false,
                  const bool save_to_file = false);
   void SetStartPose(const localization_measurements::TimestampedPose& timestamped_pose);
@@ -54,8 +54,8 @@ class GraphLocalizerInitializer {
   bool HasParams() const;
   bool HasFanSpeedMode() const;
   bool EstimateBiases() const;
-  const GraphLocalizerParams& params() const;
-  void LoadGraphLocalizerParams(config_reader::ConfigReader& config);
+  const GraphVIOParams& params() const;
+  void LoadGraphVIOParams(config_reader::ConfigReader& config);
   bool RemovedGravityFromBiasIfNecessary() const;
   void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
                                localization_measurements::FanSpeedMode fan_speed_mode);
@@ -70,7 +70,7 @@ class GraphLocalizerInitializer {
   bool has_fan_speed_mode_;
   bool estimate_biases_;
   bool removed_gravity_from_bias_if_necessary_;
-  graph_localizer::GraphLocalizerParams params_;
+  graph_localizer::GraphVIOParams params_;
   std::unique_ptr<imu_integration::DynamicImuFilter> imu_bias_filter_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
 };

@@ -43,9 +43,9 @@
 #include <vector>
 
 namespace graph_localizer {
-class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
+class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
  public:
-  GraphLocalizerNodelet();
+  GraphVIONodelet();
 
  private:
   void Initialize(ros::NodeHandle* nh) final;
@@ -112,7 +112,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void Run();
 
-  graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
+  graph_localizer::GraphVIOWrapper graph_localizer_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
@@ -123,7 +123,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;
-  GraphLocalizerNodeletParams params_;
+  GraphVIONodeletParams params_;
   int last_mode_ = -1;
 
   ros::Time last_time_tf_dock_;

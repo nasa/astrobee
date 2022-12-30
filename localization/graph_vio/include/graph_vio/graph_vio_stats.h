@@ -22,9 +22,9 @@
 #include <graph_optimizer/graph_stats.h>
 
 namespace graph_localizer {
-class GraphLocalizerStats : public graph_optimizer::GraphStats {
+class GraphVIOStats : public graph_optimizer::GraphStats {
  public:
-  GraphLocalizerStats();
+  GraphVIOStats();
   void SetCombinedNavStateGraphValues(
     std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values);
   void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) final;

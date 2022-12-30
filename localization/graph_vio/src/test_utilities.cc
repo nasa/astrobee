@@ -103,8 +103,8 @@ GraphInitializerParams DefaultGraphInitializerParams() {
   return params;
 }
 
-GraphLocalizerParams DefaultGraphLocalizerParams() {
-  GraphLocalizerParams params;
+GraphVIOParams DefaultGraphVIOParams() {
+  GraphVIOParams params;
   params.combined_nav_state_node_updater = DefaultCombinedNavStateNodeUpdaterParams();
   params.graph_optimizer = DefaultGraphOptimizerParams();
   params.graph_initializer = DefaultGraphInitializerParams();

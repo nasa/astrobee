@@ -97,5 +97,5 @@ BOOST_CLASS_EXPORT_GUID(gtsam::SharedDiagonal, "gtsam_SharedDiagonal");
 
 namespace graph_vio {
 
-std::string SerializeBinary(const GraphLocalizer& graph_vio) { return gtsam::serializeBinary(graph_vio); }
+std::string SerializeBinary(const GraphVIO& graph_vio) { return gtsam::serializeBinary(graph_vio); }
 }  // namespace graph_vio

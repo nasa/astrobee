@@ -33,7 +33,7 @@
 
 namespace graph_vio {
 namespace go = graph_optimizer;
-GraphLocalizerStats::GraphLocalizerStats() {
+GraphVIOStats::GraphVIOStats() {
   AddStatsAverager(num_states_averager_);
   AddStatsAverager(duration_averager_);
   AddStatsAverager(num_marginal_factors_averager_);
@@ -62,12 +62,12 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddErrorAverager(bias_prior_error_averager_);
 }
 
-void GraphLocalizerStats::SetCombinedNavStateGraphValues(
+void GraphVIOStats::SetCombinedNavStateGraphValues(
   std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values) {
   combined_nav_state_graph_values_ = std::move(combined_nav_state_graph_values);
 }
 
-void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) {
+void GraphVIOStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) {
   using Calibration = gtsam::Cal3_S2;
   using Camera = gtsam::PinholePose<Calibration>;
   using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
@@ -154,7 +154,7 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
   bias_prior_error_averager_.Update(bias_prior_error);
 }
 
-void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) {
+void GraphVIOStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) {
   num_states_averager_.Update(combined_nav_state_graph_values_->NumStates());
   duration_averager_.Update(combined_nav_state_graph_values_->Duration());
   num_marginal_factors_averager_.Update(go::NumFactors<gtsam::LinearContainerFactor>(graph_factors));

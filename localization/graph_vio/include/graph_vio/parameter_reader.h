@@ -62,8 +62,8 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
 void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params);
-void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
-void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params);
+void LoadGraphVIOParams(config_reader::ConfigReader& config, GraphVIOParams& params);
+void LoadGraphVIONodeletParams(config_reader::ConfigReader& config, GraphVIONodeletParams& params);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_VIO_PARAMETER_READER_H_

@@ -75,12 +75,12 @@ using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 using SharedRobustSmartFactor = boost::shared_ptr<RobustSmartFactor>;
 using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 
-class GraphLocalizer : public graph_optimizer::GraphOptimizer {
+class GraphVIO : public graph_optimizer::GraphOptimizer {
  public:
-  explicit GraphLocalizer(const GraphLocalizerParams& params);
+  explicit GraphVIO(const GraphVIOParams& params);
   // For Serialization Only
-  GraphLocalizer() {}
-  ~GraphLocalizer() = default;
+  GraphVIO() {}
+  ~GraphVIO() = default;
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
   boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
@@ -112,9 +112,9 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   bool standstill() const;
 
-  const GraphLocalizerParams& params() const;
+  const GraphVIOParams& params() const;
 
-  const GraphLocalizerStats& graph_localizer_stats() const;
+  const GraphVIOStats& graph_localizer_stats() const;
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
 
@@ -157,7 +157,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
-  GraphLocalizerParams params_;
+  GraphVIOParams params_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
 
   // Factor Adders

@@ -24,7 +24,7 @@
 #include <string>
 
 namespace graph_localizer {
-std::string SerializeBinary(const GraphLocalizer& graph_localizer);
+std::string SerializeBinary(const GraphVIO& graph_localizer);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_VIO_SERIALIZATION_H_

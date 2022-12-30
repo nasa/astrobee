@@ -243,7 +243,7 @@ void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& par
   params.distance_to_wall = mc::LoadDouble(config, "handrail_wall_min_gap");
 }
 
-void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
+void LoadGraphVIOParams(config_reader::ConfigReader& config, GraphVIOParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadCombinedNavStateNodeUpdaterParams(config, params.combined_nav_state_node_updater);
   LoadGraphInitializerParams(config, params.graph_initializer);
@@ -260,7 +260,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.estimate_world_T_dock_using_loc = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
 
-void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params) {
+void LoadGraphVIONodeletParams(config_reader::ConfigReader& config, GraphVIONodeletParams& params) {
   params.loc_adder_min_num_matches = mc::LoadInt(config, "loc_adder_min_num_matches");
   params.ar_tag_loc_adder_min_num_matches = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
   params.max_imu_buffer_size = mc::LoadInt(config, "max_imu_buffer_size");

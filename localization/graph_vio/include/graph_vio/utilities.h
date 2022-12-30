@@ -64,10 +64,10 @@ ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& c
                                   const localization_common::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphLocalizerStats& graph_stats,
+                                  const bool standstill, const GraphVIOStats& graph_stats,
                                   const localization_measurements::FanSpeedMode fan_speed_mode);
 
-ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
+ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_localizer);
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 

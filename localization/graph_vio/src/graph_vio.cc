@@ -17,14 +17,6 @@
  */
 
 #include <graph_vio/graph_vio.h>
-#include <graph_vio/loc_projection_factor.h>
-#include <graph_vio/loc_pose_factor.h>
-#include <graph_vio/point_to_handrail_endpoint_factor.h>
-#include <graph_vio/point_to_line_factor.h>
-#include <graph_vio/point_to_line_segment_factor.h>
-#include <graph_vio/point_to_plane_factor.h>
-#include <graph_vio/point_to_point_between_factor.h>
-#include <graph_vio/pose_rotation_factor.h>
 #include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
 #include <imu_integration/utilities.h>
@@ -52,8 +44,8 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
-GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
-    : GraphOptimizer(params.graph_optimizer, std::unique_ptr<GraphLocalizerStats>(new GraphLocalizerStats())),
+GraphVIO::GraphVIO(const GraphVIOParams& params)
+    : GraphOptimizer(params.graph_optimizer, std::unique_ptr<GraphVIOStats>(new GraphVIOStats())),
       feature_tracker_(new FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
       params_(params) {
@@ -64,7 +56,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   InitializeGraphActionCompleters();
 }
 
-void GraphLocalizer::InitializeNodeUpdaters() {
+void GraphVIO::InitializeNodeUpdaters() {
   const lc::CombinedNavState global_N_body_start(
     params_.graph_initializer.global_T_body_start, params_.graph_initializer.global_V_body_start,
     params_.graph_initializer.initial_imu_bias, params_.graph_initializer.start_time);
@@ -74,14 +66,14 @@ void GraphLocalizer::InitializeNodeUpdaters() {
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
-  dynamic_cast<GraphLocalizerStats*>(graph_stats())
+  dynamic_cast<GraphVIOStats*>(graph_stats())
     ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
   feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params_.feature_point_node_updater, shared_values()));
   AddNodeUpdater(feature_point_node_updater_);
 }
 
-void GraphLocalizer::InitializeFactorAdders() {
+void GraphVIO::InitializeFactorAdders() {
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
   depth_odometry_factor_adder_.reset(new DepthOdometryFactorAdder(params_.factor.depth_odometry_adder));
@@ -97,7 +89,7 @@ void GraphLocalizer::InitializeFactorAdders() {
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 }
 
-void GraphLocalizer::InitializeGraphActionCompleters() {
+void GraphVIO::InitializeGraphActionCompleters() {
   ar_tag_loc_graph_action_completer_.reset(
     new LocGraphActionCompleter(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor,
                                 combined_nav_state_node_updater_->shared_graph_values()));
@@ -117,7 +109,7 @@ void GraphLocalizer::InitializeGraphActionCompleters() {
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
-GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
+GraphVIO::LatestCombinedNavStateAndCovariances() const {
   if (!marginals()) {
     LogDebugEveryN(50, "LatestCombinedNavStateAndCovariances: No marginals available.");
     return boost::none;
@@ -134,7 +126,7 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
-GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const {
+GraphVIO::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const {
   const auto global_N_body_latest = combined_nav_state_node_updater_->graph_values().LatestCombinedNavState();
   if (!global_N_body_latest) {
     LogError("LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.");
@@ -161,7 +153,7 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& mar
   }
 }
 
-boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() const {
+boost::optional<lc::CombinedNavState> GraphVIO::LatestCombinedNavState() const {
   const auto global_N_body_latest = combined_nav_state_node_updater_->graph_values().LatestCombinedNavState();
   if (!global_N_body_latest) {
     LogError("LatestCombinedNavState: Failed to get latest combined nav state.");
@@ -171,7 +163,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() c
   return global_N_body_latest;
 }
 
-boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const lc::Time time) const {
+boost::optional<lc::CombinedNavState> GraphVIO::GetCombinedNavState(const lc::Time time) const {
   const auto lower_bound_or_equal_combined_nav_state =
     combined_nav_state_node_updater_->graph_values().LowerBoundOrEqualCombinedNavState(time);
   if (!lower_bound_or_equal_combined_nav_state) {
@@ -196,7 +188,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
   return ii::PimPredict(*lower_bound_or_equal_combined_nav_state, *integrated_pim);
 }
 
-boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalizer::LatestBiases() const {
+boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphVIO::LatestBiases() const {
   const auto latest_bias = combined_nav_state_node_updater_->graph_values().LatestBias();
   if (!latest_bias) {
     LogError("LatestBiases: Failed to get latest biases.");
@@ -206,15 +198,15 @@ boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalize
 }
 
 // Latest extrapolated pose time is limited by latest imu time
-boost::optional<lc::Time> GraphLocalizer::LatestExtrapolatedPoseTime() const {
+boost::optional<lc::Time> GraphVIO::LatestExtrapolatedPoseTime() const {
   return latest_imu_integrator_->LatestTime();
 }
 
-void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
+void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   latest_imu_integrator_->BufferImuMeasurement(imu_measurement);
 }
 
-bool GraphLocalizer::AddOpticalFlowMeasurement(
+bool GraphVIO::AddOpticalFlowMeasurement(
   const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   if (!MeasurementRecentEnough(optical_flow_feature_points_measurement.timestamp)) {
     LogDebug("AddOpticalFlowMeasurement: Measurement too old - discarding.");
@@ -254,7 +246,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   return true;
 }
 
-void GraphLocalizer::CheckForStandstill() {
+void GraphVIO::CheckForStandstill() {
   // Check for standstill via low disparity for all feature tracks
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
@@ -277,7 +269,7 @@ void GraphLocalizer::CheckForStandstill() {
   if (*standstill_) LogDebug("CheckForStandstill: Standstill.");
 }
 
-void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
+void GraphVIO::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
     LogDebug("AddARTagMeasurement: Measurement too old - discarding.");
     return;
@@ -291,7 +283,7 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   }
 }
 
-void GraphLocalizer::AddSparseMappingMeasurement(
+void GraphVIO::AddSparseMappingMeasurement(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
     LogDebug("AddSparseMappingMeasurement: Measurement too old - discarding.");
@@ -304,7 +296,7 @@ void GraphLocalizer::AddSparseMappingMeasurement(
   }
 }
 
-void GraphLocalizer::AddHandrailMeasurement(const lm::HandrailPointsMeasurement& handrail_points_measurement) {
+void GraphVIO::AddHandrailMeasurement(const lm::HandrailPointsMeasurement& handrail_points_measurement) {
   if (!MeasurementRecentEnough(handrail_points_measurement.timestamp)) {
     LogDebug("AddHandrailPointsMeasurement: Measurement too old - discarding.");
     return;
@@ -316,7 +308,7 @@ void GraphLocalizer::AddHandrailMeasurement(const lm::HandrailPointsMeasurement&
   }
 }
 
-void GraphLocalizer::AddDepthOdometryMeasurement(const lm::DepthOdometryMeasurement& depth_odometry_measurement) {
+void GraphVIO::AddDepthOdometryMeasurement(const lm::DepthOdometryMeasurement& depth_odometry_measurement) {
   if (!MeasurementRecentEnough(depth_odometry_measurement.timestamp)) {
     LogDebug("AddDepthOdometryMeasurement: Measurement too old - discarding.");
     return;
@@ -328,13 +320,13 @@ void GraphLocalizer::AddDepthOdometryMeasurement(const lm::DepthOdometryMeasurem
   }
 }
 
-void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
+void GraphVIO::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                               const boost::optional<gtsam::Marginals>& marginals) {
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
   latest_imu_integrator_->RemoveOldMeasurements(oldest_allowed_time);
 }
 
-void GraphLocalizer::BufferCumulativeFactors() {
+void GraphVIO::BufferCumulativeFactors() {
   // Remove measurements here so they are more likely to fit in sliding window duration when optimized
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow();
   if (params_.factor.smart_projection_adder.enabled) {
@@ -342,7 +334,7 @@ void GraphLocalizer::BufferCumulativeFactors() {
   }
 }
 
-void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) {
+void GraphVIO::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) {
   for (auto factor_it = graph_factors().begin(); factor_it != graph_factors().end();) {
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor_it->get());
     // Currently the only cumulative factors are smart factors
@@ -380,7 +372,7 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
   }
 }
 
-bool GraphLocalizer::ValidGraph() const {
+bool GraphVIO::ValidGraph() const {
   // If graph consists of only priors and imu factors, consider it invalid and don't optimize.
   // Make sure smart factors are valid before including them.
   const int num_valid_non_imu_measurement_factors =
@@ -396,7 +388,7 @@ bool GraphLocalizer::ValidGraph() const {
   return num_valid_non_imu_measurement_factors > 0;
 }
 
-bool GraphLocalizer::ReadyToAddFactors(const localization_common::Time timestamp) const {
+bool GraphVIO::ReadyToAddFactors(const localization_common::Time timestamp) const {
   const auto latest_time = latest_imu_integrator_->LatestTime();
   if (!latest_time) {
     LogError("ReadyToAddMeasurement: Failed to get latet imu time.");
@@ -406,7 +398,7 @@ bool GraphLocalizer::ReadyToAddFactors(const localization_common::Time timestamp
   return (timestamp <= *latest_time);
 }
 
-bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
+bool GraphVIO::MeasurementRecentEnough(const lc::Time timestamp) const {
   if (!GraphOptimizer::MeasurementRecentEnough(timestamp)) return false;
   if (!latest_imu_integrator_->OldestTime()) {
     LogDebug("MeasurementRecentEnough: Waiting until imu measurements have been received.");
@@ -416,7 +408,7 @@ bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
   return true;
 }
 
-void GraphLocalizer::PrintFactorDebugInfo() const {
+void GraphVIO::PrintFactorDebugInfo() const {
   for (const auto& factor : graph_factors()) {
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
@@ -438,33 +430,33 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   }
 }
 
-void GraphLocalizer::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
+void GraphVIO::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
   latest_imu_integrator_->SetFanSpeedMode(fan_speed_mode);
 }
 
-const lm::FanSpeedMode GraphLocalizer::fan_speed_mode() const { return latest_imu_integrator_->fan_speed_mode(); }
+const lm::FanSpeedMode GraphVIO::fan_speed_mode() const { return latest_imu_integrator_->fan_speed_mode(); }
 
-const CombinedNavStateGraphValues& GraphLocalizer::combined_nav_state_graph_values() const {
+const CombinedNavStateGraphValues& GraphVIO::combined_nav_state_graph_values() const {
   return combined_nav_state_node_updater_->graph_values();
 }
 
-const CombinedNavStateNodeUpdater& GraphLocalizer::combined_nav_state_node_updater() const {
+const CombinedNavStateNodeUpdater& GraphVIO::combined_nav_state_node_updater() const {
   return *combined_nav_state_node_updater_;
 }
 
-const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
+const GraphVIOParams& GraphVIO::params() const { return params_; }
 
-int GraphLocalizer::NumFeatures() const { return feature_point_node_updater_->NumFeatures(); }
+int GraphVIO::NumFeatures() const { return feature_point_node_updater_->NumFeatures(); }
 
 // TODO(rsoussan): fix this call to happen before of factors are removed!
-int GraphLocalizer::NumOFFactors(const bool check_valid) const {
+int GraphVIO::NumOFFactors(const bool check_valid) const {
   if (params_.factor.smart_projection_adder.enabled)
     return NumSmartFactors(graph_factors(), combined_nav_state_node_updater_->graph_values().values(), check_valid);
   if (params_.factor.projection_adder.enabled) return NumProjectionFactors(check_valid);
   return 0;
 }
 
-int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
+int GraphVIO::NumProjectionFactors(const bool check_valid) const {
   int num_factors = 0;
   for (const auto& factor : graph_factors()) {
     const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
@@ -497,18 +489,18 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
   return num_factors;
 }
 
-const GraphLocalizerStats& GraphLocalizer::graph_vio_stats() const {
-  return *(static_cast<const GraphLocalizerStats*>(graph_stats()));
+const GraphVIOStats& GraphVIO::graph_vio_stats() const {
+  return *(static_cast<const GraphVIOStats*>(graph_stats()));
 }
 
-bool GraphLocalizer::standstill() const {
+bool GraphVIO::standstill() const {
   // If uninitialized, return not at standstill
   // TODO(rsoussan): Is this the appropriate behavior?
   if (!standstill_) return false;
   return *standstill_;
 }
 
-bool GraphLocalizer::DoPostOptimizeActions() {
+bool GraphVIO::DoPostOptimizeActions() {
   // Update imu integrator bias
   const auto latest_bias = combined_nav_state_node_updater_->graph_values().LatestBias();
   if (!latest_bias) {

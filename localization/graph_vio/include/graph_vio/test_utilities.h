@@ -42,7 +42,7 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams();
 
 GraphInitializerParams DefaultGraphInitializerParams();
 
-GraphLocalizerParams DefaultGraphLocalizerParams();
+GraphVIOParams DefaultGraphVIOParams();
 
 DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams();
 }  // namespace graph_localizer

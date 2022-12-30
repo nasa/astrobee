@@ -69,7 +69,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphLocalizerStats& graph_stats,
+                                  const bool standstill, const GraphVIOStats& graph_stats,
                                   const lm::FanSpeedMode fan_speed_mode) {
   ff_msgs::GraphState loc_msg;
 
@@ -108,7 +108,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   return loc_msg;
 }
 
-ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_vio) {
+ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_vio) {
   ff_msgs::LocalizationGraph graph_msg;
 
   // Set Header Frames
