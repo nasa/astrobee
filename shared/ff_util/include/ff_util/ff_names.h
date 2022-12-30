@@ -116,6 +116,7 @@
 #define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
 #define NODE_GRAPH_LOC                              "graph_loc"
+#define NODE_GRAPH_VIO                              "graph_vio"
 #define NODE_IMU_AUG                                "imu_aug"
 #define NODE_IMU_BIAS_TESTER                        "imu_bias_tester"
 #define NODE_SIM_LOC                                "sim_loc"
@@ -123,7 +124,9 @@
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
 
 #define TOPIC_GRAPH_LOC                             "graph_loc/graph"
+#define TOPIC_GRAPH_VIO                             "graph_vio/graph"
 #define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"
+#define TOPIC_GRAPH_VIO_STATE                       "graph_vio/state"
 #define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
 #define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
 #define TOPIC_IMU_BIAS_TESTER_POSE                  "imu_bias_tester/pose"

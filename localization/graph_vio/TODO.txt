@@ -1,6 +1,4 @@
-- add vio config file
 - add vio graph message(s)
-- add ff_names
 - compile!
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
