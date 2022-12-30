@@ -23,16 +23,10 @@ namespace graph_vio {
 
 struct FeatureCounts {
   void Reset() {
-    vl = 0;
     of = 0;
-    ar = 0;
-    depth = 0;
   }
 
-  int vl = 0;
   int of = 0;
-  int ar = 0;
-  int depth = 0;
 };
 }  // namespace graph_vio
 
