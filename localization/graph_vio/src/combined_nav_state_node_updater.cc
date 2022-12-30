@@ -17,7 +17,6 @@
  */
 
 #include <graph_vio/combined_nav_state_node_updater.h>
-#include <graph_vio/loc_pose_factor.h>
 #include <graph_vio/utilities.h>
 #include <imu_integration/utilities.h>
 
@@ -207,8 +206,7 @@ void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::Nonli
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     bool erase_factor = false;
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_it->get());
-    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor_it->get());
-    if (pose_prior_factor && !loc_pose_factor && pose_prior_factor->key() == sym::P(key_index)) {
+    if (pose_prior_factor && pose_prior_factor->key() == sym::P(key_index)) {
       erase_factor = true;
     }
     const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_it->get());

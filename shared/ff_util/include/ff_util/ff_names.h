@@ -288,6 +288,7 @@
 #define NODE_MAPPED_LANDMARKS                       "ml"
 #define NODE_VIVE_LOCALIZATION                      "vive_localization"
 
+#define TOPIC_VIO_POSE                              "vio/pose"
 #define TOPIC_LOCALIZATION_POSE                     "loc/pose"
 #define TOPIC_LOCALIZATION_TWIST                    "loc/twist"
 #define TOPIC_LOCALIZATION_TRUTH                    "loc/truth/pose"

@@ -162,7 +162,7 @@ void GraphVIOInitializer::LoadGraphVIOParams(config_reader::ConfigReader& config
 }
 
 bool GraphVIOInitializer::ReadyToInitialize() const {
-  return HasBiases() && HasParams() && HasFanSpeedMode() && RemovedGravityFromBiasIfNecessary();
+  return HasBiases() && HasParams() && HasFanSpeedMode();  //&& RemovedGravityFromBiasIfNecessary();
 }
 
 void GraphVIOInitializer::StartBiasEstimation() { estimate_biases_ = true; }

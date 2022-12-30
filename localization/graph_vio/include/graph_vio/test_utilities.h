@@ -21,7 +21,6 @@
 
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <graph_vio/combined_nav_state_graph_values_params.h>
-#include <graph_vio/depth_odometry_factor_adder_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_params.h>
 

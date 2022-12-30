@@ -1,15 +1,14 @@
 - compile!
+- move factors to new package
+- move factor adders to new package
+- move node updaters to new package
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
     - set start pose fixed after maginalize????
+- add unit tests!
 - test!
   - use graph bag???? 
     - copy graph bag and run for VIO only?? Or modify current graph bag tool??
       - (probably modify current tool?)
-- add unit tests!
 
 - update graph_localizer package!!
-
-move factors to new package
-move factor adders to new package
-move node updaters to new package

@@ -18,10 +18,10 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_WRAPPER_H_
 #define GRAPH_VIO_GRAPH_VIO_WRAPPER_H_
 
-#include <ff_msgs/GraphState.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
-#include <ff_msgs/VIOGraph.h>
+#include <ff_msgs/GraphVIOState.h>
+#include <ff_msgs/SerializedGraph.h>
 #include <graph_vio/feature_counts.h>
 #include <graph_vio/graph_vio.h>
 #include <graph_vio/graph_vio_initializer.h>
@@ -57,7 +57,7 @@ class GraphVIOWrapper {
 
   boost::optional<ff_msgs::GraphVIOState> LatestVIOStateMsg();
 
-  boost::optional<ff_msgs::Graph> LatestGraphMsg() const;
+  boost::optional<ff_msgs::SerializedGraph> LatestGraphMsg() const;
 
   bool Initialized() const;
 

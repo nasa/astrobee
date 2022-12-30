@@ -225,7 +225,7 @@ boost::optional<ff_msgs::GraphVIOState> GraphVIOWrapper::LatestVIOStateMsg() {
   return graph_state_msg;
 }
 
-boost::optional<ff_msgs::Graph> GraphVIOWrapper::LatestGraphMsg() const {
+boost::optional<ff_msgs::SerializedGraph> GraphVIOWrapper::LatestGraphMsg() const {
   if (!graph_vio_) {
     LogWarningEveryN(50, "LatestVIOGraphMsg: Graph VIO not initialized yet.");
     return boost::none;

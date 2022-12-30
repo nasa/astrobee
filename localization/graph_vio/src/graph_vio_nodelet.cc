@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include <ff_msgs/GraphState.h>
-#include <ff_msgs/VIOGraph.h>
+#include <ff_msgs/GraphVIOState.h>
+#include <ff_msgs/SerializedGraph.h>
 #include <ff_util/ff_names.h>
 #include <graph_vio/graph_vio_nodelet.h>
 #include <graph_vio/parameter_reader.h>
@@ -57,9 +57,9 @@ void GraphVIONodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void GraphVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  state_pub_ = nh->advertise<ff_msgs::VIOGraphState>(TOPIC_VIO_GRAPH_STATE, 10);
+  state_pub_ = nh->advertise<ff_msgs::GraphVIOState>(TOPIC_GRAPH_VIO_STATE, 10);
   vio_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_VIO_POSE, 10);
-  graph_pub_ = nh->advertise<ff_msgs::VIOGraph>(TOPIC_VIO_GRAPH, 10);
+  graph_pub_ = nh->advertise<ff_msgs::SerializedGraph>(TOPIC_GRAPH_VIO, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
