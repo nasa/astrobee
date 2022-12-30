@@ -58,7 +58,7 @@ void GraphVIONodelet::Initialize(ros::NodeHandle* nh) {
 
 void GraphVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::GraphVIOState>(TOPIC_GRAPH_VIO_STATE, 10);
-  vio_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_VIO_POSE, 10);
+  pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_VIO_POSE, 10);
   graph_pub_ = nh->advertise<ff_msgs::SerializedGraph>(TOPIC_GRAPH_VIO, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
@@ -74,7 +74,6 @@ void GraphVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphVIONodelet::ResetBiasesAndVIO, this);
   bias_from_file_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &GraphVIONodelet::ResetBiasesFromFileAndResetVIO, this);
-  reset_map_srv_ = private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &GraphVIONodelet::ResetMap, this);
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphVIONodelet::ResetVIO, this);
   input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphVIONodelet::SetMode, this);
 }
@@ -166,7 +165,7 @@ void GraphVIONodelet::PublishVIOState() {
 }
 
 void GraphVIONodelet::PublishVIOGraph() {
-  const auto latest_vio_graph_msg = graph_vio_wrapper_.LatestVIOGraphMsg();
+  const auto latest_vio_graph_msg = graph_vio_wrapper_.LatestGraphMsg();
   if (!latest_vio_graph_msg) {
     LogDebugEveryN(100, "PublishVIOGraph: Failed to get latest vio graph msg.");
     return;
@@ -191,7 +190,7 @@ void GraphVIONodelet::PublishGraphMessages() {
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishVIOState();
-  if (graph_vio_wrapper_.publish_graph()) PublishGraph();
+  if (graph_vio_wrapper_.publish_graph()) PublishVIOGraph();
   if (graph_vio_wrapper_.save_graph_dot_file())
     graph_vio_wrapper_.SaveGraphDotFile();
 }

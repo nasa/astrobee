@@ -88,7 +88,7 @@ void GraphVIOStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factor
 
     // Prior Factors
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
-    if (pose_prior_factor && !loc_pose_factor) {
+    if (pose_prior_factor) {
       pose_prior_error += error;
     }
     const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());

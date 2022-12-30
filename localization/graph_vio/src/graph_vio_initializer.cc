@@ -171,9 +171,9 @@ bool GraphVIOInitializer::HasBiases() const { return has_biases_; }
 bool GraphVIOInitializer::HasParams() const { return has_params_; }
 bool GraphVIOInitializer::HasFanSpeedMode() const { return has_fan_speed_mode_; }
 bool GraphVIOInitializer::EstimateBiases() const { return estimate_biases_; }
-bool GraphVIOInitializer::RemovedGravityFromBiasIfNecessary() const {
+/*bool GraphVIOInitializer::RemovedGravityFromBiasIfNecessary() const {
   return removed_gravity_from_bias_if_necessary_;
-}
+}*/
 
 const GraphVIOParams& GraphVIOInitializer::params() const { return params_; }
 

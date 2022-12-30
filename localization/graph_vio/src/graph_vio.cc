@@ -58,7 +58,7 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
 
 void GraphVIO::InitializeNodeUpdaters() {
   const lc::CombinedNavState global_N_body_start(
-    params_.graph_initializer.global_T_body_start, params_.graph_initializer.global_V_body_start,
+    gtsam::Pose3::identity(), params_.graph_initializer.global_V_body_start,
     params_.graph_initializer.initial_imu_bias, params_.graph_initializer.start_time);
   params_.combined_nav_state_node_updater.global_N_body_start = global_N_body_start;
   combined_nav_state_node_updater_.reset(
@@ -217,9 +217,6 @@ bool GraphVIO::AddOpticalFlowMeasurement(
   // TODO(rsoussan): Enforce that projection and smart factor adders are not both enabled
   if (params_.factor.projection_adder.enabled) {
     BufferFactors(projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
-  }
-  if (params_.factor.rotation_adder.enabled) {
-    BufferFactors(rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
 
   CheckForStandstill();

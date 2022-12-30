@@ -55,8 +55,6 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   bool vio_enabled() const;
 
-  bool ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
-
   bool ResetBiasesAndVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
   bool ResetBiasesFromFileAndResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
@@ -94,7 +92,7 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
   ros::CallbackQueue private_queue_;
   bool vio_enabled_ = true;
   ros::Subscriber imu_sub_, of_sub_, flight_mode_sub_;
-  ros::Publisher state_pub_, graph_pub_, reset_pub_, heartbeat_pub_;
+  ros::Publisher state_pub_, graph_pub_, pose_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;

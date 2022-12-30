@@ -63,37 +63,37 @@ ff_msgs::GraphVIOState GraphStateMsg(const lc::CombinedNavState& combined_nav_st
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
                                   const bool standstill, const GraphVIOStats& graph_stats,
                                   const lm::FanSpeedMode fan_speed_mode) {
-  ff_msgs::GraphState loc_msg;
+  ff_msgs::GraphVIOState msg;
 
   // Set Header Frames
-  loc_msg.header.frame_id = "odom";
-  loc_msg.child_frame_id = "body";
+  msg.header.frame_id = "odom";
+  msg.child_frame_id = "body";
 
   // Set CombinedNavState
-  lc::CombinedNavStateToMsg(combined_nav_state, loc_msg);
+  lc::CombinedNavStateToMsg(combined_nav_state, msg);
 
   // Set Variances
-  lc::CombinedNavStateCovariancesToMsg(covariances, loc_msg);
+  lc::CombinedNavStateCovariancesToMsg(covariances, msg);
 
   // Set Confidence
   // Controller can't handle a confidence other than 0.  TODO(rsoussan): switch back when this is fixed.
-  loc_msg.confidence = 0;  // covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
+  msg.confidence = 0;  // covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
 
   // Set Graph Feature Counts/Information
-  loc_msg.num_detected_of_features = detected_feature_counts.of;
-  loc_msg.estimating_bias = estimating_bias;
+  msg.num_detected_of_features = detected_feature_counts.of;
+  msg.estimating_bias = estimating_bias;
 
   // Set Graph Stats
-  loc_msg.iterations = graph_stats.iterations_averager_.last_value();
-  loc_msg.optimization_time = graph_stats.optimization_timer_.last_value();
-  loc_msg.update_time = graph_stats.update_timer_.last_value();
-  loc_msg.num_factors = graph_stats.num_factors_averager_.last_value();
-  loc_msg.num_of_factors = graph_stats.num_optical_flow_factors_averager_.last_value();
-  loc_msg.num_states = graph_stats.num_states_averager_.last_value();
+  msg.iterations = graph_stats.iterations_averager_.last_value();
+  msg.optimization_time = graph_stats.optimization_timer_.last_value();
+  msg.update_time = graph_stats.update_timer_.last_value();
+  msg.num_factors = graph_stats.num_factors_averager_.last_value();
+  msg.num_of_factors = graph_stats.num_optical_flow_factors_averager_.last_value();
+  msg.num_states = graph_stats.num_states_averager_.last_value();
   // Other
-  loc_msg.standstill = standstill;
-  loc_msg.fan_speed_mode = static_cast<uint8_t>(fan_speed_mode);
-  return loc_msg;
+  msg.standstill = standstill;
+  msg.fan_speed_mode = static_cast<uint8_t>(fan_speed_mode);
+  return msg;
 }
 
 ff_msgs::SerializedGraph GraphMsg(const GraphVIO& graph_vio) {

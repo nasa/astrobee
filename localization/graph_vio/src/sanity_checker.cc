@@ -30,6 +30,6 @@ bool SanityChecker::CheckCovarianceSanity(const lc::CombinedNavStateCovariances&
                                 params_.check_orientation_covariance);
 }
 
-void SanityChecker::Reset() { num_consecutive_failures_ = 0; }
+void SanityChecker::Reset() { }
 
 }  // namespace graph_vio

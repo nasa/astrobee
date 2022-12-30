@@ -86,7 +86,6 @@ void GraphVIOWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature
 
 void GraphVIOWrapper::ResetVIO() {
   LogInfo("ResetVIO: Resetting vio.");
-  graph_vio_initializer_.ResetStartPose();
   if (!latest_biases_) {
     LogError(
       "ResetVIO: Trying to reset vio when no biases "
@@ -103,37 +102,18 @@ void GraphVIOWrapper::ResetVIO() {
 
 void GraphVIOWrapper::ResetBiasesAndVIO() {
   LogInfo("ResetBiasAndVIO: Resetting biases and vio.");
-  graph_vio_initializer_.ResetBiasesAndStartPose();
+  graph_vio_initializer_.ResetBiases();
   graph_vio_.reset();
   sanity_checker_->Reset();
 }
 
 void GraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
   LogInfo("ResetBiasAndVIO: Resetting biases from file and resetting vio.");
-  graph_vio_initializer_.ResetBiasesFromFileAndResetStartPose();
+  graph_vio_initializer_.ResetBiasesFromFile();
   if (graph_vio_initializer_.HasBiases())
     latest_biases_ = graph_vio_initializer_.params().graph_initializer.initial_imu_bias;
   graph_vio_.reset();
   sanity_checker_->Reset();
-}
-
-bool GraphVIOWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const lc::Time timestamp) const {
-  if (!graph_vio_) return true;
-  const auto latest_extrapolated_pose_time = graph_vio_->LatestExtrapolatedPoseTime();
-  if (!latest_extrapolated_pose_time) {
-    LogDebug("CheckPoseSanity: Failed to get latest extrapolated pose time.");
-    return true;
-  }
-  if (timestamp > *latest_extrapolated_pose_time) {
-    LogDebug("CheckPoseSanity: Timestamp occurs after latest extrapolated pose time");
-    return true;
-  }
-  const auto combined_nav_state = graph_vio_->GetCombinedNavState(timestamp);
-  if (!combined_nav_state) {
-    LogDebugEveryN(50, "CheckPoseSanity: Failed to get combined nav state.");
-    return true;
-  }
-  return sanity_checker_->CheckPoseSanity(sparse_mapping_pose, combined_nav_state->pose());
 }
 
 bool GraphVIOWrapper::CheckCovarianceSanity() const {
@@ -242,7 +222,7 @@ boost::optional<const GraphVIOStats&> GraphVIOWrapper::graph_stats() const {
     LogDebug("GraphStats: Failed to get graph stats.");
     return boost::none;
   }
-  return graph_vio_->graph_stats();
+  return graph_vio_->graph_vio_stats();
 }
 
 bool GraphVIOWrapper::publish_graph() const { return publish_graph_; }
