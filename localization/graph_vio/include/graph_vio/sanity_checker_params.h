@@ -18,7 +18,7 @@
 #ifndef GRAPH_VIO_SANITY_CHECKER_PARAMS_H_
 #define GRAPH_VIO_SANITY_CHECKER_PARAMS_H_
 
-namespace graph_localizer {
+namespace graph_vio {
 struct SanityCheckerParams {
   // Check Pose
   bool check_pose_difference;
@@ -30,6 +30,6 @@ struct SanityCheckerParams {
   double position_covariance_threshold;
   double orientation_covariance_threshold;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_SANITY_CHECKER_PARAMS_H_

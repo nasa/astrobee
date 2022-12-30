@@ -19,33 +19,26 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_H_
 #define GRAPH_VIO_GRAPH_VIO_H_
 
-#include <graph_localizer/combined_nav_state_node_updater.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/feature_point_node_updater.h>
-#include <graph_localizer/depth_odometry_factor_adder.h>
-#include <graph_localizer/handrail_factor_adder.h>
-#include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/graph_localizer_stats.h>
-#include <graph_localizer/robust_smart_projection_pose_factor.h>
-#include <graph_localizer/loc_factor_adder.h>
-#include <graph_localizer/loc_graph_action_completer.h>
-#include <graph_localizer/projection_graph_action_completer.h>
-#include <graph_localizer/projection_factor_adder.h>
-#include <graph_localizer/rotation_factor_adder.h>
-#include <graph_localizer/smart_projection_cumulative_factor_adder.h>
-#include <graph_localizer/smart_projection_graph_action_completer.h>
-#include <graph_localizer/standstill_factor_adder.h>
+#include <graph_vio/combined_nav_state_node_updater.h>
+#include <graph_vio/combined_nav_state_node_updater_params.h>
+#include <graph_vio/feature_tracker.h>
+#include <graph_vio/feature_point_node_updater.h>
+#include <graph_vio/graph_vio_params.h>
+#include <graph_vio/graph_vio_stats.h>
+#include <graph_vio/robust_smart_projection_pose_factor.h>
+#include <graph_vio/loc_graph_action_completer.h>
+#include <graph_vio/projection_graph_action_completer.h>
+#include <graph_vio/projection_factor_adder.h>
+#include <graph_vio/smart_projection_cumulative_factor_adder.h>
+#include <graph_vio/smart_projection_graph_action_completer.h>
+#include <graph_vio/standstill_factor_adder.h>
 #include <graph_optimizer/graph_optimizer.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
-#include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
-#include <localization_measurements/handrail_points_measurement.h>
-#include <localization_measurements/matched_projections_measurement.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/PinholePose.h>
@@ -67,7 +60,7 @@
 #include <utility>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace sym = gtsam::symbol_shorthand;
 using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholePose<Calibration>;
@@ -90,13 +83,6 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
   bool AddOpticalFlowMeasurement(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void CheckForStandstill();
-  void AddARTagMeasurement(
-    const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddSparseMappingMeasurement(
-    const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
-  void AddDepthOdometryMeasurement(
-    const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement);
   bool DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
@@ -114,7 +100,7 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
 
   const GraphVIOParams& params() const;
 
-  const GraphVIOStats& graph_localizer_stats() const;
+  const GraphVIOStats& graph_vio_stats() const;
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
 
@@ -161,12 +147,7 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
 
   // Factor Adders
-  std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
-  std::shared_ptr<DepthOdometryFactorAdder> depth_odometry_factor_adder_;
-  std::shared_ptr<HandrailFactorAdder> handrail_factor_adder_;
-  std::shared_ptr<LocFactorAdder> loc_factor_adder_;
   std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;
-  std::shared_ptr<RotationFactorAdder> rotation_factor_adder_;
   std::shared_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
   std::shared_ptr<StandstillFactorAdder> standstill_factor_adder_;
 
@@ -175,13 +156,11 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
   std::shared_ptr<FeaturePointNodeUpdater> feature_point_node_updater_;
 
   // Graph Action Completers
-  std::shared_ptr<LocGraphActionCompleter> ar_tag_loc_graph_action_completer_;
-  std::shared_ptr<LocGraphActionCompleter> loc_graph_action_completer_;
   std::shared_ptr<ProjectionGraphActionCompleter> projection_graph_action_completer_;
   std::shared_ptr<SmartProjectionGraphActionCompleter> smart_projection_graph_action_completer_;
 
   boost::optional<bool> standstill_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_H_

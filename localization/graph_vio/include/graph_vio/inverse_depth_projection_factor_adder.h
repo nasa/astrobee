@@ -19,15 +19,15 @@
 #ifndef GRAPH_VIO_INVERSE_DEPTH_PROJECTION_FACTOR_ADDER_H_
 #define GRAPH_VIO_INVERSE_DEPTH_PROJECTION_FACTOR_ADDER_H_
 
-#include <graph_localizer/feature_point_graph_values.h>
-#include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/inverse_depth_projection_factor_adder_params.h>
+#include <graph_vio/feature_point_graph_values.h>
+#include <graph_vio/feature_tracker.h>
+#include <graph_vio/inverse_depth_projection_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 class InverseDepthProjectionFactorAdder
     : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
                                           InverseDepthProjectionFactorAdderParams> {
@@ -46,6 +46,6 @@ class InverseDepthProjectionFactorAdder
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_INVERSE_DEPTH_PROJECTION_FACTOR_ADDER_H_

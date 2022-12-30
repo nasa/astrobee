@@ -23,12 +23,12 @@
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
-#include <graph_localizer/combined_nav_state_graph_values.h>
-#include <graph_localizer/feature_counts.h>
-#include <graph_localizer/feature_track.h>
-#include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/graph_localizer_initializer.h>
-#include <graph_localizer/graph_localizer_stats.h>
+#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_vio/feature_counts.h>
+#include <graph_vio/feature_track.h>
+#include <graph_vio/graph_vio.h>
+#include <graph_vio/graph_vio_initializer.h>
+#include <graph_vio/graph_vio_stats.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_point.h>
@@ -50,7 +50,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 bool ValidPointSet(const int num_points, const double average_distance_from_mean,
                    const double min_avg_distance_from_mean, const int min_num_points);
 
@@ -67,7 +67,7 @@ ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& c
                                   const bool standstill, const GraphVIOStats& graph_stats,
                                   const localization_measurements::FanSpeedMode fan_speed_mode);
 
-ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_localizer);
+ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_vio);
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 
@@ -94,6 +94,6 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
 
 int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const gtsam::Values& values,
                     const bool check_valid);
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_UTILITIES_H_

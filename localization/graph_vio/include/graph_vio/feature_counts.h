@@ -19,7 +19,7 @@
 #ifndef GRAPH_VIO_FEATURE_COUNTS_H_
 #define GRAPH_VIO_FEATURE_COUNTS_H_
 
-namespace graph_localizer {
+namespace graph_vio {
 
 struct FeatureCounts {
   void Reset() {
@@ -34,6 +34,6 @@ struct FeatureCounts {
   int ar = 0;
   int depth = 0;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FEATURE_COUNTS_H_

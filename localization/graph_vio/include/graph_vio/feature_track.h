@@ -25,7 +25,7 @@
 #include <set>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 class FeatureTrack {
  public:
   using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
@@ -63,6 +63,6 @@ class FeatureTrack {
   localization_measurements::FeatureId id_;
   Points points_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FEATURE_TRACK_H_

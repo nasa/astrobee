@@ -20,7 +20,7 @@
 
 #include <camera/camera_params.h>
 #include <config_reader/config_reader.h>
-#include <graph_localizer/graph_localizer_params.h>
+#include <graph_vio/graph_vio_params.h>
 #include <imu_integration/dynamic_imu_filter.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 class GraphVIOInitializer {
  public:
   GraphVIOInitializer();
@@ -70,10 +70,10 @@ class GraphVIOInitializer {
   bool has_fan_speed_mode_;
   bool estimate_biases_;
   bool removed_gravity_from_bias_if_necessary_;
-  graph_localizer::GraphVIOParams params_;
+  graph_vio::GraphVIOParams params_;
   std::unique_ptr<imu_integration::DynamicImuFilter> imu_bias_filter_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_INITIALIZER_H_

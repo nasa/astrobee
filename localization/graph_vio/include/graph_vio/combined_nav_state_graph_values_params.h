@@ -22,7 +22,7 @@
 
 #include <boost/serialization/serialization.hpp>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct CombinedNavStateGraphValuesParams {
   // Only kept if there are at least min_num_states and not more than max_num_states
   double ideal_duration;
@@ -39,6 +39,6 @@ struct CombinedNavStateGraphValuesParams {
     ar& BOOST_SERIALIZATION_NVP(max_num_states);
   }
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_

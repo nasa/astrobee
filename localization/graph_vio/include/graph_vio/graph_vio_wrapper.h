@@ -25,11 +25,11 @@
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
-#include <graph_localizer/feature_counts.h>
-#include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/graph_localizer_initializer.h>
-#include <graph_localizer/graph_localizer_stats.h>
-#include <graph_localizer/sanity_checker.h>
+#include <graph_vio/feature_counts.h>
+#include <graph_vio/graph_vio.h>
+#include <graph_vio/graph_vio_initializer.h>
+#include <graph_vio/graph_vio_stats.h>
+#include <graph_vio/sanity_checker.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -43,10 +43,10 @@
 #include <utility>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 // Handles initialization of parameters, biases, and initial pose for graph
 // localizer.  Provides callbacks that can be used by a ROS or non-ROS system
-// (i.e. graph_bag, which does not use a ROS core, vs. graph_localizer_nodelet,
+// (i.e. graph_bag, which does not use a ROS core, vs. graph_vio_nodelet,
 // which is used when running live).
 class GraphVIOWrapper {
  public:
@@ -91,7 +91,7 @@ class GraphVIOWrapper {
 
   boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
 
-  boost::optional<const GraphVIO&> graph_localizer() const;
+  boost::optional<const GraphVIO&> graph_vio() const;
 
   void MarkWorldTDockForResettingIfNecessary();
 
@@ -107,7 +107,7 @@ class GraphVIOWrapper {
 
   void SaveLocalizationGraphDotFile() const;
 
-  boost::optional<const GraphVIOStats&> graph_localizer_stats() const;
+  boost::optional<const GraphVIOStats&> graph_vio_stats() const;
 
   bool publish_localization_graph() const;
 
@@ -120,12 +120,12 @@ class GraphVIOWrapper {
 
   bool CheckCovarianceSanity() const;
 
-  std::unique_ptr<GraphVIO> graph_localizer_;
+  std::unique_ptr<GraphVIO> graph_vio_;
   // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
-  GraphVIOInitializer graph_localizer_initializer_;
+  GraphVIOInitializer graph_vio_initializer_;
   FeatureCounts feature_counts_;
   // world_T_body poses using sensor measurements
   // TODO(rsoussan): Rename these? world_T_body_sensor_name?
@@ -144,6 +144,6 @@ class GraphVIOWrapper {
   int sparse_mapping_min_num_landmarks_;
   localization_measurements::FanSpeedMode fan_speed_mode_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_WRAPPER_H_

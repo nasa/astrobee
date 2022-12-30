@@ -18,19 +18,19 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 #define GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/feature_point_node_updater_params.h>
-#include <graph_localizer/feature_tracker_params.h>
-#include <graph_localizer/handrail_params.h>
-#include <graph_localizer/graph_initializer_params.h>
+#include <graph_vio/calibration_params.h>
+#include <graph_vio/combined_nav_state_node_updater_params.h>
+#include <graph_vio/factor_params.h>
+#include <graph_vio/feature_point_node_updater_params.h>
+#include <graph_vio/feature_tracker_params.h>
+#include <graph_vio/handrail_params.h>
+#include <graph_vio/graph_initializer_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <localization_measurements/fan_speed_mode.h>
 
 #include <string>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct GraphVIOParams {
   CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
   CalibrationParams calibration;
@@ -47,6 +47,6 @@ struct GraphVIOParams {
   double standstill_feature_track_duration;
   localization_measurements::FanSpeedMode initial_fan_speed_mode;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_PARAMS_H_

@@ -19,12 +19,12 @@
 #ifndef GRAPH_VIO_SERIALIZATION_H_
 #define GRAPH_VIO_SERIALIZATION_H_
 
-#include <graph_localizer/graph_localizer.h>
+#include <graph_vio/graph_vio.h>
 
 #include <string>
 
-namespace graph_localizer {
-std::string SerializeBinary(const GraphVIO& graph_localizer);
-}  // namespace graph_localizer
+namespace graph_vio {
+std::string SerializeBinary(const GraphVIO& graph_vio);
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_SERIALIZATION_H_

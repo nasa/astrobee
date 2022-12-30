@@ -20,10 +20,10 @@
 
 #include <localization_common/combined_nav_state.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct FeaturePointNodeUpdaterParams {
   double huber_k;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FEATURE_POINT_NODE_UPDATER_PARAMS_H_

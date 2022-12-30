@@ -18,7 +18,7 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_
 #define GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_
 
-namespace graph_localizer {
+namespace graph_vio {
 struct GraphVIONodeletParams {
   int max_imu_buffer_size;
   int max_optical_flow_buffer_size;
@@ -30,6 +30,6 @@ struct GraphVIONodeletParams {
   int loc_adder_min_num_matches;
   int ar_tag_loc_adder_min_num_matches;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_NODELET_PARAMS_H_

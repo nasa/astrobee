@@ -18,15 +18,15 @@
 #ifndef GRAPH_VIO_FACTOR_PARAMS_H_
 #define GRAPH_VIO_FACTOR_PARAMS_H_
 
-#include <graph_localizer/depth_odometry_factor_adder_params.h>
-#include <graph_localizer/handrail_factor_adder_params.h>
-#include <graph_localizer/loc_factor_adder_params.h>
-#include <graph_localizer/rotation_factor_adder_params.h>
-#include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_localizer/smart_projection_factor_adder_params.h>
-#include <graph_localizer/standstill_factor_adder_params.h>
+#include <graph_vio/depth_odometry_factor_adder_params.h>
+#include <graph_vio/handrail_factor_adder_params.h>
+#include <graph_vio/loc_factor_adder_params.h>
+#include <graph_vio/rotation_factor_adder_params.h>
+#include <graph_vio/projection_factor_adder_params.h>
+#include <graph_vio/smart_projection_factor_adder_params.h>
+#include <graph_vio/standstill_factor_adder_params.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct FactorParams {
   DepthOdometryFactorAdderParams depth_odometry_adder;
   HandrailFactorAdderParams handrail_adder;
@@ -37,6 +37,6 @@ struct FactorParams {
   LocFactorAdderParams loc_adder;
   LocFactorAdderParams ar_tag_loc_adder;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FACTOR_PARAMS_H_

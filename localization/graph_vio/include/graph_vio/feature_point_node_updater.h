@@ -20,11 +20,11 @@
 #define GRAPH_VIO_FEATURE_POINT_NODE_UPDATER_H_
 
 #include <graph_optimizer/node_updater_with_priors.h>
-#include <graph_localizer/feature_point_graph_values.h>
-#include <graph_localizer/feature_point_node_updater_params.h>
+#include <graph_vio/feature_point_graph_values.h>
+#include <graph_vio/feature_point_node_updater_params.h>
 #include <localization_common/feature_point_3d.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 class FeaturePointNodeUpdater
     : public graph_optimizer::NodeUpdaterWithPriors<localization_common::FeaturePoint3d,
                                                     localization_common::FeaturePoint3dNoise> {
@@ -69,6 +69,6 @@ class FeaturePointNodeUpdater
   FeaturePointNodeUpdaterParams params_;
   std::shared_ptr<FeaturePointGraphValues> feature_point_graph_values_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FEATURE_POINT_NODE_UPDATER_H_

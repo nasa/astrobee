@@ -19,12 +19,12 @@
 #ifndef GRAPH_VIO_SANITY_CHECKER_H_
 #define GRAPH_VIO_SANITY_CHECKER_H_
 
-#include <graph_localizer/sanity_checker_params.h>
+#include <graph_vio/sanity_checker_params.h>
 #include <localization_common/combined_nav_state_covariances.h>
 
 #include <gtsam/geometry/Pose3.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 class SanityChecker {
  public:
   explicit SanityChecker(const SanityCheckerParams& params);
@@ -36,6 +36,6 @@ class SanityChecker {
   SanityCheckerParams params_;
   int num_consecutive_failures_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_SANITY_CHECKER_H_

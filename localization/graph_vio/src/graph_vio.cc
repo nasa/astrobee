@@ -74,31 +74,15 @@ void GraphVIO::InitializeNodeUpdaters() {
 }
 
 void GraphVIO::InitializeFactorAdders() {
-  ar_tag_loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
-  depth_odometry_factor_adder_.reset(new DepthOdometryFactorAdder(params_.factor.depth_odometry_adder));
-  handrail_factor_adder_.reset(new HandrailFactorAdder(params_.factor.handrail_adder));
-  loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
                               feature_point_node_updater_->shared_feature_point_graph_values()));
-  rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 }
 
 void GraphVIO::InitializeGraphActionCompleters() {
-  ar_tag_loc_graph_action_completer_.reset(
-    new LocGraphActionCompleter(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor,
-                                combined_nav_state_node_updater_->shared_graph_values()));
-  AddGraphActionCompleter(ar_tag_loc_graph_action_completer_);
-
-  loc_graph_action_completer_.reset(
-    new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor,
-                                combined_nav_state_node_updater_->shared_graph_values()));
-  AddGraphActionCompleter(loc_graph_action_completer_);
   projection_graph_action_completer_.reset(new ProjectionGraphActionCompleter(
     params_.factor.projection_adder, combined_nav_state_node_updater_->shared_graph_values(),
     feature_point_node_updater_->shared_feature_point_graph_values()));
@@ -269,57 +253,6 @@ void GraphVIO::CheckForStandstill() {
   if (*standstill_) LogDebug("CheckForStandstill: Standstill.");
 }
 
-void GraphVIO::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
-  if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
-    LogDebug("AddARTagMeasurement: Measurement too old - discarding.");
-    return;
-  }
-
-  if (params_.factor.ar_tag_loc_adder.enabled &&
-      static_cast<int>(matched_projections_measurement.matched_projections.size()) >=
-        params_.factor.ar_tag_loc_adder.min_num_matches) {
-    LogDebug("AddARTagMeasurement: Adding AR tag measurement.");
-    BufferFactors(ar_tag_loc_factor_adder_->AddFactors(matched_projections_measurement));
-  }
-}
-
-void GraphVIO::AddSparseMappingMeasurement(
-  const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
-  if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
-    LogDebug("AddSparseMappingMeasurement: Measurement too old - discarding.");
-    return;
-  }
-
-  if (params_.factor.loc_adder.enabled) {
-    LogDebug("AddSparseMappingMeasurement: Adding sparse mapping measurement.");
-    BufferFactors(loc_factor_adder_->AddFactors(matched_projections_measurement));
-  }
-}
-
-void GraphVIO::AddHandrailMeasurement(const lm::HandrailPointsMeasurement& handrail_points_measurement) {
-  if (!MeasurementRecentEnough(handrail_points_measurement.timestamp)) {
-    LogDebug("AddHandrailPointsMeasurement: Measurement too old - discarding.");
-    return;
-  }
-
-  if (params_.factor.handrail_adder.enabled) {
-    LogDebug("AddHandrailPointsMeasurement: Adding handrail measurement.");
-    BufferFactors(handrail_factor_adder_->AddFactors(handrail_points_measurement));
-  }
-}
-
-void GraphVIO::AddDepthOdometryMeasurement(const lm::DepthOdometryMeasurement& depth_odometry_measurement) {
-  if (!MeasurementRecentEnough(depth_odometry_measurement.timestamp)) {
-    LogDebug("AddDepthOdometryMeasurement: Measurement too old - discarding.");
-    return;
-  }
-
-  if (params_.factor.depth_odometry_adder.enabled) {
-    LogDebug("AddDepthOdometryMeasurement: Adding depth odometry measurement.");
-    BufferFactors(depth_odometry_factor_adder_->AddFactors(depth_odometry_measurement));
-  }
-}
-
 void GraphVIO::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                               const boost::optional<gtsam::Marginals>& marginals) {
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
@@ -376,15 +309,7 @@ bool GraphVIO::ValidGraph() const {
   // If graph consists of only priors and imu factors, consider it invalid and don't optimize.
   // Make sure smart factors are valid before including them.
   const int num_valid_non_imu_measurement_factors =
-    NumOFFactors(true) + go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
-    go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
-    go::NumFactors<gtsam::PointToLineFactor>(graph_factors()) +
-    go::NumFactors<gtsam::PointToLineSegmentFactor>(graph_factors()) +
-    go::NumFactors<gtsam::PointToPlaneFactor>(graph_factors()) +
-    go::NumFactors<gtsam::PointToPointBetweenFactor>(graph_factors()) +
-    go::NumFactors<gtsam::PointToHandrailEndpointFactor>(graph_factors()) +
-    go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
-    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
+    NumOFFactors(true) + go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
   return num_valid_non_imu_measurement_factors > 0;
 }
 

@@ -20,7 +20,7 @@
 #define GRAPH_VIO_COMBINED_NAV_STATE_GRAPH_VALUES_H_
 
 #include <graph_optimizer/graph_values.h>
-#include <graph_localizer/combined_nav_state_graph_values_params.h>
+#include <graph_vio/combined_nav_state_graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -38,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace sym = gtsam::symbol_shorthand;
 class CombinedNavStateGraphValues : public graph_optimizer::GraphValues {
  public:
@@ -134,6 +134,6 @@ class CombinedNavStateGraphValues : public graph_optimizer::GraphValues {
   CombinedNavStateGraphValuesParams params_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_COMBINED_NAV_STATE_GRAPH_VALUES_H_

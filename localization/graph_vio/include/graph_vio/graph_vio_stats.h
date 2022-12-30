@@ -18,10 +18,10 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_STATS_H_
 #define GRAPH_VIO_GRAPH_VIO_STATS_H_
 
-#include <graph_localizer/combined_nav_state_graph_values.h>
+#include <graph_vio/combined_nav_state_graph_values.h>
 #include <graph_optimizer/graph_stats.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 class GraphVIOStats : public graph_optimizer::GraphStats {
  public:
   GraphVIOStats();
@@ -69,6 +69,6 @@ class GraphVIOStats : public graph_optimizer::GraphStats {
  private:
   std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_STATS_H_

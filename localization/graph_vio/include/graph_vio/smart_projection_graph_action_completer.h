@@ -19,13 +19,13 @@
 #ifndef GRAPH_VIO_SMART_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 #define GRAPH_VIO_SMART_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 
-#include <graph_localizer/smart_projection_factor_adder_params.h>
+#include <graph_vio/smart_projection_factor_adder_params.h>
 #include <graph_optimizer/graph_action_completer.h>
-#include <graph_localizer/combined_nav_state_graph_values.h>
+#include <graph_vio/combined_nav_state_graph_values.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
   SmartProjectionGraphActionCompleter(const SmartProjectionFactorAdderParams& params,
@@ -45,6 +45,6 @@ class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionC
   std::shared_ptr<const CombinedNavStateGraphValues> graph_values_;
   gtsam::SmartProjectionParams smart_projection_params_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_SMART_PROJECTION_GRAPH_ACTION_COMPLETER_H_

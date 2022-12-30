@@ -36,7 +36,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace graph_localizer {
+namespace graph_vio {
 namespace sym = gtsam::symbol_shorthand;
 // TODO(rsoussan): Make seperate base class for static graph values so don't have to return boost::none
 // for so many virtual fcns
@@ -88,6 +88,6 @@ class FeaturePointGraphValues : public graph_optimizer::GraphValues {
   // Modified by projection_factor_adder, remove mutable if this changes
   mutable std::uint64_t feature_key_index_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FEATURE_POINT_GRAPH_VALUES_H_

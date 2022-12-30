@@ -27,7 +27,7 @@
 
 #include <string>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct SmartProjectionFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double min_avg_distance_from_mean;
   bool enable_EPI;
@@ -50,6 +50,6 @@ struct SmartProjectionFactorAdderParams : public graph_optimizer::FactorAdderPar
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_

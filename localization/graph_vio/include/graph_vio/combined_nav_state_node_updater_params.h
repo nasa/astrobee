@@ -18,12 +18,12 @@
 #ifndef GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 #define GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 
-#include <graph_localizer/combined_nav_state_graph_values_params.h>
+#include <graph_vio/combined_nav_state_graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 
 #include <boost/serialization/serialization.hpp>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct CombinedNavStateNodeUpdaterParams {
   double starting_prior_translation_stddev;
   double starting_prior_quaternion_stddev;
@@ -57,6 +57,6 @@ struct CombinedNavStateNodeUpdaterParams {
     ar& BOOST_SERIALIZATION_NVP(gyro_bias_stddev_threshold);
   }
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_

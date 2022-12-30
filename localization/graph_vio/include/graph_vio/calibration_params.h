@@ -21,7 +21,7 @@
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct CalibrationParams {
   gtsam::Pose3 body_T_dock_cam;
   gtsam::Pose3 body_T_nav_cam;
@@ -30,6 +30,6 @@ struct CalibrationParams {
   boost::shared_ptr<gtsam::Cal3_S2> nav_cam_intrinsics;
   boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_CALIBRATION_PARAMS_H_

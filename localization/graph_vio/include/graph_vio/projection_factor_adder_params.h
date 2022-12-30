@@ -27,7 +27,7 @@
 
 #include <string>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct ProjectionFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool enable_EPI;
   double landmark_distance_threshold;
@@ -40,6 +40,6 @@ struct ProjectionFactorAdderParams : public graph_optimizer::FactorAdderParams {
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_PROJECTION_FACTOR_ADDER_PARAMS_H_

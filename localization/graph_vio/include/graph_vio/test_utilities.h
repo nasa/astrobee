@@ -20,14 +20,14 @@
 #define GRAPH_VIO_TEST_UTILITIES_H_
 
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_localizer/combined_nav_state_graph_values_params.h>
-#include <graph_localizer/depth_odometry_factor_adder_params.h>
-#include <graph_localizer/graph_initializer_params.h>
-#include <graph_localizer/graph_localizer_params.h>
+#include <graph_vio/combined_nav_state_graph_values_params.h>
+#include <graph_vio/depth_odometry_factor_adder_params.h>
+#include <graph_vio/graph_initializer_params.h>
+#include <graph_vio/graph_vio_params.h>
 #include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/plane.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 localization_measurements::Plane RandomPlane();
 
 localization_measurements::DepthOdometryMeasurement DepthOdometryMeasurementFromPose(
@@ -45,5 +45,5 @@ GraphInitializerParams DefaultGraphInitializerParams();
 GraphVIOParams DefaultGraphVIOParams();
 
 DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams();
-}  // namespace graph_localizer
+}  // namespace graph_vio
 #endif  // GRAPH_VIO_TEST_UTILITIES_H_

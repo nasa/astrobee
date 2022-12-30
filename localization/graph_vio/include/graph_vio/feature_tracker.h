@@ -19,8 +19,8 @@
 #ifndef GRAPH_VIO_FEATURE_TRACKER_H_
 #define GRAPH_VIO_FEATURE_TRACKER_H_
 
-#include <graph_localizer/feature_track.h>
-#include <graph_localizer/feature_tracker_params.h>
+#include <graph_vio/feature_track.h>
+#include <graph_vio/feature_tracker_params.h>
 #include <localization_common/time.h>
 #include <localization_measurements/feature_point.h>
 
@@ -30,7 +30,7 @@
 #include <map>
 #include <set>
 
-namespace graph_localizer {
+namespace graph_vio {
 using FeatureTrackIdMap = std::map<localization_measurements::FeatureId, std::shared_ptr<FeatureTrack>>;
 using FeatureTrackLengthMap = std::multimap<int, std::shared_ptr<FeatureTrack>>;
 class FeatureTracker {
@@ -73,6 +73,6 @@ class FeatureTracker {
   // TODO(rsoussan): Move ths somewhere else?
   std::set<localization_common::Time> smart_factor_timestamp_allow_list_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_FEATURE_TRACKER_H_

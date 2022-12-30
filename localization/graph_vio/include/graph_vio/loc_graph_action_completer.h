@@ -19,12 +19,12 @@
 #ifndef GRAPH_VIO_LOC_GRAPH_ACTION_COMPLETER_H_
 #define GRAPH_VIO_LOC_GRAPH_ACTION_COMPLETER_H_
 
-#include <graph_localizer/combined_nav_state_graph_values.h>
-#include <graph_localizer/loc_factor_adder_params.h>
+#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_vio/loc_factor_adder_params.h>
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_action_completer_type.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 class LocGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
   LocGraphActionCompleter(const LocFactorAdderParams& params,
@@ -40,6 +40,6 @@ class LocGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
   graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
   std::shared_ptr<CombinedNavStateGraphValues> graph_values_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_LOC_GRAPH_ACTION_COMPLETER_H_

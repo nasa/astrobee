@@ -21,7 +21,7 @@
 
 #include <graph_optimizer/factor_adder_params.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 struct StandstillFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool add_velocity_prior;
   bool add_pose_between_factor;
@@ -29,6 +29,6 @@ struct StandstillFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double pose_between_factor_translation_stddev;
   double pose_between_factor_rotation_stddev;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_STANDSTILL_FACTOR_ADDER_PARAMS_H_

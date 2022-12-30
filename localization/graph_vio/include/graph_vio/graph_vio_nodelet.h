@@ -27,8 +27,8 @@
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_nodelet.h>
-#include <graph_localizer/graph_localizer_nodelet_params.h>
-#include <graph_localizer/graph_localizer_wrapper.h>
+#include <graph_vio/graph_vio_nodelet_params.h>
+#include <graph_vio/graph_vio_wrapper.h>
 #include <localization_common/ros_timer.h>
 #include <localization_common/timer.h>
 
@@ -42,7 +42,7 @@
 #include <string>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
  public:
   GraphVIONodelet();
@@ -112,7 +112,7 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   void Run();
 
-  graph_localizer::GraphVIOWrapper graph_localizer_wrapper_;
+  graph_vio::GraphVIOWrapper graph_vio_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
@@ -140,6 +140,6 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
   localization_common::Timer callbacks_timer_ = localization_common::Timer("Callbacks");
   localization_common::Timer nodelet_runtime_timer_ = localization_common::Timer("Nodelet Runtime");
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_VIO_NODELET_H_

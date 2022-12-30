@@ -19,14 +19,14 @@
 #ifndef GRAPH_VIO_STANDSTILL_FACTOR_ADDER_H_
 #define GRAPH_VIO_STANDSTILL_FACTOR_ADDER_H_
 
-#include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/standstill_factor_adder_params.h>
+#include <graph_vio/feature_tracker.h>
+#include <graph_vio/standstill_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_vio {
 class StandstillFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
                                                                   StandstillFactorAdderParams> {
   using Base =
@@ -42,6 +42,6 @@ class StandstillFactorAdder : public graph_optimizer::FactorAdder<localization_m
  private:
   std::shared_ptr<const FeatureTracker> feature_tracker_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_STANDSTILL_FACTOR_ADDER_H_

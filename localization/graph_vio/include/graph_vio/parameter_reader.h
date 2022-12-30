@@ -19,26 +19,26 @@
 #define GRAPH_VIO_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/combined_nav_state_graph_values_params.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/feature_point_node_updater_params.h>
-#include <graph_localizer/feature_tracker_params.h>
-#include <graph_localizer/graph_initializer_params.h>
-#include <graph_localizer/graph_localizer_nodelet_params.h>
-#include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/handrail_params.h>
-#include <graph_localizer/depth_odometry_factor_adder_params.h>
-#include <graph_localizer/handrail_factor_adder_params.h>
-#include <graph_localizer/loc_factor_adder_params.h>
-#include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_localizer/rotation_factor_adder_params.h>
-#include <graph_localizer/sanity_checker_params.h>
-#include <graph_localizer/smart_projection_factor_adder_params.h>
-#include <graph_localizer/standstill_factor_adder_params.h>
+#include <graph_vio/calibration_params.h>
+#include <graph_vio/combined_nav_state_graph_values_params.h>
+#include <graph_vio/combined_nav_state_node_updater_params.h>
+#include <graph_vio/factor_params.h>
+#include <graph_vio/feature_point_node_updater_params.h>
+#include <graph_vio/feature_tracker_params.h>
+#include <graph_vio/graph_initializer_params.h>
+#include <graph_vio/graph_vio_nodelet_params.h>
+#include <graph_vio/graph_vio_params.h>
+#include <graph_vio/handrail_params.h>
+#include <graph_vio/depth_odometry_factor_adder_params.h>
+#include <graph_vio/handrail_factor_adder_params.h>
+#include <graph_vio/loc_factor_adder_params.h>
+#include <graph_vio/projection_factor_adder_params.h>
+#include <graph_vio/rotation_factor_adder_params.h>
+#include <graph_vio/sanity_checker_params.h>
+#include <graph_vio/smart_projection_factor_adder_params.h>
+#include <graph_vio/standstill_factor_adder_params.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
 void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, DepthOdometryFactorAdderParams& params);
@@ -64,6 +64,6 @@ void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, Feat
 void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params);
 void LoadGraphVIOParams(config_reader::ConfigReader& config, GraphVIOParams& params);
 void LoadGraphVIONodeletParams(config_reader::ConfigReader& config, GraphVIONodeletParams& params);
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_PARAMETER_READER_H_

@@ -19,14 +19,14 @@
 #ifndef GRAPH_VIO_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 #define GRAPH_VIO_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 
-#include <graph_localizer/combined_nav_state_graph_values.h>
-#include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_localizer/feature_point_graph_values.h>
+#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_vio/projection_factor_adder_params.h>
+#include <graph_vio/feature_point_graph_values.h>
 #include <graph_optimizer/graph_action_completer.h>
 
 #include <gtsam/geometry/triangulation.h>
 
-namespace graph_localizer {
+namespace graph_vio {
 class ProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
   ProjectionGraphActionCompleter(const ProjectionFactorAdderParams& params,
@@ -45,6 +45,6 @@ class ProjectionGraphActionCompleter : public graph_optimizer::GraphActionComple
   std::shared_ptr<FeaturePointGraphValues> feature_point_graph_values_;
   gtsam::TriangulationParameters projection_triangulation_params_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_PROJECTION_GRAPH_ACTION_COMPLETER_H_

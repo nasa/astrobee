@@ -26,7 +26,7 @@
 
 #include <string>
 
-namespace graph_localizer {
+namespace graph_vio {
 // TODO(rsoussan): Clean this up, only use what is needed from imu integration params
 struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParams {
   gtsam::Pose3 global_T_body_start;
@@ -34,6 +34,6 @@ struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParam
   std::string imu_bias_filename;
   int num_bias_estimation_measurements;
 };
-}  // namespace graph_localizer
+}  // namespace graph_vio
 
 #endif  // GRAPH_VIO_GRAPH_INITIALIZER_PARAMS_H_
