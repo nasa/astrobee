@@ -64,8 +64,13 @@ gtsam::Pose3 PoseFromMsgWithExtrinsics(const geometry_msgs::Pose& pose, const gt
 }
 
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
-  config.AddFile((path_prefix + "graph_localizer.config").c_str());
-  LogDebug("LoadGraphLocalizerconfig: Loaded graph localizer config.");
+  config.AddFile((path_prefix + "localization/graph_localizer.config").c_str());
+  LogDebug("LoadGraphLocalizerConfig: Loaded graph localizer config.");
+}
+
+void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
+  config.AddFile((path_prefix + "localization/graph_vio.config").c_str());
+  LogDebug("LoadGraphVIOConfig: Loaded graph VIO config.");
 }
 
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
