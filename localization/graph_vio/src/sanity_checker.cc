@@ -22,19 +22,7 @@
 
 namespace graph_vio {
 namespace lc = localization_common;
-SanityChecker::SanityChecker(const SanityCheckerParams& params) : params_(params), num_consecutive_failures_(0) {}
-
-bool SanityChecker::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const gtsam::Pose3& localizer_pose) {
-  if (!params_.check_pose_difference) return true;
-
-  const gtsam::Vector3 difference_vector = sparse_mapping_pose.translation() - localizer_pose.translation();
-  const double euclidean_distance = difference_vector.norm();
-  if (euclidean_distance > params_.max_sane_position_difference)
-    ++num_consecutive_failures_;
-  else
-    num_consecutive_failures_ = 0;
-  return (num_consecutive_failures_ < params_.num_consecutive_pose_difference_failures_until_insane);
-}
+SanityChecker::SanityChecker(const SanityCheckerParams& params) : params_(params) {}
 
 bool SanityChecker::CheckCovarianceSanity(const lc::CombinedNavStateCovariances& covariances) const {
   return lc::PoseCovarianceSane(covariances.pose_covariance(), params_.position_covariance_threshold,

@@ -28,12 +28,7 @@
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_nodelet_params.h>
 #include <graph_vio/graph_vio_params.h>
-#include <graph_vio/handrail_params.h>
-#include <graph_vio/depth_odometry_factor_adder_params.h>
-#include <graph_vio/handrail_factor_adder_params.h>
-#include <graph_vio/loc_factor_adder_params.h>
 #include <graph_vio/projection_factor_adder_params.h>
-#include <graph_vio/rotation_factor_adder_params.h>
 #include <graph_vio/sanity_checker_params.h>
 #include <graph_vio/smart_projection_factor_adder_params.h>
 #include <graph_vio/standstill_factor_adder_params.h>
@@ -41,12 +36,7 @@
 namespace graph_vio {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
-void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, DepthOdometryFactorAdderParams& params);
-void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params);
-void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
-void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params);
-void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params);
 void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           SmartProjectionFactorAdderParams& params);
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
@@ -61,7 +51,6 @@ void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
-void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params);
 void LoadGraphVIOParams(config_reader::ConfigReader& config, GraphVIOParams& params);
 void LoadGraphVIONodeletParams(config_reader::ConfigReader& config, GraphVIONodeletParams& params);
 }  // namespace graph_vio

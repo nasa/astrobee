@@ -1,6 +1,9 @@
-- update graph_vio_initializer
-- update params, param reader
+- update param reader
+- add vio config file
 - add vio graph message(s)
+- initialize graph with identity pose, set fixed!!!
+  - TODO: need to always have fixed identity pose as origin! how to do this?
+    - set start pose fixed after maginalize????
 - compile!
 - test!
   - use graph bag???? 

@@ -20,10 +20,6 @@
 
 namespace graph_vio {
 struct SanityCheckerParams {
-  // Check Pose
-  bool check_pose_difference;
-  int num_consecutive_pose_difference_failures_until_insane;
-  double max_sane_position_difference;
   // Check Covariances
   bool check_position_covariance;
   bool check_orientation_covariance;

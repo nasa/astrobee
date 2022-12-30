@@ -22,13 +22,6 @@ namespace graph_vio {
 struct GraphVIONodeletParams {
   int max_imu_buffer_size;
   int max_optical_flow_buffer_size;
-  int max_vl_buffer_size;
-  int max_ar_buffer_size;
-  int max_depth_odometry_buffer_size;
-  int max_dl_buffer_size;
-  // Used to avoid saving ml/ar poses with too few landmark detections
-  int loc_adder_min_num_matches;
-  int ar_tag_loc_adder_min_num_matches;
 };
 }  // namespace graph_vio
 

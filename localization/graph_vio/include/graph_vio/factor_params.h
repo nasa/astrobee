@@ -18,24 +18,15 @@
 #ifndef GRAPH_VIO_FACTOR_PARAMS_H_
 #define GRAPH_VIO_FACTOR_PARAMS_H_
 
-#include <graph_vio/depth_odometry_factor_adder_params.h>
-#include <graph_vio/handrail_factor_adder_params.h>
-#include <graph_vio/loc_factor_adder_params.h>
-#include <graph_vio/rotation_factor_adder_params.h>
 #include <graph_vio/projection_factor_adder_params.h>
 #include <graph_vio/smart_projection_factor_adder_params.h>
 #include <graph_vio/standstill_factor_adder_params.h>
 
 namespace graph_vio {
 struct FactorParams {
-  DepthOdometryFactorAdderParams depth_odometry_adder;
-  HandrailFactorAdderParams handrail_adder;
-  RotationFactorAdderParams rotation_adder;
   SmartProjectionFactorAdderParams smart_projection_adder;
   StandstillFactorAdderParams standstill_adder;
   ProjectionFactorAdderParams projection_adder;
-  LocFactorAdderParams loc_adder;
-  LocFactorAdderParams ar_tag_loc_adder;
 };
 }  // namespace graph_vio
 

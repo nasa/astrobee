@@ -28,13 +28,11 @@ namespace graph_vio {
 class SanityChecker {
  public:
   explicit SanityChecker(const SanityCheckerParams& params);
-  bool CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const gtsam::Pose3& localizer_pose);
   bool CheckCovarianceSanity(const localization_common::CombinedNavStateCovariances& covariances) const;
   void Reset();
 
  private:
   SanityCheckerParams params_;
-  int num_consecutive_failures_;
 };
 }  // namespace graph_vio
 

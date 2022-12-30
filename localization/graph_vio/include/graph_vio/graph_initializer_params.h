@@ -29,7 +29,6 @@
 namespace graph_vio {
 // TODO(rsoussan): Clean this up, only use what is needed from imu integration params
 struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParams {
-  gtsam::Pose3 global_T_body_start;
   gtsam::Vector3 global_V_body_start;
   std::string imu_bias_filename;
   int num_bias_estimation_measurements;
