@@ -19,6 +19,7 @@
   <build_depend>config_reader</build_depend>
   <build_depend>ff_util</build_depend>
   <build_depend>ff_msgs</build_depend>
+  <build_depend>graph_factors</build_depend>
   <build_depend>graph_optimizer</build_depend>
   <build_depend>imu_integration</build_depend>
   <build_depend>localization_common</build_depend>
@@ -30,6 +31,7 @@
   <run_depend>config_reader</run_depend>
   <run_depend>ff_util</run_depend>
   <run_depend>ff_msgs</run_depend>
+  <run_depend>graph_factors</run_depend>
   <run_depend>graph_optimizer</run_depend>
   <run_depend>imu_integration</run_depend>
   <run_depend>localization_common</run_depend>

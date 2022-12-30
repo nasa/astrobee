@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_INVERSE_DEPTH_PROJECTION_FACTOR_H_
-#define GRAPH_VIO_INVERSE_DEPTH_PROJECTION_FACTOR_H_
+#ifndef GRAPH_FACTORS_INVERSE_DEPTH_PROJECTION_FACTOR_H_
+#define GRAPH_FACTORS_INVERSE_DEPTH_PROJECTION_FACTOR_H_
 
 #include <vision_common/inverse_depth_measurement.h>
 
@@ -145,4 +145,4 @@ struct traits<InverseDepthProjectionFactor> : public Testable<InverseDepthProjec
 
 }  // namespace gtsam
 
-#endif  // GRAPH_VIO_INVERSE_DEPTH_PROJECTION_FACTOR_H_
+#endif  // GRAPH_FACTORS_INVERSE_DEPTH_PROJECTION_FACTOR_H_

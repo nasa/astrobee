@@ -34,6 +34,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   config_reader
   ff_util
   ff_msgs
+  graph_factors
   graph_optimizer
   imu_integration
   localization_common
@@ -55,6 +56,7 @@ catkin_package(
     config_reader
     ff_util
     ff_msgs
+    graph_factors
     graph_optimizer
     imu_integration
     localization_common

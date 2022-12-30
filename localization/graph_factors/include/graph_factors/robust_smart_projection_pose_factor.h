@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
-#define GRAPH_VIO_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
+#ifndef GRAPH_FACTORS_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
+#define GRAPH_FACTORS_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
 
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
@@ -236,4 +236,4 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
 };
 }  // namespace gtsam
 
-#endif  // GRAPH_VIO_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
+#endif  // GRAPH_FACTORS_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
