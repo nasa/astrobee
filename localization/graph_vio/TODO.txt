@@ -1,7 +1,11 @@
-- update graph_vio_nodelet.cc
 - update graph_vio_initializer
 - update params, param reader
-- add vio graph message
+- add vio graph message(s)
+- compile!
+- test!
+  - use graph bag???? 
+    - copy graph bag and run for VIO only?? Or modify current graph bag tool??
+      - (probably modify current tool?)
 
 - update graph_localizer package!!
 

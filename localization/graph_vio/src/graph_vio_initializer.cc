@@ -29,7 +29,6 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 GraphVIOInitializer::GraphVIOInitializer()
     : has_biases_(false),
-      has_start_pose_(false),
       has_params_(false),
       has_fan_speed_mode_(false),
       estimate_biases_(false),
@@ -55,21 +54,13 @@ void GraphVIOInitializer::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias
   }
 }
 
-void GraphVIOInitializer::SetStartPose(const lm::TimestampedPose& timestamped_pose) {
-  params_.graph_initializer.start_time = timestamped_pose.time;
-  params_.graph_initializer.global_T_body_start = timestamped_pose.pose;
-  // Assumes zero initial velocity
-  params_.graph_initializer.global_V_body_start = gtsam::Velocity3::Zero();
-  has_start_pose_ = true;
-  RemoveGravityFromBiasIfPossibleAndNecessary();
-}
-
 void GraphVIOInitializer::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
   params_.initial_fan_speed_mode = fan_speed_mode;
   has_fan_speed_mode_ = true;
 }
 
-void GraphVIOInitializer::RemoveGravityFromBiasIfPossibleAndNecessary() {
+// TODO(rsoussan): Is this possible? Get from gyro?
+/*void GraphVIOInitializer::RemoveGravityFromBiasIfPossibleAndNecessary() {
   if (RemovedGravityFromBiasIfNecessary() || !HasParams()) return;
   if (params_.graph_initializer.gravity.isZero()) {
     removed_gravity_from_bias_if_necessary_ = true;
@@ -86,19 +77,7 @@ void GraphVIOInitializer::RemoveGravityFromBiasIfPossibleAndNecessary() {
            << params_.graph_initializer.initial_imu_bias.accelerometer().matrix());
   removed_gravity_from_bias_if_necessary_ = true;
   return;
-}
-
-void GraphVIOInitializer::ResetBiasesAndStartPose() {
-  ResetBiases();
-  ResetStartPose();
-}
-
-void GraphVIOInitializer::ResetBiasesFromFileAndResetStartPose() {
-  ResetBiasesFromFile();
-  ResetStartPose();
-}
-
-void GraphVIOInitializer::ResetStartPose() { has_start_pose_ = false; }
+}*/
 
 void GraphVIOInitializer::ResetBiases() {
   has_biases_ = false;
@@ -169,13 +148,13 @@ void GraphVIOInitializer::EstimateAndSetImuBiases(
   imu_bias_measurements_.clear();
 }
 
-void GraphVIOInitializer::RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity,
+/*void GraphVIOInitializer::RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity,
                                                       const gtsam::Pose3& body_T_imu, const gtsam::Pose3& global_T_body,
                                                       gtsam::imuBias::ConstantBias& imu_bias) {
   const gtsam::Vector3 gravity_corrected_accelerometer_bias = lc::RemoveGravityFromAccelerometerMeasurement(
     global_F_gravity, body_T_imu, global_T_body, imu_bias.accelerometer());
   imu_bias = gtsam::imuBias::ConstantBias(gravity_corrected_accelerometer_bias, imu_bias.gyroscope());
-}
+}*/
 
 void GraphVIOInitializer::LoadGraphVIOParams(config_reader::ConfigReader& config) {
   graph_vio::LoadGraphVIOParams(config, params_);
@@ -183,13 +162,12 @@ void GraphVIOInitializer::LoadGraphVIOParams(config_reader::ConfigReader& config
 }
 
 bool GraphVIOInitializer::ReadyToInitialize() const {
-  return HasBiases() && HasStartPose() && HasParams() && HasFanSpeedMode() && RemovedGravityFromBiasIfNecessary();
+  return HasBiases() && HasParams() && HasFanSpeedMode() && RemovedGravityFromBiasIfNecessary();
 }
 
 void GraphVIOInitializer::StartBiasEstimation() { estimate_biases_ = true; }
 
 bool GraphVIOInitializer::HasBiases() const { return has_biases_; }
-bool GraphVIOInitializer::HasStartPose() const { return has_start_pose_; }
 bool GraphVIOInitializer::HasParams() const { return has_params_; }
 bool GraphVIOInitializer::HasFanSpeedMode() const { return has_fan_speed_mode_; }
 bool GraphVIOInitializer::EstimateBiases() const { return estimate_biases_; }

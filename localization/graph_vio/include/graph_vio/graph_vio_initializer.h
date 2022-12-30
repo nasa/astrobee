@@ -39,33 +39,27 @@ class GraphVIOInitializer {
   GraphVIOInitializer();
   void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias, const bool loaded_from_previous_estimate = false,
                  const bool save_to_file = false);
-  void SetStartPose(const localization_measurements::TimestampedPose& timestamped_pose);
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
   void RemoveGravityFromBiasIfPossibleAndNecessary();
   bool ReadyToInitialize() const;
-  void ResetBiasesAndStartPose();
-  void ResetBiasesFromFileAndResetStartPose();
-  void ResetStartPose();
   void ResetBiases();
   void ResetBiasesFromFile();
   void StartBiasEstimation();
   bool HasBiases() const;
-  bool HasStartPose() const;
   bool HasParams() const;
   bool HasFanSpeedMode() const;
   bool EstimateBiases() const;
   const GraphVIOParams& params() const;
   void LoadGraphVIOParams(config_reader::ConfigReader& config);
-  bool RemovedGravityFromBiasIfNecessary() const;
+  // bool RemovedGravityFromBiasIfNecessary() const;
   void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
                                localization_measurements::FanSpeedMode fan_speed_mode);
 
  private:
-  void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
-                             const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias);
+  /*void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
+                             const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias);*/
 
   bool has_biases_;
-  bool has_start_pose_;
   bool has_params_;
   bool has_fan_speed_mode_;
   bool estimate_biases_;
