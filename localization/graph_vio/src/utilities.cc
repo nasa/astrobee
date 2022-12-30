@@ -57,15 +57,7 @@ double AverageDistanceFromMean(const std::vector<lm::FeaturePoint>& points) {
   return average_distance_from_mean;
 }
 
-bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks) {
-  return (static_cast<int>(visual_landmarks_msg.landmarks.size()) >= min_num_landmarks);
-}
-
-bool ValidDepthMsg(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
-  return (static_cast<int>(depth_landmarks_msg.landmarks.size()) >= 0);
-}
-
-ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
+ff_msgs::GraphVIOState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
@@ -74,7 +66,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   ff_msgs::GraphState loc_msg;
 
   // Set Header Frames
-  loc_msg.header.frame_id = "world";
+  loc_msg.header.frame_id = "odom";
   loc_msg.child_frame_id = "body";
 
   // Set CombinedNavState
@@ -89,8 +81,6 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
 
   // Set Graph Feature Counts/Information
   loc_msg.num_detected_of_features = detected_feature_counts.of;
-  loc_msg.num_detected_ml_features = detected_feature_counts.vl;
-  loc_msg.num_detected_ar_features = detected_feature_counts.ar;
   loc_msg.estimating_bias = estimating_bias;
 
   // Set Graph Stats
@@ -99,8 +89,6 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   loc_msg.update_time = graph_stats.update_timer_.last_value();
   loc_msg.num_factors = graph_stats.num_factors_averager_.last_value();
   loc_msg.num_of_factors = graph_stats.num_optical_flow_factors_averager_.last_value();
-  loc_msg.num_ml_projection_factors = graph_stats.num_loc_proj_factors_averager_.last_value();
-  loc_msg.num_ml_pose_factors = graph_stats.num_loc_pose_factors_averager_.last_value();
   loc_msg.num_states = graph_stats.num_states_averager_.last_value();
   // Other
   loc_msg.standstill = standstill;
@@ -108,11 +96,11 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   return loc_msg;
 }
 
-ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_vio) {
-  ff_msgs::LocalizationGraph graph_msg;
+ff_msgs::SerializedGraph GraphMsg(const GraphVIO& graph_vio) {
+  ff_msgs::SerializedGraph graph_msg;
 
   // Set Header Frames
-  graph_msg.header.frame_id = "world";
+  graph_msg.header.frame_id = "odom";
   graph_msg.child_frame_id = "body";
 
   // TODO(rsoussan): set correct time

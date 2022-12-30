@@ -54,15 +54,14 @@ bool ValidPointSet(const int num_points, const double average_distance_from_mean
 
 double AverageDistanceFromMean(const std::vector<localization_measurements::FeaturePoint>& points);
 
-// TODO(rsoussan): Update these!
-ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
+ff_msgs::GraphVIOState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                                   const localization_common::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
                                   const bool standstill, const GraphVIOStats& graph_stats,
                                   const localization_measurements::FanSpeedMode fan_speed_mode);
 
-ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_vio);
+ff_msgs::SerializedGraph GraphMsg(const GraphVIO& graph_vio);
 
 // TODO(rsoussan): Move these PoseMsg fcns to loc common?
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);

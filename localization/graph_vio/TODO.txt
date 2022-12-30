@@ -1,4 +1,5 @@
 - update utilities
+- update feature counts!
 - compile!
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
@@ -7,6 +8,7 @@
   - use graph bag???? 
     - copy graph bag and run for VIO only?? Or modify current graph bag tool??
       - (probably modify current tool?)
+- add unit tests!
 
 - update graph_localizer package!!
 
