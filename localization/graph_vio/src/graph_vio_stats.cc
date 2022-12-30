@@ -16,10 +16,6 @@
  * under the License.
  */
 #include <graph_vio/graph_vio_stats.h>
-#include <graph_vio/point_to_point_between_factor.h>
-#include <graph_vio/loc_projection_factor.h>
-#include <graph_vio/loc_pose_factor.h>
-#include <graph_vio/pose_rotation_factor.h>
 #include <graph_vio/robust_smart_projection_pose_factor.h>
 #include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
@@ -39,23 +35,13 @@ GraphVIOStats::GraphVIOStats() {
   AddStatsAverager(num_marginal_factors_averager_);
   AddStatsAverager(num_factors_averager_);
   // AddStatsAverager(num_features_averager_);
-  AddStatsAverager(num_depth_odometry_rel_pose_factors_averager_);
-  AddStatsAverager(num_depth_odometry_rel_point_factors_averager_);
   AddStatsAverager(num_optical_flow_factors_averager_);
-  AddStatsAverager(num_loc_pose_factors_averager_);
-  AddStatsAverager(num_loc_proj_factors_averager_);
   AddStatsAverager(num_imu_factors_averager_);
-  AddStatsAverager(num_rotation_factors_averager_);
   AddStatsAverager(num_standstill_between_factors_averager_);
   AddStatsAverager(num_vel_prior_factors_averager_);
 
-  AddErrorAverager(depth_odom_rel_pose_error_averager_);
-  AddErrorAverager(depth_odom_rel_point_error_averager_);
   AddErrorAverager(of_error_averager_);
-  AddErrorAverager(loc_proj_error_averager_);
-  AddErrorAverager(loc_pose_error_averager_);
   AddErrorAverager(imu_error_averager_);
-  AddErrorAverager(rotation_error_averager_);
   AddErrorAverager(standstill_between_error_averager_);
   AddErrorAverager(pose_prior_error_averager_);
   AddErrorAverager(velocity_prior_error_averager_);
@@ -74,13 +60,8 @@ void GraphVIOStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factor
   using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 
   double total_error = 0;
-  double depth_odom_rel_pose_factor_error = 0;
-  double depth_odom_rel_point_factor_error = 0;
   double optical_flow_factor_error = 0;
-  double loc_proj_error = 0;
-  double loc_pose_error = 0;
   double imu_factor_error = 0;
-  double rotation_factor_error = 0;
   double standstill_between_factor_error = 0;
   double pose_prior_error = 0;
   double velocity_prior_error = 0;
@@ -88,15 +69,6 @@ void GraphVIOStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factor
   for (const auto& factor : graph_factors) {
     const double error = factor->error(combined_nav_state_graph_values_->values());
     total_error += error;
-    // TODO(rsoussan): Differentiate between this and standstill between factor
-    const auto depth_odom_rel_pose_factor = dynamic_cast<const gtsam::BetweenFactor<gtsam::Pose3>*>(factor.get());
-    if (depth_odom_rel_pose_factor) {
-      depth_odom_rel_pose_factor_error += error;
-    }
-    const auto depth_odom_rel_point_factor = dynamic_cast<const gtsam::PointToPointBetweenFactor*>(factor.get());
-    if (depth_odom_rel_point_factor) {
-      depth_odom_rel_point_factor_error += error;
-    }
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
       optical_flow_factor_error += error;
@@ -108,18 +80,6 @@ void GraphVIOStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factor
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
       imu_factor_error += error;
-    }
-    const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
-    if (loc_factor) {
-      loc_proj_error += error;
-    }
-    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor.get());
-    if (loc_pose_factor) {
-      loc_pose_error += error;
-    }
-    const auto rotation_factor = dynamic_cast<gtsam::PoseRotationFactor*>(factor.get());
-    if (rotation_factor) {
-      rotation_factor_error += error;
     }
     const auto standstill_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factor.get());
     if (standstill_between_factor) {
@@ -141,13 +101,8 @@ void GraphVIOStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factor
     }
   }
   total_error_averager_.Update(total_error);
-  depth_odom_rel_pose_error_averager_.Update(depth_odom_rel_pose_factor_error);
-  depth_odom_rel_point_error_averager_.Update(depth_odom_rel_point_factor_error);
   of_error_averager_.Update(optical_flow_factor_error);
-  loc_proj_error_averager_.Update(loc_proj_error);
-  loc_pose_error_averager_.Update(loc_pose_error);
   imu_error_averager_.Update(imu_factor_error);
-  rotation_error_averager_.Update(rotation_factor_error);
   standstill_between_error_averager_.Update(standstill_between_factor_error);
   pose_prior_error_averager_.Update(pose_prior_error);
   velocity_prior_error_averager_.Update(velocity_prior_error);
@@ -161,14 +116,7 @@ void GraphVIOStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors
   num_factors_averager_.Update(graph_factors.size());
   num_optical_flow_factors_averager_.Update(
     NumSmartFactors(graph_factors, combined_nav_state_graph_values_->values(), true));
-  num_depth_odometry_rel_pose_factors_averager_.Update(
-    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors));
-  num_depth_odometry_rel_point_factors_averager_.Update(
-    go::NumFactors<gtsam::PointToPointBetweenFactor>(graph_factors));
-  num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));
-  num_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors));
   num_imu_factors_averager_.Update(go::NumFactors<gtsam::CombinedImuFactor>(graph_factors));
-  num_rotation_factors_averager_.Update(go::NumFactors<gtsam::PoseRotationFactor>(graph_factors));
   num_standstill_between_factors_averager_.Update(go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors));
   num_vel_prior_factors_averager_.Update(go::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(graph_factors));
 }

@@ -19,10 +19,8 @@
 #ifndef GRAPH_VIO_UTILITIES_H_
 #define GRAPH_VIO_UTILITIES_H_
 
-#include <ff_msgs/DepthLandmarks.h>
-#include <ff_msgs/GraphState.h>
-#include <ff_msgs/LocalizationGraph.h>
-#include <ff_msgs/VisualLandmarks.h>
+#include <ff_msgs/GraphVIOState.h>
+#include <ff_msgs/SerializedGraph.h>
 #include <graph_vio/combined_nav_state_graph_values.h>
 #include <graph_vio/feature_counts.h>
 #include <graph_vio/feature_track.h>
@@ -56,10 +54,7 @@ bool ValidPointSet(const int num_points, const double average_distance_from_mean
 
 double AverageDistanceFromMean(const std::vector<localization_measurements::FeaturePoint>& points);
 
-bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
-
-bool ValidDepthMsg(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
-
+// TODO(rsoussan): Update these!
 ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                                   const localization_common::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
@@ -69,6 +64,7 @@ ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& c
 
 ff_msgs::LocalizationGraph GraphMsg(const GraphVIO& graph_vio);
 
+// TODO(rsoussan): Move these PoseMsg fcns to loc common?
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const localization_common::Time time);
