@@ -20,7 +20,7 @@
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
 #include <config_reader/config_reader.h>
-#include <ff_msgs/GraphState.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
@@ -90,9 +90,9 @@ geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::st
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
 
-CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphState& loc_msg);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphVIOState& msg);
 
-CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphState& loc_msg);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphVIOState& msg);
 
 // Returns gravity corrected accelerometer measurement
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,

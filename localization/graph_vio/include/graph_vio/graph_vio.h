@@ -26,7 +26,6 @@
 #include <graph_vio/graph_vio_params.h>
 #include <graph_vio/graph_vio_stats.h>
 #include <graph_vio/robust_smart_projection_pose_factor.h>
-#include <graph_vio/loc_graph_action_completer.h>
 #include <graph_vio/projection_graph_action_completer.h>
 #include <graph_vio/projection_factor_adder.h>
 #include <graph_vio/smart_projection_cumulative_factor_adder.h>

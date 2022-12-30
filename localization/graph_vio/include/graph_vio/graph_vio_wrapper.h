@@ -55,9 +55,9 @@ class GraphVIOWrapper {
 
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
-  boost::optional<ff_msgs::GraphState> LatestLocalizationStateMsg();
+  boost::optional<ff_msgs::GraphVIOState> LatestVIOStateMsg();
 
-  boost::optional<ff_msgs::LocalizationGraph> LatestLocalizationGraphMsg() const;
+  boost::optional<ff_msgs::Graph> LatestGraphMsg() const;
 
   bool Initialized() const;
 

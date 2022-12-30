@@ -206,7 +206,7 @@ boost::optional<lc::CombinedNavState> GraphVIOWrapper::LatestCombinedNavState() 
   return latest_combined_nav_state;
 }
 
-boost::optional<ff_msgs::GraphState> GraphVIOWrapper::LatestVIOStateMsg() {
+boost::optional<ff_msgs::GraphVIOState> GraphVIOWrapper::LatestVIOStateMsg() {
   if (!graph_vio_) {
     LogDebugEveryN(50, "LatestVIOMsg: Graph VIO not initialized yet.");
     return boost::none;
@@ -225,7 +225,7 @@ boost::optional<ff_msgs::GraphState> GraphVIOWrapper::LatestVIOStateMsg() {
   return graph_state_msg;
 }
 
-boost::optional<ff_msgs::VIOGraph> GraphVIOWrapper::LatestVIOGraphMsg() const {
+boost::optional<ff_msgs::Graph> GraphVIOWrapper::LatestGraphMsg() const {
   if (!graph_vio_) {
     LogWarningEveryN(50, "LatestVIOGraphMsg: Graph VIO not initialized yet.");
     return boost::none;
