@@ -1,4 +1,3 @@
-- update graph_vio_wrapper.cc
 - update graph_vio_nodelet.cc
 - update graph_vio_initializer
 - update params, param reader
