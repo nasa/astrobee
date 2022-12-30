@@ -35,24 +35,23 @@ namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 GraphVIOWrapper::GraphVIOWrapper(const std::string& graph_config_path_prefix)
-    : reset_world_T_dock_(false), reset_world_T_handrail_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
+    : fan_speed_mode_(lm::FanSpeedMode::kNominal) {
   config_reader::ConfigReader config;
   lc::LoadGraphVIOConfig(config, graph_config_path_prefix);
   config.AddFile("transforms.config");
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
-  config.AddFile("localization/handrail_detect.config");
 
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
 
-  if (!config.GetBool("publish_localization_graph", &publish_localization_graph_)) {
-    LogFatal("Failed to load publish_localization_graph.");
+  if (!config.GetBool("publish_graph", &publish_graph_)) {
+    LogFatal("Failed to load publish_graph.");
   }
 
-  if (!config.GetBool("save_localization_graph_dot_file", &save_localization_graph_dot_file_)) {
-    LogFatal("Failed to load save_localization_graph_dot_file.");
+  if (!config.GetBool("save_graph_dot_file", &save_graph_dot_file_)) {
+    LogFatal("Failed to load save_graph_dot_file.");
   }
 
   position_cov_log_det_lost_threshold_ = mc::LoadDouble(config, "position_cov_log_det_lost_threshold");
@@ -62,12 +61,6 @@ GraphVIOWrapper::GraphVIOWrapper(const std::string& graph_config_path_prefix)
   SanityCheckerParams sanity_checker_params;
   LoadSanityCheckerParams(config, sanity_checker_params);
   sanity_checker_.reset(new SanityChecker(sanity_checker_params));
-  // Initialize with config.  Optionally update during localization
-  // TODO(rsoussan): Make graph localizer wrapper config file and load fcn in parameter reader
-  estimated_world_T_dock_ = lc::LoadTransform(config, "world_dock_transform");
-  estimate_world_T_dock_using_loc_ = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
-  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
-  ar_min_num_landmarks_ = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 bool GraphVIOWrapper::Initialized() const { return (graph_vio_.get() != nullptr); }
@@ -77,8 +70,8 @@ void GraphVIOWrapper::Update() {
     graph_vio_->Update();
     // Sanity check covariances after updates
     if (!CheckCovarianceSanity()) {
-      LogError("OpticalFlowCallback: Covariance sanity check failed, resetting localizer.");
-      ResetLocalizer();
+      LogError("OpticalFlowCallback: Covariance sanity check failed, resetting vio.");
+      ResetVIO();
       return;
     }
   }
@@ -91,12 +84,12 @@ void GraphVIOWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature
   }
 }
 
-void GraphVIOWrapper::ResetLocalizer() {
-  LogInfo("ResetLocalizer: Resetting localizer.");
+void GraphVIOWrapper::ResetVIO() {
+  LogInfo("ResetVIO: Resetting vio.");
   graph_vio_initializer_.ResetStartPose();
   if (!latest_biases_) {
     LogError(
-      "ResetLocalizer: Trying to reset localizer when no biases "
+      "ResetVIO: Trying to reset vio when no biases "
       "are available.");
     return;
   }
@@ -108,49 +101,20 @@ void GraphVIOWrapper::ResetLocalizer() {
   sanity_checker_->Reset();
 }
 
-void GraphVIOWrapper::ResetBiasesAndLocalizer() {
-  LogInfo("ResetBiasAndLocalizer: Resetting biases and localizer.");
+void GraphVIOWrapper::ResetBiasesAndVIO() {
+  LogInfo("ResetBiasAndVIO: Resetting biases and vio.");
   graph_vio_initializer_.ResetBiasesAndStartPose();
   graph_vio_.reset();
   sanity_checker_->Reset();
 }
 
-void GraphVIOWrapper::ResetBiasesFromFileAndResetLocalizer() {
-  LogInfo("ResetBiasAndLocalizer: Resetting biases from file and resetting localizer.");
+void GraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
+  LogInfo("ResetBiasAndVIO: Resetting biases from file and resetting vio.");
   graph_vio_initializer_.ResetBiasesFromFileAndResetStartPose();
   if (graph_vio_initializer_.HasBiases())
     latest_biases_ = graph_vio_initializer_.params().graph_initializer.initial_imu_bias;
   graph_vio_.reset();
   sanity_checker_->Reset();
-}
-
-void GraphVIOWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  feature_counts_.vl = visual_landmarks_msg.landmarks.size();
-  if (!ValidVLMsg(visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) return;
-  if (graph_vio_) {
-    graph_vio_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
-  }
-
-  const gtsam::Pose3 sparse_mapping_global_T_body = lc::PoseFromMsgWithExtrinsics(
-    visual_landmarks_msg.pose, graph_vio_initializer_.params().calibration.body_T_nav_cam.inverse());
-  const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = lm::TimestampedPose(sparse_mapping_global_T_body, timestamp);
-
-  // Sanity Check
-  if (graph_vio_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
-    LogError("VLVisualLandmarksCallback: Sanity check failed, resetting localizer.");
-    ResetLocalizer();
-    return;
-  }
-
-  if (!graph_vio_) {
-    // Set or update initial pose if a new one is available before the localizer
-    // has started running.
-    graph_vio_initializer_.SetStartPose(*sparse_mapping_pose_);
-    // Set fan speed mode as well in case this hasn't been set yet
-    // TODO(rsoussan): Do this in a cleaner way
-    graph_vio_initializer_.SetFanSpeedMode(fan_speed_mode_);
-  }
 }
 
 bool GraphVIOWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const lc::Time timestamp) const {
@@ -181,58 +145,6 @@ bool GraphVIOWrapper::CheckCovarianceSanity() const {
   }
 
   return sanity_checker_->CheckCovarianceSanity(combined_nav_state_and_covariances->second);
-}
-
-void GraphVIOWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  feature_counts_.ar = visual_landmarks_msg.landmarks.size();
-  if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
-  if (graph_vio_) {
-    if (reset_world_T_dock_) {
-      ResetWorldTDockUsingLoc(visual_landmarks_msg);
-      reset_world_T_dock_ = false;
-    }
-    const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
-      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
-    graph_vio_->AddARTagMeasurement(frame_changed_ar_measurements);
-    ar_tag_pose_ = lm::TimestampedPose(frame_changed_ar_measurements.global_T_cam *
-                                         graph_vio_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                       frame_changed_ar_measurements.timestamp);
-  }
-}
-
-void GraphVIOWrapper::DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg) {
-  if (graph_vio_) {
-    const auto depth_odometry_measurement = lm::MakeDepthOdometryMeasurement(depth_odometry_msg);
-    graph_vio_->AddDepthOdometryMeasurement(depth_odometry_measurement);
-  }
-}
-
-void GraphVIOWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
-  feature_counts_.depth = depth_landmarks_msg.landmarks.size();
-  if (!ValidDepthMsg(depth_landmarks_msg)) return;
-  if (graph_vio_) {
-    ResetWorldTHandrailIfNecessary(depth_landmarks_msg);
-    if (!estimated_world_T_handrail_) {
-      LogWarning("DepthLandmarksCallback: No estimated world_T_handrail pose available.");
-      return;
-    }
-    const auto handrail_points_measurement =
-      lm::MakeHandrailPointsMeasurement(depth_landmarks_msg, *estimated_world_T_handrail_);
-    graph_vio_->AddHandrailMeasurement(handrail_points_measurement);
-    // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
-    if (estimated_world_T_handrail_) {
-      const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.sensor_T_handrail).inverse();
-      // 0 value is default, 1 means endpoints seen, 2 means none seen
-      // TODO(rsoussan): Change this once this is changed in handrail node
-      const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
-      handrail_pose_ =
-        lm::TimestampedHandrailPose(estimated_world_T_handrail_->pose * handrail_T_perch_cam *
-                                      graph_vio_initializer_.params().calibration.body_T_perch_cam.inverse(),
-                                    handrail_points_measurement.timestamp, accurate_z_position,
-                                    graph_vio_initializer_.params().handrail.length,
-                                    graph_vio_initializer_.params().handrail.distance_to_wall);
-    }
-  }
 }
 
 void GraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
@@ -281,80 +193,6 @@ boost::optional<const GraphVIO&> GraphVIOWrapper::graph_vio() const {
   return *graph_vio_;
 }
 
-void GraphVIOWrapper::MarkWorldTDockForResettingIfNecessary() {
-  if (estimate_world_T_dock_using_loc_) reset_world_T_dock_ = true;
-}
-
-void GraphVIOWrapper::MarkWorldTHandrailForResetting() { reset_world_T_handrail_ = true; }
-
-void GraphVIOWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  const auto latest_combined_nav_state = LatestCombinedNavState();
-  if (!latest_combined_nav_state) {
-    LogError("ResetWorldTDockIfNecessary: Failed to get latest combined nav state.");
-    return;
-  }
-  // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
-  const gtsam::Pose3 dock_T_body = lc::PoseFromMsgWithExtrinsics(
-    visual_landmarks_msg.pose, graph_vio_initializer_.params().calibration.body_T_dock_cam.inverse());
-  estimated_world_T_dock_ = latest_combined_nav_state->pose() * dock_T_body.inverse();
-}
-
-void GraphVIOWrapper::ResetWorldTHandrailIfNecessary(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
-  const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
-  // Update old handrail estimate with new one if an accurate z position is now avaible and wasn't previously
-  const bool update_with_new_z_position =
-    accurate_z_position && estimated_world_T_handrail_ && !estimated_world_T_handrail_->accurate_z_position;
-  if (!reset_world_T_handrail_ && !update_with_new_z_position) return;
-
-  const auto latest_combined_nav_state = LatestCombinedNavState();
-  if (!latest_combined_nav_state) {
-    LogError("ResetWorldTDockIfNecessary: Failed to get latest combined nav state.");
-    return;
-  }
-  // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
-  const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.sensor_T_handrail).inverse();
-  const gtsam::Pose3 handrail_T_body =
-    handrail_T_perch_cam * graph_vio_initializer_.params().calibration.body_T_perch_cam.inverse();
-  estimated_world_T_handrail_ = lm::TimestampedHandrailPose(
-    latest_combined_nav_state->pose() * handrail_T_body.inverse(), latest_combined_nav_state->timestamp(),
-    accurate_z_position, graph_vio_initializer_.params().handrail.length,
-    graph_vio_initializer_.params().handrail.distance_to_wall);
-  reset_world_T_handrail_ = false;
-}
-
-gtsam::Pose3 GraphVIOWrapper::estimated_world_T_dock() const { return estimated_world_T_dock_; }
-
-boost::optional<lm::TimestampedHandrailPose> GraphVIOWrapper::estimated_world_T_handrail() const {
-  return estimated_world_T_handrail_;
-}
-
-boost::optional<geometry_msgs::PoseStamped> GraphVIOWrapper::LatestSparseMappingPoseMsg() const {
-  if (!sparse_mapping_pose_) {
-    LogWarningEveryN(50, "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.");
-    return boost::none;
-  }
-
-  return PoseMsg(*sparse_mapping_pose_);
-}
-
-boost::optional<geometry_msgs::PoseStamped> GraphVIOWrapper::LatestARTagPoseMsg() const {
-  if (!ar_tag_pose_) {
-    LogWarningEveryN(50, "LatestARTagPoseMsg: Failed to get latest ar tag pose msg.");
-    return boost::none;
-  }
-
-  return PoseMsg(*ar_tag_pose_);
-}
-
-boost::optional<geometry_msgs::PoseStamped> GraphVIOWrapper::LatestHandrailPoseMsg() const {
-  if (!handrail_pose_) {
-    LogWarningEveryN(50, "LatestHandrailPoseMsg: Failed to get latest handrail pose msg.");
-    return boost::none;
-  }
-
-  return PoseMsg(*handrail_pose_);
-}
-
 boost::optional<lc::CombinedNavState> GraphVIOWrapper::LatestCombinedNavState() const {
   if (!graph_vio_) {
     LogWarningEveryN(50, "LatestCombinedNavState: Graph localizater not initialized yet.");
@@ -368,14 +206,14 @@ boost::optional<lc::CombinedNavState> GraphVIOWrapper::LatestCombinedNavState() 
   return latest_combined_nav_state;
 }
 
-boost::optional<ff_msgs::GraphState> GraphVIOWrapper::LatestLocalizationStateMsg() {
+boost::optional<ff_msgs::GraphState> GraphVIOWrapper::LatestVIOStateMsg() {
   if (!graph_vio_) {
-    LogDebugEveryN(50, "LatestLocalizationMsg: Graph localizater not initialized yet.");
+    LogDebugEveryN(50, "LatestVIOMsg: Graph VIO not initialized yet.");
     return boost::none;
   }
   const auto combined_nav_state_and_covariances = graph_vio_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LogDebugEveryN(50, "LatestLocalizationMsg: No combined nav state and covariances available.");
+    LogDebugEveryN(50, "LatestVIOMsg: No combined nav state and covariances available.");
     return boost::none;
   }
   const auto graph_state_msg =
@@ -387,28 +225,28 @@ boost::optional<ff_msgs::GraphState> GraphVIOWrapper::LatestLocalizationStateMsg
   return graph_state_msg;
 }
 
-boost::optional<ff_msgs::LocalizationGraph> GraphVIOWrapper::LatestLocalizationGraphMsg() const {
+boost::optional<ff_msgs::VIOGraph> GraphVIOWrapper::LatestVIOGraphMsg() const {
   if (!graph_vio_) {
-    LogWarningEveryN(50, "LatestGraphMsg: Graph localizater not initialized yet.");
+    LogWarningEveryN(50, "LatestVIOGraphMsg: Graph VIO not initialized yet.");
     return boost::none;
   }
   return GraphMsg(*graph_vio_);
 }
 
-void GraphVIOWrapper::SaveLocalizationGraphDotFile() const {
+void GraphVIOWrapper::SaveGraphDotFile() const {
   if (graph_vio_) graph_vio_->SaveGraphDotFile();
 }
 
-boost::optional<const GraphVIOStats&> GraphVIOWrapper::graph_vio_stats() const {
+boost::optional<const GraphVIOStats&> GraphVIOWrapper::graph_stats() const {
   if (!graph_vio_) {
     LogDebug("GraphStats: Failed to get graph stats.");
     return boost::none;
   }
-  return graph_vio_->graph_vio_stats();
+  return graph_vio_->graph_stats();
 }
 
-bool GraphVIOWrapper::publish_localization_graph() const { return publish_localization_graph_; }
+bool GraphVIOWrapper::publish_graph() const { return publish_graph_; }
 
-bool GraphVIOWrapper::save_localization_graph_dot_file() const { return save_localization_graph_dot_file_; }
+bool GraphVIOWrapper::save_graph_dot_file() const { return save_graph_dot_file_; }
 
 }  // namespace graph_vio

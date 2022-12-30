@@ -18,13 +18,10 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_WRAPPER_H_
 #define GRAPH_VIO_GRAPH_VIO_WRAPPER_H_
 
-#include <ff_msgs/DepthOdometry.h>
-#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
-#include <ff_msgs/LocalizationGraph.h>
-#include <ff_msgs/VisualLandmarks.h>
+#include <ff_msgs/VIOGraph.h>
 #include <graph_vio/feature_counts.h>
 #include <graph_vio/graph_vio.h>
 #include <graph_vio/graph_vio_initializer.h>
@@ -32,9 +29,6 @@
 #include <graph_vio/sanity_checker.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
-#include <localization_measurements/matched_projections_measurement.h>
-#include <localization_measurements/timestamped_handrail_pose.h>
-#include <localization_measurements/timestamped_pose.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/Imu.h>
@@ -45,7 +39,7 @@
 
 namespace graph_vio {
 // Handles initialization of parameters, biases, and initial pose for graph
-// localizer.  Provides callbacks that can be used by a ROS or non-ROS system
+// VIO.  Provides callbacks that can be used by a ROS or non-ROS system
 // (i.e. graph_bag, which does not use a ROS core, vs. graph_vio_nodelet,
 // which is used when running live).
 class GraphVIOWrapper {
@@ -53,17 +47,11 @@ class GraphVIOWrapper {
   explicit GraphVIOWrapper(const std::string& graph_config_path_prefix = "");
 
   // Assumes previous bias estimates are available and uses these.
-  void ResetLocalizer();
+  void ResetVIO();
 
-  void ResetBiasesAndLocalizer();
+  void ResetBiasesAndVIO();
 
-  void ResetBiasesFromFileAndResetLocalizer();
-
-  boost::optional<geometry_msgs::PoseStamped> LatestSparseMappingPoseMsg() const;
-
-  boost::optional<geometry_msgs::PoseStamped> LatestARTagPoseMsg() const;
-
-  boost::optional<geometry_msgs::PoseStamped> LatestHandrailPoseMsg() const;
+  void ResetBiasesFromFileAndResetVIO();
 
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
@@ -77,14 +65,6 @@ class GraphVIOWrapper {
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 
-  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
-
-  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
-
-  void DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg);
-
-  void DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
-
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
@@ -93,55 +73,31 @@ class GraphVIOWrapper {
 
   boost::optional<const GraphVIO&> graph_vio() const;
 
-  void MarkWorldTDockForResettingIfNecessary();
+  void SaveGraphDotFile() const;
 
-  void MarkWorldTHandrailForResetting();
+  boost::optional<const GraphVIOStats&> graph_stats() const;
 
-  void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+  bool publish_graph() const;
 
-  void ResetWorldTHandrailIfNecessary(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
-
-  gtsam::Pose3 estimated_world_T_dock() const;
-
-  boost::optional<localization_measurements::TimestampedHandrailPose> estimated_world_T_handrail() const;
-
-  void SaveLocalizationGraphDotFile() const;
-
-  boost::optional<const GraphVIOStats&> graph_vio_stats() const;
-
-  bool publish_localization_graph() const;
-
-  bool save_localization_graph_dot_file() const;
+  bool save_graph_dot_file() const;
 
  private:
   void InitializeGraph();
 
-  bool CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const localization_common::Time timestamp) const;
+  bool CheckPoseSanity(const gtsam::Pose3& pose, const localization_common::Time timestamp) const;
 
   bool CheckCovarianceSanity() const;
 
   std::unique_ptr<GraphVIO> graph_vio_;
-  // TODO(rsoussan): Make graph localizer wrapper params
-  bool publish_localization_graph_;
-  bool save_localization_graph_dot_file_;
+  // TODO(rsoussan): Make graph vio wrapper params
+  bool publish_graph_;
+  bool save_graph_dot_file_;
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphVIOInitializer graph_vio_initializer_;
   FeatureCounts feature_counts_;
-  // world_T_body poses using sensor measurements
-  // TODO(rsoussan): Rename these? world_T_body_sensor_name?
-  boost::optional<localization_measurements::TimestampedPose> sparse_mapping_pose_;
-  boost::optional<localization_measurements::TimestampedPose> ar_tag_pose_;
-  boost::optional<localization_measurements::TimestampedHandrailPose> handrail_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;
-  gtsam::Pose3 estimated_world_T_dock_;
-  boost::optional<localization_measurements::TimestampedHandrailPose> estimated_world_T_handrail_;
-  bool reset_world_T_dock_;
-  bool reset_world_T_handrail_;
-  bool estimate_world_T_dock_using_loc_;
-  int ar_min_num_landmarks_;
-  int sparse_mapping_min_num_landmarks_;
   localization_measurements::FanSpeedMode fan_speed_mode_;
 };
 }  // namespace graph_vio
