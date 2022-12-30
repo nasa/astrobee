@@ -24,16 +24,8 @@
 #include <graph_vio/depth_odometry_factor_adder_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_params.h>
-#include <localization_measurements/depth_odometry_measurement.h>
-#include <localization_measurements/plane.h>
 
 namespace graph_vio {
-localization_measurements::Plane RandomPlane();
-
-localization_measurements::DepthOdometryMeasurement DepthOdometryMeasurementFromPose(
-  const Eigen::Isometry3d& pose, const localization_common::Time source_time,
-  const localization_common::Time target_time);
-
 CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams();
 
 graph_optimizer::GraphOptimizerParams DefaultGraphOptimizerParams();
@@ -43,7 +35,5 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams();
 GraphInitializerParams DefaultGraphInitializerParams();
 
 GraphVIOParams DefaultGraphVIOParams();
-
-DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams();
 }  // namespace graph_vio
 #endif  // GRAPH_VIO_TEST_UTILITIES_H_

@@ -25,26 +25,6 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace go = graph_optimizer;
 
-localization_measurements::Plane RandomPlane() {
-  gtsam::Point3 point = lc::RandomPoint3d();
-  gtsam::Vector3 normal = lc::RandomVector3d().normalized();
-  return localization_measurements::Plane(point, normal);
-}
-
-lm::DepthOdometryMeasurement DepthOdometryMeasurementFromPose(const Eigen::Isometry3d& pose, const lc::Time source_time,
-                                                              const lc::Time target_time) {
-  lm::Odometry odometry;
-  odometry.source_time = source_time;
-  odometry.target_time = target_time;
-  odometry.sensor_F_source_T_target.pose = pose;
-  odometry.sensor_F_source_T_target.covariance = Eigen::Matrix<double, 6, 6>::Identity();
-  odometry.body_F_source_T_target.pose = pose;
-  odometry.body_F_source_T_target.covariance = Eigen::Matrix<double, 6, 6>::Identity();
-  std::vector<Eigen::Vector3d> empty_points;
-  lm::DepthCorrespondences correspondences(empty_points, empty_points);
-  return lm::DepthOdometryMeasurement(odometry, correspondences, target_time);
-}
-
 CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams() {
   CombinedNavStateGraphValuesParams params;
   params.ideal_duration = 3;
@@ -86,7 +66,6 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
 
 GraphInitializerParams DefaultGraphInitializerParams() {
   GraphInitializerParams params;
-  params.global_T_body_start = gtsam::Pose3::identity();
   params.global_V_body_start = gtsam::Velocity3::Zero();
   params.num_bias_estimation_measurements = 1;
   params.start_time = 0;
@@ -109,22 +88,6 @@ GraphVIOParams DefaultGraphVIOParams() {
   params.graph_optimizer = DefaultGraphOptimizerParams();
   params.graph_initializer = DefaultGraphInitializerParams();
   params.huber_k = 1.345;
-  return params;
-}
-
-DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams() {
-  DepthOdometryFactorAdderParams params;
-  params.enabled = true;
-  params.huber_k = 1.345;
-  params.noise_scale = 1.0;
-  params.use_points_between_factor = false;
-  params.position_covariance_threshold = 100;
-  params.orientation_covariance_threshold = 100;
-  params.point_to_point_error_threshold = 100.0;
-  params.pose_translation_norm_threshold = 100.0;
-  params.max_num_points_between_factors = 100;
-  params.body_T_sensor = gtsam::Pose3::identity();
-  params.enabled = true;
   return params;
 }
 }  // namespace graph_vio

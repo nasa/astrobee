@@ -1,5 +1,4 @@
 - update utilities
-- update stats
 - compile!
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
