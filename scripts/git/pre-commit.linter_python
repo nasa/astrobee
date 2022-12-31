@@ -17,10 +17,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-files=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
+# We have to exclude the undesired suffixes here because of https://github.com/psf/black/issues/438
+files_black=$(git diff --diff-filter=d --cached --name-only | grep -v '\.launch\.py$' | grep '\.py$')
+files_isort=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
 
 # If files is empty exit success
-if [ -z "${files}" ]; then
+if [ -z "${files_isort}" ]; then
   echo "=================================================="
   echo "  No Python files changed, no checks needed."
   exit 0
@@ -43,7 +45,7 @@ if [ "$ans" -ne "0" ]; then
     exit 0
 fi
 
-echo "=================================================="
+echo "================================================== ${files_black}"
 echo "  Analysing python code style with 'black'."
 
 # Change black's default files to exclude:
@@ -55,21 +57,21 @@ echo "  Analysing python code style with 'black'."
 black_exclude="(/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|dist)/|\.launch\.py\$)"
 
 # This check the files but they will not be commited
-if $(black . --include ${files} --exclude "$black_exclude" --check --quiet); then
+if $(black . --include ${files_black} --exclude "$black_exclude" --check --quiet); then
     echo "Linter checks using 'black' passed."
 else
     echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
-    black . --include ${files} --exclude "$black_exclude"
+    black . --include ${files_black} --exclude "$black_exclude"
     failed_lint=true
 fi
 
-echo "=================================================="
+echo "==================================================${files_isort}"
 echo "  Analysing python code style with 'isort'."
-if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
+if $(isort ${files_isort} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
     echo "Linter checks using 'isort' passed."
 else
     echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
-  isort ${files} --extend-skip cmake --profile black >/dev/null
+  isort ${files_isort} --extend-skip cmake --profile black >/dev/null
   failed_lint=true
 fi
 
