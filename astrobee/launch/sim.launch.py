@@ -19,10 +19,8 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    robot=launch_arg( "robot", default_value=os.getenv("ASTROBEE_ROBOT", "sim"),
-                             description="Robot name")
     return LaunchDescription([
-        robot,
+        launch_arg("robot",  default_value=os.getenv("ASTROBEE_ROBOT", "sim"),description="Robot name"),
         launch_arg("world",  default_value=os.getenv("ASTROBEE_WORLD", "iss"),
                             description="World name"),
 
@@ -66,16 +64,13 @@ def generate_launch_description():
                            condition=LaunchConfigurationEquals("world", "iss")),
         launch_arg("pose", default_value="0 0 -0.7 0 0 0 1",
                            condition=LaunchConfigurationEquals("world", "granite")),
-
         # Multi-robot simulation
         launch_arg("honey", default_value="false", description="Insert honey robot"),
         launch_arg("bumble", default_value="false", description="Insert bumble robot"),
         launch_arg("queen", default_value="false", description="Insert queen robot"),
-
         launch_arg("honey_pose",  default_value="11 -7 4.8 0 0 0 1",  description="Overwrite honey's pose"),
         launch_arg("bumble_pose", default_value="11 -4 4.8 0 0 0 1",  description="Overwrite bumble's pose"),
         launch_arg("queen_pose",  default_value="11 -10 4.8 0 0 0 1", description="Use to overwrite queen's pose"),
-
         # Make sure all environment variables are set for controller
         # Override the robot and world environment variables all the time. The
         # environment variables are the default if they are set. So in this
@@ -84,15 +79,13 @@ def generate_launch_description():
         # this will do.
         SetEnvironmentVariable(name="ASTROBEE_ROBOT", value=os.getenv("ASTROBEE_ROBOT", LaunchConfiguration("robot"))),
         SetEnvironmentVariable(name="ASTROBEE_WORLD", value=os.getenv("ASTROBEE_WORLD", LaunchConfiguration("world"))),
-
         SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",    value=os.getenv("ASTROBEE_CONFIG_DIR",    get_path("config"))),
         SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",  value=os.getenv("ASTROBEE_RESOURCE_DIR",  get_path("resources"))),
         SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE", value=os.getenv("ROSCONSOLE_CONFIG_FILE", get_path("resources/logging.config"))),
-        
+
         # Declare our global logging format
         SetEnvironmentVariable(name="RCUTILS_CONSOLE_OUTPUT_FORMAT",
             value="[{severity} {time}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})"),
-
         # Always launch on the local machine
         #   <group>
         #     <machine name ="local" address="localhost" default="true"/>
@@ -135,7 +128,6 @@ def generate_launch_description():
             condition=LaunchConfigurationNotEquals("rec", ""),
             launch_arguments={"bag": LaunchConfiguration("rec")}.items(),
         ),
-
         #   <!-- Allow the simulator to be optionally launched remotely-->
         #   <!-- Connect and update environment variables if required -->
         #   <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"

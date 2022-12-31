@@ -18,9 +18,9 @@
 
 #include <ff_util/ff_component.h>
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_nodelet");
-
 namespace ff_util {
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_nodelet");
 
 namespace fs = boost::filesystem;
 
@@ -32,14 +32,15 @@ FreeFlyerComponent::FreeFlyerComponent(
   sleeping_(false),
   heartbeat_queue_size_(5),
   node_name_(node) {
+    Setup(node);
 }
 
-FreeFlyerComponent::FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
-  node_(std::make_shared<rclcpp::Node>("", options)),
-  autostart_hb_timer_(autostart_hb_timer),
-  initialized_(false),
-  node_name_("") {
-}
+// FreeFlyerComponent::FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
+//   node_(std::make_shared<rclcpp::Node>("", options)),
+//   autostart_hb_timer_(autostart_hb_timer),
+//   initialized_(false),
+//   node_name_("") {
+// }
 
 FreeFlyerComponent::~FreeFlyerComponent() {
 }
@@ -47,8 +48,8 @@ FreeFlyerComponent::~FreeFlyerComponent() {
 // Called directly by Gazebo and indirectly through onInit() by nodelet
 void FreeFlyerComponent::Setup(std::string plugin_name) {
   // Get the platform name from the node handle (roslaunch group name attribute)
-  if (std::string(node_->get_namespace()).size() > 1)
-    platform_ = std::string(node_->get_namespace()).substr(1);
+  if (std::string(node_->get_namespace()).size() > 1) platform_ = std::string(node_->get_namespace()).substr(1);
+  FF_ERROR_STREAM("platform_" << platform_);
 
   // If not set, try and grab the node name from the launch file
   if (node_name_.empty()) {
@@ -67,6 +68,9 @@ void FreeFlyerComponent::Setup(std::string plugin_name) {
     }
   }
 
+    FF_ERROR_STREAM("node_name_" << node_name_);
+    FF_ERROR_STREAM("node_->get_name()" << node_->get_name());
+
   // Read in faults for this node
   param_config_.AddFile("faults.config");
   param_config_.AddFile("context.config");
@@ -75,7 +79,7 @@ void FreeFlyerComponent::Setup(std::string plugin_name) {
   // Set node name and manager in heartbeat message since it won't change
   heartbeat_.node = node_name_;
   // TODO(Katie) What do we set the nodelet manager to be
-  // heartbeat_.nodelet_manager = ros::this_node::getName();
+  // heartbeat_.nodelet_manager = node_->get_name();
 
   // Immediately, setup a publisher for faults coming from this node
   // Topic needs to be latched!!!! for initialization faults

@@ -20,50 +20,24 @@ project(framestore)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
-
-# Build for ROS1
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_definitions(-DROS1)
-  ## Find catkin macros and libraries
-  find_package(catkin2 REQUIRED COMPONENTS
-    roscpp
-    nodelet
-    pluginlib
-    ff_util
-    tf2_ros
-    geometry_msgs
-    config_reader
-  )
-
-  # Call catkin
-  catkin_package(
-    CATKIN_DEPENDS
-      roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
-  )
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 # Build for ROS2
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  add_definitions(-DROS2)
+add_definitions(-DROS2)
 
-  # Find amend and libraries
-  find_package(ament_cmake REQUIRED)
-  find_package(rclcpp REQUIRED)
-  find_package(rclcpp_components REQUIRED)
-  find_package(rcutils REQUIRED)
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rcutils REQUIRED)
 
-  find_package(ff_common REQUIRED)
-  find_package(ff_util REQUIRED)
-  find_package(ff_msgs REQUIRED)
-  find_package(tf2_ros REQUIRED)
-  find_package(geometry_msgs REQUIRED)
-  find_package(config_reader REQUIRED)
-  find_package(msg_conversions REQUIRED)
-
-  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
-
-endif()
+find_package(ff_common REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(config_reader REQUIRED)
+find_package(msg_conversions REQUIRED)
 
 ###########
 ## Build ##
@@ -72,38 +46,28 @@ endif()
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}         # ROS1
-  ${ff_common_INCLUDE_DIRS}      # ROS2
-  ${config_reader_INCLUDE_DIRS}  # ROS2
-  ${msg_conversions_INCLUDE_DIRS}  # ROS2
+  ${ff_common_INCLUDE_DIRS}
+  ${config_reader_INCLUDE_DIRS}
+  ${msg_conversions_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(framestore
+add_library(framestore SHARED
   src/framestore.cc
 )
-target_link_libraries(framestore ${catkin_LIBRARIES})
-
+target_compile_definitions(framestore
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(framestore rclcpp rclcpp_components ff_util config_reader msg_conversions)
+rclcpp_components_register_nodes(framestore "mobility::FrameStore")
 
 ## Declare a C++ executable: global_transforms
 add_executable(global_transforms tools/global_transforms.cc)
 target_link_libraries(global_transforms
-  framestore gflags glog ${catkin_LIBRARIES})
-
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-add_dependencies(framestore ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(global_transforms ${catkin_EXPORTED_TARGETS})
-
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-ament_target_dependencies(framestore rclcpp rclcpp_components ff_util config_reader msg_conversions)
-
+  framestore gflags glog)
 ament_target_dependencies(global_transforms rclcpp config_reader msg_conversions tf2_ros)
 
 ament_export_include_directories(include)
 ament_package()
-
-endif()
 
 #############
 ## Install ##
@@ -111,14 +75,9 @@ endif()
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Install C++ executables
@@ -131,6 +90,6 @@ install(CODE "execute_process(
   )")
 
 # Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)

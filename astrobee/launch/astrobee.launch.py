@@ -20,7 +20,6 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-
     return LaunchDescription([
         # Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
         # Set world and world correctly; environment variable over rule default -->
@@ -54,20 +53,20 @@ def generate_launch_description():
         DeclareLaunchArgument("bag", default_value=""),
 
         # Set the TF prefix, create a robot description and joint state publisher
-        Node(
-            package="robot_state_publisher",
-            namespace="",
-            executable="robot_state_publisher",
-            name="astrobee_state_publisher",
-            parameters=[{'robot_description': ParameterValue(
-                Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
-                                                                      ' world:="',       LaunchConfiguration('world'),
-                                                                      '" top_aft:="',   LaunchConfiguration('top_aft'),
-                                                                      '" bot_aft:="',   LaunchConfiguration('bot_aft'),
-                                                                      '" bot_front:="', LaunchConfiguration('bot_front'),
-                                                                      '" ns:="_',       LaunchConfiguration('ns'),
-                                                                      '" prefix:="',    LaunchConfiguration('ns'), '/"' ]))}]
-        ),
+        # Node(
+        #     package="robot_state_publisher",
+        #     namespace="",
+        #     executable="robot_state_publisher",
+        #     name="astrobee_state_publisher",
+        #     parameters=[{'robot_description': ParameterValue(
+        #         Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
+        #                 ' world:="',      LaunchConfiguration('world'),
+        #                 '" top_aft:="',   LaunchConfiguration('top_aft'),
+        #                 '" bot_aft:="',   LaunchConfiguration('bot_aft'),
+        #                 '" bot_front:="', LaunchConfiguration('bot_front'), 
+        #                 '" ns:="_',       LaunchConfiguration('ns'),
+        #                 '" prefix:="',    LaunchConfiguration('ns'), '/"' ]))}]
+        # ),
 
 
         # If we need to load synthetic drivers (we are not running on a real robot)

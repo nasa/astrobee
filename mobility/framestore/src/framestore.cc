@@ -17,9 +17,9 @@
  */
 
 #include <ff_common/ff_ros.h>
+
 // Standard includes
 #include <ff_util/ff_component.h>
-// #include <ff_util/config_server.h>
 
 // Config reader
 #include <config_reader/config_reader.h>
@@ -43,11 +43,12 @@ namespace mobility {
 
 class FrameStore : public ff_util::FreeFlyerComponent {
  public:
-  explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options) {}
+  explicit FrameStore(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options, "framestore") {}
   ~FrameStore() {}
 
  protected:
   void Initialize(NodeHandle node) {
+    node_ = node;
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node);
 
     // Set custom config path
@@ -125,7 +126,7 @@ class FrameStore : public ff_util::FreeFlyerComponent {
   }
 
  protected:
-  NodeHandle ROS_NODE_VAR;
+  NodeHandle node_;
   ff_util::FreeFlyerTimer timer_;
   config_reader::ConfigReader config_;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_;

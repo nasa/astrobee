@@ -20,53 +20,22 @@ project(msg_conversions)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 find_package(Eigen3 REQUIRED)
 
-# Build for ROS1
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_definitions(-DROS1)
-  ## Find catkin macros and libraries
-  find_package(catkin2 REQUIRED COMPONENTS
-    roscpp
-    message_runtime
-    std_msgs
-    geometry_msgs
-    config_reader
-    ff_msgs
-    tf2
-    tf2_ros
-  )
+add_definitions(-DROS2)
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 
-
-  catkin_package(
-    LIBRARIES ${PROJECT_NAME}
-    INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs config_reader tf2 tf2_ros
-  )
-
-# Build for ROS2
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  add_definitions(-DROS2)
-  # Find amend and libraries
-  find_package(ament_cmake REQUIRED)
-  find_package(rclcpp REQUIRED)
-
-  find_package(std_msgs REQUIRED)
-  find_package(geometry_msgs REQUIRED)
-  find_package(config_reader REQUIRED)
-  find_package(ff_common REQUIRED)
-  find_package(ff_msgs REQUIRED)
-  find_package(tf2 REQUIRED)
-  find_package(tf2_ros REQUIRED)
-
-
-  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_LIB_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
-
-endif()
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(config_reader REQUIRED)
+find_package(ff_common REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 ###########
 ## Build ##
@@ -84,49 +53,42 @@ include_directories(
 add_library(msg_conversions
   src/msg_conversions.cc
 )
-target_link_libraries(msg_conversions ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
+# target_link_libraries(msg_conversions ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
+ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs ff_common)
+ament_export_targets(msg_conversions HAS_LIBRARY_TARGET)
 
 ## Declare a C++ executable: landmark_msg_cnv
 add_executable(landmark_msg_cnv tools/landmark_msg_cnv.cc)
 target_link_libraries(landmark_msg_cnv
-  msg_conversions gflags ${catkin_LIBRARIES})
+  msg_conversions gflags)
+ament_target_dependencies(landmark_msg_cnv rclcpp ff_msgs ff_common)
 
 ## Declare a C++ executable: pose_stamped_msg_cnv
 add_executable(pose_stamped_msg_cnv tools/pose_stamped_msg_cnv.cc)
 target_link_libraries(pose_stamped_msg_cnv
-  msg_conversions gflags ${catkin_LIBRARIES})
-
-
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-add_dependencies(msg_conversions ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(landmark_msg_cnv ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(pose_stamped_msg_cnv ${catkin_EXPORTED_TARGETS})
-
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs)
-ament_export_targets(msg_conversions_export HAS_LIBRARY_TARGET)
-
-ament_target_dependencies(landmark_msg_cnv rclcpp ff_common)
-
+  msg_conversions gflags )
 ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
-
-ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
-ament_package()
-
-endif()
 
 #############
 ## Install ##
 #############
 
+ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  EXPORT msg_conversions_export
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT msg_conversions
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 # Install C++ executables
@@ -140,9 +102,4 @@ install(CODE "execute_process(
   ERROR_QUIET
   )")
 
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
+ament_package()

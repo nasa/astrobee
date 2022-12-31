@@ -20,22 +20,20 @@ project(ff_util)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 # Find amend and libraries
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 
 find_package(ff_common REQUIRED)
+find_package(config_reader REQUIRED)
 find_package(ff_msgs REQUIRED)
 find_package(msg_conversions REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 # find_package(actionlib REQUIRED)
-
-set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
-set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
-set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
 
 ###########
 ## Build ##
@@ -45,8 +43,7 @@ set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
-  ${msg_conversions_INCLUDE_DIRS}
+  ${config_reader_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
 
@@ -54,25 +51,18 @@ include_directories(
 add_library(ff_component
   src/ff_component/ff_component.cc
 )
-target_link_libraries(ff_component ${catkin_LIBRARIES})
-
-ament_target_dependencies(ff_component rclcpp ff_msgs diagnostic_msgs)
-# ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
+ament_target_dependencies(ff_component rclcpp ff_common ff_msgs diagnostic_msgs config_reader)
+ament_export_targets(ff_component HAS_LIBRARY_TARGET)
 
 # Declare C++ libraries
 add_library(ff_flight
   src/ff_flight/ff_flight.cc
 )
-target_link_libraries(ff_flight ${catkin_LIBRARIES})
-
-ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs tf2_geometry_msgs)
+ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs ff_common msg_conversions config_reader tf2_geometry_msgs)
 
 # ament_target_dependencies(config_server rclcpp diagnostic_msgs)
 
 # ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
-
-ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
-ament_package()
 
 ##########
 ## Test ##
@@ -140,21 +130,27 @@ endif()
 ## Install ##
 #############
 
-# Mark libraries for installation
-# install(TARGETS ff_nodelet ff_flight config_server config_client perf_timer
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-# )
+ament_export_include_directories(include)
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
 
+# Mark libraries for installation
+install(TARGETS ff_component ff_flight #config_server config_client perf_timer
+  EXPORT ff_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 # Mark launch files for installation
 install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)
+
+ament_package()

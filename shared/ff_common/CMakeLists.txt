@@ -21,40 +21,16 @@ cmake_minimum_required(VERSION 3.5)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC")
 
 find_package(Eigen3 REQUIRED)
 
-# Build for ROS1
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_definitions(-DROS1)
-
-  ## Find catkin macros and libraries
-  find_package(catkin2 REQUIRED COMPONENTS
-    roscpp
-    std_msgs
-    nodelet
-  )
-
-  catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES ff_common
-    CATKIN_DEPENDS roscpp std_msgs nodelet
-  )
-
 # Build for ROS2
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  add_definitions(-DROS2)
+add_definitions(-DROS2)
 
-  find_package(ament_cmake REQUIRED)
-  find_package(rclcpp REQUIRED)
-  find_package(std_msgs REQUIRED)
-
-  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_LIB_DESTINATION "lib/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_INCLUDE_DESTINATION "include/${PROJECT_NAME}")
-
-endif()
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 
 ###########
 ## Build ##
@@ -64,8 +40,7 @@ endif()
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS} # ROS1
-  ${rclcpp_INCLUDE_DIRS} # ROS2
+  ${rclcpp_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
 )
 
@@ -75,59 +50,43 @@ add_library(ff_common
   src/thread.cc
   src/utils.cc
 )
-target_link_libraries(ff_common gflags glog ${catkin_LIBRARIES} )
+target_link_libraries(ff_common gflags glog)
+ament_target_dependencies(ff_common rclcpp)
+ament_export_targets(ff_common HAS_LIBRARY_TARGET)
 
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-  add_dependencies(ff_common ${catkin_EXPORTED_TARGETS})
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
 
-  if(CATKIN_ENABLE_TESTING)
-    find_package(rostest REQUIRED)
-
-    add_rostest_gtest(test_thread
-      test/test_thread.test
-      test/test_thread.cc
-    )
-    target_link_libraries(test_thread
-      ff_common
-    )
-  endif()
-
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
-  ament_target_dependencies(ff_common rclcpp)
-  ament_export_targets(ff_common_export HAS_LIBRARY_TARGET)
-
-  if(BUILD_TESTING)
-    find_package(ament_cmake_gtest REQUIRED)
-
-    ament_add_gtest(test_thread
-      test/test_thread.test
-      test/test_thread.cc
-    )
-    target_link_libraries(test_thread
-      ff_common
-    )
-  endif()
-
-  ament_export_include_directories(include)
-  ament_package()
-
+  ament_add_gtest(test_thread
+    test/test_thread.test
+    test/test_thread.cc
+  )
+  target_link_libraries(test_thread
+    ff_common
+  )
 endif()
+
 
 #############
 ## Install ##
 #############
 
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  EXPORT ff_common_export
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+ament_export_include_directories(include)
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ff_common
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+ament_package()
