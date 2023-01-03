@@ -22,7 +22,6 @@
 #include <graph_optimizer/key_info.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
-#include <localization_measurements/feature_point.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>

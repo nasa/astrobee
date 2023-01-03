@@ -20,7 +20,6 @@
 
 namespace graph_optimizer {
 namespace lc = localization_common;
-namespace lm = localization_measurements;
 GraphValues::GraphValues(std::shared_ptr<gtsam::Values> values) : values_(std::move(values)) {}
 
 const gtsam::Values& GraphValues::values() const { return *values_; }

@@ -1,4 +1,5 @@
 - move feature tracker to vis common!
+  - /home/rsoussan/astrobee/src/localization/graph_optimizer/include/graph_optimizer/graph_values.h:25:53: fatal error: localization_measurements/feature_point.h: No such file or directory
   - move graph values to new package
   - compile factor_adders code!
   - update graph_vio code!
