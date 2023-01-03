@@ -64,23 +64,16 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 
-#if(CATKIN_ENABLE_TESTING)
-#  find_package(rostest REQUIRED)
-#  add_rostest_gtest(test_combined_nav_state_node_updater
-#    test/test_combined_nav_state_node_updater.test
-#    test/test_combined_nav_state_node_updater.cc
-#  )
-#  target_link_libraries(test_combined_nav_state_node_updater
-#    graph_vio ${catkin_LIBRARIES} 
-#  )
-# add_rostest_gtest(test_inverse_depth_projection_factor
-#    test/test_inverse_depth_projection_factor.test
-#    test/test_inverse_depth_projection_factor.cc
-#  )
-#  target_link_libraries(test_inverse_depth_projection_factor
-#    graph_vio ${catkin_LIBRARIES} 
-#  )
-#endif()
+if(CATKIN_ENABLE_TESTING)
+ find_package(rostest REQUIRED)
+ add_rostest_gtest(test_inverse_depth_projection_factor
+    test/test_inverse_depth_projection_factor.test
+    test/test_inverse_depth_projection_factor.cc
+  )
+  target_link_libraries(test_inverse_depth_projection_factor
+    graph_factors ${catkin_LIBRARIES} 
+  )
+endif()
 
 #############
 ## Install ##

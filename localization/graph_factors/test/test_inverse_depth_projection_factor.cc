@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_localizer/inverse_depth_projection_factor.h>
+#include <graph_factors/inverse_depth_projection_factor.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>

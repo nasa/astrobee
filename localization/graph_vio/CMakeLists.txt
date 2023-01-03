@@ -96,13 +96,6 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_combined_nav_state_node_updater
     graph_vio ${catkin_LIBRARIES} 
   )
- add_rostest_gtest(test_inverse_depth_projection_factor
-    test/test_inverse_depth_projection_factor.test
-    test/test_inverse_depth_projection_factor.cc
-  )
-  target_link_libraries(test_inverse_depth_projection_factor
-    graph_vio ${catkin_LIBRARIES} 
-  )
 endif()
 
 #############
