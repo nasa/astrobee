@@ -23,6 +23,7 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
+  graph_optimizer
 	localization_common
   vision_common
 )
@@ -37,7 +38,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS localization_common vision_common 
+  CATKIN_DEPENDS graph_optimizer localization_common vision_common 
 )
 
 ###########

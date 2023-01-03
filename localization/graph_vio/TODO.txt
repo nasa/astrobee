@@ -1,7 +1,7 @@
 - move feature tracker to vis common!
+  - move graph values to new package
   - compile factor_adders code!
   - update graph_vio code!
-- move graph values to new package
 - compile factor adders! graph vio!
 - move node updaters to new package
 - initialize graph with identity pose, set fixed!!!
