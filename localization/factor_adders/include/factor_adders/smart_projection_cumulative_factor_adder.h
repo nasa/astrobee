@@ -41,21 +41,21 @@ class SmartProjectionCumulativeFactorAdder
   void AddFactors(
     const FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
     graph_optimizer::FactorsToAdd& smart_factors_to_add,
-    std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>& added_points);
+    std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points);
   void AddAllowedFactors(
     const FeatureTrackLengthMap& feature_tracks, const double feature_track_min_separation,
     graph_optimizer::FactorsToAdd& smart_factors_to_add,
-    std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>& added_points);
+    std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points);
 
   const gtsam::SmartProjectionParams& smart_projection_params() const;
 
  private:
-  void AddSmartFactor(const std::vector<localization_measurements::FeaturePoint>& feature_track_points,
+  void AddSmartFactor(const std::vector<vision_common::FeaturePoint>& feature_track_points,
                       graph_optimizer::FactorsToAdd& smart_factors_to_add) const;
 
-  bool TooClose(const std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>&
-                  added_points,
-                const localization_measurements::FeaturePoint& point, const double feature_track_min_separation) const;
+  bool TooClose(const std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points,
+                const vision_common::FeaturePointlocalization_measurements::FeaturePoint& point,
+                const double feature_track_min_separation) const;
 
   std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
   gtsam::SmartProjectionParams smart_projection_params_;

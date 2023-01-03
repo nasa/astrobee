@@ -43,7 +43,7 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
 
 void SmartProjectionCumulativeFactorAdder::AddFactors(
   const FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
-  go::FactorsToAdd& smart_factors_to_add, std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points) {
+  go::FactorsToAdd& smart_factors_to_add, std::unordered_map<lm::FeatureId, vc::FeaturePoint>& added_points) {
   // Iterate in reverse order so longer feature tracks are prioritized
   for (auto feature_track_it = feature_tracks.crbegin(); feature_track_it != feature_tracks.crend();
        ++feature_track_it) {
@@ -85,7 +85,7 @@ std::vector<go::FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors()
     }
     const int spacing = longest_feature_track->MaxSpacing(params().max_num_points_per_factor);
 
-    std::unordered_map<lm::FeatureId, lm::FeaturePoint> added_points;
+    std::unordered_map<lm::FeatureId, vc::FeaturePoint> added_points;
     AddFactors(feature_tracks, spacing, params().feature_track_min_separation, smart_factors_to_add, added_points);
     if (static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
       // Zero min separation so any valid feature track is added as a fallback to try to add up to max_num_factors
@@ -103,7 +103,7 @@ std::vector<go::FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors()
   return {smart_factors_to_add};
 }
 
-void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::FeaturePoint>& feature_track_points,
+void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<vc::FeaturePoint>& feature_track_points,
                                                           go::FactorsToAdd& smart_factors_to_add) const {
   SharedRobustSmartFactor smart_factor;
   const int num_feature_track_points = feature_track_points.size();
@@ -129,7 +129,7 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::
 }
 
 bool SmartProjectionCumulativeFactorAdder::TooClose(
-  const std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points, const lm::FeaturePoint& point,
+  const std::unordered_map<lm::FeatureId, vc::FeaturePoint>& added_points, const lm::FeaturePoint& point,
   const double feature_track_min_separation) const {
   for (const auto& added_point_pair : added_points) {
     const auto& added_point = added_point_pair.second;
