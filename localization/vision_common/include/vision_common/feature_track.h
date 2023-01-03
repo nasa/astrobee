@@ -19,7 +19,7 @@
 #ifndef VISION_COMMON_FEATURE_TRACK_H_
 #define VISION_COMMON_FEATURE_TRACK_H_
 
-#include <localization_measurements/feature_point.h>
+#include <vision_common/feature_point.h>
 
 #include <map>
 #include <set>

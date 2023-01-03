@@ -20,8 +20,8 @@
 #define LOCALIZATION_MEASUREMENTS_FEATURE_POINTS_MEASUREMENT_H_
 
 #include <localization_common/time.h>
-#include <localization_measurements/feature_point.h>
 #include <localization_measurements/measurement.h>
+#include <vision_common/feature_point.h>
 
 #include <vector>
 

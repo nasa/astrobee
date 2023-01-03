@@ -1,7 +1,6 @@
 - move feature tracker to vis common!
-  - move feature_point from loc measurements to viz common??
+  - compile factor_adders code!
   - update graph_vio code!
-  - update factor_adders code!
 - move graph values to new package
 - compile factor adders! graph vio!
 - move node updaters to new package

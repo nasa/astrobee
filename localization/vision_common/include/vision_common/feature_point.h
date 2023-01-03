@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
-#define LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
+#ifndef VISION_COMMON_FEATURE_POINT_H_
+#define VISION_COMMON_FEATURE_POINT_H_
 
 #include <localization_common/time.h>
 
@@ -25,7 +25,7 @@
 
 #include <vector>
 
-namespace localization_measurements {
+namespace vision_common {
 using FeatureId = int;
 using ImageId = int;
 
@@ -52,6 +52,6 @@ struct FeaturePoint {
 };
 
 using FeaturePoints = std::vector<FeaturePoint>;
-}  // namespace localization_measurements
+}  // namespace vision_common
 
-#endif  // LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
+#endif  // VISION_COMMON_FEATURE_POINT_H_

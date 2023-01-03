@@ -19,10 +19,10 @@
 #ifndef VISION_COMMON_FEATURE_TRACKER_H_
 #define VISION_COMMON_FEATURE_TRACKER_H_
 
+#include <localization_common/time.h>
+#include <vision_common/feature_point.h>
 #include <vision_common/feature_track.h>
 #include <vision_common/feature_tracker_params.h>
-#include <localization_common/time.h>
-#include <localization_measurements/feature_point.h>
 
 #include <gtsam/geometry/Point2.h>
 
