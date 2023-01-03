@@ -25,14 +25,14 @@ static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_nodelet");
 namespace fs = boost::filesystem;
 
 FreeFlyerComponent::FreeFlyerComponent(
-  const rclcpp::NodeOptions & options, std::string const& node, bool autostart_hb_timer) :
-  node_(std::make_shared<rclcpp::Node>(node, options)),
+  const rclcpp::NodeOptions & options, std::string const& name, bool autostart_hb_timer) :
+  node_(std::make_shared<rclcpp::Node>(name, options)),
   autostart_hb_timer_(autostart_hb_timer),
   initialized_(false),
   sleeping_(false),
   heartbeat_queue_size_(5),
-  node_name_(node) {
-    Setup(node);
+  node_name_(name) {
+  Setup(name);
 }
 
 // FreeFlyerComponent::FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
@@ -42,10 +42,21 @@ FreeFlyerComponent::FreeFlyerComponent(
 //   node_name_("") {
 // }
 
+// For gazebo plugins only
+FreeFlyerComponent::FreeFlyerComponent(std::string const& name, bool autostart_hb_timer) :
+  autostart_hb_timer_(autostart_hb_timer),
+  initialized_(false),
+  node_name_(name) {
+}
+void FreeFlyerComponent::FreeFlyerComponentGazeboInit(rclcpp::Node::SharedPtr node) {
+  node_ = node;
+  Setup(node_name_);
+}
+
 FreeFlyerComponent::~FreeFlyerComponent() {
 }
 
-// Called directly by Gazebo and indirectly through onInit() by nodelet
+// Called at constructor time
 void FreeFlyerComponent::Setup(std::string plugin_name) {
   // Get the platform name from the node handle (roslaunch group name attribute)
   if (std::string(node_->get_namespace()).size() > 1) platform_ = std::string(node_->get_namespace()).substr(1);

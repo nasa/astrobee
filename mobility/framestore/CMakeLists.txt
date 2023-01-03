@@ -66,12 +66,11 @@ target_link_libraries(global_transforms
   framestore gflags glog)
 ament_target_dependencies(global_transforms rclcpp config_reader msg_conversions tf2_ros)
 
-ament_export_include_directories(include)
-ament_package()
-
 #############
 ## Install ##
 #############
+
+ament_export_include_directories(include)
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
@@ -93,3 +92,5 @@ install(CODE "execute_process(
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)
+
+ament_package()

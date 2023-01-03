@@ -45,7 +45,6 @@ find_package(tf2_ros REQUIRED)
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}         # ROS1
   ${config_reader_INCLUDE_DIRS}  # ROS2
 )
 

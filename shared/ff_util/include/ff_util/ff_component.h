@@ -70,12 +70,16 @@ class FreeFlyerComponent {
     RESOURCE  = 1
   };
 
-  // Use default name from freeflyer
-  // COMPOSITION_PUBLIC
+  // Use default name from freeflyer - crashes in ROS2
   // explicit FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
   // Explicitly specift the name
   explicit FreeFlyerComponent(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
+  // Explicitly specift the node from gazebo
+  explicit FreeFlyerComponent(std::string const& name, bool autostart_hb_timer = true);
+  void FreeFlyerComponentGazeboInit(rclcpp::Node::SharedPtr node);
+
+
   // Necessary ROS2 function for components
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
     return node_->get_node_base_interface();

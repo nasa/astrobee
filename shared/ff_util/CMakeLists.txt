@@ -64,6 +64,14 @@ ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs ff_common msg_c
 
 # ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
 
+
+#############
+## Linting ##
+#############
+
+find_package(ament_lint_auto REQUIRED)
+ament_lint_auto_find_test_dependencies()
+
 ##########
 ## Test ##
 ##########
@@ -126,9 +134,15 @@ if(BUILD_TESTING)
 
 endif()
 
+
 #############
 ## Install ##
 #############
+
+ament_export_dependencies(
+  config_reader
+  msg_conversions
+)
 
 ament_export_include_directories(include)
 
