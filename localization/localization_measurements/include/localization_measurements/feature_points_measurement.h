@@ -27,7 +27,7 @@
 
 namespace localization_measurements {
 struct FeaturePointsMeasurement : public Measurement {
-  FeaturePoints feature_points;
+  vision_common::FeaturePoints feature_points;
 };
 }  // namespace localization_measurements
 
