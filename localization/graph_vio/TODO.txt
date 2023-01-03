@@ -1,4 +1,8 @@
-- move factor adders to new package
+- move feature tracker to vis common!
+  - update graph_vio code!
+  - update factor_adders code!
+- move graph values to new package
+- compile factor adders! graph vio!
 - move node updaters to new package
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?

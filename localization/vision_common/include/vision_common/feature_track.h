@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_FEATURE_TRACK_H_
-#define GRAPH_VIO_FEATURE_TRACK_H_
+#ifndef VISION_COMMON_FEATURE_TRACK_H_
+#define VISION_COMMON_FEATURE_TRACK_H_
 
 #include <localization_measurements/feature_point.h>
 
@@ -25,7 +25,7 @@
 #include <set>
 #include <vector>
 
-namespace graph_vio {
+namespace vision_common {
 class FeatureTrack {
  public:
   using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
@@ -63,6 +63,6 @@ class FeatureTrack {
   localization_measurements::FeatureId id_;
   Points points_;
 };
-}  // namespace graph_vio
+}  // namespace vision_common
 
-#endif  // GRAPH_VIO_FEATURE_TRACK_H_
+#endif  // VISION_COMMON_FEATURE_TRACK_H_

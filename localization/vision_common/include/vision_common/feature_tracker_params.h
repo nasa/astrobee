@@ -15,16 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_FEATURE_TRACKER_PARAMS_H_
-#define GRAPH_VIO_FEATURE_TRACKER_PARAMS_H_
+#ifndef VISION_COMMON_FEATURE_TRACKER_PARAMS_H_
+#define VISION_COMMON_FEATURE_TRACKER_PARAMS_H_
 
-namespace graph_vio {
+namespace vision_common {
 struct FeatureTrackerParams {
   // Max duration, feature tracker trims measurements outside of this window or outside of graph window
   double sliding_window_duration;
   int smart_projection_adder_measurement_spacing;
   bool use_allowed_timestamps;
 };
-}  // namespace graph_vio
+}  // namespace vision_common
 
-#endif  // GRAPH_VIO_FEATURE_TRACKER_PARAMS_H_
+#endif  // VISION_COMMON_FEATURE_TRACKER_PARAMS_H_
