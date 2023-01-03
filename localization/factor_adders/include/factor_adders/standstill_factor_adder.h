@@ -19,7 +19,7 @@
 #ifndef FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 #define FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 
-#include <factor_adders/feature_tracker.h>
+#include <vision_common/feature_tracker.h>
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>

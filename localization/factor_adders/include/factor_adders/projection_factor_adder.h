@@ -20,7 +20,7 @@
 #define FACTOR_ADDERS_PROJECTION_FACTOR_ADDER_H_
 
 #include <factor_adders/feature_point_graph_values.h>
-#include <factor_adders/feature_tracker.h>
+#include <vision_common/feature_tracker.h>
 #include <factor_adders/projection_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>

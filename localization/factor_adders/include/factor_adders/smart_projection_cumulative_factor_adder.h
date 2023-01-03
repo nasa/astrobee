@@ -19,7 +19,7 @@
 #ifndef FACTOR_ADDERS_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
 #define FACTOR_ADDERS_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
 
-#include <factor_adders/feature_tracker.h>
+#include <vision_common/feature_tracker.h>
 #include <factor_adders/smart_projection_factor_adder_params.h>
 #include <graph_optimizer/cumulative_factor_adder.h>
 
