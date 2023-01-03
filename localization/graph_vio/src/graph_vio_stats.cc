@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <graph_vio/graph_vio_stats.h>
-#include <graph_vio/robust_smart_projection_pose_factor.h>
 #include <graph_vio/utilities.h>
 #include <graph_optimizer/utilities.h>
 

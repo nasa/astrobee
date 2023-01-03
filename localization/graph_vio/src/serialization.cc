@@ -32,7 +32,7 @@
 #include <gtsam/navigation/NavState.h>
 
 // Factors used in NonlinearFactorGraph
-#include <graph_vio/robust_smart_projection_pose_factor.h>
+#include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/slam/BetweenFactor.h>

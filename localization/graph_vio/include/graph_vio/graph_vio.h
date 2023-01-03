@@ -19,13 +19,13 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_H_
 #define GRAPH_VIO_GRAPH_VIO_H_
 
+#include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <graph_vio/combined_nav_state_node_updater.h>
 #include <graph_vio/combined_nav_state_node_updater_params.h>
 #include <graph_vio/feature_tracker.h>
 #include <graph_vio/feature_point_node_updater.h>
 #include <graph_vio/graph_vio_params.h>
 #include <graph_vio/graph_vio_stats.h>
-#include <graph_vio/robust_smart_projection_pose_factor.h>
 #include <graph_vio/projection_graph_action_completer.h>
 #include <graph_vio/projection_factor_adder.h>
 #include <graph_vio/smart_projection_cumulative_factor_adder.h>
