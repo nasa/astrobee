@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_vio/feature_tracker.h>
+#include <vision_common/feature_tracker.h>
 #include <localization_common/logger.h>
 
 namespace graph_vio {

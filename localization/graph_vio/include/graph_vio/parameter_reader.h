@@ -24,7 +24,7 @@
 #include <graph_vio/combined_nav_state_node_updater_params.h>
 #include <graph_vio/factor_params.h>
 #include <graph_vio/feature_point_node_updater_params.h>
-#include <graph_vio/feature_tracker_params.h>
+#include <vision_common/feature_tracker_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_nodelet_params.h>
 #include <graph_vio/graph_vio_params.h>

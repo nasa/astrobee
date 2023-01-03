@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_vio/feature_track.h>
+#include <vision_common/feature_track.h>
 #include <graph_vio/serialization.h>
 #include <graph_vio/utilities.h>
 #include <imu_integration/utilities.h>

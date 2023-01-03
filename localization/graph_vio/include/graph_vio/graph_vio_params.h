@@ -22,7 +22,7 @@
 #include <graph_vio/combined_nav_state_node_updater_params.h>
 #include <graph_vio/factor_params.h>
 #include <graph_vio/feature_point_node_updater_params.h>
-#include <graph_vio/feature_tracker_params.h>
+#include <vision_common/feature_tracker_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <localization_measurements/fan_speed_mode.h>

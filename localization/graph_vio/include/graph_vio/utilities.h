@@ -23,7 +23,7 @@
 #include <ff_msgs/SerializedGraph.h>
 #include <graph_vio/combined_nav_state_graph_values.h>
 #include <graph_vio/feature_counts.h>
-#include <graph_vio/feature_track.h>
+#include <vision_common/feature_track.h>
 #include <graph_vio/graph_vio.h>
 #include <graph_vio/graph_vio_initializer.h>
 #include <graph_vio/graph_vio_stats.h>

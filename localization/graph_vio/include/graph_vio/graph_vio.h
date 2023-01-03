@@ -22,7 +22,7 @@
 #include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <graph_vio/combined_nav_state_node_updater.h>
 #include <graph_vio/combined_nav_state_node_updater_params.h>
-#include <graph_vio/feature_tracker.h>
+#include <vision_common/feature_tracker.h>
 #include <graph_vio/feature_point_node_updater.h>
 #include <graph_vio/graph_vio_params.h>
 #include <graph_vio/graph_vio_stats.h>
