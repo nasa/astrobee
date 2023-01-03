@@ -28,25 +28,25 @@
 namespace vision_common {
 class FeatureTrack {
  public:
-  using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
-  explicit FeatureTrack(const localization_measurements::FeatureId id);
+  using Points = std::map<localization_common::Time, FeaturePoint>;
+  explicit FeatureTrack(const FeatureId id);
   FeatureTrack() {}
   void AddMeasurement(const localization_common::Time timestamp,
-                      const localization_measurements::FeaturePoint& feature_point);
+                      const FeaturePoint& feature_point);
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
   bool HasMeasurement(const localization_common::Time timestamp);
   const Points& points() const;
-  const localization_measurements::FeatureId& id() const;
+  const FeatureId& id() const;
   size_t size() const;
   bool empty() const;
-  std::vector<localization_measurements::FeaturePoint> AllowedPoints(
+  std::vector<FeaturePoint> AllowedPoints(
     const std::set<localization_common::Time>& allowed_timestamps) const;
-  std::vector<localization_measurements::FeaturePoint> LatestPointsInWindow(const double duration) const;
-  std::vector<localization_measurements::FeaturePoint> LatestPoints(const int spacing = 0) const;
+  std::vector<FeaturePoint> LatestPointsInWindow(const double duration) const;
+  std::vector<FeaturePoint> LatestPoints(const int spacing = 0) const;
   bool SpacingFits(const int spacing, const int max_num_points) const;
   int MaxSpacing(const int max_num_points) const;
   int ClosestSpacing(const int ideal_spacing, const int ideal_max_num_points) const;
-  boost::optional<localization_measurements::FeaturePoint> LatestPoint() const;
+  boost::optional<FeaturePoint> LatestPoint() const;
   boost::optional<localization_common::Time> PreviousTimestamp() const;
   boost::optional<localization_common::Time> LatestTimestamp() const;
   boost::optional<localization_common::Time> OldestTimestamp() const;
@@ -60,7 +60,7 @@ class FeatureTrack {
     ar& BOOST_SERIALIZATION_NVP(points_);
   }
 
-  localization_measurements::FeatureId id_;
+  FeatureId id_;
   Points points_;
 };
 }  // namespace vision_common

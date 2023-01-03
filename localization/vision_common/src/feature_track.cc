@@ -21,10 +21,9 @@
 
 namespace vision_common {
 namespace lc = localization_common;
-namespace lm = localization_measurements;
-FeatureTrack::FeatureTrack(const localization_measurements::FeatureId id) : id_(id) {}
+FeatureTrack::FeatureTrack(const FeatureId id) : id_(id) {}
 
-void FeatureTrack::AddMeasurement(const lc::Time timestamp, const lm::FeaturePoint& feature_point) {
+void FeatureTrack::AddMeasurement(const lc::Time timestamp, const FeaturePoint& feature_point) {
   points_.emplace(timestamp, feature_point);
 }
 
@@ -36,14 +35,14 @@ bool FeatureTrack::HasMeasurement(const lc::Time timestamp) { return (points_.co
 
 const FeatureTrack::Points& FeatureTrack::points() const { return points_; }
 
-const localization_measurements::FeatureId& FeatureTrack::id() const { return id_; }
+const FeatureId& FeatureTrack::id() const { return id_; }
 
 size_t FeatureTrack::size() const { return points_.size(); }
 
 bool FeatureTrack::empty() const { return points_.empty(); }
 
-std::vector<lm::FeaturePoint> FeatureTrack::AllowedPoints(const std::set<lc::Time>& allowed_timestamps) const {
-  std::vector<lm::FeaturePoint> allowed_points;
+std::vector<FeaturePoint> FeatureTrack::AllowedPoints(const std::set<lc::Time>& allowed_timestamps) const {
+  std::vector<FeaturePoint> allowed_points;
   // Start with oldest points
   for (auto point_it = points_.begin(); point_it != points_.end(); ++point_it) {
     if (allowed_timestamps.count(point_it->second.timestamp) <= 0) continue;
@@ -52,8 +51,8 @@ std::vector<lm::FeaturePoint> FeatureTrack::AllowedPoints(const std::set<lc::Tim
   return allowed_points;
 }
 
-std::vector<lm::FeaturePoint> FeatureTrack::LatestPointsInWindow(const double duration) const {
-  std::vector<lm::FeaturePoint> latest_points;
+std::vector<FeaturePoint> FeatureTrack::LatestPointsInWindow(const double duration) const {
+  std::vector<FeaturePoint> latest_points;
   const auto latest_timestamp = LatestTimestamp();
   if (!latest_timestamp) return {};
   const lc::Time oldest_allowed_time = *latest_timestamp - duration;
@@ -65,8 +64,8 @@ std::vector<lm::FeaturePoint> FeatureTrack::LatestPointsInWindow(const double du
   return latest_points;
 }
 
-std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) const {
-  std::vector<lm::FeaturePoint> latest_points;
+std::vector<FeaturePoint> FeatureTrack::LatestPoints(const int spacing) const {
+  std::vector<FeaturePoint> latest_points;
   int i = 0;
   // Start with latest points
   for (auto point_it = points_.rbegin(); point_it != points_.rend(); ++point_it) {
@@ -106,7 +105,7 @@ int FeatureTrack::ClosestSpacing(const int ideal_spacing, const int ideal_max_nu
   return 0;
 }
 
-boost::optional<lm::FeaturePoint> FeatureTrack::LatestPoint() const {
+boost::optional<FeaturePoint> FeatureTrack::LatestPoint() const {
   if (empty()) return boost::none;
   return points_.crbegin()->second;
 }

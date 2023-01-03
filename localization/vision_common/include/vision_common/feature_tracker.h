@@ -31,14 +31,14 @@
 #include <set>
 
 namespace vision_common {
-using FeatureTrackIdMap = std::map<localization_measurements::FeatureId, std::shared_ptr<FeatureTrack>>;
+using FeatureTrackIdMap = std::map<FeatureId, std::shared_ptr<FeatureTrack>>;
 using FeatureTrackLengthMap = std::multimap<int, std::shared_ptr<FeatureTrack>>;
 class FeatureTracker {
  public:
   explicit FeatureTracker(const FeatureTrackerParams& params = FeatureTrackerParams());
   // Update existing tracks and add new tracks.  Remove tracks without
   // detections.
-  void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
+  void UpdateFeatureTracks(const FeaturePoints& feature_points);
   const FeatureTrackIdMap& feature_tracks() const;
   const std::set<localization_common::Time>& smart_factor_timestamp_allow_list() const;
   const FeatureTrackLengthMap& feature_tracks_length_ordered() const;
@@ -46,7 +46,7 @@ class FeatureTracker {
   void RemoveUndetectedFeatures(const localization_common::Time& feature_point);
   void RemoveOldFeaturePointsAndSlideWindow(
     boost::optional<localization_common::Time> oldest_allowed_time = boost::none);
-  void AddOrUpdateTrack(const localization_measurements::FeaturePoint& feature_point);
+  void AddOrUpdateTrack(const FeaturePoint& feature_point);
   void UpdateLengthMap();
   void UpdateAllowList(const localization_common::Time& timestamp);
   void SlideAllowList(const localization_common::Time& oldest_allowed_time);
