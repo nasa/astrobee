@@ -18,12 +18,16 @@
 #ifndef VISION_COMMON_UTILITIES_H_
 #define VISION_COMMON_UTILITIES_H_
 
+#include <vision_common/feature_point.h>
+
 #include <Eigen/Geometry>
 
 #include <gtsam/base/Matrix.h>
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
+
+#include <vector>
 
 namespace vision_common {
 template <typename T>
@@ -48,6 +52,12 @@ Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const 
                                       const Eigen::VectorXd& distortion_params);
 
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
+
+// TODO(rsoussan): Rename these
+bool ValidPointSet(const int num_points, const double average_distance_from_mean,
+                   const double min_avg_distance_from_mean, const int min_num_points);
+
+double AverageDistanceFromMean(const std::vector<FeaturePoint>& points);
 
 // Implementation
 template <typename T>

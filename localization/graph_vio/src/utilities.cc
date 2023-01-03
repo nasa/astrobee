@@ -34,29 +34,6 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-bool ValidPointSet(const int num_points, const double average_distance_from_mean,
-                   const double min_avg_distance_from_mean, const int min_num_points) {
-  if (num_points < min_num_points) return false;
-  return (average_distance_from_mean >= min_avg_distance_from_mean);
-}
-
-double AverageDistanceFromMean(const std::vector<lm::FeaturePoint>& points) {
-  // Calculate mean point and avg distance from mean
-  Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
-  for (const auto& point : points) {
-    sum_of_points += point.image_point;
-  }
-  const Eigen::Vector2d mean_point = sum_of_points / points.size();
-
-  double sum_of_distances_from_mean = 0;
-  for (const auto& point : points) {
-    const Eigen::Vector2d mean_centered_point = point.image_point - mean_point;
-    sum_of_distances_from_mean += mean_centered_point.norm();
-  }
-  const double average_distance_from_mean = sum_of_distances_from_mean / points.size();
-  return average_distance_from_mean;
-}
-
 ff_msgs::GraphVIOState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,

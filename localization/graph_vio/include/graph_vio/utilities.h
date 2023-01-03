@@ -49,11 +49,6 @@
 #include <vector>
 
 namespace graph_vio {
-bool ValidPointSet(const int num_points, const double average_distance_from_mean,
-                   const double min_avg_distance_from_mean, const int min_num_points);
-
-double AverageDistanceFromMean(const std::vector<localization_measurements::FeaturePoint>& points);
-
 ff_msgs::GraphVIOState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                                   const localization_common::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,

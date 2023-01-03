@@ -17,7 +17,6 @@
  */
 
 #include <factor_adders/projection_factor_adder.h>
-#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>

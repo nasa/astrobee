@@ -17,7 +17,6 @@
  */
 
 #include <factor_adders/standstill_factor_adder.h>
-#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
