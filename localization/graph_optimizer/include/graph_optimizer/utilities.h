@@ -21,9 +21,12 @@
 
 #include <localization_common/logger.h>
 
+#include <gtsam/linear/NoiseModel.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_optimizer {
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
+
 gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& graph);
 
 template <typename FactorType>

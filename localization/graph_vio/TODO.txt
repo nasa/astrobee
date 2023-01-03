@@ -1,6 +1,4 @@
-- move feature tracker to vis common!
   - fix utilities in factor adders! (move some functions from graph vio for smart factors!)
-      - move validpointset and averagedistancefrommean to vis common utils! add comments
           - update graph vio
           - update factor adders
   - move graph values to new package

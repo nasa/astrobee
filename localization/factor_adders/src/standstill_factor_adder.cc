@@ -17,6 +17,7 @@
  */
 
 #include <factor_adders/standstill_factor_adder.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
@@ -40,7 +41,7 @@ std::vector<go::FactorsToAdd> StandstillFactorAdder::AddFactors(
                                                       params().prior_velocity_stddev, params().prior_velocity_stddev)
                                                        .finished());
     const auto velocity_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+      go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
              params().huber_k);
 
     const go::KeyInfo velocity_key_info(&sym::V, go::NodeUpdaterType::CombinedNavState,
@@ -62,7 +63,7 @@ std::vector<go::FactorsToAdd> StandstillFactorAdder::AddFactors(
          params().pose_between_factor_translation_stddev, params().pose_between_factor_translation_stddev)
           .finished());
       const auto pose_between_noise =
-        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)),
+        go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)),
                params().huber_k);
       const go::KeyInfo previous_between_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, *previous_timestamp);
       const go::KeyInfo current_between_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,

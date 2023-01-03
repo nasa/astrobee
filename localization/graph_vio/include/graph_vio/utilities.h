@@ -34,7 +34,6 @@
 #include <localization_measurements/timestamped_pose.h>
 
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam/linear/NoiseModel.h>
 
 #include <Eigen/Core>
 
@@ -66,8 +65,6 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const localization_common::Time time);
 
 geometry_msgs::PoseStamped PoseMsg(const localization_measurements::TimestampedPose& timestamped_pose);
-
-gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,

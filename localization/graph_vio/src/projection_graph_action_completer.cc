@@ -92,7 +92,7 @@ bool ProjectionGraphActionCompleter::TriangulateNewPoint(go::FactorsToAdd& facto
                                                    params_.point_prior_translation_stddev)
                                                     .finished());
     const auto point_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_prior_noise_sigmas)),
+      go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_prior_noise_sigmas)),
              params_.huber_k);
     gtsam::PriorFactor<gtsam::Point3> point_prior_factor(point_key, *world_t_triangulated_point, point_noise);
     graph_factors.push_back(point_prior_factor);

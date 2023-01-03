@@ -109,10 +109,6 @@ geometry_msgs::PoseStamped PoseMsg(const lm::TimestampedPose& timestamped_pose) 
   return PoseMsg(timestamped_pose.pose, timestamped_pose.time);
 }
 
-gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
-  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
-}
-
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {

@@ -48,7 +48,7 @@ std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
         continue;
       }
       const auto projection_factor = boost::make_shared<ProjectionFactor>(
-        feature_point.image_point, Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
+        feature_point.image_point, go::Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
         *point_key, params().cam_intrinsics, params().body_T_cam);
       projection_factors_to_add.push_back({{pose_key_info, static_point_key_info}, projection_factor});
     }
@@ -75,7 +75,7 @@ std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
         const go::KeyInfo pose_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, feature_point.timestamp);
         const go::KeyInfo static_point_key_info(&sym::F, go::NodeUpdaterType::FeaturePoint, feature_point.feature_id);
         const auto projection_factor = boost::make_shared<ProjectionFactor>(
-          feature_point.image_point, Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
+          feature_point.image_point, go::Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
           point_key, params().cam_intrinsics, params().body_T_cam);
         projection_factors_with_new_point_to_add.push_back({{pose_key_info, static_point_key_info}, projection_factor});
       }

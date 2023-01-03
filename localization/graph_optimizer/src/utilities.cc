@@ -19,6 +19,10 @@
 #include <graph_optimizer/utilities.h>
 
 namespace graph_optimizer {
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
+  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
+}
+
 gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& graph) {
   gtsam::NonlinearFactorGraph removed_factors;
   if (old_keys.empty()) return removed_factors;

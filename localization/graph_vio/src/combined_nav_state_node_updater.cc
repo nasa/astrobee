@@ -52,12 +52,12 @@ CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
      params_.starting_prior_accel_bias_stddev, params_.starting_prior_gyro_bias_stddev,
      params_.starting_prior_gyro_bias_stddev, params_.starting_prior_gyro_bias_stddev)
       .finished());
-  global_N_body_start_noise_.pose_noise = Robust(
+  global_N_body_start_noise_.pose_noise = go::Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
   global_N_body_start_noise_.velocity_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
            params_.huber_k);
-  global_N_body_start_noise_.bias_noise = Robust(
+  global_N_body_start_noise_.bias_noise = go::Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
 }
 
@@ -121,12 +121,12 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const lc::Time oldest_allowed_time
     if (marginals) {
       lc::CombinedNavStateNoise noise;
       noise.pose_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))), huber_k);
+        go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))), huber_k);
       noise.velocity_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), huber_k);
+        go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), huber_k);
       auto bias_covariance = marginals->marginalCovariance(sym::B(*key_index));
       if (params_.threshold_bias_uncertainty) ThresholdBiasUncertainty(bias_covariance);
-      noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(bias_covariance), huber_k);
+      noise.bias_noise = go::Robust(gtsam::noiseModel::Gaussian::Covariance(bias_covariance), huber_k);
       AddPriors(*global_N_body_oldest, noise, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas

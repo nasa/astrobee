@@ -63,8 +63,8 @@ void FeaturePointNodeUpdater::UpdatePointPriors(const gtsam::Marginals& marginal
         // Erase old prior
         factor_it = factors.erase(factor_it);
         // Add updated one
-        const auto point_prior_noise =
-          Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)), params_.huber_k);
+        const auto point_prior_noise = go::Robust(
+          gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)), params_.huber_k);
         const gtsam::PriorFactor<gtsam::Point3> point_prior_factor(feature_key, *world_t_point, point_prior_noise);
         factors.push_back(point_prior_factor);
         // Only one point prior per feature
