@@ -17,6 +17,7 @@
  */
 
 #include <factor_adders/smart_projection_cumulative_factor_adder.h>
+#include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 #include <vision_common/utilities.h>
@@ -26,9 +27,13 @@
 
 namespace factor_adders {
 namespace go = graph_optimizer;
-namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 namespace vc = vision_common;
+using Calibration = gtsam::Cal3_S2;
+using Camera = gtsam::PinholePose<Calibration>;
+using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
+using SharedRobustSmartFactor = boost::shared_ptr<RobustSmartFactor>;
+
 SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
   const SmartProjectionFactorAdderParams& params, std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
     : SmartProjectionCumulativeFactorAdder::Base(params), feature_tracker_(feature_tracker) {
@@ -42,8 +47,8 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
 }
 
 void SmartProjectionCumulativeFactorAdder::AddFactors(
-  const FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
-  go::FactorsToAdd& smart_factors_to_add, std::unordered_map<lm::FeatureId, vc::FeaturePoint>& added_points) {
+  const vc::FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
+  go::FactorsToAdd& smart_factors_to_add, std::unordered_map<vc::FeatureId, vc::FeaturePoint>& added_points) {
   // Iterate in reverse order so longer feature tracks are prioritized
   for (auto feature_track_it = feature_tracks.crbegin(); feature_track_it != feature_tracks.crend();
        ++feature_track_it) {
@@ -85,7 +90,7 @@ std::vector<go::FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors()
     }
     const int spacing = longest_feature_track->MaxSpacing(params().max_num_points_per_factor);
 
-    std::unordered_map<lm::FeatureId, vc::FeaturePoint> added_points;
+    std::unordered_map<vc::FeatureId, vc::FeaturePoint> added_points;
     AddFactors(feature_tracks, spacing, params().feature_track_min_separation, smart_factors_to_add, added_points);
     if (static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
       // Zero min separation so any valid feature track is added as a fallback to try to add up to max_num_factors
@@ -129,7 +134,7 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<vc::
 }
 
 bool SmartProjectionCumulativeFactorAdder::TooClose(
-  const std::unordered_map<lm::FeatureId, vc::FeaturePoint>& added_points, const lm::FeaturePoint& point,
+  const std::unordered_map<vc::FeatureId, vc::FeaturePoint>& added_points, const vc::FeaturePoint& point,
   const double feature_track_min_separation) const {
   for (const auto& added_point_pair : added_points) {
     const auto& added_point = added_point_pair.second;

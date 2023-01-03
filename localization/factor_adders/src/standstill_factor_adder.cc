@@ -23,6 +23,7 @@
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/nonlinear/PriorFactor.h>
+#include <gtsam/slam/BetweenFactor.h>
 
 namespace factor_adders {
 namespace go = graph_optimizer;
