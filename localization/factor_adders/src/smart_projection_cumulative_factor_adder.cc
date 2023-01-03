@@ -30,7 +30,7 @@ namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 namespace vc = vision_common;
 SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
-  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const FeatureTracker> feature_tracker)
+  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
     : SmartProjectionCumulativeFactorAdder::Base(params), feature_tracker_(feature_tracker) {
   smart_projection_params_.verboseCheirality = params.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);

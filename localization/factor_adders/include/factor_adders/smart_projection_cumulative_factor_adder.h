@@ -35,7 +35,7 @@ class SmartProjectionCumulativeFactorAdder
 
  public:
   SmartProjectionCumulativeFactorAdder(const SmartProjectionFactorAdderParams& params,
-                                       std::shared_ptr<const FeatureTracker> feature_tracker);
+                                       std::shared_ptr<const vision_common::FeatureTracker> feature_tracker);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors() final;
   void AddFactors(
@@ -57,7 +57,7 @@ class SmartProjectionCumulativeFactorAdder
                   added_points,
                 const localization_measurements::FeaturePoint& point, const double feature_track_min_separation) const;
 
-  std::shared_ptr<const FeatureTracker> feature_tracker_;
+  std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
   gtsam::SmartProjectionParams smart_projection_params_;
 };
 }  // namespace factor_adders

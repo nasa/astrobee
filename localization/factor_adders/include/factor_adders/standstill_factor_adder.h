@@ -19,10 +19,10 @@
 #ifndef FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 #define FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 
-#include <vision_common/feature_tracker.h>
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <vision_common/feature_tracker.h>
 
 #include <vector>
 
@@ -34,13 +34,13 @@ class StandstillFactorAdder : public graph_optimizer::FactorAdder<localization_m
 
  public:
   explicit StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                                 std::shared_ptr<const FeatureTracker> feature_tracker);
+                                 std::shared_ptr<const vision_common::FeatureTracker> feature_tracker);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
 
  private:
-  std::shared_ptr<const FeatureTracker> feature_tracker_;
+  std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
 };
 }  // namespace factor_adders
 

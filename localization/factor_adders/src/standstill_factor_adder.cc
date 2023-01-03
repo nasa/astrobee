@@ -28,7 +28,7 @@ namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                                             std::shared_ptr<const FeatureTracker> feature_tracker)
+                                             std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
     : StandstillFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
 std::vector<go::FactorsToAdd> StandstillFactorAdder::AddFactors(

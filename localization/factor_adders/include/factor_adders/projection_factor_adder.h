@@ -20,10 +20,10 @@
 #define FACTOR_ADDERS_PROJECTION_FACTOR_ADDER_H_
 
 #include <factor_adders/feature_point_graph_values.h>
-#include <vision_common/feature_tracker.h>
 #include <factor_adders/projection_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <vision_common/feature_tracker.h>
 
 #include <gtsam/geometry/triangulation.h>
 
@@ -37,14 +37,14 @@ class ProjectionFactorAdder : public graph_optimizer::FactorAdder<localization_m
 
  public:
   ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
-                        std::shared_ptr<const FeatureTracker> feature_tracker,
+                        std::shared_ptr<const vision_common::FeatureTracker> feature_tracker,
                         std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
 
  private:
-  std::shared_ptr<const FeatureTracker> feature_tracker_;
+  std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
   std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values_;
 };
 }  // namespace factor_adders
