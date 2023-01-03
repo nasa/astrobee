@@ -24,7 +24,7 @@
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
-#include <localization_measurements/feature_point.h>
+#include <vision_common/feature_point.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>

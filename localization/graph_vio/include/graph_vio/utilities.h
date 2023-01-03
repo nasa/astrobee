@@ -29,7 +29,7 @@
 #include <graph_vio/graph_vio_stats.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
-#include <localization_measurements/feature_point.h>
+#include <vision_common/feature_point.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/timestamped_pose.h>
 
