@@ -1,4 +1,3 @@
-- move factor unit tests to graph factors!
 - move factor adders to new package
 - move node updaters to new package
 - initialize graph with identity pose, set fixed!!!

@@ -16,12 +16,12 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_STANDSTILL_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_VIO_STANDSTILL_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_PARAMS_H_
 
 #include <graph_optimizer/factor_adder_params.h>
 
-namespace graph_vio {
+namespace factor_adders {
 struct StandstillFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool add_velocity_prior;
   bool add_pose_between_factor;
@@ -29,6 +29,6 @@ struct StandstillFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double pose_between_factor_translation_stddev;
   double pose_between_factor_rotation_stddev;
 };
-}  // namespace graph_vio
+}  // namespace factor_adders
 
-#endif  // GRAPH_VIO_STANDSTILL_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_PARAMS_H_

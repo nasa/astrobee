@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_VIO_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_
 
 #include <graph_optimizer/factor_adder_params.h>
 
@@ -27,7 +27,7 @@
 
 #include <string>
 
-namespace graph_vio {
+namespace factor_adders {
 struct SmartProjectionFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double min_avg_distance_from_mean;
   bool enable_EPI;
@@ -50,6 +50,6 @@ struct SmartProjectionFactorAdderParams : public graph_optimizer::FactorAdderPar
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;
 };
-}  // namespace graph_vio
+}  // namespace factor_adders
 
-#endif  // GRAPH_VIO_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_

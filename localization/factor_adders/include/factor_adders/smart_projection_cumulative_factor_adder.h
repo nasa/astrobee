@@ -16,11 +16,11 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
-#define GRAPH_VIO_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
+#ifndef FACTOR_ADDERS_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
 
-#include <graph_vio/feature_tracker.h>
-#include <graph_vio/smart_projection_factor_adder_params.h>
+#include <factor_adders/feature_tracker.h>
+#include <factor_adders/smart_projection_factor_adder_params.h>
 #include <graph_optimizer/cumulative_factor_adder.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
@@ -28,7 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace graph_vio {
+namespace factor_adders {
 class SmartProjectionCumulativeFactorAdder
     : public graph_optimizer::CumulativeFactorAdder<SmartProjectionFactorAdderParams> {
   using Base = graph_optimizer::CumulativeFactorAdder<SmartProjectionFactorAdderParams>;
@@ -60,6 +60,6 @@ class SmartProjectionCumulativeFactorAdder
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   gtsam::SmartProjectionParams smart_projection_params_;
 };
-}  // namespace graph_vio
+}  // namespace factor_adders
 
-#endif  // GRAPH_VIO_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
+#endif  // FACTOR_ADDERS_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_

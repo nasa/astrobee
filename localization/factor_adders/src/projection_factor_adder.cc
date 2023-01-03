@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#include <graph_vio/projection_factor_adder.h>
-#include <graph_vio/utilities.h>
+#include <factor_adders/projection_factor_adder.h>
+#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/ProjectionFactor.h>
 
-namespace graph_vio {
+namespace factor_adders {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -89,4 +89,4 @@ std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
   if (factors_to_add_vec.empty()) return {};
   return factors_to_add_vec;
 }
-}  // namespace graph_vio
+}  // namespace factor_adders

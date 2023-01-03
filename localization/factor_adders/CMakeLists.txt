@@ -16,10 +16,16 @@
 #under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(graph_vio)
+project(factor_adders)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
+
+## Find catkin macros and libraries
+find_package(catkin2 REQUIRED COMPONENTS
+	localization_common
+  vision_common
+)
 
 # Find GTSAM
 find_package(GTSAM REQUIRED)
@@ -27,54 +33,23 @@ find_package(GTSAM REQUIRED)
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  nodelet
-  camera
-  config_reader
-  factor_adders
-  ff_util
-  ff_msgs
-  graph_factors
-  graph_optimizer
-  imu_integration
-  localization_common
-  localization_measurements
-  msg_conversions
-  vision_common
-)
-
-# Find OpenCV
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV331 REQUIRED)
-
+# include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
-  INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS
-    nodelet
-    camera
-    config_reader
-    factor_adders
-    ff_util
-    ff_msgs
-    graph_factors
-    graph_optimizer
-    imu_integration
-    localization_common
-    localization_measurements
-    msg_conversions
-    vision_common
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
+  INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
+  CATKIN_DEPENDS localization_common vision_common 
 )
 
 ###########
 ## Build ##
 ###########
+
 # Specify additional locations of header files
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+  ${GLOG_INCLUDE_DIRS}
 )
 
 file(GLOB cc_files
@@ -89,16 +64,23 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_combined_nav_state_node_updater
-    test/test_combined_nav_state_node_updater.test
-    test/test_combined_nav_state_node_updater.cc
-  )
-  target_link_libraries(test_combined_nav_state_node_updater
-    graph_vio ${catkin_LIBRARIES} 
-  )
-endif()
+#if(CATKIN_ENABLE_TESTING)
+#  find_package(rostest REQUIRED)
+#  add_rostest_gtest(test_combined_nav_state_node_updater
+#    test/test_combined_nav_state_node_updater.test
+#    test/test_combined_nav_state_node_updater.cc
+#  )
+#  target_link_libraries(test_combined_nav_state_node_updater
+#    graph_vio ${catkin_LIBRARIES} 
+#  )
+# add_rostest_gtest(test_inverse_depth_projection_factor
+#    test/test_inverse_depth_projection_factor.test
+#    test/test_inverse_depth_projection_factor.cc
+#  )
+#  target_link_libraries(test_inverse_depth_projection_factor
+#    graph_vio ${catkin_LIBRARIES} 
+#  )
+#endif()
 
 #############
 ## Install ##
@@ -111,20 +93,9 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
-

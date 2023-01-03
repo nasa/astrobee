@@ -16,29 +16,28 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_PROJECTION_FACTOR_ADDER_H_
-#define GRAPH_VIO_PROJECTION_FACTOR_ADDER_H_
+#ifndef FACTOR_ADDERS_INVERSE_DEPTH_PROJECTION_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_INVERSE_DEPTH_PROJECTION_FACTOR_ADDER_H_
 
-#include <graph_vio/feature_point_graph_values.h>
-#include <graph_vio/feature_tracker.h>
-#include <graph_vio/projection_factor_adder_params.h>
+#include <factor_adders/feature_point_graph_values.h>
+#include <factor_adders/feature_tracker.h>
+#include <factor_adders/inverse_depth_projection_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
 
-#include <gtsam/geometry/triangulation.h>
-
 #include <vector>
 
-namespace graph_vio {
-class ProjectionFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
-                                                                  ProjectionFactorAdderParams> {
-  using Base =
-    graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement, ProjectionFactorAdderParams>;
+namespace factor_adders {
+class InverseDepthProjectionFactorAdder
+    : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
+                                          InverseDepthProjectionFactorAdderParams> {
+  using Base = graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
+                                            InverseDepthProjectionFactorAdderParams>;
 
  public:
-  ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
-                        std::shared_ptr<const FeatureTracker> feature_tracker,
-                        std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values);
+  InverseDepthProjectionFactorAdder(const InverseDepthProjectionFactorAdderParams& params,
+                                    std::shared_ptr<const FeatureTracker> feature_tracker,
+                                    std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
@@ -47,6 +46,6 @@ class ProjectionFactorAdder : public graph_optimizer::FactorAdder<localization_m
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values_;
 };
-}  // namespace graph_vio
+}  // namespace factor_adders
 
-#endif  // GRAPH_VIO_PROJECTION_FACTOR_ADDER_H_
+#endif  // FACTOR_ADDERS_INVERSE_DEPTH_PROJECTION_FACTOR_ADDER_H_
