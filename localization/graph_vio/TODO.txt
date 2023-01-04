@@ -1,5 +1,6 @@
 - update graph loc!
   - remove uneeded code
+  - update initilizer, stats, sanity checker, others
   - compile!
 - move combinednavstate accesors to combinednavstate node updater????
   - update graph vio with this!!
