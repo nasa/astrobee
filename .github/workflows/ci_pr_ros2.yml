@@ -1,0 +1,23 @@
+name: Build and Test CI for Pull Requests
+
+on:
+  pull_request:
+    branches: [ 'ros2' ]
+  workflow_dispatch:
+
+jobs:
+
+  build-focal:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Build, test
+      run: ./scripts/docker/build.sh  --focal --remote rolling_base rolling astrobee_ros2

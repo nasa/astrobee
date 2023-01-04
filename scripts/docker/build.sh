@@ -130,6 +130,8 @@ while [ "$1" != "" ]; do
                                    ;;
         astrobee )                 build_astrobee="true"
                                    ;;
+        astrobee_ros2 )            build_astrobee_ros2="true"
+                                   ;;
         test_astrobee )            build_test_astrobee="true"
                                    ;;
         astrobee_quick )           astrobee_quick="true"
@@ -145,6 +147,8 @@ while [ "$1" != "" ]; do
         push_rolling_base )        push_rolling_base="true"
                                    ;;
         push_rolling )             push_rolling="true"
+                                   ;;
+        push_astrobee_ros2 )       push_astrobee_ros2="true"
                                    ;;
         * )                        echo "unknown target '$1'"
                                    usage
@@ -278,6 +282,10 @@ if [ "$rolling" = "true" ]; then
     build ros2/ros2_rolling_deb "${revision}-" "rolling-"
 fi
 
+if [ "$build_astrobee_ros2" = "true" ]; then
+    build ros2/ros2_astrobee "${revision}-" "ros2-"
+fi
+
 if [ "$push_astrobee_base" = "true" ]; then
     push astrobee_base "${revision}-" "base-"
 fi
@@ -292,4 +300,8 @@ fi
 
 if [ "$push_rolling" = "true" ]; then
     push rolling "${revision}-" "rolling-"
+fi
+
+if [ "$push_astrobee_ros2" = "true" ]; then
+    push astrobee "${revision}-" "ros2-"
 fi
