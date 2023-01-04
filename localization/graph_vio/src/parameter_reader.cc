@@ -26,6 +26,7 @@
 namespace graph_vio {
 namespace fa = factor_adders;
 namespace go = graph_optimizer;
+namespace gv = graph_values;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;

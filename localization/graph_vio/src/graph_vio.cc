@@ -23,6 +23,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
+#include <vision_common/utilities.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
@@ -39,14 +40,17 @@
 #include <unordered_set>
 
 namespace graph_vio {
+namespace fa = factor_adders;
 namespace go = graph_optimizer;
+namespace gv = graph_values;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace vc = vision_common;
 
 GraphVIO::GraphVIO(const GraphVIOParams& params)
     : GraphOptimizer(params.graph_optimizer, std::unique_ptr<GraphVIOStats>(new GraphVIOStats())),
-      feature_tracker_(new FeatureTracker(params.feature_tracker)),
+      feature_tracker_(new vc::FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
       params_(params) {
   // TODO(rsoussan): Add this param to imu integrator, set on construction
@@ -67,7 +71,7 @@ void GraphVIO::InitializeNodeUpdaters() {
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphVIOStats*>(graph_stats())
-    ->Setgv::CombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
+    ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
   feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params_.feature_point_node_updater, shared_values()));
   AddNodeUpdater(feature_point_node_updater_);
@@ -75,11 +79,11 @@ void GraphVIO::InitializeNodeUpdaters() {
 
 void GraphVIO::InitializeFactorAdders() {
   projection_factor_adder_.reset(
-    new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
+    new fa::ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
                               feature_point_node_updater_->shared_feature_point_graph_values()));
   smart_projection_cumulative_factor_adder_.reset(
-    new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
-  standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
+    new fa::SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
+  standstill_factor_adder_.reset(new fa::StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 }
 
 void GraphVIO::InitializeGraphActionCompleters() {
@@ -232,8 +236,8 @@ void GraphVIO::CheckForStandstill() {
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_->feature_tracks()) {
-    const double average_distance_from_mean =
-      AverageDistanceFromMean(feature_track.second->LatestPointsInWindow(params_.standstill_feature_track_duration));
+    const double average_distance_from_mean = vc::AverageDistanceFromMean(
+      feature_track.second->LatestPointsInWindow(params_.standstill_feature_track_duration));
     // Only consider long enough feature tracks for standstill candidates
     if (static_cast<int>(feature_track.second->size()) >= params_.standstill_min_num_points_per_track) {
       total_average_distance_from_mean += average_distance_from_mean;

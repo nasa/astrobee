@@ -210,7 +210,7 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
 
 SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
                                                       const std::unordered_set<int>& factor_key_indices_to_remove,
-                                                      const SmartProjectionFactorAdderParams& params,
+                                                      const fa::SmartProjectionFactorAdderParams& params,
                                                       const gtsam::SmartProjectionParams& smart_projection_params) {
   auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
     params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params, params.rotation_only_fallback,
