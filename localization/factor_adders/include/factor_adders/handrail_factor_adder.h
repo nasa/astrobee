@@ -16,16 +16,16 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_H_
+#ifndef FACTOR_ADDERS_HANDRAIL_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_HANDRAIL_FACTOR_ADDER_H_
 
-#include <graph_localizer/handrail_factor_adder_params.h>
+#include <factor_adders/handrail_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/handrail_points_measurement.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace factor_adders {
 class HandrailFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::HandrailPointsMeasurement,
                                                                 HandrailFactorAdderParams> {
   using Base =
@@ -45,6 +45,6 @@ class HandrailFactorAdder : public graph_optimizer::FactorAdder<localization_mea
     const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement,
     std::vector<graph_optimizer::FactorsToAdd>& factors_to_add);
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_H_
+#endif  // FACTOR_ADDERS_HANDRAIL_FACTOR_ADDER_H_

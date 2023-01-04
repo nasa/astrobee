@@ -16,17 +16,17 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_H_
+#ifndef FACTOR_ADDERS_ROTATION_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_ROTATION_FACTOR_ADDER_H_
 
-#include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/rotation_factor_adder_params.h>
+#include <factor_adders/feature_tracker.h>
+#include <factor_adders/rotation_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace factor_adders {
 class RotationFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
                                                                 RotationFactorAdderParams> {
   using Base =
@@ -41,6 +41,6 @@ class RotationFactorAdder : public graph_optimizer::FactorAdder<localization_mea
  private:
   std::shared_ptr<const FeatureTracker> feature_tracker_;
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_H_
+#endif  // FACTOR_ADDERS_ROTATION_FACTOR_ADDER_H_

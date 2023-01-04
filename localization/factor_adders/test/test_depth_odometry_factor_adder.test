@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="graph_localizer" type="test_depth_odometry_factor_adder" test-name="test_depth_odometry_factor_adder" />
+  <test pkg="factor_adders" type="test_depth_odometry_factor_adder" test-name="test_depth_odometry_factor_adder" />
 </launch>

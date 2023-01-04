@@ -16,13 +16,13 @@
  * under the License.
  */
 
-#include <graph_localizer/depth_odometry_factor_adder.h>
-#include <graph_localizer/point_to_point_between_factor.h>
-#include <graph_localizer/utilities.h>
+#include <factor_adders/depth_odometry_factor_adder.h>
+#include <factor_adders/point_to_point_between_factor.h>
+#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
-namespace graph_localizer {
+namespace factor_adders {
 namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -96,4 +96,4 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
   }
   return factors_to_add_vector;
 }
-}  // namespace graph_localizer
+}  // namespace factor_adders

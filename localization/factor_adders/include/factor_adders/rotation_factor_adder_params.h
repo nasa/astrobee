@@ -16,22 +16,22 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_ROTATION_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_ROTATION_FACTOR_ADDER_PARAMS_H_
 
 #include <graph_optimizer/factor_adder_params.h>
 
+#include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
 
-namespace graph_localizer {
-struct HandrailFactorAdderParams : public graph_optimizer::FactorAdderParams {
-  double min_num_line_matches;
-  double min_num_plane_matches;
-  double point_to_line_stddev;
-  double point_to_plane_stddev;
-  gtsam::Pose3 body_T_perch_cam;
-  bool use_silu_for_point_to_line_segment_factor;
+namespace factor_adders {
+struct RotationFactorAdderParams : public graph_optimizer::FactorAdderParams {
+  double min_avg_disparity;
+  double rotation_stddev;
+  double max_percent_outliers;
+  gtsam::Pose3 body_T_nav_cam;
+  gtsam::Cal3_S2 nav_cam_intrinsics;
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_ROTATION_FACTOR_ADDER_PARAMS_H_

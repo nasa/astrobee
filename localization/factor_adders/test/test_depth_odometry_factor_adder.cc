@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#include <graph_localizer/depth_odometry_factor_adder.h>
-#include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/point_to_point_between_factor.h>
-#include <graph_localizer/test_utilities.h>
+#include <factor_adders/depth_odometry_factor_adder.h>
+#include <factor_adders/factor_adders.h>
+#include <factor_adders/point_to_point_between_factor.h>
+#include <factor_adders/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
@@ -33,7 +33,7 @@
 
 #include <gtest/gtest.h>
 
-namespace gl = graph_localizer;
+namespace gl = factor_adders;
 namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -199,7 +199,7 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
   params.factor.depth_odometry_adder.body_T_sensor = lc::RandomPose();
   constexpr double kInitialVelocity = 0.1;
   params.graph_initializer.global_V_body_start = Eigen::Vector3d(kInitialVelocity, 0, 0);
-  gl::GraphLocalizer graph_localizer(params);
+  gl::GraphLocalizer factor_adders(params);
   constexpr int kNumIterations = 100;
   constexpr double kTimeDiff = 0.1;
   lc::Time time = 0.0;
@@ -208,11 +208,11 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
   // Add initial zero acceleration value so the imu integrator has more than one measurement when the subsequent
   // measurement is added
   const lm::ImuMeasurement initial_zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
-  graph_localizer.AddImuMeasurement(initial_zero_imu_measurement);
+  factor_adders.AddImuMeasurement(initial_zero_imu_measurement);
   for (int i = 0; i < kNumIterations; ++i) {
     time += kTimeDiff;
     const lm::ImuMeasurement zero_imu_measurement(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), time);
-    graph_localizer.AddImuMeasurement(zero_imu_measurement);
+    factor_adders.AddImuMeasurement(zero_imu_measurement);
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, Eigen::Matrix3d::Identity());
     current_pose = current_pose * relative_pose;
     const lc::Time source_time = time - kTimeDiff;
@@ -222,9 +222,9 @@ TEST(DepthOdometryFactorAdderTester, ConstantVelocityPoints) {
       source_time, target_time);
     const int num_inliers = 20;
     AddInlierAndOutlierPoints(num_inliers, 0, 0, constant_velocity_measurement);
-    graph_localizer.AddDepthOdometryMeasurement(constant_velocity_measurement);
-    graph_localizer.Update();
-    const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+    factor_adders.AddDepthOdometryMeasurement(constant_velocity_measurement);
+    factor_adders.Update();
+    const auto latest_combined_nav_state = factor_adders.LatestCombinedNavState();
     ASSERT_TRUE(latest_combined_nav_state != boost::none);
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
     EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);

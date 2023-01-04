@@ -16,15 +16,15 @@
  * under the License.
  */
 
-#include <graph_localizer/loc_factor_adder.h>
-#include <graph_localizer/loc_pose_factor.h>
-#include <graph_localizer/loc_projection_factor.h>
-#include <graph_localizer/utilities.h>
+#include <factor_adders/loc_factor_adder.h>
+#include <factor_adders/loc_pose_factor.h>
+#include <factor_adders/loc_projection_factor.h>
+#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 
-namespace graph_localizer {
+namespace factor_adders {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -106,4 +106,4 @@ std::vector<go::FactorsToAdd> LocFactorAdder::AddFactors(
 }
 
 go::GraphActionCompleterType LocFactorAdder::type() const { return graph_action_completer_type_; }
-}  // namespace graph_localizer
+}  // namespace factor_adders

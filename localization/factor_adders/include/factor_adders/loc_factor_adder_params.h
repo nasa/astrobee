@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_LOC_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_LOC_FACTOR_ADDER_PARAMS_H_
 
 #include <graph_optimizer/factor_adder_params.h>
 
@@ -25,7 +25,7 @@
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/linear/NoiseModel.h>
 
-namespace graph_localizer {
+namespace factor_adders {
 struct LocFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool add_pose_priors;
   bool add_projections;
@@ -44,6 +44,6 @@ struct LocFactorAdderParams : public graph_optimizer::FactorAdderParams {
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_LOC_FACTOR_ADDER_PARAMS_H_

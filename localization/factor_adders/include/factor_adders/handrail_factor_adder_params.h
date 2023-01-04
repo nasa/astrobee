@@ -16,24 +16,22 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_LOCALIZER_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_HANDRAIL_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_HANDRAIL_FACTOR_ADDER_PARAMS_H_
 
 #include <graph_optimizer/factor_adder_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 
-namespace graph_localizer {
-struct DepthOdometryFactorAdderParams : public graph_optimizer::FactorAdderParams {
-  double noise_scale;
-  bool use_points_between_factor;
-  double position_covariance_threshold;
-  double orientation_covariance_threshold;
-  double point_to_point_error_threshold;
-  double pose_translation_norm_threshold;
-  int max_num_points_between_factors;
-  gtsam::Pose3 body_T_sensor;
+namespace factor_adders {
+struct HandrailFactorAdderParams : public graph_optimizer::FactorAdderParams {
+  double min_num_line_matches;
+  double min_num_plane_matches;
+  double point_to_line_stddev;
+  double point_to_plane_stddev;
+  gtsam::Pose3 body_T_perch_cam;
+  bool use_silu_for_point_to_line_segment_factor;
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_HANDRAIL_FACTOR_ADDER_PARAMS_H_

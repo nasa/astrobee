@@ -16,17 +16,17 @@
  * under the License.
  */
 
-#include <graph_localizer/handrail_factor_adder.h>
-#include <graph_localizer/point_to_handrail_endpoint_factor.h>
-#include <graph_localizer/point_to_line_factor.h>
-#include <graph_localizer/point_to_line_segment_factor.h>
-#include <graph_localizer/point_to_plane_factor.h>
-#include <graph_localizer/utilities.h>
+#include <factor_adders/handrail_factor_adder.h>
+#include <factor_adders/point_to_handrail_endpoint_factor.h>
+#include <factor_adders/point_to_line_factor.h>
+#include <factor_adders/point_to_line_segment_factor.h>
+#include <factor_adders/point_to_plane_factor.h>
+#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
 
-namespace graph_localizer {
+namespace factor_adders {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -151,4 +151,4 @@ std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
   }
   return factors_to_add;
 }
-}  // namespace graph_localizer
+}  // namespace factor_adders

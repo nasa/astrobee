@@ -16,17 +16,17 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
+#ifndef FACTOR_ADDERS_LOC_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_LOC_FACTOR_ADDER_H_
 
-#include <graph_localizer/loc_factor_adder_params.h>
+#include <factor_adders/loc_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_common/averager.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace factor_adders {
 class LocFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::MatchedProjectionsMeasurement,
                                                            LocFactorAdderParams> {
   using Base =
@@ -45,6 +45,6 @@ class LocFactorAdder : public graph_optimizer::FactorAdder<localization_measurem
   graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
   localization_common::Averager num_landmarks_averager_ = localization_common::Averager("Num Landmarks");
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
+#endif  // FACTOR_ADDERS_LOC_FACTOR_ADDER_H_

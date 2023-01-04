@@ -16,9 +16,9 @@
  * under the License.
  */
 
-#include <graph_localizer/pose_rotation_factor.h>
-#include <graph_localizer/rotation_factor_adder.h>
-#include <graph_localizer/utilities.h>
+#include <factor_adders/pose_rotation_factor.h>
+#include <factor_adders/rotation_factor_adder.h>
+#include <factor_adders/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
@@ -27,7 +27,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/core/types.hpp>
 
-namespace graph_localizer {
+namespace factor_adders {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
@@ -102,4 +102,4 @@ std::vector<go::FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeatureP
   LogDebug("AddFactors: Added a rotation factor.");
   return {rotation_factors_to_add};
 }
-}  // namespace graph_localizer
+}  // namespace factor_adders

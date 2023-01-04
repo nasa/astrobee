@@ -16,16 +16,16 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_DEPTH_ODOMETRY_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_DEPTH_ODOMETRY_FACTOR_ADDER_H_
+#ifndef FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_H_
 
-#include <graph_localizer/depth_odometry_factor_adder_params.h>
+#include <factor_adders/depth_odometry_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/depth_odometry_measurement.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace factor_adders {
 class DepthOdometryFactorAdder
     : public graph_optimizer::FactorAdder<localization_measurements::DepthOdometryMeasurement,
                                           DepthOdometryFactorAdderParams> {
@@ -38,6 +38,6 @@ class DepthOdometryFactorAdder
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement) final;
 };
-}  // namespace graph_localizer
+}  // namespace factor_adders
 
-#endif  // GRAPH_LOCALIZER_DEPTH_ODOMETRY_FACTOR_ADDER_H_
+#endif  // FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_H_
