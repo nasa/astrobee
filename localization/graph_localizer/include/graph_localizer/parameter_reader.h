@@ -20,11 +20,9 @@
 
 #include <config_reader/config_reader.h>
 #include <graph_localizer/calibration_params.h>
-#include <graph_localizer/combined_nav_state_graph_values_params.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
+// #include <graph_localizer/combined_nav_state_graph_values_params.h>
+// #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_params.h>
-#include <graph_localizer/feature_point_node_updater_params.h>
-#include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_localizer_nodelet_params.h>
 #include <graph_localizer/graph_localizer_params.h>
@@ -32,11 +30,8 @@
 #include <graph_localizer/depth_odometry_factor_adder_params.h>
 #include <graph_localizer/handrail_factor_adder_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
-#include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
 #include <graph_localizer/sanity_checker_params.h>
-#include <graph_localizer/smart_projection_factor_adder_params.h>
-#include <graph_localizer/standstill_factor_adder_params.h>
 
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
@@ -45,22 +40,13 @@ void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, Dep
 void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params);
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
-void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params);
 void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params);
-void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
-                                          SmartProjectionFactorAdderParams& params);
-void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
-void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
-void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
-// Loads all params except some (biases and start pose) that are
-// not loaded from config files
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
                                            CombinedNavStateGraphValuesParams& params);
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);
-void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
 void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params);
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
 void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params);

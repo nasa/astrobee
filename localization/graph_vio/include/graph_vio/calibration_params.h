@@ -23,12 +23,8 @@
 
 namespace graph_vio {
 struct CalibrationParams {
-  gtsam::Pose3 body_T_dock_cam;
   gtsam::Pose3 body_T_nav_cam;
-  gtsam::Pose3 body_T_perch_cam;
-  gtsam::Pose3 world_T_dock;
   boost::shared_ptr<gtsam::Cal3_S2> nav_cam_intrinsics;
-  boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics;
 };
 }  // namespace graph_vio
 

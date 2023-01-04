@@ -22,18 +22,12 @@
 #include <graph_localizer/handrail_factor_adder_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
-#include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_localizer/smart_projection_factor_adder_params.h>
-#include <graph_localizer/standstill_factor_adder_params.h>
 
 namespace graph_localizer {
 struct FactorParams {
   DepthOdometryFactorAdderParams depth_odometry_adder;
   HandrailFactorAdderParams handrail_adder;
   RotationFactorAdderParams rotation_adder;
-  SmartProjectionFactorAdderParams smart_projection_adder;
-  StandstillFactorAdderParams standstill_adder;
-  ProjectionFactorAdderParams projection_adder;
   LocFactorAdderParams loc_adder;
   LocFactorAdderParams ar_tag_loc_adder;
 };

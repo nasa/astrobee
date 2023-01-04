@@ -18,21 +18,11 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_INITIALIZER_PARAMS_H_
 #define GRAPH_LOCALIZER_GRAPH_INITIALIZER_PARAMS_H_
 
-#include <imu_integration/latest_imu_integrator_params.h>
-#include <imu_integration/imu_filter_params.h>
-
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam/base/Vector.h>
-
-#include <string>
 
 namespace graph_localizer {
-// TODO(rsoussan): Clean this up, only use what is needed from imu integration params
-struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParams {
+struct GraphInitializerParams {
   gtsam::Pose3 global_T_body_start;
-  gtsam::Vector3 global_V_body_start;
-  std::string imu_bias_filename;
-  int num_bias_estimation_measurements;
 };
 }  // namespace graph_localizer
 
