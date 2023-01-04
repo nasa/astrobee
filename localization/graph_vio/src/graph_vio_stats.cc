@@ -48,8 +48,8 @@ GraphVIOStats::GraphVIOStats() {
   AddErrorAverager(bias_prior_error_averager_);
 }
 
-void GraphVIOStats::SetCombinedNavStateGraphValues(
-  std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values) {
+void GraphVIOStats::Setgv::CombinedNavStateGraphValues(
+  std::shared_ptr<const gv::CombinedNavStateGraphValues> combined_nav_state_graph_values) {
   combined_nav_state_graph_values_ = std::move(combined_nav_state_graph_values);
 }
 

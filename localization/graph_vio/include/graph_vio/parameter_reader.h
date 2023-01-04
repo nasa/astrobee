@@ -20,7 +20,7 @@
 
 #include <config_reader/config_reader.h>
 #include <graph_vio/calibration_params.h>
-#include <graph_vio/combined_nav_state_graph_values_params.h>
+#include <graph_values/combined_nav_state_graph_values_params.h>
 #include <graph_vio/combined_nav_state_node_updater_params.h>
 #include <graph_vio/factor_params.h>
 #include <graph_vio/feature_point_node_updater_params.h>
@@ -28,26 +28,28 @@
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_nodelet_params.h>
 #include <graph_vio/graph_vio_params.h>
-#include <graph_vio/projection_factor_adder_params.h>
+#include <factor_adders/projection_factor_adder_params.h>
 #include <graph_vio/sanity_checker_params.h>
-#include <graph_vio/smart_projection_factor_adder_params.h>
-#include <graph_vio/standstill_factor_adder_params.h>
+#include <factor_adders/smart_projection_factor_adder_params.h>
+#include <factor_adders/standstill_factor_adder_params.h>
 
 namespace graph_vio {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
-void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params);
+void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config,
+                                     factor_adders::ProjectionFactorAdderParams& params);
 void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
-                                          SmartProjectionFactorAdderParams& params);
-void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
+                                          factor_adders::SmartProjectionFactorAdderParams& params);
+void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config,
+                                     factor_adders::StandstillFactorAdderParams& params);
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
 // Loads all params except some (biases and start pose) that are
 // not loaded from config files
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
-void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
-                                           CombinedNavStateGraphValuesParams& params);
+void Loadgraph_values::CombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+                                           graph_values::CombinedNavStateGraphValuesParams& params);
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);

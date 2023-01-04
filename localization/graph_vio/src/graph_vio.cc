@@ -67,7 +67,7 @@ void GraphVIO::InitializeNodeUpdaters() {
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphVIOStats*>(graph_stats())
-    ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
+    ->Setgv::CombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
   feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params_.feature_point_node_updater, shared_values()));
   AddNodeUpdater(feature_point_node_updater_);
@@ -358,7 +358,7 @@ void GraphVIO::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
 
 const lm::FanSpeedMode GraphVIO::fan_speed_mode() const { return latest_imu_integrator_->fan_speed_mode(); }
 
-const CombinedNavStateGraphValues& GraphVIO::combined_nav_state_graph_values() const {
+const gv::CombinedNavStateGraphValues& GraphVIO::combined_nav_state_graph_values() const {
   return combined_nav_state_node_updater_->graph_values();
 }
 

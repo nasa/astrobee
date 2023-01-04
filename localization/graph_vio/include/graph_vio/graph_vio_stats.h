@@ -18,15 +18,15 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_STATS_H_
 #define GRAPH_VIO_GRAPH_VIO_STATS_H_
 
-#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_values/combined_nav_state_graph_values.h>
 #include <graph_optimizer/graph_stats.h>
 
 namespace graph_vio {
 class GraphVIOStats : public graph_optimizer::GraphStats {
  public:
   GraphVIOStats();
-  void SetCombinedNavStateGraphValues(
-    std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values);
+  void Setgraph_values::CombinedNavStateGraphValues(
+    std::shared_ptr<const graph_values::CombinedNavStateGraphValues> combined_nav_state_graph_values);
   void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) final;
   void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) final;
 
@@ -53,7 +53,7 @@ class GraphVIOStats : public graph_optimizer::GraphStats {
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
 
  private:
-  std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values_;
+  std::shared_ptr<const graph_values::CombinedNavStateGraphValues> combined_nav_state_graph_values_;
 };
 }  // namespace graph_vio
 

@@ -20,12 +20,12 @@
 #define GRAPH_VIO_TEST_UTILITIES_H_
 
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_vio/combined_nav_state_graph_values_params.h>
+#include <graph_values/combined_nav_state_graph_values_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_params.h>
 
 namespace graph_vio {
-CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams();
+graph_values::graph_values::CombinedNavStateGraphValuesParams Defaultgraph_values::CombinedNavStateGraphValuesParams();
 
 graph_optimizer::GraphOptimizerParams DefaultGraphOptimizerParams();
 

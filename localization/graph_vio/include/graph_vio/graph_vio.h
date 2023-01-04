@@ -105,7 +105,7 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
 
   const localization_measurements::FanSpeedMode fan_speed_mode() const;
 
-  const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
+  const graph_values::CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
 
   const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
 

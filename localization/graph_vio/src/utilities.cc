@@ -111,7 +111,7 @@ geometry_msgs::PoseStamped PoseMsg(const lm::TimestampedPose& timestamped_pose) 
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {
+  const gtsam::SmartProjectionParams& smart_projection_params, const gv::CombinedNavStateGraphValues& graph_values) {
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
   const auto original_keys = smart_factor.keys();
@@ -142,7 +142,7 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {
+  const gtsam::SmartProjectionParams& smart_projection_params, const gv::CombinedNavStateGraphValues& graph_values) {
   constexpr int min_num_measurements = 2;
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();

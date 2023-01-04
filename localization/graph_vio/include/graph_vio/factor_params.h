@@ -18,15 +18,15 @@
 #ifndef GRAPH_VIO_FACTOR_PARAMS_H_
 #define GRAPH_VIO_FACTOR_PARAMS_H_
 
-#include <graph_vio/projection_factor_adder_params.h>
-#include <graph_vio/smart_projection_factor_adder_params.h>
-#include <graph_vio/standstill_factor_adder_params.h>
+#include <factor_adders/projection_factor_adder_params.h>
+#include <factor_adders/smart_projection_factor_adder_params.h>
+#include <factor_adders/standstill_factor_adder_params.h>
 
 namespace graph_vio {
 struct FactorParams {
-  SmartProjectionFactorAdderParams smart_projection_adder;
-  StandstillFactorAdderParams standstill_adder;
-  ProjectionFactorAdderParams projection_adder;
+  factor_adders::SmartProjectionFactorAdderParams smart_projection_adder;
+  factor_adders::StandstillFactorAdderParams standstill_adder;
+  factor_adders::ProjectionFactorAdderParams projection_adder;
 };
 }  // namespace graph_vio
 

@@ -18,7 +18,7 @@
 #ifndef GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 #define GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 
-#include <graph_vio/combined_nav_state_graph_values_params.h>
+#include <graph_values/combined_nav_state_graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 
 #include <boost/serialization/serialization.hpp>
@@ -33,7 +33,7 @@ struct CombinedNavStateNodeUpdaterParams {
   double huber_k;
   localization_common::CombinedNavState global_N_body_start;
   bool add_priors;
-  CombinedNavStateGraphValuesParams graph_values;
+  graph_values::CombinedNavStateGraphValuesParams graph_values;
   bool threshold_bias_uncertainty;
   double accel_bias_stddev_threshold;
   double gyro_bias_stddev_threshold;

@@ -19,17 +19,17 @@
 #ifndef GRAPH_VIO_SMART_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 #define GRAPH_VIO_SMART_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 
-#include <graph_vio/smart_projection_factor_adder_params.h>
+#include <factor_adders/smart_projection_factor_adder_params.h>
 #include <graph_optimizer/graph_action_completer.h>
-#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_values/combined_nav_state_graph_values.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
 
 namespace graph_vio {
 class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
-  SmartProjectionGraphActionCompleter(const SmartProjectionFactorAdderParams& params,
-                                      std::shared_ptr<const CombinedNavStateGraphValues> graph_values);
+  SmartProjectionGraphActionCompleter(const factor_adders::SmartProjectionFactorAdderParams& params,
+                                      std::shared_ptr<const graph_values::CombinedNavStateGraphValues> graph_values);
 
   bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) final;
 
@@ -38,11 +38,11 @@ class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionC
   const gtsam::SmartProjectionParams& smart_projection_params() const;
 
  private:
-  void SplitSmartFactorsIfNeeded(const CombinedNavStateGraphValues& graph_values,
+  void SplitSmartFactorsIfNeeded(const graph_values::CombinedNavStateGraphValues& graph_values,
                                  graph_optimizer::FactorsToAdd& factors_to_add);
 
   SmartProjectionFactorAdderParams params_;
-  std::shared_ptr<const CombinedNavStateGraphValues> graph_values_;
+  std::shared_ptr<const graph_values::CombinedNavStateGraphValues> graph_values_;
   gtsam::SmartProjectionParams smart_projection_params_;
 };
 }  // namespace graph_vio

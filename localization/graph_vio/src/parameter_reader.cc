@@ -24,6 +24,7 @@
 #include <msg_conversions/msg_conversions.h>
 
 namespace graph_vio {
+namespace fa = factor_adders;
 namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -40,7 +41,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   LoadStandstillFactorAdderParams(config, params.standstill_adder);
 }
 
-void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params) {
+void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, fa::ProjectionFactorAdderParams& params) {
   params.enabled = mc::LoadBool(config, "projection_adder_enabled");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.enable_EPI = mc::LoadBool(config, "projection_adder_enable_EPI");
@@ -59,7 +60,7 @@ void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, Projec
 }
 
 void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
-                                          SmartProjectionFactorAdderParams& params) {
+                                          fa::SmartProjectionFactorAdderParams& params) {
   params.enabled = mc::LoadBool(config, "smart_projection_adder_enabled");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_avg_distance_from_mean = mc::LoadDouble(config, "smart_projection_adder_min_avg_distance_from_mean");
@@ -86,7 +87,7 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
     gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
 }
 
-void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params) {
+void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::StandstillFactorAdderParams& params) {
   params.add_velocity_prior = mc::LoadBool(config, "standstill_adder_add_velocity_prior");
   params.add_pose_between_factor = mc::LoadBool(config, "standstill_adder_add_pose_between_factor");
   params.enabled = params.add_velocity_prior || params.add_pose_between_factor;
@@ -129,11 +130,11 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
   params.threshold_bias_uncertainty = mc::LoadBool(config, "threshold_bias_uncertainty");
   params.accel_bias_stddev_threshold = mc::LoadDouble(config, "accel_bias_stddev_threshold");
   params.gyro_bias_stddev_threshold = mc::LoadDouble(config, "gyro_bias_stddev_threshold");
-  LoadCombinedNavStateGraphValuesParams(config, params.graph_values);
+  Loadgv::CombinedNavStateGraphValuesParams(config, params.graph_values);
 }
 
-void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
-                                           CombinedNavStateGraphValuesParams& params) {
+void Loadgv::CombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+                                           gv::CombinedNavStateGraphValuesParams& params) {
   params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
   params.min_num_states = mc::LoadInt(config, "min_num_states");
   params.max_num_states = mc::LoadInt(config, "max_num_states");

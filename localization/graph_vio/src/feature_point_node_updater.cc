@@ -24,13 +24,14 @@
 
 namespace graph_vio {
 namespace go = graph_optimizer;
+namespace gv = graph_values;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 
 // TODO(rsoussan): Make new node updater base class that doesn't have functions left empty here?
 FeaturePointNodeUpdater::FeaturePointNodeUpdater(const FeaturePointNodeUpdaterParams& params,
                                                  std::shared_ptr<gtsam::Values> values)
-    : params_(params), feature_point_graph_values_(new FeaturePointGraphValues(std::move(values))) {}
+    : params_(params), feature_point_graph_values_(new gv::FeaturePointGraphValues(std::move(values))) {}
 
 void FeaturePointNodeUpdater::AddInitialValuesAndPriors(const lc::FeaturePoint3d& global_t_point,
                                                         const lc::FeaturePoint3dNoise& noise,
@@ -104,11 +105,11 @@ boost::optional<localization_common::Time> FeaturePointNodeUpdater::LatestTimest
 
 int FeaturePointNodeUpdater::NumFeatures() const { return feature_point_graph_values_->NumFeatures(); }
 
-std::shared_ptr<FeaturePointGraphValues> FeaturePointNodeUpdater::shared_feature_point_graph_values() {
+std::shared_ptr<gv::FeaturePointGraphValues> FeaturePointNodeUpdater::shared_feature_point_graph_values() {
   return feature_point_graph_values_;
 }
 
-const FeaturePointGraphValues& FeaturePointNodeUpdater::feature_point_graph_values() const {
+const gv::FeaturePointGraphValues& FeaturePointNodeUpdater::feature_point_graph_values() const {
   return *feature_point_graph_values_;
 }
 }  // namespace graph_vio

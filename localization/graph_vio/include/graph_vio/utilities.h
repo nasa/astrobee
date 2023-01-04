@@ -21,7 +21,7 @@
 
 #include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/SerializedGraph.h>
-#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_values/combined_nav_state_graph_values.h>
 #include <graph_vio/feature_counts.h>
 #include <vision_common/feature_track.h>
 #include <graph_vio/graph_vio.h>
@@ -68,11 +68,13 @@ geometry_msgs::PoseStamped PoseMsg(const localization_measurements::TimestampedP
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values);
+  const gtsam::SmartProjectionParams& smart_projection_params,
+  const graph_values::CombinedNavStateGraphValues& graph_values);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values);
+  const gtsam::SmartProjectionParams& smart_projection_params,
+  const graph_values::CombinedNavStateGraphValues& graph_values);
 
 SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
                                                       const std::unordered_set<int>& factor_key_indices_to_remove,
