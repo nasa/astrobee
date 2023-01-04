@@ -29,13 +29,12 @@
 #include <Eigen/Core>
 
 namespace graph_localizer {
-namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix)
-    : reset_world_T_dock_(false), reset_world_T_handrail_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
+    : reset_world_T_dock_(false), reset_world_T_handrail_(false) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   config.AddFile("transforms.config");
@@ -84,42 +83,9 @@ void GraphLocalizerWrapper::Update() {
   }
 }
 
-void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
-  feature_counts_.of = feature_array_msg.feature_array.size();
-  if (graph_localizer_) {
-    graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
-  }
-}
-
 void GraphLocalizerWrapper::ResetLocalizer() {
   LogInfo("ResetLocalizer: Resetting localizer.");
   graph_localizer_initializer_.ResetStartPose();
-  if (!latest_biases_) {
-    LogError(
-      "ResetLocalizer: Trying to reset localizer when no biases "
-      "are available.");
-    return;
-  }
-
-  // TODO(rsoussan): compare current time with latest bias timestamp and print
-  // warning if it is too old
-  graph_localizer_initializer_.SetBiases(*latest_biases_, true);
-  graph_localizer_.reset();
-  sanity_checker_->Reset();
-}
-
-void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
-  LogInfo("ResetBiasAndLocalizer: Resetting biases and localizer.");
-  graph_localizer_initializer_.ResetBiasesAndStartPose();
-  graph_localizer_.reset();
-  sanity_checker_->Reset();
-}
-
-void GraphLocalizerWrapper::ResetBiasesFromFileAndResetLocalizer() {
-  LogInfo("ResetBiasAndLocalizer: Resetting biases from file and resetting localizer.");
-  graph_localizer_initializer_.ResetBiasesFromFileAndResetStartPose();
-  if (graph_localizer_initializer_.HasBiases())
-    latest_biases_ = graph_localizer_initializer_.params().graph_initializer.initial_imu_bias;
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
@@ -147,9 +113,6 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
     graph_localizer_initializer_.SetStartPose(*sparse_mapping_pose_);
-    // Set fan speed mode as well in case this hasn't been set yet
-    // TODO(rsoussan): Do this in a cleaner way
-    graph_localizer_initializer_.SetFanSpeedMode(fan_speed_mode_);
   }
 }
 
@@ -235,33 +198,7 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   }
 }
 
-void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
-  if (graph_localizer_) {
-    graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
-    const auto latest_biases = graph_localizer_->LatestBiases();
-    if (!latest_biases) {
-      LogError("ImuCallback: Failed to get latest biases.");
-    } else {
-      latest_biases_ = latest_biases->first;
-    }
-  } else if (graph_localizer_initializer_.EstimateBiases()) {
-    graph_localizer_initializer_.EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), fan_speed_mode_);
-    if (graph_localizer_initializer_.HasBiases())
-      latest_biases_ = graph_localizer_initializer_.params().graph_initializer.initial_imu_bias;
-  }
-
-  if (!graph_localizer_ && graph_localizer_initializer_.ReadyToInitialize()) {
-    InitializeGraph();
-    LogDebug("ImuCallback: Initialized Graph.");
-  }
-}
-
-void GraphLocalizerWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
-  fan_speed_mode_ = lm::ConvertFanSpeedMode(flight_mode.speed);
-  if (graph_localizer_) graph_localizer_->SetFanSpeedMode(fan_speed_mode_);
-  graph_localizer_initializer_.SetFanSpeedMode(fan_speed_mode_);
-}
-
+// TODO(rsoussan): call this from somewhere!!!! after get starting pose!
 void GraphLocalizerWrapper::InitializeGraph() {
   if (!graph_localizer_initializer_.ReadyToInitialize()) {
     LogDebug("InitializeGraph: Trying to initialize graph when not ready.");
@@ -269,11 +206,6 @@ void GraphLocalizerWrapper::InitializeGraph() {
   }
 
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_localizer_initializer_.params()));
-}
-
-boost::optional<const FeatureTrackIdMap&> GraphLocalizerWrapper::feature_tracks() const {
-  if (!graph_localizer_) return boost::none;
-  return graph_localizer_->feature_tracks();
 }
 
 boost::optional<const GraphLocalizer&> GraphLocalizerWrapper::graph_localizer() const {

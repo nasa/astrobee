@@ -1,6 +1,8 @@
 - update graph loc!
   - remove uneeded code
   - compile!
+- move combinednavstate accesors to combinednavstate node updater????
+  - update graph vio with this!!
 - move graph action completers to new package?
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?

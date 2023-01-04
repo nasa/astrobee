@@ -21,8 +21,6 @@
 #include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/GraphState.h>
-#include <ff_msgs/Feature2dArray.h>
-#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/feature_counts.h>
@@ -30,21 +28,18 @@
 #include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/sanity_checker.h>
-#include <localization_measurements/fan_speed_mode.h>
-#include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 #include <localization_measurements/timestamped_handrail_pose.h>
 #include <localization_measurements/timestamped_pose.h>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <sensor_msgs/Imu.h>
 
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace graph_localizer {
-// Handles initialization of parameters, biases, and initial pose for graph
+// Handles initialization of parameters and initial pose for graph
 // localizer.  Provides callbacks that can be used by a ROS or non-ROS system
 // (i.e. graph_bag, which does not use a ROS core, vs. graph_localizer_nodelet,
 // which is used when running live).
@@ -52,12 +47,7 @@ class GraphLocalizerWrapper {
  public:
   explicit GraphLocalizerWrapper(const std::string& graph_config_path_prefix = "");
 
-  // Assumes previous bias estimates are available and uses these.
   void ResetLocalizer();
-
-  void ResetBiasesAndLocalizer();
-
-  void ResetBiasesFromFileAndResetLocalizer();
 
   boost::optional<geometry_msgs::PoseStamped> LatestSparseMappingPoseMsg() const;
 
@@ -75,8 +65,6 @@ class GraphLocalizerWrapper {
 
   void Update();
 
-  void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
-
   void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
@@ -84,12 +72,6 @@ class GraphLocalizerWrapper {
   void DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   void DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
-
-  void ImuCallback(const sensor_msgs::Imu& imu_msg);
-
-  void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
-
-  boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
 
   boost::optional<const GraphLocalizer&> graph_localizer() const;
 
@@ -124,9 +106,8 @@ class GraphLocalizerWrapper {
   // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
-  boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphLocalizerInitializer graph_localizer_initializer_;
-  FeatureCounts feature_counts_;
+  // FeatureCounts feature_counts_;
   // world_T_body poses using sensor measurements
   // TODO(rsoussan): Rename these? world_T_body_sensor_name?
   boost::optional<localization_measurements::TimestampedPose> sparse_mapping_pose_;
@@ -142,7 +123,6 @@ class GraphLocalizerWrapper {
   bool estimate_world_T_dock_using_loc_;
   int ar_min_num_landmarks_;
   int sparse_mapping_min_num_landmarks_;
-  localization_measurements::FanSpeedMode fan_speed_mode_;
 };
 }  // namespace graph_localizer
 

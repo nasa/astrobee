@@ -64,8 +64,6 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size, &GraphLocalizerNodelet::ImuCallback,
-                                   this, ros::TransportHints().tcpNoDelay());
   ar_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, params_.max_ar_buffer_size,
                           &GraphLocalizerNodelet::ARVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
@@ -75,18 +73,9 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   depth_odometry_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odometry_buffer_size,
                           &GraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
-  of_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
-                          &GraphLocalizerNodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
   vl_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
                           &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
-  flight_mode_sub_ =
-    private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &GraphLocalizerNodelet::FlightModeCallback, this);
-  bias_srv_ =
-    private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
-  bias_from_file_srv_ = private_nh_.advertiseService(
-    SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
   reset_map_srv_ = private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &GraphLocalizerNodelet::ResetMap, this);
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
   input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
@@ -125,56 +114,24 @@ void GraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 
 bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
-bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
-  DisableLocalizer();
-  graph_localizer_wrapper_.ResetBiasesAndLocalizer();
-  PublishReset();
-  EnableLocalizer();
-  return true;
+bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+  return ResetLocalizer();
 }
 
 bool GraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
-  // Reset localizer while loading previous biases when map is reset to prevent possible initial
-  // map jump from affecting estimated IMU biases and velocity estimation.
   // Clear vl messages to prevent old localization results from being used by localizer after reset
-  // TODO(rsoussan): Better way to clear buffer?
   vl_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
                           &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
-  return ResetBiasesFromFileAndResetLocalizer();
+  return ResetLocalizer();
 }
 
-bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req,
-                                                                 std_srvs::Empty::Response& res) {
-  return ResetBiasesFromFileAndResetLocalizer();
-}
-
-bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
-  DisableLocalizer();
-  graph_localizer_wrapper_.ResetBiasesFromFileAndResetLocalizer();
-  PublishReset();
-  EnableLocalizer();
-  return true;
-}
-
-bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
-  ResetAndEnableLocalizer();
-  return true;
-}
-
-void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
+bool GraphLocalizerNodelet::ResetLocalizer() {
   DisableLocalizer();
   graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
   EnableLocalizer();
-}
-
-void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
-  of_timer_.HeaderDiff(feature_array_msg->header);
-  of_timer_.VlogEveryN(100, 2);
-
-  if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
+  return true;
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -212,18 +169,6 @@ void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
   PublishWorldTHandrailTF();
   if (ValidDepthMsg(*depth_landmarks_msg)) PublishHandrailPose();
-}
-
-void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  imu_timer_.HeaderDiff(imu_msg->header);
-  imu_timer_.VlogEveryN(100, 2);
-
-  if (!localizer_enabled()) return;
-  graph_localizer_wrapper_.ImuCallback(*imu_msg);
-}
-
-void GraphLocalizerNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
-  graph_localizer_wrapper_.FlightModeCallback(*mode);
 }
 
 void GraphLocalizerNodelet::PublishLocalizationState() {
