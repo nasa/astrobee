@@ -42,13 +42,13 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           factor_adders::SmartProjectionFactorAdderParams& params);
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config,
                                      factor_adders::StandstillFactorAdderParams& params);
-void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
+void LoadFeatureTrackerParams(config_reader::ConfigReader& config, vision_common::FeatureTrackerParams& params);
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
 // Loads all params except some (biases and start pose) that are
 // not loaded from config files
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
-void Loadgraph_values::CombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
                                            graph_values::CombinedNavStateGraphValuesParams& params);
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);

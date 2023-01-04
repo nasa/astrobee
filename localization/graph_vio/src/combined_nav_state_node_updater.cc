@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <graph_optimizer/utilities.h>
 #include <graph_vio/combined_nav_state_node_updater.h>
 #include <graph_vio/utilities.h>
 #include <imu_integration/utilities.h>
@@ -33,11 +34,11 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
-  const gv::CombinedNavStateNodeUpdaterParams& params,
+  const CombinedNavStateNodeUpdaterParams& params,
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator, std::shared_ptr<gtsam::Values> values)
     : params_(params),
       latest_imu_integrator_(std::move(latest_imu_integrator)),
-      graph_values_(new gv::gv::CombinedNavStateGraphValues(params.graph_values, std::move(values))),
+      graph_values_(new gv::CombinedNavStateGraphValues(params.graph_values, std::move(values))),
       key_index_(0) {
   const gtsam::Vector6 pose_prior_noise_sigmas(
     (gtsam::Vector(6) << params_.starting_prior_translation_stddev, params_.starting_prior_translation_stddev,

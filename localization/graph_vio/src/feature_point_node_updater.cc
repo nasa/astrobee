@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <graph_optimizer/utilities.h>
 #include <graph_vio/feature_point_node_updater.h>
 #include <graph_vio/utilities.h>
 

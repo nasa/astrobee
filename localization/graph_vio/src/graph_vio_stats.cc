@@ -29,6 +29,7 @@
 
 namespace graph_vio {
 namespace go = graph_optimizer;
+namespace gv = graph_values;
 GraphVIOStats::GraphVIOStats() {
   AddStatsAverager(num_states_averager_);
   AddStatsAverager(duration_averager_);
@@ -48,7 +49,7 @@ GraphVIOStats::GraphVIOStats() {
   AddErrorAverager(bias_prior_error_averager_);
 }
 
-void GraphVIOStats::Setgv::CombinedNavStateGraphValues(
+void GraphVIOStats::CombinedNavStateGraphValues(
   std::shared_ptr<const gv::CombinedNavStateGraphValues> combined_nav_state_graph_values) {
   combined_nav_state_graph_values_ = std::move(combined_nav_state_graph_values);
 }

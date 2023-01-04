@@ -35,7 +35,7 @@ struct GraphVIOParams {
   CalibrationParams calibration;
   FactorParams factor;
   FeaturePointNodeUpdaterParams feature_point_node_updater;
-  FeatureTrackerParams feature_tracker;
+  vision_common::FeatureTrackerParams feature_tracker;
   graph_optimizer::GraphOptimizerParams graph_optimizer;
   GraphInitializerParams graph_initializer;
   double max_standstill_feature_track_avg_distance_from_mean;

@@ -26,8 +26,8 @@ namespace lm = localization_measurements;
 namespace go = graph_optimizer;
 namespace gv = graph_values;
 
-gv::gv::CombinedNavStateGraphValuesParams Defaultgv::CombinedNavStateGraphValuesParams() {
-  gv::gv::CombinedNavStateGraphValuesParams params;
+gv::CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams() {
+  gv::CombinedNavStateGraphValuesParams params;
   params.ideal_duration = 3;
   params.min_num_states = 3;
   params.max_num_states = 20;
@@ -60,7 +60,7 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
   params.global_N_body_start =
     lc::CombinedNavState(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(), gtsam::imuBias::ConstantBias(), 0.0);
   params.add_priors = true;
-  params.graph_values = Defaultgv::CombinedNavStateGraphValuesParams();
+  params.graph_values = DefaultCombinedNavStateGraphValuesParams();
   params.threshold_bias_uncertainty = false;
   return params;
 }

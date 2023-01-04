@@ -67,18 +67,18 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const loca
 geometry_msgs::PoseStamped PoseMsg(const localization_measurements::TimestampedPose& timestamped_pose);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
-  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
+  const factor_adders::SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params,
   const graph_values::CombinedNavStateGraphValues& graph_values);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
-  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
+  const factor_adders::SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params,
   const graph_values::CombinedNavStateGraphValues& graph_values);
 
 SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
                                                       const std::unordered_set<int>& factor_key_indices_to_remove,
-                                                      const SmartProjectionFactorAdderParams& params,
+                                                      const factor_adders::SmartProjectionFactorAdderParams& params,
                                                       const gtsam::SmartProjectionParams& smart_projection_params);
 
 int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const gtsam::Values& values,

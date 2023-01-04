@@ -41,7 +41,7 @@ class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionC
   void SplitSmartFactorsIfNeeded(const graph_values::CombinedNavStateGraphValues& graph_values,
                                  graph_optimizer::FactorsToAdd& factors_to_add);
 
-  SmartProjectionFactorAdderParams params_;
+  factor_adders::SmartProjectionFactorAdderParams params_;
   std::shared_ptr<const graph_values::CombinedNavStateGraphValues> graph_values_;
   gtsam::SmartProjectionParams smart_projection_params_;
 };

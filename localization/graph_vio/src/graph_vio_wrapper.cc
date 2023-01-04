@@ -33,6 +33,7 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
+namespace vc = vision_common;
 
 GraphVIOWrapper::GraphVIOWrapper(const std::string& graph_config_path_prefix)
     : fan_speed_mode_(lm::FanSpeedMode::kNominal) {
@@ -163,7 +164,7 @@ void GraphVIOWrapper::InitializeGraph() {
   graph_vio_.reset(new graph_vio::GraphVIO(graph_vio_initializer_.params()));
 }
 
-boost::optional<const FeatureTrackIdMap&> GraphVIOWrapper::feature_tracks() const {
+boost::optional<const vc::FeatureTrackIdMap&> GraphVIOWrapper::feature_tracks() const {
   if (!graph_vio_) return boost::none;
   return graph_vio_->feature_tracks();
 }

@@ -29,6 +29,7 @@ namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
+namespace vc = vision_common;
 
 // TODO(rsoussan): remove this?
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params) {
@@ -99,7 +100,7 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::St
   params.huber_k = mc::LoadDouble(config, "huber_k");
 }
 
-void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
+void LoadFeatureTrackerParams(config_reader::ConfigReader& config, vc::FeatureTrackerParams& params) {
   params.sliding_window_duration = mc::LoadDouble(config, "feature_tracker_sliding_window_duration");
   params.smart_projection_adder_measurement_spacing = mc::LoadInt(config, "smart_projection_adder_measurement_spacing");
 }
@@ -130,10 +131,10 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
   params.threshold_bias_uncertainty = mc::LoadBool(config, "threshold_bias_uncertainty");
   params.accel_bias_stddev_threshold = mc::LoadDouble(config, "accel_bias_stddev_threshold");
   params.gyro_bias_stddev_threshold = mc::LoadDouble(config, "gyro_bias_stddev_threshold");
-  Loadgv::CombinedNavStateGraphValuesParams(config, params.graph_values);
+  LoadCombinedNavStateGraphValuesParams(config, params.graph_values);
 }
 
-void Loadgv::CombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
                                            gv::CombinedNavStateGraphValuesParams& params) {
   params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
   params.min_num_states = mc::LoadInt(config, "min_num_states");

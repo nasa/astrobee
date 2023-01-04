@@ -19,6 +19,9 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_H_
 #define GRAPH_VIO_GRAPH_VIO_H_
 
+#include <factor_adders/standstill_factor_adder.h>
+#include <factor_adders/projection_factor_adder.h>
+#include <factor_adders/smart_projection_cumulative_factor_adder.h>
 #include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <graph_vio/combined_nav_state_node_updater.h>
 #include <graph_vio/combined_nav_state_node_updater_params.h>
@@ -27,10 +30,7 @@
 #include <graph_vio/graph_vio_params.h>
 #include <graph_vio/graph_vio_stats.h>
 #include <graph_vio/projection_graph_action_completer.h>
-#include <graph_vio/projection_factor_adder.h>
-#include <graph_vio/smart_projection_cumulative_factor_adder.h>
 #include <graph_vio/smart_projection_graph_action_completer.h>
-#include <graph_vio/standstill_factor_adder.h>
 #include <graph_optimizer/graph_optimizer.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
@@ -83,7 +83,7 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void CheckForStandstill();
   bool DoPostOptimizeActions() final;
-  const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
+  const vision_common::FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 
@@ -140,15 +140,15 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
     ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_updater_);
   }
 
-  std::shared_ptr<FeatureTracker> feature_tracker_;
+  std::shared_ptr<vision_common::FeatureTracker> feature_tracker_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   GraphVIOParams params_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
 
   // Factor Adders
-  std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;
-  std::shared_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
-  std::shared_ptr<StandstillFactorAdder> standstill_factor_adder_;
+  std::shared_ptr<factor_adders::ProjectionFactorAdder> projection_factor_adder_;
+  std::shared_ptr<factor_adders::SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
+  std::shared_ptr<factor_adders::StandstillFactorAdder> standstill_factor_adder_;
 
   // Node Updaters
   std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;

@@ -25,7 +25,7 @@
 #include <graph_vio/graph_vio_params.h>
 
 namespace graph_vio {
-graph_values::graph_values::CombinedNavStateGraphValuesParams Defaultgraph_values::CombinedNavStateGraphValuesParams();
+graph_values::CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams();
 
 graph_optimizer::GraphOptimizerParams DefaultGraphOptimizerParams();
 

@@ -25,7 +25,7 @@ namespace graph_vio {
 class GraphVIOStats : public graph_optimizer::GraphStats {
  public:
   GraphVIOStats();
-  void Setgraph_values::CombinedNavStateGraphValues(
+  void SetCombinedNavStateGraphValues(
     std::shared_ptr<const graph_values::CombinedNavStateGraphValues> combined_nav_state_graph_values);
   void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) final;
   void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) final;

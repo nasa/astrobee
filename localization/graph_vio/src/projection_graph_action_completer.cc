@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <graph_optimizer/utilities.h>
 #include <graph_vio/projection_graph_action_completer.h>
 #include <graph_vio/utilities.h>
 #include <localization_common/logger.h>
@@ -27,6 +28,7 @@ namespace graph_vio {
 namespace fa = factor_adders;
 namespace go = graph_optimizer;
 namespace sym = gtsam::symbol_shorthand;
+namespace gv = graph_values;
 ProjectionGraphActionCompleter::ProjectionGraphActionCompleter(
   const fa::ProjectionFactorAdderParams& params, std::shared_ptr<const gv::CombinedNavStateGraphValues> graph_values,
   std::shared_ptr<gv::FeaturePointGraphValues> feature_point_graph_values)

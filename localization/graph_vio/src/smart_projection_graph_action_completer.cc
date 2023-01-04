@@ -25,11 +25,14 @@
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 namespace graph_vio {
+namespace fa = factor_adders;
 namespace go = graph_optimizer;
+namespace gv = graph_values;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 SmartProjectionGraphActionCompleter::SmartProjectionGraphActionCompleter(
-  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const gv::CombinedNavStateGraphValues> graph_values)
+  const fa::SmartProjectionFactorAdderParams& params,
+  std::shared_ptr<const gv::CombinedNavStateGraphValues> graph_values)
     : params_(params), graph_values_(std::move(graph_values)) {
   smart_projection_params_.verboseCheirality = params_.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);
