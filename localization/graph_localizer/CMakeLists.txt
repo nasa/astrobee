@@ -32,13 +32,17 @@ find_package(catkin2 REQUIRED COMPONENTS
   nodelet
   camera
   config_reader
+  factor_adders
   ff_util
   ff_msgs
+  graph_factors
   graph_optimizer
+  graph_values
   imu_integration
   localization_common
   localization_measurements
   msg_conversions
+  node_updaters
   vision_common
 )
 
@@ -53,13 +57,17 @@ catkin_package(
     nodelet
     camera
     config_reader
+    factor_adders
     ff_util
     ff_msgs
+    graph_factors
     graph_optimizer
+    graph_values
     imu_integration
     localization_common
     localization_measurements
     msg_conversions
+    node_updaters
     vision_common
 )
 
@@ -87,13 +95,6 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_combined_nav_state_node_updater
-    test/test_combined_nav_state_node_updater.test
-    test/test_combined_nav_state_node_updater.cc
-  )
-  target_link_libraries(test_combined_nav_state_node_updater
-    graph_localizer ${catkin_LIBRARIES} 
-  )
   add_rostest_gtest(test_depth_odometry_factor_adder
     test/test_depth_odometry_factor_adder.test
     test/test_depth_odometry_factor_adder.cc
@@ -101,67 +102,11 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_depth_odometry_factor_adder
     graph_localizer ${catkin_LIBRARIES} 
   )
-  add_rostest_gtest(test_inverse_depth_projection_factor
-    test/test_inverse_depth_projection_factor.test
-    test/test_inverse_depth_projection_factor.cc
-  )
-  target_link_libraries(test_inverse_depth_projection_factor
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_point_to_line_factor
-    test/test_point_to_line_factor.test
-    test/test_point_to_line_factor.cc
-  )
-  target_link_libraries(test_point_to_line_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_point_to_line_segment_factor
-    test/test_point_to_line_segment_factor.test
-    test/test_point_to_line_segment_factor.cc
-  )
-  target_link_libraries(test_point_to_line_segment_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_point_to_plane_factor
-    test/test_point_to_plane_factor.test
-    test/test_point_to_plane_factor.cc
-  )
-  target_link_libraries(test_point_to_plane_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_point_to_point_between_factor
-    test/test_point_to_point_between_factor.test
-    test/test_point_to_point_between_factor.cc
-  )
-  target_link_libraries(test_point_to_point_between_factor
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_point_to_handrail_endpoint_factor
-    test/test_point_to_handrail_endpoint_factor.test
-    test/test_point_to_handrail_endpoint_factor.cc
-  )
-  target_link_libraries(test_point_to_handrail_endpoint_factor
-    graph_localizer ${catkin_LIBRARIES} 
-  )
   add_rostest_gtest(test_rotation_factor_adder
     test/test_rotation_factor_adder.test
     test/test_rotation_factor_adder.cc
   )
   target_link_libraries(test_rotation_factor_adder
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_rotation_factor
-    test/test_rotation_factor.test
-    test/test_rotation_factor.cc
-  )
-  target_link_libraries(test_rotation_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_silu
-    test/test_silu.test
-    test/test_silu.cc
-  )
-  target_link_libraries(test_silu
     graph_localizer ${catkin_LIBRARIES}
   )
 endif()

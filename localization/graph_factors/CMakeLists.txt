@@ -73,6 +73,48 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_inverse_depth_projection_factor
     graph_factors ${catkin_LIBRARIES} 
   )
+  add_rostest_gtest(test_point_to_line_factor
+    test/test_point_to_line_factor.test
+    test/test_point_to_line_factor.cc
+  )
+  target_link_libraries(test_point_to_line_factor
+    graph_factors ${catkin_LIBRARIES}
+  )
+  add_rostest_gtest(test_point_to_line_segment_factor
+    test/test_point_to_line_segment_factor.test
+    test/test_point_to_line_segment_factor.cc
+  )
+  target_link_libraries(test_point_to_line_segment_factor
+    graph_factors ${catkin_LIBRARIES}
+  )
+  add_rostest_gtest(test_point_to_plane_factor
+    test/test_point_to_plane_factor.test
+    test/test_point_to_plane_factor.cc
+  )
+  target_link_libraries(test_point_to_plane_factor
+    graph_factors ${catkin_LIBRARIES}
+  )
+  add_rostest_gtest(test_point_to_point_between_factor
+    test/test_point_to_point_between_factor.test
+    test/test_point_to_point_between_factor.cc
+  )
+  target_link_libraries(test_point_to_point_between_factor
+    graph_factors ${catkin_LIBRARIES} 
+  )
+  add_rostest_gtest(test_point_to_handrail_endpoint_factor
+    test/test_point_to_handrail_endpoint_factor.test
+    test/test_point_to_handrail_endpoint_factor.cc
+  )
+  target_link_libraries(test_point_to_handrail_endpoint_factor
+    graph_factors ${catkin_LIBRARIES} 
+  )
+  add_rostest_gtest(test_silu
+    test/test_silu.test
+    test/test_silu.cc
+  )
+  target_link_libraries(test_silu
+    graph_factors ${catkin_LIBRARIES}
+  )
 endif()
 
 #############
