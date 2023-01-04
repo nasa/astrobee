@@ -60,7 +60,6 @@ FreeFlyerComponent::~FreeFlyerComponent() {
 void FreeFlyerComponent::Setup(std::string plugin_name) {
   // Get the platform name from the node handle (roslaunch group name attribute)
   if (std::string(node_->get_namespace()).size() > 1) platform_ = std::string(node_->get_namespace()).substr(1);
-  FF_ERROR_STREAM("platform_" << platform_);
 
   // If not set, try and grab the node name from the launch file
   if (node_name_.empty()) {
@@ -78,9 +77,6 @@ void FreeFlyerComponent::Setup(std::string plugin_name) {
       }
     }
   }
-
-    FF_ERROR_STREAM("node_name_" << node_name_);
-    FF_ERROR_STREAM("node_->get_name()" << node_->get_name());
 
   // Read in faults for this node
   param_config_.AddFile("faults.config");
