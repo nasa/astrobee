@@ -37,7 +37,7 @@
 #include <ff_msgs/SetFloat.h>
 
 // Autocode inclide
-#include <gnc_autocode/blowers.h>
+#include <pmc_sim/pmc_sim.h>
 
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
@@ -309,16 +309,15 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // Set the impeller and nozzle values to those given in the message
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
       // Take care of ramping in a more responsible way
-      if (blowers_.states_[i].impeller_cmd < msg.goals[i].motor_speed)
+      if (pmc_.ImpellerCmd(i) < msg.goals[i].motor_speed)
         fsm_.Update(GOAL_RAMP_UP);
-      if (blowers_.states_[i].impeller_cmd > msg.goals[i].motor_speed)
+      if (pmc_.ImpellerCmd(i) > msg.goals[i].motor_speed)
         fsm_.Update(GOAL_RAMP_DOWN);
       // Set the motor speed
-      blowers_.states_[i].impeller_cmd = msg.goals[i].motor_speed;
+      pmc_.SetImpellerCmd(i, msg.goals[i].motor_speed);
       // Set the nozzles
       for (size_t j = 0; j < NUMBER_OF_NOZZLES; j++)
-        blowers_.states_[i].servo_cmd[j]
-          = static_cast <float> (msg.goals[i].nozzle_positions[j]);
+        pmc_.SetServoCmd(i, j, static_cast <float> (msg.goals[i].nozzle_positions[j]));
     }
   }
 
@@ -326,36 +325,36 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   void CommandTimerCallback(ros::TimerEvent const& event) {
     // Step the blower model
     #if GAZEBO_MAJOR_VERSION > 7
-    blowers_.SetAngularVelocity(
+    pmc_.SetAngularVelocity(
       GetLink()->RelativeAngularVel().X(),
       GetLink()->RelativeAngularVel().Y(),
       GetLink()->RelativeAngularVel().Z());
     #else
-    blowers_.SetAngularVelocity(
+    pmc_.SetAngularVelocity(
       GetLink()->GetRelativeAngularVel().x,
       GetLink()->GetRelativeAngularVel().y,
       GetLink()->GetRelativeAngularVel().z);
     #endif
-    blowers_.SetBatteryVoltage(14.0);
-    blowers_.Step();
+    pmc_.SetBatteryVoltage(14.0);
+    pmc_.Step();
     // Calculate the force and torque on the platform
     #if GAZEBO_MAJOR_VERSION > 7
     force_ = ignition::math::Vector3d(0, 0, 0);
     torque_ = ignition::math::Vector3d(0, 0, 0);
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
-      force_ += ignition::math::Vector3d(blowers_.states_[i].force_B[0],
-        blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
-      torque_ += ignition::math::Vector3d(blowers_.states_[i].torque_B[0],
-        blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
+      auto t = pmc_.Force();
+      force_ += ignition::math::Vector3d(t[0], t[1], t[2]);
+      t = pmc_.Torque();
+      torque_ += ignition::math::Vector3d(t[0], t[1], t[2]);
     }
     #else
     force_ = math::Vector3(0, 0, 0);
     torque_ = math::Vector3(0, 0, 0);
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
-      force_ += math::Vector3(blowers_.states_[i].force_B[0],
-        blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
-      torque_ += math::Vector3(blowers_.states_[i].torque_B[0],
-        blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
+      auto t = pmc_.Force();
+      force_ += math::Vector3(t[0], t[1], t[2]);
+      t = pmc_.Torque();
+      torque_ += math::Vector3(t[0], t[1], t[2]);
     }
     #endif
     // Publish telemetry
@@ -370,7 +369,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // Check if we need to change state based on the motor speed
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
       // Convert and check range
-      double rpm = round(blowers_.states_[i].motor_speed * RADS_PER_SEC_TO_RPM);
+      double rpm = round(pmc_.MotorSpeed(i) * RADS_PER_SEC_TO_RPM);
       if (rpm < 0 || rpm > 255)
         rpm = 0;
       // Populate as much telemetry as possible from the blower model
@@ -381,8 +380,8 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       // Determine the current state based on the different between the
       // commanded and telemetry motor speeds, scaled appropriately
       static double crps, trps;
-      crps = state_command_scale_ * blowers_.states_[i].impeller_cmd;
-      trps = blowers_.states_[i].motor_speed;   // Comes in rads/sec!
+      crps = state_command_scale_ * pmc_.ImpellerCmd(i);
+      trps = pmc_.MotorSpeed(i);   // Comes in rads/sec!
       // ROS_INFO_STREAM("PMC delta C " << crps << ":: T " << trps);
       if (fabs(crps - trps) < state_tol_rads_per_sec_) {
         switch (i) {
@@ -464,7 +463,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   math::Vector3 torque_;                            // Current body-frame torque
   #endif
   geometry_msgs::Wrench wrench_;                    // Used when bypassing PMC
-  gnc_autocode::GncBlowersAutocode blowers_;        // Autocode blower iface
+  pmc_sim::PMCSim pmc_;
   ff_hw_msgs::PmcCommand null_command_;             // PMC null command
   event::ConnectionPtr update_;                     // Update event from gazeo
   ff_hw_msgs::PmcTelemetry telemetry_vector_;       // Telemetry
