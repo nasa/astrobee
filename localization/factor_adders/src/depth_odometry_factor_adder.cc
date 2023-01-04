@@ -17,10 +17,13 @@
  */
 
 #include <factor_adders/depth_odometry_factor_adder.h>
-#include <factor_adders/point_to_point_between_factor.h>
-#include <factor_adders/utilities.h>
+#include <graph_factors/point_to_point_between_factor.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+
+#include <gtsam/inference/Symbol.h>
+#include <gtsam/slam/BetweenFactor.h>
 
 namespace factor_adders {
 namespace go = graph_optimizer;
@@ -57,7 +60,7 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
       const double estimate_error_norm = estimate_error.norm();
       if (estimate_error_norm > params().point_to_point_error_threshold) continue;
       const auto points_between_factor_noise =
-        Robust(gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params().noise_scale), params().huber_k);
+        go::Robust(gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params().noise_scale), params().huber_k);
       gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(new gtsam::PointToPointBetweenFactor(
         sensor_t_point_source, sensor_t_point_target, params().body_T_sensor, points_between_factor_noise,
         source_key_info.UninitializedKey(), target_key_info.UninitializedKey()));
@@ -79,7 +82,7 @@ std::vector<go::FactorsToAdd> DepthOdometryFactorAdder::AddFactors(
     }
 
     const auto relative_pose_noise =
-      Robust(gtsam::noiseModel::Gaussian::Covariance(
+      go::Robust(gtsam::noiseModel::Gaussian::Covariance(
                depth_odometry_measurement.odometry.body_F_source_T_target.covariance * params().noise_scale, false),
              params().huber_k);
     const go::KeyInfo source_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,

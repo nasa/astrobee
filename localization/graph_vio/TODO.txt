@@ -1,10 +1,11 @@
 - update graph loc!
   - remove uneeded code
-  - add new graph updater/values
+  - compile!
+- move graph action completers to new package?
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
     - set start pose fixed after maginalize????
-- move param loading from graph_vio to respective packages!
+- move param loading and serialization from graph_vio/loc to respective packages!
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
 - add unit tests?

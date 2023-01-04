@@ -16,9 +16,9 @@
  * under the License.
  */
 
-#include <factor_adders/pose_rotation_factor.h>
 #include <factor_adders/rotation_factor_adder.h>
-#include <factor_adders/utilities.h>
+#include <graph_factors/pose_rotation_factor.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
@@ -31,8 +31,9 @@ namespace factor_adders {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
+namespace vc = vision_common;
 RotationFactorAdder::RotationFactorAdder(const RotationFactorAdderParams& params,
-                                         std::shared_ptr<const FeatureTracker> feature_tracker)
+                                         std::shared_ptr<const vc::FeatureTracker> feature_tracker)
     : RotationFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
 std::vector<go::FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) {
@@ -92,7 +93,7 @@ std::vector<go::FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeatureP
   const go::KeyInfo pose_2_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, measurement.timestamp);
   const gtsam::Vector3 rotation_noise_sigmas(
     (gtsam::Vector(3) << params().rotation_stddev, params().rotation_stddev, params().rotation_stddev).finished());
-  const auto rotation_noise = Robust(
+  const auto rotation_noise = go::Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)), params().huber_k);
   const auto rotation_factor = boost::make_shared<gtsam::PoseRotationFactor>(
     body_1_R_body_2, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());

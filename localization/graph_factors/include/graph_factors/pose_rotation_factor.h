@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_POSE_ROTATION_FACTOR_H_
-#define GRAPH_LOCALIZER_POSE_ROTATION_FACTOR_H_
+#ifndef GRAPH_FACTORS_POSE_ROTATION_FACTOR_H_
+#define GRAPH_FACTORS_POSE_ROTATION_FACTOR_H_
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
@@ -95,4 +95,4 @@ class PoseRotationFactor : public NoiseModelFactor2<gtsam::Pose3, gtsam::Pose3> 
 };
 }  // namespace gtsam
 
-#endif  // GRAPH_LOCALIZER_POSE_ROTATION_FACTOR_H_
+#endif  // GRAPH_FACTORS_POSE_ROTATION_FACTOR_H_

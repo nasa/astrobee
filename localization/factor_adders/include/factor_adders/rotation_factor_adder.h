@@ -19,10 +19,10 @@
 #ifndef FACTOR_ADDERS_ROTATION_FACTOR_ADDER_H_
 #define FACTOR_ADDERS_ROTATION_FACTOR_ADDER_H_
 
-#include <factor_adders/feature_tracker.h>
 #include <factor_adders/rotation_factor_adder_params.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <vision_common/feature_tracker.h>
 
 #include <vector>
 
@@ -33,13 +33,14 @@ class RotationFactorAdder : public graph_optimizer::FactorAdder<localization_mea
     graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement, RotationFactorAdderParams>;
 
  public:
-  RotationFactorAdder(const RotationFactorAdderParams& params, std::shared_ptr<const FeatureTracker> feature_tracker);
+  RotationFactorAdder(const RotationFactorAdderParams& params,
+                      std::shared_ptr<const vision_common::FeatureTracker> feature_tracker);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& measurement) final;
 
  private:
-  std::shared_ptr<const FeatureTracker> feature_tracker_;
+  std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
 };
 }  // namespace factor_adders
 

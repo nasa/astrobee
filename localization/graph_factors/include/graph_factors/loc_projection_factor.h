@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_LOC_PROJECTION_FACTOR_H_
-#define GRAPH_LOCALIZER_LOC_PROJECTION_FACTOR_H_
+#ifndef GRAPH_FACTORS_LOC_PROJECTION_FACTOR_H_
+#define GRAPH_FACTORS_LOC_PROJECTION_FACTOR_H_
 
 #include <gtsam/geometry/Point2.h>
 #include <gtsam/geometry/Pose3.h>
@@ -234,4 +234,4 @@ struct traits<LocProjectionFactor<POSE, LANDMARK, CALIBRATION>>
 
 }  // namespace gtsam
 
-#endif  // GRAPH_LOCALIZER_LOC_PROJECTION_FACTOR_H_
+#endif  // GRAPH_FACTORS_LOC_PROJECTION_FACTOR_H_

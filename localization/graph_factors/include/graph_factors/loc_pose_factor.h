@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_LOC_POSE_FACTOR_H_
-#define GRAPH_LOCALIZER_LOC_POSE_FACTOR_H_
+#ifndef GRAPH_FACTORS_LOC_POSE_FACTOR_H_
+#define GRAPH_FACTORS_LOC_POSE_FACTOR_H_
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>
@@ -50,4 +50,4 @@ class LocPoseFactor : public PriorFactor<Pose3> {
 };
 }  // namespace gtsam
 
-#endif  // GRAPH_LOCALIZER_LOC_POSE_FACTOR_H_
+#endif  // GRAPH_FACTORS_LOC_POSE_FACTOR_H_

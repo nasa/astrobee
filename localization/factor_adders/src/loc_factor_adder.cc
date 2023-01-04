@@ -17,12 +17,13 @@
  */
 
 #include <factor_adders/loc_factor_adder.h>
-#include <factor_adders/loc_pose_factor.h>
-#include <factor_adders/loc_projection_factor.h>
-#include <factor_adders/utilities.h>
+#include <graph_factors/loc_pose_factor.h>
+#include <graph_factors/loc_projection_factor.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
+#include <gtsam/inference/Symbol.h>
 
 namespace factor_adders {
 namespace go = graph_optimizer;
@@ -60,7 +61,7 @@ std::vector<go::FactorsToAdd> LocFactorAdder::AddFactors(
                                                   params().prior_quaternion_stddev, params().prior_quaternion_stddev,
                                                   params().prior_quaternion_stddev)
                                                    .finished());
-    const auto pose_noise = Robust(
+    const auto pose_noise = go::Robust(
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)),
       params().huber_k);
 
@@ -90,7 +91,7 @@ std::vector<go::FactorsToAdd> LocFactorAdder::AddFactors(
       const gtsam::SharedIsotropic scaled_noise(
         gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
       gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-        matched_projection.image_point, matched_projection.map_point, Robust(scaled_noise, params().huber_k),
+        matched_projection.image_point, matched_projection.map_point, go::Robust(scaled_noise, params().huber_k),
         key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
       // Set world_T_cam estimate in case need to use it as a fallback
       loc_projection_factor->setWorldTCam(matched_projections_measurement.global_T_cam);

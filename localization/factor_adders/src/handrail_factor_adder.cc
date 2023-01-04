@@ -17,11 +17,11 @@
  */
 
 #include <factor_adders/handrail_factor_adder.h>
-#include <factor_adders/point_to_handrail_endpoint_factor.h>
-#include <factor_adders/point_to_line_factor.h>
-#include <factor_adders/point_to_line_segment_factor.h>
-#include <factor_adders/point_to_plane_factor.h>
-#include <factor_adders/utilities.h>
+#include <graph_factors/point_to_handrail_endpoint_factor.h>
+#include <graph_factors/point_to_line_factor.h>
+#include <graph_factors/point_to_line_segment_factor.h>
+#include <graph_factors/point_to_plane_factor.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
@@ -45,14 +45,14 @@ void HandrailFactorAdder::AddPointToLineOrLineSegmentFactors(
   const gtsam::Vector2 point_to_line_noise_sigmas(
     (gtsam::Vector(2) << params().point_to_line_stddev, params().point_to_line_stddev).finished());
   const auto point_to_line_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_noise_sigmas)),
+    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_noise_sigmas)),
            params().huber_k);
   const gtsam::Vector3 point_to_line_segment_noise_sigmas(
     (gtsam::Vector(3) << params().point_to_line_stddev, params().point_to_line_stddev, params().point_to_line_stddev)
       .finished());
-  const auto point_to_line_segment_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_segment_noise_sigmas)),
-           params().huber_k);
+  const auto point_to_line_segment_noise = go::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_segment_noise_sigmas)),
+    params().huber_k);
   const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
   for (const auto& sensor_t_line_point : handrail_points_measurement.sensor_t_line_points) {
     if (handrail_points_measurement.world_T_handrail.accurate_z_position) {
@@ -90,7 +90,7 @@ void HandrailFactorAdder::AddPointToPlaneFactors(const lm::HandrailPointsMeasure
   point_to_plane_factors_to_add.SetTimestamp(handrail_points_measurement.timestamp);
   const gtsam::Vector1 point_to_plane_noise_sigmas((gtsam::Vector(1) << params().point_to_plane_stddev).finished());
   const auto point_to_plane_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_plane_noise_sigmas)),
+    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_plane_noise_sigmas)),
            params().huber_k);
   const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
   for (const auto& sensor_t_plane_point : handrail_points_measurement.sensor_t_plane_points) {
@@ -118,7 +118,7 @@ void HandrailFactorAdder::AddPointToHandrailEndpointFactors(
   const gtsam::Vector3 point_to_handrail_endpoint_noise_sigmas(
     (gtsam::Vector(3) << params().point_to_line_stddev, params().point_to_line_stddev, params().point_to_line_stddev)
       .finished());
-  const auto point_to_handrail_endpoint_noise = Robust(
+  const auto point_to_handrail_endpoint_noise = go::Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_handrail_endpoint_noise_sigmas)),
     params().huber_k);
   const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
