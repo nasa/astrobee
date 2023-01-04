@@ -19,19 +19,18 @@
 #define GRAPH_VIO_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
+#include <factor_adders/projection_factor_adder_params.h>
+#include <factor_adders/smart_projection_factor_adder_params.h>
+#include <factor_adders/standstill_factor_adder_params.h>
 #include <graph_vio/calibration_params.h>
-#include <graph_values/combined_nav_state_graph_values_params.h>
-#include <graph_vio/combined_nav_state_node_updater_params.h>
 #include <graph_vio/factor_params.h>
-#include <graph_vio/feature_point_node_updater_params.h>
-#include <vision_common/feature_tracker_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_nodelet_params.h>
 #include <graph_vio/graph_vio_params.h>
-#include <factor_adders/projection_factor_adder_params.h>
 #include <graph_vio/sanity_checker_params.h>
-#include <factor_adders/smart_projection_factor_adder_params.h>
-#include <factor_adders/standstill_factor_adder_params.h>
+#include <node_updaters/combined_nav_state_node_updater_params.h>
+#include <node_updaters/feature_point_node_updater_params.h>
+#include <vision_common/feature_tracker_params.h>
 
 namespace graph_vio {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
@@ -51,8 +50,9 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
 void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
                                            graph_values::CombinedNavStateGraphValuesParams& params);
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
-                                           CombinedNavStateNodeUpdaterParams& params);
-void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
+                                           node_updaters::CombinedNavStateNodeUpdaterParams& params);
+void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config,
+                                       node_updaters::FeaturePointNodeUpdaterParams& params);
 void LoadGraphVIOParams(config_reader::ConfigReader& config, GraphVIOParams& params);
 void LoadGraphVIONodeletParams(config_reader::ConfigReader& config, GraphVIONodeletParams& params);
 }  // namespace graph_vio

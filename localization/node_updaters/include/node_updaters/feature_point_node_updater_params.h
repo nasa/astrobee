@@ -15,15 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
-#define GRAPH_VIO_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
+#ifndef NODE_UPDATERS_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
+#define NODE_UPDATERS_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
 
 #include <localization_common/combined_nav_state.h>
 
-namespace graph_vio {
+namespace node_updaters {
 struct FeaturePointNodeUpdaterParams {
   double huber_k;
 };
-}  // namespace graph_vio
+}  // namespace node_updaters
 
-#endif  // GRAPH_VIO_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
+#endif  // NODE_UPDATERS_FEATURE_POINT_NODE_UPDATER_PARAMS_H_

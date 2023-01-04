@@ -1,0 +1,27 @@
+<package>
+  <name>node_updaters</name>
+  <version>1.0.0</version>
+  <description>
+    The node updaters package
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>graph_factors</build_depend>
+  <build_depend>graph_optimizer</build_depend>
+  <build_depend>graph_values</build_depend>
+  <build_depend>imu_integration</build_depend>
+  <build_depend>localization_common</build_depend>
+  <run_depend>graph_factors</run_depend>
+  <run_depend>graph_optimizer</run_depend>
+  <run_depend>graph_values</run_depend>
+  <run_depend>imu_integration</run_depend>
+  <run_depend>localization_common</run_depend>
+</package>

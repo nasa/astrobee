@@ -17,8 +17,7 @@
  */
 
 #include <graph_optimizer/utilities.h>
-#include <graph_vio/combined_nav_state_node_updater.h>
-#include <graph_vio/utilities.h>
+#include <node_updaters/combined_nav_state_node_updater.h>
 #include <imu_integration/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -27,7 +26,7 @@
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/slam/PriorFactor.h>
 
-namespace graph_vio {
+namespace node_updaters {
 namespace go = graph_optimizer;
 namespace gv = graph_values;
 namespace ii = imu_integration;
@@ -398,4 +397,4 @@ bool CombinedNavStateNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(
   factors.push_back(combined_imu_factor);
   return true;
 }
-}  // namespace graph_vio
+}  // namespace node_updaters

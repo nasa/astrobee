@@ -46,6 +46,7 @@ namespace gv = graph_values;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace nu = node_updaters;
 namespace vc = vision_common;
 
 GraphVIO::GraphVIO(const GraphVIOParams& params)
@@ -65,15 +66,16 @@ void GraphVIO::InitializeNodeUpdaters() {
     gtsam::Pose3::identity(), params_.graph_initializer.global_V_body_start,
     params_.graph_initializer.initial_imu_bias, params_.graph_initializer.start_time);
   params_.combined_nav_state_node_updater.global_N_body_start = global_N_body_start;
-  combined_nav_state_node_updater_.reset(
-    new CombinedNavStateNodeUpdater(params_.combined_nav_state_node_updater, latest_imu_integrator_, shared_values()));
+  combined_nav_state_node_updater_.reset(new nu::CombinedNavStateNodeUpdater(params_.combined_nav_state_node_updater,
+                                                                             latest_imu_integrator_, shared_values()));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphVIOStats*>(graph_stats())
     ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
-  feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params_.feature_point_node_updater, shared_values()));
+  feature_point_node_updater_.reset(
+    new nu::FeaturePointNodeUpdater(params_.feature_point_node_updater, shared_values()));
   AddNodeUpdater(feature_point_node_updater_);
 }
 
@@ -366,7 +368,7 @@ const gv::CombinedNavStateGraphValues& GraphVIO::combined_nav_state_graph_values
   return combined_nav_state_node_updater_->graph_values();
 }
 
-const CombinedNavStateNodeUpdater& GraphVIO::combined_nav_state_node_updater() const {
+const nu::CombinedNavStateNodeUpdater& GraphVIO::combined_nav_state_node_updater() const {
   return *combined_nav_state_node_updater_;
 }
 

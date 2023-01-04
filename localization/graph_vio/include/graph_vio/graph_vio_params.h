@@ -19,9 +19,9 @@
 #define GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 
 #include <graph_vio/calibration_params.h>
-#include <graph_vio/combined_nav_state_node_updater_params.h>
 #include <graph_vio/factor_params.h>
-#include <graph_vio/feature_point_node_updater_params.h>
+#include <node_updaters/combined_nav_state_node_updater_params.h>
+#include <node_updaters/feature_point_node_updater_params.h>
 #include <vision_common/feature_tracker_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
@@ -31,10 +31,10 @@
 
 namespace graph_vio {
 struct GraphVIOParams {
-  CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
+  node_updaters::CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
   CalibrationParams calibration;
   FactorParams factor;
-  FeaturePointNodeUpdaterParams feature_point_node_updater;
+  node_updaters::FeaturePointNodeUpdaterParams feature_point_node_updater;
   vision_common::FeatureTrackerParams feature_tracker;
   graph_optimizer::GraphOptimizerParams graph_optimizer;
   GraphInitializerParams graph_initializer;

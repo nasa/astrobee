@@ -1,12 +1,10 @@
-- compile graph vio!
-- move node updaters to new package
+- update graph loc!
+  - remove uneeded code
+  - add new graph updater/values
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
     - set start pose fixed after maginalize????
 - move param loading from graph_vio to respective packages!
-- update graph loc!
-  - remove uneeded code
-  - add new graph updater/values
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
 - add unit tests?
@@ -14,5 +12,3 @@
   - use graph bag???? 
     - copy graph bag and run for VIO only?? Or modify current graph bag tool??
       - (probably modify current tool?)
-
-- update graph_localizer package!!

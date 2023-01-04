@@ -16,17 +16,17 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_H_
-#define GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#ifndef NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#define NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
 
 #include <graph_values/combined_nav_state_graph_values.h>
-#include <graph_vio/combined_nav_state_node_updater_params.h>
+#include <node_updaters/combined_nav_state_node_updater_params.h>
 #include <graph_optimizer/key_info.h>
 #include <graph_optimizer/node_updater_with_priors.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 
-namespace graph_vio {
+namespace node_updaters {
 class CombinedNavStateNodeUpdater
     : public graph_optimizer::NodeUpdaterWithPriors<localization_common::CombinedNavState,
                                                     localization_common::CombinedNavStateNoise> {
@@ -106,6 +106,6 @@ class CombinedNavStateNodeUpdater
   int key_index_;
   localization_common::CombinedNavStateNoise global_N_body_start_noise_;
 };
-}  // namespace graph_vio
+}  // namespace node_updaters
 
-#endif  // GRAPH_VIO_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#endif  // NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_

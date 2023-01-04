@@ -23,10 +23,6 @@
 #include <factor_adders/projection_factor_adder.h>
 #include <factor_adders/smart_projection_cumulative_factor_adder.h>
 #include <graph_factors/robust_smart_projection_pose_factor.h>
-#include <graph_vio/combined_nav_state_node_updater.h>
-#include <graph_vio/combined_nav_state_node_updater_params.h>
-#include <vision_common/feature_tracker.h>
-#include <graph_vio/feature_point_node_updater.h>
 #include <graph_vio/graph_vio_params.h>
 #include <graph_vio/graph_vio_stats.h>
 #include <graph_vio/projection_graph_action_completer.h>
@@ -38,6 +34,10 @@
 #include <localization_common/time.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <node_updaters/combined_nav_state_node_updater.h>
+#include <node_updaters/combined_nav_state_node_updater_params.h>
+#include <node_updaters/feature_point_node_updater.h>
+#include <vision_common/feature_tracker.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/PinholePose.h>
@@ -107,7 +107,7 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
 
   const graph_values::CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
 
-  const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
+  const node_updaters::CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
 
  private:
   void InitializeNodeUpdaters();
@@ -151,8 +151,8 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
   std::shared_ptr<factor_adders::StandstillFactorAdder> standstill_factor_adder_;
 
   // Node Updaters
-  std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
-  std::shared_ptr<FeaturePointNodeUpdater> feature_point_node_updater_;
+  std::shared_ptr<node_updaters::CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
+  std::shared_ptr<node_updaters::FeaturePointNodeUpdater> feature_point_node_updater_;
 
   // Graph Action Completers
   std::shared_ptr<ProjectionGraphActionCompleter> projection_graph_action_completer_;

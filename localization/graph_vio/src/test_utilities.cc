@@ -21,10 +21,11 @@
 #include <gtsam/geometry/Point3.h>
 
 namespace graph_vio {
-namespace lc = localization_common;
-namespace lm = localization_measurements;
 namespace go = graph_optimizer;
 namespace gv = graph_values;
+namespace lc = localization_common;
+namespace lm = localization_measurements;
+namespace nu = node_updaters;
 
 gv::CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams() {
   gv::CombinedNavStateGraphValuesParams params;
@@ -49,8 +50,8 @@ go::GraphOptimizerParams DefaultGraphOptimizerParams() {
   return params;
 }
 
-CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
-  CombinedNavStateNodeUpdaterParams params;
+nu::CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
+  nu::CombinedNavStateNodeUpdaterParams params;
   params.starting_prior_translation_stddev = 0.02;
   params.starting_prior_quaternion_stddev = 0.01;
   params.starting_prior_velocity_stddev = 0.01;

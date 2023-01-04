@@ -30,6 +30,7 @@ namespace gv = graph_values;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
+namespace nu = node_updaters;
 namespace vc = vision_common;
 
 // TODO(rsoussan): remove this?
@@ -120,7 +121,7 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
 }
 
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
-                                           CombinedNavStateNodeUpdaterParams& params) {
+                                           nu::CombinedNavStateNodeUpdaterParams& params) {
   // TODO(rsoussan): Still need these?
   params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
@@ -142,7 +143,7 @@ void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
   params.max_num_states = mc::LoadInt(config, "max_num_states");
 }
 
-void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params) {
+void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, nu::FeaturePointNodeUpdaterParams& params) {
   params.huber_k = mc::LoadDouble(config, "huber_k");
 }
 

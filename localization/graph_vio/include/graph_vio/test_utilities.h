@@ -23,13 +23,14 @@
 #include <graph_values/combined_nav_state_graph_values_params.h>
 #include <graph_vio/graph_initializer_params.h>
 #include <graph_vio/graph_vio_params.h>
+#include <node_updaters/combined_nav_state_node_updater_params.h>
 
 namespace graph_vio {
 graph_values::CombinedNavStateGraphValuesParams DefaultCombinedNavStateGraphValuesParams();
 
 graph_optimizer::GraphOptimizerParams DefaultGraphOptimizerParams();
 
-CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams();
+node_updaters::CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams();
 
 GraphInitializerParams DefaultGraphInitializerParams();
 

@@ -17,13 +17,12 @@
  */
 
 #include <graph_optimizer/utilities.h>
-#include <graph_vio/feature_point_node_updater.h>
-#include <graph_vio/utilities.h>
+#include <node_updaters/feature_point_node_updater.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/slam/PriorFactor.h>
 
-namespace graph_vio {
+namespace node_updaters {
 namespace go = graph_optimizer;
 namespace gv = graph_values;
 namespace lc = localization_common;
@@ -113,4 +112,4 @@ std::shared_ptr<gv::FeaturePointGraphValues> FeaturePointNodeUpdater::shared_fea
 const gv::FeaturePointGraphValues& FeaturePointNodeUpdater::feature_point_graph_values() const {
   return *feature_point_graph_values_;
 }
-}  // namespace graph_vio
+}  // namespace node_updaters
