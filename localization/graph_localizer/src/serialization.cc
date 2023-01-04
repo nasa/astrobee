@@ -28,7 +28,6 @@
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
-#include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
 
 // Factors used in NonlinearFactorGraph
@@ -44,13 +43,10 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
-#include <gtsam/slam/ProjectionFactor.h>
-#include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 // Export all classes derived from Value so they can
 // be properly serialized using base class (value) pointers in GraphValues
 GTSAM_VALUE_EXPORT(gtsam::Cal3_S2);
-GTSAM_VALUE_EXPORT(gtsam::imuBias::ConstantBias);
 GTSAM_VALUE_EXPORT(gtsam::PinholeCamera<gtsam::Cal3_S2>);
 GTSAM_VALUE_EXPORT(gtsam::Pose3);
 GTSAM_VALUE_EXPORT(gtsam::Vector3);
@@ -69,12 +65,6 @@ BOOST_CLASS_EXPORT_GUID(gtsam::PointToLineFactor, "gtsam::PointToLineFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::PointToLineSegmentFactor, "gtsam::PointToLineSegmentFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::PointToPlaneFactor, "gtsam::PointToPlaneFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::PoseRotationFactor, "gtsam::PoseRotationFactor");
-using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
-BOOST_CLASS_EXPORT_GUID(ProjectionFactor, "gtsam::GenericProjectionFactor");
-BOOST_CLASS_EXPORT_GUID(gtsam::RobustSmartProjectionPoseFactor<gtsam::Cal3_S2>,
-                        "gtsam::RobustSmartProjectionPoseFactorCal3_S2");
-BOOST_CLASS_EXPORT_GUID(gtsam::SmartProjectionPoseFactor<gtsam::Cal3_S2>, "gtsam::SmartProjectionPoseFactorCal3_S2");
-BOOST_CLASS_EXPORT_GUID(gtsam::CombinedImuFactor, "gtsam::CombinedImuFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::LinearContainerFactor, "gtsam::LinearContainerFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::BetweenFactor<gtsam::Pose3>, "gtsam::BetweenFactorPose3");
 

@@ -87,19 +87,7 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
 GraphInitializerParams DefaultGraphInitializerParams() {
   GraphInitializerParams params;
   params.global_T_body_start = gtsam::Pose3::identity();
-  params.global_V_body_start = gtsam::Velocity3::Zero();
-  params.num_bias_estimation_measurements = 1;
   params.start_time = 0;
-  params.initial_imu_bias = gtsam::imuBias::ConstantBias();
-  params.gravity = gtsam::Vector3::Zero();
-  params.body_T_imu = gtsam::Pose3::identity();
-  params.filter = imu_integration::ImuFilterParams();
-  params.gyro_sigma = 0.001;
-  params.accel_sigma = 0.001;
-  params.accel_bias_sigma = 0.001;
-  params.gyro_bias_sigma = 0.001;
-  params.integration_variance = 0.001;
-  params.bias_acc_omega_int = 0.001;
   return params;
 }
 

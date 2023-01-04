@@ -1,6 +1,6 @@
 - update graph loc!
   - remove uneeded code
-  - update params, param reader, serialization, sanity checker, others
+  - update serialization, sanity checker, others
   - compile!
 - move combinednavstate accesors to combinednavstate node updater????
   - update graph vio with this!!
