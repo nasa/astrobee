@@ -19,11 +19,10 @@
 #include <vision_common/feature_tracker.h>
 #include <localization_common/logger.h>
 
-namespace graph_vio {
+namespace vision_common {
 namespace lc = localization_common;
-namespace lm = localization_measurements;
 FeatureTracker::FeatureTracker(const FeatureTrackerParams& params) : params_(params) {}
-void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points) {
+void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
   if (feature_points.empty()) {
     Clear();
     LogDebug("UpdateFeatureTracks: Removed all feature tracks.");
@@ -85,7 +84,7 @@ void FeatureTracker::RemoveUndetectedFeatures(const lc::Time& feature_point_time
   }
 }
 
-void FeatureTracker::AddOrUpdateTrack(const lm::FeaturePoint& feature_point) {
+void FeatureTracker::AddOrUpdateTrack(const FeaturePoint& feature_point) {
   if (feature_track_id_map_.count(feature_point.feature_id) == 0) {
     feature_track_id_map_[feature_point.feature_id] = std::make_shared<FeatureTrack>(feature_point.feature_id);
   }
@@ -145,4 +144,4 @@ boost::optional<const FeatureTrack&> FeatureTracker::LongestFeatureTrack() const
   if (empty()) return boost::none;
   return *(feature_track_length_map_.rbegin()->second.get());
 }
-}  // namespace graph_vio
+}  // namespace vision_common

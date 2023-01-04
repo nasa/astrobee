@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_vio/combined_nav_state_graph_values.h>
+#include <graph_values/combined_nav_state_graph_values.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
@@ -28,10 +28,10 @@
 
 #include <iomanip>
 
-namespace graph_vio {
+namespace graph_values {
 namespace go = graph_optimizer;
 namespace lc = localization_common;
-namespace lm = localization_measurements;
+
 CombinedNavStateGraphValues::CombinedNavStateGraphValues(const CombinedNavStateGraphValuesParams& params,
                                                          std::shared_ptr<gtsam::Values> values)
     : GraphValues(std::move(values)), params_(params) {
@@ -423,4 +423,4 @@ bool CombinedNavStateGraphValues::RemoveCombinedNavState(const lc::Time timestam
   LogDebug("RemoveCombinedNavState: Removed timestamp" << std::setprecision(15) << timestamp);
   return removed_values;
 }
-}  // namespace graph_vio
+}  // namespace graph_values

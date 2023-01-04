@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_vio/feature_point_graph_values.h>
+#include <graph_values/feature_point_graph_values.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
@@ -25,10 +25,10 @@
 
 #include <iomanip>
 
-namespace graph_vio {
+namespace graph_values {
 namespace go = graph_optimizer;
 namespace lc = localization_common;
-namespace lm = localization_measurements;
+namespace vc = vision_common;
 FeaturePointGraphValues::FeaturePointGraphValues(std::shared_ptr<gtsam::Values> values)
     : go::GraphValues(std::move(values)), feature_key_index_(0) {}
 
@@ -43,9 +43,9 @@ boost::optional<lc::Time> FeaturePointGraphValues::LatestTimestamp() const { ret
 
 boost::optional<lc::Time> FeaturePointGraphValues::SlideWindowNewOldestTime() const { return boost::none; }
 
-bool FeaturePointGraphValues::HasFeature(const lm::FeatureId id) const { return (feature_id_key_map_.count(id) > 0); }
+bool FeaturePointGraphValues::HasFeature(const vc::FeatureId id) const { return (feature_id_key_map_.count(id) > 0); }
 
-boost::optional<gtsam::Key> FeaturePointGraphValues::FeatureKey(const lm::FeatureId id) const {
+boost::optional<gtsam::Key> FeaturePointGraphValues::FeatureKey(const vc::FeatureId id) const {
   if (!HasFeature(id)) return boost::none;
   return feature_id_key_map_.at(id);
 }
@@ -60,7 +60,7 @@ gtsam::KeyVector FeaturePointGraphValues::FeatureKeys() const {
   return feature_keys;
 }
 
-bool FeaturePointGraphValues::AddFeature(const lm::FeatureId id, const gtsam::Point3& feature_point,
+bool FeaturePointGraphValues::AddFeature(const vc::FeatureId id, const gtsam::Point3& feature_point,
                                          const gtsam::Key& key) {
   if (HasFeature(id)) {
     LogError("AddFeature: Feature already exists.");
@@ -118,4 +118,4 @@ void FeaturePointGraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys
   }
 }
 
-}  // namespace graph_vio
+}  // namespace graph_values

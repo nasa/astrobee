@@ -1,15 +1,12 @@
-  - fix utilities in factor adders! (move some functions from graph vio for smart factors!)
-          - update graph vio
-          - update factor adders
-  - move graph values to new package
-  - compile factor_adders code!
-  - update graph_vio code!
+- compile factor_adders code!
 - compile graph vio!
 - move node updaters to new package
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
     - set start pose fixed after maginalize????
 - update graph loc!
+  - remove uneeded code
+  - add new graph updater/values
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
 - add unit tests?

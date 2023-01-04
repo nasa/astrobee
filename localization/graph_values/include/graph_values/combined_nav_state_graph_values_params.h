@@ -15,14 +15,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_VIO_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
-#define GRAPH_VIO_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
+#ifndef GRAPH_VALUES_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
+#define GRAPH_VALUES_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
 
 #include <gtsam/geometry/Pose3.h>
 
 #include <boost/serialization/serialization.hpp>
 
-namespace graph_vio {
+namespace graph_values {
 struct CombinedNavStateGraphValuesParams {
   // Only kept if there are at least min_num_states and not more than max_num_states
   double ideal_duration;
@@ -39,6 +39,6 @@ struct CombinedNavStateGraphValuesParams {
     ar& BOOST_SERIALIZATION_NVP(max_num_states);
   }
 };
-}  // namespace graph_vio
+}  // namespace graph_values
 
-#endif  // GRAPH_VIO_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
+#endif  // GRAPH_VALUES_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_

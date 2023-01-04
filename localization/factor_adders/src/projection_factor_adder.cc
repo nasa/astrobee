@@ -17,6 +17,7 @@
  */
 
 #include <factor_adders/projection_factor_adder.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
@@ -24,11 +25,14 @@
 
 namespace factor_adders {
 namespace go = graph_optimizer;
+namespace gv = graph_values;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-ProjectionFactorAdder::ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
-                                             std::shared_ptr<const vision_common::FeatureTracker> feature_tracker,
-                                             std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values)
+namespace vc = vision_common;
+using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
+ProjectionFactorAdder::ProjectionFactorAdder(
+  const ProjectionFactorAdderParams& params, std::shared_ptr<const vc::FeatureTracker> feature_tracker,
+  std::shared_ptr<const gv::FeaturePointGraphValues> feature_point_graph_values)
     : ProjectionFactorAdder::Base(params),
       feature_tracker_(feature_tracker),
       feature_point_graph_values_(std::move(feature_point_graph_values)) {}

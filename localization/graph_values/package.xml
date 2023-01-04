@@ -1,8 +1,8 @@
 <package>
-  <name>factor_adders</name>
+  <name>graph_values</name>
   <version>1.0.0</version>
   <description>
-    The factor adders package
+    The graph values package
   </description>
   <license>
     Apache License, Version 2.0
@@ -14,14 +14,10 @@
     Astrobee Flight Software
   </maintainer>
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>graph_factors</build_depend>
   <build_depend>graph_optimizer</build_depend>
-  <build_depend>graph_values</build_depend>
   <build_depend>localization_common</build_depend>
   <build_depend>vision_common</build_depend>
-  <run_depend>graph_factors</run_depend>
   <run_depend>graph_optimizer</run_depend>
-  <run_depend>graph_values</run_depend>
   <run_depend>localization_common</run_depend>
   <run_depend>vision_common</run_depend>
 </package>

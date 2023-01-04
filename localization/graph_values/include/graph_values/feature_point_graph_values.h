@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_VIO_FEATURE_POINT_GRAPH_VALUES_H_
-#define GRAPH_VIO_FEATURE_POINT_GRAPH_VALUES_H_
+#ifndef GRAPH_VALUES_FEATURE_POINT_GRAPH_VALUES_H_
+#define GRAPH_VALUES_FEATURE_POINT_GRAPH_VALUES_H_
 
 #include <graph_optimizer/graph_values.h>
 #include <localization_common/logger.h>
@@ -36,7 +36,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace graph_vio {
+namespace graph_values {
 namespace sym = gtsam::symbol_shorthand;
 // TODO(rsoussan): Make seperate base class for static graph values so don't have to return boost::none
 // for so many virtual fcns
@@ -65,12 +65,12 @@ class FeaturePointGraphValues : public graph_optimizer::GraphValues {
 
   int NumFeatures() const;
 
-  bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
+  bool AddFeature(const vision_common::FeatureId id, const gtsam::Point3& feature_point,
                   const gtsam::Key& key);
 
-  bool HasFeature(const localization_measurements::FeatureId id) const;
+  bool HasFeature(const vision_common::FeatureId id) const;
 
-  boost::optional<gtsam::Key> FeatureKey(const localization_measurements::FeatureId id) const;
+  boost::optional<gtsam::Key> FeatureKey(const vision_common::FeatureId id) const;
 
   // TODO(rsoussan): This shouldn't be const, modify when changes are made to projection factor adder
   gtsam::Key CreateFeatureKey() const;
@@ -84,10 +84,10 @@ class FeaturePointGraphValues : public graph_optimizer::GraphValues {
     ar& BOOST_SERIALIZATION_NVP(feature_key_index_);
   }
 
-  std::unordered_map<localization_measurements::FeatureId, gtsam::Key> feature_id_key_map_;
+  std::unordered_map<vision_common::FeatureId, gtsam::Key> feature_id_key_map_;
   // Modified by projection_factor_adder, remove mutable if this changes
   mutable std::uint64_t feature_key_index_;
 };
-}  // namespace graph_vio
+}  // namespace graph_values
 
-#endif  // GRAPH_VIO_FEATURE_POINT_GRAPH_VALUES_H_
+#endif  // GRAPH_VALUES_FEATURE_POINT_GRAPH_VALUES_H_
