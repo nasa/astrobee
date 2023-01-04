@@ -15,9 +15,17 @@ If you are using the localizer or mapping pipeline in academic work, please cite
 
 \subpage depthodometry
 
+\subpage factoradders 
+
+\subpage graphfactors
+
 \subpage graphlocalizer
 
 \subpage graphoptimizer
+
+\subpage graphvalues
+
+\subpage graphvio
 
 \subpage groundtruthlocalizer
 
@@ -31,11 +39,15 @@ If you are using the localizer or mapping pipeline in academic work, please cite
 
 \subpage localizationcommon
 
-\subpage localization_manager
+\subpage localizationmanager
 
 \subpage localizationmeasurements
 
-\subpage localization_node
+\subpage localizationnode
+
+\subpage markertracking
+
+\subpage nodeupdaters 
 
 \subpage opticalflow
 
@@ -43,10 +55,8 @@ If you are using the localizer or mapping pipeline in academic work, please cite
 
 \subpage pointcloudcommon 
 
-\subpage markertracking
-
 \subpage sparsemapping
 
 \subpage visioncommon 
 
-\subpage vive_localization
+\subpage vivelocalization
