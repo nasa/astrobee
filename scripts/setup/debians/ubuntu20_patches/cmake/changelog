@@ -1,9 +1,16 @@
-cmake (3.16.3-1ubuntu1+focal1) focal; urgency=medium
+cmake (3.16.3-1ubuntu1.20.04.1+focal1) focal; urgency=medium
 
   * Force 64bit offsets
     - This fixes a cmake bug on 32bit systems, allowing compilation
 
  -- Ruben Garcia <nospam@nospam.org>  Fri, 08 Apr 2022 20:33:06 -0700
+
+cmake (3.16.3-1ubuntu1.20.04.1) focal; urgency=medium
+
+  * Backport CMake imported targets GTest::gmock and GTest::gmock_main.
+    (LP: #1986665)
+
+ -- Eero Aaltonen <eero.aaltonen@vaisala.com>  Tue, 27 Sep 2022 12:09:35 +0300
 
 cmake (3.16.3-1ubuntu1) focal; urgency=low
 

@@ -1,2 +1,3 @@
 use_64bit_offsets.patch
 disable_fileapi_json_extra_test.patch
+0001-backport-gmock-and-gmock-main-definitions.patch

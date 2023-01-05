@@ -1,6 +1,8 @@
---- a/CompileFlags.cmake
-+++ b/CompileFlags.cmake
-@@ -53,6 +53,12 @@
+Index: cmake-3.16.3/CompileFlags.cmake
+===================================================================
+--- cmake-3.16.3.orig/CompileFlags.cmake
++++ cmake-3.16.3/CompileFlags.cmake
+@@ -53,6 +53,12 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "^pari
    endif()
  endif()
  
@@ -13,3 +15,35 @@
  # Workaround for TOC Overflow on ppc64
  set(bigTocFlag "")
  if(CMAKE_SYSTEM_NAME STREQUAL "AIX" AND
+Index: cmake-3.16.3/bootstrap
+===================================================================
+--- cmake-3.16.3.orig/bootstrap
++++ cmake-3.16.3/bootstrap
+@@ -1448,6 +1448,7 @@ done
+ libs=""
+ 
+ uv_c_flags=""
++system_flags=""
+ if ${cmake_system_mingw}; then
+   uv_c_flags="${uv_c_flags} -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600"
+   libs="${libs} -lws2_32 -lpsapi -liphlpapi -lshell32 -luserenv -lole32 -loleaut32"
+@@ -1466,6 +1467,7 @@ else
+     *Linux*)
+       uv_c_flags="${uv_c_flags} -D_GNU_SOURCE"
+       libs="${libs} -ldl -lrt"
++      system_flags="${system_flags} -D_FILE_OFFSET_BITS=64"
+       ;;
+     *kFreeBSD*)
+       libs="${libs} -lkvm -lfreebsd-glue"
+@@ -1493,6 +1495,11 @@ if [ "x${cmake_ansi_cxx_flags}" != "x" ]
+   cmake_cxx_flags="${cmake_ansi_cxx_flags} ${cmake_cxx_flags}"
+ fi
+ 
++if [ "x${system_flags}" != "x" ]; then
++  cmake_c_flags="${cmake_c_flags} ${system_flags}"
++  cmake_cxx_flags="${cmake_cxx_flags} ${system_flags}"
++fi
++
+ if [ "x${cmake_c_flags}" != "x" ]; then
+   cmake_c_flags="${cmake_c_flags} "
+ fi

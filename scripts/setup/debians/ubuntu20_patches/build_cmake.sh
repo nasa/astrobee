@@ -25,7 +25,7 @@
 # This issue is fixed in CMake 3.19.0.
 
 PACKAGE_NAME=cmake-3.16.3
-CONTROL_FILES=cmake_3.16.3-1ubuntu1.debian.tar.xz
+CONTROL_FILES=cmake_3.16.3-1ubuntu1.20.04.1.debian.tar.xz
 ORIG_TAR=cmake_3.16.3.orig.tar.gz
 DEB_DIR=cmake
 
