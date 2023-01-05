@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#ifndef PMC_SIM_PMC_SIM_H_
-#define PMC_SIM_PMC_SIM_H_
+#ifndef PMC_PMC_SIM_H_
+#define PMC_PMC_SIM_H_
 
 #include <gnc_autocode/blowers.h>
 
 #include <Eigen/Dense>
 
-namespace pmc_sim {
+namespace pmc {
 
 class PID {
  public:
@@ -51,12 +51,11 @@ class Blower {
   void ServoModel(const Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Matrix<float, 6, 1> & nozzle_theta,
                   Eigen::Matrix<float, 6, 1> & nozzle_area);
   void ImpellerModel(int speed_cmd, float voltage, float* motor_current, float* motor_torque);
-  float Lookup(int table_size, const float lookup[], const float breakpoints[], float value);
   Eigen::Matrix<float, 6, 1> Aerodynamics(const Eigen::Matrix<float, 6, 1> & nozzle_area);
   void BlowerBodyDynamics(const Eigen::Vector3f & omega_body, Eigen::Matrix<float, 6, 1> & nozzle_thrusts,
                           float motor_torque);
 
-  Eigen::Matrix<float, 6, 1> prev_omega_, motor_thetas_, backlash_theta_, discharge_coeff_;
+  Eigen::Matrix<float, 6, 1> prev_omega_, servo_thetas_, backlash_theta_, discharge_coeff_;
   Eigen::Matrix<float, 6, 3> nozzle_offsets_, nozzle_orientations_;
   Eigen::Vector3f center_of_mass_, impeller_orientation_;
   PID servo_pids_[6], speed_pid_;
@@ -67,11 +66,6 @@ class Blower {
   Eigen::Matrix<float, 6, 1> nozzles_theta_, servo_current_;
   float impeller_speed_, last_speed_;
   float impeller_current_;
-
-  // generated in bpm_blower_propulsion_module_prep.m
-  static const float AREA_LOOKUP_INPUT[];
-  static const float CDP_LOOKUP_OUTPUT[];
-  static const int LOOKUP_TABLE_SIZE;
 };
 
 class PMCSim {
@@ -98,6 +92,6 @@ class PMCSim {
   Eigen::Matrix<float, 6, 1> servo_cmd_[2];
 };
 
-}  // end namespace pmc_sim
+}  // end namespace pmc
 
-#endif  // PMC_SIM_PMC_SIM_H_
+#endif  // PMC_PMC_SIM_H_

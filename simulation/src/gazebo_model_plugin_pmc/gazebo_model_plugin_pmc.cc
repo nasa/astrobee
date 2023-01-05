@@ -37,7 +37,7 @@
 #include <ff_msgs/SetFloat.h>
 
 // Autocode inclide
-#include <pmc_sim/pmc_sim.h>
+#include <pmc/pmc_sim.h>
 
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
@@ -463,7 +463,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   math::Vector3 torque_;                            // Current body-frame torque
   #endif
   geometry_msgs::Wrench wrench_;                    // Used when bypassing PMC
-  pmc_sim::PMCSim pmc_;
+  pmc::PMCSim pmc_;
   ff_hw_msgs::PmcCommand null_command_;             // PMC null command
   event::ConnectionPtr update_;                     // Update event from gazeo
   ff_hw_msgs::PmcTelemetry telemetry_vector_;       // Telemetry

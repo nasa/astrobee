@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>pmc_sim</name>
+  <name>pmc</name>
   <version>0.0.0</version>
   <description>
     Simulates the propulsion modules.

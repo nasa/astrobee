@@ -17,12 +17,12 @@
  */
 
 #include <ros/console.h>
-#include "pmc_sim/pmc_sim.h"
+#include "pmc/shared.h"
 
-namespace pmc_sim {
+namespace pmc {
 
-const int Blower::LOOKUP_TABLE_SIZE = 334;
-const float Blower::AREA_LOOKUP_INPUT[334] =
+const int PMCConstants::AREA_LOOKUP_TABLE_SIZE = 334;
+const float PMCConstants::AREA_LOOKUP_INPUT[334] =
   { 0.0F, 1.46138646E-5F, 2.92062887E-5F, 4.37784511E-5F, 5.83315159E-5F,
     7.28665837E-5F, 8.7384753E-5F, 0.000101887068F, 0.000116374569F,
     0.000130848246F, 0.000145309066F, 0.000159758F, 0.000174195899F,
@@ -103,7 +103,7 @@ const float Blower::AREA_LOOKUP_INPUT[334] =
     0.0121469265F, 0.0124259172F, 0.0127205F, 0.0130322482F, 0.0133628659F,
     0.0137143685F, 0.0140890917F, 0.0144897308F, 0.0149194878F, 0.01538203F,
     0.0158818662F, 0.0164243504F, 0.0170160942F, 0.0176650118F, 0.0183811728F };
-const float Blower::CDP_LOOKUP_OUTPUT[334] =
+const float PMCConstants::CDP_LOOKUP_OUTPUT[334] =
   { 0.0825F, 0.082625635F, 0.08274699F, 0.0828641355F, 0.082977131F,
     0.083086051F, 0.0831909552F, 0.083291918F, 0.083389F, 0.083482258F,
     0.0835717544F, 0.0836575627F, 0.0837397277F, 0.083818309F, 0.0838933736F,
@@ -172,157 +172,48 @@ const float Blower::CDP_LOOKUP_OUTPUT[334] =
     0.00938956812F, 0.00893222168F, 0.00847681239F, 0.00802352652F,
     0.00757240178F, 0.007123549F, 0.00667699846F, 0.00623294385F, 0.0057914448F};
 
-void PID::Initialize(float Kp, float Ki, float Kd, float out_max, float out_min) {
-  kp = Kp;
-  ki = Ki;
-  kd = Kd;
-  omax = out_max;
-  omin = out_min;
-  last = integral = 0.0;
-}
+// determined by test
+const Eigen::Matrix<float, 6, 1> PMCConstants::discharge_coeff1 = (Eigen::Matrix<float, 6, 1>() <<
+    0.914971062, 0.755778254, 0.940762925, 0.792109779, 0.92401881, 0.930319765).finished();
+const Eigen::Matrix<float, 6, 1> PMCConstants::discharge_coeff2 = (Eigen::Matrix<float, 6, 1>() <<
+    0.947114008, 0.764468916, 1.000000000, 0.90480943, 0.936555627, 0.893794766).finished();
+const Eigen::Matrix<float, 6, 1> PMCConstants::nozzle_widths =
+  PMCConstants::units_inches_to_meters * (Eigen::Matrix<float, 6, 1>() << 5.0, 5.0, 2.8, 2.8, 2.8, 2.8).finished();
 
-float PID::Run(float x) {
-  float dt = 1.0 / 62.5;
-  float d = kd * x - last;
-  float out = kp * x + ki * integral + d;
-  last += d * dt;  // kind of confused here but matches simmulink
-  integral += x * dt;
-  if (out < omin)
-    out = omin;
-  if (out > omax)
-    out = omax;
-  return out;
-}
-
-Blower::Blower(bool is_pmc1) {
-  prev_omega_ << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
-  backlash_theta_ << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
-  motor_thetas_ << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
-  prev_speed_rate_ = impeller_speed_ = 0.0f;
-  for (int i = 0; i < 6; i++)
-    servo_pids_[i].Initialize(5.0, 1.5, 0.8, 6.0, -6.0);
-  speed_pid_.Initialize(0.2, 0.1, 0.05, 16.6, -16.6);
-  if (is_pmc1) {
-    // determined by test
-    discharge_coeff_ << 0.914971062, 0.755778254, 0.940762925, 0.792109779, 0.92401881, 0.930319765;
-    zero_thrust_area_ = 0.0044667;  //  [m^2] If air is leaking from the plenum, the
-    // '0 thrust' position (all nozzles closed) will have an effective open area
-    nozzle_offsets_    << 6.00,  4.01, -1.56,
+const Eigen::Matrix<float, 6, 3> PMCConstants::nozzle_offsets1 = PMCConstants::units_inches_to_meters *
+      (Eigen::Matrix<float, 6, 3>() <<
+                          6.00,  4.01, -1.56,
                          -6.00,  4.01,  1.56,
                           2.83,  6.00,  2.83,
                          -2.83,  6.00, -2.83,
                          -2.66,  4.01,  6.00,
-                          2.66,  4.01, -6.00;
-    nozzle_orientations_ << 1, 0,  0,  //  [unit vec] PM1: Pointing Direction of each nozzle
+                          2.66,  4.01, -6.00).finished();
+const Eigen::Matrix<float, 6, 3> PMCConstants::nozzle_offsets2 = PMCConstants::units_inches_to_meters *
+      (Eigen::Matrix<float, 6, 3>() <<
+                         -6.00, -4.01, -1.56,
+                          6.00, -4.01,  1.56,
+                         -2.83, -6.00,  2.83,
+                          2.83, -6.00, -2.83,
+                          2.66, -4.01,  6.00,
+                         -2.66, -4.01, -6.00).finished();
+const Eigen::Matrix<float, 6, 3> PMCConstants::nozzle_orientations1 = (Eigen::Matrix<float, 6, 3>() <<
+                            1, 0,  0,
                            -1, 0,  0,
                             0, 1,  0,
                             0, 1,  0,
                             0, 0,  1,
-                            0, 0, -1;
-    impeller_orientation_ << 0, 1, 0;
-  } else {
-    discharge_coeff_ << 0.947114008, 0.764468916, 1.000000000, 0.90480943, 0.936555627, 0.893794766;
-    zero_thrust_area_ = 0.0042273;
-    nozzle_offsets_  << -6.00, -4.01, -1.56,
-                         6.00, -4.01,  1.56,
-                        -2.83, -6.00,  2.83,
-                         2.83, -6.00, -2.83,
-                         2.66, -4.01,  6.00,
-                        -2.66, -4.01, -6.00;
-    nozzle_orientations_ << -1, 0,  0,  //  [unit vec] PM1: Pointing Direction of each nozzle
+                            0, 0, -1).finished();
+const Eigen::Matrix<float, 6, 3> PMCConstants::nozzle_orientations2 = (Eigen::Matrix<float, 6, 3>() <<
+                            -1, 0,  0,
                              1, 0,  0,
                              0, -1, 0,
                              0, -1, 0,
                              0, 0,  1,
-                             0, 0, -1;
-    impeller_orientation_ << 0, -1, 0;
-  }
-  const float units_inches_to_meters = 0.0254;
-  nozzle_offsets_ *= units_inches_to_meters;  // [m] Position vector of the nozzle locations in the body frame
+                             0, 0, -1).finished();
+const Eigen::Vector3f PMCConstants::impeller_orientation1 = (Eigen::Vector3f() << 0, 1, 0).finished();
+const Eigen::Vector3f PMCConstants::impeller_orientation2 = (Eigen::Vector3f() << 0, -1, 0).finished();
 
-  center_of_mass_ << 0.0, 0.0, 0.0;  // hmmm.... this seems wrong but was used originally in the simulink
-}
-
-void Blower::ServoModel(const Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Matrix<float, 6, 1> & nozzle_theta,
-                        Eigen::Matrix<float, 6, 1> & nozzle_area) {
-  //  [rad]      THEORETICAL max angle that a nozzle can open to
-  const float abp_nozzle_max_open_angle = 79.91 * M_PI / 180.0;
-  //  [rad]      Min angle that the nozzle can close to
-  const float abp_nozzle_min_open_angle = 15.68 * M_PI / 180.0;
-  const float abp_nozzle_flap_length = 0.5353 * 0.0254;  //  [m]
-  const float abp_nozzle_intake_height = 0.5154 * 0.0254;  //  [m]
-  const float abp_nozzle_gear_ratio = 0.5;
-  const float bpm_servo_max_theta = abp_nozzle_gear_ratio * (abp_nozzle_max_open_angle - abp_nozzle_min_open_angle);
-  //  [-] Conversion between servo PWM command (0-100) and resulting angle (0-90)
-  const float bpm_servo_pwm2angle = bpm_servo_max_theta / 255.0;
-  // bpm_servo_peak_torque*bpm_servo_motor_gear_ratio/(bpm_servo_peak_curr); [Nm/A] Servo motor torque constant
-  const float motor_k = 0.2893 * 0.01 / 1.5;
-  // bpm_servo_max_voltage/bpm_servo_peak_curr; %[ohm] Servo internal resistance
-  const float motor_r = 6.0 / 1.5;
-  // bpm_imp_noload_curr*bpm_imp_motor_torque_k/bpm_imp_noload_speed ;  %[Nm*s] Viscous Friction
-  const float motor_friction = 3e-7;
-  //  %[kg*m^2] (Tuned in analysis_servo_motor_test.m) Servo gearbox inertia.
-  const float motor_gearbox_inertia = .000000025;
-  const float motor_gear_ratio = 1.0 / 100.0;
-  const float backlash_half_width = 1.0 * M_PI / 180.0 / 2;
-  Eigen::Matrix<float, 6, 1> nozzle_widths;
-  nozzle_widths << 5.0, 5.0, 2.8, 2.8, 2.8, 2.8;
-  nozzle_widths *= 0.0254;  //  [m]
-  // backlash box
-  for (int i = 0; i < 6; i++) {
-    if (motor_thetas_[i] < backlash_theta_[i] - backlash_half_width)
-      backlash_theta_[i] = motor_thetas_[i] + backlash_half_width;
-    else if (motor_thetas_[i] > backlash_theta_[i] + backlash_half_width)
-      backlash_theta_[i] = motor_thetas_[i] - backlash_half_width;
-  }
-  Eigen::Matrix<float, 6, 1> voltage, err = bpm_servo_pwm2angle * servo_cmd - backlash_theta_ * motor_gear_ratio;
-  for (int i = 0; i < 6; i++)
-    voltage[i] = servo_pids_[i].Run(err[i]);
-  servo_current_ = (voltage - motor_k * prev_omega_) * (1.0 / motor_r);
-  motor_thetas_ += 1.0 / 62.5 * prev_omega_;
-  motor_thetas_ = motor_thetas_.cwiseMin(bpm_servo_max_theta / motor_gear_ratio).cwiseMax(0.0);
-  // torque - viscous friction
-  Eigen::Matrix<float, 6, 1> motor_torque = motor_k * servo_current_ - motor_friction * prev_omega_;
-  prev_omega_ += (1.0 / motor_gearbox_inertia) / 62.5 * motor_torque;
-  nozzle_theta = backlash_theta_ * motor_gear_ratio * 1.0 / abp_nozzle_gear_ratio;
-  for (int i = 0; i < 6; i++) {
-    //  * nozzle_flap_count * nozzle_width
-    nozzle_area[i] = (abp_nozzle_intake_height - cos(abp_nozzle_min_open_angle + nozzle_theta[i]) *
-                      abp_nozzle_flap_length) * 2 * nozzle_widths[i];
-  }
-}
-
-void Blower::ImpellerModel(int speed_cmd, float voltage, float* motor_current, float* motor_torque) {
-  const float impeller_speed2pwm = 0.792095;  //  [CNT/(rad/sec)] Converts impeller speeds into PWM values
-  const float max_change = 200*2*M_PI/60.0 / 62.5;
-  float speed = speed_cmd / impeller_speed2pwm;
-  if (speed > prev_speed_rate_ + max_change)
-    speed = prev_speed_rate_ + max_change;
-  else if (speed < prev_speed_rate_ - max_change)
-    speed = prev_speed_rate_ - max_change;
-  prev_speed_rate_ = speed;
-
-  speed = speed - impeller_speed_;
-  float v = speed_pid_.Run(speed);
-  v = std::max(-voltage, std::min(voltage, v));
-
-  // dc_motor_model
-  const float motor_speed_k = 374*2*M_PI/60;  // [(rad/s)/V] Impeller Speed constant
-  const float motor_r = 1.2;  // %[ohm] Impeller Motor internal resistance
-  const float motor_torque_k = 0.0255;  // [Nm/A] Impeller Torque constant
-  // noload_curr * torque_k / noload_speed [Nm*s] Viscous Friction
-  const float motor_friction_coeff = 0.144 * motor_torque_k / (4380*2*M_PI/60.0);
-  *motor_current = (v - impeller_speed_ / motor_speed_k) / motor_r;
-  *motor_torque = (*motor_current) * motor_torque_k - motor_friction_coeff * impeller_speed_;
-
-  last_speed_ = impeller_speed_;  // matching simulink, but I don't think this is right
-  // in simulink, drag torque would be subtracted from motor, but set to 0
-  // noise is also set to 0
-  const float impeller_inertia = 0.001;
-  impeller_speed_ += *motor_torque / impeller_inertia / 62.5;
-}
-
-float Blower::Lookup(int table_size, const float lookup[], const float breakpoints[], float value) {
+float Lookup(int table_size, const float lookup[], const float breakpoints[], float value) {
   if (value < breakpoints[0])
     return lookup[0];
   if (value > breakpoints[table_size - 1])
@@ -340,107 +231,5 @@ float Blower::Lookup(int table_size, const float lookup[], const float breakpoin
   return (1.0 - ratio) * lookup[start] + ratio * lookup[start + 1];
 }
 
-Eigen::Matrix<float, 6, 1> Blower::Aerodynamics(const Eigen::Matrix<float, 6, 1> & nozzle_area) {
-  float area = zero_thrust_area_ + (discharge_coeff_.array() * nozzle_area.array()).sum();
-  float cdp = Lookup(LOOKUP_TABLE_SIZE, CDP_LOOKUP_OUTPUT, AREA_LOOKUP_INPUT, area);
-  const float impeller_diameter = 5.5 * 0.0254;  // [m]
-  const float air_density = 1.2;  //  [kg/m^3]   Air density inside of the ISS (some places in code this was 1.225?)
-  float delta_p = impeller_speed_ * impeller_speed_ * cdp * impeller_diameter * impeller_diameter * air_density;
-  // 1.25 is thrust_error_scale_factor
-  return 2 * delta_p * discharge_coeff_.array() * discharge_coeff_.array() * nozzle_area.array() * 1.25;
-  // note: currently in simulink noise is set to zero
-}
-
-void Blower::Step(int impeller_cmd, Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Vector3f & omega, float voltage) {
-  Eigen::Matrix<float, 6, 1> nozzle_area;
-  float motor_torque;
-  ServoModel(servo_cmd, nozzles_theta_, nozzle_area);
-  ImpellerModel(impeller_cmd, voltage, &impeller_current_, &motor_torque);
-  Eigen::Matrix<float, 6, 1> nozzle_thrust = Aerodynamics(nozzle_area);
-  BlowerBodyDynamics(omega, nozzle_thrust, motor_torque);
-}
-
-void Blower::BlowerBodyDynamics(const Eigen::Vector3f & omega_body, Eigen::Matrix<float, 6, 1> & nozzle_thrusts,
-    float motor_torque) {
-  Eigen::Matrix<float, 3, 6> thrust2force, thrust2torque;
-  // latch nozzle thrust matrices
-  Eigen::Matrix<float, 6, 3> nozzle_moment_arm = nozzle_offsets_ - center_of_mass_.transpose().replicate(6, 1);
-  for (int i = 0; i < 6; i++)
-    thrust2torque.col(i) = -nozzle_moment_arm.row(i).cross(nozzle_orientations_.row(i)).transpose();
-
-  thrust2force = -nozzle_orientations_.transpose();
-
-  const float impeller_inertia = 0.001;
-  Eigen::Vector3f momentum_B = impeller_orientation_ * impeller_inertia * impeller_speed_;
-
-  Eigen::Matrix<float, 6, 1> a = nozzle_thrusts;
-  force_B_ = thrust2force * nozzle_thrusts;
-  torque_B_ = impeller_orientation_ * -motor_torque + omega_body.cross(momentum_B) + thrust2torque * nozzle_thrusts;
-}
-
-PMCSim::PMCSim(void) : b1(true), b2(false), omega_(0, 0, 0), voltage_(0.0f) {
-  for (int i = 0; i < 2; i++) {
-    impeller_cmd_[i] = 0;
-    servo_cmd_[i] << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
-  }
-  gnc_.Initialize();
-}
-
-void TestTwoVectors(const char* name, const Eigen::VectorXf new_array,
-                    const float old_array[], float tolerance) {
-  for (int i = 0; i < new_array.rows(); i++) {
-    float difference = old_array[i] - new_array[i];
-    float perc_difference = difference / old_array[i];
-    if (fabs(difference) > tolerance) {
-      std::string p1, p2;
-      for (int j = 0; j < new_array.rows(); j++) {
-        p1 += " " + std::to_string(new_array[j]);
-        p2 += " " + std::to_string(old_array[j]);
-      }
-      ROS_ERROR("%s New: %s, Old: %s", name, p1.c_str(), p2.c_str());
-      exit(0);
-      return;
-    }
-  }
-}
-void TestTwoFloats(const char* name, float new_float, float old_float, float tolerance) {
-  if (fabs(new_float - old_float) > tolerance) {
-      ROS_ERROR("%s New: %g, Old: %g", name, new_float, old_float);
-      exit(0);
-  }
-}
-
-
-void PMCSim::Step(void) {
-  b1.Step(impeller_cmd_[0], servo_cmd_[0], omega_, voltage_);
-  b2.Step(impeller_cmd_[1], servo_cmd_[1], omega_, voltage_);
-
-  for (int i = 0; i < 2; i++) {
-    gnc_.states_[i].impeller_cmd = impeller_cmd_[i];
-    for (int j = 0; j < 6; j++)
-      gnc_.states_[i].servo_cmd[j] = servo_cmd_[i][j];
-  }
-  gnc_.Step();
-
-  Blower b[2] = {b1, b2};
-  for (int i = 0; i < 2; i++) {
-    TestTwoVectors("force", b[i].Force(), gnc_.states_[i].force_B, 0.001);
-    TestTwoVectors("torque", b[i].Torque(), gnc_.states_[i].torque_B, 0.001);
-    TestTwoVectors("servo current", b[i].ServoCurrent(), gnc_.states_[i].servo_current, 0.001);
-    TestTwoFloats("current", b[i].ImpellerCurrent(), gnc_.states_[i].impeller_current, 0.001);
-    TestTwoVectors("theta", b[i].NozzlesTheta(), gnc_.states_[i].nozzle_theta, 0.001);
-    TestTwoFloats("motor speed", b[i].MotorSpeed(), gnc_.states_[i].motor_speed, 0.001);
-  }
-}
-
-void PMCSim::SetAngularVelocity(float x, float y, float z) {
-  omega_ << x, y, z;
-  gnc_.SetAngularVelocity(x, y, z);
-}
-
-void PMCSim::SetBatteryVoltage(float voltage) {
-  voltage_ = voltage;
-  gnc_.SetBatteryVoltage(voltage);
-}
-}  // namespace pmc_sim
+}  // namespace pmc
 

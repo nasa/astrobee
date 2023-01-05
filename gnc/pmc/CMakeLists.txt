@@ -16,7 +16,7 @@
 # under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(pmc_sim)
+project(pmc)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -35,7 +35,7 @@ catkin_package(
   INCLUDE_DIRS
     include
   LIBRARIES
-    pmc_sim
+    pmc
   CATKIN_DEPENDS
     roscpp
     config_reader
@@ -54,11 +54,13 @@ include_directories(
 )
 
 # Declare C++ libraries
-add_library(pmc_sim
+add_library(pmc
   src/pmc_sim.cc
+  src/fam.cc
+  src/shared.cc
 )
-add_dependencies(pmc_sim ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pmc_sim ${catkin_LIBRARIES})
+add_dependencies(pmc ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc ${catkin_LIBRARIES})
 
 #############
 ## Install ##
