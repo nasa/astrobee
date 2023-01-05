@@ -1,0 +1,13 @@
+android-platform-system-core (1:8.1.0+r23-5ubuntu2+focal1) focal; urgency=medium
+
+  * Rebuild with 64bit offsets
+    - This allows fastboot to open images larger than 2GB
+
+ -- Ruben Garcia <nospam@nospam.org>  Wed, 22 Jun 2022 17:30:11 -0700
+
+android-platform-system-core (1:8.1.0+r23-5ubuntu2) focal; urgency=medium
+
+  * No-change rebuild with fixed binutils on arm64.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 08 Feb 2020 10:55:53 +0000
+

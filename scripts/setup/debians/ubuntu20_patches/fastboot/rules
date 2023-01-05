@@ -1,0 +1,117 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/pkg-info.mk
+
+export DEB_HOST_MULTIARCH
+export DEB_CFLAGS_MAINT_APPEND = -fPIC
+export DEB_CXXFLAGS_MAINT_APPEND = -fPIC
+export DEB_CPPFLAGS_MAINT_APPEND = -DNDEBUG -UDEBUG -I/usr/include/android -D_FILE_OFFSET_BITS=64
+export DEB_LDFLAGS_MAINT_APPEND = -fPIC
+export DEB_VERSION
+# DEB_BUILD_PROFILES = stage1
+
+STAGE1_COMPONENTS = adb \
+		libadb.so \
+		libbacktrace.so \
+		libbase.so \
+		libcutils.so \
+		liblog.so \
+		libsparse.so \
+		libutils.so \
+		libziparchive.so \
+		libcrypto_utils.so \
+		simg2img \
+		img2simg \
+		append2simg \
+		simg2simg
+
+OTHER_COMPONENTS = fastboot libnativebridge.so libnativeloader.so
+COMPONENTS = $(STAGE1_COMPONENTS)
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+  COMPONENTS += $(OTHER_COMPONENTS)
+endif
+
+# Whatever depends on BoringSSL must be disabled on MIPS
+NON_MIPS_COMPONENTS = adb libadb.so libcrypto_utils.so fastboot
+ifneq ($(filter mips mipsel mips64el,$(DEB_HOST_ARCH)),)
+  COMPONENTS := $(filter-out $(NON_MIPS_COMPONENTS),$(COMPONENTS))
+endif
+
+# Most components only support ARM, x86 and MIPS, but some can be built
+# on all architectures.
+COMPONENTS_ANY_ARCH = \
+  append2simg \
+  img2simg \
+  libbase.so \
+  libcutils.so \
+  liblog.so \
+  libsparse.so \
+  simg2img \
+  simg2simg
+ifeq ($(filter amd64 i386 armel armhf arm64 mips mipsel mips64el,$(DEB_HOST_ARCH)),)
+  COMPONENTS := $(filter $(COMPONENTS_ANY_ARCH), $(COMPONENTS))
+endif
+
+.PHONY: adb fastboot
+
+lib%.so: debian/lib%.mk
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+debian/%.1: debian/%.1.md
+	pandoc -s -o $@ $<
+
+libadb.so: debian/libadb.mk libcutils.so libbase.so libcrypto_utils.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+libbacktrace.so: debian/libbacktrace.mk libcutils.so libbase.so liblog.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+libbase.so: debian/libbase.mk liblog.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+libcutils.so: debian/libcutils.mk liblog.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+libutils.so: debian/libutils.mk liblog.so libcutils.so libbacktrace.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+libziparchive: debian/libziparchive.mk libutils.so liblog.so libbase.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+adb: debian/adb.mk libadb.so libcutils.so libbase.so debian/adb.1
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+fastboot: debian/fastboot.mk libziparchive.so libsparse.so libbase.so libcutils.so libadb.so debian/fastboot.1
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+simg2img: debian/simg2img.mk libsparse.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+simg2simg: debian/simg2simg.mk libsparse.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+img2simg: debian/img2simg.mk libsparse.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+append2simg: debian/append2simg.mk libsparse.so
+	dh_auto_build --buildsystem=makefile -- -f $<
+
+libnativebridge.so: debian/libnativebridge.mk liblog.so
+	dh_auto_build --buildsystem=makefile -- --file=$<
+
+libnativeloader.so: debian/libnativeloader.mk libnativebridge.so
+	dh_auto_build --buildsystem=makefile -- --file=$<
+
+%:
+	dh $@ --with bash-completion
+
+override_dh_auto_build-arch: $(COMPONENTS)
+
+override_dh_auto_clean:
+	dh_auto_clean
+	$(foreach component,$(COMPONENTS),make clean -f debian/$(component:.so=).mk;)
+	$(RM) debian/*.1
+
+override_dh_shlibdeps:
+	dh_shlibdeps -l/usr/lib/$(DEB_HOST_MULTIARCH)/android

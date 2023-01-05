@@ -1,0 +1,27 @@
+android-platform-external-boringssl (8.1.0+r23-2ubuntu1+focal1) focal; urgency=medium
+
+  * Rebuild with armv7 patch
+    * Always use adr for thumb2, this fixes adb key error on start
+
+ -- Ruben Garcia <nospam@nospam.org>  Thu, 23 Jun 2022 15:06:25 -0700
+
+android-platform-external-boringssl (8.1.0+r23-2build1) focal; urgency=medium
+
+  * No-change rebuild for libgcc-s1 package name change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sun, 22 Mar 2020 16:33:07 +0100
+
+android-platform-external-boringssl (8.1.0+r23-2) unstable; urgency=medium
+
+  * Update d/copyright:
+    * Cover all copyright holders (Closes: #905820)
+    * Point the Source to AOSP
+  * Standards-Version => 4.2.1
+
+ -- Kai-Chung Yan <seamlikok@gmail.com>  Fri, 21 Sep 2018 16:43:18 +0800
+
+android-platform-external-boringssl (8.1.0+r23-1) unstable; urgency=medium
+
+  * Initial release (Closes: #823933)
+
+ -- Kai-Chung Yan <seamlikok@gmail.com>  Mon, 28 May 2018 19:53:05 +0200
