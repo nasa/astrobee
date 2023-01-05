@@ -1,11 +1,12 @@
-- add posenodeupdater (and posegraphvalues?)!!
-  - use code from other branch?????
-      - look at timestamped node, node updater???!!!
-        - add these to graph optimization package?
-      - use sliding window graph optimizer package?????
-        - don't update graph vio yet??
-  - update graph loc with this!!!
- move combinednavstate accesors to combinednavstate node updater????
+- use timestamped node/node updater for graph loc!
+  - steal from inv depth branch, add to graph opt
+  - avoid using graph values?
+- add other parts from inv depth branch?
+  - make sliding window graph optimizer? seperate from graph?
+  - add abilitiy to compute covariances?
+  - avoid having to use graph action completers?
+  - add option to use isam instead of levenberg marq!!!
+ -move combinednavstate accesors to combinednavstate node updater????
   - update graph vio with this!!
 - compiple graph loc!
 - move graph action completers to new package?

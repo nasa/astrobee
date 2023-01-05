@@ -62,6 +62,24 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_nodes
+    test/test_nodes.test
+    test/test_nodes.cc
+  )
+  target_link_libraries(test_nodes
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+  add_rostest_gtest(test_timestamped_nodes
+    test/test_timestamped_nodes.test
+    test/test_timestamped_nodes.cc
+  )
+  target_link_libraries(test_timestamped_nodes
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+endif() 
+
 #############
 ## Install ##
 #############
