@@ -57,7 +57,7 @@ using ServiceClient = ros::ServiceClient*;
 ros::ServiceClient __serv_client = nh_private_.serviceClient<msg>(topic);
 serv_client = &__serv_client
 
-using Duration = ros::Duration;
+using Duration = ros::Duration*;
 
 #define FF_DEBUG(...)   ROS_DEBUG_NAMED(ros::this_node::getName(), __VA_ARGS__)
 #define FF_INFO(...)    ROS_INFO_NAMED(ros::this_node::getName(), __VA_ARGS__)
