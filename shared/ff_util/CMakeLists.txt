@@ -31,6 +31,7 @@ find_package(msg_conversions REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(config_reader REQUIRED)
 # find_package(actionlib REQUIRED)
 
 set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
@@ -56,7 +57,7 @@ add_library(ff_component
 )
 target_link_libraries(ff_component ${catkin_LIBRARIES})
 
-ament_target_dependencies(ff_component rclcpp ff_msgs diagnostic_msgs)
+ament_target_dependencies(ff_component rclcpp ff_msgs config_reader diagnostic_msgs)
 # ament_export_targets(ff_nodelet_export HAS_LIBRARY_TARGET)
 
 # Declare C++ libraries
@@ -81,12 +82,20 @@ ament_package()
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
+  # ff_timer
   ament_add_gtest(test_ff_timer
     test/test_ff_timer.test
     test/test_ff_timer.cc
   )
-  target_link_libraries(test_ff_timer ff_component
+  target_link_libraries(test_ff_timer ff_component)
+
+  # ff_service
+  ament_add_gtest(test_ff_service
+    test/test_ff_service.test
+    test/test_ff_service.cc
   )
+  target_link_libraries(test_ff_service ff_component)
+
   # ff_action
  # ament_add_gtest(ff_action_nominal_behaviour
  #   test/ff_action_nominal_behaviour.test
