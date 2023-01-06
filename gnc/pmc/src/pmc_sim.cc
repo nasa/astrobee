@@ -119,7 +119,7 @@ void Blower::ImpellerModel(int speed_cmd, float voltage, float* motor_current, f
   *motor_torque =
     (*motor_current) * PMCConstants::imp_motor_torque_k - PMCConstants::imp_motor_friction_coeff * impeller_speed_;
 
-  last_speed_ = impeller_speed_;  // matching simulink, but I don't think this is right
+  last_speed_ = impeller_speed_;
   // in simulink, drag torque would be subtracted from motor, but set to 0
   // noise is also set to 0
   const float impeller_inertia = 0.001;
