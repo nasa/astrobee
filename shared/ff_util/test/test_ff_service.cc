@@ -27,10 +27,14 @@
 
 bool test_done = false;
 
-class Server : public rclcpp::Node {
+class Server : public ff_util::FreeFlyerComponent {
  public :
-  Server() : Node("service_server_test") {
-    service_ = this->create_service<ff_msgs::srv::SetRate>("/testing/set_rate",
+  Server(const rclcpp::NodeOptions & options) :
+    FreeFlyerComponent(options, "service_server_test", false) {
+  }
+
+  void Initialize(NodeHandle node) {
+    service_ = node->create_service<ff_msgs::srv::SetRate>("/testing/set_rate",
       std::bind(&Server::SetRateCallback, this, std::placeholders::_1, std::placeholders::_2));
   }
 
@@ -50,44 +54,81 @@ class Server : public rclcpp::Node {
   Service<ff_msgs::srv::SetRate> service_;
 };
 
-TEST(ff_service, Nominal) {
-  test_done = false;
-  rclcpp::NodeOptions node_options;
-  rclcpp::Node::SharedPtr test_node =
-                  std::make_shared<rclcpp::Node>("test_ff_service_nominal", node_options);
+class Client : public ff_util::FreeFlyerComponent {
+ public :
+  Client(const rclcpp::NodeOptions & options) :
+    FreeFlyerComponent(options, "service_client_test", false) {
+  }
 
-  Server server();
+  void Initialize(NodeHandle node) {
+    client_.Create(node, "/testing/set_rate");
+  }
 
-  ff_util::FreeFlyerServiceClient<ff_msgs::srv::SetRate,
-                                  ff_msgs::srv::SetRate::Request,
-                                  ff_msgs::srv::SetRate::Response> client_;
-
-  /*client_.Create(test_node, "/testing/set_rate");
-
-  ff_util::FreeFlyerService<ff_msgs::srv::SetRate::Request,
+  void TestCall(bool nominal) {
+    ff_util::FreeFlyerService<ff_msgs::srv::SetRate::Request,
                             ff_msgs::srv::SetRate::Response> srv;
     srv.request->which = ff_msgs::srv::SetRate::Request::DISK_STATE;
     srv.request->rate = 5.0;
 
-    bool status = client_.call(srv);
+    client_.waitForExistence(5.0);
 
-    EXPECT_TRUE(status);
-    EXPECT_TRUE(srv.response->success);
-    EXPECT_EQ(srv.response->status, "Which is disk state.");*/
-  EXPECT_TRUE(true);
-}
+    // Test is valid for fun
+    bool status = false;
+    if (client_.isValid()) {
+      status = client_.call(srv);
+    }
 
-TEST(ff_timer, NoConnection) {
-  test_done = false;
-  rclcpp::NodeOptions node_options;
-  rclcpp::Node::SharedPtr test_node = std::make_shared<rclcpp::Node>("test_ff_service_no_connection");
+    if (nominal) {
+      EXPECT_TRUE(status);
+      EXPECT_TRUE(srv.response->success);
+      EXPECT_EQ(srv.response->status, "Which is disk state.");
+    } else {
+      EXPECT_FALSE(status);
+      EXPECT_FALSE(srv.response->success);
+      EXPECT_EQ(srv.response->status, "");
+    }
+    test_done = true;
+  }
 
+ private:
   ff_util::FreeFlyerServiceClient<ff_msgs::srv::SetRate,
                                   ff_msgs::srv::SetRate::Request,
                                   ff_msgs::srv::SetRate::Response> client_;
 
+};
 
-  EXPECT_TRUE(true);
+TEST(ff_service, Nominal) {
+  test_done = false;
+  rclcpp::NodeOptions node_options;
+  rclcpp::Node::SharedPtr test_node =
+                  std::make_shared<rclcpp::Node>("test_ff_service_nominal");
+
+  Server server(node_options);
+  Client client(node_options);
+
+  server.Initialize(test_node);
+  client.Initialize(test_node);
+
+  client.TestCall(true);
+  while(!test_done) {
+    rclcpp::spin_some(test_node);
+  }
+}
+
+TEST(ff_service, NoConnection) {
+  test_done = false;
+  rclcpp::NodeOptions node_options;
+  rclcpp::Node::SharedPtr test_node =
+                        std::make_shared<rclcpp::Node>("test_ff_service_no_connection");
+
+  Client client(node_options);
+
+  client.Initialize(test_node);
+
+  client.TestCall(false);
+  while(!test_done) {
+    rclcpp::spin_some(test_node);
+  }
 }
 
 // Run all the tests that were declared with TEST()

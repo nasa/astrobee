@@ -31,6 +31,10 @@ namespace ff_util {
 
 template < class ServiceRequestSpec, class ServiceResponseSpec >
 struct FreeFlyerService {
+  FreeFlyerService () {
+    request = std::make_shared<ServiceRequestSpec>();
+    response = std::make_shared<ServiceResponseSpec>();
+  }
   std::shared_ptr<ServiceRequestSpec> request;
   std::shared_ptr<ServiceResponseSpec> response;
 };
@@ -90,7 +94,7 @@ class FreeFlyerServiceClient {
 
   // Check that the service is ready
   bool IsConnected() {
-    if (service_client_->service_is_ready())
+    if (exists())
       return true;
     ConnectPollCallback();
     return false;
@@ -104,8 +108,6 @@ class FreeFlyerServiceClient {
   // ROS1 functions
   bool call(FreeFlyerService<ServiceRequestSpec, ServiceResponseSpec>& service) {
     if (IsConnected()) {
-      // std::shared_future<ServiceRequestSpec> result =
-      // rclcpp::Client<ServiceRequestSpec>::FutureAndRequestId result =
       auto result = service_client_->async_send_request(service.request);
       rclcpp::FutureReturnCode return_code =
                             rclcpp::spin_until_future_complete(node_, result);
@@ -118,19 +120,25 @@ class FreeFlyerServiceClient {
   }
 
   bool exists() {
-    return service_client_->service_is_ready();
+    if (service_client_.get() != NULL) {
+      return service_client_->service_is_ready();
+    }
+    return false;
   }
 
   bool isValid() {
-    return service_client_->service_is_ready();
-  }
-
-  bool waitForExistence(double duration) {
-    return waitForExistence(std::make_shared<rclcpp::Duration>(duration, 0));
+    return exists();
   }
 
   bool waitForExistence(std::shared_ptr<rclcpp::Duration> duration) {
-    return service_client_->wait_for_service();
+    return waitForExistence(duration->seconds());
+  }
+
+  bool waitForExistence(double duration_sec) {
+    if (service_client_.get() != NULL) {
+      return service_client_->wait_for_service((std::chrono::duration<double>) duration_sec);
+    }
+    return false;
   }
 
  protected:
@@ -146,7 +154,8 @@ class FreeFlyerServiceClient {
   // Called periodically until the server is ready
   void ConnectPollCallback() {
     // Case: connected
-    if (service_client_->service_is_ready()) {
+    if (service_client_.get() != NULL &&
+        service_client_->service_is_ready()) {
       if (state_ != WAITING_FOR_CALL) {
         state_ = WAITING_FOR_CALL;
         timer_connected_.stop();
