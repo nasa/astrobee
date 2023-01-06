@@ -19,8 +19,6 @@
 #ifndef PMC_PMC_SIM_H_
 #define PMC_PMC_SIM_H_
 
-#include <gnc_autocode/blowers.h>
-
 #include <Eigen/Dense>
 
 namespace pmc {
@@ -81,8 +79,6 @@ class PMCSim {
   float MotorSpeed(int blower) {return (blower == 0) ? b1.MotorSpeed() : b2.MotorSpeed();}
   Eigen::Vector3f Force() {return b1.Force() + b2.Force();}
   Eigen::Vector3f Torque() {return b1.Torque() + b2.Torque();}
-
-  gnc_autocode::GncBlowersAutocode gnc_;
 
  private:
   Blower b1, b2;

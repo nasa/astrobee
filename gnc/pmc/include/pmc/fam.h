@@ -19,8 +19,6 @@
 #ifndef PMC_FAM_H_
 #define PMC_FAM_H_
 
-#include <gnc_autocode/blowers.h>
-
 #include <Eigen/Dense>
 
 namespace pmc {
@@ -29,7 +27,7 @@ struct FamInput {
   Eigen::Vector3f body_force_cmd;
   Eigen::Vector3f body_torque_cmd;
   Eigen::Vector3f center_of_mass;
-  uint8_T speed_gain_cmd;
+  uint8_t speed_gain_cmd;
 };
 
 class Fam {
