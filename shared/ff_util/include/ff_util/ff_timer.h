@@ -43,7 +43,6 @@ class FreeFlyerTimer {
 
   // Constructor
   FreeFlyerTimer() : one_shot_(false),
-    auto_start_(true),
     created_(false) {}
 
   // Destructor
@@ -54,15 +53,12 @@ class FreeFlyerTimer {
                    rclcpp::Node::SharedPtr node,
                    bool one_shot = false,
                    bool auto_start = true) {
-    period_ = period_sec;
-    cb_timer_ = cb_timer;
-    one_shot_ = one_shot;
-    auto_start_ = auto_start;
-    node_ = node;
-    clock_ = node_->get_clock();
-    if (auto_start_) {
-      createStartTimer();
-    }
+    createTimer(std::make_shared<rclcpp::Duration>(period_sec, 0),
+                cb_timer,
+                node,
+                node->get_clock(),
+                one_shot,
+                auto_start);
   }
 
   void createTimer(double period_sec,
@@ -71,13 +67,39 @@ class FreeFlyerTimer {
                    rclcpp::Clock::SharedPtr clock,
                    bool one_shot = false,
                    bool auto_start = true) {
-    period_ = period_sec;
+    createTimer(std::make_shared<rclcpp::Duration>(period_sec, 0),
+                cb_timer,
+                node,
+                clock,
+                one_shot,
+                auto_start);
+  }
+
+  void createTimer(std::shared_ptr<rclcpp::Duration> period,
+                   TimerCallbackType cb_timer,
+                   rclcpp::Node::SharedPtr node,
+                   bool one_shot = false,
+                   bool auto_start = true) {
+    createTimer(period,
+                cb_timer,
+                node,
+                node->get_clock(),
+                one_shot,
+                auto_start);
+  }
+
+  void createTimer(std::shared_ptr<rclcpp::Duration> period,
+                   TimerCallbackType cb_timer,
+                   rclcpp::Node::SharedPtr node,
+                   rclcpp::Clock::SharedPtr clock,
+                   bool one_shot = false,
+                   bool auto_start = true) {
+    period_ = period;
     cb_timer_ = cb_timer;
     one_shot_ = one_shot;
-    auto_start_ = auto_start;
-    node_ = node;
     clock_ = clock;
-    if (auto_start_) {
+    node_ = node;
+    if (auto_start) {
       createStartTimer();
     }
   }
@@ -88,10 +110,33 @@ class FreeFlyerTimer {
     }
   }
 
+  // The ROS1 timer has a reset parameter that was set to true by default.
+  // ARS never passed false for reset so the following two functions don't
+  // take a reset argument and implement the reset is true functionality
+  // from ROS1
+  void setPeriod(double period_sec) {
+    setPeriod(std::make_shared<rclcpp::Duration>(period_sec, 0));
+  }
+
+  void setPeriod(std::shared_ptr<rclcpp::Duration> period) {
+    period_ = period;
+    // See if the timer has been created
+    if (created_) {
+      // Check if the timer is stopped
+      if (timer_->is_canceled()) {
+        // Don't want to start the timer if it isn't running
+        created_ = false;
+      } else {
+        timer_->cancel();
+        createStartTimer();
+      }
+    }
+  }
+
   // Follows the ros1 one convention that it doesn't do anything if the timer
   // is already started
   void start() {
-    if (!auto_start_) {
+    if (!created_) {
       createStartTimer();
     } else if (timer_->is_canceled()) {
       timer_->reset();
@@ -108,7 +153,7 @@ class FreeFlyerTimer {
   void createStartTimer() {
     timer_ = rclcpp::create_timer(node_,
                                   clock_,
-                                  rclcpp::Duration::from_seconds(period_),
+                                  *period_,
                                   std::bind(&FreeFlyerTimer::TimerCallback, this));
     created_ = true;
   }
@@ -124,8 +169,8 @@ class FreeFlyerTimer {
   }
 
  protected:
-  bool one_shot_, auto_start_, created_;
-  double period_;
+  bool one_shot_, created_;
+  std::shared_ptr<rclcpp::Duration> period_;
   TimerCallbackType cb_timer_;
   rclcpp::Clock::SharedPtr clock_;
   rclcpp::Node::SharedPtr node_;
