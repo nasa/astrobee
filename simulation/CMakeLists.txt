@@ -35,7 +35,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_hw_msgs
   tf2_geometry_msgs
   ff_util
-  gnc_autocode
+  pmc
   camera
   cv_bridge
   jsonloader
@@ -91,7 +91,7 @@ catkin_package(
     ff_hw_msgs
     tf2_geometry_msgs
     ff_util
-    gnc_autocode
+    pmc
     camera
     cv_bridge
     jsonloader
