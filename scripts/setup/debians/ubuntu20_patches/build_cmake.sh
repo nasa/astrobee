@@ -29,6 +29,9 @@ CONTROL_FILES=cmake_3.16.3-1ubuntu1.20.04.1.debian.tar.xz
 ORIG_TAR=cmake_3.16.3.orig.tar.gz
 DEB_DIR=cmake
 
+# Set LANG so perl doesn't complain all the time on chroot
+[[ -z $LANG ]] && export LANG=C
+
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi

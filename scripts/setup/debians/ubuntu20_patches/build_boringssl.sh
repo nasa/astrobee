@@ -23,6 +23,9 @@ ORIG_TAR=android-platform-external-boringssl_8.1.0+r23.orig.tar.gz
 URL=http://ports.ubuntu.com/pool/universe/a/android-platform-external-boringssl/
 DEB_DIR=boringssl
 
+# Set LANG so perl doesn't complain all the time on chroot
+[[ -z $LANG ]] && export LANG=C
+
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
   rm -f *boringssl*{.deb,.ddeb,.build,.buildinfo,.changes,.dsc,.gz,.xz}

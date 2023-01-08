@@ -23,6 +23,9 @@ ORIG_TAR=android-platform-system-core_8.1.0+r23.orig.tar.gz
 URL=http://ports.ubuntu.com/pool/universe/a/android-platform-system-core
 DEB_DIR=fastboot
 
+# Set LANG so perl doesn't complain all the time on chroot
+[[ -z $LANG ]] && export LANG=C
+
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
