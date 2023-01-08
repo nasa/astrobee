@@ -1,3 +1,7 @@
+kwsys_no_root_write_test.patch
+ignore_testuv_qemu_error.patch
+skip_longnames_test.patch
 use_64bit_offsets.patch
+allow_git_protocol_file.patch
 disable_fileapi_json_extra_test.patch
 0001-backport-gmock-and-gmock-main-definitions.patch
