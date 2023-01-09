@@ -29,9 +29,8 @@ bool test_done = false;
 
 class Server : public ff_util::FreeFlyerComponent {
  public :
-  Server(const rclcpp::NodeOptions & options) :
-    FreeFlyerComponent(options, "service_server_test", false) {
-  }
+  explicit Server(const rclcpp::NodeOptions& options) :
+      FreeFlyerComponent(options, "service_server_test", false) {}
 
   void Initialize(NodeHandle node) {
     service_ = node->create_service<ff_msgs::srv::SetRate>("/testing/set_rate",
@@ -56,9 +55,8 @@ class Server : public ff_util::FreeFlyerComponent {
 
 class Client : public ff_util::FreeFlyerComponent {
  public :
-  Client(const rclcpp::NodeOptions & options) :
-    FreeFlyerComponent(options, "service_client_test", false) {
-  }
+  explicit Client(const rclcpp::NodeOptions& options) :
+      FreeFlyerComponent(options, "service_client_test", false) {}
 
   void Initialize(NodeHandle node) {
     client_.Create(node, "/testing/set_rate");
@@ -94,7 +92,6 @@ class Client : public ff_util::FreeFlyerComponent {
   ff_util::FreeFlyerServiceClient<ff_msgs::srv::SetRate,
                                   ff_msgs::srv::SetRate::Request,
                                   ff_msgs::srv::SetRate::Response> client_;
-
 };
 
 TEST(ff_service, Nominal) {
@@ -110,7 +107,7 @@ TEST(ff_service, Nominal) {
   client.Initialize(test_node);
 
   client.TestCall(true);
-  while(!test_done) {
+  while (!test_done) {
     rclcpp::spin_some(test_node);
   }
 }
@@ -126,7 +123,7 @@ TEST(ff_service, NoConnection) {
   client.Initialize(test_node);
 
   client.TestCall(false);
-  while(!test_done) {
+  while (!test_done) {
     rclcpp::spin_some(test_node);
   }
 }

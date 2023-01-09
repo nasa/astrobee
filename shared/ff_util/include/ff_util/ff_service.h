@@ -31,7 +31,7 @@ namespace ff_util {
 
 template < class ServiceRequestSpec, class ServiceResponseSpec >
 struct FreeFlyerService {
-  FreeFlyerService () {
+  FreeFlyerService() {
     request = std::make_shared<ServiceRequestSpec>();
     response = std::make_shared<ServiceResponseSpec>();
   }
