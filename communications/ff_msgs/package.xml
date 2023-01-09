@@ -37,6 +37,8 @@
   <build_depend condition="$ROS_VERSION == 2">std_msgs</build_depend>
   <build_depend condition="$ROS_VERSION == 2">trajectory_msgs</build_depend>
   <build_depend condition="$ROS_VERSION == 2">actionlib_msgs</build_depend>
+  <build_depend condition="$ROS_VERSION == 2">diagnostic_msgs</build_depend>
+  <build_depend condition="$ROS_VERSION == 2">tf2_geometry_msgs</build_depend>
 
   <exec_depend condition="$ROS_VERSION == 2">rosidl_default_runtime</exec_depend>
   <exec_depend condition="$ROS_VERSION == 2">builtin_interfaces</exec_depend>

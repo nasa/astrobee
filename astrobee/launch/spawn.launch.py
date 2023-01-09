@@ -37,15 +37,12 @@ def generate_launch_description():
         # this will do.
         SetEnvironmentVariable(name="ASTROBEE_ROBOT", value=os.getenv("ASTROBEE_ROBOT", LaunchConfiguration("robot"))),
         SetEnvironmentVariable(name="ASTROBEE_WORLD", value=os.getenv("ASTROBEE_WORLD", LaunchConfiguration("world"))),
-
         SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",    value=os.getenv("ASTROBEE_CONFIG_DIR",    get_path("config"))),
         SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",  value=os.getenv("ASTROBEE_RESOURCE_DIR",  get_path("resources"))),
         SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE", value=os.getenv("ROSCONSOLE_CONFIG_FILE", get_path("resources/logging.config"))),
-
         # Declare our global logging format
         SetEnvironmentVariable(name="RCUTILS_CONSOLE_OUTPUT_FORMAT",
             value="[{severity} {time}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})"),
-        
         IncludeLaunchDescription(
             get_launch_file("launch/astrobee.launch.py"),
             launch_arguments={
@@ -65,6 +62,5 @@ def generate_launch_description():
                 "dds"    : LaunchConfiguration("dds",   default="false"),  # Enable DDS
                 "gtloc"  : LaunchConfiguration("gtloc", default="false"),  # Use Ground Truth Localizer
             }.items(),
-                
         ),
     ])

@@ -17,59 +17,6 @@
 
 project(ff_msgs)
 
-if($ENV{ROS_VERSION} STREQUAL "1")  # begin ROS1 version
-
-cmake_minimum_required(VERSION 3.0)
-find_package(catkin REQUIRED COMPONENTS
-  message_generation
-  std_msgs
-  geometry_msgs
-  actionlib_msgs
-  trajectory_msgs
-  sensor_msgs
-)
-
-# Generate messages in the 'msg' folder
-file(GLOB MSG_FILES msg/*.msg)
-foreach(SRC ${MSG_FILES})
-  get_filename_component(NAME ${SRC} NAME)
-  list(APPEND MSG_FILE_NAMES ${NAME})
-endforeach()
-add_message_files(FILES ${MSG_FILE_NAMES})
-
-# Generate services in the 'srv' folder
-file(GLOB SRV_FILES srv/*.srv)
-foreach(SRC ${SRV_FILES})
-  get_filename_component(NAME ${SRC} NAME)
-  list(APPEND SRV_FILE_NAMES ${NAME})
-endforeach()
-add_service_files(FILES ${SRV_FILE_NAMES})
-
-# Generate actions in the 'action' folder
-file(GLOB ACTION_FILES action/*.action)
-foreach(SRC ${ACTION_FILES})
-  get_filename_component(NAME ${SRC} NAME)
-  list(APPEND ACTION_FILE_NAMES ${NAME})
-endforeach()
-add_action_files(FILES ${ACTION_FILE_NAMES})
-
-generate_messages(
-  DEPENDENCIES std_msgs geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs std_msgs
-)
-
-catkin_package(
- # INCLUDE_DIRS include
-  LIBRARIES
-  CATKIN_DEPENDS geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs
-)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-else()  # begin ROS2 version
-
 cmake_minimum_required(VERSION 3.5)
 
 # Default to C++14
@@ -86,6 +33,8 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(actionlib_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
@@ -121,6 +70,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   sensor_msgs
   trajectory_msgs
   actionlib_msgs
+  diagnostic_msgs
+  tf2_geometry_msgs
 
   ADD_LINTER_TESTS
 )
@@ -128,5 +79,3 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()
-
-endif()  # end ROS2 version

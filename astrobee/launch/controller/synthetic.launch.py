@@ -27,7 +27,6 @@ def generate_launch_description():
     #              address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
     if LaunchConfigurationNotEquals("bag", ""):
         return LaunchDescription([
-
             #   <group if="$(eval arg('bag')=='')" >
             SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",
                                    value="/home/astrobee/native/config",
@@ -36,7 +35,7 @@ def generate_launch_description():
                                    value=os.getenv("ASTROBEE_RESOURCE_DIR", get_path("/resources")),
                                    condition=LaunchConfigurationNotEquals("sim", "local")),
             SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE",
-                                   value=os.getenv( "ROSCONSOLE_CONFIG_FILE", get_path("/resources/logging.config")),
+                                   value=os.getenv("ROSCONSOLE_CONFIG_FILE", get_path("/resources/logging.config")),
                                    condition=LaunchConfigurationNotEquals("sim", "local")),
             SetEnvironmentVariable(name="DISPLAY", value=":0",
                                    condition=LaunchConfigurationNotEquals("sim", "local")),
@@ -44,15 +43,13 @@ def generate_launch_description():
                                    condition=LaunchConfigurationNotEquals("sim", "local")),
 
             # IncludeLaunchDescription(
-            #     get_launch_file("/launch/spawn_astrobee.launch", "astrobee_gazebo"),
+            #     get_launch_file("/launch/spawn_astrobee.launch.py", "astrobee_gazebo"),
             #     launch_arguments={
             #         "ns"  : LaunchConfiguration("ns"),
             #         "pose": LaunchConfiguration("pose"),
             #     }.items(),
             # ),
-        
         ])
-    
     return LaunchDescription([
         IncludeLaunchDescription(
             get_launch_file("/launch/controller/bagreplay.launch"),

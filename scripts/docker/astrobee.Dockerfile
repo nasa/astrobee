@@ -9,11 +9,7 @@ FROM ${REMOTE}/astrobee:latest-base-ubuntu${UBUNTU_VERSION}
 ARG ROS_VERSION=kinetic
 ARG PYTHON=''
 
-RUN apt-get update \
-  && apt-get install -y python${PYTHON}-jinja2 \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY . /src/astrobee/git_src/
+COPY . /src/astrobee/src/
 RUN . /opt/ros/${ROS_VERSION}/setup.sh \
 	&& cd /src/astrobee \
 	&& ./git_src/scripts/configure.sh -l -F -D -T \
