@@ -35,13 +35,6 @@ FreeFlyerComponent::FreeFlyerComponent(
   Setup(name);
 }
 
-// FreeFlyerComponent::FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer) :
-//   node_(std::make_shared<rclcpp::Node>("", options)),
-//   autostart_hb_timer_(autostart_hb_timer),
-//   initialized_(false),
-//   node_name_("") {
-// }
-
 // For gazebo plugins only
 FreeFlyerComponent::FreeFlyerComponent(std::string const& name, bool autostart_hb_timer) :
   autostart_hb_timer_(autostart_hb_timer),

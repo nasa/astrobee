@@ -52,7 +52,6 @@ include_directories(
 add_library(msg_conversions
   src/msg_conversions.cc
 )
-# target_link_libraries(msg_conversions ${EIGEN_LIBRARIES} ${catkin_LIBRARIES})
 ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs ff_common)
 ament_export_targets(msg_conversions HAS_LIBRARY_TARGET)
 

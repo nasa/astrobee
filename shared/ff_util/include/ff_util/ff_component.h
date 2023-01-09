@@ -75,7 +75,7 @@ class FreeFlyerComponent {
   // Explicitly specift the name
   explicit FreeFlyerComponent(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
-  // Explicitly specift the node from gazebo
+  // Explicitly specify the node from gazebo
   explicit FreeFlyerComponent(std::string const& name, bool autostart_hb_timer = true);
   void FreeFlyerComponentGazeboInit(rclcpp::Node::SharedPtr node);
 

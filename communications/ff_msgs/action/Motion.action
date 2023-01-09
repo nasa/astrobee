@@ -111,7 +111,7 @@ ff_msgs/ControlState[] segment
 ff_msgs/MotionState state
 
 # Control progress
-# ff_msgs/ControlFeedback progress                    # ROS2 does not allow this
+# ff_msgs/ControlFeedback progress       # TODO(@mgouveia): ROS2 does not allow this
 
 
 # Planner progress
