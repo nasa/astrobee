@@ -175,7 +175,7 @@ Next, download the cross toolchain and install the chroot:
     mkdir -p $ARMHF_TOOLCHAIN
     cd $HOME/arm_cross
     $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
-    $SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+    $SOURCE_PATH/submodules/platform/rootfs/make_chroot.sh xenial dev $ARMHF_CHROOT_DIR
 
 From the root of the repository, run:
 
