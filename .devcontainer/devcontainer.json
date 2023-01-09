@@ -40,6 +40,6 @@
 		"yzhang.markdown-all-in-one",
 		"zachflower.uncrustify"
 	],
-	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/.astrobee,type=bind",
-	"workspaceFolder": "/src/astrobee/.astrobee"
+	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/src,type=bind",
+	"workspaceFolder": "/src/astrobee/src"
 }

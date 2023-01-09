@@ -70,12 +70,16 @@ class FreeFlyerComponent {
     RESOURCE  = 1
   };
 
-  // Use default name from freeflyer
-  // COMPOSITION_PUBLIC
-  explicit FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
+  // Use default name from freeflyer - crashes in ROS2
+  // explicit FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
   // Explicitly specift the name
   explicit FreeFlyerComponent(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
+  // Explicitly specify the node from gazebo
+  explicit FreeFlyerComponent(std::string const& name, bool autostart_hb_timer = true);
+  void FreeFlyerComponentGazeboInit(rclcpp::Node::SharedPtr node);
+
+
   // Necessary ROS2 function for components
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const {
     return node_->get_node_base_interface();
@@ -128,6 +132,9 @@ class FreeFlyerComponent {
   // Called in onInit to read in the config values associated with the node
   void ReadConfig();
 
+  // Node
+  rclcpp::Node::SharedPtr node_;
+
   // Heartbeat autostart
   bool autostart_hb_timer_;
   bool initialized_;
@@ -140,7 +147,6 @@ class FreeFlyerComponent {
   // Heartbeat message, also used to report faults
   ff_msgs::Heartbeat heartbeat_;
 
-  rclcpp::Node::SharedPtr node_;
 
   ff_util::FreeFlyerTimer timer_heartbeat_;
   ff_util::FreeFlyerTimer timer_deferred_init_;

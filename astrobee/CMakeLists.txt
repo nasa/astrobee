@@ -32,57 +32,32 @@ add_definitions(-DROS1)
 #  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 #  )
 
-# Build for ROS1
-if("$ENV{ROS_VERSION}" STREQUAL "1")
-message(STATUS "------------------------------------------")
-message(STATUS "Astrobee is being built using ROS1.")
-message(STATUS "------------------------------------------")
-
-
-  ## Find catkin macros and libraries
-  find_package(catkin2 REQUIRED COMPONENTS
-    roscpp
-  )
-
-  catkin_package(
-      CATKIN_DEPENDS roscpp
-  )
-# Build for ROS2
-elseif("$ENV{ROS_VERSION}" STREQUAL "2")
 message(STATUS "------------------------------------------")
 message(STATUS "Astrobee is being built using ROS2.")
 message(STATUS "------------------------------------------")
-  # Find amend and libraries
-  find_package(ament_cmake REQUIRED)
-  find_package(rclcpp REQUIRED)
-
-
-  set(CATKIN_PACKAGE_SHARE_DESTINATION "share/${PROJECT_NAME}")
-  set(CATKIN_PACKAGE_BIN_DESTINATION "lib/${PROJECT_NAME}")
-
-  # Install Python modules
-  ament_python_install_package("utilities")
-
-  ament_package()
-endif()
-
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 
 #############
 ## Install ##
 #############
 
-install(DIRECTORY config/ DESTINATION config)
+# Install Python modules
+ament_python_install_package("utilities")
+
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 # resources will be installed separately
 # install(DIRECTORY resources/ DESTINATION resources)
 
 # Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)
 
 # Mark resource files for installation
-install(DIRECTORY resources/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/resources
+install(DIRECTORY resources
+  DESTINATION lib
   PATTERN ".svn" EXCLUDE)
 
 install(PROGRAMS scripts/apk_print_version.sh
@@ -90,7 +65,7 @@ install(PROGRAMS scripts/apk_print_version.sh
           scripts/print_version.sh
           scripts/cpu_print_version.sh
           scripts/launch_gds.sh
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+  DESTINATION lib/${PROJECT_NAME})
 
 # install the version.txt file when install target is run
 # add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.txt
@@ -104,3 +79,5 @@ install(PROGRAMS scripts/apk_print_version.sh
 # install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.txt DESTINATION ${CMAKE_INSTALL_PREFIX} )
 
 install(PROGRAMS scripts/env_wrapper.sh DESTINATION ${CMAKE_INSTALL_PREFIX} )
+
+ament_package()

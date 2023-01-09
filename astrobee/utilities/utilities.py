@@ -41,11 +41,15 @@ from launch.substitutions import (
     PythonExpression,
     TextSubstitution,
 )
-from launch_ros.actions import Node
-from launch_ros.descriptions import ParameterValue
+from launch_ros.actions import ComposableNodeContainer, Node
+from launch_ros.descriptions import ComposableNode, ParameterValue
 
 
 def get_launch_file(path, package="astrobee"):
-    return PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package), path)])
+    return PythonLaunchDescriptionSource(
+        [os.path.join(get_package_share_directory(package), path)]
+    )
+
+
 def get_path(path, package="astrobee"):
     return os.path.join(get_package_share_directory(package), path)
