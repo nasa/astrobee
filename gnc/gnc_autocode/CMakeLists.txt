@@ -128,6 +128,7 @@ add_library(gnc_autocode
   src/sim_csv.cc
   src/blowers.cc
   src/ctl.cc
+  src/old_ctl.cc
   src/sim.cc
   ${GNC_SOURCES}
 )

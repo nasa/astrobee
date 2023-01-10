@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package>
-  <name>fam</name>
+  <name>pmc</name>
   <version>0.0.0</version>
   <description>
-    Calls the GNC simulink auto-generated code for the force allocation module.
+    Simulates the propulsion modules.
   </description>
   <license>
   	Apache License, Version 2.0
@@ -16,23 +16,9 @@
   </maintainer>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>nodelet</build_depend>
-  <build_depend>ff_msgs</build_depend>
-  <build_depend>ff_hw_msgs</build_depend>
-  <build_depend>ff_util</build_depend>
   <build_depend>config_reader</build_depend>
   <build_depend>gnc_autocode</build_depend>
-  <build_depend>pmc</build_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>ff_msgs</run_depend>
-  <run_depend>ff_util</run_depend>
-  <run_depend>ff_msgs</run_depend>
-  <run_depend>ff_hw_msgs</run_depend>
   <run_depend>config_reader</run_depend>
   <run_depend>gnc_autocode</run_depend>
-  <run_depend>pmc</run_depend>
-  <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
-  </export>
 </package>
