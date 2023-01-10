@@ -56,9 +56,9 @@ Select which distribution you want to build for:
 
     sudo cp -a $S/scripts/setup/debians $B/debbuild_${D}/data/
 
-## Test chroot
+## Test your chroot
 
-Access to the chroot shell
+Access the chroot shell
 
     sudo $P/rootfs/chroot.sh $B/debbuild_${D}
 
@@ -77,7 +77,7 @@ For example, you may want to try editing the /etc/resolv.conf file on your chroo
 ## Build debians
 
 From your chroot shell, execute the following script to build all debians.
-This will also install them, as an additional test. You may omit the `--install`
+This will also install them in order to test them. You may omit the `--install`
 flag if desired.
 
     cd /data/debians

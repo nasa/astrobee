@@ -1,7 +1,7 @@
 # Astrobee armhf debian patches for Ubuntu 20
 
-This folder contains scripts and patches needed for flight software
-on the Ubuntu 20 armhf platform.
+This folder contains scripts and patches needed for flight software on the
+Ubuntu 20 armhf platform.
 
 ## Cmake
 
@@ -14,13 +14,17 @@ The patched debians are already in our repositories. You do not need to
 run this script again unless an additional change to CMake is needed.
 This issue is fixed in CMake 3.19.0.
 
+Note: In order to avoid dependency issues with cmake (armhf) and cmake-data (all)
+we have also rebuilt cmake for amd64 so it will use our cmake-data (all) as a
+dependency.
+
 ## BoringSSL
 
-ADB fails with key errors on start. The issue is not exactly on ADB,
+ADB fails with key access errors on start. The issue is not exactly on ADB,
 rather on the SSL implementation it depends on.
 
-Use `build_boringssl.sh` to patch and create new debians. This may
-produce many debians. We only need the following:
+Use `build_boringssl.sh` to patch and create new debians. This may produce
+many debians. We only need the following:
 
 - `android-libboringssl_8.1.0+r23-2ubuntu1+focal1_armhf.deb`
 - `android-libboringssl-dev_8.1.0+r23-2ubuntu1+focal1_armhf.deb`
