@@ -17,8 +17,6 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>config_reader</build_depend>
-  <build_depend>gnc_autocode</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>config_reader</run_depend>
-  <run_depend>gnc_autocode</run_depend>
 </package>
