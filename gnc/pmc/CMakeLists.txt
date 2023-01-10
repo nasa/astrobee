@@ -25,7 +25,6 @@ add_compile_options(-std=c++14)
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
   config_reader
-  gnc_autocode
 )
 
 # System dependencies are found with CMake's conventions
@@ -39,7 +38,6 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     config_reader
-    gnc_autocode
 )
 
 ###########

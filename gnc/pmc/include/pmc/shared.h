@@ -19,8 +19,6 @@
 #ifndef PMC_SHARED_H_
 #define PMC_SHARED_H_
 
-#include <gnc_autocode/blowers.h>
-
 #include <Eigen/Dense>
 
 namespace pmc {
