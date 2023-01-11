@@ -82,14 +82,12 @@ if(BUILD_TESTING)
 
   # ff_timer
   ament_add_gtest(test_ff_timer
-    test/test_ff_timer.test
     test/test_ff_timer.cc
   )
   target_link_libraries(test_ff_timer ff_component)
 
   # ff_service
   ament_add_gtest(test_ff_service
-    test/test_ff_service.test
     test/test_ff_service.cc
   )
   target_link_libraries(test_ff_service ff_component)
