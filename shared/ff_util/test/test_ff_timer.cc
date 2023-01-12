@@ -22,8 +22,9 @@
 
 #include <cmath>
 
-bool oneshot = false, oneshot_fired = false, test_done = false;
+bool oneshot = false, oneshot_fired = false, test_done = false, set_period = false;
 double timer_duration = 2.0;
+ff_util::FreeFlyerTimer set_period_timer;
 rclcpp::Node::SharedPtr test_node;
 rclcpp::Time start_time;
 rclcpp::TimerBase::SharedPtr timeout_timer;
@@ -40,6 +41,11 @@ void OneShotTimerCallback() {
 }
 
 void TimerTimeout() {
+  if (set_period) {
+    start_time = test_node->now();
+    set_period_timer.setPeriod(timer_duration);
+    return;
+  }
   test_done = true;
   // If the timer is one shot, we need to make sure it fired once
   if (oneshot) {
@@ -114,6 +120,23 @@ TEST(ff_timer, AutoStartTimer) {
 
   timeout_timer->cancel();
   test_timer.stop();
+}
+
+TEST(ff_timer, SetPeriodTimer) {
+  test_done = false;
+  set_period = true;
+  test_node = std::make_shared<rclcpp::Node>("test_ff_timer_set_period");
+  start_time = test_node->now();
+  set_period_timer.createTimer((timer_duration*10), &TimerCallback, test_node);
+  CreateTimeoutTimer();
+
+  while (!test_done) {
+    rclcpp::spin_some(test_node);
+  }
+
+  timeout_timer->cancel();
+  set_period_timer.stop();
+  set_period = false;
 }
 
 // Run all the tests that were declared with TEST()

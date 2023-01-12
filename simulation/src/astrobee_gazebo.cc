@@ -48,7 +48,7 @@ void FreeFlyerPlugin::SetParentFrame(std::string const& parent) {
 // Load function
 void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::string const& plugin_name,
                                        sdf::ElementPtr sdf) {
-  gzwarn << "Starting plugin " << plugin_name_ << " or " << plugin_name << std::endl;
+  gzwarn << "Starting plugin " << plugin_name_ << plugin_name << std::endl;
   robot_name_ = robot_name;
 
   // Get nodehandle based on the model.

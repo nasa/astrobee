@@ -20,7 +20,7 @@
 #define FF_UTIL_FF_SERVICE_H_
 
 // ROS includes
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // C++ includes
 #include <string>
@@ -29,13 +29,21 @@
 
 namespace ff_util {
 
-//////////////////////////////////////// ACTION CLIENT CODE ////////////////////////////////////////////////
+template < class ServiceRequestSpec, class ServiceResponseSpec >
+struct FreeFlyerService {
+  FreeFlyerService() {
+    request = std::make_shared<ServiceRequestSpec>();
+    response = std::make_shared<ServiceResponseSpec>();
+  }
+  std::shared_ptr<ServiceRequestSpec> request;
+  std::shared_ptr<ServiceResponseSpec> response;
+};
 
-// This is a simple wrapper around a ROS service client, which forces the connection to be persistent, and
-// handles reconnection if the connection is dropped. This improves the performance of the service call as
-// the connection is not established on each query, at the expense of a little more complexity.
+///////////////////////////// SERVICE CLIENT CODE /////////////////////////////
 
-template < class ServiceSpec >
+// This is a simple wrapper around a ROS2 service client.
+
+template < class ServiceSpec, class ServiceRequestSpec, class  ServiceResponseSpec >
 class FreeFlyerServiceClient {
  protected:
   enum State {
@@ -56,7 +64,7 @@ class FreeFlyerServiceClient {
   void SetConnectedCallback(ConnectedCallbackType cb_connected)    { cb_connected_ = cb_connected; }
 
   // Setters for timeouts
-  void SetConnectedTimeout(double to_connected)  { to_connected_ = ros::Duration(to_connected); }
+  void SetConnectedTimeout(double to_connected)  { to_connected_ = to_connected; }
 
   // Constructor
   FreeFlyerServiceClient() : state_(WAITING_FOR_CREATE),
@@ -66,50 +74,88 @@ class FreeFlyerServiceClient {
   // Destructor
   ~FreeFlyerServiceClient() {}
 
-  // Try and connect to the service client, and return whether the connection is active. In the blocking
-  // case (NOT RECOMMENDED) if the server exists, then the return value should be true. The non-blocking
-  // case will always return false, and you will receive a callback when the connection is ready.
-  bool Create(ros::NodeHandle *nh, std::string const& topic) {
-    // Create a timer to poll to see if the server is connected [autostart]
-    timer_connected_ = nh->createTimer(to_connected_,
-      &FreeFlyerServiceClient::TimeoutCallback, this, true, false);
-    timer_poll_ = nh->createTimer(to_poll_,
-      &FreeFlyerServiceClient::ConnectPollCallback, this, false, false);
+  bool Create(rclcpp::Node::SharedPtr node, std::string const& topic) {
+    // Create a timer to poll to see if the server is ready
+    timer_connected_.createTimer(to_connected_,
+        std::bind(&FreeFlyerServiceClient::TimeoutCallback, this),
+        node,
+        true,
+        false);
+    timer_poll_.createTimer(to_poll_,
+        std::bind(&FreeFlyerServiceClient::ConnectPollCallback, this),
+        node,
+        false,
+        false);
     // Save the node handle and topic to support reconnects
-    nh_ = nh;
+    node_ = node;
     topic_ = topic;
-    // Create a persistent connection to the service
     return IsConnected();
   }
 
-  // Check that we are connected to the server
+  // Check that the service is ready
   bool IsConnected() {
-    if (service_.isValid())
+    if (exists())
       return true;
-    ConnectPollCallback(ros::TimerEvent());
+    ConnectPollCallback();
     return false;
   }
 
-  // Call triggers a check for connection in order to prevent continual polling
-  bool Call(ServiceSpec & service) {
-    if (!IsConnected())
-      return false;
-    return service_.call(service);
+  bool Call(FreeFlyerService<ServiceRequestSpec, ServiceResponseSpec> &
+                                                                    service) {
+    return call(service);
+  }
+
+  // ROS1 functions
+  bool call(FreeFlyerService<ServiceRequestSpec, ServiceResponseSpec>& service) {
+    if (IsConnected()) {
+      auto result = service_client_->async_send_request(service.request);
+      rclcpp::FutureReturnCode return_code =
+                            rclcpp::spin_until_future_complete(node_, result);
+      service.response = result.get();
+      if (return_code == rclcpp::FutureReturnCode::SUCCESS) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool exists() {
+    if (service_client_.get() != NULL) {
+      return service_client_->service_is_ready();
+    }
+    return false;
+  }
+
+  bool isValid() {
+    return exists();
+  }
+
+  bool waitForExistence(std::shared_ptr<rclcpp::Duration> duration) {
+    return waitForExistence(duration->seconds());
+  }
+
+  bool waitForExistence(double duration_sec) {
+    if (service_client_.get() != NULL) {
+      return service_client_->wait_for_service((std::chrono::duration<double>) duration_sec);
+    }
+    return false;
   }
 
  protected:
   // Simple wrapper around an optional timer
-  void StartOptionalTimer(ros::Timer & timer, ros::Duration const& duration) {
-    if (duration.isZero()) return;
+  void StartOptionalTimer(ff_util::FreeFlyerTimer & timer,
+                          double duration) {
+    if (duration == 0) return;
     timer.stop();
     timer.setPeriod(duration);
     timer.start();
   }
 
-  // Called periodically until the server is connected
-  void ConnectPollCallback(ros::TimerEvent const& event) {
+  // Called periodically until the server is ready
+  void ConnectPollCallback() {
     // Case: connected
-    if (service_.isValid()) {
+    if (service_client_.get() != NULL &&
+        service_client_->service_is_ready()) {
       if (state_ != WAITING_FOR_CALL) {
         state_ = WAITING_FOR_CALL;
         timer_connected_.stop();
@@ -119,32 +165,32 @@ class FreeFlyerServiceClient {
       }
     // Case: disconnected
     } else {
-      service_ = nh_->serviceClient<ServiceSpec>(topic_, true);
+      ROS_CREATE_SERVICE_CLIENT(service_client_, ServiceSpec, topic_);
       state_ = WAITING_FOR_CONNECT;
       StartOptionalTimer(timer_connected_, to_connected_);
       StartOptionalTimer(timer_poll_, to_poll_);
     }
   }
 
-  // Called when the service doesn't go active or a response isn't received
-  void TimeoutCallback(ros::TimerEvent const& event) {
+  // Called when the service doesn't go active
+  void TimeoutCallback() {
     timer_connected_.stop();
     timer_poll_.stop();
     if (cb_timeout_)
       cb_timeout_();
   }
 
- protected:
+ protected :
   State state_;
-  ros::Duration to_connected_;
-  ros::Duration to_poll_;
+  double to_connected_;
+  double to_poll_;
   TimeoutCallbackType cb_timeout_;
   ConnectedCallbackType cb_connected_;
-  ros::ServiceClient service_;
-  ros::Timer timer_connected_;
-  ros::Timer timer_poll_;
+  ServiceClient<ServiceSpec> service_client_;
+  ff_util::FreeFlyerTimer timer_connected_;
+  ff_util::FreeFlyerTimer timer_poll_;
   std::string topic_;
-  ros::NodeHandle *nh_;
+  rclcpp::Node::SharedPtr node_;
 };
 
 }  // namespace ff_util

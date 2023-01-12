@@ -69,7 +69,6 @@ def generate_launch_description():
             parameters=[{'robot_description': ParameterValue(robot_description) }],
         ),
 
-
         # If we need to load synthetic drivers (we are not running on a real robot)
         # TODO(asymingt) - pass nodes, spurn and extra into gazebo
         IncludeLaunchDescription(

@@ -51,6 +51,11 @@ using Service = ros::ServiceServer*;
   ros::ServiceServer __serv = nh_private_.advertiseService(topic, callback, this); \
   serv = &__serv
 
+template<class MessageType>
+using ServiceClient = ros::ServiceClient*;
+#define ROS_CREATE_SERVICE_(serv_client, msg, topic)
+ros::ServiceClient __serv_client = nh_private_.serviceClient<msg>(topic);
+serv_client = &__serv_client
 
 using Duration = ros::Duration*;
 
@@ -95,6 +100,11 @@ template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 #define FF_CREATE_SERVICE(serv, msg, topic, callback) \
   serv = node_->create_service<msg>(topic, std::bind(callback, this, std::placeholders::_1, std::placeholders::_2))
+
+template<class MessageType>
+using ServiceClient = std::shared_ptr<rclcpp::Client<MessageType>>;
+#define ROS_CREATE_SERVICE_CLIENT(serv_client, msg, topic) \
+  serv_client = node_->create_client<msg>(topic)
 
 using Duration = std::shared_ptr<rclcpp::Duration>;
 
