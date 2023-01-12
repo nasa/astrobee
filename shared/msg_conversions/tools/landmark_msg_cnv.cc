@@ -48,12 +48,12 @@ DEFINE_string(output_topic, "/loc/rviz",
               "The output topic suitable for rviz.");
 
 Publisher<sensor_msgs::PointCloud2> landmarks_pub = NULL;
-// auto landmarks_pub;
+std::shared_ptr<rclcpp::Clock> clock_;
 
 void landmarks_callback(ff_msgs::VisualLandmarksPtr const l) {
   sensor_msgs::PointCloud2 out;
   out.header = std_msgs::Header();
-  out.header.stamp = ROS_TIME_NOW();
+  out.header.stamp = FF_TIME_NOW();
   out.header.frame_id = "world";
   out.height = 1;
   out.width = l->landmarks.size();
@@ -90,12 +90,13 @@ void landmarks_callback(ff_msgs::VisualLandmarksPtr const l) {
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   ROS_CREATE_NODE("landmark_msg_cnv");
+  clock_ = node_->get_clock();
 
   auto landmarks_sub = ROS_CREATE_SUBSCRIBER(ff_msgs::VisualLandmarks, FLAGS_input_topic, 5, landmarks_callback);
 
   ROS_CREATE_PUBLISHER(landmarks_pub, sensor_msgs::PointCloud2, FLAGS_output_topic, 5);
 
-  ROS_SPIN();
+  FF_SPIN();
 
   return 0;
 }

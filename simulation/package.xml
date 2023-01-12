@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="3">
   <name>astrobee_gazebo</name>
   <version>0.0.0</version>
   <description>
@@ -14,8 +14,12 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
+  <build_depend condition="$ROS_VERSION == 1">catkin</build_depend>
+  <build_depend condition="$ROS_VERSION == 2">ament_cmake</build_depend>
+  
+  <build_depend condition="$ROS_VERSION == 1">roscpp</build_depend>
+  <build_depend condition="$ROS_VERSION == 2">rclcpp</build_depend>
+
   <build_depend>visualization_msgs</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
@@ -27,27 +31,30 @@
   <build_depend>ff_hw_msgs</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>ff_util</build_depend>
-  <build_depend>gnc_autocode</build_depend>
-  <build_depend>camera</build_depend>
+  <build_depend condition="$ROS_VERSION == 1">gnc_autocode</build_depend>
+  <build_depend condition="$ROS_VERSION == 1">camera</build_depend>
   <build_depend>cv_bridge</build_depend>
   <build_depend>jsonloader</build_depend>
-  <run_depend>visualization_msgs</run_depend>
-  <run_depend>tf2</run_depend>
-  <run_depend>tf2_ros</run_depend>
-  <run_depend>tf2_msgs</run_depend>
-  <run_depend>tf2_eigen</run_depend>
-  <run_depend>gazebo_ros</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>ff_msgs</run_depend>
-  <run_depend>ff_hw_msgs</run_depend>
-  <run_depend>tf2_geometry_msgs</run_depend>
-  <run_depend>ff_util</run_depend>
-  <run_depend>gnc_autocode</run_depend>
-  <run_depend>camera</run_depend>
-  <run_depend>cv_bridge</run_depend>
-  <run_depend>jsonloader</run_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>tf2_eigen</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>ff_msgs</exec_depend>
+  <exec_depend>ff_hw_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>ff_util</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">gnc_autocode</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">camera</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>jsonloader</exec_depend>
   <export>
-    <gazebo_ros plugin_path="${prefix}/lib"/>
-    <gazebo_ros gazebo_model_path="${prefix}/../description/media"/>
+    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+    <gazebo_ros gazebo_plugin_path="${prefix}/lib"/>
+    <gazebo_ros plugin_path="${prefix}" />
+    <gazebo_ros gazebo_media_path="${prefix}/worlds"/>
   </export>
 </package>

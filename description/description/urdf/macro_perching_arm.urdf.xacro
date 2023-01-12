@@ -380,15 +380,27 @@
         upper="1.22173"
         velocity="0.12" />
     </joint>
-    <gazebo>
-      <plugin name="${bay}_perching_arm_ros" filename="libgazebo_model_plugin_perching_arm.so">>
-        <namespace>/${ns}/</namespace>
-        <rate>10.0</rate>
-        <bay>${bay}</bay>
-        <proximal>1.57079632679</proximal>
-        <distal>0</distal>
-        <gripper>0</gripper>
-      </plugin>
-    </gazebo>
+    <xacro:if value="${bay == 'top_aft'}">
+      <gazebo>
+        <plugin name="top_aft_perching_arm_ros" filename="libgazebo_model_plugin_perching_arm.so">
+          <rate>10.0</rate>
+          <bay>top_aft</bay>
+          <proximal>1.57079632679</proximal>
+          <distal>0</distal>
+          <gripper>0</gripper>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+    <xacro:if value="${bay == 'bot_aft'}">
+      <gazebo>
+        <plugin name="bot_aft_perching_arm_ros" filename="libgazebo_model_plugin_perching_arm.so">
+          <rate>10.0</rate>
+          <bay>bot_aft</bay>
+          <proximal>1.57079632679</proximal>
+          <distal>0</distal>
+          <gripper>0</gripper>
+        </plugin>
+      </gazebo>
+    </xacro:if>
   </xacro:macro>
 </robot>

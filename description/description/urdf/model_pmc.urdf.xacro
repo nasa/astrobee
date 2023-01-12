@@ -19,10 +19,9 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
-    <plugin name="pmc_ros" filename="libgazebo_model_plugin_pmc.so">
-      <namespace>/${ns}/</namespace>
+<!--     <plugin name="pmc_ros" filename="libgazebo_model_plugin_pmc.so">
       <rate>62.5</rate>
       <bypass_blower_model>false</bypass_blower_model>
-    </plugin>
+    </plugin> -->
   </gazebo>
 </robot>

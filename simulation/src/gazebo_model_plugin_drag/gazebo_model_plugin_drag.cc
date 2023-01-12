@@ -16,9 +16,6 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
@@ -41,8 +38,7 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(
-    ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+  void LoadCallback(NodeHandle &nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
     // Drag coefficient
     if (sdf->HasElement("coefficient"))
       coefficient_ = sdf->Get<double>("coefficient");

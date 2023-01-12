@@ -44,11 +44,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   // Read all transforms, broadcasting only world -> xxx
-#if ROS1
-  tf2_ros::StaticTransformBroadcaster bc;
-#else
-  tf2_ros::StaticTransformBroadcaster bc(ROS_NODE_VAR);
-#endif
+  tf2_ros::StaticTransformBroadcaster bc(node_);
   geometry_msgs::TransformStamped tf;
   Eigen::Vector3d trans;
   Eigen::Quaterniond rot;
@@ -69,7 +65,7 @@ int main(int argc, char **argv) {
           && msg_conversions::config_read_vector(&t_trans, &trans)) {
           // Only send global transforms
           if (global) {
-            tf.header.stamp = ROS_TIME_NOW();
+            tf.header.stamp = node_->get_clock()->now();
             tf.header.frame_id = parent;
             tf.child_frame_id = child;
             tf.transform.translation =
@@ -82,6 +78,6 @@ int main(int argc, char **argv) {
       }
     }
   }
-  ROS_SPIN();
+  FF_SPIN();
   return 0;
 }

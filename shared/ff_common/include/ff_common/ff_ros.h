@@ -47,7 +47,7 @@ using Publisher = ros::Publisher*;
 
 template<class MessageType>
 using Service = ros::ServiceServer*;
-#define ROS_CREATE_SERVICE(serv, msg, topic, callback)                       \
+#define FF_CREATE_SERVICE(serv, msg, topic, callback)                       \
   ros::ServiceServer __serv = nh_private_.advertiseService(topic, callback, this); \
   serv = &__serv
 
@@ -67,11 +67,11 @@ using Duration = ros::Duration*;
 #define FF_FATAL_STREAM(...)   ROS_FATAL_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
 
 
-#define ROS_TIME_NOW()  ros::Time::now()
-#define ROS_SPIN()      ros::spin()
-#define ROS_SPIN_ONCE() ros::spinOnce()
-#define ROS_OK()        ros::ok()
-#define ROS_SHUTDOWN()  ros::shutdown()
+#define FF_TIME_NOW()  ros::Time::now()
+#define FF_SPIN()      ros::spin()
+#define FF_SPIN_ONCE() ros::spinOnce()
+#define FF_OK()        ros::ok()
+#define FF_SHUTDOWN()  ros::shutdown()
 
 #else
 #include "rclcpp/rclcpp.hpp"
@@ -93,7 +93,7 @@ using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
-#define ROS_CREATE_SERVICE(serv, msg, topic, callback) \
+#define FF_CREATE_SERVICE(serv, msg, topic, callback) \
   serv = node_->create_service<msg>(topic, std::bind(callback, this, std::placeholders::_1, std::placeholders::_2))
 
 using Duration = std::shared_ptr<rclcpp::Duration>;
@@ -112,11 +112,11 @@ using Duration = std::shared_ptr<rclcpp::Duration>;
 
 #define toSec() seconds()
 
-#define ROS_TIME_NOW()  rclcpp::Clock().now()
-#define ROS_SPIN()      rclcpp::spin(node_)
-#define ROS_SPIN_ONCE() rclcpp::spin_some(node_)
-#define ROS_OK()        rclcpp::ok()
-#define ROS_SHUTDOWN()  rclcpp::shutdown()
+#define FF_TIME_NOW()  clock_->now()
+#define FF_SPIN()      rclcpp::spin(node_)
+#define FF_SPIN_ONCE() rclcpp::spin_some(node_)
+#define FF_OK()        rclcpp::ok()
+#define FF_SHUTDOWN()  rclcpp::shutdown()
 
 #endif
 #endif  // FF_COMMON_FF_ROS_H_

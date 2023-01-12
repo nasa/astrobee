@@ -16,7 +16,8 @@
  * under the License.
  */
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <gazebo_ros/node.hpp>
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/common.hh>
@@ -34,18 +35,20 @@ class WorldPluginSpeed : public WorldPlugin {
 
   void Load(physics::WorldPtr world, sdf::ElementPtr sdf) {
     world_ = world;
-    // Check ROS is initialized
-    if (!ros::isInitialized()) {
-      ROS_FATAL_STREAM("ROS has not been initialized");
-      return;
-    }
-    nh_ = ros::NodeHandle("/");
+    // Get nodehandle based on the model.
+    nh_ = gazebo_ros::Node::Get(sdf);
+
     // Query the simulation speed
+    rclcpp::Parameter simulation_speed_param;
     double simulation_speed = 1.0;
-    if (!nh_.getParam("/simulation_speed", simulation_speed)) {
+    nh_->declare_parameter("simulation_speed", 1.0);
+    if (nh_->get_parameter("simulation_speed", simulation_speed_param)) {
+      simulation_speed = simulation_speed_param.as_double();
+    } else {
       gzwarn << "Sim speed not specified. Trying real-time." << std::endl;
       return;
     }
+
     simulation_speed *= 125;
     // Set the simulation speed
     gzmsg << "Setting target update rate to " << simulation_speed << std::endl;
@@ -58,8 +61,7 @@ class WorldPluginSpeed : public WorldPlugin {
   }
 
  private:
-  ros::NodeHandle nh_;
-  ros::WallTimer timer_;
+  gazebo_ros::Node::SharedPtr nh_;
   physics::WorldPtr world_;
 };
 
