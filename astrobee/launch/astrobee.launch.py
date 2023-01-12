@@ -20,6 +20,14 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
+    robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
+                        ' world:="',      LaunchConfiguration('world'),
+                        '" top_aft:="',   LaunchConfiguration('top_aft'),
+                        '" bot_aft:="',   LaunchConfiguration('bot_aft'),
+                        '" bot_front:="', LaunchConfiguration('bot_front'), 
+                        '" ns:="_',       LaunchConfiguration('ns'),
+                        '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
+
     return LaunchDescription([
         # Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
         # Set world and world correctly; environment variable over rule default -->
@@ -53,20 +61,13 @@ def generate_launch_description():
         DeclareLaunchArgument("bag", default_value=""),
 
         # Set the TF prefix, create a robot description and joint state publisher
-        # Node(
-        #     package="robot_state_publisher",
-        #     namespace="",
-        #     executable="robot_state_publisher",
-        #     name="astrobee_state_publisher",
-        #     parameters=[{'robot_description': ParameterValue(
-        #         Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
-        #                 ' world:="',      LaunchConfiguration('world'),
-        #                 '" top_aft:="',   LaunchConfiguration('top_aft'),
-        #                 '" bot_aft:="',   LaunchConfiguration('bot_aft'),
-        #                 '" bot_front:="', LaunchConfiguration('bot_front'), 
-        #                 '" ns:="_',       LaunchConfiguration('ns'),
-        #                 '" prefix:="',    LaunchConfiguration('ns'), '/"' ]))}]
-        # ),
+        Node(
+            package="robot_state_publisher",
+            namespace="",
+            executable="robot_state_publisher",
+            name="robot_state_publisher",
+            parameters=[{'robot_description': ParameterValue(robot_description) }],
+        ),
 
 
         # If we need to load synthetic drivers (we are not running on a real robot)
@@ -74,11 +75,12 @@ def generate_launch_description():
         IncludeLaunchDescription(
             get_launch_file("launch/controller/synthetic.launch.py"),
             launch_arguments={
-                "world": LaunchConfiguration("world"),   # Don't start driver nodes
-                "ns"   : LaunchConfiguration("ns"),      # Prevent node
-                "sim"  : LaunchConfiguration("sim"),     # Launch node group
-                "pose" : LaunchConfiguration("pose"),    # Inject extra nodes
-                "bag"  : LaunchConfiguration("bag"),     # Debug a node set
+                "world": LaunchConfiguration("world"),     # Don't start driver nodes
+                "ns"   : LaunchConfiguration("ns"),        # Prevent node
+                "sim"  : LaunchConfiguration("sim"),       # Launch node group
+                "pose" : LaunchConfiguration("pose"),      # Inject extra nodes
+                "bag"  : LaunchConfiguration("bag"),       # Debug a node set
+                "robot_description"  : robot_description,  # Robot description
             }.items(), 
             condition=UnlessCondition(LaunchConfiguration("drivers"))
         ),

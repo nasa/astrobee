@@ -16,35 +16,92 @@
 # <!-- permissions and limitations under the License.                          -->
 
 
-import os
-
-from ament_index_python import get_package_share_directory
-from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from utilities.utilities import *
 
 
 def generate_launch_description():
+    [granite_urdf,       granite_robot_description]       = get_urdf('urdf/model.urdf', 'astrobee_granite')
+    [iss_urdf,           iss_robot_description]           = get_urdf('urdf/model.urdf', 'astrobee_iss')
+    [dock_urdf,          dock_robot_description]          = get_urdf('urdf/model.urdf', 'astrobee_dock')
+    [handrail_8_5_urdf,  handrail_8_5_robot_description]  = get_urdf('urdf/model.urdf', 'astrobee_handrail_8_5')
+    [handrail_21_5_urdf, handrail_21_5_robot_description] = get_urdf('urdf/model.urdf', 'astrobee_handrail_21_5')
+    [handrail_30_urdf,   handrail_30_robot_description]   = get_urdf('urdf/model.urdf', 'astrobee_handrail_30')
+    [handrail_41_5_urdf, handrail_41_5_robot_description] = get_urdf('urdf/model.urdf', 'astrobee_handrail_41_5')
 
-    return LaunchDescription(
-        [
-            # We must publish global transforms in case no robot has been spawned
-            # Node(
-            # package='framestore',
-            # namespace='',
-            # executable='global_transforms',
-            # name='global_transforms',
-            # parameters=[{
-            #     # Description is based on the world being simulated / launched
-            #     'world': LaunchConfiguration('world'),
-            #     '/granite/robot_description':       os.path.join(get_package_share_directory('astrobee_granite'), '/urdf/model.urdf'),
-            #     '/iss/robot_description':           os.path.join(get_package_share_directory('astrobee_iss'), '/urdf/model.urdf'),
-            #     '/dock/robot_description':          os.path.join(get_package_share_directory('astrobee_dock'), '/urdf/model.urdf')      ,
-            #     '/handrail_8_5/robot_description':  os.path.join(get_package_share_directory('handrail_8_5'), '/urdf/model.urdf'),
-            #     '/handrail_21_5/robot_description': os.path.join(get_package_share_directory('handrail_21_5'), '/urdf/model.urdf'),
-            #     '/handrail_30/robot_description':   os.path.join(get_package_share_directory('handrail_30'), '/urdf/model.urdf'),
-            #     '/handrail_41_5/robot_description': os.path.join(get_package_share_directory('handrail_41_5'), '/urdf/model.urdf'),
-            #      }]
-            # )
-        ]
-    )
+    return LaunchDescription([
+
+        DeclareLaunchArgument("world"),
+
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="granite",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(granite_robot_description) }],
+            arguments=[granite_urdf],
+            condition=LaunchConfigurationEquals("world", "granite")
+        ),
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="iss",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(iss_robot_description) }],
+            arguments=[iss_urdf],
+            condition=LaunchConfigurationEquals("world", "iss")
+        ),
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="dock",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(dock_robot_description) }],
+            arguments=[dock_urdf]
+        ),
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="handrail_8_5",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(handrail_8_5_robot_description) }],
+            arguments=[handrail_8_5_urdf]
+        ),
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="handrail_21_5",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(handrail_21_5_robot_description) }],
+            arguments=[handrail_21_5_urdf]
+        ),
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="handrail_30",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(handrail_30_robot_description) }],
+            arguments=[handrail_30_urdf]
+        ),
+        # Granite robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="handrail_41_5",
+            executable="robot_state_publisher",
+            name="astrobee_state_publisher",
+            parameters=[{'robot_description': ParameterValue(handrail_41_5_robot_description) }],
+            arguments=[handrail_41_5_urdf]
+        ),
+        # We must publish global transforms in case no robot has been spawned
+        Node(
+        package='framestore',
+        namespace='',
+        executable='global_transforms',
+        name='global_transforms',
+        )
+    ])
