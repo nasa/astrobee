@@ -5,8 +5,9 @@ The localization rviz plugins package provides various plugins for use to displa
 The plugins in this package are spit between displays and panels, where displays provide 3D visualizations and panels display color coded text and numerical information.
 
 ## Usage
-In the RVIZ Displays panel, select "Add" and select the desired plugin. It should now appear in the Displays panel and any options should be available.
+In the RVIZ Displays panel, select "Add" and select the desired plugin under the `localization_rviz_plugins` section. It should now appear in the Displays panel and any options should be available.
 Ensure that the localization_rviz_plugins package is built and the required setup.bash script is sourced for the Astrobee repo, otherwise RVIZ will not be able to find the custom plugins.
+Also ensure that the required Astrobee environment variables are set as described in the astrobee/readme.md file.
 
 ## Plugins
 ## Depth Odometry Display 
