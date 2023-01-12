@@ -1,19 +1,7 @@
 - use timestamped node/node updater for graph loc!
-  - steal from inv depth branch, add to graph opt
-  - avoid using graph values?
-- add other parts from inv depth branch?
-  - make sliding window graph optimizer? seperate from graph?
-  - add abilitiy to compute covariances?
-  - avoid having to use graph action completers?
-  - add option to use isam instead of levenberg marq!!!
- -move combinednavstate accesors to combinednavstate node updater????
-  - update graph vio with this!!
+  - finish making timestamped pose node updater!! (AAA)
+    - add test!
 - compiple graph loc!
-- move graph action completers to new package?
-- initialize graph with identity pose, set fixed!!!
-  - TODO: need to always have fixed identity pose as origin! how to do this?
-    - set start pose fixed after maginalize????
-- move param loading and serialization from graph_vio/loc to respective packages!
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
 - add unit tests?
@@ -21,3 +9,30 @@
   - use graph bag???? 
     - copy graph bag and run for VIO only?? Or modify current graph bag tool??
       - (probably modify current tool?)
+- move param loading and serialization from graph_vio/loc to respective packages!
+- initialize graph with identity pose, set fixed!!!
+  - TODO: need to always have fixed identity pose as origin! how to do this?
+    - set start pose fixed after maginalize????
+
+
+// Nice to have:
+ -move combinednavstate accesors to combinednavstate node updater????
+  - update graph vio with this!!
+- update combined nav state node update to use timestamped nodes!
+    - steal from inv depth branch!
+    - steal updated test from there as well!
+    - remove graph values! replace with nodes! (need to do more work first? need to update feature point stuff?)
+- rename graph values to nodes!!
+    - package, graph loc first
+      - graph vio later
+  - avoid using graph values?
+- add other parts from inv depth branch?
+  - make sliding window graph optimizer? seperate from graph?
+  - add abilitiy to compute covariances?
+  - avoid having to use graph action completers?
+  - add option to use isam instead of levenberg marq!!!
+
+- move graph action completers to new package?
+  - or remove altogether....
+    - see inv depth branch? does this do that?
+
