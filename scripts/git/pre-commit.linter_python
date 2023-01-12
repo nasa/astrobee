@@ -33,20 +33,19 @@ failed_lint=false
 command -v black > /dev/null 2>&1
 ans=$?
 if [ "$ans" -ne "0" ]; then
-    echo "'black' was not found. To install, check https://github.com/psf/black."
-    echo "Note that black requires Python 3.6.2+ to run."
-    exit 0
+  echo "'black' was not found. To install, check https://github.com/psf/black."
+  echo "Note that black requires Python 3.6.2+ to run."
+  exit 0
 fi
 
 command -v isort > /dev/null 2>&1
 ans=$?
 if [ "$ans" -ne "0" ]; then
-    echo "'isort' was not found. To install, check https://github.com/PyCQA/isort."
-    exit 0
+  echo "'isort' was not found. To install, check https://github.com/PyCQA/isort."
+  exit 0
 fi
 
-echo "================================================== ${files_black}"
-echo "  Analysing python code style with 'black'."
+echo "=================================================="
 
 # Change black's default files to exclude:
 # - Remove 'build' folder. We have a Python script in a 'build' folder.
@@ -57,20 +56,24 @@ echo "  Analysing python code style with 'black'."
 black_exclude="(/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|venv|\.svn|_build|buck-out|dist)/|\.launch\.py\$)"
 
 # This check the files but they will not be commited
-if $(black . --include ${files_black} --exclude "$black_exclude" --check --quiet); then
-    echo "Linter checks using 'black' passed."
+if [ -z "${files_black}" ]; then
+  echo "  Skipping black but not isort."
 else
+  echo "  Analysing python code style with 'black'."
+  if $(black . --include ${files_black} --exclude "$black_exclude" --check --quiet); then
+    echo "Linter checks using 'black' passed."
+  else
     echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
     black . --include ${files_black} --exclude "$black_exclude"
     failed_lint=true
+  fi
 fi
-
-echo "==================================================${files_isort}"
+echo "=================================================="
 echo "  Analysing python code style with 'isort'."
 if $(isort ${files_isort} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
-    echo "Linter checks using 'isort' passed."
+  echo "Linter checks using 'isort' passed."
 else
-    echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
+  echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
   isort ${files_isort} --extend-skip cmake --profile black >/dev/null
   failed_lint=true
 fi
