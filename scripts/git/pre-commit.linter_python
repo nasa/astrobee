@@ -18,7 +18,7 @@
 # under the License.
 
 # We have to exclude the undesired suffixes here because of https://github.com/psf/black/issues/438
-files_black=$(git diff --diff-filter=d --cached --name-only | grep -v '\.launch\.py$' | grep '\.py$')
+files_black=$(git diff --diff-filter=d --cached --name-only | grep -v '\.launch\.py$' | grep -v '\.test\.py$' | grep '\.py$')
 files_isort=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
 
 # If files is empty exit success

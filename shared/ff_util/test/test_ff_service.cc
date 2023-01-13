@@ -17,12 +17,12 @@
  */
 
 // Test service
-#include <ff_msgs/srv/set_rate.hpp>
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_service.h>
 #include <ff_common/ff_ros.h>
 #include <gtest/gtest.h>
 
+#include <ff_msgs/srv/set_rate.hpp>
 #include <string>
 
 bool test_done = false;
