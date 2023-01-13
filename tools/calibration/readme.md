@@ -2,15 +2,17 @@
 
 # Package Overview
 # Camera Target Based Intrinsics Calibration 
-Calibrating camera intrinsics involves generating target detection files
-from a set of bagfiles, generating or providing an initial estimate for the camera intrinsics and distortion values, 
-and finally running the calibrator.
-Several camera distortion models (fov, rad, radtan) are supported for calibration and various scripts are provided to view the quality of the input target detections and the calibration results.
+This package refines an initial estimate for camera intrinsics and distortion values given a bag file containing images of a calibration target and a calibration target configuration.
+Several camera distortion models (fov, rad, radtan) are supported for calibration and various scripts are provided to view the quality of the input target detections and the calibration results. <br />
+
+For generating an initial estimate of camera intrinsics and distortion values, see https://github.com/nasa/astrobee/tree/master/scripts/calibrate.
 
 ## Example Usage
+The following gives an overview of refining calibration parameters given an initial estimate and a bag file containing target detections. 
+For more information on each tool or script and its options, see [Usage Instructions](#usage-instructions). 
 ### Generate target detections from bagfiles
 `rosrun calibration save_images_with_target_detections -d ~/bag_files -o target_detections -t ~/target.yaml` <br /> 
-Here `~/bag_files` contains a directory of bagfiles containing target detection images.
+Here `~/bag_files` contains a directory of bagfiles containing target detection images and target.yaml is the desired target yaml file found in https://github.com/nasa/astrobee/tree/master/scripts/calibrate/config.
 ### View target detection coverage in image space
 `rosrun calibration view_all_detections.py -d target_detections`<br /> 
 `feh detection_image.jpg`<br /> 
@@ -20,11 +22,10 @@ Here `~/bag_files` contains a directory of bagfiles containing target detection 
 Ideally the target detections span the entire image. If only the middle of the image contains detections or if parts of the image have no detections, this may lead to an underconstrained calibration problem.  Ensure good target coverage before attempting to calibrate a camera. <br />
 ### Calibrate
 #### Calibration Parameters 
-In addition to the script parameters, the camera_target_based_intrinsics_calibrator.config contains most of the configuration options for camera target based intrinsics calibration.  The distortion model, camera name, parameters for the reprojection pose estimator handling target pose estimation, visualization, and other general parameters can be selected. <br />
+In addition to the script parameters, the camera_target_based_intrinsics_calibrator.config contains most of the configuration options for camera target based intrinsics calibration, found here: https://github.com/nasa/astrobee/tree/master/astrobee/config/tools/camera_target_based_intrinsics_calibrator.config.  The distortion model, camera name, parameters for the reprojection pose estimator handling target pose estimation, visualization, and other general parameters can be selected. <br />
 The parameters to calibrate can also be selected.  Depending on the distortion model used, different parameters should be calibrated concurrently to avoid degeneracies and underconstrained calibration.  For example, calibrating the camera principal points and target poses at the same time should be avoided.  Calibration may be repeated while incrementally updating solved parameters and toggling different concurrent parameter sets to solve for until all parameters are adequately calibrated.  
 #### Run Calibration
-`rosrun calibration calibrate_intrinsics_and_save_results.py target_detections ~\/astrobee\/src\/astrobee\/config config\/robots\/bumble.config -u -p -i target_detections -d fov` <br />
-For more details of the calibration script see below in the Scripts section.
+`rosrun calibration calibrate_intrinsics_and_save_results.py target_detections ~/astrobee/src/astrobee/config config/robots/bumble.config -u -p -i target_detections -d fov` <br />
 #### Calibration Output
 The calibrated results are saved in the calibrated_params.txt file while more verbose output is saved to the calibration_output.txt file.  
 #### Judging Calibration Results
@@ -55,54 +56,39 @@ Undistorted Image (FOV distortion):
 
 The black dots in the undistorted image are a result of the FOV undistortion procedure, while the Rad and RadTan uses interpolation to fill these. 
 
+# Usage Instructions
+For each script and tool, run `rosrun calibration script_or_tool_name -h` for further details and
+usage instructions.
 
 # Tools
-
 ## create_undistorted_images 
 Generates undistorted images from a set of distorted images and provided camera calibration parameters.
-See 'rosrun calibration create_undistorted_images -h'
-for further details and usage instructions.
 
 ## run_camera_target_based_intrinsics_calibrator
 Runs the intrinsics calibrator using a set of target detection files and initial estimates
 for the camera intrinsics and distortion values.  Support various distortion models.
-See 'rosrun calibration run_camera_target_based_intrinsics_calibrator -h'
-for further details and usage instructions.
 
 # Scripts
-
 ## calibrate_intrinsics_and_save_results.py  
 Runs camera intrinsic calibration using provided target detections and a config file with camera
 parameters (including initial estimate for camera intrinsics and distortion values).
-See 'rosrun calibration calibrate_intrinsics_and_save_results.py -h'
-for further details and usage instructions.
 
 ## copy_calibration_params_to_config.py      
 Helper script that copies calibration parameters from the output of the 
 calibration pipeline and writes these to the camera config file.
-See 'rosrun calibration copy_calibration_params_to_config.py -h'
-for further details and usage instructions.
 
 ## get_bags_with_topic.py    
 Helper script that generates a list of bag files in a directory
 with the provided topic. 
-See 'rosrun calibration get_bags_with_topic.py -h'
-for further details and usage instructions.
 
 ## make_error_histograms.py
 Generates a histogram of errors using the output errors from 
 the calibration pipeline.
-See 'rosrun calibration make_error_histograms.py -h'
-for further details and usage instructions.
 
 ## save_images_with_target_detections.py
 Generates target detection files for use with the calibration 
 pipeline from a set of bagfiles containing images of target detections. 
-See 'rosrun calibration save_images_with_target_detections.py -h'
-for further details and usage instructions.
 
 ## view_all_detections.py
 Generates an image containing all images space detections of a target
 for a set of target detection files.
-See 'rosrun calibration view_all_detections.py -h'
-for further details and usage instructions.
