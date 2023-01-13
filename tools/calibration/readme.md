@@ -15,7 +15,6 @@ For more information on each tool or script and its options, see [Usage Instruct
 Here `~/bag_files` contains a directory of bagfiles containing target detection images and target.yaml is the desired target yaml file found in https://github.com/nasa/astrobee/tree/master/scripts/calibrate/config.
 ### View target detection coverage in image space
 `rosrun calibration view_all_detections.py -d target_detections`<br /> 
-`feh detection_image.jpg`<br /> 
 
 ![Detection Image showing detected target points in image space in green.](/doc/images/calibration/detection_image.jpg)
 
