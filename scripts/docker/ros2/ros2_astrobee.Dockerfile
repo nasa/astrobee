@@ -5,12 +5,6 @@ FROM ${REMOTE}/astrobee:latest-rolling-ubuntu${UBUNTU_VERSION}
 
 ARG ROS_DISTRO=rolling
 
-RUN apt-get update \
-  && apt-get install -y \
-  libgoogle-glog-dev libgflags-dev libgtest-dev \
-  libluajit-5.1-dev \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY . /src/astrobee/src/
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh \
     && cd /src/astrobee \
