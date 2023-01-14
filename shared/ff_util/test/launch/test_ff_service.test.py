@@ -39,6 +39,8 @@ def generate_test_description():
     )
 
     return launch.LaunchDescription([
+        SetEnvironmentVariable(name="ASTROBEE_ROBOT", value='sim'),
+        SetEnvironmentVariable(name="ASTROBEE_WORLD", value='iss'),
         SetEnvironmentVariable(name='ASTROBEE_CONFIG_DIR',    value=os.getenv('ASTROBEE_CONFIG_DIR',    get_path('config'))),
         SetEnvironmentVariable(name='ASTROBEE_RESOURCE_DIR',  value=os.getenv('ASTROBEE_RESOURCE_DIR',  get_path('resources'))),
         SetEnvironmentVariable(name='ROSCONSOLE_CONFIG_FILE', value=os.getenv('ROSCONSOLE_CONFIG_FILE', get_path('resources/logging.config'))),
