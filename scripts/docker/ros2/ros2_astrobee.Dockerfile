@@ -10,6 +10,7 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh \
     && cd /src/astrobee \
     && CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/src/astrobee/src/cmake \
     && colcon build --symlink-install \
+    && . install/setup.sh \
     && colcon test \
     && colcon test-result --verbose
 
