@@ -109,7 +109,7 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
       TOPIC_LOCALIZATION_TRUTH_TWIST, 1);
 
     // Called before each iteration of simulated world update
-    timer_ .createTimer(1 / rate_,
+    timer_.createTimer(1 / rate_,
       std::bind(&GazeboModelPluginTruth::TimerCallback, this), nh, false, true);
   }
 

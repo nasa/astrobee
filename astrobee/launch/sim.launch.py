@@ -137,7 +137,7 @@ def generate_launch_description():
                                value=os.getenv("ASTROBEE_CONFIG_DIR", "/home/astrobee/native/config"),
                                condition=LaunchConfigurationNotEquals("sim", "local")),
         SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",
-                               value=os.getenv("ASTROBEE_RESOURCE_DIR", "home/astrobee/native/resources"),
+                               value=os.getenv("ASTROBEE_RESOURCE_DIR", "/home/astrobee/native/resources"),
                                condition=LaunchConfigurationNotEquals("sim", "local")),
         SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE",
                                value=os.getenv("ROSCONSOLE_CONFIG_FILE", "/home/astrobee/native/resources/logging.config"),
