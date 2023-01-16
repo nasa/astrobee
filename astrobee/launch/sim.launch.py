@@ -132,6 +132,21 @@ def generate_launch_description():
         #   <!-- Connect and update environment variables if required -->
         #   <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
         #            address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
+        # Update the environment variables relating to absolute paths
+        SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",
+                               value=os.getenv("ASTROBEE_CONFIG_DIR", "/home/astrobee/native/config"),
+                               condition=LaunchConfigurationNotEquals("sim", "local")),
+        SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",
+                               value=os.getenv("ASTROBEE_RESOURCE_DIR", "/home/astrobee/native/resources"),
+                               condition=LaunchConfigurationNotEquals("sim", "local")),
+        SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE",
+                               value=os.getenv("ROSCONSOLE_CONFIG_FILE", "/home/astrobee/native/resources/logging.config"),
+                               condition=LaunchConfigurationNotEquals("sim", "local")),
+
+        SetEnvironmentVariable(name="DISPLAY", value=":0",
+                               condition=LaunchConfigurationNotEquals("sim", "local")),
+        SetEnvironmentVariable(name="ROS_IP", value=LaunchConfiguration("sim"),
+                               condition=LaunchConfigurationNotEquals("sim", "local")),
         # Start the simulator
         IncludeLaunchDescription(
             get_launch_file("launch/controller/sim_start.launch.py"),

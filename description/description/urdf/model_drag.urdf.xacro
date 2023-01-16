@@ -20,7 +20,6 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
     <plugin name="drag_ros" filename="libgazebo_model_plugin_drag.so">>
-      <namespace>/${ns}/</namespace>
       <coefficient>1.05</coefficient>  <!-- Drag coefficient -->
       <area>0.092903</area>            <!-- Surface area     -->
       <density>1.225</density>         <!-- Air density      -->

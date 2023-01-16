@@ -53,3 +53,10 @@ def get_launch_file(path, package="astrobee"):
 
 def get_path(path, package="astrobee"):
     return os.path.join(get_package_share_directory(package), path)
+
+
+def get_urdf(path, package):
+    urdf_file_name = path
+    urdf = os.path.join(get_package_share_directory(package), urdf_file_name)
+    with open(urdf, "r") as infp:
+        return urdf, infp.read()

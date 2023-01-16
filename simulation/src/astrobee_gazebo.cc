@@ -25,16 +25,18 @@
 
 namespace gazebo {
 
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo");
+
 // Constructor
 FreeFlyerPlugin::FreeFlyerPlugin(std::string const& plugin_name,
   std::string const& plugin_frame, bool send_heartbeats) :
-    ff_util::FreeFlyerNodelet(plugin_name, send_heartbeats),
+    ff_util::FreeFlyerComponent(plugin_name, send_heartbeats),
       robot_name_("/"), plugin_name_(plugin_name),
         plugin_frame_(plugin_frame), parent_frame_() {}
 
 // Destructor
 FreeFlyerPlugin::~FreeFlyerPlugin() {
-  nh_ff_.shutdown();
+  // nh_ff_.shutdown();
   thread_.join();
 }
 
@@ -44,37 +46,45 @@ void FreeFlyerPlugin::SetParentFrame(std::string const& parent) {
 }
 
 // Load function
-void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::string const& plugin_name) {
+void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::string const& plugin_name,
+                                       sdf::ElementPtr sdf) {
+  gzwarn << "Starting plugin " << plugin_name_ << plugin_name << std::endl;
   robot_name_ = robot_name;
+
+  // Get nodehandle based on the model.
+  nh_ = gazebo_ros::Node::Get(sdf);
+  // Initialize ROS node for Gazebo
+  FreeFlyerComponent::FreeFlyerComponentGazeboInit(nh_);
+
   // Make sure the ROS node for Gazebo has already been initialized
-  if (!ros::isInitialized())
-    ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized");
-  ROS_DEBUG_STREAM("Loading " << plugin_name_ << " on robot " << robot_name_);
+  // if (!ros::isInitialized())
+  //   FF_FATAL_STREAM("A ROS node for Gazebo has not been initialized");
+  // FF_DEBUG_STREAM("Loading " << plugin_name_ << " on robot " << robot_name_);
 
   // Get nodehandle based on the model name.
-  nh_ = ros::NodeHandle(robot_name_);
-  nh_.setCallbackQueue(&callback_queue_);
-  thread_ = std::thread(&FreeFlyerPlugin::CallbackThread, this);
-  listener_.reset(new tf2_ros::TransformListener(buffer_, nh_));
+  // nh_.setCallbackQueue(&callback_queue_);
+  // thread_ = std::thread(&FreeFlyerPlugin::CallbackThread, this);
+  buffer_.reset(new tf2_ros::Buffer(nh_->get_clock()));
+  listener_.reset(new tf2_ros::TransformListener(*buffer_));
 
   // Assign special node handles that use custom callback queues to avoid
   // Gazebo locking up heartbeats from being sent to the system monitor.
-  nh_ff_ = ros::NodeHandle(robot_name_);
-  Setup(nh_ff_, nh_ff_, plugin_name);
+  // nh_ff_ = ros::NodeHandle(robot_name_);
+  // Setup(nh_ff_, nh_ff_, plugin_name);
 
   // If we have a frame then defer chainloading until we receive them
-  timer_ = nh_.createTimer(ros::Duration(5.0),
-    &FreeFlyerSensorPlugin::SetupExtrinsics, this);
+  timer_.createTimer(5.0,
+      std::bind(&FreeFlyerPlugin::SetupExtrinsics, this), nh_);
 }
 
 // Service the callback thread
-void FreeFlyerPlugin::CallbackThread() {
-  while (nh_.ok())
-    callback_queue_.callAvailable(ros::WallDuration(0.01));
-}
+// void FreeFlyerPlugin::CallbackThread() {
+//   while (nh_.ok())
+//     callback_queue_.callAvailable(ros::WallDuration(0.01));
+// }
 
 // Poll for extrinsics until found
-void FreeFlyerPlugin::SetupExtrinsics(const ros::TimerEvent& event) {
+void FreeFlyerPlugin::SetupExtrinsics() {
   // If we don't need extrinsics, then don't bother looking...
   if (plugin_frame_.empty()) {
     if (ExtrinsicsCallback(nullptr))
@@ -87,9 +97,9 @@ void FreeFlyerPlugin::SetupExtrinsics(const ros::TimerEvent& event) {
   // Keep trying to find the frame transform
   try {
     geometry_msgs::TransformStamped tf =
-      buffer_.lookupTransform(parent_frame_, GetFrame(), ros::Time(0));
+      buffer_->lookupTransform(parent_frame_, GetFrame(), ros::Time(0));
     if (ExtrinsicsCallback(&tf)) {
-      OnExtrinsicsReceived(&nh_);
+      OnExtrinsicsReceived(nh_);
       timer_.stop();
     }
   } catch (tf2::TransformException &ex) {}
@@ -133,10 +143,10 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
     plugin_frame_ = sdf->Get<std::string>("plugin_frame");
 
   // Initialize the FreeFlyerPlugin
-  InitializePlugin(ns, plugin_name);
+  InitializePlugin(ns, plugin_name, sdf);
 
   // Now load the rest of the plugin
-  LoadCallback(&nh_, model_, sdf_);
+  LoadCallback(nh_, model_, sdf_);
 }
 
 // Get the model link
@@ -213,10 +223,10 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
     plugin_frame_ = sdf->Get<std::string>("plugin_frame");
 
   // Initialize the FreeFlyerPlugin
-  InitializePlugin(ns, plugin_name);
+  InitializePlugin(ns, plugin_name, sdf_);
 
   // Now load the rest of the plugin
-  LoadCallback(&nh_, sensor_, sdf_);
+  // LoadCallback(nh_, sensor_, sdf_);
 }
 
 // Get the sensor world
@@ -348,55 +358,55 @@ Eigen::Affine3d SensorToWorld(gazebo::math::Pose const& world_pose,
 }
 
 void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & msg) {
-    msg.width = camera->ImageWidth();
-    msg.height = camera->ImageHeight();
+  msg.width = camera->ImageWidth();
+  msg.height = camera->ImageHeight();
 
-    double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
-    double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
-    double opitcal_center_x = msg.width/2.0;
-    double optical_center_y = msg.height/2.0;
+  double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
+  double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
+  double opitcal_center_x = msg.width/2.0;
+  double optical_center_y = msg.height/2.0;
 
-    // Intrinsics matrix
-    msg.K = {focal_length, 0, opitcal_center_x,
-             0, focal_length, optical_center_y,
-             0, 0, 1};
+  // Intrinsics matrix
+  msg.k = {focal_length, 0, opitcal_center_x,
+           0, focal_length, optical_center_y,
+           0, 0, 1};
 
-    // Projection matrix. We won't use this, but initalize it to something.
-    msg.P = {1, 0, 0, 0,
-             0, 1, 0, 0,
-             0, 0, 1, 0};
+  // Projection matrix. We won't use this, but initalize it to something.
+  msg.p = {1, 0, 0, 0,
+           0, 1, 0, 0,
+           0, 0, 1, 0};
 
-    // Rotation matrix. We won't use it.
-    msg.R = {1, 0, 0,
-             0, 1, 0,
-             0, 0, 1};
+  // Rotation matrix. We won't use it.
+  msg.r = {1, 0, 0,
+           0, 1, 0,
+           0, 0, 1};
 
-    rendering::DistortionPtr dPtr = camera->LensDistortion();
+  rendering::DistortionPtr dPtr = camera->LensDistortion();
 
-    // sensor_msgs::CameraInfo can manage only a few distortion
-    // models. Here we assume plumb_bob just to pass along the
-    // coefficients. Out of all the simulated cameras, nav_cam is
-    // fisheye, which uses only K1, and all others have zero
-    // distortion. Hence this code was not tested in the most general
-    // setting.
-    msg.distortion_model = "plumb_bob";
-    if (dPtr) {
-      #if GAZEBO_MAJOR_VERSION > 8
-      msg.D = {camera->LensDistortion()->K1(),
-               camera->LensDistortion()->K2(),
-               camera->LensDistortion()->K3(),
-               camera->LensDistortion()->P1(),
-               camera->LensDistortion()->P2()};
-      #else
-      msg.D = {camera->LensDistortion()->GetK1(),
-               camera->LensDistortion()->GetK2(),
-               camera->LensDistortion()->GetK3(),
-               camera->LensDistortion()->GetP1(),
-               camera->LensDistortion()->GetP2()};
-      #endif
-    } else {
-      msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
-    }
+  // sensor_msgs::CameraInfo can manage only a few distortion
+  // models. Here we assume plumb_bob just to pass along the
+  // coefficients. Out of all the simulated cameras, nav_cam is
+  // fisheye, which uses only K1, and all others have zero
+  // distortion. Hence this code was not tested in the most general
+  // setting.
+  msg.distortion_model = "plumb_bob";
+  if (dPtr) {
+    #if GAZEBO_MAJOR_VERSION > 8
+    msg.d = {camera->LensDistortion()->K1(),
+             camera->LensDistortion()->K2(),
+             camera->LensDistortion()->K3(),
+             camera->LensDistortion()->P1(),
+             camera->LensDistortion()->P2()};
+    #else
+    msg.D = {camera->LensDistortion()->GetK1(),
+             camera->LensDistortion()->GetK2(),
+             camera->LensDistortion()->GetK3(),
+             camera->LensDistortion()->GetP1(),
+             camera->LensDistortion()->GetP2()};
+    #endif
+  } else {
+    msg.d = {0.0, 0.0, 0.0, 0.0, 0.0};
   }
+}
 
 }  // namespace gazebo

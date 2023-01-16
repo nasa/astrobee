@@ -89,7 +89,7 @@ class FreeFlyerComponent {
 
   void AssertFault(FaultKeys enum_key,
                    std::string const& message,
-                   ros::Time time_fault_occurred = ROS_TIME_NOW());
+                   ros::Time time_fault_occurred = rclcpp::Clock().now());
   void ClearAllFaults();
   void ClearFault(FaultKeys enum_key);
   void PrintFaults();
@@ -134,6 +134,7 @@ class FreeFlyerComponent {
 
   // Node
   rclcpp::Node::SharedPtr node_;
+  rclcpp::Clock::SharedPtr clock_;
 
   // Heartbeat autostart
   bool autostart_hb_timer_;

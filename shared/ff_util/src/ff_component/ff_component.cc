@@ -51,6 +51,7 @@ FreeFlyerComponent::~FreeFlyerComponent() {
 
 // Called at constructor time
 void FreeFlyerComponent::Setup(std::string plugin_name) {
+  clock_ = node_->get_clock();
   // Get the platform name from the node handle (roslaunch group name attribute)
   if (std::string(node_->get_namespace()).size() > 1) platform_ = std::string(node_->get_namespace()).substr(1);
 
@@ -302,7 +303,7 @@ void FreeFlyerComponent::InitCallback() {
   Reset();
 
   // Start a trigger service on the private nodehandle /platform/pvt/name
-  ROS_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
+  FF_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
                      &FreeFlyerComponent::TriggerCallback);
 }
 
@@ -344,7 +345,7 @@ void FreeFlyerComponent::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger:
 
 void FreeFlyerComponent::PublishHeartbeat() {
   if (initialized_) {
-    heartbeat_.header.stamp = ROS_TIME_NOW();
+    heartbeat_.header.stamp = FF_TIME_NOW();
     pub_heartbeat_->publish(heartbeat_);
   }
 }
@@ -380,7 +381,7 @@ void FreeFlyerComponent::SendDiagnostics(
   }
   // Publish the diagnostics
   diagnostic_msgs::DiagnosticArray da;
-  da.header.stamp = ROS_TIME_NOW();
+  da.header.stamp = FF_TIME_NOW();
   da.status.push_back(ds);
   pub_diagnostics_->publish(da);
 }

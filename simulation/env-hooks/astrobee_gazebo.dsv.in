@@ -1,0 +1,2 @@
+prepend-non-duplicate;GAZEBO_RESOURCE_PATH;share/@PROJECT_NAME@/worlds
+prepend-non-duplicate;GAZEBO_PLUGIN_PATH;lib/@PROJECT_NAME@

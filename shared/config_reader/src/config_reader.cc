@@ -977,13 +977,9 @@ bool ConfigReader::ReadLongLong(const char *exp, int64_t *val) {
 }
 
 bool ConfigReader::ReadUInt(const char *exp, unsigned int *val) {
-  bool ok = lua_isnumber(l_, -1);
+  bool ok = lua_isnumber(l_, -1) && rint(lua_tonumber(l_, -1)) >= 0;
   if (ok) {
-    *val = static_cast<int>(rint(lua_tonumber(l_, -1)));
-    if (val < 0) {
-      LOG(WARNING) << "ConfigReader: " << exp << " is not an unsigned integer";
-      ok = false;
-    }
+    *val = static_cast<unsigned int>(rint(lua_tonumber(l_, -1)));
   } else {
     OutputGetValueError(exp, "unsigned integer");
   }

@@ -16,43 +16,72 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // Astrobee simulation API
 #include <astrobee_gazebo/astrobee_gazebo.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 
 // Standard messages
-#include <sensor_msgs/BatteryState.h>
-#include <sensor_msgs/Temperature.h>
+#include <sensor_msgs/msg/battery_state.hpp>
+#include <sensor_msgs/msg/temperature.hpp>
+namespace sensor_msgs {
+typedef msg::BatteryState BatteryState;
+typedef msg::Temperature Temperature;
+}  // namespace sensor_msgs
 
 // Finite state machine for tracking dock state
 #include <ff_util/ff_fsm.h>
 
 // Messages
-#include <ff_hw_msgs/EpsBatteryLocation.h>
-#include <ff_hw_msgs/EpsHousekeeping.h>
-#include <ff_hw_msgs/EpsPowerState.h>
-#include <ff_hw_msgs/EpsDockStateStamped.h>
+#include <ff_hw_msgs/msg/eps_battery_location.hpp>
+#include <ff_hw_msgs/msg/eps_housekeeping.hpp>
+#include <ff_hw_msgs/msg/eps_power_state.hpp>
+#include <ff_hw_msgs/msg/eps_dock_state_stamped.hpp>
+namespace ff_hw_msgs {
+typedef msg::EpsBatteryLocation EpsBatteryLocation;
+typedef msg::EpsHousekeeping EpsHousekeeping;
+typedef msg::EpsHousekeepingValue EpsHousekeepingValue;
+typedef msg::EpsPowerState EpsPowerState;
+typedef msg::EpsPowerStateValue EpsPowerStateValue;
+typedef msg::EpsDockStateStamped EpsDockStateStamped;
+}  // namespace ff_hw_msgs
 
 // Services
-#include <ff_hw_msgs/Reset.h>
-#include <ff_hw_msgs/ConfigureSystemLeds.h>
-#include <ff_hw_msgs/ConfigurePayloadPower.h>
-#include <ff_hw_msgs/ConfigureAdvancedPower.h>
-#include <ff_hw_msgs/GetBoardInfo.h>
-#include <ff_hw_msgs/ClearTerminate.h>
-#include <ff_hw_msgs/RingBuzzer.h>
-#include <ff_hw_msgs/SetEnabled.h>
-#include <ff_hw_msgs/GetBatteryStatus.h>
-#include <ff_hw_msgs/GetTemperatures.h>
-#include <ff_hw_msgs/Undock.h>
+#include <ff_hw_msgs/srv/reset.hpp>
+#include <ff_hw_msgs/srv/configure_system_leds.hpp>
+#include <ff_hw_msgs/srv/configure_payload_power.hpp>
+#include <ff_hw_msgs/srv/configure_advanced_power.hpp>
+#include <ff_hw_msgs/srv/get_board_info.hpp>
+#include <ff_hw_msgs/srv/clear_terminate.hpp>
+#include <ff_hw_msgs/srv/ring_buzzer.hpp>
+#include <ff_hw_msgs/srv/set_enabled.hpp>
+#include <ff_hw_msgs/srv/get_battery_status.hpp>
+#include <ff_hw_msgs/srv/get_temperatures.hpp>
+#include <ff_hw_msgs/srv/undock.hpp>
+namespace ff_hw_msgs {
+typedef srv::Reset Reset;
+typedef srv::ConfigureSystemLeds ConfigureSystemLeds;
+typedef srv::ConfigurePayloadPower ConfigurePayloadPower;
+typedef srv::ConfigureAdvancedPower ConfigureAdvancedPower;
+typedef srv::GetBoardInfo GetBoardInfo;
+typedef srv::ClearTerminate ClearTerminate;
+typedef srv::RingBuzzer RingBuzzer;
+typedef srv::SetEnabled SetEnabled;
+typedef srv::GetBatteryStatus GetBatteryStatus;
+typedef srv::GetTemperatures GetTemperatures;
+typedef srv::Undock Undock;
+}  // namespace ff_hw_msgs
+namespace std_msgs {
+typedef msg::Header Header;
+}  // namespace std_msgs
 
 // STL includes
 #include <string>
 #include <thread>
 
 namespace gazebo {
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_eps");
 
 using FSM = ff_util::FSM;
 
@@ -190,8 +219,14 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh,
+  void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
+    clock_ = nh->get_clock();
+
+    // Initialize Transform lookup
+    buffer_.reset(new tf2_ros::Buffer(clock_));
+    listener_.reset(new tf2_ros::TransformListener(*buffer_));
+
     // Get parameters
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
@@ -202,75 +237,76 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     if (sdf->HasElement("delay"))
       delay_ = sdf->Get<double>("delay");
     // Setup telemetry publishers
-    pub_dock_state_ = nh->advertise<ff_hw_msgs::EpsDockStateStamped>(
+    pub_dock_state_ = nh->create_publisher<ff_hw_msgs::EpsDockStateStamped>(
       TOPIC_HARDWARE_EPS_DOCK_STATE, 1);
-    pub_housekeeping_ = nh->advertise<ff_hw_msgs::EpsHousekeeping>(
+    pub_housekeeping_ = nh->create_publisher<ff_hw_msgs::EpsHousekeeping>(
       TOPIC_HARDWARE_EPS_HOUSEKEEPING, 1);
-    pub_power_ = nh->advertise<ff_hw_msgs::EpsPowerState>(
+    pub_power_ = nh->create_publisher<ff_hw_msgs::EpsPowerState>(
       TOPIC_HARDWARE_EPS_POWER_STATE, 1);
-    battery_state_pub_tl_ = nh->advertise<sensor_msgs::BatteryState>(
+    battery_state_pub_tl_ = nh->create_publisher<sensor_msgs::BatteryState>(
       TOPIC_HARDWARE_EPS_BATTERY_STATE_TL, 5);
-    battery_state_pub_tr_ = nh->advertise<sensor_msgs::BatteryState>(
+    battery_state_pub_tr_ = nh->create_publisher<sensor_msgs::BatteryState>(
       TOPIC_HARDWARE_EPS_BATTERY_STATE_TR, 5);
-    battery_state_pub_bl_ = nh->advertise<sensor_msgs::BatteryState>(
+    battery_state_pub_bl_ = nh->create_publisher<sensor_msgs::BatteryState>(
       TOPIC_HARDWARE_EPS_BATTERY_STATE_BL, 5);
-    battery_state_pub_br_ = nh->advertise<sensor_msgs::BatteryState>(
+    battery_state_pub_br_ = nh->create_publisher<sensor_msgs::BatteryState>(
       TOPIC_HARDWARE_EPS_BATTERY_STATE_BR, 5);
     // Provide an undock service to call to release the robot from the dock
-    srv_undock_ = nh->advertiseService(
+    srv_undock_ = nh->create_service<ff_hw_msgs::Undock>(
       SERVICE_HARDWARE_EPS_UNDOCK,
-        &GazeboModelPluginEps::UndockCallback, this);
+        std::bind(&GazeboModelPluginEps::UndockCallback, this, std::placeholders::_1, std::placeholders::_2));
     // Enable payload power toggling
-    srv_payload_ = nh->advertiseService(
+    srv_payload_ = nh->create_service<ff_hw_msgs::ConfigurePayloadPower>(
       SERVICE_HARDWARE_EPS_CONF_PAYLOAD_POWER,
-        &GazeboModelPluginEps::PayloadConfigureCallback, this);
+        std::bind(&GazeboModelPluginEps::PayloadConfigureCallback, this, std::placeholders::_1, std::placeholders::_2));
     // Enable advanced power toggling
-    srv_power_ = nh->advertiseService(
+    srv_power_ = nh->create_service<ff_hw_msgs::ConfigureAdvancedPower>(
       SERVICE_HARDWARE_EPS_CONF_ADVANCED_POWER,
-        &GazeboModelPluginEps::PowerConfigureCallback, this);
-    srv_led_ = nh->advertiseService(SERVICE_HARDWARE_EPS_CONF_LED_STATE,
-      &GazeboModelPluginEps::LedsConfigureCallback, this);
+        std::bind(&GazeboModelPluginEps::PowerConfigureCallback, this, std::placeholders::_1, std::placeholders::_2));
+    srv_led_ = nh->create_service<ff_hw_msgs::ConfigureSystemLeds>(
+      SERVICE_HARDWARE_EPS_CONF_LED_STATE,
+       std::bind(&GazeboModelPluginEps::LedsConfigureCallback, this, std::placeholders::_1, std::placeholders::_2));
     // Once we have berth locations start timer for checking dock status
-    timer_delay_ = nh->createTimer(ros::Duration(delay_),
-      &GazeboModelPluginEps::DelayCallback, this, true, false);
+    timer_delay_.createTimer(delay_,
+      std::bind(&GazeboModelPluginEps::DelayCallback, this), nh_, true, false);
       // Once we have berth locations start timer for checking dock status
-    timer_update_ = nh->createTimer(ros::Rate(rate_),
-      &GazeboModelPluginEps::UpdateCallback, this, false, false);
+    timer_update_.createTimer(1 / rate_,
+      std::bind(&GazeboModelPluginEps::UpdateCallback, this), nh_, false, false);
     // Create timer to publish battery states
-    telem_timer_= nh->createTimer(ros::Duration(5),
-      &GazeboModelPluginEps::TelemetryCallback, this, false, true);
+    telem_timer_.createTimer(5.0,
+      std::bind(&GazeboModelPluginEps::TelemetryCallback, this), nh_, false, true);
      // Defer the extrinsics setup to allow plugins to load
     update_ = event::Events::ConnectWorldUpdateEnd(
       std::bind(&GazeboModelPluginEps::BerthCallback, this));
     // Initialize battery states
-    state_tl_.header.stamp = ros::Time::now();
+    // state_tl_.header.stamp = ros::Time::now();
     state_tl_.location = ff_hw_msgs::EpsBatteryLocation::TOP_LEFT;
     state_tl_.present = sdf->Get<bool>("battery_top_left");
     state_tl_.capacity = battery_capacity_;
     state_tl_.charge = battery_charge_;
     state_tl_.percentage = state_tl_.charge / state_tl_.capacity;
-    battery_state_pub_tl_.publish(state_tl_);
-    state_tr_.header.stamp = ros::Time::now();
+    battery_state_pub_tl_->publish(state_tl_);
+    // state_tr_.header.stamp = ros::Time::now();
     state_tr_.location = ff_hw_msgs::EpsBatteryLocation::TOP_RIGHT;
     state_tr_.present = sdf->Get<bool>("battery_top_right");
     state_tr_.capacity = battery_capacity_;
     state_tr_.charge = battery_charge_;
     state_tr_.percentage = state_tr_.charge / state_tl_.capacity;
-    battery_state_pub_tr_.publish(state_tr_);
-    state_bl_.header.stamp = ros::Time::now();
+    battery_state_pub_tr_->publish(state_tr_);
+    // state_bl_.header.stamp = ros::Time::now();
     state_bl_.location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_LEFT;
     state_bl_.present = sdf->Get<bool>("battery_bottom_left");
     state_bl_.capacity = battery_capacity_;
     state_bl_.charge = battery_charge_;
     state_bl_.percentage = state_bl_.charge / state_bl_.capacity;
-    battery_state_pub_bl_.publish(state_bl_);
-    state_br_.header.stamp = ros::Time::now();
+    battery_state_pub_bl_->publish(state_bl_);
+    // state_br_.header.stamp = ros::Time::now();
     state_br_.location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_RIGHT;
     state_br_.present = sdf->Get<bool>("battery_bottom_right");
     state_br_.capacity = battery_capacity_;
     state_br_.charge = battery_charge_;
     state_br_.percentage = state_br_.charge /state_br_.capacity;
-    battery_state_pub_br_.publish(state_br_);
+    battery_state_pub_br_->publish(state_br_);
     // Set default values for housekeeping
     housekeeping_["AGND1_V"] = 0.0000;
     housekeeping_["SUPPLY_IN_V"] = 0.4640;
@@ -350,7 +386,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     case TIMEOUT:                 str = "TIMEOUT";            break;
     case UNDOCK:                  str = "UNDOCK";             break;
     }
-    NODELET_DEBUG_STREAM("Received event " << str);
+    FF_DEBUG_STREAM("Received event " << str);
     // Debug state changes
     switch (state) {
     case UNKNOWN:                 str = "UNKNOWN";            break;
@@ -359,19 +395,17 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     case DOCKED:                  str = "DOCKED";             break;
     case UNDOCKING:               str = "UNDOCKING";          break;
     }
-    NODELET_DEBUG_STREAM("State changed to " << str);
+    FF_DEBUG_STREAM("State changed to " << str);
   }
 
   // Manage the extrinsics based on the sensor type
   void BerthCallback() {
     // Create a buffer and listener for TF2 transforms
-    static tf2_ros::Buffer buffer;
-    static tf2_ros::TransformListener listener(buffer);
     static geometry_msgs::TransformStamped tf;
     // Get extrinsics from framestore
     try {
       // Lookup the transform for dock/berth1
-      tf = buffer.lookupTransform(
+      tf = buffer_->lookupTransform(
         "world", "dock/berth1/complete", ros::Time(0));
       // Handle the transform for all sensor types
       berths_["dock/berth1/complete"] = ignition::math::Pose3d(
@@ -383,7 +417,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
         tf.transform.rotation.y,
         tf.transform.rotation.z);
       // Lookup the transform for dock/berth2
-      tf = buffer.lookupTransform(
+      tf = buffer_->lookupTransform(
         "world", "dock/berth2/complete", ros::Time(0));
       // Handle the transform for all sensor types
       berths_["dock/berth2/complete"] = ignition::math::Pose3d(
@@ -441,7 +475,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   }
 
   // Called when we have berth transforms populated
-  void UpdateCallback(const ros::TimerEvent& event) {
+  void UpdateCallback() {
     // Iterate over the berths to check if any are within a threshold distance.
     // There are smarter ways to do this sort of search (kNN) but this we are
     // only expecting fewer than 6 berths, it seems like needless optimization.
@@ -476,7 +510,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // in the system, and in particular the dock procedure.
     ff_hw_msgs::EpsDockStateStamped msg;
     msg.header.frame_id = GetPlatform();
-    msg.header.stamp = ros::Time::now();
+    msg.header.stamp = FF_TIME_NOW();
     switch (fsm_.GetState()) {
     case UNDOCKED:
     case UNDOCKING:
@@ -488,114 +522,114 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     default:
       msg.state = ff_hw_msgs::EpsDockStateStamped::UNKNOWN;     break;
     }
-    pub_dock_state_.publish(msg);
+    pub_dock_state_->publish(msg);
   }
 
   // Called when we have berth transforms populated
-  void DelayCallback(const ros::TimerEvent& event) {
+  void DelayCallback() {
     fsm_.Update(TIMEOUT);
   }
 
   // Callback for the undock service
-  bool UndockCallback(ff_hw_msgs::Undock::Request &req,
-                      ff_hw_msgs::Undock::Response &res) {
+  bool UndockCallback(const std::shared_ptr<ff_hw_msgs::Undock::Request> req,
+                      std::shared_ptr<ff_hw_msgs::Undock::Response> res) {
     // We cannot undock in certain states
     switch (fsm_.GetState()) {
     case UNKNOWN:
     default:
-      res.value = ff_hw_msgs::Undock::Response::CANNOT_QUERY_STATE;
+      res->value = ff_hw_msgs::Undock::Response::CANNOT_QUERY_STATE;
       return true;
     case DOCKING:
     case UNDOCKED:
     case UNDOCKING:
-      res.value = ff_hw_msgs::Undock::Response::NOT_DOCKED;
+      res->value = ff_hw_msgs::Undock::Response::NOT_DOCKED;
       return true;
     case DOCKED:
       break;
     }
     // Send an undock command to the FSM
     fsm_.Update(UNDOCK);
-    res.value = ff_hw_msgs::Undock::Response::SUCCESS;
+    res->value = ff_hw_msgs::Undock::Response::SUCCESS;
     return true;
   }
 
   // Callback for setting the power state
   bool PayloadConfigureCallback(
-      ff_hw_msgs::ConfigurePayloadPower::Request &req,
-      ff_hw_msgs::ConfigurePayloadPower::Response &res) {
+      const std::shared_ptr<ff_hw_msgs::ConfigurePayloadPower::Request> req,
+      std::shared_ptr<ff_hw_msgs::ConfigurePayloadPower::Response> res) {
     // Batch the request
     uint8_t const &on = ff_hw_msgs::ConfigurePayloadPower::Request::ON;
     uint8_t const &off = ff_hw_msgs::ConfigurePayloadPower::Request::OFF;
     // Top front
-    if (req.top_front == on)
+    if (req->top_front == on)
       power_states_["PAYLOAD_EN_TOP_FRONT"] = true;
-    if (req.top_front == off)
+    if (req->top_front == off)
       power_states_["PAYLOAD_EN_TOP_FRONT"] = false;
     // Top aft
-    if (req.top_aft == on)
+    if (req->top_aft == on)
       power_states_["PAYLOAD_EN_TOP_AFT"] = true;
-    if (req.top_aft == off)
+    if (req->top_aft == off)
       power_states_["PAYLOAD_EN_TOP_AFT"] = false;
     // Bottom aft
-    if (req.bottom_aft == on)
+    if (req->bottom_aft == on)
       power_states_["PAYLOAD_EN_BOT_AFT"] = true;
-    if (req.bottom_aft == off)
+    if (req->bottom_aft == off)
       power_states_["PAYLOAD_EN_BOT_AFT"] = false;
     // Bottom front
-    if (req.bottom_front == on)
+    if (req->bottom_front == on)
       power_states_["PAYLOAD_EN_BOT_FRONT"] = true;
-    if (req.bottom_front == off)
+    if (req->bottom_front == off)
       power_states_["PAYLOAD_EN_BOT_FRONT"] = false;
     // Success!
-    res.success = true;
-    res.status = "All payload power set sucessfully";
+    res->success = true;
+    res->status = "All payload power set sucessfully";
     return true;
   }
 
   // Callback for setting the power channels
   bool PowerConfigureCallback(
-      ff_hw_msgs::ConfigureAdvancedPower::Request &req,
-      ff_hw_msgs::ConfigureAdvancedPower::Response &res) {
+      const std::shared_ptr<ff_hw_msgs::ConfigureAdvancedPower::Request> req,
+      std::shared_ptr<ff_hw_msgs::ConfigureAdvancedPower::Response> res) {
     // Batch the request
     uint8_t const &on = ff_hw_msgs::ConfigureAdvancedPower::Request::ON;
     uint8_t const &off = ff_hw_msgs::ConfigureAdvancedPower::Request::OFF;
     // Set the states
-    if (req.usb == on)
+    if (req->usb == on)
       power_states_["USB_PWR_EN"] = true;
-    if (req.usb == off)
+    if (req->usb == off)
       power_states_["USB_PWR_EN"] = false;
-    if (req.aux == on)
+    if (req->aux == on)
       power_states_["AUX_PWR_EN"] = true;
-    if (req.aux == off)
+    if (req->aux == off)
       power_states_["AUX_PWR_EN"] = false;
-    if (req.pmc1 == on)
+    if (req->pmc1 == on)
       power_states_["MOTOR_EN1"] = true;
-    if (req.pmc1 == off)
+    if (req->pmc1 == off)
       power_states_["MOTOR_EN1"] = false;
-    if (req.pmc2 == on)
+    if (req->pmc2 == on)
       power_states_["MOTOR_EN2"] = true;
-    if (req.pmc2 == off)
+    if (req->pmc2 == off)
       power_states_["MOTOR_EN2"] = false;
     // Success!
-    res.success = true;
-    res.status = "All advanced power set sucessfully";
+    res->success = true;
+    res->status = "All advanced power set sucessfully";
     return true;
   }
 
-  bool LedsConfigureCallback(ff_hw_msgs::ConfigureSystemLeds::Request &req,
-                             ff_hw_msgs::ConfigureSystemLeds::Response &res) {
+  bool LedsConfigureCallback(const std::shared_ptr<ff_hw_msgs::ConfigureSystemLeds::Request> req,
+                             std::shared_ptr<ff_hw_msgs::ConfigureSystemLeds::Response> res) {
     // TODO(?) Maybe have actual leds on the simulated robot that turn on
-    res.success = true;
-    res.status = "All LED set successfully";
+    res->success = true;
+    res->status = "All LED set successfully";
     return true;
   }
 
   // Callback for telemetry broadcast
-  void TelemetryCallback(const ros::TimerEvent &event) {
+  void TelemetryCallback() {
     // Set a header for all telemetry items
     static std_msgs::Header header;
     header.frame_id = GetPlatform();
-    header.stamp = ros::Time::now();
+    // header.stamp = ros::Time::now();
 
     // Send battery
     if (state_tl_.present) {
@@ -608,7 +642,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // Always publish every battery state regardless if it is present or not
     // since the actual eps driver does this
     state_tl_.header = header;
-    battery_state_pub_tl_.publish(state_tl_);
+    battery_state_pub_tl_->publish(state_tl_);
 
     if (state_tr_.present) {
       state_tr_.charge -= battery_discharge_rate_;
@@ -618,7 +652,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       state_tr_.percentage = state_tr_.charge / state_tr_.capacity;
     }
     state_tr_.header = header;
-    battery_state_pub_tr_.publish(state_tr_);
+    battery_state_pub_tr_->publish(state_tr_);
 
     if (state_bl_.present) {
       state_bl_.charge -= battery_discharge_rate_;
@@ -628,7 +662,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       state_bl_.percentage = state_bl_.charge / state_bl_.capacity;
     }
     state_bl_.header = header;
-    battery_state_pub_bl_.publish(state_bl_);
+    battery_state_pub_bl_->publish(state_bl_);
 
     if (state_br_.present) {
       state_br_.charge -= battery_discharge_rate_;
@@ -637,8 +671,8 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       }
       state_br_.percentage = state_br_.charge / state_br_.capacity;
     }
-    state_br_.header.stamp = ros::Time::now();
-    battery_state_pub_br_.publish(state_br_);
+    // state_br_.header.stamp = ros::Time::now();
+    battery_state_pub_br_->publish(state_br_);
 
     // Send housekeeping
     static ff_hw_msgs::EpsHousekeeping msg_housekeeping;
@@ -660,7 +694,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       kv.value = it->second;
       msg_housekeeping.values.push_back(kv);
     }
-    pub_housekeeping_.publish(msg_housekeeping);
+    pub_housekeeping_->publish(msg_housekeeping);
 
     // Send power
     static ff_hw_msgs::EpsPowerState msg_power;
@@ -672,10 +706,11 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       kv.value = it->second;
       msg_power.values.push_back(kv);
     }
-    pub_power_.publish(msg_power);
+    pub_power_->publish(msg_power);
   }
 
  private:
+  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FSM fsm_;
   double rate_, distance_near_, distance_far_ , delay_;
   bool lock_;
@@ -685,14 +720,22 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   std::map<std::string, ignition::math::Pose3d>::iterator nearest_;
   ignition::math::Vector3d force_;
   physics::JointPtr joint_;
-  ros::Timer timer_update_, timer_delay_, telem_timer_;
-  ros::Publisher pub_dock_state_, pub_housekeeping_, pub_power_;
-  ros::Publisher battery_state_pub_tl_, battery_state_pub_tr_;
-  ros::Publisher battery_state_pub_bl_, battery_state_pub_br_;
-  ros::ServiceServer srv_undock_, srv_power_, srv_payload_, srv_led_;
+  ff_util::FreeFlyerTimer timer_update_, timer_delay_, telem_timer_;
+  rclcpp::Publisher<ff_hw_msgs::EpsDockStateStamped>::SharedPtr pub_dock_state_;
+  rclcpp::Publisher<ff_hw_msgs::EpsHousekeeping>::SharedPtr pub_housekeeping_;
+  rclcpp::Publisher<ff_hw_msgs::EpsPowerState>::SharedPtr pub_power_;
+  rclcpp::Publisher<sensor_msgs::BatteryState>::SharedPtr battery_state_pub_tl_, battery_state_pub_tr_,
+                  battery_state_pub_bl_, battery_state_pub_br_;
+  rclcpp::Service<ff_hw_msgs::Undock>::SharedPtr srv_undock_;
+  rclcpp::Service<ff_hw_msgs::ConfigureAdvancedPower>::SharedPtr srv_power_;
+  rclcpp::Service<ff_hw_msgs::ConfigurePayloadPower>::SharedPtr srv_payload_;
+  rclcpp::Service<ff_hw_msgs::ConfigureSystemLeds>::SharedPtr srv_led_;
   sensor_msgs::BatteryState state_tl_, state_tr_, state_bl_, state_br_;
   std::map<std::string, bool> power_states_;
   std::map<std::string, double> housekeeping_;
+
+  std::shared_ptr<tf2_ros::Buffer> buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> listener_;
 };
 
 // Register this plugin with the simulator

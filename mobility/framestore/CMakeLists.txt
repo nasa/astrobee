@@ -18,8 +18,11 @@
 cmake_minimum_required(VERSION 3.5)
 project(framestore)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
 set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 # Build for ROS2
@@ -80,7 +83,11 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install C++ executables
-install(TARGETS global_transforms DESTINATION bin)
+install(
+  TARGETS global_transforms
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/global_transforms share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}

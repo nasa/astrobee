@@ -48,7 +48,7 @@ class FrameStore : public ff_util::FreeFlyerComponent {
 
  protected:
   void Initialize(NodeHandle node) {
-    node_ = node;
+    clock_ = node->get_clock();
     tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node);
 
     // Set custom config path
@@ -63,7 +63,7 @@ class FrameStore : public ff_util::FreeFlyerComponent {
 
     timer_.createTimer(1.0, [this]() {
       config_.CheckFilesUpdated(std::bind(&FrameStore::ReadParams, this));},
-      node_, false, true);
+      node, false, true);
   }
 
   bool ReadParams() {
@@ -94,7 +94,7 @@ class FrameStore : public ff_util::FreeFlyerComponent {
             && msg_conversions::config_read_quat(&t_rot, &rot)
             && msg_conversions::config_read_vector(&t_trans, &trans)) {
             // Add the transform
-            tf.header.stamp = ROS_TIME_NOW();
+            tf.header.stamp = FF_TIME_NOW();
             // GLobal transforms
             if (global || platform.empty()) {
               tf.header.frame_id = parent;
@@ -126,7 +126,7 @@ class FrameStore : public ff_util::FreeFlyerComponent {
   }
 
  protected:
-  NodeHandle node_;
+  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FreeFlyerTimer timer_;
   config_reader::ConfigReader config_;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_;

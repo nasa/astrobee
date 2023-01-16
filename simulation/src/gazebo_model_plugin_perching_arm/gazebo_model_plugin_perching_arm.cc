@@ -17,25 +17,37 @@
  */
 
 // ROS includes
-#include <ros/ros.h>
 #include <time.h>
 
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
 // Generic arm control messages
-#include <sensor_msgs/JointState.h>
+#include <sensor_msgs/msg/joint_state.hpp>
+namespace sensor_msgs {
+typedef msg::JointState JointState;
+}  // namespace sensor_msgs
 
 // Specific arm services
-#include <ff_hw_msgs/SetJointMaxVelocity.h>
-#include <ff_msgs/SetState.h>
-#include <ff_hw_msgs/SetEnabled.h>
-#include <ff_hw_msgs/CalibrateGripper.h>
+#include <ff_hw_msgs/srv/set_joint_max_velocity.hpp>
+#include <ff_msgs/srv/set_state.hpp>
+#include <ff_hw_msgs/srv/set_enabled.hpp>
+#include <ff_hw_msgs/srv/calibrate_gripper.hpp>
+namespace ff_msgs {
+typedef srv::SetState SetState;
+}  // namespace ff_msgs
+namespace ff_hw_msgs {
+typedef srv::SetJointMaxVelocity SetJointMaxVelocity;
+typedef srv::SetEnabled SetEnabled;
+typedef srv::CalibrateGripper CalibrateGripper;
+}  // namespace ff_hw_msgs
 
 // STL includes
 #include <string>
 
 namespace gazebo {
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_perching_arm");
 
 /* The perching arm has two DYNAMIXEL XM 430 intelligent motors. They
    run an internal PID control loop to achieve velocity or position.
@@ -90,8 +102,9 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   static constexpr double RPM_TO_RADS_PER_S     = 0.1047198;
 
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, physics::ModelPtr model,
+  void LoadCallback(NodeHandle &nh, physics::ModelPtr model,
     sdf::ElementPtr sdf) {
+    clock_ = nh->get_clock();
     // Get parameters
     if (sdf->HasElement("bay"))
       bay_ = sdf->Get<std::string>("bay");
@@ -159,46 +172,46 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     msg_.effort.resize(joints_.size() + 1);
 
     // Create a joint state publisher for the arm
-    pub_ = nh->advertise<sensor_msgs::JointState>("joint_states", 100, true);
+    pub_ = nh->create_publisher<sensor_msgs::JointState>("joint_states", 100);
+    // pub_ = nh->create_publisher<sensor_msgs::JointState>("joint_states", 100, true); // TODO (@mgouveia): figure out
+    // latched topics
 
     // Now register to be called back every time FAM has new wrench
-    sub_ = nh->subscribe("joint_goals", 1,
-      &GazeboModelPluginPerchingArm::GoalCallback, this);
+    sub_ = nh->create_subscription<sensor_msgs::JointState>("joint_goals", 1,
+      std::bind(&GazeboModelPluginPerchingArm::GoalCallback, this, std::placeholders::_1));
 
     // Set the distal velocity
-    srv_p_ = nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_DIST_VEL,
-      &GazeboModelPluginPerchingArm::SetDistVelCallback, this);
+    srv_p_ = nh->create_service<ff_hw_msgs::SetJointMaxVelocity>(
+      SERVICE_HARDWARE_PERCHING_ARM_DIST_VEL,
+      std::bind(&GazeboModelPluginPerchingArm::SetDistVelCallback, this, std::placeholders::_1, std::placeholders::_2));
 
     // Set the proximal velocity
-    srv_t_ = nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_PROX_VEL,
-      &GazeboModelPluginPerchingArm::SetProxVelCallback, this);
+    srv_t_ = nh->create_service<ff_hw_msgs::SetJointMaxVelocity>(SERVICE_HARDWARE_PERCHING_ARM_PROX_VEL,
+      std::bind(&GazeboModelPluginPerchingArm::SetProxVelCallback,
+                              this, std::placeholders::_1, std::placeholders::_2));
 
     // Periodic timer to send feedback to executive to avoid timeout
-    timer_ = nh->createTimer(ros::Rate(rate_),
-      &GazeboModelPluginPerchingArm::TimerCallback, this, false, true);
+    timer_.createTimer(1.0 / rate_,
+      std::bind(&GazeboModelPluginPerchingArm::TimerCallback, this), nh, false, true);
 
     // Answer to hardware services
     // Enable/Disable the Proximal Joint Servo
-    srv_ps_ =
-        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO,
-                             &GazeboModelPluginPerchingArm::EnableProximalServoCallback,
-                             this);
+    srv_ps_ = nh->create_service<ff_hw_msgs::SetEnabled>(SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO,
+      std::bind(&GazeboModelPluginPerchingArm::EnableProximalServoCallback,
+                             this, std::placeholders::_1, std::placeholders::_2));
     // Enable/Disable the Distal Joint Servo
-    srv_ds_ =
-        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO,
-                             &GazeboModelPluginPerchingArm::EnableDistalServoCallback,
-                             this);
+    srv_ds_ = nh->create_service<ff_hw_msgs::SetEnabled>(SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO,
+      std::bind(&GazeboModelPluginPerchingArm::EnableDistalServoCallback,
+                             this, std::placeholders::_1, std::placeholders::_2));
 
     // Enable/Disable the Gripper Servo
-    srv_gs_ =
-        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO,
-                             &GazeboModelPluginPerchingArm::EnableGripperServoCallback,
-                             this);
+    srv_gs_ = nh->create_service<ff_hw_msgs::SetEnabled>(SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO,
+      std::bind(&GazeboModelPluginPerchingArm::EnableGripperServoCallback,
+                             this, std::placeholders::_1, std::placeholders::_2));
     // Calibrate the arm
-    srv_c_ =
-        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE,
-                             &GazeboModelPluginPerchingArm::CalibrateGripperCallback,
-                            this);
+    srv_c_ = nh->create_service<ff_hw_msgs::CalibrateGripper>(SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE,
+      std::bind(&GazeboModelPluginPerchingArm::CalibrateGripperCallback,
+                            this, std::placeholders::_1, std::placeholders::_2));
   }
 
   // Called on simulation reset
@@ -312,7 +325,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
           // Compensate for machine offset
           SetGripperGoal(msg.position[i] + GRIPPER_OFFSET);
         else
-          NODELET_WARN("Gripper: only position control is supported");
+          FF_WARN("Gripper: only position control is supported");
       // The only other two states that are supported are the proximal and
       // distal joints of the arm.
       } else if (msg.name[i] == bay_+"_arm_proximal_joint"
@@ -321,17 +334,17 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
           GetModel()->GetJointController()->SetPositionTarget(GetModel()
             ->GetJoint(msg.name[i])->GetScopedName(), msg.position[i]);
         else
-          NODELET_WARN("Joint: only position control is supported");
+          FF_WARN("Joint: only position control is supported");
       // Catch all invalid joint states
       }
     }
   }
 
   // Called on every discrete time tick in the simulated world
-  void TimerCallback(ros::TimerEvent const& event) {
+  void TimerCallback() {
     // Package all joint states, inclusind the left and right proximal
     // and distal joints of the gripper (for visualization reasons)
-    msg_.header.stamp = ros::Time::now();
+    msg_.header.stamp = FF_TIME_NOW();
     size_t i = 0;
     for (; i < joints_.size(); i++) {
       msg_.name[i] = joints_[i]->GetName();
@@ -350,91 +363,92 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     msg_.velocity[i] = 0;
     msg_.effort[i] = 0;
     // Publish the joint state
-    pub_.publish(msg_);
+    pub_->publish(msg_);
   }
 
   // Set the pan velocity
-  bool SetDistVelCallback(ff_hw_msgs::SetJointMaxVelocity::Request  &req,
-                          ff_hw_msgs::SetJointMaxVelocity::Response &res) {
+  bool SetDistVelCallback(const std::shared_ptr<ff_hw_msgs::SetJointMaxVelocity::Request> req,
+                          std::shared_ptr<ff_hw_msgs::SetJointMaxVelocity::Response> res) {
     // Set the velocity limit for the joint
     GetModel()->GetJoint(bay_+"_arm_distal_joint")
-      ->SetVelocityLimit(0, req.rpm * RPM_TO_RADS_PER_S);
+      ->SetVelocityLimit(0, req->rpm * RPM_TO_RADS_PER_S);
     // Success!
-    res.success = true;
-    res.status_message = "Success";
+    res->success = true;
+    res->status_message = "Success";
     return true;
   }
 
   // Set the tilt velocity
-  bool SetProxVelCallback(ff_hw_msgs::SetJointMaxVelocity::Request  &req,
-                          ff_hw_msgs::SetJointMaxVelocity::Response &res) {
+  bool SetProxVelCallback(const std::shared_ptr<ff_hw_msgs::SetJointMaxVelocity::Request> req,
+                          std::shared_ptr<ff_hw_msgs::SetJointMaxVelocity::Response> res) {
     // Set the velocity limit for the joint
     GetModel()->GetJoint(bay_+"_arm_proximal_joint")
-      ->SetVelocityLimit(0, req.rpm * RPM_TO_RADS_PER_S);
+      ->SetVelocityLimit(0, req->rpm * RPM_TO_RADS_PER_S);
     // Success!
-    res.success = true;
-    res.status_message = "Success";
+    res->success = true;
+    res->status_message = "Success";
     return true;
   }
 
   // Enable/Disable the proximal joint servo
-  bool EnableProximalServoCallback(ff_hw_msgs::SetEnabled::Request &req,
-                                   ff_hw_msgs::SetEnabled::Response &res) {
+  bool EnableProximalServoCallback(const std::shared_ptr<ff_hw_msgs::SetEnabled::Request> req,
+                                   std::shared_ptr<ff_hw_msgs::SetEnabled::Response> res) {
     // ROS_WARN("[Perching_arm] Enable/Disable the proximal joint servo callback");
-    res.success = true;
-    res.status_message = "Success";
+    res->success = true;
+    res->status_message = "Success";
     return true;
   }
 
   // Enable/Disable the distal joint servo
-  bool EnableDistalServoCallback(ff_hw_msgs::SetEnabled::Request &req,
-                                 ff_hw_msgs::SetEnabled::Response &res) {
+  bool EnableDistalServoCallback(const std::shared_ptr<ff_hw_msgs::SetEnabled::Request> req,
+                                 std::shared_ptr<ff_hw_msgs::SetEnabled::Response> res) {
     // ROS_WARN("[Perching_arm] Enable/Disable the distal joint servo callback");
-    res.success = true;
-    res.status_message = "Success";
+    res->success = true;
+    res->status_message = "Success";
     return true;
   }
 
   // Enable/Disable the gripper joint servo
-  bool EnableGripperServoCallback(ff_hw_msgs::SetEnabled::Request &req,
-                                  ff_hw_msgs::SetEnabled::Response &res) {
+  bool EnableGripperServoCallback(const std::shared_ptr<ff_hw_msgs::SetEnabled::Request> req,
+                                  std::shared_ptr<ff_hw_msgs::SetEnabled::Response> res) {
     // ROS_WARN("[Perching_arm] Enable/Disable the gripper joint servo callback");
-    res.success = true;
-    res.status_message = "Success";
+    res->success = true;
+    res->status_message = "Success";
     return true;
   }
 
   // Calibrate the gripper
-  bool CalibrateGripperCallback(ff_hw_msgs::CalibrateGripper::Request &req,
-                                ff_hw_msgs::CalibrateGripper::Response &res) {
+  bool CalibrateGripperCallback(const std::shared_ptr<ff_hw_msgs::CalibrateGripper::Request> req,
+                                std::shared_ptr<ff_hw_msgs::CalibrateGripper::Response> res) {
     // ROS_WARN("[Perching_arm] Calibrate Gripper Callback");
     SetGripperGoal(GRIPPER_OPEN);
-    res.success = true;
-    res.status_message = "Success";
+    res->success = true;
+    res->status_message = "Success";
     return true;
   }
 
  private:
-  double rate_;                   // Rate of joint state update
-  std::string bay_;               // Prefix to avoid name collisions
-  ros::Timer timer_;              // Timer for sending updates
-  ros::Publisher pub_;            // Joint state publisher
-  ros::Subscriber sub_;           // Joint goal subscriber
-  ros::ServiceServer srv_p_;      // Set max pan velocity
-  ros::ServiceServer srv_t_;      // Set max tilt velcoity
-  physics::Joint_V joints_;       // List of joints in system
-  sensor_msgs::JointState msg_;   // Joint state message
-  double grip_;                   // Joint state message
-  common::PID pid_prox_p_;        // PID : arm proximal position
-  common::PID pid_dist_p_;        // PID : arm distal position
-  common::PID pid_gl_prox_p_;     // PID : gripper left proximal position
-  common::PID pid_gl_dist_p_;     // PID : gripper left distal position
-  common::PID pid_gr_prox_p_;     // PID : gripper right proximal position
-  common::PID pid_gr_dist_p_;     // PID : gripper right distal position
-  ros::ServiceServer srv_ps_;    // Enable/Disable the proximal joint servo
-  ros::ServiceServer srv_ds_;    // Enable/Disable the distal   joint servo
-  ros::ServiceServer srv_gs_;    // Enable/Disable the gripper  joint servo
-  ros::ServiceServer srv_c_;     // Calibrate gripper
+  std::shared_ptr<rclcpp::Clock> clock_;
+  double rate_;                                                        // Rate of joint state update
+  std::string bay_;                                                    // Prefix to avoid name collisions
+  ff_util::FreeFlyerTimer timer_;                                      // Timer for sending updates
+  rclcpp::Publisher<sensor_msgs::JointState>::SharedPtr pub_;          // Joint state publisher
+  rclcpp::Subscription<sensor_msgs::JointState>::SharedPtr sub_;       // Joint goal subscriber
+  rclcpp::Service<ff_hw_msgs::SetJointMaxVelocity>::SharedPtr srv_p_;  // Set max pan velocity
+  rclcpp::Service<ff_hw_msgs::SetJointMaxVelocity>::SharedPtr srv_t_;  // Set max tilt velcoity
+  physics::Joint_V joints_;                                            // List of joints in system
+  sensor_msgs::JointState msg_;                                        // Joint state message
+  double grip_;                                                        // Joint state message
+  common::PID pid_prox_p_;                                             // PID : arm proximal position
+  common::PID pid_dist_p_;                                             // PID : arm distal position
+  common::PID pid_gl_prox_p_;                                          // PID : gripper left proximal position
+  common::PID pid_gl_dist_p_;                                          // PID : gripper left distal position
+  common::PID pid_gr_prox_p_;                                          // PID : gripper right proximal position
+  common::PID pid_gr_dist_p_;                                          // PID : gripper right distal position
+  rclcpp::Service<ff_hw_msgs::SetEnabled>::SharedPtr srv_ps_;          // Enable/Disable the proximal joint servo
+  rclcpp::Service<ff_hw_msgs::SetEnabled>::SharedPtr srv_ds_;          // Enable/Disable the distal   joint servo
+  rclcpp::Service<ff_hw_msgs::SetEnabled>::SharedPtr srv_gs_;          // Enable/Disable the gripper  joint servo
+  rclcpp::Service<ff_hw_msgs::CalibrateGripper>::SharedPtr srv_c_;     // Calibrate gripper
 };
 
 // Register this plugin with the simulator

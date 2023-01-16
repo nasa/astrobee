@@ -19,8 +19,7 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
-    <plugin name="eps_ros" filename="libgazebo_model_plugin_eps.so">>
-      <namespace>/${ns}/</namespace>
+    <plugin name="eps_ros" filename="libgazebo_model_plugin_eps.so">
       <rate>10.0</rate>                    <!-- Rate at which dock state checked  -->
       <distance_near>0.04</distance_near>  <!-- Threshold distance for magnetism  -->
       <distance_far>0.05</distance_far>    <!-- Threshold distance for magnetism  -->

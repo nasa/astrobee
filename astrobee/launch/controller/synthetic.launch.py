@@ -27,6 +27,7 @@ def generate_launch_description():
     #              address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
     if LaunchConfigurationNotEquals("bag", ""):
         return LaunchDescription([
+            DeclareLaunchArgument("robot_description"),     # Robot description
             #   <group if="$(eval arg('bag')=='')" >
             SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",
                                    value="/home/astrobee/native/config",
@@ -42,13 +43,14 @@ def generate_launch_description():
             SetEnvironmentVariable(name="ROS_IP", value=LaunchConfiguration("sim"),
                                    condition=LaunchConfigurationNotEquals("sim", "local")),
 
-            # IncludeLaunchDescription(
-            #     get_launch_file("/launch/spawn_astrobee.launch.py", "astrobee_gazebo"),
-            #     launch_arguments={
-            #         "ns"  : LaunchConfiguration("ns"),
-            #         "pose": LaunchConfiguration("pose"),
-            #     }.items(),
-            # ),
+            IncludeLaunchDescription(
+                get_launch_file("launch/spawn_astrobee.launch.py", "astrobee_gazebo"),
+                launch_arguments={
+                    "ns"  : LaunchConfiguration("ns"),
+                    "pose": LaunchConfiguration("pose"),
+                    "robot_description": LaunchConfiguration("robot_description"),
+                }.items(),
+            ),
         ])
     return LaunchDescription([
         IncludeLaunchDescription(

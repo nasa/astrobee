@@ -20,24 +20,34 @@
 #define ASTROBEE_GAZEBO_ASTROBEE_GAZEBO_H_
 
 // ROS includes
-#include <ros/ros.h>
-#include <ros/callback_queue.h>
-
-// General messages
-#include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/point_cloud2_iterator.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/CameraInfo.h>
+#include <ff_common/ff_ros.h>
+// #include <ros/callback_queue.h>
 
 // Transformation helper code
+#include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
 // FSW includes
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
+
+// General messages
+#include <geometry_msgs/msg/transform_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::TransformStamped TransformStamped;
+}  // namespace geometry_msgs
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/point_cloud2_iterator.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/image_encodings.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
+namespace sensor_msgs {
+typedef msg::PointCloud2 PointCloud2;
+typedef msg::Image Image;
+typedef msg::CameraInfo CameraInfo;
+}  // namespace sensor_msgs
 
 // Gazebo includes
+#include <gazebo_ros/node.hpp>
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
@@ -57,7 +67,7 @@
 namespace gazebo {
 
 // Convenience wrapper around a model plugin
-class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
+class FreeFlyerPlugin : public ff_util::FreeFlyerComponent {
  public:
   // Constructor
   explicit FreeFlyerPlugin(std::string const& plugin_name,
@@ -68,7 +78,7 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
 
  protected:
   // Initialize the plugin
-  void InitializePlugin(std::string const& robot_name, std::string const& plugin_name);
+  void InitializePlugin(std::string const& robot_name, std::string const& plugin_name, sdf::ElementPtr sdf);
 
   // Some plugins might want the world as the parent frame
   void SetParentFrame(std::string const& parent);
@@ -81,23 +91,23 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
     geometry_msgs::TransformStamped const* tf) = 0;
 
   // Optional callback for nodes to know when extrinsics were received
-  virtual void OnExtrinsicsReceived(ros::NodeHandle *nh) {}
+  virtual void OnExtrinsicsReceived(NodeHandle node) {}
 
   // Manage the extrinsics based on the sensor type
-  void SetupExtrinsics(const ros::TimerEvent& event);
+  void SetupExtrinsics();
 
   // Custom callback queue to avoid contention between the global callback
   // queue and gazebo update work.
-  void CallbackThread();
+  // void CallbackThread();
 
   // Child classes need access
   std::string robot_name_, plugin_name_, plugin_frame_, parent_frame_;
-  ros::NodeHandle nh_, nh_ff_, nh_ff_mt_;
+  NodeHandle nh_;
+  std::shared_ptr<tf2_ros::Buffer> buffer_;
   std::shared_ptr<tf2_ros::TransformListener> listener_;
-  ros::CallbackQueue callback_queue_;
+  // ros::CallbackQueue callback_queue_;
   std::thread thread_;
-  ros::Timer timer_;
-  tf2_ros::Buffer buffer_;
+  ff_util::FreeFlyerTimer timer_;
 };
 
 // Convenience wrapper around a model plugin
@@ -124,7 +134,7 @@ class FreeFlyerModelPlugin : public FreeFlyerPlugin, public ModelPlugin {
   physics::ModelPtr GetModel();
 
   // Callback when the model has loaded
-  virtual void LoadCallback(ros::NodeHandle *nh,
+  virtual void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) = 0;
 
   // Manage the extrinsics based on the sensor type
@@ -162,7 +172,7 @@ class FreeFlyerSensorPlugin : public FreeFlyerPlugin, public SensorPlugin {
   std::string GetRotationType();
 
   // Callback when the sensor has loaded
-  virtual void LoadCallback(ros::NodeHandle *nh,
+  virtual void LoadCallback(NodeHandle &nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) = 0;
 
   // Manage the extrinsics based on the sensor type

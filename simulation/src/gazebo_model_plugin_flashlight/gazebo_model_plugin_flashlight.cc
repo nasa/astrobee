@@ -16,26 +16,32 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
+// Gazebo includes
+#include <astrobee_gazebo/astrobee_gazebo.h>
 
 // Transformation helper code
 #include <tf2_ros/transform_listener.h>
 
 // RVIZ visualization
-#include <visualization_msgs/MarkerArray.h>
-
-// Gazebo includes
-#include <astrobee_gazebo/astrobee_gazebo.h>
+#include <visualization_msgs/msg/marker_array.hpp>
+namespace visualization_msgs {
+typedef msg::Marker Marker;
+typedef msg::MarkerArray MarkerArray;
+}  // namespace visualization_msgs
 
 // Freeflyer messages
-#include <ff_hw_msgs/SetFlashlight.h>
+#include <ff_hw_msgs/srv/set_flashlight.hpp>
+namespace ff_hw_msgs {
+typedef srv::SetFlashlight SetFlashlight;
+}  // namespace ff_hw_msgs
 
 // STL includes
 #include <string>
 #include <map>
 
 namespace gazebo {
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_perching_flashlight");
 
 class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
  public:
@@ -55,8 +61,9 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh,
+  void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
+    clock_ = nh->get_clock();
     // Get parameters from the SDF
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
@@ -77,29 +84,30 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
     pub_light_ = gz_->Advertise<msgs::Light>("~/light/modify");
 
     // For the RVIZ marker array
-    pub_rviz_ = nh->advertise<visualization_msgs::MarkerArray>(
-      TOPIC_HARDWARE_LIGHTS_RVIZ, 0, true);
+    pub_rviz_ = nh->create_publisher<visualization_msgs::MarkerArray>(
+      TOPIC_HARDWARE_LIGHTS_RVIZ, 0);
+      // TOPIC_HARDWARE_LIGHTS_RVIZ, 0, true); // TODO (@mgouveia): figure out latched topics
 
     // Rotate from the flaslight frame to the visual frame
     pose_ = ignition::math::Pose3d(0.0, 0, 0, 0.70710678, 0, -0.70710678, 0);
   }
 
   // Only send measurements when extrinsics are available
-  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
-    srv_ = nh->advertiseService("hw/" + plugin_frame_ + "/control",
-      &GazeboModelPluginFlashlight::ToggleCallback, this);
+  void OnExtrinsicsReceived(NodeHandle &nh) {
+    srv_ = nh->create_service<ff_hw_msgs::SetFlashlight>("hw/" + plugin_frame_ + "/control",
+      std::bind(&GazeboModelPluginFlashlight::ToggleCallback, this, std::placeholders::_1, std::placeholders::_2));
   }
 
 
   // Manage the extrinsics based on the sensor type
   bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf) {
     if (!tf) {
-      ROS_WARN("Flashlight extrinsics are null");
+      FF_WARN("Flashlight extrinsics are null");
       return false;
     }
 
     // Create the rviz marker
-    marker_.header.stamp = ros::Time::now();
+    marker_.header.stamp = FF_TIME_NOW();
     marker_.header.frame_id = GetFrame();
     marker_.ns = GetFrame(plugin_frame_, "_");
     marker_.id = 0;
@@ -121,7 +129,7 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
     marker_.color.b = 1.0;
     visualization_msgs::MarkerArray msg;
     msg.markers.push_back(marker_);
-    pub_rviz_.publish(msg);
+    pub_rviz_->publish(msg);
 
     // Aggregate pose
     pose_ = pose_ + ignition::math::Pose3d(
@@ -184,14 +192,14 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
   }
 
   // Called when the laser needs to be toggled
-  bool ToggleCallback(ff_hw_msgs::SetFlashlight::Request &req,
-                      ff_hw_msgs::SetFlashlight::Response &res) {
+  bool ToggleCallback(const std::shared_ptr<ff_hw_msgs::SetFlashlight::Request> req,
+                      std::shared_ptr<ff_hw_msgs::SetFlashlight::Response> res) {
     // Update the alpha channel in rviz
-    marker_.header.stamp = ros::Time::now();
-    marker_.color.a = static_cast<double>(req.brightness) / 200.0;
+    marker_.header.stamp = FF_TIME_NOW();
+    marker_.color.a = static_cast<double>(req->brightness) / 200.0;
     visualization_msgs::MarkerArray msg;
     msg.markers.push_back(marker_);
-    pub_rviz_.publish(msg);
+    pub_rviz_->publish(msg);
 
     // Update Gazebo visual
     visual_.set_transparency(1.0 - marker_.color.a);
@@ -202,8 +210,8 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
     pub_light_->Publish(light_);
 
     // Print response
-    res.success = true;
-    res.status_message = "Flashlight toggled successfully";
+    res->success = true;
+    res->status_message = "Flashlight toggled successfully";
     return true;
   }
 
@@ -220,13 +228,14 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
   }
 
  private:
+  std::shared_ptr<rclcpp::Clock> clock_;
   double rate_, width_, height_, depth_;
   transport::NodePtr gz_;
   transport::PublisherPtr pub_visual_, pub_factory_, pub_light_;
   event::ConnectionPtr update_;
-  ros::Timer timer_;
-  ros::ServiceServer srv_;
-  ros::Publisher pub_rviz_;
+  ff_util::FreeFlyerTimer timer_;
+  rclcpp::Service<ff_hw_msgs::SetFlashlight>::SharedPtr srv_;
+  rclcpp::Publisher<visualization_msgs::MarkerArray>::SharedPtr pub_rviz_;
   visualization_msgs::Marker marker_;
   msgs::Light light_;
   msgs::Visual visual_;
