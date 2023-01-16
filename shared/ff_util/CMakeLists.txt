@@ -89,14 +89,14 @@ if(BUILD_TESTING)
     test/test_ff_timer.cc
   )
   target_link_libraries(test_ff_timer ff_component)
-  add_ros_test(test/launch/test_ff_timer.test.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+  add_ros_test(test/launch/test_ff_timer.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_service
   ament_add_gtest_executable(test_ff_service
     test/test_ff_service.cc
   )
   target_link_libraries(test_ff_service ff_component)
-  add_ros_test(test/launch/test_ff_service.test.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+  add_ros_test(test/launch/test_ff_service.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_action
 # ament_add_gtest(ff_action_nominal_behaviour
