@@ -66,7 +66,7 @@ def generate_test_description():
             launch.actions.DeclareLaunchArgument(
                 name="test_binary_dir",
                 description="Binary directory of package containing test executables",
-                default_value="build/ff_timer",
+                default_value="/src/astrobee/build/ff_util",
             ),
             test_ff_timer,
             # Tell launch when to start the test

@@ -71,76 +71,72 @@ void CreateTimeoutTimer() {
 }
 
 TEST(ff_timer, DelayedStartTimer) {
-  // test_done = false;
-  // test_node = std::make_shared<rclcpp::Node>("test_ff_timer_delayed_start");
-  // ff_util::FreeFlyerTimer test_timer;
-  // test_timer.createTimer(timer_duration, &TimerCallback, test_node, false, false);
+  test_done = false;
+  test_node = std::make_shared<rclcpp::Node>("test_ff_timer_delayed_start");
+  ff_util::FreeFlyerTimer test_timer;
+  test_timer.createTimer(timer_duration, &TimerCallback, test_node, false, false);
 
-  // start_time = test_node->now();
-  // test_timer.start();
-  // CreateTimeoutTimer();
+  start_time = test_node->now();
+  test_timer.start();
+  CreateTimeoutTimer();
 
-  // while (!test_done) {
-  //   rclcpp::spin_some(test_node);
-  // }
+  while (!test_done) {
+    rclcpp::spin_some(test_node);
+  }
 
-  // timeout_timer->cancel();
-  // test_timer.stop();
-  EXPECT_TRUE(true);
+  timeout_timer->cancel();
+  test_timer.stop();
 }
 
 TEST(ff_timer, OneShotTimer) {
-  // test_done = false;
-  // oneshot = true;
-  // test_node = std::make_shared<rclcpp::Node>("test_ff_timer_one_shot");
-  // ff_util::FreeFlyerTimer oneshot_test_timer;
-  // oneshot_test_timer.createTimer(timer_duration, &OneShotTimerCallback, test_node, true);
-  // CreateTimeoutTimer();
+  test_done = false;
+  oneshot = true;
+  test_node = std::make_shared<rclcpp::Node>("test_ff_timer_one_shot");
+  ff_util::FreeFlyerTimer oneshot_test_timer;
+  oneshot_test_timer.createTimer(timer_duration, &OneShotTimerCallback, test_node, true);
+  CreateTimeoutTimer();
 
-  // while (!test_done) {
-  //   rclcpp::spin_some(test_node);
-  // }
+  while (!test_done) {
+    rclcpp::spin_some(test_node);
+  }
 
-  // timeout_timer->cancel();
-  // oneshot_test_timer.stop();
-  // oneshot = false;
-  // oneshot_fired = false;
-  EXPECT_TRUE(true);
+  timeout_timer->cancel();
+  oneshot_test_timer.stop();
+  oneshot = false;
+  oneshot_fired = false;
 }
 
 TEST(ff_timer, AutoStartTimer) {
-  // test_done = false;
-  // test_node = std::make_shared<rclcpp::Node>("test_ff_timer_auto_start");
-  // ff_util::FreeFlyerTimer test_timer;
-  // start_time = test_node->now();
-  // test_timer.createTimer(timer_duration, &TimerCallback, test_node);
-  // CreateTimeoutTimer();
+  test_done = false;
+  test_node = std::make_shared<rclcpp::Node>("test_ff_timer_auto_start");
+  ff_util::FreeFlyerTimer test_timer;
+  start_time = test_node->now();
+  test_timer.createTimer(timer_duration, &TimerCallback, test_node);
+  CreateTimeoutTimer();
 
-  // while (!test_done) {
-  //   rclcpp::spin_some(test_node);
-  // }
+  while (!test_done) {
+    rclcpp::spin_some(test_node);
+  }
 
-  // timeout_timer->cancel();
-  // test_timer.stop();
-  EXPECT_TRUE(true);
+  timeout_timer->cancel();
+  test_timer.stop();
 }
 
 TEST(ff_timer, SetPeriodTimer) {
-  // test_done = false;
-  // set_period = true;
-  // test_node = std::make_shared<rclcpp::Node>("test_ff_timer_set_period");
-  // start_time = test_node->now();
-  // set_period_timer.createTimer((timer_duration*10), &TimerCallback, test_node);
-  // CreateTimeoutTimer();
+  test_done = false;
+  set_period = true;
+  test_node = std::make_shared<rclcpp::Node>("test_ff_timer_set_period");
+  start_time = test_node->now();
+  set_period_timer.createTimer((timer_duration*10), &TimerCallback, test_node);
+  CreateTimeoutTimer();
 
-  // while (!test_done) {
-  //   rclcpp::spin_some(test_node);
-  // }
+  while (!test_done) {
+    rclcpp::spin_some(test_node);
+  }
 
-  // timeout_timer->cancel();
-  // set_period_timer.stop();
-  // set_period = false;
-  EXPECT_TRUE(true);
+  timeout_timer->cancel();
+  set_period_timer.stop();
+  set_period = false;
 }
 
 // Run all the tests that were declared with TEST()
