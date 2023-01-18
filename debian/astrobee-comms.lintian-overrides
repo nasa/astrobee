@@ -1,0 +1,17 @@
+# This will actually have no effect on lintian because of the current profile
+# settings for this vendor (ubuntu). If you want to ignore these errors
+# you must modify the following file: /usr/share/lintian/profiles/ubuntu/main.profile
+#
+# Add to the end:
+#
+# Overridable:
+#  yes
+# Tags:
+#  dir-or-file-in-opt,
+#
+# See https://bugs.launchpad.net/ubuntu/+source/lintian/+bug/824122 for more.
+
+dir-or-file-in-opt
+
+# Ignore until we figure out how to use shlibs on chroot
+missing-dependency-on-libc

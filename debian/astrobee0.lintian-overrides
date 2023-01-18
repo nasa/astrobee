@@ -1,0 +1,4 @@
+# See astrobee-comms.lintian-overrides for details
+dir-or-file-in-opt
+# Ignore until we figure out how to use shlibs on chroot
+missing-dependency-on-libc
