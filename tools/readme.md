@@ -7,10 +7,6 @@ but are not run on the robot.
 
 \subpage calibration
 
-\subpage ekfbag
-
-\subpage ekfvideo
-
 \subpage gncvisualizer
 
 \subpage imubiastester
@@ -18,12 +14,6 @@ but are not run on the robot.
 \subpage localizationanalysis 
 
 \subpage localizationrvizplugins
-
-\subpage rvizvisualizer
-
-\subpage simulator
-
-\subpage visualeyez
 
 \subpage dds_profile
 

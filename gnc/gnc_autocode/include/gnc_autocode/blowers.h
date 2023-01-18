@@ -24,6 +24,8 @@ extern "C" {
 #include <bpm_blower_2_propulsion_module.h>
 }
 
+#include <Eigen/Dense>
+
 namespace gnc_autocode {
 
 struct  GncBlowerState{

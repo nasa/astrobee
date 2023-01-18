@@ -39,6 +39,7 @@ find_package(ff_common REQUIRED)
 find_package(ff_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 ###########
 ## Build ##
@@ -55,7 +56,7 @@ include_directories(
 add_library(msg_conversions
   src/msg_conversions.cc
 )
-ament_target_dependencies(msg_conversions rclcpp geometry_msgs ff_msgs ff_common)
+ament_target_dependencies(msg_conversions rclcpp geometry_msgs tf2_geometry_msgs ff_msgs ff_common)
 ament_export_targets(msg_conversions HAS_LIBRARY_TARGET)
 
 ## Declare a C++ executable: landmark_msg_cnv

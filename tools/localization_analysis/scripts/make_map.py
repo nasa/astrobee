@@ -35,6 +35,7 @@ def make_map(
     world,
     robot_name,
     histogram_equalization,
+    max_low_movement_mean_distance,
     base_surf_map=None,
     maps_directory=None,
 ):
@@ -52,7 +53,10 @@ def make_map(
     lu.run_command_and_save_output(extract_images_command, "extract_images.txt")
 
     remove_low_movement_images_command = (
-        "rosrun sparse_mapping remove_low_movement_images " + bag_images
+        "rosrun sparse_mapping remove_low_movement_images "
+        + bag_images
+        + " -m "
+        + str(max_low_movement_mean_distance)
     )
     lu.run_command_and_save_output(
         remove_low_movement_images_command, basename + "_remove_low_movement_images.txt"
@@ -83,6 +87,7 @@ def make_map(
         build_map_command += " -histogram_equalization"
     lu.run_command_and_save_output(build_map_command, "build_map.txt")
 
+    linked_map_images = False
     if merge_with_base_map:
         merged_surf_map = map_name + ".surf.map"
         merge_map_command = (
@@ -101,7 +106,9 @@ def make_map(
         # image files to appear to be in correct relative path
         os.symlink(maps_directory, "maps")
         maps_bag_images = os.path.join("maps", bag_images_dir)
-        os.symlink(bag_images, maps_bag_images)
+        if not os.path.isdir(maps_bag_images):
+            os.symlink(bag_images, maps_bag_images)
+            linked_map_images = True
 
     # Convert SURF to BRISK map
     # Get full path to output file to avoid permission errors when running
@@ -134,7 +141,8 @@ def make_map(
 
     if merge_with_base_map:
         # Remove simlinks
-        os.unlink(maps_bag_images)
+        if linked_map_images:
+            os.unlink(maps_bag_images)
         os.unlink("maps")
 
 
@@ -159,6 +167,13 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
     parser.add_argument("-m", "--map-name", default="bag_map")
+    parser.add_argument(
+        "-l",
+        "--max-low-movement-mean-distance",
+        type=float,
+        default=0.15,
+        help="Threshold for sequential image removal, the higher the more images removed.",
+    )
     parser.add_argument(
         "-n",
         "--no-histogram_equalization",
@@ -205,6 +220,7 @@ if __name__ == "__main__":
         args.world,
         args.robot_name,
         args.histogram_equalization,
+        args.max_low_movement_mean_distance,
         base_surf_map,
         maps_directory,
     )

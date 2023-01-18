@@ -27,6 +27,7 @@
 #include <tf2_ros/transform_listener.h>
 
 // FSW includes
+#include <msg_conversions/msg_conversions.h>
 #include <ff_util/ff_names.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_action.h>
@@ -170,7 +171,7 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
           (ns.empty() ? "body" : ns + "/" + std::string(FRAME_NAME_BODY)),
           ros::Time(0));
         state.header = tfs.header;
-        state.pose = ros_transform_to_ros_pose(tfs.transform);
+        state.pose = msg_conversions::ros_transform_to_ros_pose(tfs.transform);
       } catch (tf2::TransformException &ex) {
         std::cout << "Could not query the pose of the robot: "
                   << ex.what() << std::endl;
@@ -215,20 +216,14 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
           p_check(2) = 0;
           Eigen::Vector3d p_check2(std::cos(alpha), std::sin(alpha), 0);
           // End check
-          state.pose.orientation.x = qd.x();
-          state.pose.orientation.y = qd.y();
-          state.pose.orientation.z = qd.z();
-          state.pose.orientation.w = qd.w();
+          state.pose.orientation = msg_conversions::eigen_to_ros_quat(qd);
         } else if (vec_a.size() == 4) {
           aa.angle() = vec_a[0];
           aa.axis().x() = vec_a[1];
           aa.axis().y() = vec_a[2];
           aa.axis().z() = vec_a[3];
           Eigen::Quaterniond q(aa);
-          state.pose.orientation.x = q.x();
-          state.pose.orientation.y = q.y();
-          state.pose.orientation.z = q.z();
-          state.pose.orientation.w = q.w();
+          state.pose.orientation = msg_conversions::eigen_to_ros_quat(q);
         } else if (vec_a.size() > 0) {
           std::cout << "Invalid axis-angle format passed to -att. "
             << "Four elements required. Aborting" << std::endl;

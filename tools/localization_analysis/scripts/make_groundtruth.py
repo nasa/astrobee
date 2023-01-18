@@ -66,6 +66,13 @@ if __name__ == "__main__":
         help="Prefix for generated map names. Defaults to bagfile name.",
     )
     parser.add_argument(
+        "-l",
+        "--max-low-movement-mean-distance",
+        type=float,
+        default=0.09,
+        help="Threshold for sequential image removal, the higher the more images removed.",
+    )
+    parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",
         action="store_false",
@@ -113,6 +120,7 @@ if __name__ == "__main__":
         args.world,
         args.robot_name,
         args.histogram_equalization,
+        args.max_low_movement_mean_distance,
         base_surf_map,
         maps_directory,
     )
