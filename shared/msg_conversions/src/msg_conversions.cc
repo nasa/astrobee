@@ -26,32 +26,32 @@ namespace msg_conversions {
 // Setup logging for ROS2
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("msg_conversions");
 
-Eigen::Vector3d ros_point_to_eigen_vector(const GeometryMsgs::Point& p) { return Eigen::Vector3d(p.x, p.y, p.z); }
+Eigen::Vector3d ros_point_to_eigen_vector(const geometry_msgs::Point& p) { return Eigen::Vector3d(p.x, p.y, p.z); }
 
-Eigen::Vector3d ros_to_eigen_vector(const GeometryMsgs::Vector3& v) { return Eigen::Vector3d(v.x, v.y, v.z); }
+Eigen::Vector3d ros_to_eigen_vector(const geometry_msgs::Vector3& v) { return Eigen::Vector3d(v.x, v.y, v.z); }
 
-GeometryMsgs::Vector3 eigen_to_ros_vector(const Eigen::Vector3d& v) {
-  GeometryMsgs::Vector3 n;
+geometry_msgs::Vector3 eigen_to_ros_vector(const Eigen::Vector3d& v) {
+  geometry_msgs::Vector3 n;
   n.x = v[0];
   n.y = v[1];
   n.z = v[2];
   return n;
 }
 
-GeometryMsgs::Point eigen_to_ros_point(const Eigen::Vector3d& v) {
-  GeometryMsgs::Point n;
+geometry_msgs::Point eigen_to_ros_point(const Eigen::Vector3d& v) {
+  geometry_msgs::Point n;
   n.x = v[0];
   n.y = v[1];
   n.z = v[2];
   return n;
 }
 
-Eigen::Quaterniond ros_to_eigen_quat(const GeometryMsgs::Quaternion& q) {
+Eigen::Quaterniond ros_to_eigen_quat(const geometry_msgs::Quaternion& q) {
   return Eigen::Quaterniond(q.w, q.x, q.y, q.z);
 }
 
-GeometryMsgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond& q) {
-  GeometryMsgs::Quaternion out;
+geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond& q) {
+  geometry_msgs::Quaternion out;
   out.x = q.x();
   out.y = q.y();
   out.z = q.z();
@@ -59,8 +59,8 @@ GeometryMsgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond& q) {
   return out;
 }
 
-GeometryMsgs::Quaternion eigen_to_ros_quat(const Eigen::Vector4d& v) {
-  GeometryMsgs::Quaternion out;
+geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Vector4d& v) {
+  geometry_msgs::Quaternion out;
   out.x = v.x();
   out.y = v.y();
   out.z = v.z();
@@ -68,24 +68,24 @@ GeometryMsgs::Quaternion eigen_to_ros_quat(const Eigen::Vector4d& v) {
   return out;
 }
 
-GeometryMsgs::Vector3 array_to_ros_vector(float* array) {
-  GeometryMsgs::Vector3 v;
+geometry_msgs::Vector3 array_to_ros_vector(float* array) {
+  geometry_msgs::Vector3 v;
   v.x = array[0];
   v.y = array[1];
   v.z = array[2];
   return v;
 }
 
-GeometryMsgs::Point array_to_ros_point(float* array) {
-  GeometryMsgs::Point v;
+geometry_msgs::Point array_to_ros_point(float* array) {
+  geometry_msgs::Point v;
   v.x = array[0];
   v.y = array[1];
   v.z = array[2];
   return v;
 }
 
-GeometryMsgs::Quaternion array_to_ros_quat(float* array) {
-  GeometryMsgs::Quaternion q;
+geometry_msgs::Quaternion array_to_ros_quat(float* array) {
+  geometry_msgs::Quaternion q;
   q.x = array[0];
   q.y = array[1];
   q.z = array[2];
@@ -93,19 +93,19 @@ GeometryMsgs::Quaternion array_to_ros_quat(float* array) {
   return q;
 }
 
-void ros_to_array_vector(const GeometryMsgs::Vector3& v, float* array) {
+void ros_to_array_vector(const geometry_msgs::Vector3& v, float* array) {
   array[0] = v.x;
   array[1] = v.y;
   array[2] = v.z;
 }
 
-void ros_to_array_point(const GeometryMsgs::Point& p, float* array) {
+void ros_to_array_point(const geometry_msgs::Point& p, float* array) {
   array[0] = p.x;
   array[1] = p.y;
   array[2] = p.z;
 }
 
-void ros_to_array_quat(const GeometryMsgs::Quaternion& q, float* array) {
+void ros_to_array_quat(const geometry_msgs::Quaternion& q, float* array) {
   array[0] = q.x;
   array[1] = q.y;
   array[2] = q.z;
@@ -170,8 +170,8 @@ bool config_read_transform(config_reader::ConfigReader* config, const char* name
   return success;
 }
 
-bool config_read_transform(config_reader::ConfigReader* config, const char* name, GeometryMsgs::Vector3* vec,
-                           GeometryMsgs::Quaternion* quat) {
+bool config_read_transform(config_reader::ConfigReader* config, const char* name, geometry_msgs::Vector3* vec,
+                           geometry_msgs::Quaternion* quat) {
   config_reader::ConfigReader::Table t(config, name);
   config_reader::ConfigReader::Table v(&t, "trans");
   config_reader::ConfigReader::Table r(&t, "rot");
@@ -188,9 +188,9 @@ bool config_read_transform(config_reader::ConfigReader* config, const char* name
   return true;
 }
 
-bool config_read_transform(config_reader::ConfigReader* config, const char* name, GeometryMsgs::Transform* transform) {
-  GeometryMsgs::Vector3 trans;
-  GeometryMsgs::Quaternion rot;
+bool config_read_transform(config_reader::ConfigReader* config, const char* name, geometry_msgs::Transform* transform) {
+  geometry_msgs::Vector3 trans;
+  geometry_msgs::Quaternion rot;
   if (!config_read_transform(config, name, &trans, &rot)) return false;
   transform->translation = trans;
   transform->rotation = rot;
@@ -212,7 +212,7 @@ bool config_read_vector(config_reader::ConfigReader::Table* t, Eigen::Vector3d* 
   return success;
 }
 
-bool config_read_quat(config_reader::ConfigReader::Table* t, GeometryMsgs::Quaternion* quat) {
+bool config_read_quat(config_reader::ConfigReader::Table* t, geometry_msgs::Quaternion* quat) {
   bool success = t->GetReal("x", &quat->x);
   success = success && t->GetReal("y", &quat->y);
   success = success && t->GetReal("z", &quat->z);
@@ -220,14 +220,14 @@ bool config_read_quat(config_reader::ConfigReader::Table* t, GeometryMsgs::Quate
   return success;
 }
 
-bool config_read_vector(config_reader::ConfigReader::Table* t, GeometryMsgs::Vector3* vec) {
+bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Vector3* vec) {
   bool success = t->GetReal(1, &vec->x);
   success = success && t->GetReal(2, &vec->y);
   success = success && t->GetReal(3, &vec->z);
   return success;
 }
 
-bool config_read_vector(config_reader::ConfigReader::Table* t, GeometryMsgs::Point* point) {
+bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Point* point) {
   bool success = t->GetReal(1, &point->x);
   success = success && t->GetReal(2, &point->y);
   success = success && t->GetReal(3, &point->z);
@@ -243,7 +243,7 @@ bool SingleBoolTrue(const std::initializer_list<bool>& bools) {
   return num_true_bools == 1;
 }
 
-Eigen::Affine3d ros_pose_to_eigen_transform(const GeometryMsgs::Pose& p) {
+Eigen::Affine3d ros_pose_to_eigen_transform(const geometry_msgs::Pose& p) {
   Eigen::Affine3d transform;
   transform.translation() = Eigen::Vector3d(p.position.x, p.position.y, p.position.z);
   transform.linear() =
@@ -251,7 +251,7 @@ Eigen::Affine3d ros_pose_to_eigen_transform(const GeometryMsgs::Pose& p) {
   return transform;
 }
 
-Eigen::Affine3d ros_to_eigen_transform(const GeometryMsgs::Transform& p) {
+Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform& p) {
   Eigen::Affine3d transform;
   transform.translation() = Eigen::Vector3d(p.translation.x, p.translation.y, p.translation.z);
   transform.linear() = Eigen::Quaterniond(p.rotation.w, p.rotation.x, p.rotation.y, p.rotation.z).toRotationMatrix();
@@ -354,12 +354,12 @@ std::string LoadString(config_reader::ConfigReader& config, const std::string& c
   return val;
 }
 
-void EigenPoseToMsg(const Eigen::Isometry3d& pose, GeometryMsgs::Pose& msg_pose) {
+void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose) {
   RotationToMsg(Eigen::Quaterniond(pose.linear()), msg_pose.orientation);
   VectorToMsg(pose.translation(), msg_pose.position);
 }
 
-void EigenPoseToMsg(const Eigen::Isometry3d& pose, GeometryMsgs::Transform& msg_transform) {
+void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform) {
   RotationToMsg(Eigen::Quaterniond(pose.linear()), msg_transform.rotation);
   VectorToMsg(pose.translation(), msg_transform.translation);
 }
@@ -375,12 +375,12 @@ Eigen::Vector3d CovDiagToVariances(const float* const cov_diag) {
 }
 
 void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
-                              GeometryMsgs::PoseWithCovarianceStamped& pose_cov_msg) {
+                              geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg) {
   EigenPoseCovarianceToMsg(pose, covariance, pose_cov_msg.pose);
 }
 
 void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance,
-                              GeometryMsgs::PoseWithCovariance& pose_cov_msg) {
+                              geometry_msgs::PoseWithCovariance& pose_cov_msg) {
   EigenPoseToMsg(pose, pose_cov_msg.pose);
   EigenCovarianceToMsg(covariance, pose_cov_msg.covariance);
 }
