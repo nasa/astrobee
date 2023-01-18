@@ -168,64 +168,19 @@ PMCSim::PMCSim(void) : b1(true), b2(false), omega_(0, 0, 0), voltage_(0.0f) {
     impeller_cmd_[i] = 0;
     servo_cmd_[i] << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
   }
-  gnc_.Initialize();
 }
-
-void TestTwoVectors(const char* name, const Eigen::VectorXf new_array,
-                    const float old_array[], float tolerance) {
-  for (int i = 0; i < new_array.rows(); i++) {
-    float difference = old_array[i] - new_array[i];
-    float perc_difference = difference / old_array[i];
-    if (fabs(difference) > tolerance) {
-      std::string p1, p2;
-      for (int j = 0; j < new_array.rows(); j++) {
-        p1 += " " + std::to_string(new_array[j]);
-        p2 += " " + std::to_string(old_array[j]);
-      }
-      ROS_ERROR("%s New: %s, Old: %s", name, p1.c_str(), p2.c_str());
-      exit(0);
-      return;
-    }
-  }
-}
-void TestTwoFloats(const char* name, float new_float, float old_float, float tolerance) {
-  if (fabs(new_float - old_float) > tolerance) {
-      ROS_ERROR("%s New: %g, Old: %g", name, new_float, old_float);
-      exit(0);
-  }
-}
-
 
 void PMCSim::Step(void) {
   b1.Step(impeller_cmd_[0], servo_cmd_[0], omega_, voltage_);
   b2.Step(impeller_cmd_[1], servo_cmd_[1], omega_, voltage_);
-
-  for (int i = 0; i < 2; i++) {
-    gnc_.states_[i].impeller_cmd = impeller_cmd_[i];
-    for (int j = 0; j < 6; j++)
-      gnc_.states_[i].servo_cmd[j] = servo_cmd_[i][j];
-  }
-  gnc_.Step();
-
-  Blower b[2] = {b1, b2};
-  for (int i = 0; i < 2; i++) {
-    TestTwoVectors("force", b[i].Force(), gnc_.states_[i].force_B, 0.001);
-    TestTwoVectors("torque", b[i].Torque(), gnc_.states_[i].torque_B, 0.001);
-    TestTwoVectors("servo current", b[i].ServoCurrent(), gnc_.states_[i].servo_current, 0.001);
-    TestTwoFloats("current", b[i].ImpellerCurrent(), gnc_.states_[i].impeller_current, 0.001);
-    TestTwoVectors("theta", b[i].NozzlesTheta(), gnc_.states_[i].nozzle_theta, 0.001);
-    TestTwoFloats("motor speed", b[i].MotorSpeed(), gnc_.states_[i].motor_speed, 0.001);
-  }
 }
 
 void PMCSim::SetAngularVelocity(float x, float y, float z) {
   omega_ << x, y, z;
-  gnc_.SetAngularVelocity(x, y, z);
 }
 
 void PMCSim::SetBatteryVoltage(float voltage) {
   voltage_ = voltage;
-  gnc_.SetBatteryVoltage(voltage);
 }
 
 }  // namespace pmc
