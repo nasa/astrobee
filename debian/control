@@ -13,7 +13,7 @@ Section: libdevel
 Architecture: any
 Depends: astrobee0 (= ${binary:Version}), ${misc:Depends}
   libgoogle-glog-dev, libgtest-dev, libgflags-dev,
-  libace-dev, libqt4-dev,
+  libace-dev, libqt4-dev | qtbase5-dev,
   protobuf-compiler, libv4l-dev, libeigen3-dev, libluajit-5.1-dev,
   libjsoncpp-dev, libtinyxml-dev, libyaml-cpp-dev, libusb-1.0-0-dev,
   libalvar-dev, libdbow2-dev, libgtsam-dev, libopenmvg-dev, libroyale-dev, libceres-dev, rti-dev,
@@ -31,42 +31,43 @@ Description: Astrobee flight software configuration.
 Package: astrobee-comms
 Section: comm
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}
   astrobee-config (>= ${binary:Version}),
   rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
-  ros-kinetic-ros-base, ros-kinetic-cpp-common,
-  ros-kinetic-common-msgs, ros-kinetic-nodelet, ros-kinetic-image-transport,
-  ros-kinetic-compressed-image-transport, ros-kinetic-tf2,
-  ros-kinetic-tf2-geometry-msgs, ros-kinetic-tf2-msgs, ros-kinetic-tf2-ros,
-  ros-kinetic-tf2-sensor-msgs,
+  ros-${ros-distro}-ros-base, ros-${ros-distro}-cpp-common,
+  ros-${ros-distro}-common-msgs, ros-${ros-distro}-nodelet, ros-${ros-distro}-image-transport,
+  ros-${ros-distro}-compressed-image-transport, ros-${ros-distro}-tf2,
+  ros-${ros-distro}-tf2-geometry-msgs, ros-${ros-distro}-tf2-msgs, ros-${ros-distro}-tf2-ros,
+  ros-${ros-distro}-tf2-sensor-msgs,
   libgoogle-glog0v5
-Description: The communications for Astrobee flight software.
+Description: Astrobee flight software communications.
  The communications portion of the Astrobee flight software.
 
 Package: astrobee0
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}
+  ${ros-python},
   astrobee-config (>= ${binary:Version}),
   astrobee-comms (>= ${binary:Version}),
   libalvar2 (>=2.0), libdbow21 (>=0.1), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
   libceres1 (>=1.0), rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
   libdecomputil0 (>=0.1), libjps3d0 (>=0.1),
   libluajit-5.1-2,
-  ros-kinetic-ros-base, ros-kinetic-cpp-common, ros-kinetic-rosbag,
-  ros-kinetic-common-msgs, ros-kinetic-nodelet, ros-kinetic-pluginlib,
-  ros-kinetic-actionlib, ros-kinetic-image-transport,
-  ros-kinetic-compressed-image-transport, ros-kinetic-tf2,
-  ros-kinetic-tf2-eigen, ros-kinetic-tf2-geometry-msgs,
-  ros-kinetic-tf2-kdl, ros-kinetic-tf2-msgs, ros-kinetic-tf2-ros,
-  ros-kinetic-tf2-sensor-msgs, ros-kinetic-message-filters,
-  ros-kinetic-robot-state-publisher, ros-kinetic-rosconsole, ros-kinetic-roscpp,
-  ros-kinetic-rosgraph, ros-kinetic-rosgraph-msgs,
-  ros-kinetic-roslaunch, ros-kinetic-rosmaster, ros-kinetic-rosmsg,
-  ros-kinetic-rosnode, ros-kinetic-rosout, ros-kinetic-rosparam,
-  ros-kinetic-rosservice, ros-kinetic-rostopic, ros-kinetic-roswtf,
-  ros-kinetic-std-srvs, ros-kinetic-topic-tools, ros-kinetic-xmlrpcpp,
-  ros-kinetic-opencv3,
-  libjsoncpp1, libprotoc9v5, libgoogle-glog0v5,
-  libtinyxml2.6.2v5, libyaml-cpp0.5v5
+  ros-${ros-distro}-ros-base, ros-${ros-distro}-cpp-common, ros-${ros-distro}-rosbag,
+  ros-${ros-distro}-common-msgs, ros-${ros-distro}-nodelet, ros-${ros-distro}-pluginlib,
+  ros-${ros-distro}-actionlib, ros-${ros-distro}-image-transport,
+  ros-${ros-distro}-compressed-image-transport, ros-${ros-distro}-tf2,
+  ros-${ros-distro}-tf2-eigen, ros-${ros-distro}-tf2-geometry-msgs,
+  ros-${ros-distro}-tf2-kdl, ros-${ros-distro}-tf2-msgs, ros-${ros-distro}-tf2-ros,
+  ros-${ros-distro}-tf2-sensor-msgs, ros-${ros-distro}-message-filters,
+  ros-${ros-distro}-robot-state-publisher, ros-${ros-distro}-rosconsole, ros-${ros-distro}-roscpp,
+  ros-${ros-distro}-rosgraph, ros-${ros-distro}-rosgraph-msgs,
+  ros-${ros-distro}-roslaunch, ros-${ros-distro}-rosmaster, ros-${ros-distro}-rosmsg,
+  ros-${ros-distro}-rosnode, ros-${ros-distro}-rosout, ros-${ros-distro}-rosparam,
+  ros-${ros-distro}-rosservice, ros-${ros-distro}-rostopic, ros-${ros-distro}-roswtf,
+  ros-${ros-distro}-std-srvs, ros-${ros-distro}-topic-tools, ros-${ros-distro}-xmlrpcpp,
+  ros-kinetic-opencv3 | libopencv3.3.1,
+  libjsoncpp1, libprotoc9v5 | libprotoc17, libgoogle-glog0v5,
+  libtinyxml2.6.2v5, libyaml-cpp0.5v5 | libyaml-cpp0.6
 Description: Astrobee flight software.
  The Astrobee flight software.

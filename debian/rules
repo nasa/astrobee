@@ -3,61 +3,48 @@
 # output every command that modifies files on the build system.
 #export DH_VERBOSE = 1
 
-
-# see FEATURE AREAS in dpkg-buildflags(1)
-#export DEB_BUILD_OPTIONS = parallel=`nproc`
-#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-
-# see ENVIRONMENT in dpkg-buildflags(1)
-# package maintainers to append CFLAGS
-#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
-# package maintainers to append LDFLAGS
-#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-export EXTRA_CMAKE_OPTS
-export LIB_SEARCH_OPTIONS
-
 ifeq ($(DEB_HOST_ARCH),armhf)
-#   export EXTRA_CMAKE_OPTS=-DCMAKE_TOOLCHAIN_FILE=../scripts/build/ubuntu_cross.cmake -DUSE_CTC=true
-	# stripping doesn't work with the cross compile
-  #export DEB_BUILD_OPTIONS += nostrip
-	export LIB_SEARCH_OPTIONS = -l$(ARMHF_CHROOT_DIR)/opt/rti/ndds/lib/armv6vfphLinux3.xgcc4.7.2:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib:$(ARMHF_CHROOT_DIR)/usr/lib:$(ARMHF_CHROOT_DIR)/usr/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib/arm-linux-gnueabihf -- --ignore-missing-info --admindir=$(ARMHF_CHROOT_DIR)/var/lib/dpkg 
-	export DEB_MAINT_CC_SET = $(ARMHF_TOOLCHAIN)/bin/arm-linux-gnueabihf-gcc
-	export DEB_MAINT_CXX_SET = $(ARMHF_TOOLCHAIN)/bin/arm-linux-gnueabihf-g++
+	export FSW_CONFIG_FLAGS = -a -w debian -n debian -p src/debian/tmp
 else
-	export LIB_SEARCH_OPTIONS = -l/opt/ros/kinetic/lib:/opt/ros/kinetic/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/gazebo-7/plugins
+	export FSW_CONFIG_FLAGS = -l -w debian_native -n debian_native -p src/debian/tmp/opt/astrobee
+	# dpkg-buildpackage and catkin were both adding flags apparently, ignore dpkg's
+	export DEB_CXXFLAGS_MAINT_SET
 endif
 
-# skip build for config files
-build-indep: ;
-	mkdir -p build
-
 %:
-	dh $@ --buildsystem=cmake --builddirectory=build/ --parallel
+	# We are using catkin now... not exactly supported by debhelper.
+	# Set buildsytem to none to avoid debhelper default
+	dh $@ --buildsystem=none
 
-# we always need release, otherwise it is too slow
-override_dh_auto_configure:
+# only configure for architecture dependent, skip for 'all' (astrobee-config)
+override_dh_auto_configure-arch:
 	# configure the build
-	cd .. && \
-	./src/scripts/configure.sh -a -w debian -p src/debian/tmp -n debian
-override_dh_auto_build: ;
+	cd .. && src/scripts/configure.sh  $(FSW_CONFIG_FLAGS)
+	# Make sure we install
+	catkin config --install
 
-# the install command is already invoked in the build
-override_dh_auto_install:
-	cd .. && \
-	catkin build
+override_dh_auto_build:
 
-override_dh_install:
+# build and install for architecture dependent only
+override_dh_auto_install-arch:
+	cd .. && catkin build
+
+# override only for arch dependent, for astrobee-config let it use default
+override_dh_install-arch:
+	# Clean pycache before copying directories
+	pyclean debian || py3clean debian
+	# Move DDS stuff out of debian/tmp (astrobee-comms.files)
+	# so we don't intall it again to astrobee0
 	dh_movefiles
+	# Install the rest of the files as defined in <package>.install
 	dh_install
 
-override_dh_auto_test: ;
+override_dh_auto_test:
 
-#override_dh_auto_install-idep:
-#	@
-#
-#override_dh_auto_install:
-#	dh_auto_install
-#
+# dpkg-shlibdebs and dpkq-query have issues finding dependencies in our chroot
+# Skip this step since it was not populating {shlibs:Depends} anyway.
 override_dh_shlibdeps:
-	dh_shlibdeps $(LIB_SEARCH_OPTIONS)
 
+override_dh_gencontrol:
+	# Generate control file with the correct ros distribution and python for dependencies
+	dh_gencontrol -- -Vros-distro=$(ROS_DISTRO) -Vros-python=python$(ROS_PYTHON_VERSION)
