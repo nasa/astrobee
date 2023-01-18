@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -80,25 +80,29 @@ ament_lint_auto_find_test_dependencies()
 ##########
 
 if(BUILD_TESTING)
+
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ros_testing REQUIRED)
 
   # ff_timer
-  ament_add_gtest(test_ff_timer
+  ament_add_gtest_executable(test_ff_timer
     test/test_ff_timer.cc
   )
   target_link_libraries(test_ff_timer ff_component)
+  add_ros_test(test/launch/test_ff_timer.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_service
-  ament_add_gtest(test_ff_service
+  ament_add_gtest_executable(test_ff_service
     test/test_ff_service.cc
   )
   target_link_libraries(test_ff_service ff_component)
+  add_ros_test(test/launch/test_ff_service.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_action
- # ament_add_gtest(ff_action_nominal_behaviour
- #   test/ff_action_nominal_behaviour.test
- #   test/ff_action_nominal_behaviour.cc)
- # target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
+# ament_add_gtest(ff_action_nominal_behaviour
+#   test/ff_action_nominal_behaviour.test
+#   test/ff_action_nominal_behaviour.cc)
+# target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
 
   # ff_action
 #  ament_add_gtest(ff_action_nominal_behaviour

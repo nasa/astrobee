@@ -17,12 +17,12 @@
  */
 
 // Test service
-#include <ff_msgs/srv/set_rate.hpp>
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_service.h>
 #include <ff_common/ff_ros.h>
 #include <gtest/gtest.h>
 
+#include <ff_msgs/srv/set_rate.hpp>
 #include <string>
 
 bool test_done = false;
@@ -133,5 +133,7 @@ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   // google::InitGoogleLogging(argv[0]);
   rclcpp::init(argc, argv);
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+  rclcpp::shutdown();
+  return result;
 }

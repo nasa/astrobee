@@ -43,6 +43,12 @@
   <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>config_reader</exec_depend>
   <exec_depend>msg_conversions</exec_depend>
+  <exec_depend>python3-pytest</exec_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ros_testing</test_depend>
+  <test_depend>launch</test_depend>
+
   <export>
     <build_type condition="$ROS_VERSION == 1">catkin</build_type>
     <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>

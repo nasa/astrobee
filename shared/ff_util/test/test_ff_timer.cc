@@ -144,5 +144,7 @@ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   // google::InitGoogleLogging(argv[0]);
   rclcpp::init(argc, argv);
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+  rclcpp::shutdown();
+  return result;
 }

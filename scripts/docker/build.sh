@@ -76,11 +76,9 @@ os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 build_astrobee_base="false"
 build_astrobee="false"
 build_test_astrobee="false"
-rolling_base="false"
 rolling="false"
 push_astrobee_base="false"
 push_astrobee="false"
-push_rolling_base="false"
 push_rolling="false"
 
 remote="false"
@@ -274,11 +272,8 @@ if [ "$astrobee_quick" = "true" ]; then
     build astrobee_quick "${revision}-" "quick-"
 fi
 
-if [ "$rolling_base" = "true" ]; then
-    build ros2/ros2_rolling_base "${revision}-" "rolling_base-"
-fi
-
 if [ "$rolling" = "true" ]; then
+    build ros2/ros2_base "${revision}-" "rolling_base-"
     build ros2/ros2_rolling_deb "${revision}-" "rolling-"
 fi
 
@@ -294,11 +289,8 @@ if [ "$push_astrobee" = "true" ]; then
     push astrobee "${revision}-" ""
 fi
 
-if [ "$push_rolling_base" = "true" ]; then
-    push rolling_base "${revision}-" "rolling_base-"
-fi
-
 if [ "$push_rolling" = "true" ]; then
+    push rolling_base "${revision}-" "rolling_base-"
     push rolling "${revision}-" "rolling-"
 fi
 
