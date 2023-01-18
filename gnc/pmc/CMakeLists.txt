@@ -16,39 +16,28 @@
 # under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(fam)
+project(pmc)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
-add_definitions(-DROS1)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
-  nodelet
-  ff_msgs
-  ff_hw_msgs
-  ff_util
   config_reader
-  gnc_autocode
-  pmc
 )
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
+  INCLUDE_DIRS
+    include
   LIBRARIES
-    fam
+    pmc
   CATKIN_DEPENDS
     roscpp
-    nodelet
-    ff_msgs
-    ff_hw_msgs
-    ff_util
     config_reader
-    gnc_autocode
-    pmc
 )
 
 ###########
@@ -63,12 +52,13 @@ include_directories(
 )
 
 # Declare C++ libraries
-add_library(fam
+add_library(pmc
+  src/pmc_sim.cc
   src/fam.cc
-  src/fam_nodelet.cc
+  src/shared.cc
 )
-add_dependencies(fam ${catkin_EXPORTED_TARGETS})
-target_link_libraries(fam ${catkin_LIBRARIES})
+add_dependencies(pmc ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -81,14 +71,9 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
-
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
-
-

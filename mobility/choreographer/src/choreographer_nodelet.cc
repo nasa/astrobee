@@ -23,6 +23,7 @@
 #include <tf2_ros/transform_listener.h>
 
 // FSW libraries
+#include <msg_conversions/msg_conversions.h>
 #include <ff_util/ff_nodelet.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_service.h>
@@ -858,10 +859,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
         std::string(FRAME_NAME_WORLD), child_frame, ros::Time(0));
       pose.header = tf.header;
-      pose.pose.position.x = tf.transform.translation.x;
-      pose.pose.position.y = tf.transform.translation.y;
-      pose.pose.position.z = tf.transform.translation.z;
-      pose.pose.orientation = tf.transform.rotation;
+      pose.pose = msg_conversions::ros_transform_to_ros_pose(tf.transform);
     }
     catch (tf2::TransformException &ex) {
       NODELET_WARN_STREAM("Transform failed" << ex.what());

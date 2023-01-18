@@ -20,6 +20,8 @@
 
 #include <assert.h>
 
+#include <ros/console.h>
+
 namespace gnc_autocode {
 
 GncBlowersAutocode::GncBlowersAutocode(void) {
@@ -81,6 +83,5 @@ void GncBlowersAutocode::SetBatteryVoltage(float voltage) {
   states_[0].battery_voltage = voltage;
   states_[1].battery_voltage = voltage;
 }
-
 }  // namespace gnc_autocode
 
