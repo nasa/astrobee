@@ -4,10 +4,8 @@
 #
 # Add to the end:
 #
-# Overridable:
-#  yes
-# Tags:
-#  dir-or-file-in-opt,
+# Overridable: yes
+# Tags: dir-or-file-in-opt,
 #
 # See https://bugs.launchpad.net/ubuntu/+source/lintian/+bug/824122 for more.
 

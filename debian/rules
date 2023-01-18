@@ -12,18 +12,16 @@ else
 endif
 
 %:
-	# We are using catkin now... not exactly supported by debhelper.
-	# Set buildsytem to none to avoid debhelper default
-	dh $@ --buildsystem=none
+	# We are using catkin now, but debhelper does not exactly support it
+	# Since debhelper xenial does not support 'none', set cmake instead
+	dh $@ --buildsystem=cmake
 
-# only configure for architecture dependent, skip for 'all' (astrobee-config)
+# only configure for architecture dependent
 override_dh_auto_configure-arch:
 	# configure the build
 	cd .. && src/scripts/configure.sh  $(FSW_CONFIG_FLAGS)
 	# Make sure we install
 	catkin config --install
-
-override_dh_auto_build:
 
 # build and install for architecture dependent only
 override_dh_auto_install-arch:
@@ -39,8 +37,6 @@ override_dh_install-arch:
 	# Install the rest of the files as defined in <package>.install
 	dh_install
 
-override_dh_auto_test:
-
 # dpkg-shlibdebs and dpkq-query have issues finding dependencies in our chroot
 # Skip this step since it was not populating {shlibs:Depends} anyway.
 override_dh_shlibdeps:
@@ -48,3 +44,9 @@ override_dh_shlibdeps:
 override_dh_gencontrol:
 	# Generate control file with the correct ros distribution and python for dependencies
 	dh_gencontrol -- -Vros-distro=$(ROS_DISTRO) -Vros-python=python$(ROS_PYTHON_VERSION)
+
+# skip for 'arch independent' (astrobee-config)
+override_dh_auto_configure-indep override_dh_auto_install-indep:
+
+# skip for all
+override_dh_auto_build override_dh_auto_test:
