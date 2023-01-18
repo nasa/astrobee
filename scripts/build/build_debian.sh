@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIST=$(. /etc/os-release && echo $UBUNTU_CODENAME)
 
 if [ -n "$(git status --porcelain)" ]; then 
   echo "You should not build Debians for a dirty source tree!"
@@ -8,12 +9,19 @@ if [ -n "$(git status --porcelain)" ]; then
   exit -1
 fi
 
-EXTRA_FLAGS="-b -a armhf"
+EXTRA_FLAGS="-b -aarmhf"
+
+# In some cases we may want to build for amd64 (e.g. astrobee-comms for users)
+if [[ $* == *--amd64* ]]; then
+  EXTRA_FLAGS="-b -aamd64"
+fi
+
 if [[ $* == *--config* ]]; then
   EXTRA_FLAGS="-A"
 fi
 
 pushd $DIR/../..
-export CMAKE_TOOLCHAIN_FILE=${DIR}/ubuntu_cross.cmake
-DEB_BUILD_OPTIONS="parallel=20" debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -e CMAKE_TOOLCHAIN_FILE -e CMAKE_PREFIX_PATH -us -uc $EXTRA_FLAGS 
+DEBEMAIL="astrobee-fsw@nx.arc.nasa.gov" DEBFULLNAME="Astrobee Flight Software" dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
+debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -e CMAKE_TOOLCHAIN_FILE -e CMAKE_PREFIX_PATH -e ROS_DISTRO -e ROS_PYTHON_VERSION -us -uc $EXTRA_FLAGS
+git checkout debian/changelog
 popd > /dev/null
