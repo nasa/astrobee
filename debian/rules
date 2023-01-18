@@ -11,6 +11,11 @@ else
 	export DEB_CXXFLAGS_MAINT_SET
 endif
 
+export FSW_PYTHON_DEP = python
+ifeq ($(ROS_PYTHON_VERSION),3)
+	export FSW_PYTHON_DEP = python3
+endif
+
 %:
 	# We are using catkin now, but debhelper does not exactly support it
 	# Since debhelper xenial does not support 'none', set cmake instead
@@ -43,7 +48,7 @@ override_dh_shlibdeps:
 
 override_dh_gencontrol:
 	# Generate control file with the correct ros distribution and python for dependencies
-	dh_gencontrol -- -Vros-distro=$(ROS_DISTRO) -Vros-python=python$(ROS_PYTHON_VERSION)
+	dh_gencontrol -- -Vros-distro=$(ROS_DISTRO) -Vros-python=$(FSW_PYTHON_DEP)
 
 # skip for 'arch independent' (astrobee-config)
 override_dh_auto_configure-indep override_dh_auto_install-indep:
