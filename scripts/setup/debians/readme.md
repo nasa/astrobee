@@ -86,14 +86,3 @@ flag if desired.
 Inspect generated files:
 
     ls $B/debbuild_${D}/data/debians
-
-## Build patched Ubuntu 20 debians
-
-Some Ubuntu packages (fastboot, boringssl, cmake) had to be recompiled 
-for the armhf platform we use.
-
-Same as all previous packages, these are already in our repo and only
-need to be recompiled if more changes are needed.
-
-To recompile these debians you may execute the scripts under `ubuntu20_patches`
-from the same chroot you just used. See the readme for more info.
