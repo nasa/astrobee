@@ -12,8 +12,8 @@ fi
 EXTRA_FLAGS="-b -aarmhf"
 
 # In some cases we may want to build for amd64 (e.g. astrobee-comms for users)
-if [[ $* == *--amd64* ]]; then
-  EXTRA_FLAGS="-b -aamd64"
+if [[ $* == *--native* ]]; then
+  EXTRA_FLAGS="-b"
 fi
 
 if [[ $* == *--config* ]]; then
