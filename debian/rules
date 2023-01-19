@@ -16,6 +16,9 @@ ifeq ($(ROS_PYTHON_VERSION),3)
 	export FSW_PYTHON_DEP = python3
 endif
 
+# This is a Makefile variable that will only be used by native since armhf uses --extend
+CMAKE_PREFIX_PATH = $(CURDIR)/cmake:/opt/ros/$(ROS_DISTRO)
+
 %:
 	# We are using catkin now, but debhelper does not exactly support it
 	# Since debhelper xenial does not support 'none', set cmake instead
@@ -30,7 +33,8 @@ override_dh_auto_configure-arch:
 
 # build and install for architecture dependent only
 override_dh_auto_install-arch:
-	cd .. && catkin build
+	# Make sure we only extend what we need
+	cd .. && CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) catkin build
 
 # override only for arch dependent, for astrobee-config let it use default
 override_dh_install-arch:
