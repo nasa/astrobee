@@ -20,11 +20,10 @@
 #define FF_UTIL_FF_ACTION_H_
 
 // ROS includes
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // Actionlib includes
-#include <actionlib/server/simple_action_server.h>
-#include <actionlib/client/simple_action_client.h>
+#include <rclcpp_action/rclcpp_action.hpp>
 
 // C++ includes
 #include <functional>
@@ -127,7 +126,7 @@ class FreeFlyerActionServer {
   }
 
  protected:
-  std::shared_ptr < actionlib::SimpleActionServer < ActionSpec > > sas_;
+  rclcpp_action::Server<ActionSpec>::SharedPtr sas_;
   GoalCallbackType cb_goal_;
   PreemptCallbackType cb_preempt_;
   CancelCallbackType cb_cancel_;
@@ -170,7 +169,7 @@ class FreeFlyerActionClient {
 
  public:
   // Templated action definition
-  ACTION_DEFINITION(ActionSpec);
+/*  ACTION_DEFINITION(ActionSpec);
 
   // Callback types
   typedef std::function < void (FeedbackConstPtr const&) > FeedbackCallbackType;
@@ -414,7 +413,7 @@ class FreeFlyerActionClient {
   ros::Timer timer_response_delay_;
   // Save response
   FreeFlyerActionState::Enum state_response_;
-  ResultConstPtr result_;
+  ResultConstPtr result_;*/
 };
 
 }  // namespace ff_util
