@@ -27,7 +27,6 @@ set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 find_package(Eigen3 REQUIRED)
 
-add_definitions(-DROS2)
 # Find amend and libraries
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -49,7 +48,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${config_reader_INCLUDE_DIRS}  # ROS2
+  ${config_reader_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
