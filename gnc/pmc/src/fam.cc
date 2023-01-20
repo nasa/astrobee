@@ -16,6 +16,8 @@
  * under the License.
  */
 
+#include <ff_common/ff_ros.h>
+
 #include "pmc/fam.h"
 #include "pmc/shared.h"
 

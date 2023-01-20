@@ -21,8 +21,6 @@
 
 #include <Eigen/Dense>
 
-#include <ff_common/ff_ros.h>
-
 namespace pmc {
 
 struct FamInput {
