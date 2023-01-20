@@ -24,6 +24,10 @@
 #ifndef FF_COMMON_FF_ROS_H_
 #define FF_COMMON_FF_ROS_H_
 
+// This is the ROS2 astrobee branch. Check out the other branch for ros1.
+// We keep the definitions for both versions to reducing merging hassle.
+#define ROS2
+
 #if ROS1
 #include <ros/ros.h>
 

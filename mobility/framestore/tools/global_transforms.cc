@@ -26,13 +26,12 @@
 #include <config_reader/config_reader.h>
 #include <msg_conversions/msg_conversions.h>
 
-#ifdef ROS2
 namespace geometry_msgs {
 typedef msg::TransformStamped TransformStamped;
 }  // namespace geometry_msgs
 
 FF_DEFINE_LOGGER("framestore");
-#endif
+
 // Main entry point of application
 int main(int argc, char **argv) {
   ROS_CREATE_NODE("global_transforms");
