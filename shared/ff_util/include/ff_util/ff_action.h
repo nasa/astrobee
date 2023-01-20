@@ -48,15 +48,13 @@ class FreeFlyerActionState {
   };
 };
 
-// Wrapper around the simple action server that allows initialization outside the constructor
-template < class ActionSpec >
+// Wrapper around the action server that allows initialization outside the constructor
+template <typename ActionType>
 class FreeFlyerActionServer {
  public:
-  // Templated action definition
-  ACTION_DEFINITION(ActionSpec);
-
+  using GoalHandle = rclcpp_action::ServerGoalHandle<ActionType>;
   // Callback types
-  typedef std::function < void (GoalConstPtr const&) > GoalCallbackType;
+  typedef std::function< void (std::shared_ptr<const typename ActionType::Goal>)> GoalCallbackType;
   typedef std::function < void (void) > PreemptCallbackType;
   typedef std::function < void (void) > CancelCallbackType;
 
@@ -72,16 +70,16 @@ class FreeFlyerActionServer {
   void SetCancelCallback(CancelCallbackType cb_cancel)    { cb_cancel_ = cb_cancel;   }
 
   // Start the server
-  void Create(ros::NodeHandle *nh, std::string const& topic) {
-    sas_ = std::shared_ptr < actionlib::SimpleActionServer < ActionSpec > >(
-      new actionlib::SimpleActionServer < ActionSpec > (*nh, topic, false));
-    sas_->registerGoalCallback(boost::bind(&FreeFlyerActionServer::GoalCallback, this));
-    sas_->registerPreemptCallback(boost::bind(&FreeFlyerActionServer::PreemptCallback, this));
-    sas_->start();
+  void Create(NodeHandle node, std::string const& topic) {
+    sas_ = rclcpp_action::create_server<ActionType>(node,
+      topic,
+      std::bind(&FreeFlyerActionServer::GoalCallback, this, _1, _2),
+      std::bind(&FreeFlyerActionServer::CancelCallback, this, _1),
+      std::bind(&FreeFlyerActionServer::AcceptedCallback, this, _1));
   }
 
   // Send incremental feedback for the current goal
-  void SendFeedback(Feedback const& feedback) {
+/*  void SendFeedback(Feedback const& feedback) {
     if (!sas_) return;
     sas_->publishFeedback(feedback);
   }
@@ -101,32 +99,44 @@ class FreeFlyerActionServer {
     default:
       break;
     }
-  }
+  }*/
 
  protected:
+  // A new action has been called. We have to care of a special case where the goal is
+  // cancelled / preempted between arrival and the time this callback is called.
+  rclcpp_action::GoalResponse GoalCallback(
+                                const rclcpp_action::GoalUUID & uuid,
+                                std::shared_ptr<const ActionType::goal> goal) {
+    // TODO Fill me!               
+    /*boost::shared_ptr<const Goal> goal = sas_->acceptNewGoal();
+    if (cb_goal_)
+      cb_goal_(goal);*/
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
+
+  void AcceptedCallback(const std::shared_ptr<GoalHandle> goal_handle) {
+    // TODO Fill me!
+  }
+
   // In the case where one goal preempts another, the preempt callback called right before
   // the new goal arrives. In the freeflyer project we differentiate between cancels() and
   // preemptions. This intercepts the preempt call and decides what to do.
-  void PreemptCallback() {
-    if (sas_->isNewGoalAvailable()) {
+  rclcpp_action::CancelResponse CancelCallback(
+                              const std::shared_ptr<GoalHandle> goal_handle) {
+    // TODO Fill me!
+    /*if (sas_->isNewGoalAvailable()) {
       if (cb_preempt_)
         cb_preempt_();
     } else {
       if (cb_cancel_)
         cb_cancel_();
-    }
-  }
-
-  // A new action has been called. We have to care of a special case where the goal is
-  // cancelled / preempted between arrival and the time this callback is called.
-  void GoalCallback() {
-    boost::shared_ptr<const Goal> goal = sas_->acceptNewGoal();
-    if (cb_goal_)
-      cb_goal_(goal);
+    }*/
+    return rclcpp_action::CancelResponse::ACCEPT;
   }
 
  protected:
-  rclcpp_action::Server<ActionSpec>::SharedPtr sas_;
+  typename rclcpp_action::Server<ActionType>::SharedPtr sas_;
+  typename GoalHandle::SharedPtr sgh_;
   GoalCallbackType cb_goal_;
   PreemptCallbackType cb_preempt_;
   CancelCallbackType cb_cancel_;

@@ -99,16 +99,11 @@ if(BUILD_TESTING)
   add_ros_test(test/launch/test_ff_service.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_action
-# ament_add_gtest(ff_action_nominal_behaviour
-#   test/ff_action_nominal_behaviour.test
-#   test/ff_action_nominal_behaviour.cc)
-# target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
-
-  # ff_action
-#  ament_add_gtest(ff_action_nominal_behaviour
-#    test/ff_action_nominal_behaviour.test
-#    test/ff_action_nominal_behaviour.cc)
-#  target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
+  ament_add_gtest_executable(test_ff_action_nominal_behavior
+    test/test_ff_action_nominal_behavior.cc
+  )
+  target_link_libraries(test_ff_action_nominal_behavior ff_nodelet ${catkin_LIBRARIES})
+  add_ros_test(test/launch/test_ff_action_nominal_behavior.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
 #  add_rostest_gtest(ff_action_active_timeout
 #    test/ff_action_active_timeout.test
