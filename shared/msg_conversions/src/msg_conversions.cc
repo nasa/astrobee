@@ -18,13 +18,12 @@
 
 #include <msg_conversions/msg_conversions.h>
 
-#include "rclcpp/rclcpp.hpp"
-#define FF_FATAL_STREAM(...)   RCLCPP_FATAL_STREAM(LOGGER, __VA_ARGS__)
+#include <ff_common/ff_ros.h>
 
 namespace msg_conversions {
 
 // Setup logging for ROS2
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("msg_conversions");
+FF_DEFINE_LOGGER("msg_conversions");
 
 Eigen::Vector3d ros_point_to_eigen_vector(const geometry_msgs::Point& p) { return Eigen::Vector3d(p.x, p.y, p.z); }
 

@@ -31,7 +31,7 @@ namespace geometry_msgs {
 typedef msg::TransformStamped TransformStamped;
 }  // namespace geometry_msgs
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("framestore");
+FF_DEFINE_LOGGER("framestore");
 #endif
 // Main entry point of application
 int main(int argc, char **argv) {

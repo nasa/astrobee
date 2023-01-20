@@ -32,7 +32,7 @@
 #include <ff_msgs/FlightMode.h>
 
 #else
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_flight");
+FF_DEFINE_LOGGER("ff_flight");
 // General information
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/inertia_stamped.hpp>
