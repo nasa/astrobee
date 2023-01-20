@@ -15,9 +15,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-// ROS includes
-#include <ros/ros.h>
+/**
+ * A plugin that does nothing but publish a standard heartbeat.
+ * 
+ * Can create multiple with plugin_name tag.
+ */
 
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
@@ -27,17 +29,20 @@
 
 namespace gazebo {
 
-class GazeboModelPluginLlpDiskMonitor : public FreeFlyerModelPlugin {
- public:
-  GazeboModelPluginLlpDiskMonitor() : FreeFlyerModelPlugin(
-    "llp_disk_monitor", "llp_disk_monitor", true) {}
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_empty");
 
-  ~GazeboModelPluginLlpDiskMonitor() {}
+class GazeboModelPluginHeartbeat : public FreeFlyerModelPlugin {
+ public:
+  GazeboModelPluginHeartbeat() : FreeFlyerModelPlugin(
+    "", "", true) {}
+
+  ~GazeboModelPluginHeartbeat() {}
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh,
-    physics::ModelPtr model, sdf::ElementPtr sdf) {}
+  void LoadCallback(NodeHandle& nh,
+    physics::ModelPtr model, sdf::ElementPtr sdf) {
+    }
 
   // Manage the extrinsics based on the sensor type
   bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf) {
@@ -46,6 +51,6 @@ class GazeboModelPluginLlpDiskMonitor : public FreeFlyerModelPlugin {
 };
 
 // Register this plugin with the simulator
-GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginLlpDiskMonitor)
+GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginHeartbeat)
 
 }   // namespace gazebo

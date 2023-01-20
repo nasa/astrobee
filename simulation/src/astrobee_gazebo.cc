@@ -54,7 +54,7 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::strin
   // Get nodehandle based on the model.
   nh_ = gazebo_ros::Node::Get(sdf);
   // Initialize ROS node for Gazebo
-  FreeFlyerComponent::FreeFlyerComponentGazeboInit(nh_);
+  FreeFlyerComponent::FreeFlyerComponentGazeboInit(nh_, plugin_name);
 
   // Make sure the ROS node for Gazebo has already been initialized
   // if (!ros::isInitialized())
