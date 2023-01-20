@@ -42,7 +42,6 @@ class GazeboModelPluginHeartbeat : public FreeFlyerModelPlugin {
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle& nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
-
     }
 
   // Manage the extrinsics based on the sensor type
