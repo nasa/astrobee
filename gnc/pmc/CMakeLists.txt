@@ -15,30 +15,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(pmc)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  config_reader
-)
+# Build for ROS2
+add_definitions(-DROS2)
 
-# System dependencies are found with CMake's conventions
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+
+find_package(ff_common REQUIRED)
+find_package(config_reader REQUIRED)
+
 find_package(Eigen3 REQUIRED)
-
-catkin_package(
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    pmc
-  CATKIN_DEPENDS
-    roscpp
-    config_reader
-)
 
 ###########
 ## Build ##
@@ -47,8 +43,8 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
+  ${config_reader_INCLUDE_DIRS}  # ROS2
 )
 
 # Declare C++ libraries
@@ -57,23 +53,28 @@ add_library(pmc
   src/fam.cc
   src/shared.cc
 )
-add_dependencies(pmc ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pmc ${catkin_LIBRARIES})
+ament_target_dependencies(pmc rclcpp ff_common config_reader)
+ament_export_targets(pmc HAS_LIBRARY_TARGET)
 
 #############
 ## Install ##
 #############
 
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+ament_export_include_directories(include ${config_reader_INCLUDE_DIRS})
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  EXPORT pmc
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+ament_package()

@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# State of the access control node. Loosely based off of AccessControlState.idl 
+# State of the access control node. Loosely based off of AccessControlState.idl
 # from RAPID.
 
 # Header with timestamp

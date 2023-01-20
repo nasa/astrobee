@@ -36,6 +36,7 @@ find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 find_package(ff_hw_msgs REQUIRED)
+find_package(pmc REQUIRED)
 
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -77,6 +78,7 @@ find_package(JsonCpp REQUIRED)
 include_directories(
   include
   ${config_reader_INCLUDE_DIRS}
+  ${pmc_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
@@ -118,12 +120,12 @@ ament_target_dependencies(gazebo_model_plugin_truth rclcpp tf2 tf2_ros gazebo_de
 ament_export_libraries(gazebo_model_plugin_truth)
 
 # Create a model plugin for the propulsion system
-# add_library(gazebo_model_plugin_pmc SHARED
-#   src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
-# )
-# target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo)
-# ament_target_dependencies(gazebo_model_plugin_pmc rclcpp ff_msgs ff_hw_msgs gazebo_dev gazebo_ros)
-# ament_export_libraries(gazebo_model_plugin_pmc)
+add_library(gazebo_model_plugin_pmc SHARED
+  src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
+)
+target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_pmc rclcpp ff_msgs ff_hw_msgs gazebo_dev gazebo_ros pmc)
+ament_export_libraries(gazebo_model_plugin_pmc)
 
 # Create a model plugin for the perching arm
 add_library(gazebo_model_plugin_perching_arm SHARED
@@ -319,7 +321,7 @@ install(TARGETS
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
   gazebo_model_plugin_truth
-  # gazebo_model_plugin_pmc
+  gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
   gazebo_world_plugin_speed

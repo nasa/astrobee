@@ -31,7 +31,7 @@
   <build_depend>ff_hw_msgs</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>ff_util</build_depend>
-  <build_depend condition="$ROS_VERSION == 1">gnc_autocode</build_depend>
+  <build_depend>pmc</build_depend>
   <build_depend condition="$ROS_VERSION == 1">camera</build_depend>
   <build_depend>cv_bridge</build_depend>
   <build_depend>jsonloader</build_depend>
@@ -46,7 +46,7 @@
   <exec_depend>ff_hw_msgs</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>ff_util</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 1">gnc_autocode</exec_depend>
+  <exec_depend>pmc</exec_depend>
   <exec_depend condition="$ROS_VERSION == 1">camera</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>jsonloader</exec_depend>

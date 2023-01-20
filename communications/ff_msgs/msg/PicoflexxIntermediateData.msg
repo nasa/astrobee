@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.      #
 #
-# Message for encoding Picoflexx imtermediate data 
+# Message for encoding Picoflexx imtermediate data
 
 std_msgs/Header header
 uint32[] frequency

@@ -16,25 +16,11 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // FSW shared libraries
 #include <config_reader/config_reader.h>
 
-// FreeFlyer messages
-#include <ff_hw_msgs/PmcCommand.h>
-#include <ff_hw_msgs/PmcGoal.h>
-#include <ff_hw_msgs/PmcTelemetry.h>
-#include <ff_hw_msgs/PmcState.h>
-
 // Finite state machine for tracking dock state
 #include <ff_util/ff_fsm.h>
-
-// FSW messahes
-#include <ff_msgs/SetBool.h>
-#include <ff_msgs/FamCommand.h>
-#include <ff_msgs/SetFloat.h>
 
 // Autocode inclide
 #include <pmc/pmc_sim.h>
@@ -42,11 +28,39 @@
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
+// FreeFlyer messages
+#include <ff_hw_msgs/msg/pmc_command.hpp>
+#include <ff_hw_msgs/msg/pmc_goal.hpp>
+#include <ff_hw_msgs/msg/pmc_telemetry.hpp>
+#include <ff_hw_msgs/msg/pmc_state.hpp>
+namespace ff_hw_msgs {
+typedef msg::PmcCommand PmcCommand;
+typedef msg::PmcGoal PmcGoal;
+typedef msg::PmcTelemetry PmcTelemetry;
+typedef msg::PmcState PmcState;
+typedef msg::PmcStatus PmcStatus;
+}  // ff_hw_msgs
+
+// FSW messahes
+#include <ff_msgs/srv/set_bool.hpp>
+#include <ff_msgs/msg/fam_command.hpp>
+#include <ff_msgs/srv/set_float.hpp>
+namespace ff_msgs {
+typedef srv::SetBool SetBool;
+typedef msg::FamCommand FamCommand;
+typedef srv::SetFloat SetFloat;
+}  // ff_msgs
+namespace geometry_msgs {
+typedef msg::Wrench Wrench;
+}  // geometry_msgs
+
 // STL includes
 #include <string>
 #include <map>
 
 namespace gazebo {
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_pmc");
 
 using FSM = ff_util::FSM;
 
@@ -119,7 +133,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   void StateCallback(FSM::State const& state, FSM::FSM::Event const& event) {
     ff_hw_msgs::PmcState msg;
     msg.header.frame_id = frame_id_;
-    msg.header.stamp = ros::Time::now();
+    msg.header.stamp = FF_TIME_NOW();
     msg.states.resize(NUMBER_OF_PMCS);
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
       switch (state) {
@@ -143,7 +157,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
         break;
       }
     }
-    pub_state_.publish(msg);
+    pub_state_->publish(msg);
   }
 
   // Destructor
@@ -157,11 +171,12 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh,
+  void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
+    clock_ = nh->get_clock();
     config_params.AddFile("hw/pmc_actuator.config");
     if (!GetParams()) {
-      ROS_ERROR("PMC Actuator: Failed to get parameters.");
+      FF_ERROR("PMC Actuator: Failed to get parameters.");
       AssertFault(ff_util::INITIALIZATION_FAILED,
                   "Could not get PMC parameters");
     }
@@ -179,36 +194,38 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     null_command_.goals.push_back(null_goal);
 
     // Set timeout
-    watchdog_period_ = ros::Duration(20.0/control_rate_hz_);
+    watchdog_period_ = 20.0/control_rate_hz_;
 
     // Telemetry publisher
-    pub_telemetry_ = nh->advertise<ff_hw_msgs::PmcTelemetry>(
+    pub_telemetry_ = nh->create_publisher<ff_hw_msgs::PmcTelemetry>(
       TOPIC_HARDWARE_PMC_TELEMETRY, 1);
 
     // State publisher as a latched topic
-    pub_state_ = nh->advertise<ff_hw_msgs::PmcState>(
-      TOPIC_HARDWARE_PMC_STATE, 1, true);
+    pub_state_ = nh->create_publisher<ff_hw_msgs::PmcState>(
+      TOPIC_HARDWARE_PMC_STATE, 1);
+    // TOPIC_HARDWARE_PMC_STATE, 1, true);  //TODO(@mgouveia): latched topic
 
     // Subscibe to PMC commands
-    sub_command_ = nh->subscribe(TOPIC_HARDWARE_PMC_COMMAND, 5,
-      &GazeboModelPluginPmc::CommandCallback, this);
+    sub_command_ = nh->create_subscription<ff_hw_msgs::PmcCommand>(TOPIC_HARDWARE_PMC_COMMAND, 5,
+      std::bind(&GazeboModelPluginPmc::CommandCallback, this, std::placeholders::_1));
 
     // Now register to be called back every time FAM has new wrench
     if (bypass_blower_model_)
-      sub_fam_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5,
-        &GazeboModelPluginPmc::FamCallback, this);
+      sub_fam_ = nh->create_subscription<ff_msgs::FamCommand>(TOPIC_GNC_CTL_COMMAND, 5,
+        std::bind(&GazeboModelPluginPmc::FamCallback, this, std::placeholders::_1));
 
     // Create a watchdog timer to ensure the PMC commands are set
-    timer_watchdog_ = nh->createTimer(watchdog_period_,
-      &GazeboModelPluginPmc::WatchdogCallback, this, false, true);
+    timer_watchdog_.createTimer(watchdog_period_,
+      std::bind(&GazeboModelPluginPmc::WatchdogCallback, this), nh_, false, true);
 
     // Update PMC watchdog timer timeout
-    update_timeout_srv_ = nh->advertiseService(
-      SERVICE_HARDWARE_PMC_TIMEOUT, &GazeboModelPluginPmc::IdlingTimeoutService, this);
+    update_timeout_srv_ = nh->create_service<ff_msgs::SetFloat>(
+      SERVICE_HARDWARE_PMC_TIMEOUT,
+      std::bind(&GazeboModelPluginPmc::IdlingTimeoutService, this, std::placeholders::_1, std::placeholders::_2));
 
     // Create a watchdog timer to ensure the PMC commands are set
-    timer_command_ = nh->createTimer(ros::Duration(1.0/control_rate_hz_),
-      &GazeboModelPluginPmc::CommandTimerCallback, this, false, true);
+    timer_command_.createTimer(1.0/control_rate_hz_,
+      std::bind(&GazeboModelPluginPmc::CommandTimerCallback, this), nh_, false, true);
 
     // Called before each iteration of simulated world update
     update_ = event::Events::ConnectWorldUpdateBegin(
@@ -219,32 +236,32 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   bool GetParams() {
     // Read all config files
     if (!config_params.ReadFiles()) {
-      ROS_FATAL("PMC Actuator: Unable to load lua parameters!");
+      FF_FATAL("PMC Actuator: Unable to load lua parameters!");
       return false;
     }
     // get frame id
     if (!config_params.GetStr("frame_id", &frame_id_)) {
-      ROS_FATAL("PMC Actuator: frame id not specified!");
+      FF_FATAL("PMC Actuator: frame id not specified!");
       return false;
     }
     // get control rate
     if (!config_params.GetPosReal("control_rate_hz", &control_rate_hz_)) {
-      ROS_FATAL("PMC Actuator: control rate not specified!");
+      FF_FATAL("PMC Actuator: control rate not specified!");
       return false;
     }
     // get values used to calculate state
     if (!config_params.GetReal("state_command_scale",
       &state_command_scale_)) {
-      ROS_FATAL("PMC Actuator: state_command_scale not specified!");
+      FF_FATAL("PMC Actuator: state_command_scale not specified!");
       return false;
     }
     if (!config_params.GetReal("state_telemetry_scale",
       &state_telemetry_scale_)) {
-      ROS_FATAL("PMC Actuator: state_telemetry_scale not specified!");
+      FF_FATAL("PMC Actuator: state_telemetry_scale not specified!");
       return false;
     }
     if (!config_params.GetPosReal("max_timeout", &max_timeout_)) {
-      ROS_FATAL("PMC Actuator: minimum control rate not specified!");
+      FF_FATAL("PMC Actuator: minimum control rate not specified!");
       return false;
     }
     // TODO(asymingt) This is being phased out.
@@ -285,13 +302,13 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // If this is *ever* called, it means a FAM command was not received - note
   // that we are using a single-threaded spinner so at most one callback is
   // processed at any time which means that we wont have race conditions
-  void WatchdogCallback(ros::TimerEvent const& event) {
+  void WatchdogCallback() {
     // Immediately reset the watchdog timer
     timer_watchdog_.stop();
     // ros::getGlobalCallbackQueue()->clear();
     timer_watchdog_.start();
     // Update the null command time
-    null_command_.header.stamp = ros::Time::now();
+    null_command_.header.stamp = FF_TIME_NOW();
     // set the blower speed to zero in case we do not receive messages from FAM
     SendCommand(null_command_);
   }
@@ -322,7 +339,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   }
 
   // Must be called at 62.5Hz to satisfy the needs of GNC
-  void CommandTimerCallback(ros::TimerEvent const& event) {
+  void CommandTimerCallback() {
     // Step the blower model
     #if GAZEBO_MAJOR_VERSION > 7
     pmc_.SetAngularVelocity(
@@ -364,7 +381,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Send the commands to the PMCs
   void PublishTelemetry() {
     telemetry_vector_.header.frame_id = GetFrame();
-    telemetry_vector_.header.stamp = ros::Time::now();
+    telemetry_vector_.header.stamp = FF_TIME_NOW();
     telemetry_vector_.statuses.clear();
     // Check if we need to change state based on the motor speed
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
@@ -382,7 +399,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       static double crps, trps;
       crps = state_command_scale_ * pmc_.ImpellerCmd(i);
       trps = pmc_.MotorSpeed(i);   // Comes in rads/sec!
-      // ROS_INFO_STREAM("PMC delta C " << crps << ":: T " << trps);
+      // FF_INFO_STREAM("PMC delta C " << crps << ":: T " << trps);
       if (fabs(crps - trps) < state_tol_rads_per_sec_) {
         switch (i) {
         case 0: fsm_.Update(PMC1_READY); break;
@@ -392,35 +409,35 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       }
     }
     // Publish telemetry
-    pub_telemetry_.publish(telemetry_vector_);
+    pub_telemetry_->publish(telemetry_vector_);
   }
 
   // Enable or disable the PMC
-  bool EnableService(ff_msgs::SetBool::Request &req,
-                     ff_msgs::SetBool::Response &res) {  // NOLINT
-    pmc_enabled_ = req.enable;
+  bool EnableService(const std::shared_ptr<ff_msgs::SetBool::Request> req,
+                     std::shared_ptr<ff_msgs::SetBool::Response> res) {  // NOLINT
+    pmc_enabled_ = req->enable;
     if (pmc_enabled_) {
-      ROS_INFO("PMC Enabled.");
+      FF_INFO("PMC Enabled.");
     } else {
-      ROS_INFO("PMC Disabled.");
+      FF_INFO("PMC Disabled.");
     }
-    res.success = true;
+    res->success = true;
     return true;
   }
 
   // Update Minimum Control Frequency (and cutoff time)
-  bool IdlingTimeoutService(ff_msgs::SetFloat::Request &req,
-                      ff_msgs::SetFloat::Response &res) {  // NOLINT
-    double new_timeout = req.data;
+  bool IdlingTimeoutService(const std::shared_ptr<ff_msgs::SetFloat::Request> req,
+                      std::shared_ptr<ff_msgs::SetFloat::Response> res) {  // NOLINT
+    double new_timeout = req->data;
     // Check if the new rate is within the safe and default limits
     if (new_timeout <= max_timeout_ && new_timeout >= (20.0/control_rate_hz_)) {
-      watchdog_period_ = ros::Duration(new_timeout);
+      watchdog_period_ = new_timeout;
       timer_.setPeriod(watchdog_period_);
-      ROS_INFO("PMC idling timeout updated.");
-      res.success = true;
+      FF_INFO("PMC idling timeout updated.");
+      res->success = true;
     } else {
-      ROS_INFO("Selected timeout is not within the safe timeout bounds.");
-      res.success = false;
+      FF_INFO("Selected timeout is not within the safe timeout bounds.");
+      res->success = false;
     }
     return true;
   }
@@ -446,35 +463,37 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   }
 
  private:
-  ff_util::FSM fsm_;                                // Finite state machine
-  bool ready_[NUMBER_OF_PMCS];                      // Ready flags
-  config_reader::ConfigReader config_params;        // LUA configuration reader
-  ros::Publisher pub_telemetry_, pub_state_;        // State/telemetry pubs
-  ros::Subscriber sub_command_;                     // Command subscriber
-  ros::Subscriber sub_fam_;                         // Fam command subscriber
-  ros::ServiceServer update_timeout_srv_;
-  ros::Timer timer_command_, timer_watchdog_;       // Timers
-  ros::Duration watchdog_period_;
+  std::shared_ptr<rclcpp::Clock> clock_;
+  ff_util::FSM fsm_;                                                     // Finite state machine
+  bool ready_[NUMBER_OF_PMCS];                                           // Ready flags
+  config_reader::ConfigReader config_params;                             // LUA configuration reader
+  rclcpp::Publisher<ff_hw_msgs::PmcTelemetry>::SharedPtr pub_telemetry_;
+  rclcpp::Publisher<ff_hw_msgs::PmcState>::SharedPtr pub_state_;         // State/telemetry pubs
+  rclcpp::Subscription<ff_hw_msgs::PmcCommand>::SharedPtr sub_command_;  // Command subscriber
+  rclcpp::Subscription<ff_msgs::FamCommand>::SharedPtr sub_fam_;         // Fam command subscriber
+  rclcpp::Service<ff_msgs::SetFloat>::SharedPtr update_timeout_srv_;
+  ff_util::FreeFlyerTimer timer_command_, timer_watchdog_;               // Timers
+  double watchdog_period_;
   #if GAZEBO_MAJOR_VERSION > 7
-  ignition::math::Vector3d force_;                  // Current body-frame force
-  ignition::math::Vector3d torque_;                 // Current body-frame torque
+  ignition::math::Vector3d force_;                                       // Current body-frame force
+  ignition::math::Vector3d torque_;                                      // Current body-frame torque
   #else
-  math::Vector3 force_;                             // Current body-frame force
-  math::Vector3 torque_;                            // Current body-frame torque
+  math::Vector3 force_;                                                  // Current body-frame force
+  math::Vector3 torque_;                                                 // Current body-frame torque
   #endif
-  geometry_msgs::Wrench wrench_;                    // Used when bypassing PMC
+  geometry_msgs::Wrench wrench_;                                         // Used when bypassing PMC
   pmc::PMCSim pmc_;
-  ff_hw_msgs::PmcCommand null_command_;             // PMC null command
-  event::ConnectionPtr update_;                     // Update event from gazeo
-  ff_hw_msgs::PmcTelemetry telemetry_vector_;       // Telemetry
-  bool pmc_enabled_;                                // Is the PMC enabled?
-  bool bypass_blower_model_;                        // Bypass the blower model
-  double state_command_scale_;                      // Command scale
-  double state_telemetry_scale_;                    // Telemetry scale
-  double state_tol_rads_per_sec_;                   // RPM tolerance
-  double control_rate_hz_;                          // Control rate
-  double max_timeout_;                              // Maximum timeout allowed for PMC
-  std::string frame_id_;                            // Frame
+  ff_hw_msgs::PmcCommand null_command_;                                  // PMC null command
+  event::ConnectionPtr update_;                                          // Update event from gazeo
+  ff_hw_msgs::PmcTelemetry telemetry_vector_;                            // Telemetry
+  bool pmc_enabled_;                                                     // Is the PMC enabled?
+  bool bypass_blower_model_;                                             // Bypass the blower model
+  double state_command_scale_;                                           // Command scale
+  double state_telemetry_scale_;                                         // Telemetry scale
+  double state_tol_rads_per_sec_;                                        // RPM tolerance
+  double control_rate_hz_;                                               // Control rate
+  double max_timeout_;                                                   // Maximum timeout allowed for PMC
+  std::string frame_id_;                                                 // Frame
 };
 
 // Register this plugin with the simulator
