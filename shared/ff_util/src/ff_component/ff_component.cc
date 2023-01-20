@@ -41,9 +41,10 @@ FreeFlyerComponent::FreeFlyerComponent(std::string const& name, bool autostart_h
   initialized_(false),
   node_name_(name) {
 }
-void FreeFlyerComponent::FreeFlyerComponentGazeboInit(rclcpp::Node::SharedPtr node) {
+void FreeFlyerComponent::FreeFlyerComponentGazeboInit(rclcpp::Node::SharedPtr node,
+                                                      std::string const& plugin_name) {
   node_ = node;
-  Setup(node_name_);
+  Setup(plugin_name);
 }
 
 FreeFlyerComponent::~FreeFlyerComponent() {

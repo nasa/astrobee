@@ -150,41 +150,13 @@ ament_export_libraries(gazebo_model_plugin_flashlight)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# Create a model plugin for the LLP CPU mem monitor
-# add_library(gazebo_model_plugin_llp_cpu_mem_monitor
-#   src/gazebo_model_plugin_llp_cpu_mem_monitor/gazebo_model_plugin_llp_cpu_mem_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_llp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_llp_cpu_mem_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a model plugin for the LLP disk monitor
-# add_library(gazebo_model_plugin_llp_disk_monitor
-#   src/gazebo_model_plugin_llp_disk_monitor/gazebo_model_plugin_llp_disk_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_llp_disk_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_llp_disk_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a model plugin for the MLP CPU mem monitor
-# add_library(gazebo_model_plugin_mlp_cpu_mem_monitor
-#   src/gazebo_model_plugin_mlp_cpu_mem_monitor/gazebo_model_plugin_mlp_cpu_mem_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_mlp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_mlp_cpu_mem_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a model plugin for the MLP disk monitor
-# add_library(gazebo_model_plugin_mlp_disk_monitor
-#   src/gazebo_model_plugin_mlp_disk_monitor/gazebo_model_plugin_mlp_disk_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_mlp_disk_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_mlp_disk_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin to publish heartbeats
+add_library(gazebo_model_plugin_heartbeat SHARED
+  src/gazebo_model_plugin_heartbeat/gazebo_model_plugin_heartbeat.cc
+)
+target_link_libraries(gazebo_model_plugin_heartbeat astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_heartbeat rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_model_plugin_heartbeat)
 
 # Create a model plugin for the speed camera
 # add_library(gazebo_model_plugin_speed_cam
@@ -318,6 +290,7 @@ install(TARGETS
   astrobee_gazebo
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
+  gazebo_model_plugin_heartbeat
   gazebo_model_plugin_truth
   # gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
