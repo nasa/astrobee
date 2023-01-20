@@ -47,7 +47,7 @@ typedef srv::CalibrateGripper CalibrateGripper;
 
 namespace gazebo {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_perching_arm");
+FF_DEFINE_LOGGER("gazebo_model_plugin_perching_arm");
 
 /* The perching arm has two DYNAMIXEL XM 430 intelligent motors. They
    run an internal PID control loop to achieve velocity or position.

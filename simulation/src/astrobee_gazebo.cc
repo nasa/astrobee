@@ -25,7 +25,7 @@
 
 namespace gazebo {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo");
+FF_DEFINE_LOGGER("gazebo");
 
 // Constructor
 FreeFlyerPlugin::FreeFlyerPlugin(std::string const& plugin_name,

@@ -20,7 +20,7 @@
 
 namespace ff_util {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("ff_nodelet");
+FF_DEFINE_LOGGER("ff_nodelet");
 
 namespace fs = boost::filesystem;
 

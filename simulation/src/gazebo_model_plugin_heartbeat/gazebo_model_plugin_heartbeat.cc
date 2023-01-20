@@ -29,7 +29,7 @@
 
 namespace gazebo {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_empty");
+FF_DEFINE_LOGGER("gazebo_model_plugin_empty");
 
 class GazeboModelPluginHeartbeat : public FreeFlyerModelPlugin {
  public:

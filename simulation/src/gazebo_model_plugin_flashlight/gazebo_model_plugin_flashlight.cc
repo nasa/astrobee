@@ -41,7 +41,7 @@ typedef srv::SetFlashlight SetFlashlight;
 
 namespace gazebo {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_perching_flashlight");
+FF_DEFINE_LOGGER("gazebo_model_plugin_perching_flashlight");
 
 class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
  public:

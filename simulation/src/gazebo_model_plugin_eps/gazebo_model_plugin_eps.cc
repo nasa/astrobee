@@ -81,7 +81,7 @@ typedef msg::Header Header;
 
 namespace gazebo {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_eps");
+FF_DEFINE_LOGGER("gazebo_model_plugin_eps");
 
 using FSM = ff_util::FSM;
 
