@@ -60,7 +60,7 @@ typedef msg::Wrench Wrench;
 
 namespace gazebo {
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_model_plugin_pmc");
+FF_DEFINE_LOGGER("gazebo_model_plugin_pmc");
 
 using FSM = ff_util::FSM;
 

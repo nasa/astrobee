@@ -20,7 +20,7 @@
 #include "pmc/shared.h"
 
 namespace pmc {
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("fam");
+FF_DEFINE_LOGGER("fam");
 
 const float Fam::IMPELLER_SPEEDS[3] = {2000 * 2 * M_PI / 60, 2500 * 2 * M_PI / 60, 2800 * 2 * M_PI / 60};
 const float Fam::THRUST_LOOKUP_CDP[316] =

@@ -74,8 +74,6 @@ find_package(JsonCpp REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
-  ${config_reader_INCLUDE_DIRS}
-  ${pmc_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
