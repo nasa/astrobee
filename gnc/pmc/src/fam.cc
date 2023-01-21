@@ -16,11 +16,13 @@
  * under the License.
  */
 
-#include <ros/console.h>
+#include <ff_common/ff_ros.h>
+
 #include "pmc/fam.h"
 #include "pmc/shared.h"
 
 namespace pmc {
+FF_DEFINE_LOGGER("fam");
 
 const float Fam::IMPELLER_SPEEDS[3] = {2000 * 2 * M_PI / 60, 2500 * 2 * M_PI / 60, 2800 * 2 * M_PI / 60};
 const float Fam::THRUST_LOOKUP_CDP[316] =
@@ -164,7 +166,7 @@ void Fam::CalcPMServoCmd(bool is_pmc1, uint8_t speed_gain_cmd, const Eigen::Matr
     Eigen::Matrix<float, 6, 1> & nozzle_theta_cmd,
     Eigen::Matrix<float, 6, 1> & normalized_pressure_density, Eigen::Matrix<float, 6, 1> & command_area_per_nozzle) {
   if (speed_gain_cmd > 3)
-    ROS_FATAL("Invalid speed command %d.", speed_gain_cmd);
+    FF_FATAL("Invalid speed command %d.", speed_gain_cmd);
 
   Eigen::Matrix<float, 6, 1> discharge_coeff =
     is_pmc1 ? PMCConstants::discharge_coeff1 : PMCConstants::discharge_coeff2;

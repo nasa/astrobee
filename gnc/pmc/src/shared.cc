@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <ros/console.h>
 #include "pmc/shared.h"
 
 namespace pmc {

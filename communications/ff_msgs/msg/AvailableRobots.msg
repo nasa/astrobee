@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Message containing the Astrobee's connected to the current Astrobee 
+# Message containing the Astrobee's connected to the current Astrobee
 
 std_msgs/Header header # header with time stamp
 
