@@ -63,7 +63,7 @@ class PoseNodeUpdater
   boost::optional<localization_common::Time> LatestTimestamp() const final;
 
  private:
-  // void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);
+  void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
 
   // Serialization function
   friend class boost::serialization::access;

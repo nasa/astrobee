@@ -69,22 +69,27 @@ bool PoseNodeUpdater::SlideWindow(const lc::Time oldest_allowed_timestamp,
     // Add prior to oldest pose using covariances from last round of
     // optimization
     const auto global_T_body_oldest = nodes_->OldestNode();
-    if (!global_T_body_oldest) {
-      LogError("SlideWindow: Failed to get oldest pose.");
+    const auto oldest_timestamp = nodes_->OldestTimestamp();
+    if (!global_T_body_oldest || !oldest_timestamp) {
+      LogError("SlideWindow: Failed to get oldest pose and timestamp.");
       return false;
     }
 
     // Make sure priors are removed before adding new ones
-    // TODO(rsoussan): implement this!
-    /*RemovePriors(*key_index, factors);
+    RemovePriors(old_keys, factors);
     if (marginals) {
+      const auto key = nodes_->Key(*oldest_timestamp);
+    if (!key) {
+      LogError("SlideWindow: Failed to get oldest key.");
+      return false;
+    }
       const auto pose_noise =
-        go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key), huber_k);
-      AddPriors(*global_T_body_oldest, pose_noise, factors);
+        go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(*key)), huber_k);
+      AddPriors(*global_T_body_oldest, pose_noise, *oldest_timestamp, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-      AddPriors(*global_T_body_oldest, global_T_body_start_noise_, factors);
-    }*/
+      AddPriors(*global_T_body_oldest, global_T_body_start_noise_, *oldest_timestamp, factors);
+    }
   }
 
   return true;
@@ -119,33 +124,27 @@ boost::optional<lc::Time> PoseNodeUpdater::LatestTimestamp() const {
   return nodes_->LatestTimestamp();
 }
 
-/*void PoseNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
+void PoseNodeUpdater::RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     bool erase_factor = false;
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_it->get());
-    if (pose_prior_factor && pose_prior_factor->key() == sym::P(key_index)) {
-      erase_factor = true;
+    if (pose_prior_factor) {
+    // Erase factor if it contains an old key
+    for (const auto& old_key : old_keys) {
+      if (pose_prior_factor->key() == old_key) {
+        erase_factor = true;
+        factor_it = factors.erase(factor_it);
+        ++removed_factors;
+      }
     }
-    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_it->get());
-    if (velocity_prior_factor && velocity_prior_factor->key() == sym::V(key_index)) {
-      erase_factor = true;
-    }
-    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor_it->get());
-    if (bias_prior_factor && bias_prior_factor->key() == sym::B(key_index)) {
-      erase_factor = true;
-    }
-
-    if (erase_factor) {
-      factor_it = factors.erase(factor_it);
-      ++removed_factors;
-    } else {
+    if (!erase_factor) {
       ++factor_it;
-      continue;
     }
   }
+  }
   LogDebug("RemovePriors: Erase " << removed_factors << " factors.");
-}*/
+}
 
 bool PoseNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
 //  return AddOrSplitImuFactorIfNeeded(timestamp, factors, *graph_values_);

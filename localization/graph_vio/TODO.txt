@@ -1,7 +1,5 @@
 - use timestamped node/node updater for graph loc!
   - finish making timestamped pose node updater!! (AAA)
-    - add timestamp to add initial values and priors
-    - add timestamp to addpriors
     - add removepriors function 
     - add slidewindownewoldesttime fcn
       - what does this do?
