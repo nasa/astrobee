@@ -139,11 +139,10 @@ gtsam::KeyVector PoseNodeUpdater::OldKeys(const lc::Time oldest_allowed_time,
   // return nodes_->OldKeys(oldest_allowed_time, graph);
 }
 
-// TODO(rsoussan): Change this interface???
+// TODO(rsoussan): Change this interface
 boost::optional<gtsam::Key> PoseNodeUpdater::GetKey(go::KeyCreatorFunction key_creator_function,
                                                                 const lc::Time timestamp) const {
-  return boost::none;
-  // return graph_values_->GetKey(key_creator_function, timestamp);
+  return nodes_->Key(timestamp);
 }
 
 boost::optional<lc::Time> PoseNodeUpdater::OldestTimestamp() const {

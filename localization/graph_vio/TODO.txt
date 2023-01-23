@@ -2,7 +2,6 @@
   - finish making timestamped pose node updater!! (AAA)
     - add old keys fcn
       - what does this do?
-    - add getkeyfunction -> change interface??
     - add update function!
   - test timestamped pose node updater!
 - compiple graph loc!
