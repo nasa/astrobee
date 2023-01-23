@@ -98,8 +98,38 @@ bool PoseNodeUpdater::SlideWindow(const lc::Time oldest_allowed_timestamp,
 go::NodeUpdaterType PoseNodeUpdater::type() const { return go::NodeUpdaterType::Pose; }
 
 boost::optional<lc::Time> PoseNodeUpdater::SlideWindowNewOldestTime() const {
-  return boost::none;  // TODO(rsoussan): add this!  //nodes_->SlideWindowNewOldestTime(); // TODO(rsoussan): what does
-                       // this do?
+  // TODO(rsoussan): Generalize this with CombinedNavStateGraphValues
+  if (nodes_->empty()) {
+    LogDebug("SlideWindowOldestTime: No states in map.");
+    return boost::none;
+  }
+
+  const size_t size = nodes_->size();
+  if (size <= params_.min_num_states) {
+    LogDebug("SlideWindowOldestTime: Not enough states to remove.");
+    return boost::none;
+  }
+
+  const double total_duration = nodes_->Duration();
+  LogDebug("SlideWindowOldestTime: Starting total num states: " << nodes_->size());
+  LogDebug("SlideWindowOldestTime: Starting total duration is " << total_duration);
+  const lc::Time ideal_oldest_allowed_state =
+    std::max(0.0, *(nodes_->LatestTimestamp()) - params_.ideal_duration);
+
+  int num_states_to_be_removed = 0;
+  // Ensures that new oldest time is consistent with a number of states <= max_num_states
+  // and >= min_num_states.
+  // Assumes min_num_states < max_num_states.
+  for (const auto& timestamp : nodes_->Timestamps()) {
+    ++num_states_to_be_removed;
+    const int new_num_states = size - num_states_to_be_removed;
+    if (new_num_states > params_.max_num_states) continue;
+    if (new_num_states <= params_.min_num_states) return timestamp;
+    if (timestamp >= ideal_oldest_allowed_state) return timestamp;
+  }
+
+  // Shouldn't occur
+  return boost::none;
 }
 
 gtsam::KeyVector PoseNodeUpdater::OldKeys(const lc::Time oldest_allowed_time,

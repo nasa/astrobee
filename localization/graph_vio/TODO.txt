@@ -1,8 +1,5 @@
 - use timestamped node/node updater for graph loc!
   - finish making timestamped pose node updater!! (AAA)
-    - add removepriors function 
-    - add slidewindownewoldesttime fcn
-      - what does this do?
     - add old keys fcn
       - what does this do?
     - add getkeyfunction -> change interface??

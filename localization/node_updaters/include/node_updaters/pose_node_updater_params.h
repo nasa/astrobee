@@ -32,6 +32,10 @@ struct PoseNodeUpdaterParams {
   gtsam::Pose3 global_T_body_start;
   bool add_priors;
   localization_common::Time starting_time;
+  // Only kept if there are at least min_num_states and not more than max_num_states
+  double ideal_duration;
+  int min_num_states;
+  int max_num_states;
 
  private:
   // Serialization function
@@ -44,6 +48,9 @@ struct PoseNodeUpdaterParams {
     ar& BOOST_SERIALIZATION_NVP(global_T_body_start);
     ar& BOOST_SERIALIZATION_NVP(add_priors);
     ar& BOOST_SERIALIZATION_NVP(starting_time);
+    ar& BOOST_SERIALIZATION_NVP(ideal_duration);
+    ar& BOOST_SERIALIZATION_NVP(min_num_states);
+    ar& BOOST_SERIALIZATION_NVP(max_num_states);
   }
 };
 }  // namespace node_updaters
