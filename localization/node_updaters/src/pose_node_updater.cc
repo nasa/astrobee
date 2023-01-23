@@ -39,21 +39,18 @@ PoseNodeUpdater::PoseNodeUpdater(std::shared_ptr<TimestampedPoseNodes> nodes)
 }
 
 void PoseNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors) {
-  AddInitialValuesAndPriors(params_.global_T_body_start, global_T_body_start_noise_, factors);
+  AddInitialValuesAndPriors(params_.global_T_body_start, global_T_body_start_noise_, params_.starting_time, factors);
 }
 
-void PoseNodeUpdater::AddInitialValuesAndPriors(const gtsam::Pose3& global_T_body,
-                                 const gtsam::SharedNoiseModel& noise,
-                                 gtsam::NonlinearFactorGraph& factors) {
-  lc::Time tmp = 0.0;  // TODO(rsoussan): Fill this in! Initialize with start time?
-  nodes_->Add(tmp, global_T_body);
-  AddPriors(global_T_body, noise, factors);
+void PoseNodeUpdater::AddInitialValuesAndPriors(const gtsam::Pose3& global_T_body, const gtsam::SharedNoiseModel& noise,
+                                                const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+  nodes_->Add(timestamp, global_T_body);
+  AddPriors(global_T_body, noise, timestamp, factors);
 }
 
 void PoseNodeUpdater::AddPriors(const gtsam::Pose3& global_T_body, const gtsam::SharedNoiseModel& noise,
-                                gtsam::NonlinearFactorGraph& factors) {
-  const lc::Time tmp = 0.0;  // TODO(rsoussan): pass timestamp!!
-  const auto key = nodes_->Key(tmp);
+                                const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+  const auto key = nodes_->Key(timestamp);
   if (!key) {
     LogError("AddPriors: Failed to get key.");
     return;

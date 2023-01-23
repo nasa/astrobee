@@ -18,6 +18,8 @@
 #ifndef NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
 #define NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
 
+#include <localization_common/time.h>
+
 #include <gtsam/geometry/Pose3.h>
 
 #include <boost/serialization/serialization.hpp>
@@ -29,6 +31,7 @@ struct PoseNodeUpdaterParams {
   double huber_k;
   gtsam::Pose3 global_T_body_start;
   bool add_priors;
+  localization_common::Time starting_time;
 
  private:
   // Serialization function
@@ -40,6 +43,7 @@ struct PoseNodeUpdaterParams {
     ar& BOOST_SERIALIZATION_NVP(huber_k);
     ar& BOOST_SERIALIZATION_NVP(global_T_body_start);
     ar& BOOST_SERIALIZATION_NVP(add_priors);
+    ar& BOOST_SERIALIZATION_NVP(starting_time);
   }
 };
 }  // namespace node_updaters

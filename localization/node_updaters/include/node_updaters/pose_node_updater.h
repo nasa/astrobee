@@ -35,12 +35,11 @@ class PoseNodeUpdater
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
-  void AddInitialValuesAndPriors(const gtsam::Pose3& global_T_body,
-                                 const gtsam::SharedNoiseModel& noise,
-                                 gtsam::NonlinearFactorGraph& factors) final;
+  void AddInitialValuesAndPriors(const gtsam::Pose3& global_T_body, const gtsam::SharedNoiseModel& noise,
+                                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   void AddPriors(const gtsam::Pose3& global_T_body, const gtsam::SharedNoiseModel& noise,
-                 gtsam::NonlinearFactorGraph& factors) final;
+                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // TODO(rsousan): Add function to split if needed?
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;

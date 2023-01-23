@@ -32,10 +32,11 @@ class FeaturePointNodeUpdater
   FeaturePointNodeUpdater(const FeaturePointNodeUpdaterParams& params, std::shared_ptr<gtsam::Values> values);
   void AddInitialValuesAndPriors(const localization_common::FeaturePoint3d& global_N_body,
                                  const localization_common::FeaturePoint3dNoise& noise,
-                                 gtsam::NonlinearFactorGraph& factors) final;
+                                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   void AddPriors(const localization_common::FeaturePoint3d& global_N_body,
-                 const localization_common::FeaturePoint3dNoise& noise, gtsam::NonlinearFactorGraph& factors) final;
+                 const localization_common::FeaturePoint3dNoise& noise, const localization_common::Time timestamp,
+                 gtsam::NonlinearFactorGraph& factors) final;
 
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 

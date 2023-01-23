@@ -34,11 +34,11 @@ FeaturePointNodeUpdater::FeaturePointNodeUpdater(const FeaturePointNodeUpdaterPa
     : params_(params), feature_point_graph_values_(new gv::FeaturePointGraphValues(std::move(values))) {}
 
 void FeaturePointNodeUpdater::AddInitialValuesAndPriors(const lc::FeaturePoint3d& global_t_point,
-                                                        const lc::FeaturePoint3dNoise& noise,
+                                                        const lc::FeaturePoint3dNoise& noise, const lc::Time timestamp,
                                                         gtsam::NonlinearFactorGraph& factors) {}
 
 void FeaturePointNodeUpdater::AddPriors(const lc::FeaturePoint3d& global_t_point, const lc::FeaturePoint3dNoise& noise,
-                                        gtsam::NonlinearFactorGraph& factors) {}
+                                        const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {}
 
 bool FeaturePointNodeUpdater::SlideWindow(const lc::Time oldest_allowed_timestamp,
                                           const boost::optional<gtsam::Marginals>& marginals,

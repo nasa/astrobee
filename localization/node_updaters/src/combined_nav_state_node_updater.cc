@@ -69,6 +69,13 @@ void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFact
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const lc::CombinedNavState& global_N_body,
                                                             const lc::CombinedNavStateNoise& noise,
                                                             gtsam::NonlinearFactorGraph& factors) {
+  AddInitialValuesAndPriors(global_N_body, noise, global_N_body.timestamp(), factors);
+}
+
+void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const lc::CombinedNavState& global_N_body,
+                                                            const lc::CombinedNavStateNoise& noise,
+                                                            const lc::Time timestamp,
+                                                            gtsam::NonlinearFactorGraph& factors) {
   const int key_index = GenerateKeyIndex();
   graph_values_->AddCombinedNavState(global_N_body, key_index);
   AddPriors(global_N_body, noise, factors);
@@ -76,6 +83,12 @@ void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const lc::CombinedNa
 
 void CombinedNavStateNodeUpdater::AddPriors(const lc::CombinedNavState& global_N_body,
                                             const lc::CombinedNavStateNoise& noise,
+                                            gtsam::NonlinearFactorGraph& factors) {
+    AddPriors(global_N_body, noise, global_N_body.timestamp(), factors);
+}
+
+void CombinedNavStateNodeUpdater::AddPriors(const lc::CombinedNavState& global_N_body,
+                                            const lc::CombinedNavStateNoise& noise, const lc::Time timestamp,
                                             gtsam::NonlinearFactorGraph& factors) {
   const auto key_index = graph_values_->KeyIndex(global_N_body.timestamp());
   if (!key_index) {
