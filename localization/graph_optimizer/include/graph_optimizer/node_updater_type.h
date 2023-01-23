@@ -21,7 +21,7 @@
 
 namespace graph_optimizer {
 // TODO(rsoussan): Generalize this better
-enum class NodeUpdaterType { CombinedNavState, FeaturePoint };
+enum class NodeUpdaterType { CombinedNavState, FeaturePoint, Pose};
 }  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_NODE_UPDATER_TYPE_H_
