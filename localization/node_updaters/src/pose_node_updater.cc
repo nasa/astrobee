@@ -134,9 +134,7 @@ boost::optional<lc::Time> PoseNodeUpdater::SlideWindowNewOldestTime() const {
 
 gtsam::KeyVector PoseNodeUpdater::OldKeys(const lc::Time oldest_allowed_time,
                                                       const gtsam::NonlinearFactorGraph& graph) const {
-  // TODO(rsoussan): add this! what does this do?
-  return gtsam::KeyVector();
-  // return nodes_->OldKeys(oldest_allowed_time, graph);
+  return nodes_->OldKeys(oldest_allowed_time);
 }
 
 // TODO(rsoussan): Change this interface
