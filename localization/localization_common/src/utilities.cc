@@ -236,4 +236,13 @@ Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const E
     Eigen::Quaterniond(lower_bound_pose.linear()).slerp(alpha, Eigen::Quaterniond(upper_bound_pose.linear()));
   return Isometry3d(translation, rotation);
 }
+
+PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const PoseWithCovariance& upper_bound_pose,
+                              const double alpha) {
+  const Eigen::Isometry3d interpolated_pose = Interpolate(lower_bound_pose.pose, upper_bound_pose.pose, alpha);
+  // TODO(rsoussan): Implement this properly
+  const PoseCovariance interpolated_covariance =
+    alpha > 0.5 ? upper_bound_pose.covariance : lower_bound_pose.covariance;
+  return PoseWithCovariance(interpolated_pose, interpolated_covariance);
+}
 }  // namespace localization_common

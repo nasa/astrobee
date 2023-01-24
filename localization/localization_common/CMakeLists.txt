@@ -66,6 +66,7 @@ add_library(${PROJECT_NAME}
   src/combined_nav_state.cc
   src/combined_nav_state_covariances.cc
   src/pose_interpolater.cc
+  src/pose_with_covariance_interpolater.cc
   src/rate_timer.cc
   src/ros_timer.cc
   src/time.cc
@@ -94,6 +95,14 @@ if(CATKIN_ENABLE_TESTING)
     test/test_pose_interpolater.cc
   )
   target_link_libraries(test_pose_interpolater
+    ${PROJECT_NAME}  
+  )
+
+  add_rostest_gtest(test_pose_with_covariance_interpolater
+    test/test_pose_with_covariance_interpolater.test
+    test/test_pose_with_covariance_interpolater.cc
+  )
+  target_link_libraries(test_pose_with_covariance_interpolater
     ${PROJECT_NAME}  
   )
 

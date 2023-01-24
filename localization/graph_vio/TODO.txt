@@ -2,11 +2,9 @@
   - finish making timestamped pose node updater!! (AAA)
     - add update function!
       - addlatestnodeandfactor (AA)
-            -test these!
-              - pose interpolater! 
-                - add relative test! (AAA)
           - add posewithcovarianceinterpolator! (BBB)
                 - copy pose interpolater test??? (CCC)
+                - add lc utils interplate test! (DDD)
                 - how to test relative cov?
               - how to compute relative covariances?????
             - use in update function! (DDDD)

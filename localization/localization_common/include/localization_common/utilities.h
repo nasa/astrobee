@@ -154,6 +154,9 @@ std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformP
 Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const Eigen::Isometry3d& upper_bound_pose,
                               const double alpha);
 
+PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const PoseWithCovariance& upper_bound_pose,
+                              const double alpha);
+
 // Implementations
 template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
