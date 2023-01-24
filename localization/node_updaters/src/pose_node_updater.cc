@@ -197,9 +197,29 @@ bool PoseNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGra
     return AddLatestNodeAndRelativeFactor(timestamp, factors);
   } else {
     LogDebug("Update: Splitting old relative factor.");
-    return false;  // SplitOldRelativeFactor(timestamp, factors, graph_values);
+    return SplitOldRelativeFactor(timestamp, factors);
   }
 }
+
+bool PoseNodeUpdater::AddNodeAndRelativeFactor(
+  const lc::Time timestamp_a, const lc::Time timestamp_b, gtsam::NonlinearFactorGraph& factors) {
+  const auto key_a = nodes_->Key(timestamp_a);
+  if (!key_a) {
+    LogError("AddNodeAndRelativeFactor: Failed to get latest key.");
+    return false;
+  }
+  const auto key_b = AddNode(timestamp_b);
+  if (!key_b) {
+    LogError("AddNodeAndRelativeFactor: Failed to add node.");
+    return false;
+  }
+  if (!AddRelativeFactor(*key_a, timestamp_a, *key_b, timestamp_b, factors)) {
+    LogError("AddNodeAndRelativeFactor: Failed to add relative factor.");
+    return false;
+  }
+  return true;
+}
+
 
 bool PoseNodeUpdater::AddLatestNodeAndRelativeFactor(
   const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
@@ -208,21 +228,7 @@ bool PoseNodeUpdater::AddLatestNodeAndRelativeFactor(
     LogError("AddLatestNodeAndRelativeFactor: Failed to get latest timestamp.");
     return false;
   }
-  const auto key_a = LatestKey();
-  if (!key_a) {
-    LogError("AddLatestNodeAndRelativeFactor: Failed to get latest key.");
-    return false;
-  }
-  const auto key_b = AddNode(timestamp);
-  if (!key_b) {
-    LogError("AddLatestNodeAndRelativeFactor: Failed to add node.");
-    return false;
-  }
-  if (!AddRelativeFactor(*key_a, *timestamp_a, *key_b, timestamp, factors)) {
-    LogError("AddLatestNodeAndRelativeFactor: Failed to add relative factor.");
-    return false;
-  }
-  return true;
+  return AddNodeAndRelativeFactor(*timestamp_a, timestamp, factors);
 }
 
 // TODO(rsoussan): add this to timestamped nodes!
@@ -258,11 +264,11 @@ bool PoseNodeUpdater::AddRelativeFactor(const gtsam::Key key_a, const lc::Time t
   factors.push_back(relative_pose_factor);
 }
 
-/*bool PoseNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(
-  const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors, gv::CombinedNavStateGraphValues& graph_values) {
-  const auto timestamp_bounds = graph_values.LowerAndUpperBoundTimestamp(timestamp);
+bool PoseNodeUpdater::SplitOldRelativeFactor(
+  const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+  const auto timestamp_bounds = nodes_->LowerAndUpperBoundTimestamps(timestamp);
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.");
+    LogError("SplitOldRelativeFactor: Failed to get upper and lower bound timestamp.");
     return false;
   }
 
@@ -270,81 +276,45 @@ bool PoseNodeUpdater::AddRelativeFactor(const gtsam::Key key_a, const lc::Time t
   const lc::Time upper_bound_time = *(timestamp_bounds.second);
 
   if (timestamp < lower_bound_time || timestamp > upper_bound_time) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Timestamp is not within bounds of existing timestamps.");
+    LogError("SplitOldRelativeFactor: Timestamp is not within bounds of existing timestamps.");
     return false;
   }
 
-  const auto lower_bound_key_index = graph_values.KeyIndex(lower_bound_time);
-  const auto upper_bound_key_index = graph_values.KeyIndex(upper_bound_time);
-  if (!lower_bound_key_index || !upper_bound_key_index) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get lower and upper bound key indices.");
-    return false;
-  }
-
-  // get old imu factor, delete it
-  bool removed_old_imu_factor = false;
-  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
-    if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get()) &&
-        graph_values.ContainsCombinedNavStateKey(**factor_it, *lower_bound_key_index) &&
-        graph_values.ContainsCombinedNavStateKey(**factor_it, *upper_bound_key_index)) {
-      factors.erase(factor_it);
-      removed_old_imu_factor = true;
-      break;
-    }
-    ++factor_it;
-  }
-  if (!removed_old_imu_factor) {
+  const bool removed_old_factors = RemoveFactors(timestamp, factors);
+  if (!removed_old_factors) {
     LogError(
-      "SplitOldImuFactorAndAddCombinedNavState: Failed to remove "
-      "old imu factor.");
+      "SplitOldRelativeFactor: Failed to remove "
+      "old factors.");
+    return false;
+  }
+  if (!AddNodeAndRelativeFactor(lower_bound_time, timestamp, factors)) {
+    LogError(
+      "SplitOldRelativeFactor: Failed to add first relative node and factor.");
+    return false;
+  }
+  if (!AddNodeAndRelativeFactor(timestamp, upper_bound_time, factors)) {
+    LogError(
+      "SplitOldRelativeFactor: Failed to add second relative node and factor.");
+    return false;
+  }
+}
+
+bool PoseNodeUpdater::RemoveFactors(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+  const auto key = nodes_->Key(timestamp);
+  if (!key) {
+    LogError("RemoveFactors: Failed to get key.");
     return false;
   }
 
-  const auto lower_bound_bias = graph_values.at<gtsam::imuBias::ConstantBias>(sym::B(*lower_bound_key_index));
-  if (!lower_bound_bias) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get lower bound bias.");
-    return false;
+  bool removed_factor = false;
+  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+    if ((*factor_it)->find(*key) != std::end((*factor_it)->keys())) {
+      factors.erase(factor_it);
+      removed_factor = true;
+    } else {
+      ++factor_it;
+    }
   }
-
-  // Add first factor and new nav state at timestamp
-  auto first_integrated_pim = latest_imu_integrator_->IntegratedPim(*lower_bound_bias, lower_bound_time, timestamp,
-                                                                    latest_imu_integrator_->pim_params());
-  if (!first_integrated_pim) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create first integrated pim.");
-    return false;
-  }
-
-  const auto lower_bound_combined_nav_state = graph_values.GetCombinedNavState(lower_bound_time);
-  if (!lower_bound_combined_nav_state) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get lower bound combined nav state.");
-    return false;
-  }
-
-  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*lower_bound_combined_nav_state, *first_integrated_pim,
-                                                         factors, graph_values)) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create and add imu factor.");
-    return false;
-  }
-
-  // Add second factor, use lower_bound_bias as starting bias since that is the
-  // best estimate available
-  auto second_integrated_pim = latest_imu_integrator_->IntegratedPim(*lower_bound_bias, timestamp, upper_bound_time,
-                                                                     latest_imu_integrator_->pim_params());
-  if (!second_integrated_pim) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create second integrated pim.");
-    return false;
-  }
-
-  // New nav state already added so just get its key index
-  const auto new_key_index = graph_values.KeyIndex(timestamp);
-  if (!new_key_index) {
-    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get new key index.");
-    return false;
-  }
-
-  const auto combined_imu_factor =
-    ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
-  factors.push_back(combined_imu_factor);
-  return true;
-}*/
+  return removed_factor;
+}
 }  // namespace node_updaters

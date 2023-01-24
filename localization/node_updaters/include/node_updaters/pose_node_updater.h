@@ -72,6 +72,10 @@ boost::optional<gtsam::Key> LatestKey();
 boost::optional<gtsam::Key> AddNode(const localization_common::Time timestamp);
 bool AddRelativeFactor(const gtsam::Key key_a, const localization_common::Time timestamp_a, const gtsam::Key key_b,
                        const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors) const;
+bool AddNodeAndRelativeFactor(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+                              gtsam::NonlinearFactorGraph& factors);
+bool SplitOldRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
+bool RemoveFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
 
 // Serialization function
 friend class boost::serialization::access;
