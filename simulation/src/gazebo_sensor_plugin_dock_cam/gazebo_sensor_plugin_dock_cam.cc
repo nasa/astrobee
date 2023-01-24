@@ -34,7 +34,7 @@ typedef msg::Image Image;
 #include <string>
 
 namespace gazebo {
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("gazebo_sensor_plugin_dock_cam");
+FF_DEFINE_LOGGER("gazebo_sensor_plugin_dock_cam");
 class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
  public:
   GazeboSensorPluginDockCam() : FreeFlyerSensorPlugin("dock_cam", "dock_cam", true), rate_(0.0) {}
