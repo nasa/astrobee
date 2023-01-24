@@ -2,18 +2,18 @@
   - finish making timestamped pose node updater!! (AAA)
     - add update function!
       - addlatestnodeandfactor (AA)
-        - make base class timestampedinterpolator!
-          - use this for pose interpolator, add posewithcovarianceinterpolator!
             -test these!
-              - pose interpolater! (AAA)
-                - add relative test!
-              - pose with cov interpolater! (BBB)
-                - copy pose interpolater test???
+              - pose interpolater! 
+                - add relative test! (AAA)
+          - add posewithcovarianceinterpolator! (BBB)
+                - copy pose interpolater test??? (CCC)
                 - how to test relative cov?
               - how to compute relative covariances?????
-            - use in update function!
+            - use in update function! (DDDD)
       - splitoldrelativefactor (AB)
   - test timestamped pose node updater!
+  - add todo to templated timestamped node updater!! 
+    - do this already?????
 - compiple graph loc!
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
