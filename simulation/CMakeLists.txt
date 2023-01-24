@@ -41,6 +41,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 
 #   visualization_msgs
@@ -249,14 +250,13 @@ ament_export_libraries(gazebo_model_plugin_flashlight)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# # Create a sensor plugin for the dock cam
-# add_library(gazebo_sensor_plugin_dock_cam
-#   src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_dock_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_dock_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the dock cam
+add_library(gazebo_sensor_plugin_dock_cam SHARED
+  src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_dock_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_dock_cam rclcpp tf2 tf2_ros sensor_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_dock_cam)
 
 # # Create a model plugin for sparse mapping
 # add_library(gazebo_sensor_plugin_sparse_map
