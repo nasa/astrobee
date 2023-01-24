@@ -173,39 +173,34 @@ void PoseNodeUpdater::RemovePriors(const gtsam::KeyVector& old_keys, gtsam::Nonl
   LogDebug("RemovePriors: Erase " << removed_factors << " factors.");
 }
 
+// TODO(rsoussan): Generalize this, use in CombinedNavStateNodeUpdater
 bool PoseNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
-//  return AddOrSplitImuFactorIfNeeded(timestamp, factors, *graph_values_);
-}
-
-/*bool PoseNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,
-                                                              gtsam::NonlinearFactorGraph& factors,
-                                                              gv::CombinedNavStateGraphValues& graph_values) {
-  if (graph_values.HasKey(timestamp)) {
+  if (nodes_->Contains(timestamp)) {
     LogDebug(
-      "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
+      "Update: Node exists at "
       "timestamp, nothing to do.");
     return true;
   }
 
-  const auto latest_timestamp = graph_values.LatestTimestamp();
+  const auto latest_timestamp = nodes_->LatestTimestamp();
   if (!latest_timestamp) {
-    LogError("AddOrSplitImuFactorIfNeeded: Failed to get latest timestamp.");
+    LogError("Update: Failed to get latest timestamp.");
     return false;
   }
 
   if (timestamp > *latest_timestamp) {
     LogDebug(
-      "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
-      "factor and nav state.");
-    return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp, factors, graph_values);
+      "Update: Adding latest node and relative factor.");
+    return AddLatestNodeAndRelativeFactor(timestamp, factors);
   } else {
-    LogDebug("AddOrSplitImuFactorIfNeeded: Splitting old imu factor.");
-    return SplitOldImuFactorAndAddCombinedNavState(timestamp, factors, graph_values);
+    LogDebug("Update: Splitting old relative factor.");
+    return SplitOldRelativeFactor(timestamp, factors, graph_values);
   }
 }
 
-bool PoseNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(
-  const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors, gv::CombinedNavStateGraphValues& graph_values) {
+bool PoseNodeUpdater::AddLatestNodeAndRelativeFactor(
+  const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+  // TODO(rsoussan): Need to make container for rel odom poses!  (already have this?)
   if (!latest_imu_integrator_->IntegrateLatestImuMeasurements(timestamp)) {
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to integrate latest imu measurements.");
     return false;
@@ -221,14 +216,6 @@ bool PoseNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to create and add imu factor.");
     return false;
   }
-
-  const auto latest_bias = graph_values.LatestBias();
-  if (!latest_bias) {
-    LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to get latest bias.");
-    return false;
-  }
-
-  latest_imu_integrator_->ResetPimIntegrationAndSetBias(latest_bias->first);
   return true;
 }
 
@@ -337,5 +324,5 @@ bool PoseNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(
     ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
   factors.push_back(combined_imu_factor);
   return true;
-}*/
+}
 }  // namespace node_updaters

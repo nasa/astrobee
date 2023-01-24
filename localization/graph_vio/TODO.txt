@@ -1,8 +1,18 @@
 - use timestamped node/node updater for graph loc!
   - finish making timestamped pose node updater!! (AAA)
-    - add old keys fcn
-      - what does this do?
     - add update function!
+      - addlatestnodeandfactor (AA)
+        - make base class timestampedinterpolator!
+          - use this for pose interpolator, add posewithcovarianceinterpolator!
+            -test these!
+              - pose interpolater! (AAA)
+                - add relative test!
+              - pose with cov interpolater! (BBB)
+                - copy pose interpolater test???
+                - how to test relative cov?
+              - how to compute relative covariances?????
+            - use in update function!
+      - splitoldrelativefactor (AB)
   - test timestamped pose node updater!
 - compiple graph loc!
 - add graph vio to graph bag!
