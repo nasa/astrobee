@@ -195,8 +195,6 @@ void FreeFlyerNodelet::ReadConfig() {
       faults_[fault_key] = fault_id;
     }
   }
-
-  return;
 }
 
 void FreeFlyerNodelet::AssertFault(FaultKeys enum_key,

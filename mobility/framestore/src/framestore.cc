@@ -118,7 +118,6 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
   void InitFault(std::string const& msg ) {
     NODELET_ERROR_STREAM(msg);
     AssertFault(ff_util::INITIALIZATION_FAILED, msg);
-    return;
   }
 
  protected:

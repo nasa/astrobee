@@ -299,7 +299,6 @@ void Trajectory3D::TrajectoryAtTime(const double time,
   // return the value of the polynomial some time after tf (extrapolation)
   segments_poly_[n_segments_-1].SegmentAtTime(time, result);
   ROS_WARN("Time extrapolation when returning polynomial!");
-  return;
 }
 
 void Trajectory3D::TrajectoryAtTime(const double time,
@@ -316,7 +315,6 @@ void Trajectory3D::TrajectoryAtTime(const double time,
   // return the value of the polynomial some time after tf (extrapolation)
   segments_poly_[n_segments_-1].SegmentAtTime(time, result);
   ROS_WARN("Time extrapolation when returning polynomial!");
-  return;
 }
 
 }  // namespace polynomials

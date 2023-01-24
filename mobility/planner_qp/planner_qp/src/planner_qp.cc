@@ -363,7 +363,6 @@ class Planner : public planner::PlannerImplementation {
     plan_result.response = RESPONSE::SUCCESS;
     PlanResult(plan_result);
     timer_fb_.stop();
-    return;
   }
 
   // Called to interrupt the process

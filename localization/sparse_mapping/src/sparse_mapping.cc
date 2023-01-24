@@ -855,8 +855,6 @@ void sparse_mapping::ParseCSV(std::string const& csv_file,
         (*cols)[col_names[col_pos]].push_back(v);
     }
   }
-
-  return;
 }
 
 // save size before protbuf, to save multiple protobufs in one file
@@ -1348,6 +1346,4 @@ void sparse_mapping::PoseInterpolation(std::vector<std::string> const& images,
     }
     it.close();
   }
-
-  return;
 }

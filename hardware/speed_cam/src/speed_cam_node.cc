@@ -110,7 +110,6 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
   void InitFault(std::string const& msg ) {
     NODELET_ERROR_STREAM(msg);
     AssertFault(ff_util::INITIALIZATION_FAILED, msg);
-    return;
   }
 
   // Callback from speedcam when new a new scaled IMU measurement is produced

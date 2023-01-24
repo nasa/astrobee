@@ -403,8 +403,6 @@ void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
     // no database specified
     return;
   }
-
-  return;
 }
 
 void BuildDBforDBoW2(SparseMap* map, std::string const& descriptor,

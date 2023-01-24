@@ -69,8 +69,6 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
     sub_ekf_.shutdown();
   sleep(1);
   stable_ = true;
-
-  return;
 }
 
 // Keepout zone test

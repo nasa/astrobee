@@ -154,7 +154,6 @@ void AccessControl::HandleGrabControl(ff_msgs::CommandStampedConstPtr const&
 
   PublishState();
   PublishAck(cmd->cmd_id);
-  return;
 }
 
 void AccessControl::HandleRequestControl(ff_msgs::CommandStampedConstPtr const&

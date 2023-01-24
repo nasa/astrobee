@@ -1058,7 +1058,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   // Preempt the current action with a new action
   void PreemptCallback() {
     Result(RESPONSE::PREEMPTED);
-    return;
   }
 
   // A Cancellation request arrives

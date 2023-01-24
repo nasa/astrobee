@@ -1449,8 +1449,6 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   }
 
   LOG(INFO) << "Total number of tracks in the merged map: " << C.pid_to_xyz_.size();
-
-  return;
 }
 
 // Take a map. Form a map with only a subset of the images.
@@ -1560,8 +1558,6 @@ void ExtractSubmap(std::vector<std::string> * keep_ptr,
   LOG(INFO) << "Number of images in the extracted map: " << map.cid_to_filename_.size();
   LOG(INFO) << "Number of tracks in the extracted map: " << map.pid_to_cid_fid_.size();
   // map.Save(output_map + ".extracted.map");
-
-  return;
 }
 
 // Register a map to world coordinates from user-supplied data, or simply

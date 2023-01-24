@@ -370,7 +370,6 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       it->second = std::stoi(pid);
     }
   }
-  return;
 }
 
 int CpuMemMonitor::CollectCPUStats() {
