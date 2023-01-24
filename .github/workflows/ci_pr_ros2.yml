@@ -20,4 +20,4 @@ jobs:
       run: git submodule update --init --depth 1 description/media
 
     - name: Build, test
-      run: ./scripts/docker/build.sh  --focal --remote rolling_base rolling astrobee_ros2
+      run: ./scripts/docker/build.sh  --focal --remote rolling astrobee_ros2

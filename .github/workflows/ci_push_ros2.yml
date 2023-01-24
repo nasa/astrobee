@@ -16,6 +16,6 @@ jobs:
 
       - name: Build, test, push docker
         run: |
-          ./scripts/docker/build.sh --remote --owner ${{ github.repository_owner }} rolling_base rolling astrobee_ros2
-          if [ "${{ github.repository_owner }}" = "nasa" ]; then ./scripts/docker/build.sh --remote --owner ${{ github.repository_owner }}  push_rolling_base push_rolling; fi;
+          ./scripts/docker/build.sh --remote --owner ${{ github.repository_owner }} rolling astrobee_ros2
+          if [ "${{ github.repository_owner }}" = "nasa" ]; then ./scripts/docker/build.sh --remote --owner ${{ github.repository_owner }} push_rolling; fi;
 

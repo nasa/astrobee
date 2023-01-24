@@ -25,9 +25,6 @@ endif()
 
 set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
-# Build for ROS2
-add_definitions(-DROS2)
-
 # Find amend and libraries
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -36,6 +33,7 @@ find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 find_package(ff_hw_msgs REQUIRED)
+find_package(pmc REQUIRED)
 
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -77,7 +75,6 @@ find_package(JsonCpp REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
-  ${config_reader_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
@@ -119,12 +116,12 @@ ament_target_dependencies(gazebo_model_plugin_truth rclcpp tf2 tf2_ros gazebo_de
 ament_export_libraries(gazebo_model_plugin_truth)
 
 # Create a model plugin for the propulsion system
-# add_library(gazebo_model_plugin_pmc SHARED
-#   src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
-# )
-# target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo)
-# ament_target_dependencies(gazebo_model_plugin_pmc rclcpp ff_msgs ff_hw_msgs gazebo_dev gazebo_ros)
-# ament_export_libraries(gazebo_model_plugin_pmc)
+add_library(gazebo_model_plugin_pmc SHARED
+  src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
+)
+target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_pmc rclcpp ff_msgs ff_hw_msgs gazebo_dev gazebo_ros pmc)
+ament_export_libraries(gazebo_model_plugin_pmc)
 
 # Create a model plugin for the perching arm
 add_library(gazebo_model_plugin_perching_arm SHARED
@@ -151,41 +148,13 @@ ament_export_libraries(gazebo_model_plugin_flashlight)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# Create a model plugin for the LLP CPU mem monitor
-# add_library(gazebo_model_plugin_llp_cpu_mem_monitor
-#   src/gazebo_model_plugin_llp_cpu_mem_monitor/gazebo_model_plugin_llp_cpu_mem_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_llp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_llp_cpu_mem_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a model plugin for the LLP disk monitor
-# add_library(gazebo_model_plugin_llp_disk_monitor
-#   src/gazebo_model_plugin_llp_disk_monitor/gazebo_model_plugin_llp_disk_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_llp_disk_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_llp_disk_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a model plugin for the MLP CPU mem monitor
-# add_library(gazebo_model_plugin_mlp_cpu_mem_monitor
-#   src/gazebo_model_plugin_mlp_cpu_mem_monitor/gazebo_model_plugin_mlp_cpu_mem_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_mlp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_mlp_cpu_mem_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a model plugin for the MLP disk monitor
-# add_library(gazebo_model_plugin_mlp_disk_monitor
-#   src/gazebo_model_plugin_mlp_disk_monitor/gazebo_model_plugin_mlp_disk_monitor.cc
-# )
-# add_dependencies(gazebo_model_plugin_mlp_disk_monitor ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_mlp_disk_monitor astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin to publish heartbeats
+add_library(gazebo_model_plugin_heartbeat SHARED
+  src/gazebo_model_plugin_heartbeat/gazebo_model_plugin_heartbeat.cc
+)
+target_link_libraries(gazebo_model_plugin_heartbeat astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_heartbeat rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_model_plugin_heartbeat)
 
 # Create a model plugin for the speed camera
 # add_library(gazebo_model_plugin_speed_cam
@@ -318,8 +287,9 @@ install(TARGETS
   astrobee_gazebo
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
+  gazebo_model_plugin_heartbeat
   gazebo_model_plugin_truth
-  # gazebo_model_plugin_pmc
+  gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
   gazebo_world_plugin_speed

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <ros/console.h>
 #include "pmc/pmc_sim.h"
 #include "pmc/shared.h"
 
@@ -36,10 +35,8 @@ float PID::Run(float x) {
   float out = kp * x + ki * integral + d;
   last += d * PMCConstants::DT;  // kind of confused here but matches simmulink
   integral += x * PMCConstants::DT;
-  if (out < omin)
-    out = omin;
-  if (out > omax)
-    out = omax;
+  if (out < omin) out = omin;
+  if (out > omax) out = omax;
   return out;
 }
 
@@ -48,8 +45,7 @@ Blower::Blower(bool is_pmc1) {
   backlash_theta_ << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
   servo_thetas_ << 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
   prev_speed_rate_ = impeller_speed_ = 0.0f;
-  for (int i = 0; i < 6; i++)
-    servo_pids_[i].Initialize(5.0, 1.5, 0.8, 6.0, -6.0);
+  for (int i = 0; i < 6; i++) servo_pids_[i].Initialize(5.0, 1.5, 0.8, 6.0, -6.0);
   speed_pid_.Initialize(0.2, 0.1, 0.05, 16.6, -16.6);
   if (is_pmc1) {
     discharge_coeff_ = PMCConstants::discharge_coeff1;
@@ -68,8 +64,8 @@ Blower::Blower(bool is_pmc1) {
   center_of_mass_ << 0.0, 0.0, 0.0;  // hmmm.... this seems wrong but was used originally in the simulink
 }
 
-void Blower::ServoModel(const Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Matrix<float, 6, 1> & nozzle_theta,
-                        Eigen::Matrix<float, 6, 1> & nozzle_area) {
+void Blower::ServoModel(const Eigen::Matrix<float, 6, 1>& servo_cmd, Eigen::Matrix<float, 6, 1>& nozzle_theta,
+                        Eigen::Matrix<float, 6, 1>& nozzle_area) {
   const float bpm_servo_max_theta = PMCConstants::abp_nozzle_gear_ratio *
                                     (PMCConstants::abp_nozzle_max_open_angle - PMCConstants::abp_nozzle_min_open_angle);
   //  [-] Conversion between servo PWM command (0-100) and resulting angle (0-90)
@@ -83,8 +79,7 @@ void Blower::ServoModel(const Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Mat
   }
   Eigen::Matrix<float, 6, 1> voltage,
     err = bpm_servo_pwm2angle * servo_cmd - backlash_theta_ * PMCConstants::servo_motor_gear_ratio;
-  for (int i = 0; i < 6; i++)
-    voltage[i] = servo_pids_[i].Run(err[i]);
+  for (int i = 0; i < 6; i++) voltage[i] = servo_pids_[i].Run(err[i]);
   servo_current_ = (voltage - PMCConstants::servo_motor_k * prev_omega_) * (1.0 / PMCConstants::servo_motor_r);
   servo_thetas_ += 1.0 / 62.5 * prev_omega_;
   servo_thetas_ = servo_thetas_.cwiseMin(bpm_servo_max_theta / PMCConstants::servo_motor_gear_ratio).cwiseMax(0.0);
@@ -103,7 +98,7 @@ void Blower::ServoModel(const Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Mat
 }
 
 void Blower::ImpellerModel(int speed_cmd, float voltage, float* motor_current, float* motor_torque) {
-  const float max_change = 200*2*M_PI/60.0 * PMCConstants::DT;
+  const float max_change = 200 * 2 * M_PI / 60.0 * PMCConstants::DT;
   float speed = speed_cmd / PMCConstants::impeller_speed2pwm;
   if (speed > prev_speed_rate_ + max_change)
     speed = prev_speed_rate_ + max_change;
@@ -126,7 +121,7 @@ void Blower::ImpellerModel(int speed_cmd, float voltage, float* motor_current, f
   impeller_speed_ += *motor_torque / impeller_inertia / 62.5;
 }
 
-Eigen::Matrix<float, 6, 1> Blower::Aerodynamics(const Eigen::Matrix<float, 6, 1> & nozzle_area) {
+Eigen::Matrix<float, 6, 1> Blower::Aerodynamics(const Eigen::Matrix<float, 6, 1>& nozzle_area) {
   float area = zero_thrust_area_ + (discharge_coeff_.array() * nozzle_area.array()).sum();
   float cdp = Lookup(PMCConstants::AREA_LOOKUP_TABLE_SIZE, PMCConstants::CDP_LOOKUP_OUTPUT,
                      PMCConstants::AREA_LOOKUP_INPUT, area);
@@ -137,7 +132,7 @@ Eigen::Matrix<float, 6, 1> Blower::Aerodynamics(const Eigen::Matrix<float, 6, 1>
   // note: currently in simulink noise is set to zero
 }
 
-void Blower::Step(int impeller_cmd, Eigen::Matrix<float, 6, 1> & servo_cmd, Eigen::Vector3f & omega, float voltage) {
+void Blower::Step(int impeller_cmd, Eigen::Matrix<float, 6, 1>& servo_cmd, Eigen::Vector3f& omega, float voltage) {
   Eigen::Matrix<float, 6, 1> nozzle_area;
   float motor_torque;
   ServoModel(servo_cmd, nozzles_theta_, nozzle_area);
@@ -146,8 +141,8 @@ void Blower::Step(int impeller_cmd, Eigen::Matrix<float, 6, 1> & servo_cmd, Eige
   BlowerBodyDynamics(omega, nozzle_thrust, motor_torque);
 }
 
-void Blower::BlowerBodyDynamics(const Eigen::Vector3f & omega_body, Eigen::Matrix<float, 6, 1> & nozzle_thrusts,
-    float motor_torque) {
+void Blower::BlowerBodyDynamics(const Eigen::Vector3f& omega_body, Eigen::Matrix<float, 6, 1>& nozzle_thrusts,
+                                float motor_torque) {
   Eigen::Matrix<float, 3, 6> thrust2force, thrust2torque;
   // latch nozzle thrust matrices
   Eigen::Matrix<float, 6, 3> nozzle_moment_arm = nozzle_offsets_ - center_of_mass_.transpose().replicate(6, 1);
@@ -175,12 +170,8 @@ void PMCSim::Step(void) {
   b2.Step(impeller_cmd_[1], servo_cmd_[1], omega_, voltage_);
 }
 
-void PMCSim::SetAngularVelocity(float x, float y, float z) {
-  omega_ << x, y, z;
-}
+void PMCSim::SetAngularVelocity(float x, float y, float z) { omega_ << x, y, z; }
 
-void PMCSim::SetBatteryVoltage(float voltage) {
-  voltage_ = voltage;
-}
+void PMCSim::SetBatteryVoltage(float voltage) { voltage_ = voltage; }
 
 }  // namespace pmc

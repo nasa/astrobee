@@ -24,6 +24,10 @@
 #ifndef FF_COMMON_FF_ROS_H_
 #define FF_COMMON_FF_ROS_H_
 
+// This is the ROS2 astrobee branch. Check out the other branch for ros1.
+// We keep the definitions for both versions to reducing merging hassle.
+#define ROS2
+
 #if ROS1
 #include <ros/ros.h>
 
@@ -108,17 +112,18 @@ using ServiceClient = std::shared_ptr<rclcpp::Client<MessageType>>;
 
 using Duration = std::shared_ptr<rclcpp::Duration>;
 
-#define FF_DEBUG(...)   RCLCPP_DEBUG(LOGGER, __VA_ARGS__)
-#define FF_INFO(...)    RCLCPP_INFO(LOGGER, __VA_ARGS__)
-#define FF_WARN(...)    RCLCPP_WARN(LOGGER, __VA_ARGS__)
-#define FF_ERROR(...)   RCLCPP_ERROR(LOGGER, __VA_ARGS__)
-#define FF_FATAL(...)   RCLCPP_FATAL(LOGGER, __VA_ARGS__)
+#define FF_DEFINE_LOGGER(name) static const rclcpp::Logger _FF_LOGGER = rclcpp::get_logger(name);
+#define FF_DEBUG(...)   RCLCPP_DEBUG(_FF_LOGGER, __VA_ARGS__)
+#define FF_INFO(...)    RCLCPP_INFO(_FF_LOGGER, __VA_ARGS__)
+#define FF_WARN(...)    RCLCPP_WARN(_FF_LOGGER, __VA_ARGS__)
+#define FF_ERROR(...)   RCLCPP_ERROR(_FF_LOGGER, __VA_ARGS__)
+#define FF_FATAL(...)   RCLCPP_FATAL(_FF_LOGGER, __VA_ARGS__)
 
-#define FF_DEBUG_STREAM(...)   RCLCPP_DEBUG_STREAM(LOGGER, __VA_ARGS__)
-#define FF_INFO_STREAM(...)    RCLCPP_INFO_STREAM(LOGGER, __VA_ARGS__)
-#define FF_WARN_STREAM(...)    RCLCPP_WARN_STREAM(LOGGER, __VA_ARGS__)
-#define FF_ERROR_STREAM(...)   RCLCPP_ERROR_STREAM(LOGGER, __VA_ARGS__)
-#define FF_FATAL_STREAM(...)   RCLCPP_FATAL_STREAM(LOGGER, __VA_ARGS__)
+#define FF_DEBUG_STREAM(...)   RCLCPP_DEBUG_STREAM(_FF_LOGGER, __VA_ARGS__)
+#define FF_INFO_STREAM(...)    RCLCPP_INFO_STREAM(_FF_LOGGER, __VA_ARGS__)
+#define FF_WARN_STREAM(...)    RCLCPP_WARN_STREAM(_FF_LOGGER, __VA_ARGS__)
+#define FF_ERROR_STREAM(...)   RCLCPP_ERROR_STREAM(_FF_LOGGER, __VA_ARGS__)
+#define FF_FATAL_STREAM(...)   RCLCPP_FATAL_STREAM(_FF_LOGGER, __VA_ARGS__)
 
 #define toSec() seconds()
 
