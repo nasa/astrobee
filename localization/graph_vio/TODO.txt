@@ -1,9 +1,6 @@
 - use timestamped node/node updater for graph loc!
   - finish making timestamped pose node updater!! (AAA)
     - add update function!
-      - addlatestnodeandfactor (AA)
-          - add posewithcovarianceinterpolator! 
-            - use in update function! (DDDD)
       - splitoldrelativefactor (AB)
   - test timestamped pose node updater!
   - add todo to templated timestamped node updater!! 

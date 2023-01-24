@@ -21,6 +21,7 @@
 
 #include <graph_optimizer/node_updater_with_priors.h>
 #include <graph_optimizer/timestamped_nodes.h>
+#include <localization_common/pose_with_covariance_interpolater.h>
 #include <node_updaters/pose_node_updater_params.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -30,7 +31,8 @@ using TimestampedPoseNodes = graph_optimizer::TimestampedNodes<gtsam::Pose3>;
 class PoseNodeUpdater
     : public graph_optimizer::NodeUpdaterWithPriors<gtsam::Pose3, gtsam::SharedNoiseModel> {
  public:
-  explicit PoseNodeUpdater(std::shared_ptr<TimestampedPoseNodes> nodes);
+  PoseNodeUpdater(std::shared_ptr<TimestampedPoseNodes> nodes,
+                  std::shared_ptr<localization_common::PoseWithCovarianceInterpolater> pose_interpolater);
   PoseNodeUpdater() = default;
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
@@ -64,17 +66,24 @@ class PoseNodeUpdater
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
+bool AddLatestNodeAndRelativeFactor(
+  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
+boost::optional<gtsam::Key> LatestKey();
+boost::optional<gtsam::Key> AddNode(const localization_common::Time timestamp);
+bool AddRelativeFactor(const gtsam::Key key_a, const localization_common::Time timestamp_a, const gtsam::Key key_b,
+                       const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors) const;
 
-  // Serialization function
-  friend class boost::serialization::access;
-  template <class Archive>
-  void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_NVP(nodes_);
-    ar& BOOST_SERIALIZATION_NVP(params_);
-    ar& BOOST_SERIALIZATION_NVP(global_T_body_start_noise_);
+// Serialization function
+friend class boost::serialization::access;
+template <class Archive>
+void serialize(Archive& ar, const unsigned int file_version) {
+  ar& BOOST_SERIALIZATION_NVP(nodes_);
+  ar& BOOST_SERIALIZATION_NVP(params_);
+  ar& BOOST_SERIALIZATION_NVP(global_T_body_start_noise_);
   }
 
   std::shared_ptr<TimestampedPoseNodes> nodes_;
+  std::shared_ptr<localization_common::PoseWithCovarianceInterpolater> pose_interpolater_;
   PoseNodeUpdaterParams params_;
   gtsam::SharedNoiseModel global_T_body_start_noise_;
 };
