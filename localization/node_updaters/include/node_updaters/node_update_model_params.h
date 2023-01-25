@@ -15,31 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
-#define NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
-
-#include <localization_common/time.h>
-
-#include <gtsam/geometry/Pose3.h>
+#ifndef NODE_UPDATERS_NODE_UPDATE_MODEL_PARAMS_H_
+#define NODE_UPDATERS_NODE_UPDATE_MODEL_PARAMS_H_
 
 #include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-using Base = TimestampedNodeUpdaterParams<gtsam::Pose3>;
-struct PoseNodeUpdaterParams : Base {
-  double starting_prior_translation_stddev;
-  double starting_prior_quaternion_stddev;
+struct NodeUpdateModelParams {
+  double huber_k;
 
  private:
   // Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
-    ar& BOOST_SERIALIZATION_NVP(starting_prior_translation_stddev);
-    ar& BOOST_SERIALIZATION_NVP(starting_prior_quaternion_stddev);
+    ar& BOOST_SERIALIZATION_NVP(huber_k);
   }
 };
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
+#endif  // NODE_UPDATERS_NODE_UPDATE_MODEL_PARAMS_H_

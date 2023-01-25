@@ -1,10 +1,7 @@
 - use timestamped node/node updater for graph loc!
-  - finish making timestamped pose node updater!! (AAA)
-    - add update function!
-      - splitoldrelativefactor (AA)
-  - test timestamped pose node updater!
-  - add todo to templated timestamped node updater? Do it anyway? 
-    - template on nodes type!
+  - add todo to templated timestamped node updater? Do it anyway?  (AAA)
+    - compile! (C)
+  - test timestamped pose node updater! (AAB)
 - compiple graph loc!
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag

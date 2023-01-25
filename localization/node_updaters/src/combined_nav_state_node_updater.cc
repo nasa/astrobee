@@ -57,7 +57,7 @@ CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
   global_N_body_start_noise_.velocity_noise =
     go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-           params_.huber_k);
+               params_.huber_k);
   global_N_body_start_noise_.bias_noise = go::Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
 }
@@ -84,7 +84,7 @@ void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const lc::CombinedNa
 void CombinedNavStateNodeUpdater::AddPriors(const lc::CombinedNavState& global_N_body,
                                             const lc::CombinedNavStateNoise& noise,
                                             gtsam::NonlinearFactorGraph& factors) {
-    AddPriors(global_N_body, noise, global_N_body.timestamp(), factors);
+  AddPriors(global_N_body, noise, global_N_body.timestamp(), factors);
 }
 
 void CombinedNavStateNodeUpdater::AddPriors(const lc::CombinedNavState& global_N_body,

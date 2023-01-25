@@ -40,8 +40,7 @@ class CombinedNavStateNodeUpdater
 
   void AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                  const localization_common::CombinedNavStateNoise& noise,
-                                 const localization_common::Time timestamp,
-                                 gtsam::NonlinearFactorGraph& factors) final;
+                                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   void AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                  const localization_common::CombinedNavStateNoise& noise,

@@ -33,6 +33,7 @@
 
 namespace graph_optimizer {
 template <typename NodeType>
+// TODO(rsoussan): This should use TimestampedSet!
 class TimestampedNodes {
  public:
   explicit TimestampedNodes(std::shared_ptr<Nodes> nodes);
