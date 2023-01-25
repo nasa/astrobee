@@ -64,32 +64,34 @@ ament_target_dependencies(camera rclcpp ff_common config_reader)
 ament_export_targets(camera HAS_LIBRARY_TARGET)
 target_link_libraries(camera ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
 
-# ## Declare a C++ executable: undistort_image
-# add_executable(undistort_image tools/undistort_image.cc)
-# add_dependencies(undistort_image ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(undistort_image
-#   camera gflags glog ${catkin_LIBRARIES})
+# Declare a C++ executable: undistort_image
+add_executable(undistort_image tools/undistort_image.cc)
+target_link_libraries(undistort_image
+  camera gflags glog -lboost_filesystem -lboost_system)
+ament_target_dependencies(undistort_image rclcpp ff_common)
 
-# if(CATKIN_ENABLE_TESTING)
-#   find_package(rostest REQUIRED)
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
 
-#   add_rostest_gtest(test_camera_model
-#     test/test_camera_model.test
-#     test/test_camera_model.cc
-#   )
-#   target_link_libraries(test_camera_model
-#     camera
-#   )
+  # define TEST_DIR so that tests can find their test data
+  get_filename_component(ABSOLUTE_TEST_DIR test ABSOLUTE)
+  add_definitions(-DTEST_DIR=\"${ABSOLUTE_TEST_DIR}\")
 
-#   add_rostest_gtest(test_camera_params
-#     test/test_camera_params.test
-#     test/test_camera_params.cc
-#   )
-#   target_link_libraries(test_camera_params
-#     camera
-#   )
+  ament_add_gtest(test_camera_model
+    test/test_camera_model.cc
+  )
+  target_link_libraries(test_camera_model
+    camera
+  )
 
-# endif()
+  ament_add_gtest(test_camera_params
+    test/test_camera_params.cc
+  )
+  target_link_libraries(test_camera_params
+    camera
+  )
+
+endif()
 
 #############
 ## Install ##
@@ -109,13 +111,13 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # # Install C++ executables
-# install(TARGETS undistort_image DESTINATION bin)
-# install(CODE "execute_process(
-#   COMMAND ln -s ../../bin/undistort_image share/${PROJECT_NAME}
-#   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-#   OUTPUT_QUIET
-#   ERROR_QUIET
-#   )")
+install(TARGETS undistort_image DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/undistort_image share/${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}
