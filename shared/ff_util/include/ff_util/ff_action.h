@@ -21,6 +21,7 @@
 
 // ROS includes
 #include <ff_common/ff_ros.h>
+#include <ff_util/ff_timer.h>
 
 // Actionlib includes
 #include <rclcpp_action/rclcpp_action.hpp>
@@ -31,6 +32,8 @@
 #include <string>
 
 namespace ff_util {
+
+FF_DEFINE_LOGGER("ff_action")
 
 /////////////////////////////// ACTION SERVER CODE /////////////////////////////
 
@@ -48,18 +51,42 @@ class FreeFlyerActionState {
   };
 };
 
-// Wrapper around the action server that allows initialization outside the constructor
-template <typename ActionType>
+// Major changes from ros1 to ros2 are ros2 uses both topics and services to
+// implement actions whereas ros1 only used topics. In ros1, new goals
+// preempted/canceled the current goal. In ros2, an action server can accept
+// multiple goals. This class attempts to apply the ros1 functionality to ros2.
+// Please use the ros2 action server if you want to accept multiple goals.
+template < typename ActionType >
 class FreeFlyerActionServer {
+ private:
+  // For the purpose of this class, preempt will refer to the case of where
+  // a new goal was received before the original goal was accepted and
+  // canceled will refer to the case where a new goal was received
+  // before the original goal completed.
+  // In ros1 the server preempt callback was used for both preempting a goal
+  // and canceling a goal so the cancelled state in the above explanation will
+  // map to the preempt callback. The new preempt will be invisible to the code
+  // using this class.
+  enum State {
+    WAITING_FOR_CREATE,   /*!< Create() has not been called */
+    WAITING_FOR_GOAL,     /*!< Server found, waiting on goal */
+    WAITING_FOR_ACCEPTED, /*!< Goal sent but not accepted */
+    WAITING_FOR_RESPONSE, /*!< Goal accepted but no feedback/result yet */
+    PREEMPTED,            /*!< New goal received before last goal accepted */
+    CANCELED              /*!< New goal received before last goal completed */
+  };
+  static constexpr double DEFAULT_TIMEOUT_RESPONSE = 5.0;
+
  public:
   using GoalHandle = rclcpp_action::ServerGoalHandle<ActionType>;
   // Callback types
-  typedef std::function< void (std::shared_ptr<const typename ActionType::Goal>)> GoalCallbackType;
+  typedef std::function < void (std::shared_ptr<const typename ActionType::Goal>)> GoalCallbackType;
   typedef std::function < void (void) > PreemptCallbackType;
   typedef std::function < void (void) > CancelCallbackType;
 
   // Constructor
-  FreeFlyerActionServer() {}
+  FreeFlyerActionServer() : to_response_(DEFAULT_TIMEOUT_RESPONSE),
+    state_(WAITING_FOR_CREATE) {}
 
   // Destructor
   ~FreeFlyerActionServer() {}
@@ -73,70 +100,237 @@ class FreeFlyerActionServer {
   void Create(NodeHandle node, std::string const& topic) {
     sas_ = rclcpp_action::create_server<ActionType>(node,
       topic,
-      std::bind(&FreeFlyerActionServer::GoalCallback, this, _1, _2),
-      std::bind(&FreeFlyerActionServer::CancelCallback, this, _1),
-      std::bind(&FreeFlyerActionServer::AcceptedCallback, this, _1));
+      std::bind(&FreeFlyerActionServer::GoalCallback, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&FreeFlyerActionServer::CancelCallback, this, std::placeholders::_1),
+      std::bind(&FreeFlyerActionServer::AcceptedCallback, this, std::placeholders::_1));
+    state_ = WAITING_FOR_GOAL;
   }
 
   // Send incremental feedback for the current goal
-/*  void SendFeedback(Feedback const& feedback) {
-    if (!sas_) return;
-    sas_->publishFeedback(feedback);
+  void SendFeedback(std::shared_ptr<typename ActionType::Feedback> const feedback) {
+    if (!current_goal_handle_) return;
+    current_goal_handle_->publish_feedback(feedback);
   }
 
   // Send the final result for the current goal
-  void SendResult(FreeFlyerActionState::Enum result_code, Result const& result) {
-    if (!sas_) return;
+  void SendResult(FreeFlyerActionState::Enum result_code,
+                  std::shared_ptr<typename ActionType::Result> const result) {
+    if (!current_goal_handle_) return;
+
     switch (result_code) {
-    case FreeFlyerActionState::SUCCESS:     // Everything worked
-      sas_->setSucceeded(result);
-      break;
-    case FreeFlyerActionState::PREEMPTED:   // Client B preempts client A
-      sas_->setPreempted(result);
-      break;
-    case FreeFlyerActionState::ABORTED:     // Server encounters an error
-      sas_->setAborted(result);
-    default:
-      break;
+      case FreeFlyerActionState::SUCCESS:     // Everything worked
+        // In ros1, this is where canceled results would go since we were able
+        // to successful cancel. Ros2 has an actual canceled function. From the
+        // ros2 action diagram, it looks like it is fine to call succeed in the
+        // canceling state
+        current_goal_handle_->succeed(result);
+        break;
+      case FreeFlyerActionState::PREEMPTED:
+      case FreeFlyerActionState::ABORTED:     // Server encounters an error
+        current_goal_handle_->abort(result);
+        break;
+      default:
+        break;
     }
-  }*/
+
+    // Check to see if this goal was canceled and there is another goal waiting
+    // to be executed
+    if (state_ == CANCELED) {
+      if (current_goal_handle_.get_goal_id() != latest_uuid_) {
+        // Check if the accepted callback was called yet. If not, the goal will
+        // be started in the accepted callback
+        if (next_goal_handle_) {
+          // In this case, the goal was accepted and deferred in the goal
+          // callback. Need to set the goal to executing
+          next_goal_handle_->execute();
+          StartGoal(next_goal_handle_);
+          next_goal_handle_ = NULL;
+          return;
+        } else {
+          current_goal_handle_ = NULL;
+          // Stay in the canceled state so that execute will be called on the
+          // goal in the accepted callback
+          return;
+        }
+      }
+    }
+    current_goal_handle_ = NULL;
+    state_ = WAITING_FOR_GOAL;
+  }
 
  protected:
-  // A new action has been called. We have to care of a special case where the goal is
-  // cancelled / preempted between arrival and the time this callback is called.
+  // A new action has been called. We have to care of a special case where the
+  // goal is preempted or cancelled.
   rclcpp_action::GoalResponse GoalCallback(
-                                const rclcpp_action::GoalUUID & uuid,
-                                std::shared_ptr<const ActionType::goal> goal) {
-    // TODO Fill me!               
-    /*boost::shared_ptr<const Goal> goal = sas_->acceptNewGoal();
-    if (cb_goal_)
-      cb_goal_(goal);*/
+                        const rclcpp_action::GoalUUID & uuid,
+                        std::shared_ptr<const typename ActionType::Goal> goal) {
+    // ROS2 actions are a bit different in that you can reject a goal in the
+    // goal callback. So we don't want to start executing the goal in this
+    // callback. We will started executing it in the accepted callback.
+    // Also, ROS2 allows multiple goals to be executed at one time and this
+    // doesn't deal with preemption. Thus this wrapper class will implement
+    // preemption. Another note is ROS2 actions are built on topics and services
+    // so it is important that the goal and accepted callbacks return quickly to
+    // avoid blocking the executor
+
+    // Not sure if this is correct but the goal is part of the goal handle in
+    // the accepted callback so the goal passed in to this callback is not
+    // being saved.
+
+    latest_uuid_ = uuid;
+    // If we are waiting for last goal to go active, this new goal is preempting
+    // the last one. Not sure how likely it is to receive a third or forth goal
+    // before the first goal is accepted but let's handle it just in case
+    if (state_ == WAITING_FOR_ACCEPTED || state_ == PREEMPTED) {
+      state_ = PREEMPTED;
+      // Accept and start executing the goal in the accepted callback. We will
+      // kill previous goals in their accept callback
+      return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    } else if (state_ == WAITING_FOR_RESPONSE)  {
+      // If the current goal is being execution, we need to cancel it.
+      // In the ros1 astrobee code, this was referred to as preemption
+      state_ = CANCELED;
+      if (cb_preempt_) {
+        cb_preempt_();
+      }
+      // Accept but don't start executing the goal until the previous goal has
+      // been completed.
+      return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
+    } else if (state_ == CANCELED) {
+      // We are receive yet another goal before working on the last goal or a
+      // user canceled a goal and sent a new one before the cancel finished.
+      return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
+    }
+
+    // Nominal case where we are waiting for goal
+    state_ = WAITING_FOR_ACCEPTED;
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
   void AcceptedCallback(const std::shared_ptr<GoalHandle> goal_handle) {
-    // TODO Fill me!
+    // First check to see if this goal id matches the latest goal id. If it
+    // doesn't we don't care about this goal
+    if (goal_handle->get_goal_id() != latest_uuid_) {
+      std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+      if (state_ == WAITING_FOR_ACCEPTED) {
+      // This cancel will be called when there is one goal that got canceled
+      // before its accepted callback was called. This should be very rare.
+        goal_handle->canceled(result);
+      } else {
+        // This abort will get called if multiple goals were received before
+        // the accepted callback was called. It is unlikely that more than one
+        // goal will preempt the original of canceled goal. However, this code
+        // should be able to handle that case. Also this isn't really an abort
+        // but the canceled function documentation makes it sound like the goal
+        // had to be canceled by the action client before it can be canceled in
+        // the server. Since these cases are very unlikely, output a warning in
+        // case debugging is needed.
+        FF_DEBUG("Rare abort goal case. This may need some attention.");
+        goal_handle->abort(result);
+      }
+    } else {
+      // Check if nominal or preempted case. For preempted, we already checked
+      // that this was the most recent goal handle
+      if (state_ == WAITING_FOR_ACCEPTED || state_ == PREEMPTED) {
+        StartGoal(goal_handle);
+      } else if (state_ == CANCELED) {
+        // First check to see if the old goal has been successfully canceled. We
+        // don't want to start the new goal until the old one was successfully
+        // canceled.
+        if (!current_goal_handle_) {
+          // In this case, the goal was accepted and deferred in the goal
+          // callback. Need to set the goal to executing
+          goal_handle->execute();
+          StartGoal(goal_handle);
+        } else {
+          // If the old goal still needs to be canceled, save the goal handle
+          next_goal_handle_ = goal_handle;
+        }
+      } else {
+        // Handle the case were we get a goal handle and don't know what to do
+        FF_ERROR("ff action: Got accepted goal callback in state %d.", state_);
+        std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+        goal_handle->abort(result);
+      }
+    }
   }
 
-  // In the case where one goal preempts another, the preempt callback called right before
-  // the new goal arrives. In the freeflyer project we differentiate between cancels() and
-  // preemptions. This intercepts the preempt call and decides what to do.
+  void StartGoal(const std::shared_ptr<GoalHandle> goal_handle) {
+    state_ = WAITING_FOR_RESPONSE;
+    current_goal_handle_ = goal_handle;
+    if (cb_goal_) {
+      std::thread(cb_goal_, current_goal_handle_->get_goal()).detach();
+    }
+  }
+
+  // Handles request to cancel a goal
   rclcpp_action::CancelResponse CancelCallback(
                               const std::shared_ptr<GoalHandle> goal_handle) {
-    // TODO Fill me!
-    /*if (sas_->isNewGoalAvailable()) {
-      if (cb_preempt_)
-        cb_preempt_();
-    } else {
-      if (cb_cancel_)
+    // Nominal case
+    if (state_ == WAITING_FOR_RESPONSE) {
+      state_ = CANCELED;
+      if (cb_cancel_) {
         cb_cancel_();
-    }*/
+      }
+    } else if (state_ == WAITING_FOR_ACCEPTED) {
+      // This assumes actions allow a goal to be canceled before fully being
+      // accepted
+      // Make latest uuid invalid so we have a way to cancel the goal in the
+      // accepted callback
+      latest_uuid_ = {};
+    } else if (state_ == PREEMPTED) {
+      // If the cancel was not called on the latest goal, the goal will be
+      // aborted anyway. Do we care if it is aborted instead of cancelled?
+      if (latest_uuid_ == goal_handle->get_goal_id()) {
+        // Set state to waiting for goal. When the accepted callback for the
+        // latest goal is called, the uuid check will fail and the goal will be
+        // aborted. Again, do we care that the goal was aborted instead of
+        // cancelled?
+        state_ = WAITING_FOR_GOAL;
+        latest_uuid_ = {};
+      }
+    } else if (state_ == CANCELED) {
+      // If this is a cancel for the old goal, set state to canceled so the
+      // goal gets canceled in the send result code
+      if (current_goal_handle_->get_goal_id() == goal_handle->get_goal_id()) {
+        state_ = CANCELED;
+      } else {
+        // Check to make sure the latest goal is being canceled. If we had
+        // multiple goals come in while the oldest was being canceled, they will
+        // be aborted in the accepted callback. Again, do we care that the goals
+        // were aborted instead of canceled?
+        if (latest_uuid_ == goal_handle->get_goal_id()) {
+          // If accepted was called for the new goal, cancel it and set latest
+          // uuid to the current goal uuid if that goal hasn't finished
+          if (next_goal_handle_) {
+            std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+            next_goal_handle_->canceled(result);
+            latest_uuid_ = current_goal_handle_->get_goal_id();
+            next_goal_handle_ = NULL;
+          } else {
+            // If accepted wasn't called yet, set the latest uuid to be invalid
+            // so that it gets aborted in the accepted callback. Again, do we
+            // care that the goal gets aborted instead of canceled?
+            latest_uuid_ = {};
+          }
+        }
+      }
+    }
+
     return rclcpp_action::CancelResponse::ACCEPT;
   }
 
  protected:
+  double to_response_;
+  State state_;
+  ff_util::FreeFlyerTimer timer_response_;
+  rclcpp_action::GoalUUID latest_uuid_;
   typename rclcpp_action::Server<ActionType>::SharedPtr sas_;
-  typename GoalHandle::SharedPtr sgh_;
+  typename std::shared_ptr<GoalHandle> current_goal_handle_;
+  typename std::shared_ptr<GoalHandle> next_goal_handle_;
   GoalCallbackType cb_goal_;
   PreemptCallbackType cb_preempt_;
   CancelCallbackType cb_cancel_;
