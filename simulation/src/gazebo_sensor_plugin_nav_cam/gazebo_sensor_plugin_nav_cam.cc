@@ -59,6 +59,7 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle& nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
+    clock_ = nh->get_clock();
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
       gzerr << "GazeboSensorPluginNavCam requires a parent camera sensor.\n";
