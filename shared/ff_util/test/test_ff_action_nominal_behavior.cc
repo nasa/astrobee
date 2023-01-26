@@ -38,54 +38,55 @@
 #include <functional>
 #include <memory>
 
-// SERVER CALLBACKS
+FF_DEFINE_LOGGER("test_ff_action_nominal_behavior")
 
+// SERVER CALLBACKS
 class Server : ff_util::FreeFlyerComponent {
  public:
   explicit Server(const rclcpp::NodeOptions& options) :
       FreeFlyerComponent(options, "action_server_test", true), messages_(0) {}
 
-  void Initialize(NodeHandle node) {
-    /*action_.SetGoalCallback(std::bind(&Server::GoalCallback, this, std::placeholders::_1));
+  void Initialize(NodeHandle nh) {
+    action_.SetGoalCallback(std::bind(&Server::GoalCallback, this, std::placeholders::_1));
     action_.SetPreemptCallback(std::bind(&Server::PreemptCallback, this));
     action_.SetCancelCallback(std::bind(&Server::CancelCallback, this));
     action_.Create(nh, "two_ints_action");
-    timer_ = nh->createTimer(ros::Duration(0.2), &Server::TimerCallback, this, false, false);*/
+    timer_.createTimer(0.2, std::bind(&Server::TimerCallback, this), nh, false, false);
   }
 
  protected:
-/*  void GoalCallback(actionlib::TwoIntsGoalConstPtr const& goal) {
-    ROS_INFO("S:GoalCallback()");
+  void GoalCallback(std::shared_ptr<const ff_msgs::action::Dock::Goal> goal) {
+    FF_INFO("S:GoalCallback()");
     messages_ = 0;
     timer_.start();
   }
 
   void CancelCallback() {
-    ROS_INFO("S:CancelCallback()");
+    FF_INFO("S:CancelCallback()");
     EXPECT_TRUE(false);
     // ros::shutdown();
   }
 
   void PreemptCallback() {
-    ROS_INFO("S:PreemptCallback()");
+    FF_INFO("S:PreemptCallback()");
     EXPECT_TRUE(false);
     // ros::shutdown();
   }
 
-  void TimerCallback(ros::TimerEvent const& event) {
-    if (messages_++ < 5) {
+  void TimerCallback() {
+    /*if (messages_++ < 5) {
       actionlib::TwoIntsFeedback feedback;
       action_.SendFeedback(feedback);
     } else {
       timer_.stop();
       actionlib::TwoIntsResult result;
       action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
-    }
-  }*/
+    }*/
+  }
 
  private:
   size_t messages_;
-  ff_util::FreeFlyerActionServer <ff_msgs::action::Dock> action_;
+  ff_util::FreeFlyerActionServer<ff_msgs::action::Dock> action_;
   ff_util::FreeFlyerTimer timer_;
 };
 
@@ -93,7 +94,7 @@ class Server : ff_util::FreeFlyerComponent {
 
 class Client : ff_util::FreeFlyerComponent {
  public:
-  explicit Client(const rclcpp::NodeOption& options) :
+  explicit Client(const rclcpp::NodeOptions& options) :
     ff_util::FreeFlyerComponent(options, "action_client_test", true) {}
 
   void Initialize(NodeHandle node) {
@@ -152,10 +153,10 @@ class Client : ff_util::FreeFlyerComponent {
 // Perform a test of the simple action client
 TEST(ff_action, nominal_behaviour) {
   // Initialize before nodehandle is available
-  Server server;
+  /*Server server;
   Client client;
   // Create a new node handle
-  /*ros::NodeHandle nh("~");
+  ros::NodeHandle nh("~");
   // Initialize the client before the server to make things difficult
   client.Initialize(&nh);
   server.Initialize(&nh);
