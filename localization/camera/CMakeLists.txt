@@ -108,7 +108,7 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
 
-# # Install C++ executables
+# Install C++ executables
 install(TARGETS undistort_image DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/undistort_image share/${PROJECT_NAME}
