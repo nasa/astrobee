@@ -15,22 +15,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(camera)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  ff_common
-  config_reader
-)
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 # System dependencies are found with CMake's conventions
-find_package(cmake_modules REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
+# find_package(cmake_modules REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 find_package(Eigen3 REQUIRED)
 
 # Find OpenCV
@@ -38,14 +35,12 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
 
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES camera
-  CATKIN_DEPENDS
-    ff_common
-    config_reader
-)
+find_package(ff_common REQUIRED)
+find_package(config_reader REQUIRED)
 
 ###########
 ## Build ##
@@ -54,7 +49,6 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -64,28 +58,31 @@ add_library(camera
   src/camera_model.cc
   src/camera_params.cc
 )
-add_dependencies(camera ${catkin_EXPORTED_TARGETS})
-target_link_libraries(camera ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
+ament_target_dependencies(camera rclcpp ff_common config_reader)
+ament_export_targets(camera HAS_LIBRARY_TARGET)
+target_link_libraries(camera ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
 
-## Declare a C++ executable: undistort_image
+# Declare a C++ executable: undistort_image
 add_executable(undistort_image tools/undistort_image.cc)
-add_dependencies(undistort_image ${catkin_EXPORTED_TARGETS})
 target_link_libraries(undistort_image
-  camera gflags glog ${catkin_LIBRARIES})
+  camera gflags glog ${Boost_LIBRARIES})
+ament_target_dependencies(undistort_image rclcpp ff_common)
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
 
-  add_rostest_gtest(test_camera_model
-    test/test_camera_model.test
+  # define TEST_DIR so that tests can find their test data
+  get_filename_component(ABSOLUTE_TEST_DIR test ABSOLUTE)
+  add_definitions(-DTEST_DIR=\"${ABSOLUTE_TEST_DIR}\")
+
+  ament_add_gtest(test_camera_model
     test/test_camera_model.cc
   )
   target_link_libraries(test_camera_model
     camera
   )
 
-  add_rostest_gtest(test_camera_params
-    test/test_camera_params.test
+  ament_add_gtest(test_camera_params
     test/test_camera_params.cc
   )
   target_link_libraries(test_camera_params
@@ -98,11 +95,17 @@ endif()
 ## Install ##
 #############
 
+target_include_directories(camera
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT camera
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Install C++ executables
@@ -115,8 +118,10 @@ install(CODE "execute_process(
   )")
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+ament_package()

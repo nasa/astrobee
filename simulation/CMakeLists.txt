@@ -34,6 +34,7 @@ find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 find_package(ff_hw_msgs REQUIRED)
 find_package(pmc REQUIRED)
+find_package(camera REQUIRED)
 
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -226,14 +227,13 @@ target_link_libraries(gazebo_sensor_plugin_dock_cam astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_dock_cam rclcpp tf2 tf2_ros sensor_msgs gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_sensor_plugin_dock_cam)
 
-# # Create a model plugin for sparse mapping
-# add_library(gazebo_sensor_plugin_sparse_map
-#   src/gazebo_sensor_plugin_sparse_map/gazebo_sensor_plugin_sparse_map.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_sparse_map ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_sparse_map
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin for sparse mapping
+add_library(gazebo_sensor_plugin_sparse_map SHARED
+  src/gazebo_sensor_plugin_sparse_map/gazebo_sensor_plugin_sparse_map.cc
+)
+target_link_libraries(gazebo_sensor_plugin_sparse_map astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_sparse_map rclcpp gazebo_dev gazebo_ros camera)
+ament_export_libraries(gazebo_sensor_plugin_sparse_map)
 
 # # Create a model plugin for AR localization
 # add_library(gazebo_sensor_plugin_ar_tags
@@ -291,6 +291,7 @@ install(TARGETS
   gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
+  gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}

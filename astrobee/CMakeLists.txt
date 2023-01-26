@@ -57,7 +57,7 @@ install(DIRECTORY launch
 
 # Mark resource files for installation
 install(DIRECTORY resources
-  DESTINATION lib
+  DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)
 
 install(PROGRAMS scripts/apk_print_version.sh
