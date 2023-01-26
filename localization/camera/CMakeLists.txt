@@ -33,7 +33,6 @@ find_package(Eigen3 REQUIRED)
 # Find OpenCV
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
-find_package(Luajit20 REQUIRED)
 
 
 # Find amend and libraries
@@ -52,7 +51,6 @@ include_directories(
   include
   ${EIGEN3_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
-  ${LUAJIT_INCLUDE_DIR}
 )
 
 # Declare C++ libraries
