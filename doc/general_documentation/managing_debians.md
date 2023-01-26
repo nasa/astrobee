@@ -12,7 +12,6 @@ Step 1 is slightly different for freeflyer or freeflyer_avionics.
 
 Setup:
 
-    export FF_SOURCE=<path_to_your_freeflyer_repository>
     export FF_AVIONICS=<path_to_your_avionics_repository>
 
 More information on how Astrobee is using

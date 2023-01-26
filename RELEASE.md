@@ -1,5 +1,10 @@
 # Releases
 
+## Release 0.16.7
+
+  * Remove simulink auto-generated code
+  * improved documentation, other tools and fixes
+
 ## Release 0.16.6
 
   * switch map online possibility

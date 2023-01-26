@@ -110,7 +110,7 @@ void GraphLocalizerInitializer::ResetBiases() {
 void GraphLocalizerInitializer::ResetBiasesFromFile() {
   std::ifstream imu_bias_file(params_.graph_initializer.imu_bias_filename);
   if (!imu_bias_file.is_open()) {
-    LogError("ResetBiasesFromFile: Failed to read imu bias file.");
+    LogDebug("ResetBiasesFromFile: Failed to read imu bias file.");
     return;
   }
 

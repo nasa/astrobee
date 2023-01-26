@@ -22,6 +22,6 @@ Each bag in this folder:
 
 - Specifically, contains one sample message on each ROS telemetry topic
   recorded within the ZIP archive, as collected by scanning the bags in
-  the archive using the `rosbag_sample_bags.py` script. (The full bags
+  the archive using the `rosbag_sample.py` script. (The full bags
   are multiple gigabytes in size and are not needed for basic backward
   compatibility testing.)

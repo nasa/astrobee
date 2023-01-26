@@ -59,8 +59,6 @@ OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     exec_->StopArm(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-    exec_->StopGuestScience(cmd);
   } else {
     std::string err_msg = "Command " + cmd->cmd_name +
                                       " not accepted in op state auto return.";

@@ -5,7 +5,8 @@
 # You must set the docker context to be the repository root directory
 
 ARG UBUNTU_VERSION=16.04
-FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu$UBUNTU_VERSION
+ARG ROS_VERSION=kinetic
+FROM osrf/ros:${ROS_VERSION}-desktop-full
 
 ARG ROS_VERSION=kinetic
 ARG PYTHON=''
@@ -28,11 +29,8 @@ RUN apt-get update \
 # suppress detached head warnings later
 RUN git config --global advice.detachedHead false
 
-# Install ROS --------------------------------------------------------------------
+# Install Desktop ROS ------------------------------------------------------------
 COPY ./scripts/setup/*.sh /setup/astrobee/
-
-# this command is expected to have output on stderr, so redirect to suppress warning
-RUN /setup/astrobee/add_ros_repository.sh >/dev/null 2>&1
 
 RUN apt-get update \
   && apt-get install -y \
@@ -46,7 +44,7 @@ RUN apt-get update \
 COPY ./scripts/setup/debians /setup/astrobee/debians
 
 RUN apt-get update \
-  && /setup/astrobee/debians/build_install_debians.sh \
+  && /bin/bash /setup/astrobee/debians/build_install_debians.sh \
   && rm -rf /var/lib/apt/lists/* \
   && rm -rf /setup/astrobee/debians
 
@@ -58,5 +56,4 @@ RUN /setup/astrobee/install_desktop_packages.sh \
 #Add the entrypoint for docker
 RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/${ROS_VERSION}/setup.bash\"\nsource \"/src/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/src/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
   chmod +x /astrobee_init.sh && \
-  rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'

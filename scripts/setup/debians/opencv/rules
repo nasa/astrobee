@@ -34,7 +34,10 @@ override_dh_auto_configure:
 	dh_auto_configure -B $(BUILDDIR) \
 		-- $(CMAKE_FLAGS) \
 		-DCMAKE_SHARED_LINKER_FLAGS_RELEASE="$(LDFLAGS)" \
-		-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON
+		-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON \
+		-DWITH_V4L=OFF \
+		-DWITH_LIBV4L=OFF \
+		-DWITH_CUDA=OFF
 
 
 override_dh_auto_build: 

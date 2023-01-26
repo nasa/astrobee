@@ -23,17 +23,17 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy astrobee code
-COPY . /home/astrobee/astrobee
+COPY . /src/astrobee/src
 
 # Define the appropriate environment variables
 ARG ARMHF_CHROOT_DIR=/arm_cross/rootfs
 ARG ARMHF_TOOLCHAIN=/arm_cross/toolchain/gcc
-ARG FF_SOURCE=/home/astrobee/astrobee
 
 # Cross-compile
 RUN ln -s /arm_cross/toolchain/gcc/bin/arm-linux-gnueabihf-strip "/usr/bin/arm-linux-gnueabihf-strip" \
-    && cd /home/astrobee/astrobee && ./scripts/build/build_debian.sh
+    && ln -s /arm_cross/rootfs/usr/include/eigen3 /usr/include/eigen3 \
+    && cd /src/astrobee && ./src/scripts/build/build_debian.sh
 
 # Move resulting files to a folder
-RUN mkdir /home/astrobee/debians \
- && mv -t /home/astrobee/debians /home/astrobee/*.deb /home/astrobee/*.build /home/astrobee/*.changes
+RUN mkdir /src/astrobee/debians \
+ && mv -t /src/astrobee/debians /src/astrobee/*.deb /src/astrobee/*.build /src/astrobee/*.changes

@@ -31,13 +31,16 @@
 #include <ff_util/ff_names.h>
 #include <ff_util/perf_timer.h>
 
+#include <Eigen/Dense>
 #include <geometry_msgs/InertiaStamped.h>
 
 #include <config_reader/config_reader.h>
+#include <pmc/fam.h>
 
 #include <mutex>
 
 namespace fam {
+
 /**
 * @brief Force Allocation Module implementation using GNC module
 */
@@ -52,8 +55,11 @@ class Fam {
   void CtlCallBack(const ff_msgs::FamCommand & c);
   void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
   void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
+  void TestTwoVectors(const char* name, const Eigen::Matrix<float, 6, 1> new_array,
+                      const float old_array[], float tolerance);
 
   gnc_autocode::GncFamAutocode gnc_;
+  pmc::Fam fam_;
 
   ros::Subscriber ctl_sub_;
   ros::Subscriber flight_mode_sub_, inertia_sub_;
@@ -66,8 +72,12 @@ class Fam {
   std::mutex mutex_speed_;
   uint8_t speed_;
   std::mutex mutex_mass_;
-  geometry_msgs::Vector3 center_of_mass_;
+  Eigen::Vector3f center_of_mass_;
   bool inertia_received_;
+  bool use_old_fam_;
+  bool compare_fam_;
+
+  pmc::FamInput input_;
 };
 }  // end namespace fam
 

@@ -66,6 +66,7 @@ extern const InsensitiveMap<CommandCreateFn> kCommandMap = {
   { kCmdSwitchLocal, &CreateCommand<SwitchLocalizationCommand> },
   { kCmdStartRecord, &CreateCommand<StartRecordingCommand> },
   { kCmdStopRecord,  &CreateCommand<StopRecordingCommand> },
+  { kCmdEnableAstrobeeIntercomms, &CreateCommand<EnableAstrobeeIntercommsCommand> }
 };
 
 // Command names that need the normalized
@@ -574,4 +575,9 @@ StopRecordingCommand::StopRecordingCommand(Json::Value const& obj)
   set_valid(true);
 }
 
+EnableAstrobeeIntercommsCommand::EnableAstrobeeIntercommsCommand(
+                                                        Json::Value const& obj)
+  : Command(obj) {
+  set_valid(true);
+}
 }  // namespace jsonloader

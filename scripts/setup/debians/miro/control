@@ -1,7 +1,7 @@
 Source: libmiro
 Priority: optional
 Maintainer: Brian Coltin <nospam@nospam.org>
-Build-Depends: debhelper (>=9), cmake (>=3.5), rti-dev (>=5.1), libqt4-qt3support (>=4) | libqt5widgets5, libace-dev (>=6.3)
+Build-Depends: debhelper (>=9), cmake (>=3.5), rti-dev (>=5.1), qt5-default | libqt4-qt3support (>=4), libace-dev (>=6.3)
 Standards-Version: 3.9.7
 Section: libs
 Homepage: https://github.com/hhutz/Miro

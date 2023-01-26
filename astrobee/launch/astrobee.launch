@@ -29,7 +29,7 @@
 
   <!-- Remaining options -->
   <arg name="output" default="log" />         <!-- Output to screen or log   -->
-  <arg name="ground_truth_localizer" default="false" /> <!-- Use Ground Truth Localizer      -->
+  <arg name="gtloc" default="false" />        <!-- Use Ground Truth Localizer -->
   <arg name="drivers" default="true" />       <!-- Should we launch drivers? -->
   <arg name="sim" default="local" />          <!-- SIM IP address            -->
   <arg name="llp" default="local" />          <!-- LLP IP address            -->
@@ -113,7 +113,7 @@
         <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
-        <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" />
+        <arg name="gtloc" value="$(arg gtloc)" />
       </include>
 
       <!-- If we have specified a bag, then play it back into flight software-->
@@ -153,7 +153,7 @@
         <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
-        <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" />
+        <arg name="gtloc" value="$(arg gtloc)" />
       </include>
 
       <!-- If we have specified a bag, then play it back into flight software-->

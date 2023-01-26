@@ -30,6 +30,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   config_reader
   gnc_autocode
+  pmc
 )
 
 # System dependencies are found with CMake's conventions
@@ -46,6 +47,7 @@ catkin_package(
     ff_util
     config_reader
     gnc_autocode
+    pmc
 )
 
 ###########

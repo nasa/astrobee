@@ -34,19 +34,10 @@ plan schema, please follow the next three subsections to generate the files.
 
 ## Setup
 
-To use the scripts, you will need to checkout the xgds2 repo and install some
-python and geocam tools.
+The scripts for auto-generating source code files from the command dictionary
+depend on the `xgds_planner2` library, which can be installed as follows:
 
-    cd astrobee/commands/
-    git clone https://github.com/xgds/xgds_planner2.git
-    sudo apt-get install python-pip python-iso8601
-    sudo pip install git+https://github.com/geocam/geocamUtilWeb
-
-In order to generate the Android files, the xpjson planner parser needs to be
-changed to keep the parent field for each command parameter. To do this, open
-the astrobee/commands/xgds_planner2/xgds_planner2/xpjson.py file in your
-preferred text editor. Find the KEEP_PARAM_PARENT parameter (around line 114)
-and set it to true. Then save and close the file.
+    sudo pip install git+https://github.com/trey0/xgds_planner2.git@just_xpjson
 
 ## Generate FSW files
 

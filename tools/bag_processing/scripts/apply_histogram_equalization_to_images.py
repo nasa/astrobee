@@ -27,7 +27,7 @@ import sys
 import cv2
 import rosbag
 import rospy
-import utilities
+import utilities.utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 

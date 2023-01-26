@@ -564,6 +564,8 @@ void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
   for (auto it = watch_dogs_.begin(); it != watch_dogs_.end(); ++it) {
     // Try restarting nodelet if we never received a heartbeat from it
     if (!it->second->heartbeat_started()) {
+      ROS_WARN_STREAM(it->first <<
+          " never published a heartbeat! Trying to start it manually.");
       // Only need to set the name. Everything else will be looked up from the
       // config
       load_req.name = it->first;

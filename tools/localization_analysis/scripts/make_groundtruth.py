@@ -66,10 +66,23 @@ if __name__ == "__main__":
         help="Prefix for generated map names. Defaults to bagfile name.",
     )
     parser.add_argument(
+        "-l",
+        "--max-low-movement-mean-distance",
+        type=float,
+        default=0.09,
+        help="Threshold for sequential image removal, the higher the more images removed.",
+    )
+    parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",
         action="store_false",
         help="Use image features msgs from bagfile or generate features from images.",
+    )
+    parser.add_argument(
+        "--no-histogram-equalization",
+        dest="histogram_equalization",
+        action="store_false",
+        help="Do not perform histogram equalization on images for map construction.",
     )
 
     args = parser.parse_args()
@@ -102,7 +115,14 @@ if __name__ == "__main__":
         map_name = bag_prefix + "_groundtruth"
 
     make_map.make_map(
-        bagfile, map_name, args.world, args.robot_name, base_surf_map, maps_directory
+        bagfile,
+        map_name,
+        args.world,
+        args.robot_name,
+        args.histogram_equalization,
+        args.max_low_movement_mean_distance,
+        base_surf_map,
+        maps_directory,
     )
 
     robot_config = "config/robots/" + args.robot_name + ".config"
