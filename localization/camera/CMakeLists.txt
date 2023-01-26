@@ -27,7 +27,7 @@ set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 # System dependencies are found with CMake's conventions
 # find_package(cmake_modules REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 find_package(Eigen3 REQUIRED)
 
 # Find OpenCV
@@ -67,7 +67,7 @@ target_link_libraries(camera ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
 # Declare a C++ executable: undistort_image
 add_executable(undistort_image tools/undistort_image.cc)
 target_link_libraries(undistort_image
-  camera gflags glog -lboost_filesystem -lboost_system)
+  camera gflags glog ${Boost_LIBRARIES})
 ament_target_dependencies(undistort_image rclcpp ff_common)
 
 if(BUILD_TESTING)
