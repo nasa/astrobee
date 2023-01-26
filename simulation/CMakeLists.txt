@@ -229,7 +229,7 @@ ament_export_libraries(gazebo_model_plugin_heartbeat)
 # )
 
 # Create a model plugin for sparse mapping
-add_library(gazebo_sensor_plugin_sparse_map
+add_library(gazebo_sensor_plugin_sparse_map SHARED
   src/gazebo_sensor_plugin_sparse_map/gazebo_sensor_plugin_sparse_map.cc
 )
 target_link_libraries(gazebo_sensor_plugin_sparse_map astrobee_gazebo)
@@ -292,6 +292,7 @@ install(TARGETS
   gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
+  gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}

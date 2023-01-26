@@ -155,7 +155,7 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     timer_features_.start();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = FF_TIME_NOW() + rclcpp::Duration(delay_camera_);
+    msg_reg_.header.stamp = FF_TIME_NOW() + rclcpp::Duration::from_seconds(delay_camera_);
     msg_reg_.camera_id++;
     pub_reg_->publish(msg_reg_);
     FF_SPIN_ONCE();

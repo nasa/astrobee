@@ -55,7 +55,6 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
   ament_add_gtest(test_thread
-    test/test_thread.test
     test/test_thread.cc
   )
   target_link_libraries(test_thread

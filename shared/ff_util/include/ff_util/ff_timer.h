@@ -48,12 +48,14 @@ class FreeFlyerTimer {
   // Destructor
   ~FreeFlyerTimer() {}
 
-  void createTimer(double period_sec,
+  void createTimer(double period,
                    TimerCallbackType cb_timer,
                    rclcpp::Node::SharedPtr node,
                    bool one_shot = false,
                    bool auto_start = true) {
-    createTimer(std::make_shared<rclcpp::Duration>(period_sec, 0),
+    int period_sec = std::floor(period);
+    int period_nsec = (period - period_sec) * 1e9;
+    createTimer(std::make_shared<rclcpp::Duration>(period_sec, period_nsec),
                 cb_timer,
                 node,
                 node->get_clock(),
@@ -61,13 +63,15 @@ class FreeFlyerTimer {
                 auto_start);
   }
 
-  void createTimer(double period_sec,
+  void createTimer(double period,
                    TimerCallbackType cb_timer,
                    rclcpp::Node::SharedPtr node,
                    rclcpp::Clock::SharedPtr clock,
                    bool one_shot = false,
                    bool auto_start = true) {
-    createTimer(std::make_shared<rclcpp::Duration>(period_sec, 0),
+    int period_sec = std::floor(period);
+    int period_nsec = (period - period_sec) * 1e9;
+    createTimer(std::make_shared<rclcpp::Duration>(period_sec, period_nsec),
                 cb_timer,
                 node,
                 clock,
