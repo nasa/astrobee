@@ -150,14 +150,8 @@ void MapperNodelet::OctomappingTask() {
 
   // Transform pcl into world frame
   Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-  transform.translation() <<  tf_cam2world.transform.translation.x,
-                              tf_cam2world.transform.translation.y,
-                              tf_cam2world.transform.translation.z;
-  transform.rotate(Eigen::Quaterniond(
-    tf_cam2world.transform.rotation.w,
-    tf_cam2world.transform.rotation.x,
-    tf_cam2world.transform.rotation.y,
-    tf_cam2world.transform.rotation.z));
+  transform = msg_conversions::ros_to_eigen_transform(tf_cam2world.transform);
+
   pcl::transformPointCloud(point_cloud, pcl_world, transform);
 
   // Save into octomap

@@ -25,6 +25,7 @@ messages.
 import argparse
 import logging
 import os
+import shutil
 
 import numpy as np
 import pico_utils as pico
@@ -49,6 +50,7 @@ def pico_xyz_from_extended(
     fast=False,
     verbose=False,
     cam=pico.DEFAULT_CAM,
+    save_all_topics=False,
 ):
     with open(in_npy_path, "rb") as in_npy:
         xyz_coeff = np.load(in_npy)
@@ -57,24 +59,41 @@ def pico_xyz_from_extended(
     ext_topic = pico.get_ext_topic(cam)
     pts_topic = pico.get_pts_topic(cam)
     amp_topic = pico.get_amp_topic(cam)
-    with rosbag.Bag(out_bag_path, "w") as out_bag:
-        for ext_msg in pico.get_msgs(in_bag_path, ext_topic, fast):
-            distance, amplitude, intensity, noise = pico.split_extended(ext_msg)
+    topics_bag = [] if save_all_topics else ext_topic
 
-            xyz = pico.xyz_from_distance(distance, xyz_coeff)
-            pts_msg = pico.make_points_msg(ext_msg.header, xyz)
-            out_bag.write(pts_topic, pts_msg, pts_msg.header.stamp)
+    with rosbag.Bag(in_bag_path, "r") as bag, rosbag.Bag(out_bag_path, "w") as out_bag:
+        # for ext_msg in pico.get_msgs(in_bag_path, ext_topic, fast):
+        for topic, msg, t in bag.read_messages(topics_bag):
+            if topic == ext_topic:
+                distance, amplitude, intensity, noise = pico.split_extended(msg)
 
-            amp_msg = pico.make_amp_msg(ext_msg.header, amplitude)
-            out_bag.write(amp_topic, amp_msg, amp_msg.header.stamp)
+                xyz = pico.xyz_from_distance(distance, xyz_coeff)
+                pts_msg = pico.make_points_msg(msg.header, xyz)
+                out_bag.write(pts_topic, pts_msg, pts_msg.header.stamp)
 
-            k_logger.info("split %5d extended messages", k_logger.count + 1)
+                amp_msg = pico.make_amp_msg(msg.header, amplitude)
+                out_bag.write(amp_topic, amp_msg, amp_msg.header.stamp)
+
+                k_logger.info("split %5d extended messages", k_logger.count + 1)
+
+            if save_all_topics:
+                out_bag.write(topic, msg, t)
     logging.info("wrote split messages to %s", out_bag_path)
 
 
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "inbag", nargs="+", help="Input bag containing extended messages"
+    )
+    parser.add_argument("--in_npy", help="Input xyz coefficients file", default="")
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="path for output bag",
+        default="{inbag}.split_extended.bag",
     )
     parser.add_argument(
         "-v",
@@ -98,25 +117,49 @@ def main():
         choices=pico.CAM_CHOICES,
         default=pico.DEFAULT_CAM,
     )
-    parser.add_argument("in_bag", help="input bag containing extended messages")
-    parser.add_argument("in_npy", help="input xyz coefficients file")
-    parser.add_argument("out_bag", help="output bag of points messages")
+    parser.add_argument(
+        "-s",
+        "--save-all-topics",
+        dest="save_all_topics",
+        action="store_true",
+        help="Save all topics from input bagfile to output bagfile.",
+    )
+    parser.add_argument(
+        "-n",
+        dest="do_nothing",
+        action="store_true",
+        help="Option to not debayer anything and write output",
+    )
 
     args = parser.parse_args()
-    if os.path.exists(args.out_bag):
-        parser.error("not replacing existing file %s" % args.out_bag)
 
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(message)s")
 
-    pico_xyz_from_extended(
-        args.in_bag,
-        args.in_npy,
-        args.out_bag,
-        fast=args.fast,
-        verbose=args.verbose,
-        cam=args.cam,
-    )
+    for inbag_path in args.inbag:
+        # Check if input bag exists
+        if not os.path.isfile(inbag_path):
+            print(("Bag file " + inbag_path + " does not exist."))
+            sys.exit()
+        output_bag_name = args.output.format(inbag=inbag_path)
+
+        # Check if output bag already exists
+        if os.path.exists(output_bag_name):
+            parser.error("not replacing existing file %s" % output_bag_name)
+
+        if not args.do_nothing:
+            # Split extended message
+            pico_xyz_from_extended(
+                inbag_path,
+                args.in_npy,
+                output_bag_name,
+                args.fast,
+                args.verbose,
+                args.cam,
+                args.save_all_topics,
+            )
+        else:
+            os.rename(inbag_path, output_bag_name)
 
     # suppress confusing ROS message at exit
     logging.getLogger().setLevel(logging.WARN)

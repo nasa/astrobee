@@ -155,6 +155,19 @@ being used, please run:
 
     rosrun executive teleop_tool -get_planner
 
+### Set Check Zones
+
+This flag is used to tell the robot if it should check the keepin and keepout
+zones. By default, the robot checks them before performing a motion. If you are
+having trouble with the keepin/keepout zones in simulation, try turning this
+off. To turn it off, run:
+
+    rosrun executive teleop_tool -set_check_zones "off"
+
+To turn check zones back on, please run:
+
+    rosrun executive teleop_tool -set_check_zones "on"
+
 ### Set Face Forward
 
 This flag is used to tell the robot to fly in face forward mode. By default,

@@ -829,10 +829,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
         geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
           "world", pose.header.frame_id, ros::Time(0));
         // Copy the transform
-        pose.pose.position.x = tf.transform.translation.x;
-        pose.pose.position.y = tf.transform.translation.y;
-        pose.pose.position.z = tf.transform.translation.z;
-        pose.pose.orientation = tf.transform.rotation;
+        pose.pose = msg_conversions::ros_transform_to_ros_pose(tf.transform);
       } catch (tf2::TransformException &ex) {
         NODELET_WARN_STREAM("Transform failed" << ex.what());
         return false;

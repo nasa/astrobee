@@ -58,6 +58,7 @@ constexpr char kCmdTelemRate[]    = "setTelemetryRate";
 constexpr char kCmdSwitchLocal[]  = "switchLocalization";
 constexpr char kCmdStartRecord[]  = "startRecording";
 constexpr char kCmdStopRecord[]   = "stopRecording";
+constexpr char kCmdEnableAstrobeeIntercomms[] = "enableAstrobeeIntercomms";
 
 class DockCommand : public Command {
  public:
@@ -303,6 +304,11 @@ class StartRecordingCommand : public Command {
 class StopRecordingCommand : public Command {
  public:
   explicit StopRecordingCommand(Json::Value const& obj);
+};
+
+class EnableAstrobeeIntercommsCommand : public Command {
+ public:
+  explicit EnableAstrobeeIntercommsCommand(Json::Value const& obj);
 };
 
 }  // end namespace jsonloader

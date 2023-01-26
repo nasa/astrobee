@@ -37,20 +37,19 @@ if [ -z "${ARMHF_CHROOT_DIR}" ]; then echo ARMHF_CHROOT_DIR is not set, please c
 echo "Build context for cross: "${DIR}/../../..
 
 if [ -z "${DEBIAN_PATH}" ]
-then
-  if [ -d "${DIR}/../../../../astrobee_install/armhf/" ] # Checks if this folder is defined otherwise defaults to standard
-  then export DEBIAN_PATH=${DIR}/../../../../
-  else export DEBIAN_PATH=$HOME/
-  fi
+then export DEBIAN_PATH=${DIR}/../../../../
 fi
-echo "Saving the cross-compiled code in: "${INSTALL_PATH}
+echo "Saving the debians in: "${DEBIAN_PATH}
 
 # Setup the build context
-docker build $ARMHF_TOOLCHAIN -f scripts/docker/cross_compile/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
-docker build $ARMHF_CHROOT_DIR -f scripts/docker/cross_compile/astrobee_base_rootfs.Dockerfile -t astrobee/astrobee:base-cross
+docker build $ARMHF_TOOLCHAIN -f ${DIR}/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
+docker build $ARMHF_CHROOT_DIR -f ${DIR}/astrobee_base_rootfs.Dockerfile -t astrobee/astrobee:base-cross
 
 # Cross-compiles the code
-docker build ${DIR}/../../.. -f scripts/docker/cross_compile/astrobee_debian.Dockerfile -t astrobee/astrobee:debian
+docker build ${DIR}/../../.. -f ${DIR}/astrobee_debian.Dockerfile -t astrobee/astrobee:debian
+
+# Create install dir if it doesn't exist
+mkdir -p ${DEBIAN_PATH}
 
 # Save the code
-docker cp $(docker create --rm astrobee/astrobee:debian):/home/astrobee/debians/. $DEBIAN_PATH
+docker cp $(docker create --rm astrobee/astrobee:debian):/src/astrobee/debians/. $DEBIAN_PATH

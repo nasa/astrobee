@@ -123,21 +123,23 @@ SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t,
 
 // Form a sparse map by reading a text file from disk. This is for comparing
 // bundler, nvm or theia maps.
-SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& all_image_files)
-    : camera_params_(Eigen::Vector2i(640, 480), Eigen::Vector2d::Constant(300),
-                     Eigen::Vector2d(320, 240)),  // these are placeholders and must be changed
-      num_similar_(FLAGS_num_similar),
-      num_ransac_iterations_(FLAGS_num_ransac_iterations),
-      ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-      early_break_landmarks_(FLAGS_early_break_landmarks),
-      histogram_equalization_(FLAGS_histogram_equalization) {
+SparseMap::SparseMap(bool bundler_format, std::string const& filename,
+                     std::vector<std::string> const& all_image_files):
+  camera_params_(Eigen::Vector2i(640, 480), Eigen::Vector2d::Constant(300),
+                 Eigen::Vector2d(320, 240)),  // these are placeholders and must be changed
+  num_similar_(FLAGS_num_similar),
+  num_ransac_iterations_(FLAGS_num_ransac_iterations),
+  ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
+  early_break_landmarks_(FLAGS_early_break_landmarks),
+  histogram_equalization_(FLAGS_histogram_equalization) {
   std::string ext = ff_common::file_extension(filename);
   boost::to_lower(ext);
 
   if (ext == "nvm") {
     std::cout << "NVM format detected." << std::endl;
 
-    sparse_mapping::ReadNVM(filename, &cid_to_keypoint_map_, &cid_to_filename_, &pid_to_cid_fid_, &pid_to_xyz_,
+    sparse_mapping::ReadNVM(filename, &cid_to_keypoint_map_, &cid_to_filename_,
+                            &pid_to_cid_fid_, &pid_to_xyz_,
                             &cid_to_cam_t_global_);
 
     // Descriptors are not saved, so let them be empty

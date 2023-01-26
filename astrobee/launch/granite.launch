@@ -34,7 +34,6 @@
   <arg name="fsw" default="true" />             <!-- Enable FSW launch       -->
 
   <!-- General options -->
-  <arg name="ocam" default="false" />           <!-- Overhead camera         -->
   <arg name="vive" default="false" />           <!-- Vive ground truth       -->
   <arg name="gviz" default="false" />           <!-- GNC visualizer          -->
   <arg name="rviz" default="false" />           <!-- Robot visualizater      -->
@@ -72,7 +71,6 @@
     </include>
     <!-- Start ground controller services -->
     <include if="$(arg stats)" file="$(find astrobee)/launch/controller/stats.launch"/>
-    <include if="$(arg ocam)" file="$(find astrobee)/launch/controller/ocam.launch"/>
     <include if="$(arg vive)" file="$(find astrobee)/launch/controller/vive.launch"/>
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
     <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch">

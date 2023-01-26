@@ -189,7 +189,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
                                                               lower_bound_or_equal_combined_nav_state->timestamp(),
                                                               time, latest_imu_integrator_->pim_params());
   if (!integrated_pim) {
-    LogError("GetCombinedNavState: Failed to create integrated pim.");
+    LogDebug("GetCombinedNavState: Failed to create integrated pim.");
     return boost::none;
   }
 

@@ -2,17 +2,14 @@
 
 # Usage instructions for non-NASA users
 
-Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04)
-on a host machine, and make sure that you can checkout and build code.
+Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04),
+[Ubuntu 18.04](http://releases.ubuntu.com/18.04) or [Ubuntu 20.04](http://releases.ubuntu.com/20.04)
+(preferred) on a host machine, and make sure that you can checkout and build code.
 
     sudo apt-get install build-essential git
 
 *Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
-
-*Note: Preferably install Ubuntu 16.04. These instructions are also valid for
-Ubuntu 18.04 and 20.04, however at this time we do not officially support
-any other operating system or Ubuntu version.*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
 support running Astrobee Robot Software on 32-bit systems.*

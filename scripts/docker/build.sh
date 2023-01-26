@@ -33,6 +33,7 @@ Build specified docker image targets. Available targets:
 - astrobee_base
 - astrobee
 - test_astrobee
+- astrobee_quick
 - push_astrobee_base (push astrobee_base to ghcr.io)
 - push_astrobee (push astrobee to ghcr.io)
 
@@ -126,6 +127,8 @@ while [ "$1" != "" ]; do
         astrobee )                 build_astrobee="true"
                                    ;;
         test_astrobee )            build_test_astrobee="true"
+                                   ;;
+        astrobee_quick )           astrobee_quick="true"
                                    ;;
         push_astrobee_base )       push_astrobee_base="true"
                                    ;;
@@ -249,6 +252,10 @@ fi
 
 if [ "$build_test_astrobee" = "true" ]; then
     build test_astrobee "" "test-"
+fi
+
+if [ "$astrobee_quick" = "true" ]; then
+    build astrobee_quick "${revision}-" "quick-"
 fi
 
 if [ "$push_astrobee_base" = "true" ]; then

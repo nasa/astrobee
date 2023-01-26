@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy astrobee code
-COPY . /src/astrobee
+COPY . /src/astrobee/src
 
 # Define the appropriate environment variables
 ARG ARMHF_CHROOT_DIR=/arm_cross/rootfs
@@ -29,5 +29,5 @@ ARG ARMHF_TOOLCHAIN=/arm_cross/toolchain/gcc
 
 # Cross-compile
 RUN ln -s /arm_cross/rootfs/usr/include/eigen3 /usr/include/eigen3
-RUN ./src/astrobee/scripts/configure.sh -a -p /opt/astrobee -b /build
-RUN cd /build && make -j4 install
+    && cd /src/astrobee/ && ./src/scripts/configure.sh -a
+    && cd /src/astrobee/ && catkin build

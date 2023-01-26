@@ -102,7 +102,7 @@ target_link_libraries(interest_points_test_bag
 add_executable(merge_bags tools/merge_bags.cc)
 add_dependencies(merge_bags ${catkin_EXPORTED_TARGETS})
 target_link_libraries(merge_bags
-  localization_node gflags glog ${catkin_LIBRARIES})
+  gflags glog ${catkin_LIBRARIES})
 
 #############
 ## Install ##

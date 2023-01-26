@@ -35,15 +35,25 @@ import rosbag
 
 
 def get_message_counts(bag_path):
-    with rosbag.Bag(bag_path, "r") as bag:
-        types, topics = bag.get_type_and_topic_info()
-        return {topic: info.message_count for topic, info in topics.items()}
+    try:
+        with rosbag.Bag(bag_path, "r") as bag:
+            types, topics = bag.get_type_and_topic_info()
+            return {topic: info.message_count for topic, info in topics.items()}
+    except:
+        logging.warning("WARNING: Caught exception during message count check")
+        logging.debug("  Exception was: %s", get_exception_text())
+        return None
 
 
-def message_counts_match_internal(bag_path1, bag_path2):
+def message_counts_match(bag_path1, bag_path2):
     c1 = get_message_counts(bag_path1)
     c2 = get_message_counts(bag_path2)
-    if c1 == c2:
+    if c2 is None:
+        logging.info(
+            "INCONCLUSIVE: Message count comparison: The unfixed bag was too broken to support checking its message counts. (But the fixed bag is likely ok.)"
+        )
+        return True
+    elif c1 == c2:
         num_topics = len(c1)
         num_messages = sum([mc for mc in c1.values()])
         logging.info("PASS: Input bags have identical message counts on each topic")
@@ -56,22 +66,14 @@ def message_counts_match_internal(bag_path1, bag_path2):
     else:
         logging.warning("FAIL: Input bags do not have identical message counts")
         logging.debug(
-            "Bag message count info:\n%s", json.dumps({bag_path1: c1, bag_path2: c2})
+            "Bag message count info:\n%s",
+            json.dumps({bag_path1: c1, bag_path2: c2}, indent=4, sort_keys=True),
         )
         return False
 
 
 def get_exception_text():
     return tb.format_exception_only(*sys.exc_info()[:2])[0].strip()
-
-
-def message_counts_match(bag_path1, bag_path2):
-    try:
-        return message_counts_match_internal(bag_path1, bag_path2)
-    except:
-        logging.warning("FAIL: Caught exception during message count check")
-        logging.debug("  Exception was: %s", get_exception_text())
-        return False
 
 
 def valid_deserialization(bag_path):
@@ -94,7 +96,7 @@ def valid_deserialization(bag_path):
 
 def verify(fixed_path, orig_path, verbose=False, deserialize=False):
     result = True
-    result &= message_counts_match(orig_path, fixed_path)
+    result &= message_counts_match(fixed_path, orig_path)
     if deserialize:
         result &= valid_deserialization(fixed_path)
 

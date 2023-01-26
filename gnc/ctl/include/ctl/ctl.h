@@ -21,6 +21,7 @@
 
 // Autocode includes
 #include <gnc_autocode/ctl.h>
+#include <gnc_autocode/old_ctl.h>
 
 // For includes
 #include <ros/ros.h>
@@ -148,10 +149,7 @@ class Ctl {
     ff_msgs::ControlCommand const& poseVel = ff_msgs::ControlCommand());
 
   // Step control forward
-  bool Step(void);
-
-  ctl_msg* GetCtlMsg(void) {return &gnc_.ctl_;}
-  cmd_msg* GetCmdMsg(void) {return &gnc_.cmd_;}
+  bool Step(ros::Time curr_time);
 
   // Read the control parameters from the LUA config file
   void ReadParams(void);
@@ -162,6 +160,7 @@ class Ctl {
  private:
   // Proxy to gnc
   gnc_autocode::GncCtlAutocode gnc_;
+  gnc_autocode::Control controller_;
 
   std::mutex mutex_cmd_msg_, mutex_segment_;
 
@@ -176,18 +175,30 @@ class Ctl {
   ff_util::Segment segment_;
   ff_util::Segment::iterator setpoint_;
   ff_msgs::ControlFeedback feedback_;
+  ff_msgs::ControlCommand command_;
 
   config_reader::ConfigReader config_;
   ff_util::PerfTimer pt_ctl_;
   ros::Timer config_timer_;
+
+  uint8_t mode_;
+  gnc_autocode::ControlState state_;
 
   std::string name_;
   bool inertia_received_;
   bool control_enabled_;
   bool flight_enabled_;
   bool use_truth_;
+  bool compare_ctl_;
+  bool use_old_ctl_;
   float stopping_vel_thresh_squared_;
   float stopping_omega_thresh_squared_;
+
+  float GetCommand(gnc_autocode::ControlCommand* cmd, ros::Time tim);
+// for testing
+  void TestTwoVectors(const char*, const Eigen::Vector3f new_array, const float old_array[], float tolerance);
+  void TestTwoQuats(const char*, const Eigen::Quaternionf new_quat, const float old_array[], float tolerance);
+  void TestFloats(const char*, const float new_float, const float oldfloat, float tolerance);
 };
 
 }  // end namespace ctl

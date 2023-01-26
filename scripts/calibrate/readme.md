@@ -3,24 +3,25 @@
 This folder contains various scripts for calibration.
 
 # Setup
+
 - Build and install the Astrobee code on the robot.
 - Install Kalibr on your computer.
 
 ## Installation instructions for Kalibr for Ubuntu 18.04
 
-sudo apt install python-rosinstall ipython python-software-properties \
-        python-git ipython python-catkin-tools
-sudo apt install libopencv-dev ros-melodic-vision-opencv
+    sudo apt install python-rosinstall ipython python-software-properties \
+            python-git ipython python-catkin-tools
+    sudo apt install libopencv-dev ros-melodic-vision-opencv
 
 # Install pip and use it to install python packages
 
 We assume that Python 2 is used.
 
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-sudo python get-pip.py
-sudo -H pip install testresources
-sudo -H pip install python-igraph==0.8 --upgrade
-sudo -H pip install  numpy==1.15.0 opencv-python==4.2.0.32
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    sudo python get-pip.py
+    sudo -H pip install testresources
+    sudo -H pip install python-igraph==0.8 --upgrade
+    sudo -H pip install  numpy==1.15.0 opencv-python==4.2.0.32
 
 If necessary, pip and the other packages can be installed in user
 space. The PYTHONPATH may need to be set for such packages.
@@ -29,21 +30,28 @@ The pip flags --user, --force, and --verbose may be useful.
 Kalibr uses Python 2, and many packages are transitioning to Python 3,
 so some effort may be needed to install the Python 2 dependencies.
 
-# Build using catkin
-export KALIBR_WS=$HOME/source/kalibr_workspace
-mkdir -p $KALIBR_WS/src
-cd $KALIBR_WS
-source /opt/ros/melodic/setup.bash
-catkin init
-catkin config --extend /opt/ros/melodic
-catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
-cd $KALIBR_WS/src
-git clone git@github.com:oleg-alexandrov/Kalibr.git
+    # Build using catkin
+    export KALIBR_WS=$HOME/source/kalibr_workspace
+    mkdir -p $KALIBR_WS/src
+    cd $KALIBR_WS
+    source /opt/ros/melodic/setup.bash
+    catkin init
+    catkin config --extend /opt/ros/melodic
+    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
+    cd $KALIBR_WS/src
+    git clone git@github.com:oleg-alexandrov/Kalibr.git
 
-# This line takes care of catkin not finding numpy.
-ln -s /usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy $KALIBR_WS/src/Kalibr/Schweizer-Messer/numpy_eigen/include
+If the above cloning operation fails, it is likely due to some ssh settings on your machine not being as GitHub expects. Then try:
 
-catkin build -DCMAKE_BUILD_TYPE=Release -j4
+    git clone https://github.com/oleg-alexandrov/Kalibr.git
+
+In either case, continue as follows:
+
+    # This line takes care of catkin not finding numpy.
+    ln -s /usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy \
+      $KALIBR_WS/src/Kalibr/Schweizer-Messer/numpy_eigen/include
+
+    catkin build -DCMAKE_BUILD_TYPE=Release -j4
 
 # Prepare the environment. This is expected for all the steps below.
 
@@ -58,12 +66,12 @@ Two calibration target are in use. In the granite lab the April tag
 target can be used. It is on the dock and is a combination of AR
 tags. Its definition is in:
 
-   $SOURCE_PATH/scripts/calibrate/config/granite_april_tag.yaml
+    $SOURCE_PATH/scripts/calibrate/config/granite_april_tag.yaml
 
 Calibration on the ISS uses a checkerboard pattern. That one is
 defined in:
 
-  $SOURCE_PATH/scripts/calibrate/config/iss_checkerboard.yaml
+    $SOURCE_PATH/scripts/calibrate/config/iss_checkerboard.yaml
 
 and has 12 rows and 7 columns of black and white squares, each one
 being of size 1 inch (2.54 cm).
@@ -85,7 +93,7 @@ config_filename: config file where the specifications of AR tags of
 the target are defined. Default value is
 dock_markers_specs.config. This will write the file:
 
-   $SOURCE_PATH/scripts/calibrate/config/granite_april_tag.yaml
+    $SOURCE_PATH/scripts/calibrate/config/granite_april_tag.yaml
 
 Note that $KALIBR_WS should be defined since the script will also
 automatically add a header file to Kalibr's directory describing the
@@ -111,13 +119,13 @@ Prepare the environment:
 
 To launch the nodes needed for calibration, do:
 
-   cd $SCRIPT_DIR
-   roslaunch calibration.launch
+    cd $SCRIPT_DIR
+    roslaunch calibration.launch
 
 On the flight unit, more specifically on MLP, do:
 
-   roslaunch astrobee astrobee.launch llp:=??? mlp:=??? \
-     nodes:=calibration_nav_cam,calibration_dock_cam,calibration_imu,pico_driver,framestore
+    roslaunch astrobee astrobee.launch llp:=??? mlp:=??? \
+      nodes:=calibration_nav_cam,calibration_dock_cam,calibration_imu,pico_driver,framestore
 
 This will start the IMU driver, camera drivers, and an image
 viewer. 
@@ -132,7 +140,7 @@ refer to the high-resolution nav and dock cameras as the HD camera.
 To be able to record the amplitude, which is necessary for haz_cam
 calibration, the file 
 
- /opt/astrobee/config/cameras.config
+    /opt/astrobee/config/cameras.config
 
 (on the robot's MLP, not on the local machine) needs to be edited
 before calibration.launch is started. The api_key variable in the
@@ -147,16 +155,16 @@ amplitude data.
 With the current default setup on the robot, this node should start
 automatically. If it did not, it can be run with the command:
 
-  roslaunch $SOURCE_PATH/hardware/pico_driver/launch/pico_proxy.launch 
+    roslaunch $SOURCE_PATH/hardware/pico_driver/launch/pico_proxy.launch 
   
  Note that on the robot itself this file is stored at:
 
- /opt/astrobee/share/pico_driver/launch/pico_proxy.launch
+    /opt/astrobee/share/pico_driver/launch/pico_proxy.launch
 
 When it is desired to record the amplitude for the perch camera,
 one should pass to roslaunch the argument:
 
-  topic:=/hw/depth_perch/extended
+    topic:=/hw/depth_perch/extended
 
 To calibrate nav_cam attached to a standalone computer, rather than
 astrobee's built in one, one can do instead:
@@ -189,7 +197,7 @@ Begin recording the bag. Example to record nav_cam and haz_cam:
 
 For the dock and perch cams, one should do:
 
-      rosbag record /hw/cam_dock /hw/depth_perch/extended/amplitude_int
+    rosbag record /hw/cam_dock /hw/depth_perch/extended/amplitude_int
 
 Move the AR tag in front of the camera. If the AR tag is only
 partially visible in some frames that is fine. Try to cover the entire

@@ -1,3 +1,10 @@
+astrobee (0.16.7) testing; urgency=medium
+
+  * Remove simulink auto-generated code
+  * improved documentation, other tools and fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 25 Jan 2023 10:42:04 -0800
+
 astrobee (0.16.6) testing; urgency=medium
 
   * switch map online possibility

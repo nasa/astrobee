@@ -25,7 +25,7 @@
   <arg name="debug" default=""/>                 <!-- Debug a node set          -->
   <arg name="dds" default="true"/>               <!-- Should DDS be started     -->
   <arg name="output" default="log"/>             <!-- Where nodes should log    -->
-  <arg name="ground_truth_localizer" default="false"/>   <!-- Runs ground_truth localizer -->
+  <arg name="gtloc" default="false"/>   <!-- Runs ground_truth localizer -->
 
   <!-- Setup nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
@@ -98,7 +98,7 @@
   </include>
 
   <!-- Run ground_truth_localizer, otherwise run graph localizer -->
-  <group unless="$(arg ground_truth_localizer)">
+  <group unless="$(arg gtloc)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
       <arg name="name" value="graph_loc" />
@@ -111,7 +111,7 @@
     </include>
   </group>
 
-  <group if="$(arg ground_truth_localizer)">
+  <group if="$(arg gtloc)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="ground_truth_localizer/GroundTruthLocalizerNodelet" />
       <arg name="name" value="ground_truth_localizer" />

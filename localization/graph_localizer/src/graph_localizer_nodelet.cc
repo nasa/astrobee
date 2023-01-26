@@ -258,7 +258,7 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
 void GraphLocalizerNodelet::PublishARTagPose() const {
   const auto latest_ar_tag_pose_msg = graph_localizer_wrapper_.LatestARTagPoseMsg();
   if (!latest_ar_tag_pose_msg) {
-    LogWarning("PublishARTagPose: Failed to get latest ar tag pose msg.");
+    LogDebug("PublishARTagPose: Failed to get latest ar tag pose msg.");
     return;
   }
   ar_tag_pose_pub_.publish(*latest_ar_tag_pose_msg);

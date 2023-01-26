@@ -44,6 +44,7 @@ import fnmatch
 import json
 import logging
 import os
+import re
 import tempfile
 
 import genpy
@@ -54,6 +55,9 @@ import roslib
 # here:
 #   http://docs.ros.org/en/melodic/api/rosbag/html/python/rosbag.migration-pysrc.html
 #   https://github.com/gavanderhoorn/rosbag_fixer
+
+
+INTERNAL_MESSAGE_DEF_REGEX = re.compile(r"^MSG: ", re.MULTILINE)
 
 
 def dosys(cmd):
@@ -136,6 +140,27 @@ def fix_message_definitions(inbag, fix_topic_patterns, verbose=False):
     fixed_topics = set()
     for conn in inbag._get_connections():
         if not topic_matcher(conn.topic, fix_topic_patterns):
+            continue
+        if INTERNAL_MESSAGE_DEF_REGEX.search(conn.msg_def):
+            logging.info(
+                "Connection's message definition would be fixed based on message topic '%s', but leaving it alone because it already appears to properly incorporate internal message definitions."
+                % conn.topic
+            )
+            # Note that "fixing" a message definition means forcing it to be
+            # deserialized according to the current schema for that message
+            # type, which could be wrong if the schema has changed since the
+            # message was recorded. The usual problem with rosjava message
+            # definitions is that they don't incorporate the definitions of
+            # referenced field types. So we do a superficial check for
+            # that problem and bail out if it comes up negative.
+            #
+            # A real-world example of where this check can be important: the
+            # /mgt/cpu_monitor/state message can be published on both the MLP
+            # and the HLP (different publishers). If on the HLP, the message
+            # definition will be broken and we need to fix it. If on the MLP,
+            # the message definition will not be broken. The schema for that
+            # message has also changed, so fixing non-broken MLP messages from
+            # before the schema change could break them!
             continue
         pytype = roslib.message.get_message_class(conn.datatype)
         if pytype is None:

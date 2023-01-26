@@ -3,7 +3,7 @@ import sys
 
 bre_folder = subprocess.check_output(["catkin_find", "--first-only", "bag_processing", "scripts"]).decode("utf-8").strip()
 sys.path.insert(0, bre_folder)
-import bmr_renumber_enum as bre
+import utilities.bmr_renumber_enum as bre
 
 OLD_RESPONSE_ENUM = """
 int32 ALREADY_THERE                =   2  # MOVE: We are already at the location

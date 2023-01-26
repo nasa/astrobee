@@ -394,10 +394,10 @@ void IncrementalBA(std::string const& essential_file,
   int num_images = s->cid_to_filename_.size();
 
   // Track and camera info up to the current cid
-  std::vector<std::map<int, int> > pid_to_cid_fid_local;
-  std::vector<Eigen::Affine3d > cid_to_cam_t_local;
+  std::vector<std::map<int, int>> pid_to_cid_fid_local;
+  std::vector<Eigen::Affine3d> cid_to_cam_t_local;
   std::vector<Eigen::Vector3d> pid_to_xyz_local;
-  std::vector<std::map<int, int> > cid_fid_to_pid_local;
+  std::vector<std::map<int, int>> cid_fid_to_pid_local;
 
   bool rm_invalid_xyz = true;
 
@@ -660,57 +660,46 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
   // PrintTrackStats(s->pid_to_cid_fid_, "bundle adjustment and filtering");
 }
 
-// Check if the two arrays share elements
-bool haveSharedElements(std::vector<std::string> const& A, std::vector<std::string> const& B) {
-  std::set<std::string> setA;
-  for (size_t it = 0; it < A.size(); it++) setA.insert(A[it]);
-
-  for (size_t it = 0; it < B.size(); it++)
-    if (setA.find(B[it]) != setA.end())
-      return true;
-
-  return false;
-}
-
 // Load two maps, merge the second one onto the first one, and save the result.
 void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
                    int num_image_overlaps_at_endpoints,
                    double outlier_factor, bool bundle_adjust,
                    bool fix_first_map) {
-  if (!bundle_adjust && fix_first_map) LOG(FATAL) << "Cannot fix first map if no bundle adjustment happens.";
+  if (!bundle_adjust && fix_first_map)
+    LOG(FATAL) << "Cannot fix first map if no bundle adjustment happens.";
 
   LOG(INFO) << "Appending " << mapIn << " to " << mapOut << std::endl;
 
   sparse_mapping::SparseMap A(mapOut);
   sparse_mapping::SparseMap B(mapIn);
 
-  // Sanity check before we do a lot of work
-  if (fix_first_map && haveSharedElements(A.cid_to_filename_, B.cid_to_filename_))
-    LOG(FATAL) << "Cannot fix the first map if it shares cameras with the second map.";
-
-  // C starts as A, as SparseMap lacks an empty constructor
+  // C starts as a copy of A, as SparseMap lacks an empty constructor
   sparse_mapping::SparseMap C(mapOut);
 
   // Merge
-  sparse_mapping::MergeMaps(&A, &B,
-                            num_image_overlaps_at_endpoints,
-                            outlier_factor,
-                            mapOut,
-                            &C);
+  sparse_mapping::MergeMaps(&A, &B, num_image_overlaps_at_endpoints, outlier_factor,
+                            mapOut, &C);
 
   // Bundle-adjust the merged map
   if (bundle_adjust) {
     bool fix_all_cameras = false;
-
     std::set<int> fixed_cameras;
 
-    // Find in the list of images of the merged map the ones from the first map
     if (fix_first_map) {
-      std::set<std::string> setA;
-      for (size_t it = 0; it < A.cid_to_filename_.size(); it++) setA.insert(A.cid_to_filename_[it]);
+      // Poses shared among maps A and B were averaged after merging
+      // in C. Now, replace all poses in C which are present in A with the
+      // originals in A. Then keep all poses from A fixed in bundle adjustment.
+      std::map<std::string, int> A_name_to_cid;
+      for (size_t A_cid = 0; A_cid < A.cid_to_filename_.size(); A_cid++)
+        A_name_to_cid[A.cid_to_filename_[A_cid]] = A_cid;
 
-      for (size_t it = 0; it < C.cid_to_filename_.size(); it++) {
-        if (setA.find(C.cid_to_filename_[it]) != setA.end()) fixed_cameras.insert(it);
+      for (size_t C_cid = 0; C_cid < C.cid_to_filename_.size(); C_cid++) {
+        auto pos = A_name_to_cid.find(C.cid_to_filename_[C_cid]);
+        if (pos == A_name_to_cid.end()) continue;  // was not in A
+
+        int A_cid = pos->second;
+        fixed_cameras.insert(C_cid);
+        C.cid_to_cam_t_global_[C_cid] = A.cid_to_cam_t_global_[A_cid];
       }
     }
 
@@ -1100,13 +1089,13 @@ void TransformMap(std::map<int, int> & cid2cid,
       // image in one map has few tracks going through it, or those
       // tracks are short, this instance could be given less weight.
 
-      std::vector< Eigen::Quaternion<double> >Q(num);
+      std::vector<Eigen::Quaternion<double>> Q(num);
       cid_to_cam_t_global2[c].translation() << 0.0, 0.0, 0.0;
       int pos = -1;
       for (auto it = blobs[c].begin(); it != blobs[c].end() ; it++) {
         pos++;
         int cid = *it;
-        Q[pos] = Eigen::Quaternion<double> (C.cid_to_cam_t_global_[cid].linear());
+        Q[pos] = Eigen::Quaternion<double>(C.cid_to_cam_t_global_[cid].linear());
 
         cid_to_cam_t_global2[c].translation()
           += W[pos]*C.cid_to_cam_t_global_[cid].translation();
@@ -1382,7 +1371,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   // The index of the cid after removing the repetitions
   std::map<int, int> cid2cid;
   for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
-    cid2cid[cid] = image2cid[ C.cid_to_filename_[cid] ];
+    cid2cid[cid] = image2cid[C.cid_to_filename_[cid]];
   }
 
   // Remove repetitions.
