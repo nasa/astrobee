@@ -91,7 +91,7 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerComponent {
     geometry_msgs::TransformStamped const* tf) = 0;
 
   // Optional callback for nodes to know when extrinsics were received
-  virtual void OnExtrinsicsReceived(NodeHandle node) {}
+  virtual void OnExtrinsicsReceived(NodeHandle &node) {}
 
   // Manage the extrinsics based on the sensor type
   void SetupExtrinsics();
