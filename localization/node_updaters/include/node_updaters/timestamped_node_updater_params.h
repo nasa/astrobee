@@ -22,11 +22,13 @@
 
 #include <boost/serialization/serialization.hpp>
 
+#include <vector>
+
 namespace node_updaters {
 template <typename NodeType>
 struct TimestampedNodeUpdaterParams {
   NodeType start_node;
-  gtsam::SharedNoiseModel start_noise;
+  std::vector<gtsam::SharedNoiseModel> start_noise_models;
   double huber_k;
   bool add_priors;
   localization_common::Time starting_time;

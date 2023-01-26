@@ -27,12 +27,11 @@
 #include <algorithm>
 
 namespace node_updaters {
-template <typename NodeType, typename NodeUpdateModelType>
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 using Base = graph_optimizer::NodeUpdaterWithPriors<NodeType, gtsam::SharedNoiseModel>;
-using TimestampedNodes = graph_optimizer::TimestampedNodes<NodeType>;
 class TimestampedNodeUpdater : public Base {
  public:
-  explicit TimestampedNodeUpdater(std::shared_ptr<TimestampedNodes> nodes);
+  explicit TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes);
   TimestampedNodeUpdater() = default;
   virtual ~TimestampedNodeUpdater() = default;
 
@@ -40,9 +39,6 @@ class TimestampedNodeUpdater : public Base {
 
   void AddInitialValuesAndPriors(const NodeType& initial_node, const gtsam::SharedNoiseModel& initial_noise,
                                  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
-
-  void AddPriors(const NodeType& node, const gtsam::SharedNoiseModel& noise, const localization_common::Time timestamp,
-                 gtsam::NonlinearFactorGraph& factors) final;
 
   // TODO(rsousan): Rename this?
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
@@ -59,7 +55,7 @@ class TimestampedNodeUpdater : public Base {
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
-  // TODO(rsoussan): Remove key creator function
+  // TODO(rsoussan): Deprecate/Remove this
   boost::optional<gtsam::Key> GetKey(graph_optimizer::KeyCreatorFunction key_creator_function,
                                      const localization_common::Time timestamp) const final;
 
@@ -69,12 +65,8 @@ class TimestampedNodeUpdater : public Base {
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
-  bool AddLatestNodeAndRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
-  boost::optional<gtsam::Key> LatestKey();
-  bool AddNodeAndRelativeFactor(const localization_common::Time timestamp_a,
-                                const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors);
-  bool AddRelativeFactor(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
-                         gtsam::NonlinearFactorGraph& factors);
+  bool AddLatestNodesAndRelativeFactors(const localization_common::Time timestamp,
+                                        gtsam::NonlinearFactorGraph& factors);
   bool SplitOldRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
   bool RemoveFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
 
@@ -87,14 +79,15 @@ class TimestampedNodeUpdater : public Base {
     ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
-  std::shared_ptr<TimestampedNodes> nodes_;
+  std::shared_ptr<TimestampedNodesType> nodes_;
   std::shared_ptr<NodeUpdateModelType> node_update_model_;
   TimestampedNodeUpdaterParams params_;
 };
 
 // Implementation
 template <typename NodeType>
-TimestampedNodeUpdater(std::shared_ptr<TimestampedNodes> nodes, std::shared_ptr<NodeUpdateModelType> node_update_model)
+TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes,
+                       std::shared_ptr<NodeUpdateModelType> node_update_model)
     : nodes_(nodes), node_update_model_(node_update_model) {}
 
 template <typename NodeType>
@@ -108,20 +101,7 @@ void TimestampedNodeUpdater<NodeType>::AddInitialValuesAndPriors(const NodeType&
                                                                  const lc::Time timestamp,
                                                                  gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
-  AddPriors(initial_node, initial_noise, timestamp, factors);
-}
-
-template <typename NodeType>
-void TimestampedNodeUpdater<NodeType>::AddPriors(const NodeType& node, const gtsam::SharedNoiseModel& noise,
-                                                 const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
-  const auto key = nodes_->Key(timestamp);
-  if (!key) {
-    LogError("AddPriors: Failed to get key.");
-    return;
-  }
-  // TODO(rsoussan): Ensure symbols not used by other node updaters
-  gtsam::PriorFactor<NodeType> prior_factor(*key, node, noise);
-  factors.push_back(prior_factor);
+  node_update_model_->AddPriors(initial_node, initial_noise, timestamp, factors);
 }
 
 template <typename NodeType>
@@ -143,17 +123,22 @@ bool TimestampedNodeUpdater<NodeType>::SlideWindow(const lc::Time oldest_allowed
     // Make sure priors are removed before adding new ones
     RemovePriors(old_keys, factors);
     if (marginals) {
-      const auto key = nodes_->Key(*oldest_timestamp);
-      if (!key) {
-        LogError("SlideWindow: Failed to get oldest key.");
+      const auto keys = nodes_->Keys(*oldest_timestamp);
+      if (keys.empty()) {
+        LogError("SlideWindow: Failed to get oldest keys.");
         return false;
       }
-      const auto prior_noise =
-        go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(*key)), huber_k);
-      AddPriors(*oldest_node, prior_noise, *oldest_timestamp, factors);
+
+      std::vector<gtsam::SharedNoiseModel> prior_noise_models;
+      for (const auto& key : keys) {
+        const auto prior_noise =
+          go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(*key)), huber_k);
+        prior_noise_models.emplace_back(prior_noise);
+      }
+      node_update_model_->AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior noise
-      AddPriors(*oldest_node, params_.start_noise, *oldest_timestamp, factors);
+      node_update_model_->AddPriors(*oldest_node, params_.start_noise_models, *oldest_timestamp, factors);
     }
   }
 
@@ -263,7 +248,7 @@ bool TimestampedNodeUpdater<NodeType>::Update(const lc::Time timestamp, gtsam::N
 
   if (timestamp > *latest_timestamp) {
     LogDebug("Update: Adding latest node and relative factor.");
-    return AddLatestNodeAndRelativeFactor(timestamp, factors);
+    return AddLatestNodesAndRelativeFactors(timestamp, factors);
   } else {
     LogDebug("Update: Splitting old relative factor.");
     return SplitOldRelativeFactor(timestamp, factors);
@@ -271,57 +256,14 @@ bool TimestampedNodeUpdater<NodeType>::Update(const lc::Time timestamp, gtsam::N
 }
 
 template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::AddNodeAndRelativeFactor(const lc::Time timestamp_a, const lc::Time timestamp_b,
-                                                                gtsam::NonlinearFactorGraph& factors) {
-  const auto key_b = node_update_model_->AddNode(timestamp_b);
-  if (!key_b) {
-    LogError("AddNodeAndRelativeFactor: Failed to add node.");
-    return false;
-  }
-  if (!AddRelativeFactor(timestamp_a, timestamp_b, factors)) {
-    LogError("AddNodeAndRelativeFactor: Failed to add relative factor.");
-    return false;
-  }
-  return true;
-}
-
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::AddRelativeFactor(const lc::Time timestamp_a, const lc::Time timestamp_b,
-                                                         gtsam::NonlinearFactorGraph& factors) {
-  const auto key_a = nodes_->Key(timestamp_a);
-  if (!key_a) {
-    LogError("AddRelativeFactor: Failed to get key a.");
-    return false;
-  }
-  const auto key_b = nodes_->Key(timestamp_b);
-  if (!key_b) {
-    LogError("AddRelativeFactor: Failed to get key b.");
-    return false;
-  }
-  if (!node_update_model_->AddRelativeFactor(*key_a, timestamp_a, *key_b, timestamp_b, factors)) {
-    LogError("AddRelativeFactor: Failed to add relative factor.");
-    return false;
-  }
-  return true;
-}
-
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::AddLatestNodeAndRelativeFactor(const lc::Time timestamp,
-                                                                      gtsam::NonlinearFactorGraph& factors) {
+bool TimestampedNodeUpdater<NodeType>::AddLatestNodesAndRelativeFactors(const lc::Time timestamp,
+                                                                        gtsam::NonlinearFactorGraph& factors) {
   const auto timestamp_a = nodes_->LatestTimestamp();
   if (!timestamp_a) {
     LogError("AddLatestNodeAndRelativeFactor: Failed to get latest timestamp.");
     return false;
   }
-  return AddNodeAndRelativeFactor(*timestamp_a, timestamp, factors);
-}
-
-// TODO(rsoussan): add this to timestamped nodes!
-template <typename NodeType>
-boost::optional<gtsam::Key> TimestampedNodeUpdater<NodeType>::LatestKey() {
-  const auto latest_timestamp = nodes_->LatestTimestamp();
-  if (!latest_timestamp) return boost::none;
-  return nodes_->Key(*latest_timestamp);
+  return node_update_model_->AddNodesAndRelativeFactors(*timestamp_a, timestamp, factors);
 }
 
 template <typename NodeType>
@@ -348,11 +290,11 @@ bool TimestampedNodeUpdater<NodeType>::SplitOldRelativeFactor(const lc::Time tim
       "old factors.");
     return false;
   }
-  if (!AddNodeAndRelativeFactor(lower_bound_time, timestamp, factors)) {
+  if (!node_update_model_->AddNodesAndRelativeFactors(lower_bound_time, timestamp, factors)) {
     LogError("SplitOldRelativeFactor: Failed to add first relative node and factor.");
     return false;
   }
-  if (!AddRelativeFactor(timestamp, upper_bound_time, factors)) {
+  if (!node_update_model_->AddRelativeFactors(timestamp, upper_bound_time, factors)) {
     LogError("SplitOldRelativeFactor: Failed to add second relative factor.");
     return false;
   }
@@ -360,19 +302,21 @@ bool TimestampedNodeUpdater<NodeType>::SplitOldRelativeFactor(const lc::Time tim
 
 template <typename NodeType>
 bool TimestampedNodeUpdater<NodeType>::RemoveFactors(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
-  const auto key = nodes_->Key(timestamp);
-  if (!key) {
-    LogError("RemoveFactors: Failed to get key.");
+  const auto keys = nodes_->Keys(timestamp);
+  if (!keys) {
+    LogError("RemoveFactors: Failed to get keys.");
     return false;
   }
 
   bool removed_factor = false;
-  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
-    if ((*factor_it)->find(*key) != std::end((*factor_it)->keys())) {
-      factors.erase(factor_it);
-      removed_factor = true;
-    } else {
-      ++factor_it;
+  for (const auto& key : keys) {
+    for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+      if ((*factor_it)->find(*key) != std::end((*factor_it)->keys())) {
+        factors.erase(factor_it);
+        removed_factor = true;
+      } else {
+        ++factor_it;
+      }
     }
   }
   return removed_factor;

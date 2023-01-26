@@ -19,22 +19,21 @@
 #ifndef NODE_UPDATERS_POSE_NODE_UPDATE_MODEL_H_
 #define NODE_UPDATERS_POSE_NODE_UPDATE_MODEL_H_
 
-#include <graph_optimizer/timestamped_nodes.h>
 #include <localization_common/pose_with_covariance_interpolater.h>
-#include <node_updaters/node_update_model.h>
+#include <node_updaters/between_factor_node_update_model.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace node_updaters {
-using NodesType = graph_optimizer::TimestampedNodes<gtsam::Pose3>;
-using Base = NodeUpdateModel<NodesType>;
-class PoseNodeUpdateModel : Base {
+class PoseNodeUpdateModel : BetweenFactorNodeUpdateModel<gtsam::Pose3> {
+  using Base = BetweenFactorNodeUpdateModel<gtsam::Pose3>;
+  using NodesType = Base::NodesType;
+
  public:
   boost::optional<gtsam::Key> AddNode(const localization_common::Time timestamp, NodesType& nodes) final;
-  bool AddRelativeFactor(const gtsam::Key key_a, const localization_common::Time timestamp_a, const gtsam::Key key_b,
-                         const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors) const final;
+  boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
+    const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;
 
  private:
   // Serialization function

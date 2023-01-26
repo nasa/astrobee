@@ -19,13 +19,15 @@
 #ifndef NODE_UPDATERS_POSE_NODE_UPDATER_H_
 #define NODE_UPDATERS_POSE_NODE_UPDATER_H_
 
+#include <graph_optimizer/timestamped_nodes.h>
 #include <node_updaters/pose_node_update_model.h>
 #include <node_updaters/timestamped_node_updater.h>
 
 #include <gtsam/geometry/Pose3.h>
 
 namespace node_updaters {
-using PoseNodeUpdater = TimestampedNodeUpdater<gtsam::Pose3, PoseNodeUpdateModel>;
+using PoseNodeUpdater =
+  TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
 
 template <>
 graph_optimizer::NodeUpdaterType PoseNodeUpdater::type() const final {

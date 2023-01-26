@@ -48,6 +48,8 @@ class TimestampedNodes {
 
   boost::optional<gtsam::Key> Key(const localization_common::Time timestamp) const;
 
+  std::vector<gtsam::Key> Keys(const localization_common::Time timestamp) const;
+
   size_t size() const;
 
   bool empty() const;
@@ -133,6 +135,12 @@ template <typename NodeType>
 boost::optional<gtsam::Key> TimestampedNodes<NodeType>::Key(const localization_common::Time timestamp) const {
   if (!Contains(timestamp)) return boost::none;
   return timestamp_key_map_.at(timestamp);
+}
+
+template <typename NodeType>
+std::vector<gtsam::Key> TimestampedNodes<NodeType>::Keys(const localization_common::Time timestamp) const {
+  if (!Contains(timestamp)) return boost::none;
+  return std::vector<gtsam::Key>{timestamp_key_map_.at(timestamp)};
 }
 
 template <typename NodeType>
