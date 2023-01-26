@@ -175,13 +175,12 @@ ament_export_libraries(gazebo_model_plugin_heartbeat)
 # )
 
 # Create a sensor plugin for the IMU
-# add_library(gazebo_sensor_plugin_imu
-#   src/gazebo_sensor_plugin_imu/gazebo_sensor_plugin_imu.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_imu ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_sensor_plugin_imu SHARED
+   src/gazebo_sensor_plugin_imu/gazebo_sensor_plugin_imu.cc
+)
+target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_imu rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_imu)
 
 # Create a sensor plugin for the perch camera
 # add_library(gazebo_sensor_plugin_perch_cam
@@ -288,6 +287,7 @@ install(TARGETS
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
   gazebo_model_plugin_heartbeat
+  gazebo_sensor_plugin_imu
   gazebo_model_plugin_truth
   gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
