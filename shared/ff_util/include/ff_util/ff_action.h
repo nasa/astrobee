@@ -155,17 +155,17 @@ class FreeFlyerActionServer {
           // callback. Need to set the goal to executing
           next_goal_handle_->execute();
           StartGoal(next_goal_handle_);
-          next_goal_handle_ = NULL;
+          next_goal_handle_ = nullptr;
           return;
         } else {
-          current_goal_handle_ = NULL;
+          current_goal_handle_ = nullptr;
           // Stay in the canceled state so that execute will be called on the
           // goal in the accepted callback
           return;
         }
       }
     }
-    current_goal_handle_ = NULL;
+    current_goal_handle_ = nullptr;
     state_ = WAITING_FOR_GOAL;
   }
 
@@ -225,7 +225,7 @@ class FreeFlyerActionServer {
       if (state_ == WAITING_FOR_ACCEPTED) {
       // This cancel will be called when there is one goal that got canceled
       // before its accepted callback was called. This should be very rare.
-        goal_handle->canceled(NULL);
+        goal_handle->canceled(nullptr);
       } else {
         // This abort will get called if multiple goals were received before
         // the accepted callback was called. It is unlikely that more than one
@@ -236,7 +236,7 @@ class FreeFlyerActionServer {
         // the server. Since these cases are very unlikely, output a warning in
         // case debugging is needed.
         FF_DEBUG("Rare abort goal case. This may need some attention.");
-        goal_handle->abort(NULL);
+        goal_handle->abort(nullptr);
       }
     } else {
       // Check if nominal or preempted case. For preempted, we already checked
@@ -259,7 +259,7 @@ class FreeFlyerActionServer {
       } else {
         // Handle the case were we get a goal handle and don't know what to do
         FF_ERROR("ff action: Got accepted goal callback in state %d.", state_);
-        goal_handle->abort(NULL);
+        goal_handle->abort(nullptr);
       }
     }
   }
@@ -312,9 +312,9 @@ class FreeFlyerActionServer {
           // If accepted was called for the new goal, cancel it and set latest
           // uuid to the current goal uuid if that goal hasn't finished
           if (next_goal_handle_) {
-            next_goal_handle_->canceled(NULL);
+            next_goal_handle_->canceled(nullptr);
             latest_uuid_ = current_goal_handle_->get_goal_id();
-            next_goal_handle_ = NULL;
+            next_goal_handle_ = nullptr;
           } else {
             // If accepted wasn't called yet, set the latest uuid to be invalid
             // so that it gets aborted in the accepted callback. Again, do we
@@ -423,8 +423,9 @@ class FreeFlyerActionClient {
   // Initialize the action client and return whether connected by end of call
   bool Create(NodeHandle nh, std::string const& topic) {
     // Initialize all timers, but do not start them.
-    timer_connected_.createTimer(to_connect_, std::bind(&FreeFlyerActionClient::ConnectedTimeoutCallback, this), nh,
-                                 true, false);
+    timer_connected_.createTimer(to_connect_,
+        std::bind(&FreeFlyerActionClient::ConnectedTimeoutCallback, this),
+        nh, true, false);
     timer_active_.createTimer(to_active_,
         std::bind(&FreeFlyerActionClient::ActiveTimeoutCallback, this),
         nh, true, false);
@@ -465,6 +466,15 @@ class FreeFlyerActionClient {
   // Send a new goal
   bool SendGoal(std::shared_ptr<typename ActionType::Goal> const goal) {
     if (!IsConnected()) return false;
+
+    // In ros1, if a previous goal is active and send goal is called, the old
+    // goal is simply forgotten and the new goal is tracked. To preserve this
+    // functionality, set the current goal_handle to null so we ignore any
+    // feedback or results received from the old goal. The current goal handle
+    // will then be assigned to the new goal once the goal is accepted and the
+    // accepted callback is called.
+    current_goal_handle_ = nullptr;
+
     // Start the active timer waiting for goal to be accepted
     StartOptionalTimer(timer_active_, to_active_);
     StartOptionalTimer(timer_deadline_, to_deadline_);
@@ -491,24 +501,25 @@ class FreeFlyerActionClient {
   }
 
   // Cancel the goal that is currently running
-/*  bool CancelGoal() {
-    if (!sac_) return false;
+  bool CancelGoal() {
+    if (!sac_ || !current_goal_handle_) return false;
     // Only cancel a goal if we are in the correct state
     switch (state_) {
-    case WAITING_FOR_ACTIVE:
-    case WAITING_FOR_RESPONSE:
-    case WAITING_FOR_DEADLINE:
-      StopAllTimers();
-      sac_->cancelGoal();
-      sac_->stopTrackingGoal();
-      state_ = WAITING_FOR_GOAL;
-      return true;
-    default:
-      break;
+      case WAITING_FOR_ACTIVE:
+      case WAITING_FOR_RESPONSE:
+      case WAITING_FOR_DEADLINE:
+        StopAllTimers();
+        sac_->async_cancel_goal(current_goal_handle_);
+        // Set goal handle to null so we stop tracking the goal
+        current_goal_handle_ = nullptr;
+        state_ = WAITING_FOR_GOAL;
+        return true;
+      default:
+        break;
     }
     return false;
   }
-*/
+
  protected:
   // Simple wrapper around an optional timer
   void StartOptionalTimer(ff_util::FreeFlyerTimer & timer, double duration) {
@@ -536,7 +547,7 @@ class FreeFlyerActionClient {
       cb_result_(state, result);
     // Reset state
     state_ = WAITING_FOR_GOAL;
-    current_goal_handle_ = NULL;
+    current_goal_handle_ = nullptr;
   }
 
   // Called periodically until the server is connected
@@ -550,29 +561,28 @@ class FreeFlyerActionClient {
   }
 
   // Called when the server cannot be connected to
-  /*void ConnectedTimeoutCallback(ros::TimerEvent const& event) {
+  void ConnectedTimeoutCallback() {
     Complete(FreeFlyerActionState::TIMEOUT_ON_CONNECT, nullptr);
   }
 
   // Called when the goal does not go active
-  void ActiveTimeoutCallback(ros::TimerEvent const& event) {
-    ROS_WARN("Freeflyer action timed out on going active.");
+  void ActiveTimeoutCallback() {
+    FF_WARN("Freeflyer action timed out on going active.");
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_ACTIVE, nullptr);
   }
 
   // Called when the task deadline was not met
-  void DeadlineTimeoutCallback(ros::TimerEvent const& event) {
+  void DeadlineTimeoutCallback() {
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_DEADLINE, nullptr);
   }
 
   // Called when no feedback/result is received within a certain period of time
-  void ResponseTimeoutCallback(ros::TimerEvent const& event) {
+  void ResponseTimeoutCallback() {
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_RESPONSE, nullptr);
   }
-*/
   // Goal is now active, restart timer and switch state
   void ActiveCallback(std::shared_future<typename GoalHandle::SharedPtr>
                                                                       future) {
@@ -582,7 +592,7 @@ class FreeFlyerActionClient {
     // save goal handle for later use.
     current_goal_handle_ = future.get();
     if (!current_goal_handle_) {
-      Complete(FreeFlyerActionState::ABORTED, NULL);
+      Complete(FreeFlyerActionState::ABORTED, nullptr);
     } else {
       // Start a responser timer if required
       StartOptionalTimer(timer_response_, to_response_);
@@ -598,12 +608,12 @@ class FreeFlyerActionClient {
   void FeedbackCallback(typename GoalHandle::SharedPtr goal_handle,
           const std::shared_ptr<const typename ActionType::Feedback> feedback) {
     timer_response_.stop();
-    // Start a responser timer if required
-    StartOptionalTimer(timer_response_, to_response_);
     // Need to check if this is the newest goal being executed. We can ignore
     // the feedback from preempted/canceled goals
     if (current_goal_handle_ &&
         current_goal_handle_->get_goal_id() == goal_handle->get_goal_id()) {
+      // Start a responser timer if required
+      StartOptionalTimer(timer_response_, to_response_);
       // Forward the feedback
       if (cb_feedback_)
         cb_feedback_(feedback);
@@ -611,22 +621,34 @@ class FreeFlyerActionClient {
   }
 
   // Called when a result is received
-/*  void ResultCallback(actionlib::SimpleClientGoalState const& action_state, ResultConstPtr const& result) {
-    // Feedback has been received after a result before. Stop tracking the goal
-    // so that this doesn't happen
-    sac_->stopTrackingGoal();
-    // The response we send depends on the state
-    result_ = result;
+  void ResultCallback(typename GoalHandle::WrappedResult const& result) {
+    if (current_goal_handle_ &&
+        current_goal_handle_->get_goal_id() != result.goal_id) {
+      // Feedback has been received after a result before. Stop tracking the
+      // goal so that this doesn't happen
+      current_goal_handle_ = nullptr;
+      // The response we send depends on the state
+      result_ = result.result;
 
-    // The response we send depends on the state
-    if (action_state == actionlib::SimpleClientGoalState::SUCCEEDED)
-      state_response_ = FreeFlyerActionState::SUCCESS;
-    else if (action_state == actionlib::SimpleClientGoalState::PREEMPTED)
-      state_response_ = FreeFlyerActionState::PREEMPTED;
-    else
-      state_response_ = FreeFlyerActionState::ABORTED;
+      // The response we send depends on the state
+      // We don't track canceled goals so we don't need to worry about that
+      // return code
+      if (result.code == rclcpp_action::ResultCode::SUCCEEDED) {
+        state_response_ = FreeFlyerActionState::SUCCESS;
+      } else {
+        // Unfortunately the free flyer action server code had to abort
+        // preempted goals so these goals could have either been preempted or
+        // aborted. After some poking around in the free flyer code, it looks
+        // like the code only cares if the goal succeeded or failed. I.e. there
+        // is no check to distinguish between preempted or aborted. If the
+        // distinction is necessary, one can use the result since the response
+        // portion of the result in all free flyer actions is 0 for preemption.
+        state_response_ = FreeFlyerActionState::ABORTED;
+      }
 
-    StartOptionalTimer(timer_response_delay_, to_response_delay_);
+      // TODO(Katie) See if this is still necessary
+      StartOptionalTimer(timer_response_delay_, to_response_delay_);
+    }
   }
 
   // This delayed callback is necessary because on Ubuntu 20 / ROS noetic,
@@ -635,13 +657,13 @@ class FreeFlyerActionClient {
   // called in the ResultCallback or immediately afterwards, it returns
   // failed because the previous action is technically not finished and
   // returns an error.
-  void ResultDelayCallback(ros::TimerEvent const& event) {
+  void ResultDelayCallback() {
     // Call the result callback on the client side
     Complete(state_response_, result_);
 
     // Return to waiting for a goal
     state_ = WAITING_FOR_GOAL;
-  }*/
+  }
 
  protected:
   State state_;
