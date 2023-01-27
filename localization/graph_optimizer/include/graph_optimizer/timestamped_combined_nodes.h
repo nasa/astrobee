@@ -170,7 +170,7 @@ gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Keys(
 
 template <typename NodeType, bool CombinedType>
 size_t TimestampedCombinedNodes<NodeType, CombinedType>::size() const {
-  return timestamp_keys_map_.size()/NodeSize();
+  return timestamp_keys_map_.size() / NodeSize();
 }
 
 template <typename NodeType, bool CombinedType>

@@ -26,7 +26,7 @@ namespace go = graph_optimizer;
 namespace lc = localization_common;
 
 struct CombinedObject {
-  CombinedObject(const double val_a, const double val_b): val_a(val_a), val_b(val_b) {}
+  CombinedObject(const double val_a, const double val_b) : val_a(val_a), val_b(val_b) {}
   double val_a;
   double val_b;
   bool operator==(const CombinedObject& rhs) const { return val_a == rhs.val_a && val_b == rhs.val_b; }
@@ -77,56 +77,56 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
     EXPECT_EQ(*accessed_node, node_1);
     EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
   }*/
-/*
-  // Add element 2
-  const double node_2 = 100.3;
-  const localization_common::Time timestamp_2 = 3.3;
-  EXPECT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
-  EXPECT_EQ(timestamped_nodes.size(), 2);
-  EXPECT_FALSE(timestamped_nodes.empty());
-  {
-    EXPECT_TRUE(timestamped_nodes.Node(7.0) == boost::none);
-    const auto accessed_node_1 = timestamped_nodes.Node(timestamp_1);
-    ASSERT_TRUE(accessed_node_1 != boost::none);
-    EXPECT_EQ(*accessed_node_1, node_1);
-    EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
-    const auto accessed_node_2 = timestamped_nodes.Node(timestamp_2);
-    ASSERT_TRUE(accessed_node_2 != boost::none);
-    EXPECT_EQ(*accessed_node_2, node_2);
+  /*
+    // Add element 2
+    const double node_2 = 100.3;
+    const localization_common::Time timestamp_2 = 3.3;
+    EXPECT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
+    EXPECT_EQ(timestamped_nodes.size(), 2);
+    EXPECT_FALSE(timestamped_nodes.empty());
+    {
+      EXPECT_TRUE(timestamped_nodes.Node(7.0) == boost::none);
+      const auto accessed_node_1 = timestamped_nodes.Node(timestamp_1);
+      ASSERT_TRUE(accessed_node_1 != boost::none);
+      EXPECT_EQ(*accessed_node_1, node_1);
+      EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
+      const auto accessed_node_2 = timestamped_nodes.Node(timestamp_2);
+      ASSERT_TRUE(accessed_node_2 != boost::none);
+      EXPECT_EQ(*accessed_node_2, node_2);
+      EXPECT_TRUE(timestamped_nodes.Contains(timestamp_2));
+    }
+
+    // Remove element 1
+    EXPECT_TRUE(timestamped_nodes.Remove(timestamp_1));
+    EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
+    EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
+    EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
     EXPECT_TRUE(timestamped_nodes.Contains(timestamp_2));
-  }
+    EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
+    EXPECT_EQ(timestamped_nodes.size(), 1);
+    EXPECT_FALSE(timestamped_nodes.empty());
+    {
+      const auto good_val = timestamped_nodes.Node(timestamp_2);
+      ASSERT_TRUE(good_val != boost::none);
+      EXPECT_EQ(*good_val, node_2);
+    }
 
-  // Remove element 1
-  EXPECT_TRUE(timestamped_nodes.Remove(timestamp_1));
-  EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
-  EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
-  EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
-  EXPECT_TRUE(timestamped_nodes.Contains(timestamp_2));
-  EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
-  EXPECT_EQ(timestamped_nodes.size(), 1);
-  EXPECT_FALSE(timestamped_nodes.empty());
-  {
-    const auto good_val = timestamped_nodes.Node(timestamp_2);
-    ASSERT_TRUE(good_val != boost::none);
-    EXPECT_EQ(*good_val, node_2);
-  }
+    // Bad Remove
+    EXPECT_FALSE(timestamped_nodes.Remove(timestamp_1));
+    EXPECT_FALSE(timestamped_nodes.Remove(100));
 
-  // Bad Remove
-  EXPECT_FALSE(timestamped_nodes.Remove(timestamp_1));
-  EXPECT_FALSE(timestamped_nodes.Remove(100));
-
-  // Remove element 2
-  EXPECT_TRUE(timestamped_nodes.Remove(timestamp_2));
-  EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
-  EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
-  EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) == boost::none);
-  EXPECT_FALSE(timestamped_nodes.Contains(timestamp_2));
-  EXPECT_EQ(timestamped_nodes.size(), 0);
-  EXPECT_TRUE(timestamped_nodes.empty());
-  {
-    const auto bad_val = timestamped_nodes.Node(timestamp_2);
-    EXPECT_TRUE(bad_val == boost::none);
-  }*/
+    // Remove element 2
+    EXPECT_TRUE(timestamped_nodes.Remove(timestamp_2));
+    EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
+    EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
+    EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) == boost::none);
+    EXPECT_FALSE(timestamped_nodes.Contains(timestamp_2));
+    EXPECT_EQ(timestamped_nodes.size(), 0);
+    EXPECT_TRUE(timestamped_nodes.empty());
+    {
+      const auto bad_val = timestamped_nodes.Node(timestamp_2);
+      EXPECT_TRUE(bad_val == boost::none);
+    }*/
 }
 /*
 TEST(TimestampedNodesTester, OldestLatest) {
