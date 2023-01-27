@@ -27,9 +27,10 @@ namespace lc = localization_common;
 
 struct CombinedObject {
   CombinedObject(const double val_a, const double val_b) : val_a(val_a), val_b(val_b) {}
+  bool operator==(const CombinedObject& rhs) const { return val_a == rhs.val_a && val_b == rhs.val_b; }
+  static CombinedObject Random() { return CombinedObject(lc::RandomDouble(), lc::RandomDouble()); }
   double val_a;
   double val_b;
-  bool operator==(const CombinedObject& rhs) const { return val_a == rhs.val_a && val_b == rhs.val_b; }
 };
 
 namespace graph_optimizer {
@@ -51,11 +52,6 @@ boost::optional<CombinedObject> TestCombinedNodes::Node(const gtsam::KeyVector& 
   if (!val_a || !val_b) return boost::none;
   return CombinedObject(*val_a, *val_b);
 }
-
-template <>
-int TestCombinedNodes::NodeSize() {
-  return 2;
-}
 }  // namespace graph_optimizer
 
 TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
@@ -68,7 +64,7 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
   const CombinedObject node_1(-2, 23.8);
   const localization_common::Time timestamp_1 = 1.0;
   EXPECT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
-  /*EXPECT_EQ(timestamped_nodes.size(), 1);
+  EXPECT_EQ(timestamped_nodes.size(), 1);
   EXPECT_FALSE(timestamped_nodes.empty());
   {
     EXPECT_TRUE(timestamped_nodes.Node(2.0) == boost::none);
@@ -76,12 +72,11 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
     ASSERT_TRUE(accessed_node != boost::none);
     EXPECT_EQ(*accessed_node, node_1);
     EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
-  }*/
-  /*
+  }
     // Add element 2
-    const double node_2 = 100.3;
+    const CombinedObject node_2(123.2, 22.7);
     const localization_common::Time timestamp_2 = 3.3;
-    EXPECT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
+    EXPECT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
     EXPECT_EQ(timestamped_nodes.size(), 2);
     EXPECT_FALSE(timestamped_nodes.empty());
     {
@@ -126,12 +121,11 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
     {
       const auto bad_val = timestamped_nodes.Node(timestamp_2);
       EXPECT_TRUE(bad_val == boost::none);
-    }*/
+    }
 }
-/*
 TEST(TimestampedNodesTester, OldestLatest) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
+  go::TestCombinedNodes timestamped_nodes(nodes);
   // No elements
   {
     EXPECT_TRUE(timestamped_nodes.OldestTimestamp() == boost::none);
@@ -139,9 +133,9 @@ TEST(TimestampedNodesTester, OldestLatest) {
     EXPECT_TRUE(timestamped_nodes.LatestTimestamp() == boost::none);
     EXPECT_TRUE(timestamped_nodes.LatestNode() == boost::none);
   }
-  const double node_1 = 101.0;
+  const CombinedObject node_1 = CombinedObject::Random();
   const localization_common::Time timestamp_1 = 1.0;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
   // 1 element
   {
     const auto oldest_timestamp = timestamped_nodes.OldestTimestamp();
@@ -159,9 +153,9 @@ TEST(TimestampedNodesTester, OldestLatest) {
     EXPECT_EQ(*latest_node, node_1);
   }
   // 2 elements
-  const double node_2 = 100.3;
+  const CombinedObject node_2 = CombinedObject::Random();
   const localization_common::Time timestamp_2 = 3.3;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
   {
     const auto oldest_timestamp = timestamped_nodes.OldestTimestamp();
     ASSERT_TRUE(oldest_timestamp != boost::none);
@@ -179,9 +173,9 @@ TEST(TimestampedNodesTester, OldestLatest) {
   }
 
   // 3 elements
-  const double node_3 = 2100.3;
+  const CombinedObject node_3 = CombinedObject::Random();
   const localization_common::Time timestamp_3 = 19.3;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 2);
   {
     const auto oldest_timestamp = timestamped_nodes.OldestTimestamp();
     ASSERT_TRUE(oldest_timestamp != boost::none);
@@ -243,7 +237,7 @@ TEST(TimestampedNodesTester, OldestLatest) {
 
 TEST(TimestampedNodesTester, LowerAndUpperBounds) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
+  go::TestCombinedNodes timestamped_nodes(nodes);
   // No elements
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(1.0);
@@ -255,9 +249,9 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
   }
 
   // 1 element
-  const double node_1 = -77.0;
+  const CombinedObject node_1 = CombinedObject::Random();
   const localization_common::Time timestamp_1 = 37.0;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
   // 1 element below
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(10.0);
@@ -293,9 +287,9 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
   }
 
   // 2 elements
-  const double node_2 = 512.0;
+  const CombinedObject node_2 = CombinedObject::Random();
   const localization_common::Time timestamp_2 = 2.33;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
   // 2 elements below
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(1.1);
@@ -357,9 +351,9 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
   }
 
   // 3 elements
-  const double node_3 = 291.1;
+  const CombinedObject node_3 = CombinedObject::Random();
   const localization_common::Time timestamp_3 = 14.1;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 2);
   // 3 elements lower between
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(7.11);
@@ -390,16 +384,16 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
 
 TEST(TimestampedNodesTester, LowerBoundOrEqual) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
-  const double node_1 = 1.23;
+  go::TestCombinedNodes timestamped_nodes(nodes);
+  const CombinedObject node_1 = CombinedObject::Random();
   const localization_common::Time timestamp_1 = 3.1;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 1);
-  const double node_2 = 2.22;
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
+  const CombinedObject node_2 = CombinedObject::Random();
   const localization_common::Time timestamp_2 = 5.78;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
-  const double node_3 = 3.98;
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
+  const CombinedObject node_3 = CombinedObject::Random();
   const localization_common::Time timestamp_3 = 7.88;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 2);
 
   const auto too_low_node = timestamped_nodes.LowerBoundOrEqualNode(1.23);
   EXPECT_TRUE(too_low_node == boost::none);
@@ -419,16 +413,16 @@ TEST(TimestampedNodesTester, LowerBoundOrEqual) {
 
 TEST(TimestampedNodesTester, Closest) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
-  const double node_1 = 1.23;
+  go::TestCombinedNodes timestamped_nodes(nodes);
+  const CombinedObject node_1 = CombinedObject::Random();
   const localization_common::Time timestamp_1 = 3.1;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 1);
-  const double node_2 = 2.22;
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
+  const CombinedObject node_2 = CombinedObject::Random();
   const localization_common::Time timestamp_2 = 5.78;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 1);
-  const double node_3 = 3.98;
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
+  const CombinedObject node_3 = CombinedObject::Random();
   const localization_common::Time timestamp_3 = 7.88;
-  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 2);
 
   const auto below_lowest_node = timestamped_nodes.ClosestNode(1.23);
   EXPECT_TRUE(below_lowest_node != boost::none);
@@ -455,23 +449,27 @@ TEST(TimestampedNodesTester, Closest) {
 
 TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
+  go::TestCombinedNodes timestamped_nodes(nodes);
   const double t0 = 0;
-  const double n0 = lc::RandomDouble();
-  const int k0 = 1;
+  const CombinedObject node_0 = CombinedObject::Random();
   const double t1 = 1.001;
-  const double n1 = lc::RandomDouble();
-  const int k1 = 2;
+  const CombinedObject node_1 = CombinedObject::Random();
   const double t2 = 2.100;
-  const double n2 = lc::RandomDouble();
-  const int k2 = 3;
+  const CombinedObject node_2 = CombinedObject::Random();
   const double t3 = 3.0222;
-  const double n3 = lc::RandomDouble();
+  const CombinedObject node_3 = CombinedObject::Random();
+  const int k0 = 1;
+  const int k1 = 2;
+  const int k2 = 3;
   const int k3 = 4;
-  ASSERT_EQ(timestamped_nodes.Add(t0, n0).size(), 1);
-  ASSERT_EQ(timestamped_nodes.Add(t1, n1).size(), 1);
-  ASSERT_EQ(timestamped_nodes.Add(t2, n2).size(), 1);
-  ASSERT_EQ(timestamped_nodes.Add(t3, n3).size(), 1);
+  const int k4 = 5;
+  const int k5 = 6;
+  const int k6 = 7;
+  const int k7 = 8;
+  ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+  ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+  ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+  ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
   {
     const auto old_keys = timestamped_nodes.OldKeys(0);
     EXPECT_EQ(old_keys.size(), 0);
@@ -481,75 +479,85 @@ TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
   {
     const auto old_keys = timestamped_nodes.OldKeys(0.1);
     EXPECT_EQ(old_keys.size(), 1);
-    EXPECT_EQ(old_keys[0].size(), 1);
+    EXPECT_EQ(old_keys[0].size(), 2);
     EXPECT_EQ(old_keys[0][0], k0);
+    EXPECT_EQ(old_keys[0][1], k1);
     const auto old_nodes = timestamped_nodes.OldNodes(0.1);
     ASSERT_EQ(old_nodes.size(), 1);
-    EXPECT_EQ(old_nodes[0], n0);
+    EXPECT_EQ(old_nodes[0], node_0);
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(1.7);
     EXPECT_EQ(old_keys.size(), 2);
-    EXPECT_EQ(old_keys[0].size(), 1);
-    EXPECT_EQ(old_keys[1].size(), 1);
+    EXPECT_EQ(old_keys[0].size(), 2);
+    EXPECT_EQ(old_keys[1].size(), 2);
     EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[1][0], k1);
+    EXPECT_EQ(old_keys[0][1], k1);
+    EXPECT_EQ(old_keys[1][0], k2);
+    EXPECT_EQ(old_keys[1][1], k3);
     const auto old_nodes = timestamped_nodes.OldNodes(1.7);
     ASSERT_EQ(old_nodes.size(), 2);
-    EXPECT_EQ(old_nodes[0], n0);
-    EXPECT_EQ(old_nodes[1], n1);
+    EXPECT_EQ(old_nodes[0], node_0);
+    EXPECT_EQ(old_nodes[1], node_1);
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(2.333);
     EXPECT_EQ(old_keys.size(), 3);
-    EXPECT_EQ(old_keys[0].size(), 1);
-    EXPECT_EQ(old_keys[1].size(), 1);
-    EXPECT_EQ(old_keys[2].size(), 1);
+    EXPECT_EQ(old_keys[0].size(), 2);
+    EXPECT_EQ(old_keys[1].size(), 2);
+    EXPECT_EQ(old_keys[2].size(), 2);
     EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[1][0], k1);
-    EXPECT_EQ(old_keys[2][0], k2);
+    EXPECT_EQ(old_keys[0][1], k1);
+    EXPECT_EQ(old_keys[1][0], k2);
+    EXPECT_EQ(old_keys[1][1], k3);
+    EXPECT_EQ(old_keys[2][0], k4);
+    EXPECT_EQ(old_keys[2][1], k5);
     const auto old_nodes = timestamped_nodes.OldNodes(2.333);
     ASSERT_EQ(old_nodes.size(), 3);
-    EXPECT_EQ(old_nodes[0], n0);
-    EXPECT_EQ(old_nodes[1], n1);
-    EXPECT_EQ(old_nodes[2], n2);
+    EXPECT_EQ(old_nodes[0], node_0);
+    EXPECT_EQ(old_nodes[1], node_1);
+    EXPECT_EQ(old_nodes[2], node_2);
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(1999);
     EXPECT_EQ(old_keys.size(), 4);
-    EXPECT_EQ(old_keys[0].size(), 1);
-    EXPECT_EQ(old_keys[1].size(), 1);
-    EXPECT_EQ(old_keys[2].size(), 1);
-    EXPECT_EQ(old_keys[3].size(), 1);
+    EXPECT_EQ(old_keys[0].size(), 2);
+    EXPECT_EQ(old_keys[1].size(), 2);
+    EXPECT_EQ(old_keys[2].size(), 2);
+    EXPECT_EQ(old_keys[3].size(), 2);
     EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[1][0], k1);
-    EXPECT_EQ(old_keys[2][0], k2);
-    EXPECT_EQ(old_keys[3][0], k3);
+    EXPECT_EQ(old_keys[0][1], k1);
+    EXPECT_EQ(old_keys[1][0], k2);
+    EXPECT_EQ(old_keys[1][1], k3);
+    EXPECT_EQ(old_keys[2][0], k4);
+    EXPECT_EQ(old_keys[2][1], k5);
+    EXPECT_EQ(old_keys[3][0], k6);
+    EXPECT_EQ(old_keys[3][1], k7);
     const auto old_nodes = timestamped_nodes.OldNodes(1999);
     ASSERT_EQ(old_nodes.size(), 4);
-    EXPECT_EQ(old_nodes[0], n0);
-    EXPECT_EQ(old_nodes[1], n1);
-    EXPECT_EQ(old_nodes[2], n2);
-    EXPECT_EQ(old_nodes[3], n3);
+    EXPECT_EQ(old_nodes[0], node_0);
+    EXPECT_EQ(old_nodes[1], node_1);
+    EXPECT_EQ(old_nodes[2], node_2);
+    EXPECT_EQ(old_nodes[3], node_3);
   }
 }
 
 TEST(TimestampedNodesTester, RemoveOldNodes) {
   {
     std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-    go::TimestampedNodes<double> timestamped_nodes(nodes);
+    go::TestCombinedNodes timestamped_nodes(nodes);
     const double t0 = 0;
-    const double n0 = lc::RandomDouble();
+    const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
-    const double n1 = lc::RandomDouble();
+    const CombinedObject node_1 = CombinedObject::Random();
     const double t2 = 2.100;
-    const double n2 = lc::RandomDouble();
+    const CombinedObject node_2 = CombinedObject::Random();
     const double t3 = 3.0222;
-    const double n3 = lc::RandomDouble();
-    ASSERT_EQ(timestamped_nodes.Add(t0, n0).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t1, n1).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t2, n2).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t3, n3).size(), 1);
+    const CombinedObject node_3 = CombinedObject::Random();
+    ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
     const int num_nodes_removed = timestamped_nodes.RemoveOldNodes(0);
     EXPECT_EQ(num_nodes_removed, 0);
     EXPECT_EQ(timestamped_nodes.size(), 4);
@@ -557,19 +565,19 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
 
   {
     std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-    go::TimestampedNodes<double> timestamped_nodes(nodes);
+    go::TestCombinedNodes timestamped_nodes(nodes);
     const double t0 = 0;
-    const double n0 = lc::RandomDouble();
+    const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
-    const double n1 = lc::RandomDouble();
+    const CombinedObject node_1 = CombinedObject::Random();
     const double t2 = 2.100;
-    const double n2 = lc::RandomDouble();
+    const CombinedObject node_2 = CombinedObject::Random();
     const double t3 = 3.0222;
-    const double n3 = lc::RandomDouble();
-    ASSERT_EQ(timestamped_nodes.Add(t0, n0).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t1, n1).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t2, n2).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t3, n3).size(), 1);
+    const CombinedObject node_3 = CombinedObject::Random();
+    ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
     const int num_nodes_removed = timestamped_nodes.RemoveOldNodes(0.1);
     EXPECT_EQ(num_nodes_removed, 1);
     EXPECT_EQ(timestamped_nodes.size(), 3);
@@ -580,19 +588,19 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
   {
     std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-    go::TimestampedNodes<double> timestamped_nodes(nodes);
+    go::TestCombinedNodes timestamped_nodes(nodes);
     const double t0 = 0;
-    const double n0 = lc::RandomDouble();
+    const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
-    const double n1 = lc::RandomDouble();
+    const CombinedObject node_1 = CombinedObject::Random();
     const double t2 = 2.100;
-    const double n2 = lc::RandomDouble();
+    const CombinedObject node_2 = CombinedObject::Random();
     const double t3 = 3.0222;
-    const double n3 = lc::RandomDouble();
-    ASSERT_EQ(timestamped_nodes.Add(t0, n0).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t1, n1).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t2, n2).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t3, n3).size(), 1);
+    const CombinedObject node_3 = CombinedObject::Random();
+    ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
     const int num_nodes_removed = timestamped_nodes.RemoveOldNodes(1.334);
     EXPECT_EQ(num_nodes_removed, 2);
     EXPECT_EQ(timestamped_nodes.size(), 2);
@@ -603,19 +611,19 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
 
   {
     std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-    go::TimestampedNodes<double> timestamped_nodes(nodes);
+    go::TestCombinedNodes timestamped_nodes(nodes);
     const double t0 = 0;
-    const double n0 = lc::RandomDouble();
+    const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
-    const double n1 = lc::RandomDouble();
+    const CombinedObject node_1 = CombinedObject::Random();
     const double t2 = 2.100;
-    const double n2 = lc::RandomDouble();
+    const CombinedObject node_2 = CombinedObject::Random();
     const double t3 = 3.0222;
-    const double n3 = lc::RandomDouble();
-    ASSERT_EQ(timestamped_nodes.Add(t0, n0).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t1, n1).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t2, n2).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t3, n3).size(), 1);
+    const CombinedObject node_3 = CombinedObject::Random();
+    ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
     const int num_nodes_removed = timestamped_nodes.RemoveOldNodes(2.78);
     EXPECT_EQ(num_nodes_removed, 3);
     EXPECT_EQ(timestamped_nodes.size(), 1);
@@ -625,19 +633,19 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
 
   {
     std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-    go::TimestampedNodes<double> timestamped_nodes(nodes);
+    go::TestCombinedNodes timestamped_nodes(nodes);
     const double t0 = 0;
-    const double n0 = lc::RandomDouble();
+    const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
-    const double n1 = lc::RandomDouble();
+    const CombinedObject node_1 = CombinedObject::Random();
     const double t2 = 2.100;
-    const double n2 = lc::RandomDouble();
+    const CombinedObject node_2 = CombinedObject::Random();
     const double t3 = 3.0222;
-    const double n3 = lc::RandomDouble();
-    ASSERT_EQ(timestamped_nodes.Add(t0, n0).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t1, n1).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t2, n2).size(), 1);
-    ASSERT_EQ(timestamped_nodes.Add(t3, n3).size(), 1);
+    const CombinedObject node_3 = CombinedObject::Random();
+    ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+    ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
     const int num_nodes_removed = timestamped_nodes.RemoveOldNodes(1923.78);
     EXPECT_EQ(num_nodes_removed, 4);
     EXPECT_EQ(timestamped_nodes.size(), 0);
@@ -646,19 +654,22 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
 
 TEST(TimestampedNodesTester, Duration) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
+  go::TestCombinedNodes timestamped_nodes(nodes);
+  const CombinedObject node_1 = CombinedObject::Random();
+  const CombinedObject node_2 = CombinedObject::Random();
+  const CombinedObject node_3 = CombinedObject::Random();
   EXPECT_EQ(timestamped_nodes.Duration(), 0);
-  ASSERT_EQ(timestamped_nodes.Add(1.0, 1).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(1.0, node_1).size(), 2);
   EXPECT_EQ(timestamped_nodes.Duration(), 0);
-  ASSERT_EQ(timestamped_nodes.Add(2.0, 2).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(2.0, node_2).size(), 2);
   EXPECT_NEAR(timestamped_nodes.Duration(), 1, 1e-6);
-  ASSERT_EQ(timestamped_nodes.Add(3.0, 3).size(), 1);
+  ASSERT_EQ(timestamped_nodes.Add(3.0, node_3).size(), 2);
   EXPECT_NEAR(timestamped_nodes.Duration(), 2, 1e-6);
 }
 
 TEST(TimestampedNodesTester, Timestamps) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-  go::TimestampedNodes<double> timestamped_nodes(nodes);
+  go::TestCombinedNodes timestamped_nodes(nodes);
   {
     const auto timestamps = timestamped_nodes.Timestamps();
     EXPECT_EQ(timestamps.size(), 0);
@@ -667,10 +678,14 @@ TEST(TimestampedNodesTester, Timestamps) {
   const double t1 = 1;
   const double t2 = 2;
   const double t3 = 3;
-  ASSERT_EQ(timestamped_nodes.Add(t0, t0).size(), 1);
-  ASSERT_EQ(timestamped_nodes.Add(t1, t1).size(), 1);
-  ASSERT_EQ(timestamped_nodes.Add(t2, t2).size(), 1);
-  ASSERT_EQ(timestamped_nodes.Add(t3, t3).size(), 1);
+  const CombinedObject node_0 = CombinedObject::Random();
+  const CombinedObject node_1 = CombinedObject::Random();
+  const CombinedObject node_2 = CombinedObject::Random();
+  const CombinedObject node_3 = CombinedObject::Random();
+  ASSERT_EQ(timestamped_nodes.Add(t0, node_0).size(), 2);
+  ASSERT_EQ(timestamped_nodes.Add(t1, node_1).size(), 2);
+  ASSERT_EQ(timestamped_nodes.Add(t2, node_2).size(), 2);
+  ASSERT_EQ(timestamped_nodes.Add(t3, node_3).size(), 2);
   {
     const auto timestamps = timestamped_nodes.Timestamps();
     EXPECT_EQ(timestamps[0], t0);
@@ -681,12 +696,12 @@ TEST(TimestampedNodesTester, Timestamps) {
 }
 
 TEST(TimestampedNodesTester, Serialization) {
-  const go::TimestampedNodes<double> nodes;
+  const go::TestCombinedNodes nodes;
   const auto serialized_nodes = gtsam::serializeBinary(nodes);
-  go::TimestampedNodes<double> deserialized_nodes;
+  go::TestCombinedNodes deserialized_nodes;
   gtsam::deserializeBinary(serialized_nodes, deserialized_nodes);
 }
-*/
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
