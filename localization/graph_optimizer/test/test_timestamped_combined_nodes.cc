@@ -73,55 +73,55 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
     EXPECT_EQ(*accessed_node, node_1);
     EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
   }
-    // Add element 2
-    const CombinedObject node_2(123.2, 22.7);
-    const localization_common::Time timestamp_2 = 3.3;
-    EXPECT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
-    EXPECT_EQ(timestamped_nodes.size(), 2);
-    EXPECT_FALSE(timestamped_nodes.empty());
-    {
-      EXPECT_TRUE(timestamped_nodes.Node(7.0) == boost::none);
-      const auto accessed_node_1 = timestamped_nodes.Node(timestamp_1);
-      ASSERT_TRUE(accessed_node_1 != boost::none);
-      EXPECT_EQ(*accessed_node_1, node_1);
-      EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
-      const auto accessed_node_2 = timestamped_nodes.Node(timestamp_2);
-      ASSERT_TRUE(accessed_node_2 != boost::none);
-      EXPECT_EQ(*accessed_node_2, node_2);
-      EXPECT_TRUE(timestamped_nodes.Contains(timestamp_2));
-    }
-
-    // Remove element 1
-    EXPECT_TRUE(timestamped_nodes.Remove(timestamp_1));
-    EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
-    EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
-    EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
+  // Add element 2
+  const CombinedObject node_2(123.2, 22.7);
+  const localization_common::Time timestamp_2 = 3.3;
+  EXPECT_EQ(timestamped_nodes.Add(timestamp_2, node_2).size(), 2);
+  EXPECT_EQ(timestamped_nodes.size(), 2);
+  EXPECT_FALSE(timestamped_nodes.empty());
+  {
+    EXPECT_TRUE(timestamped_nodes.Node(7.0) == boost::none);
+    const auto accessed_node_1 = timestamped_nodes.Node(timestamp_1);
+    ASSERT_TRUE(accessed_node_1 != boost::none);
+    EXPECT_EQ(*accessed_node_1, node_1);
+    EXPECT_TRUE(timestamped_nodes.Contains(timestamp_1));
+    const auto accessed_node_2 = timestamped_nodes.Node(timestamp_2);
+    ASSERT_TRUE(accessed_node_2 != boost::none);
+    EXPECT_EQ(*accessed_node_2, node_2);
     EXPECT_TRUE(timestamped_nodes.Contains(timestamp_2));
-    EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
-    EXPECT_EQ(timestamped_nodes.size(), 1);
-    EXPECT_FALSE(timestamped_nodes.empty());
-    {
-      const auto good_val = timestamped_nodes.Node(timestamp_2);
-      ASSERT_TRUE(good_val != boost::none);
-      EXPECT_EQ(*good_val, node_2);
-    }
+  }
 
-    // Bad Remove
-    EXPECT_FALSE(timestamped_nodes.Remove(timestamp_1));
-    EXPECT_FALSE(timestamped_nodes.Remove(100));
+  // Remove element 1
+  EXPECT_TRUE(timestamped_nodes.Remove(timestamp_1));
+  EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
+  EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
+  EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
+  EXPECT_TRUE(timestamped_nodes.Contains(timestamp_2));
+  EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) != boost::none);
+  EXPECT_EQ(timestamped_nodes.size(), 1);
+  EXPECT_FALSE(timestamped_nodes.empty());
+  {
+    const auto good_val = timestamped_nodes.Node(timestamp_2);
+    ASSERT_TRUE(good_val != boost::none);
+    EXPECT_EQ(*good_val, node_2);
+  }
 
-    // Remove element 2
-    EXPECT_TRUE(timestamped_nodes.Remove(timestamp_2));
-    EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
-    EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
-    EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) == boost::none);
-    EXPECT_FALSE(timestamped_nodes.Contains(timestamp_2));
-    EXPECT_EQ(timestamped_nodes.size(), 0);
-    EXPECT_TRUE(timestamped_nodes.empty());
-    {
-      const auto bad_val = timestamped_nodes.Node(timestamp_2);
-      EXPECT_TRUE(bad_val == boost::none);
-    }
+  // Bad Remove
+  EXPECT_FALSE(timestamped_nodes.Remove(timestamp_1));
+  EXPECT_FALSE(timestamped_nodes.Remove(100));
+
+  // Remove element 2
+  EXPECT_TRUE(timestamped_nodes.Remove(timestamp_2));
+  EXPECT_TRUE(timestamped_nodes.Node(timestamp_1) == boost::none);
+  EXPECT_FALSE(timestamped_nodes.Contains(timestamp_1));
+  EXPECT_TRUE(timestamped_nodes.Node(timestamp_2) == boost::none);
+  EXPECT_FALSE(timestamped_nodes.Contains(timestamp_2));
+  EXPECT_EQ(timestamped_nodes.size(), 0);
+  EXPECT_TRUE(timestamped_nodes.empty());
+  {
+    const auto bad_val = timestamped_nodes.Node(timestamp_2);
+    EXPECT_TRUE(bad_val == boost::none);
+  }
 }
 TEST(TimestampedNodesTester, OldestLatest) {
   std::shared_ptr<go::Nodes> nodes(new go::Nodes());
