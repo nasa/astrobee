@@ -40,6 +40,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 
 #   visualization_msgs
@@ -182,15 +183,6 @@ target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_imu rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_sensor_plugin_imu)
 
-# Create a sensor plugin for the perch camera
-# add_library(gazebo_sensor_plugin_perch_cam
-#   src/gazebo_sensor_plugin_perch_cam/gazebo_sensor_plugin_perch_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_perch_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_perch_cam astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
 # Create a sensor plugin for the handrail detection algorithm
 # add_library(gazebo_sensor_plugin_handrail_detect
 #   src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
@@ -200,14 +192,13 @@ ament_export_libraries(gazebo_sensor_plugin_imu)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# # Create a sensor plugin for the hazard camera
-# add_library(gazebo_sensor_plugin_haz_cam
-#   src/gazebo_sensor_plugin_haz_cam/gazebo_sensor_plugin_haz_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_haz_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_haz_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# # Create a sensor plugin for the depth camera
+add_library(gazebo_sensor_plugin_depth_cam SHARED
+   src/gazebo_sensor_plugin_depth_cam/gazebo_sensor_plugin_depth_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_depth_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_depth_cam rclcpp gazebo_dev gazebo_ros sensor_msgs)
+ament_export_libraries(gazebo_sensor_plugin_depth_cam)
 
 # # Create a sensor plugin for the nav cam
 # add_library(gazebo_sensor_plugin_nav_cam
@@ -287,11 +278,12 @@ install(TARGETS
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
   gazebo_model_plugin_heartbeat
-  gazebo_sensor_plugin_imu
   gazebo_model_plugin_truth
   gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
+  gazebo_sensor_plugin_depth_cam
+  gazebo_sensor_plugin_imu
   gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
   ARCHIVE DESTINATION lib/${PROJECT_NAME}

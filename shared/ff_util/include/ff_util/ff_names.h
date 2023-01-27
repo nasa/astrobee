@@ -327,6 +327,8 @@
 #define TOPIC_NAV_CAM_SIM_INFO                     "sim/nav_cam/info"
 #define TOPIC_HAZ_CAM_SIM_POSE                     "sim/haz_cam/pose"
 #define TOPIC_HAZ_CAM_SIM_INFO                     "sim/haz_cam/info"
+#define TOPIC_PERCH_CAM_SIM_POSE                   "sim/perch_cam/pose"
+#define TOPIC_PERCH_CAM_SIM_INFO                   "sim/perch_cam/info"
 #define TOPIC_SCI_CAM_SIM_POSE                     "sim/sci_cam/pose"
 #define TOPIC_SCI_CAM_SIM_INFO                     "sim/sci_cam/info"
 
