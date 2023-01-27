@@ -20,7 +20,6 @@
 #define GRAPH_OPTIMIZER_TIMESTAMPED_COMBINED_NODES_H_
 
 #include <graph_optimizer/nodes.h>
-#include <graph_optimizer/timestamped_nodes.h>
 #include <localization_common/timestamped_set.h>
 #include <localization_common/time.h>
 
@@ -92,6 +91,8 @@ class TimestampedCombinedNodes {
 
   boost::optional<NodeType> Node(const gtsam::KeyVector& keys) const;
 
+  static int NodeSize();
+
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/);
@@ -131,6 +132,13 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node
 }
 
 template <typename NodeType, bool CombinedType>
+int TimestampedCombinedNodes<NodeType, CombinedType>::NodeSize() {
+  static_assert(!CombinedType, "This needs to be specialized for combined types.");
+  // Implementation for non-combined type
+  return 1;
+}
+
+template <typename NodeType, bool CombinedType>
 bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const localization_common::Time& timestamp) {
   const auto value = timestamp_keys_map_.Get(timestamp);
   if (!value) return false;
@@ -162,7 +170,7 @@ gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Keys(
 
 template <typename NodeType, bool CombinedType>
 size_t TimestampedCombinedNodes<NodeType, CombinedType>::size() const {
-  return timestamp_keys_map_.size();
+  return timestamp_keys_map_.size()/NodeSize();
 }
 
 template <typename NodeType, bool CombinedType>

@@ -79,6 +79,14 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_timestamped_nodes
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
+  add_rostest_gtest(test_timestamped_combined_nodes
+    test/test_timestamped_combined_nodes.test
+    test/test_timestamped_combined_nodes.cc
+  )
+  target_link_libraries(test_timestamped_combined_nodes
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+
 endif() 
 
 #############
