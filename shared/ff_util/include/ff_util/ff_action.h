@@ -147,7 +147,7 @@ class FreeFlyerActionServer {
     // Check to see if this goal was canceled and there is another goal waiting
     // to be executed
     if (state_ == CANCELED) {
-      if (current_goal_handle_.get_goal_id() != latest_uuid_) {
+      if (current_goal_handle_->get_goal_id() != latest_uuid_) {
         // Check if the accepted callback was called yet. If not, the goal will
         // be started in the accepted callback
         if (next_goal_handle_) {
@@ -478,23 +478,22 @@ class FreeFlyerActionClient {
     // Start the active timer waiting for goal to be accepted
     StartOptionalTimer(timer_active_, to_active_);
     StartOptionalTimer(timer_deadline_, to_deadline_);
-    rclcpp_action::Client<ActionType> send_goal_options =
-                          rclcpp_action::Client<ActionType>::SendGoalOptions();
-    send_goal_options.goal_response_callback =
+    typename rclcpp_action::Client<ActionType>::SendGoalOptions sgo =
+                  typename rclcpp_action::Client<ActionType>::SendGoalOptions();
+    sgo.goal_response_callback =
                           std::bind(&FreeFlyerActionClient::ActiveCallback,
                           this,
                           std::placeholders::_1);
-    send_goal_options.feedback_callback =
+    sgo.feedback_callback =
                           std::bind(&FreeFlyerActionClient::FeedbackCallback,
                           this,
                           std::placeholders::_1,
                           std::placeholders::_2);
-    send_goal_options.result_callback =
-                          std::bind(&FreeFlyerActionClient::ResultCallback,
+    sgo.result_callback = std::bind(&FreeFlyerActionClient::ResultCallback,
                           this,
                           std::placeholders::_1);
     // Send the goal
-    sac_->sendGoal(goal, send_goal_options);
+    sac_->async_send_goal(goal, sgo);
     // Update the state
     state_ = WAITING_FOR_ACTIVE;
     return true;

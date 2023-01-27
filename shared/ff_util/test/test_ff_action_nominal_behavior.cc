@@ -74,14 +74,14 @@ class Server : ff_util::FreeFlyerComponent {
   }
 
   void TimerCallback() {
-    /*if (messages_++ < 5) {
-      actionlib::TwoIntsFeedback feedback;
+    if (messages_++ < 5) {
+      ff_msgs::action::Dock::Feedback::SharedPtr feedback;
       action_.SendFeedback(feedback);
     } else {
       timer_.stop();
-      actionlib::TwoIntsResult result;
+      ff_msgs::action::Dock::Result::SharedPtr result;
       action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
-    }*/
+    }
   }
 
  private:
@@ -97,7 +97,7 @@ class Client : ff_util::FreeFlyerComponent {
   explicit Client(const rclcpp::NodeOptions& options) :
     ff_util::FreeFlyerComponent(options, "action_client_test", true) {}
 
-  void Initialize(NodeHandle node) {
+  void Initialize(NodeHandle nh) {
     // Setters for callbacks
     /*action_.SetFeedbackCallback(
       std::bind(&Client::FeedbackCallback, this, std::placeholders::_1));
@@ -106,7 +106,7 @@ class Client : ff_util::FreeFlyerComponent {
     action_.SetConnectedCallback(
       std::bind(&Client::ConnectedCallback, this));
     action_.SetActiveCallback(
-      std::bind(&Client::ActiveCallback, this));
+      std::bind(&Client::ActiveCallback, this));*/
     // Setters for timeout values
     action_.SetConnectedTimeout(2.0);
     action_.SetActiveTimeout(4.0);
@@ -115,35 +115,40 @@ class Client : ff_util::FreeFlyerComponent {
     // Call connect
     action_.Create(nh, "two_ints_action");
     // Setup a timer to preempt or cancel ones own task
-    timer_ = nh->createTimer(ros::Duration(0.2), &Client::TimerCallback, this, true, false);*/
+    timer_.createTimer(0.2,
+                       std::bind(&Client::TimerCallback, this),
+                       nh,
+                       true,
+                       false);
   }
 
  protected:
-  /*void FeedbackCallback(actionlib::TwoIntsFeedbackConstPtr const& feedback) {
-    ROS_INFO("C:FeedbackCallback()");
+  void FeedbackCallback(ff_msgs::action::Dock::Feedback const& feedback) {
+    FF_INFO("C:FeedbackCallback()");
   }
 
-  void ResultCallback(ff_util::FreeFlyerActionState::Enum state, actionlib::TwoIntsResultConstPtr const& result) {
-    ROS_INFO("C:ResultCallback()");
+  void ResultCallback(ff_util::FreeFlyerActionState::Enum state,
+                      ff_msgs::action::Dock::Result::SharedPtr const& result) {
+    FF_INFO("C:ResultCallback()");
     EXPECT_TRUE(state == ff_util::FreeFlyerActionState::SUCCESS);
     ros::shutdown();
   }
 
   void ConnectedCallback() {
-    ROS_INFO("C:ConnectedCallback()");
-    actionlib::TwoIntsGoal goal;
+    FF_INFO("C:ConnectedCallback()");
+    ff_msgs::action::Dock::Goal::SharedPtr goal;
     action_.SendGoal(goal);
   }
 
   void ActiveCallback() {
-    ROS_INFO("C:ActiveCallback()");
+    FF_INFO("C:ActiveCallback()");
   }
 
   // Timer callback
-  void TimerCallback(ros::TimerEvent const& event) {
+  void TimerCallback() {
     EXPECT_TRUE(false);
     // ros::shutdown();
-  }*/
+  }
 
  private:
   ff_util::FreeFlyerActionClient<ff_msgs::action::Dock> action_;
