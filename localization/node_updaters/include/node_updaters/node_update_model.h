@@ -33,13 +33,13 @@ class NodeUpdateModel {
   virtual ~NodeUpdateModel() = 0;
   virtual void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                          const localization_common::Time timestamp, const NodesType& nodes,
-                         gtsam::NonlinearFactorGraph& factors) = 0;
+                         gtsam::NonlinearFactorGraph& factors) const = 0;
   virtual bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
                                           const localization_common::Time timestamp_b, NodesType& nodes,
-                                          gtsam::NonlinearFactorGraph& factors) = 0;
+                                          gtsam::NonlinearFactorGraph& factors) const = 0;
   virtual bool AddRelativeFactors(const localization_common::Time timestamp_a,
                                   const localization_common::Time timestamp_b, const NodesType& nodes,
-                                  gtsam::NonlinearFactorGraph& factors) = 0;
+                                  gtsam::NonlinearFactorGraph& factors) const = 0;
 
  protected:
   // TODO(rsoussan): Add constructor to set these, template on params?

@@ -24,7 +24,7 @@ namespace node_updaters {
 namespace lc = localization_common;
 namespace go = graph_optimizer;
 
-boost::optional<gtsam::Key> PoseNodeUpdateModel::AddNode(const lc::Time timestamp, NodesType& nodes) {
+gtsam::KeyVector PoseNodeUpdateModel::AddNode(const lc::Time timestamp, NodesType& nodes) const {
   const auto pose = pose_interpolater_.Interpolate(timestamp);
   if (!pose) {
     LogError("AddNode: Failed to get value.");

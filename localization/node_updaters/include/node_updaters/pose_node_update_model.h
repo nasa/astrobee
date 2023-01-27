@@ -33,7 +33,7 @@ class PoseNodeUpdateModel : BetweenFactorNodeUpdateModel<gtsam::Pose3> {
   using NodesType = Base::NodesType;
 
  public:
-  boost::optional<gtsam::Key> AddNode(const localization_common::Time timestamp, NodesType& nodes) final;
+  gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const final;
   boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;
 

@@ -1,9 +1,10 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
-      - create combinednavstatenodes! test this! (AA)
-        - put in graph values!!!
-    - make sure node updaters (w/o combined and feature point) compile! (AB)
+   - make sure node updaters (w/o combined and feature point) compile! (AA)
+      - add relativefactors function to betweennodeupdater that takes key vectors and relative node and noise!
+      - add base implementations to between node updater that work for single type???
+  - test combinednavstatenodes! (AB)
     - update combined nav state node updater! (AC)
-      - used timestampedcombinednodes!
+      - used combinednavstatenodes and timestampednodeupdater!
       - test and compile!
 - test timestamped pose node updater! (AE)
 - update factor adders with changes described below

@@ -41,18 +41,19 @@ class BetweenFactorNodeUpdateModel : public NodeUpdateModel<NodeType, graph_opti
   using Base = NodeUpdateModel<NodeType, NodesType>;
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,
-                 gtsam::NonlinearFactorGraph& factors) final;
+                 gtsam::NonlinearFactorGraph& factors) const final;
   bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
                                   const localization_common::Time timestamp_b, NodesType& nodes,
-                                  gtsam::NonlinearFactorGraph& factors) final;
+                                  gtsam::NonlinearFactorGraph& factors) const final;
   bool AddRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
-                          const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) final;
+                          const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
 
  private:
-  bool AddRelativeFactor(const gtsam::Key key_a, const localization_common::Time timestamp_a, const gtsam::Key key_b,
-                         const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors) const;
+  bool AddRelativeFactors(const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a,
+                          const gtsam::KeyVector& keys_b, const localization_common::Time timestamp_b,
+                          gtsam::NonlinearFactorGraph& factors) const;
   // These functions needs to be implemented by the child class
-  virtual boost::optional<gtsam::Key> AddNode(const localization_common::Time timestamp, NodesType& nodes) = 0;
+  virtual gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const = 0;
   virtual boost::optional<std::pair<NodeType, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const = 0;
 
@@ -72,15 +73,15 @@ template <typename NodeType>
 void BetweenFactorNodeUpdateModel<NodeType>::AddPriors(const NodeType& node,
                                                        const std::vector<gtsam::SharedNoiseModel>& noise_models,
                                                        const localization_common::Time timestamp,
-                                                       const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) {
-  // TODO(rsoussan): vector now
-  const auto key = nodes.Key(timestamp);
-  if (!key) {
-    LogError("AddPriors: Failed to get key.");
+                                                       const NodesType& nodes,
+                                                       gtsam::NonlinearFactorGraph& factors) const {
+  const auto keys = nodes.Keys(timestamp);
+  if (keys.empty()) {
+    LogError("AddPriors: Failed to get keys.");
     return;
   }
   // TODO(rsoussan): Ensure symbols not used by other node updaters
-  gtsam::PriorFactor<NodeType> prior_factor(*key, node, noise_models[0]);
+  gtsam::PriorFactor<NodeType> prior_factor(keys[0], node, noise_models[0]);
   factors.push_back(prior_factor);
 }
 
@@ -88,9 +89,9 @@ template <typename NodeType>
 bool BetweenFactorNodeUpdateModel<NodeType>::AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
                                                                         const localization_common::Time timestamp_b,
                                                                         NodesType& nodes,
-                                                                        gtsam::NonlinearFactorGraph& factors) {
-  const auto key_b = AddNode(timestamp_b, nodes);
-  if (!key_b) {
+                                                                        gtsam::NonlinearFactorGraph& factors) const {
+  const auto keys = AddNode(timestamp_b, nodes);
+  if (keys.empty()) {
     LogError("AddNodesAndRelativeFactors: Failed to add node.");
     return false;
   }
@@ -105,19 +106,18 @@ template <typename NodeType>
 bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const localization_common::Time timestamp_a,
                                                                 const localization_common::Time timestamp_b,
                                                                 const NodesType& nodes,
-                                                                gtsam::NonlinearFactorGraph& factors) {
-  // TODO(rsoussan): Are these vectors now?
-  const auto key_a = nodes.Key(timestamp_a);
-  if (!key_a) {
-    LogError("AddRelativeFactor: Failed to get key a.");
+                                                                gtsam::NonlinearFactorGraph& factors) const {
+  const auto keys_a = nodes.Keys(timestamp_a);
+  if (keys_a.empty()) {
+    LogError("AddRelativeFactors: Failed to get keys a.");
     return false;
   }
-  const auto key_b = nodes.Key(timestamp_b);
-  if (!key_b) {
-    LogError("AddRelativeFactor: Failed to get key b.");
+  const auto keys_b = nodes.Keys(timestamp_b);
+  if (keys_b.empty()) {
+    LogError("AddRelativeFactors: Failed to get keys b.");
     return false;
   }
-  if (!AddRelativeFactor(*key_a, timestamp_a, *key_b, timestamp_b, factors)) {
+  if (!AddRelativeFactors(keys_a, timestamp_a, keys_b, timestamp_b, factors)) {
     LogError("AddRelativeFactor: Failed to add relative factor.");
     return false;
   }
@@ -125,18 +125,18 @@ bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const localizati
 }
 
 template <typename NodeType>
-bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactor(const gtsam::Key key_a,
-                                                               const localization_common::Time timestamp_a,
-                                                               const gtsam::Key key_b,
-                                                               const localization_common::Time timestamp_b,
-                                                               gtsam::NonlinearFactorGraph& factors) const {
+bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const gtsam::KeyVector& keys_a,
+                                                                const localization_common::Time timestamp_a,
+                                                                const gtsam::KeyVector& keys_b,
+                                                                const localization_common::Time timestamp_b,
+                                                                gtsam::NonlinearFactorGraph& factors) const {
   const auto relative_node_and_noise = RelativeNodeAndNoise(timestamp_a, timestamp_b);
   if (!relative_node_and_noise) {
     LogError("AddRelativeFactor: Failed to relative node and noise.");
   }
 
-  typename gtsam::BetweenFactor<NodeType>::shared_ptr relative_factor(
-    new gtsam::BetweenFactor<NodeType>(key_a, key_b, relative_node_and_noise->first, relative_node_and_noise->second));
+  typename gtsam::BetweenFactor<NodeType>::shared_ptr relative_factor(new gtsam::BetweenFactor<NodeType>(
+    keys_a[0], keys_b[0], relative_node_and_noise->first, relative_node_and_noise->second));
   factors.push_back(relative_factor);
 }
 }  // namespace node_updaters
