@@ -89,7 +89,8 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
       if (simulation_speed > 1.0 && dos) rate_ = 0.0;
 
     // Toggle if the camera is active or not
-    ToggleCallback();
+    timer_toggle_.createTimer(0.5,
+      std::bind(&GazeboSensorPluginDockCam::ToggleCallback, this), nh, false, true);
   }
 
   // Only send measurements when extrinsics are available
@@ -123,6 +124,7 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
 
  private:
   std::shared_ptr<rclcpp::Clock> clock_;
+  ff_util::FreeFlyerTimer timer_toggle_;
   sensor_msgs::Image msg_;
   rclcpp::Publisher<sensor_msgs::Image>::SharedPtr pub_img_;
   std::shared_ptr<sensors::WideAngleCameraSensor> sensor_;
