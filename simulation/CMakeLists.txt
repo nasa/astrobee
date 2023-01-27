@@ -291,6 +291,8 @@ install(TARGETS
   gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
+  gazebo_sensor_plugin_nav_cam
+  gazebo_sensor_plugin_dock_cam
   gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
