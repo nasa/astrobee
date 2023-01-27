@@ -250,14 +250,13 @@ target_link_libraries(gazebo_world_plugin_speed astrobee_gazebo)
 ament_target_dependencies(gazebo_world_plugin_speed rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_world_plugin_speed)
 
-# # Create a system plugin for the client gui
-# add_library(gazebo_system_plugin_client
-#   src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
-# )
-# add_dependencies(gazebo_system_plugin_client ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_system_plugin_client
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a system plugin for the client gui
+add_library(gazebo_system_plugin_client SHARED
+  src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
+)
+target_link_libraries(gazebo_system_plugin_client astrobee_gazebo)
+ament_target_dependencies(gazebo_system_plugin_client rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_system_plugin_client)
 
 #############
 ## Install ##
@@ -284,6 +283,7 @@ install(TARGETS
   gazebo_model_plugin_signal_lights
   gazebo_model_plugin_truth
   gazebo_sensor_plugin_sparse_map
+  gazebo_system_plugin_client
   gazebo_world_plugin_speed
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}
