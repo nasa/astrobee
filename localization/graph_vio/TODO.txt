@@ -1,11 +1,8 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
-    - add tests for timestamp combined nodes??? 
-      - simple test, make sure add and node functions work with multiple values! (AA)
-        - remove nodesize!!
-      - create combinednavstatenodes! test this! (AB)
+      - create combinednavstatenodes! test this! (AA)
         - put in graph values!!!
-    - make sure node updaters (w/o combined and feature point) compile! (AC)
-    - update combined nav state node updater! (AD)
+    - make sure node updaters (w/o combined and feature point) compile! (AB)
+    - update combined nav state node updater! (AC)
       - used timestampedcombinednodes!
       - test and compile!
 - test timestamped pose node updater! (AE)
