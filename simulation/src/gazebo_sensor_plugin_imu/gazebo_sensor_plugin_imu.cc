@@ -16,11 +16,9 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
 
 // IMU Sensor message
-#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/msg/imu.hpp>
 
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
@@ -28,7 +26,13 @@
 // STL includes
 #include <string>
 
+namespace sensor_msgs {
+typedef msg::Imu Imu;
+}  // namespace sensor_msgs
+
 namespace gazebo {
+
+FF_DEFINE_LOGGER("gazebo_sensor_plugin_imu");
 
 class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
  public:
@@ -48,17 +52,13 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
 
   ~GazeboSensorPluginImu() {
     if (update_) {
-      #if GAZEBO_MAJOR_VERSION > 7
       update_.reset();
-      #else
-      sensor_->DisconnectUpdated(update_);
-      #endif
     }
   }
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle* nh,
+  void LoadCallback(NodeHandle& nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
     sensor_ = sensor;
@@ -76,23 +76,14 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
   }
 
   // Only send IMU when we have the correct extrinsics
-  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+  void OnExtrinsicsReceived(NodeHandle& nh) {
     // Offer IMU messages to those which need them
-    pub_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_IMU, 1,
-      boost::bind(&GazeboSensorPluginImu::ToggleCallback, this),
-      boost::bind(&GazeboSensorPluginImu::ToggleCallback, this));
+    pub_ = nh->create_publisher< sensor_msgs::Imu > (TOPIC_HARDWARE_IMU, 1);
 
     // Connect to the sensor update event.
     update_ = sensor_->ConnectUpdated(
       std::bind(&GazeboSensorPluginImu::UpdateCallback, this));
-  }
-
-  // Turn camera on or off based on topic subscription
-  void ToggleCallback() {
-    if (pub_.getNumSubscribers() > 0)
-      sensor_->SetActive(true);
-    else
-      sensor_->SetActive(false);
+    sensor_->SetActive(true);
   }
 
   // Called on each sensor update event
@@ -100,7 +91,7 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
     if (!sensor_->IsActive())
       return;
     msg_.header.stamp.sec = imu_->LastMeasurementTime().sec;
-    msg_.header.stamp.nsec = imu_->LastMeasurementTime().nsec;
+    msg_.header.stamp.nanosec = imu_->LastMeasurementTime().nsec;
     msg_.orientation.x = imu_->Orientation().X();
     msg_.orientation.y = imu_->Orientation().Y();
     msg_.orientation.z = imu_->Orientation().Z();
@@ -111,12 +102,12 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
     msg_.linear_acceleration.x = imu_->LinearAcceleration().X();
     msg_.linear_acceleration.y = imu_->LinearAcceleration().Y();
     msg_.linear_acceleration.z = imu_->LinearAcceleration().Z();
-    pub_.publish(msg_);
+    pub_->publish(msg_);
   }
 
  private:
   // ROS variables
-  ros::Publisher pub_;
+  rclcpp::Publisher<sensor_msgs::Imu>::SharedPtr pub_;
   // Gazebo variables
   sensors::SensorPtr sensor_;
   sensors::ImuSensorPtr imu_;
