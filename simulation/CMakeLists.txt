@@ -156,15 +156,6 @@ target_link_libraries(gazebo_model_plugin_heartbeat astrobee_gazebo)
 ament_target_dependencies(gazebo_model_plugin_heartbeat rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_model_plugin_heartbeat)
 
-# Create a model plugin for the speed camera
-# add_library(gazebo_model_plugin_speed_cam
-#   src/gazebo_model_plugin_speed_cam/gazebo_model_plugin_speed_cam.cc
-# )
-# add_dependencies(gazebo_model_plugin_speed_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_speed_cam astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
 # Create a model plugin for the signal lights
 # add_library(gazebo_model_plugin_signal_lights
 #   src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
