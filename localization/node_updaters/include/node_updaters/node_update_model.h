@@ -24,6 +24,8 @@
 #include <gtsam/inference/Key.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <vector>
+
 namespace node_updaters {
 template <typename NodeType, typename NodesType>
 class NodeUpdateModel {

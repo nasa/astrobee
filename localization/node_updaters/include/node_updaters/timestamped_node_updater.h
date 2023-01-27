@@ -25,6 +25,7 @@
 #include <node_updaters/timestamped_node_updater_params.h>
 
 #include <algorithm>
+#include <vector>
 
 namespace node_updaters {
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>

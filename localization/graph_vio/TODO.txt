@@ -1,26 +1,19 @@
-- test timestamped pose node updater! (AA)
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
-  - pass nodes to addnodesandrelativefactors!
-    - also pass to addnodes!
-  - update timestamped node updater to work with multiple keys!!!! (AA)
-      - get key?
-        - won't be needed in future...
- - compile w/o new combined nav stat classes!
-  - add combinednavstatetimestampednodes! (AB)
-    - add TimestampedCombinedNodes class!!!
-      - uses n timestamped nodes classes!
-      - make TimestampedNodesBase class!
-        - timestampedCombinedNodes and timestampednodes inherit from this!
-      - update timestamped nodes to use timestamped set???
-        - compile and test!
-  - compile nodes!
-  - compile w/ new combined nav state classes!
-  - test!
-  - compile graph vio!
-- compiple graph loc! (AB)
-- update factor adders with changes described below???
-- test graph loc!!! (AC)
+    - update timestampednodes!!! (AB)
+      - compile and test!
+    - add tests for timestamp combined nodes???
+      - create combinednavstatenodes! test this!
+        - put in graph values!!!
+    - make sure node updaters (w/o combined and feature point) compile! (AC)
+    - update combined nav state node updater! (AD)
+      - used timestampedcombinednodes!
+      - test and compile!
+- test timestamped pose node updater! (AE)
+- update factor adders with changes described below
+- compile graph vio!
 - test graph vio!!! (AD)
+- compiple graph loc! (AB)
+- test graph loc!!! (AC)
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
   - use graph bag???? 

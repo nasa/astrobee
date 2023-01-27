@@ -28,5 +28,13 @@ bool Nodes::Remove(const gtsam::Key& key) {
   return true;
 }
 
+bool Nodes::Remove(const gtsam::KeyVector& keys) {
+  bool removed_value = false;
+  for (const auto& key : keys) {
+    removed_value = removed_value || Remove(key);
+  }
+  return removed_value;
+}
+
 size_t Nodes::size() const { return values_->size(); }
 }  // namespace graph_optimizer

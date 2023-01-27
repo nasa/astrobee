@@ -40,6 +40,9 @@ class Nodes {
 
   bool Remove(const gtsam::Key& key);
 
+  // TODO(rsoussan): Test this
+  bool Remove(const gtsam::KeyVector& keys);
+
   bool Contains(const gtsam::Key& key) const;
 
   size_t size() const;

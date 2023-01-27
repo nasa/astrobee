@@ -54,10 +54,11 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/graph_optimizer.cc
-  src/graph_values.cc
-  src/utilities.cc
   src/graph_stats.cc
+  src/graph_values.cc
+  src/nodes.cc
   src/parameter_reader.cc
+  src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

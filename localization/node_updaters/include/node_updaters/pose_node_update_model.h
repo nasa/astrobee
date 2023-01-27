@@ -25,6 +25,8 @@
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
 
+#include <utility>
+
 namespace node_updaters {
 class PoseNodeUpdateModel : BetweenFactorNodeUpdateModel<gtsam::Pose3> {
   using Base = BetweenFactorNodeUpdateModel<gtsam::Pose3>;
