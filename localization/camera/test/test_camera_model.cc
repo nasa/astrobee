@@ -58,7 +58,8 @@ TEST(camera_model, angleaxis_transforms) {
 }
 
 TEST(camera_model, camera) {
-  std::string data_dir = std::string(std::getenv("DATA_DIR"));
+  std::string data_dir = std::string(TEST_DIR) + "/../../sparse_mapping/test/data/";
+
   camera::CameraParameters params(data_dir + "iss_tango_camera.xml");  // Ideally we would use a
                                                    // different file which
                                                    // represents an undistorted
@@ -147,7 +148,7 @@ TEST(camera_model, camera) {
 }
 
 TEST(camera_model, DistortionCoeffs) {
-  std::string data_dir = std::string(std::getenv("DATA_DIR"));
+  std::string data_dir = std::string(TEST_DIR) + "/../../sparse_mapping/test/data/";
 
   // Test with our three camera models
   std::vector<std::string> files {"p2_camera.xml", "iss_tango_camera.xml",
