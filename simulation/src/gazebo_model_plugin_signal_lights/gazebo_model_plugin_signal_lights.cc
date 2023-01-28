@@ -16,18 +16,14 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
 // FSW nodelet
 #include <ff_util/ff_names.h>
-#include <ff_util/ff_nodelet.h>
 
 // Services
-#include <ff_msgs/SetStreamingLights.h>
+#include <ff_msgs/srv/set_streaming_lights.hpp>
 
 // STL includes
 #include <string>
@@ -37,20 +33,21 @@ namespace gazebo {
 class GazeboModelPluginSignalLights : public FreeFlyerModelPlugin {
  public:
   GazeboModelPluginSignalLights() : FreeFlyerModelPlugin(
-    "signal_lights", "signal_lights", true) {}
+    "signal_lights", "", true) {}
 
   ~GazeboModelPluginSignalLights() {}
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh,
+  void LoadCallback(NodeHandle& nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
     // this service is a special case for when we need to light
     // two AMBER leds on each side only when we are streaming
     // live video
     streaming_service_ =
-        nh->advertiseService(SERVICE_STREAMING_LIGHTS,
-        &GazeboModelPluginSignalLights::StreamingLightsCallback, this);
+        nh->create_service<ff_msgs::srv::SetStreamingLights>(SERVICE_STREAMING_LIGHTS,
+        std::bind(&GazeboModelPluginSignalLights::StreamingLightsCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
   }
 
   // Manage the extrinsics based on the sensor type
@@ -59,14 +56,14 @@ class GazeboModelPluginSignalLights : public FreeFlyerModelPlugin {
   }
 
   bool StreamingLightsCallback(
-      ff_msgs::SetStreamingLights::Request& request,
-      ff_msgs::SetStreamingLights::Response& response) {
+      const std::shared_ptr<ff_msgs::srv::SetStreamingLights::Request> request,
+      const std::shared_ptr<ff_msgs::srv::SetStreamingLights::Response> response) {
     // Send successful response
-    response.success = true;
+    response->success = true;
     return true;
   }
 
-  ros::ServiceServer streaming_service_;
+  rclcpp::Service<ff_msgs::srv::SetStreamingLights>::SharedPtr streaming_service_;
 };
 
 // Register this plugin with the simulator
