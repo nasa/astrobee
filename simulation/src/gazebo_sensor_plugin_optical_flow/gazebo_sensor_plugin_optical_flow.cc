@@ -137,7 +137,8 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
-    timer_features_.reset();
+    timer_features_.stop();
+    timer_features_.start();
 
     // Send the registration pulse
     msg_reg_.header.stamp = FF_TIME_NOW();
