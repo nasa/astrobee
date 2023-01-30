@@ -57,20 +57,20 @@ def generate_launch_description():
         launch_arg("default_robot", default_value="true", description="Insert default robot "),
         # Default starting pose based on scenario
         # Perch mode assumes ISS world
-        launch_arg("pose", default_value="9.92 -9.54 4.50 0 0 0 1",
+        launch_arg("pose", default_value="9.92 -9.54 4.50 0 0 0",
                            condition=IfCondition(LaunchConfiguration("perch"))),
         # Default is using JPM Berth 1, for Berth 2 use: '9.817 -10.312 4.293 1 0 0 0'
-        launch_arg("pose", default_value="9.816 -9.806 4.293 0 0 0 1",
+        launch_arg("pose", default_value="9.816 -9.806 4.293 0 0 0",
                            condition=LaunchConfigurationEquals("world", "iss")),
-        launch_arg("pose", default_value="0 0 -0.7 0 0 0 1",
+        launch_arg("pose", default_value="0 0 -0.7 0 0 0",
                            condition=LaunchConfigurationEquals("world", "granite")),
         # Multi-robot simulation
         launch_arg("honey", default_value="false", description="Insert honey robot"),
         launch_arg("bumble", default_value="false", description="Insert bumble robot"),
         launch_arg("queen", default_value="false", description="Insert queen robot"),
-        launch_arg("honey_pose",  default_value="11 -7 4.8 0 0 0 1",  description="Overwrite honey's pose"),
-        launch_arg("bumble_pose", default_value="11 -4 4.8 0 0 0 1",  description="Overwrite bumble's pose"),
-        launch_arg("queen_pose",  default_value="11 -10 4.8 0 0 0 1", description="Use to overwrite queen's pose"),
+        launch_arg("honey_pose",  default_value="11 -7 4.8 0 0 0",  description="Overwrite honey's pose"),
+        launch_arg("bumble_pose", default_value="11 -4 4.8 0 0 0",  description="Overwrite bumble's pose"),
+        launch_arg("queen_pose",  default_value="11 -10 4.8 0 0 0", description="Use to overwrite queen's pose"),
         # Make sure all environment variables are set for controller
         # Override the robot and world environment variables all the time. The
         # environment variables are the default if they are set. So in this

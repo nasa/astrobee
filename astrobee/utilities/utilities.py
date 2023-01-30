@@ -24,6 +24,7 @@ from launch.actions import DeclareLaunchArgument as launch_arg
 from launch.actions import (
     ExecuteProcess,
     IncludeLaunchDescription,
+    OpaqueFunction,
     SetEnvironmentVariable,
 )
 from launch.conditions import (

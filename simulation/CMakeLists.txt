@@ -275,10 +275,8 @@ install(TARGETS
   gazebo_sensor_plugin_imu
   gazebo_model_plugin_laser
   gazebo_model_plugin_perching_arm
-  gazebo_model_plugin_flashlight
   gazebo_sensor_plugin_nav_cam
   gazebo_sensor_plugin_dock_cam
-  gazebo_sensor_plugin_optical_flow
   gazebo_model_plugin_pmc
   gazebo_model_plugin_signal_lights
   gazebo_model_plugin_truth
