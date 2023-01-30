@@ -55,7 +55,7 @@ def generate_launch_description():
         DeclareLaunchArgument("bot_front", default_value="empty"),        # Payload bays
 
         # Simulation options only -->
-        DeclareLaunchArgument("pose", default_value="0 0 0 0 0 0 1"),  # Initial pose (sim only)
+        DeclareLaunchArgument("pose", default_value="0 0 0 0 0 0"),  # Initial pose (sim only)
 
         # Path to the bag file
         DeclareLaunchArgument("bag", default_value=""),

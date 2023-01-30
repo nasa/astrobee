@@ -141,13 +141,12 @@ ament_target_dependencies(gazebo_model_plugin_flashlight rclcpp ff_hw_msgs visua
 ament_export_libraries(gazebo_model_plugin_flashlight)
 
 # Create a model plugin for the laser
-# add_library(gazebo_model_plugin_laser
-#   src/gazebo_model_plugin_laser/gazebo_model_plugin_laser.cc
-# )
-# add_dependencies(gazebo_model_plugin_laser ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_laser astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_model_plugin_laser SHARED
+  src/gazebo_model_plugin_laser/gazebo_model_plugin_laser.cc
+)
+target_link_libraries(gazebo_model_plugin_laser astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_laser rclcpp ff_hw_msgs visualization_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_model_plugin_laser)
 
 # Create a model plugin to publish heartbeats
 add_library(gazebo_model_plugin_heartbeat SHARED
@@ -157,23 +156,13 @@ target_link_libraries(gazebo_model_plugin_heartbeat astrobee_gazebo)
 ament_target_dependencies(gazebo_model_plugin_heartbeat rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_model_plugin_heartbeat)
 
-# Create a model plugin for the speed camera
-# add_library(gazebo_model_plugin_speed_cam
-#   src/gazebo_model_plugin_speed_cam/gazebo_model_plugin_speed_cam.cc
-# )
-# add_dependencies(gazebo_model_plugin_speed_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_speed_cam astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
 # Create a model plugin for the signal lights
-# add_library(gazebo_model_plugin_signal_lights
-#   src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
-# )
-# add_dependencies(gazebo_model_plugin_signal_lights ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_signal_lights astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_model_plugin_signal_lights SHARED
+  src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
+)
+target_link_libraries(gazebo_model_plugin_signal_lights astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_signal_lights rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_model_plugin_signal_lights)
 
 # Create a sensor plugin for the IMU
 add_library(gazebo_sensor_plugin_imu SHARED
@@ -192,7 +181,7 @@ ament_export_libraries(gazebo_sensor_plugin_imu)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# # Create a sensor plugin for the depth camera
+# Create a sensor plugin for the depth camera
 add_library(gazebo_sensor_plugin_depth_cam SHARED
    src/gazebo_sensor_plugin_depth_cam/gazebo_sensor_plugin_depth_cam.cc
 )
@@ -200,23 +189,21 @@ target_link_libraries(gazebo_sensor_plugin_depth_cam astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_depth_cam rclcpp gazebo_dev gazebo_ros sensor_msgs)
 ament_export_libraries(gazebo_sensor_plugin_depth_cam)
 
-# # Create a sensor plugin for the nav cam
-# add_library(gazebo_sensor_plugin_nav_cam
-#   src/gazebo_sensor_plugin_nav_cam/gazebo_sensor_plugin_nav_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_nav_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_nav_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the nav cam
+add_library(gazebo_sensor_plugin_nav_cam SHARED
+  src/gazebo_sensor_plugin_nav_cam/gazebo_sensor_plugin_nav_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_nav_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_nav_cam rclcpp tf2 tf2_ros sensor_msgs geometry_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_nav_cam)
 
-# # Create a sensor plugin for the dock cam
-# add_library(gazebo_sensor_plugin_dock_cam
-#   src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_dock_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_dock_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the dock cam
+add_library(gazebo_sensor_plugin_dock_cam SHARED
+  src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_dock_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_dock_cam rclcpp tf2 tf2_ros sensor_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_dock_cam)
 
 # Create a model plugin for sparse mapping
 add_library(gazebo_sensor_plugin_sparse_map SHARED
@@ -244,7 +231,7 @@ ament_export_libraries(gazebo_sensor_plugin_sparse_map)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# # Create a world plugin for speed
+# Create a world plugin for speed
 add_library(gazebo_world_plugin_speed SHARED
   src/gazebo_world_plugin_speed/gazebo_world_plugin_speed.cc
 )
@@ -252,14 +239,13 @@ target_link_libraries(gazebo_world_plugin_speed astrobee_gazebo)
 ament_target_dependencies(gazebo_world_plugin_speed rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_world_plugin_speed)
 
-# # Create a system plugin for the client gui
-# add_library(gazebo_system_plugin_client
-#   src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
-# )
-# add_dependencies(gazebo_system_plugin_client ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_system_plugin_client
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a system plugin for the client gui
+add_library(gazebo_system_plugin_client SHARED
+  src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
+)
+target_link_libraries(gazebo_system_plugin_client astrobee_gazebo)
+ament_target_dependencies(gazebo_system_plugin_client rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_system_plugin_client)
 
 #############
 ## Install ##
@@ -277,15 +263,20 @@ install(TARGETS
   astrobee_gazebo
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
-  gazebo_model_plugin_heartbeat
   gazebo_model_plugin_truth
   gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
-  gazebo_sensor_plugin_depth_cam
+  gazebo_model_plugin_laser
+  gazebo_model_plugin_heartbeat
+  gazebo_model_plugin_signal_lights
   gazebo_sensor_plugin_imu
+  gazebo_sensor_plugin_depth_cam
+  gazebo_sensor_plugin_nav_cam
+  gazebo_sensor_plugin_dock_cam
   gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
+  gazebo_system_plugin_client
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION bin
