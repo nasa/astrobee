@@ -182,13 +182,12 @@ ament_export_libraries(gazebo_sensor_plugin_imu)
 # )
 
 # Create a sensor plugin for the handrail detection algorithm
-# add_library(gazebo_sensor_plugin_handrail_detect
-#   src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_handrail_detect ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_handrail_detect
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_sensor_plugin_handrail_detect SHARED
+  src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
+)
+target_link_libraries(gazebo_sensor_plugin_handrail_detect astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_handrail_detect rclcpp gazebo_dev gazebo_ros geometry_msgs tf2_ros camera)
+ament_export_libraries(gazebo_sensor_plugin_handrail_detect)
 
 # # Create a sensor plugin for the hazard camera
 # add_library(gazebo_sensor_plugin_haz_cam
