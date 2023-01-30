@@ -42,9 +42,9 @@
       </plugin>
       <plugin name="sparse_map_ros" filename="libgazebo_sensor_plugin_sparse_map.so">
       </plugin>
-      <!-- <plugin name="optical_flow_ros" filename="libgazebo_sensor_plugin_optical_flow.so">
+      <plugin name="optical_flow_ros" filename="libgazebo_sensor_plugin_optical_flow.so">
         <namespace>/${ns}/</namespace>
-      </plugin> -->
+      </plugin>
     </sensor>
   </gazebo>
 </robot>

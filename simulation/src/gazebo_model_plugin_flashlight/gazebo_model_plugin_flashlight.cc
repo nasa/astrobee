@@ -51,11 +51,7 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
 
   ~GazeboModelPluginFlashlight() {
     if (update_) {
-      #if GAZEBO_MAJOR_VERSION > 7
       update_.reset();
-      #else
-      event::Events::DisconnectWorldUpdateBegin(update_);
-      #endif
     }
   }
 

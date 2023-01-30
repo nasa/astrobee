@@ -27,11 +27,7 @@ namespace gazebo {
 class SystemPluginClient : public SystemPlugin {
  public:
   ~SystemPluginClient() {
-  #if GAZEBO_MAJOR_VERSION > 7
     update_.reset();
-  #else
-    event::Events::DisconnectPreRender(update_);
-  #endif
   }
 
   // Called before initializing

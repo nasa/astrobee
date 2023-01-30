@@ -16,9 +16,6 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
@@ -26,12 +23,22 @@
 #include <config_reader/config_reader.h>
 
 // General messages
-#include <sensor_msgs/PointCloud2.h>
+// #include <sensor_msgs/PointCloud2.h>
+// namespace sensor_msgs {
+// typedef msg::PointCloud2 PointCloud2;
+// }  // namespace sensor_msgs
 
 // FSW messages
-#include <ff_msgs/CameraRegistration.h>
-#include <ff_msgs/Feature2dArray.h>
-#include <ff_msgs/SetBool.h>
+#include <ff_msgs/msg/camera_registration.hpp>
+#include <ff_msgs/msg/feature2d_array.hpp>
+#include <ff_msgs/msg/feature2d.hpp>
+#include <ff_msgs/srv/set_bool.hpp>
+namespace ff_msgs {
+typedef msg::CameraRegistration CameraRegistration;
+typedef msg::Feature2dArray Feature2dArray;
+typedef msg::Feature2d Feature2d;
+typedef srv::SetBool SetBool;
+}  // namespace ff_msgs
 
 // Camera model
 #include <camera/camera_model.h>
@@ -42,20 +49,20 @@
 #include <unordered_map>
 
 namespace gazebo {
+FF_DEFINE_LOGGER("gazebo_sensor_plugin_optical_flow");
 
 class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
  public:
-  GazeboSensorPluginOpticalFlow() :
-    FreeFlyerSensorPlugin("optical_flow_nodelet", "nav_cam", true),
-      active_(true), id_(0) {}
+  GazeboSensorPluginOpticalFlow()
+      : FreeFlyerSensorPlugin("optical_flow_nodelet", "nav_cam", true), active_(true), id_(0) {}
 
   ~GazeboSensorPluginOpticalFlow() {}
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle *nh,
-    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+  void LoadCallback(NodeHandle& nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
+    clock_ = nh->get_clock();
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
       gzerr << "GazeboSensorPluginOpticalFlow requires a parent camera sensor.\n";
@@ -63,53 +70,38 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     }
 
     // Check that we have a mono camera
-    if (sensor_->Camera()->ImageFormat() != "L8")
-      ROS_FATAL_STREAM("Camera format must be L8");
+    if (sensor_->Camera()->ImageFormat() != "L8") FF_FATAL_STREAM("Camera format must be L8");
 
     // Build the nav cam Camera Model
     config_.AddFile("cameras.config");
     config_.AddFile("simulation/optical_flow.config");
     if (!config_.ReadFiles()) {
-        ROS_ERROR("Failed to read config files.");
-        return;
+      FF_ERROR("Failed to read config files.");
+      return;
     }
 
-    if (!config_.GetReal("rate", &rate_))
-      ROS_FATAL("Could not read the rate parameter.");
+    if (!config_.GetReal("rate", &rate_)) FF_FATAL("Could not read the rate parameter.");
 
-    if (!config_.GetReal("delay_camera", &delay_camera_))
-      ROS_FATAL("Could not read the delay_camera parameter.");
+    if (!config_.GetReal("delay_camera", &delay_camera_)) FF_FATAL("Could not read the delay_camera parameter.");
 
-    if (!config_.GetReal("delay_features", &delay_features_))
-      ROS_FATAL("Could not read the delay_features parameter.");
+    if (!config_.GetReal("delay_features", &delay_features_)) FF_FATAL("Could not read the delay_features parameter.");
 
-    if (!config_.GetReal("near_clip", &near_clip_))
-      ROS_FATAL("Could not read the near_clip parameter.");
+    if (!config_.GetReal("near_clip", &near_clip_)) FF_FATAL("Could not read the near_clip parameter.");
 
-    if (!config_.GetReal("far_clip", &far_clip_))
-      ROS_FATAL("Could not read the far_clip parameter.");
+    if (!config_.GetReal("far_clip", &far_clip_)) FF_FATAL("Could not read the far_clip parameter.");
 
-    if (!config_.GetUInt("num_features", &num_features_))
-      ROS_FATAL("Could not read the num_features parameter.");
+    if (!config_.GetUInt("num_features", &num_features_)) FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
-    pub_reg_ = nh->advertise<ff_msgs::CameraRegistration>(
-      TOPIC_LOCALIZATION_OF_REGISTRATION, 1);
+    pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(TOPIC_LOCALIZATION_OF_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    pub_feat_ = nh->advertise<ff_msgs::Feature2dArray>(
-      TOPIC_LOCALIZATION_OF_FEATURES, 1);
+    pub_feat_ = nh->create_publisher<ff_msgs::Feature2dArray>(TOPIC_LOCALIZATION_OF_FEATURES, 1);
 
     // Create a shape for collision testing
-    #if GAZEBO_MAJOR_VERSION > 7
     GetWorld()->Physics()->InitForThread();
-    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
-        ->Physics()->CreateShape("ray", physics::CollisionPtr()));
-    #else
-    GetWorld()->GetPhysicsEngine()->InitForThread();
-    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
-        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
-    #endif
+    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(
+      GetWorld()->Physics()->CreateShape("ray", physics::CollisionPtr()));
 
     // Only do this once
     msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
@@ -117,105 +109,76 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
   }
 
   // Only send measurements when extrinsics are available
-  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+  void OnExtrinsicsReceived(NodeHandle& nh) {
     // Servide for enabling optical flow
-    srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_OF_ENABLE,
-      &GazeboSensorPluginOpticalFlow::EnableService, this);
+    srv_enable_ = nh->create_service<ff_msgs::SetBool>(
+      SERVICE_LOCALIZATION_OF_ENABLE,
+      std::bind(&GazeboSensorPluginOpticalFlow::EnableService, this, std::placeholders::_1, std::placeholders::_2));
 
     // Timer triggers registration
-    timer_registration_ = nh->createTimer(ros::Duration(ros::Rate(rate_)),
-      &GazeboSensorPluginOpticalFlow::SendRegistration, this, false, true);
+    timer_registration_.createTimer(1.0 / rate_, std::bind(&GazeboSensorPluginOpticalFlow::SendRegistration, this), nh,
+                                    false, true);
 
     // Timer triggers features
-    timer_features_ = nh->createTimer(ros::Duration(0.8 / rate_),
-      &GazeboSensorPluginOpticalFlow::SendFeatures, this, true, false);
+    timer_features_.createTimer(0.8 / rate_, std::bind(&GazeboSensorPluginOpticalFlow::SendFeatures, this), nh, true,
+                                false);
   }
 
   // Enable or disable the feature timer
-  bool EnableService(ff_msgs::SetBool::Request & req,
-                     ff_msgs::SetBool::Response & res) {
-    active_ = req.enable;
-    res.success = true;
+  bool EnableService(const std::shared_ptr<ff_msgs::srv::SetBool::Request> req,
+                     std::shared_ptr<ff_msgs::srv::SetBool::Response> res) {
+    active_ = req->enable;
+    res->success = true;
     return true;
   }
 
   // Send a registration pulse
-  void SendRegistration(ros::TimerEvent const& event) {
+  void SendRegistration() {
     if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
-    timer_features_.stop();
-    timer_features_.start();
+    timer_features_.reset();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = ros::Time::now() + ros::Duration(delay_camera_);
+    msg_reg_.header.stamp = FF_TIME_NOW();
     msg_reg_.camera_id++;
-    pub_reg_.publish(msg_reg_);
-    ros::spinOnce();
+    pub_reg_->publish(msg_reg_);
 
     // Copy over the camera id to the feature message
     msg_feat_.camera_id = msg_reg_.camera_id;
 
     // Handle the transform for all sensor types
-  #if GAZEBO_MAJOR_VERSION > 7
-    Eigen::Affine3d wTb = (
-        Eigen::Translation3d(
-          GetModel()->WorldPose().Pos().X(),
-          GetModel()->WorldPose().Pos().Y(),
-          GetModel()->WorldPose().Pos().Z()) *
-        Eigen::Quaterniond(
-          GetModel()->WorldPose().Rot().W(),
-          GetModel()->WorldPose().Rot().X(),
-          GetModel()->WorldPose().Rot().Y(),
-          GetModel()->WorldPose().Rot().Z()));
-  #else
-    Eigen::Affine3d wTb = (
-        Eigen::Translation3d(
-          GetModel()->GetWorldPose().pos.x,
-          GetModel()->GetWorldPose().pos.y,
-          GetModel()->GetWorldPose().pos.z) *
-        Eigen::Quaterniond(
-          GetModel()->GetWorldPose().rot.w,
-          GetModel()->GetWorldPose().rot.x,
-          GetModel()->GetWorldPose().rot.y,
-          GetModel()->GetWorldPose().rot.z));
-  #endif
-    Eigen::Affine3d bTs = (
-        Eigen::Translation3d(
-          sensor_->Pose().Pos().X(),
-          sensor_->Pose().Pos().Y(),
-          sensor_->Pose().Pos().Z()) *
-        Eigen::Quaterniond(
-          sensor_->Pose().Rot().W(),
-          sensor_->Pose().Rot().X(),
-          sensor_->Pose().Rot().Y(),
-          sensor_->Pose().Rot().Z()));
+    Eigen::Affine3d wTb = (Eigen::Translation3d(GetModel()->WorldPose().Pos().X(), GetModel()->WorldPose().Pos().Y(),
+                                                GetModel()->WorldPose().Pos().Z()) *
+                           Eigen::Quaterniond(GetModel()->WorldPose().Rot().W(), GetModel()->WorldPose().Rot().X(),
+                                              GetModel()->WorldPose().Rot().Y(), GetModel()->WorldPose().Rot().Z()));
+
+    Eigen::Affine3d bTs =
+      (Eigen::Translation3d(sensor_->Pose().Pos().X(), sensor_->Pose().Pos().Y(), sensor_->Pose().Pos().Z()) *
+       Eigen::Quaterniond(sensor_->Pose().Rot().W(), sensor_->Pose().Rot().X(), sensor_->Pose().Rot().Y(),
+                          sensor_->Pose().Rot().Z()));
     Eigen::Affine3d wTs = wTb * bTs;
 
-    msg_feat_.header.stamp = ros::Time::now();
+    msg_feat_.header.stamp = FF_TIME_NOW();
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "nav_cam");
-    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0),
-      Eigen::Matrix3d::Identity(), cam_params);
+    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), Eigen::Matrix3d::Identity(), cam_params);
 
     // Sample some features from the map. If we hav an issue sampling the map
     // then avoid sending features, at least for this round.
-    if (!BuildAndSampleMap(camera, wTs, msg_feat_))
-      timer_features_.stop();
+    if (!BuildAndSampleMap(camera, wTs, msg_feat_)) timer_features_.stop();
   }
 
   // Send a registration pulse
-  void SendFeatures(ros::TimerEvent const& event) {
+  void SendFeatures() {
     if (!active_) return;
-    pub_feat_.publish(msg_feat_);
+    pub_feat_->publish(msg_feat_);
   }
 
  protected:
   // Sample a map, which is built online
-  bool BuildAndSampleMap(camera::CameraModel const& camera,
-    Eigen::Affine3d const& wTs, ff_msgs::Feature2dArray & msg) {
-
+  bool BuildAndSampleMap(camera::CameraModel const& camera, Eigen::Affine3d const& wTs, ff_msgs::Feature2dArray& msg) {
     // Make sure we have the correct number of elements
     map_.resize(num_features_);
 
@@ -224,15 +187,8 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
     {
       // Initialize and lock the physics engine
-    #if GAZEBO_MAJOR_VERSION > 7
       GetWorld()->Physics()->InitForThread();
-      boost::unique_lock<boost::recursive_mutex> lock(*(
-        GetWorld()->Physics()->GetPhysicsUpdateMutex()));
-    #else
-      GetWorld()->GetPhysicsEngine()->InitForThread();
-      boost::unique_lock<boost::recursive_mutex> lock(*(
-        GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
-    #endif
+      boost::unique_lock<boost::recursive_mutex> lock(*(GetWorld()->Physics()->GetPhysicsUpdateMutex()));
 
       // Iterate over the map in an attempt to find features in the frustrum
       for (size_t i = 0; i < num_features_; i++) {
@@ -242,11 +198,10 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
         // If the feature is uninitialized or not in the FOV
         if (map_[i].first == 0 || !camera.IsInFov(pt)) {
           // Get a ray through a random image coordinate
-          Eigen::Vector3d ray = camera.Ray(
-            (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
-              * camera.GetParameters().GetDistortedSize()[0],
-            (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
-              * camera.GetParameters().GetDistortedSize()[1]);
+          Eigen::Vector3d ray = camera.Ray((static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+                                             * camera.GetParameters().GetDistortedSize()[0],
+                                           (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+                                             * camera.GetParameters().GetDistortedSize()[1]);
 
           // Get the camera coordinate of the ray near and far clips
           Eigen::Vector3d n_c = near_clip_ * ray;
@@ -259,12 +214,10 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
           // Intersection information
           double dist;
           std::string entity;
-          shape_->SetPoints(
-            ignition::math::Vector3d(n_w.x(), n_w.y(), n_w.z()),
-            ignition::math::Vector3d(f_w.x(), f_w.y(), f_w.z()));
+          shape_->SetPoints(ignition::math::Vector3d(n_w.x(), n_w.y(), n_w.z()),
+                            ignition::math::Vector3d(f_w.x(), f_w.y(), f_w.z()));
           shape_->GetIntersection(dist, entity);
-          if (entity.empty())
-            return false;
+          if (entity.empty()) return false;
 
           // Get the landmark coordinate
           pt = n_c + dist * (f_c - n_c).normalized();
@@ -293,9 +246,13 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
  private:
   config_reader::ConfigReader config_;
-  ros::Publisher pub_reg_, pub_feat_, pub_debug_;
-  ros::ServiceServer srv_enable_;
-  ros::Timer timer_registration_, timer_features_;
+  std::shared_ptr<rclcpp::Clock> clock_;
+
+  rclcpp::Publisher<ff_msgs::CameraRegistration>::SharedPtr pub_reg_;
+  rclcpp::Publisher<ff_msgs::Feature2dArray>::SharedPtr pub_feat_;
+  rclcpp::Service<ff_msgs::SetBool>::SharedPtr srv_enable_;
+  ff_util::FreeFlyerTimer timer_registration_, timer_features_;
+
   std::shared_ptr<sensors::WideAngleCameraSensor> sensor_;
   gazebo::physics::RayShapePtr shape_;
   bool active_;
@@ -313,4 +270,4 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginOpticalFlow)
 
-}   // namespace gazebo
+}  // namespace gazebo

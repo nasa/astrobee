@@ -16,20 +16,20 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // Transformation helper code
 #include <tf2_ros/transform_listener.h>
 
 // RVIZ visualization
-#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/msg/marker.hpp>
+namespace visualization_msgs {
+typedef msg::Marker Marker;
+}  // namespace visualization_msgs
 
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
 // Freeflyer messages
-#include <ff_hw_msgs/SetEnabled.h>
+#include <ff_hw_msgs/srv/set_enabled.hpp>
 
 // STL includes
 #include <string>
@@ -37,24 +37,24 @@
 
 namespace gazebo {
 
+FF_DEFINE_LOGGER("gazebo_model_plugin_laser");
+
 class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
  public:
   GazeboModelPluginLaser() : FreeFlyerModelPlugin("laser", "laser", true),
-    rate_(10.0), range_(50.0), width_(0.0025), ready_(false) {}
+    rate_(10.0), range_(50.0), width_(0.0025) {}
 
   ~GazeboModelPluginLaser() {
     if (update_) {
-      #if GAZEBO_MAJOR_VERSION > 7
       update_.reset();
-      #else
-      event::Events::DisconnectWorldUpdateBegin(update_);
-      #endif
     }
   }
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+  void LoadCallback(NodeHandle& nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+    clock_ = nh->get_clock();
+
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
     if (sdf->HasElement("range"))
@@ -68,21 +68,22 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     pub_gazebo_ = gz_->Advertise<msgs::Visual>("~/visual");
 
     // For the RVIZ marker array
-    pub_rviz_ = nh->advertise<visualization_msgs::Marker>(
-      TOPIC_HARDWARE_LASER_RVIZ, 0, true);
+    pub_rviz_ = nh->create_publisher<visualization_msgs::Marker>(
+      TOPIC_HARDWARE_LASER_RVIZ, 0);  // TODO(@mgouveia): figure out latched topics
   }
 
   // Only send measurements when extrinsics are available
-  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+  void OnExtrinsicsReceived(NodeHandle& nh) {
     // Advertise the presence of the laser
-    srv_ = nh->advertiseService(SERVICE_HARDWARE_LASER_ENABLE,
-      &GazeboModelPluginLaser::ToggleCallback, this);
+    srv_ = nh->create_service<ff_hw_msgs::srv::SetEnabled>(SERVICE_HARDWARE_LASER_ENABLE,
+      std::bind(&GazeboModelPluginLaser::ToggleCallback, this,
+          std::placeholders::_1, std::placeholders::_2));
   }
 
   // Manage the extrinsics based on the sensor type
   bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf) {
     if (!tf) {
-      ROS_WARN("Laser extrinsics are null");
+      FF_WARN("Laser extrinsics are null");
       return false;
     }
 
@@ -117,7 +118,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     pub_gazebo_->Publish(visual_);
 
     // Setup boilerplate marke code for rviz
-    marker_.header.stamp = ros::Time::now();
+    marker_.header.stamp = FF_TIME_NOW();
     marker_.header.frame_id = GetFrame("laser");
     marker_.ns = GetFrame("laser_visual", "_");
     marker_.id = 0;
@@ -137,7 +138,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     marker_.color.r = 0.0;
     marker_.color.g = 1.0;
     marker_.color.b = 0.0;
-    pub_rviz_.publish(marker_);
+    pub_rviz_->publish(marker_);
 
     // Modify the new entity to be only visible in the GUI
     update_ = event::Events::ConnectWorldUpdateBegin(std::bind(
@@ -148,22 +149,22 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
   }
 
   // Called when the laser needs to be toggled
-  bool ToggleCallback(ff_hw_msgs::SetEnabled::Request &req,
-                      ff_hw_msgs::SetEnabled::Response &res) {
+  bool ToggleCallback(const std::shared_ptr<ff_hw_msgs::srv::SetEnabled::Request> req,
+                      const std::shared_ptr<ff_hw_msgs::srv::SetEnabled::Response> res) {
     // Update the visual marker
     visual_.set_name(GetFrame("laser_visual", "_"));
-    visual_.set_visible(req.enabled);
+    visual_.set_visible(req->enabled);
     pub_gazebo_->Publish(visual_);
 
     // Update RVIZ marker
     marker_.action = visualization_msgs::Marker::MODIFY;
-    marker_.header.stamp = ros::Time::now();
-    marker_.color.a = (req.enabled ? 0.9 : 0.0);
-    pub_rviz_.publish(marker_);
+    marker_.header.stamp = FF_TIME_NOW();
+    marker_.color.a = (req->enabled ? 0.9 : 0.0);
+    pub_rviz_->publish(marker_);
 
     // Print success and return
-    res.success = true;
-    res.status_message = "Laser toggled successfully";
+    res->success = true;
+    res->status_message = "Laser toggled successfully";
     return true;
   }
 
@@ -178,26 +179,20 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
       return;
     visual->SetVisibilityFlags(GZ_VISIBILITY_GUI);
     if (update_) {
-      #if GAZEBO_MAJOR_VERSION > 7
       update_.reset();
-      #else
-      event::Events::DisconnectWorldUpdateBegin(update_);
-      #endif
     }
   }
 
  private:
+  std::shared_ptr<rclcpp::Clock> clock_;
   double rate_, range_, width_;
-  common::Time next_tick_;
   transport::NodePtr gz_;
   transport::PublisherPtr pub_gazebo_;
   event::ConnectionPtr update_;
-  ros::Timer timer_;
-  ros::ServiceServer srv_;
-  ros::Publisher pub_rviz_;
+  rclcpp::Service<ff_hw_msgs::srv::SetEnabled>::SharedPtr srv_;
+  rclcpp::Publisher<visualization_msgs::Marker>::SharedPtr pub_rviz_;
   visualization_msgs::Marker marker_;
   msgs::Visual visual_;
-  bool ready_;
 };
 
 // Register this plugin with the simulator
