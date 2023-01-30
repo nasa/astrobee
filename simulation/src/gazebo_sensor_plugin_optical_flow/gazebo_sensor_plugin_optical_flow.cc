@@ -140,7 +140,7 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     timer_features_.reset();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = FF_TIME_NOW();
+    msg_reg_.header.stamp = FF_TIME_NOW() + rclcpp::Duration::from_seconds(delay_camera_);
     msg_reg_.camera_id++;
     pub_reg_->publish(msg_reg_);
 
