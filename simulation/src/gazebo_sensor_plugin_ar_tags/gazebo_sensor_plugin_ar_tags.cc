@@ -25,10 +25,12 @@
 
 // FSW messages
 #include <ff_msgs/msg/visual_landmarks.hpp>
+#include <ff_msgs/msg/visual_landmark.hpp>
 #include <ff_msgs/msg/camera_registration.hpp>
 #include <ff_msgs/srv/set_bool.hpp>
 namespace ff_msgs {
 typedef msg::VisualLandmarks VisualLandmarks;
+typedef msg::VisualLandmark VisualLandmark;
 typedef msg::CameraRegistration CameraRegistration;
 typedef srv::SetBool SetBool;
 }  // namespace ff_msgs
@@ -74,27 +76,26 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
       return;
     }
 
-    if (!config_.GetReal("drawing_width", &width_)) NODELET_ERROR("Could not read the drawing_width parameter.");
+    if (!config_.GetReal("drawing_width", &width_)) FF_ERROR("Could not read the drawing_width parameter.");
 
-    if (!config_.GetReal("drawing_height", &height_)) NODELET_ERROR("Could not read the drawing_height parameter.");
+    if (!config_.GetReal("drawing_height", &height_)) FF_ERROR("Could not read the drawing_height parameter.");
 
-    if (!config_.GetReal("rate", &rate_)) NODELET_ERROR("Could not read the rate parameter.");
+    if (!config_.GetReal("rate", &rate_)) FF_ERROR("Could not read the rate parameter.");
 
-    if (!config_.GetReal("delay_camera", &delay_camera_)) NODELET_ERROR("Could not read the delay_camera parameter.");
+    if (!config_.GetReal("delay_camera", &delay_camera_)) FF_ERROR("Could not read the delay_camera parameter.");
 
-    if (!config_.GetReal("delay_features", &delay_features_))
-      NODELET_ERROR("Could not read the delay_features parameter.");
+    if (!config_.GetReal("delay_features", &delay_features_)) FF_ERROR("Could not read the delay_features parameter.");
 
-    if (!config_.GetUInt("num_samp", &num_samp_)) NODELET_ERROR("Could not read the num_samp parameter.");
+    if (!config_.GetUInt("num_samp", &num_samp_)) FF_ERROR("Could not read the num_samp parameter.");
 
-    if (!config_.GetUInt("num_features", &num_features_)) NODELET_ERROR("Could not read the num_features parameter.");
+    if (!config_.GetUInt("num_features", &num_features_)) FF_ERROR("Could not read the num_features parameter.");
 
-    if (!config_.GetTable("markers_world", &markers_)) NODELET_ERROR("Could not read the markers_world parameter.");
+    if (!config_.GetTable("markers_world", &markers_)) FF_ERROR("Could not read the markers_world parameter.");
 
     Eigen::Vector3d world_t_dock;
     Eigen::Quaterniond world_Q_dock;
     if (!msg_conversions::config_read_transform(&config_, "world_dock_transform", &world_t_dock, &world_Q_dock))
-      NODELET_ERROR("Could not read world_T_dock transform.");
+      FF_ERROR("Could not read world_T_dock transform.");
     world_T_dock_ = Eigen::Isometry3d::Identity();
     world_T_dock_.translation() = world_t_dock;
     world_T_dock_.linear() = world_Q_dock.toRotationMatrix();
@@ -130,15 +131,14 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     // Enable mapped landmarks
     srv_enable_ = nh->create_service<ff_msgs::SetBool>(
       SERVICE_LOCALIZATION_AR_ENABLE,
-      std::bind(&GazeboSensorPluginOpticalFlow::EnableService, this, std::placeholders::_1, std::placeholders::_2));
+      std::bind(&GazeboSensorPluginARTags::EnableService, this, std::placeholders::_1, std::placeholders::_2));
 
     // Timer triggers registration
-    timer_registration_.createTimer(1.0 / rate_, std::bind(&GazeboSensorPluginOpticalFlow::SendRegistration, this), nh,
+    timer_registration_.createTimer(1.0 / rate_, std::bind(&GazeboSensorPluginARTags::SendRegistration, this), nh,
                                     false, true);
 
     // Timer triggers features
-    timer_features_.createTimer(0.8 / rate_, std::bind(&GazeboSensorPluginOpticalFlow::SendFeatures, this), nh, true,
-                                false);
+    timer_features_.createTimer(0.8 / rate_, std::bind(&GazeboSensorPluginARTags::SendFeatures, this), nh, true, false);
   }
 
   // Enable or disable the feature timer
@@ -150,7 +150,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
   }
 
   // Called when featured must be sent
-  void SendRegistration(ros::TimerEvent const& event) {
+  void SendRegistration() {
     if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
@@ -222,7 +222,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
   }
 
   // Send features
-  void SendFeatures(ros::TimerEvent const& event) {
+  void SendFeatures() {
     if (!active_) return;
     pub_feat_->publish(msg_feat_);
   }

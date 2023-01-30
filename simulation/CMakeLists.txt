@@ -223,14 +223,13 @@ target_link_libraries(gazebo_sensor_plugin_sparse_map astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_sparse_map rclcpp gazebo_dev gazebo_ros camera)
 ament_export_libraries(gazebo_sensor_plugin_sparse_map)
 
-# # Create a model plugin for AR localization
-# add_library(gazebo_sensor_plugin_ar_tags
-#   src/gazebo_sensor_plugin_ar_tags/gazebo_sensor_plugin_ar_tags.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_ar_tags ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_ar_tags
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin for AR localization
+add_library(gazebo_sensor_plugin_ar_tags SHARED
+  src/gazebo_sensor_plugin_ar_tags/gazebo_sensor_plugin_ar_tags.cc
+)
+target_link_libraries(gazebo_sensor_plugin_ar_tags astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_ar_tags rclcpp gazebo_dev gazebo_ros camera)
+ament_export_libraries(gazebo_sensor_plugin_ar_tags)
 
 # Create a model plugin for optical flow
 add_library(gazebo_sensor_plugin_optical_flow SHARED
