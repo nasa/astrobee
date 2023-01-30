@@ -15,21 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATE_MODEL_PARAMS_H_
+#define NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATE_MODEL_PARAMS_H_
 
-#ifndef NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
-#define NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#include <imu_integration/imu_integrator_params.h>
 
-#include <node_updaters/combined_nav_state_node_update_model.h>
-#include <node_updaters/combined_nav_state_nodes.h>
-#include <node_updaters/timestamped_node_updater.h>
+#include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-using CombinedNavStateNodeUpdater = TimestampedNodeUpdater<CombinedNavStateNodes, CombinedNavStateNodeUpdateModel>;
-
-template <>
-graph_optimizer::NodeUpdaterType CombinedNavStateNodeUpdater::type() const final {
-  return go::NodeUpdaterType::CombinedNavState;
-}
+struct CombinedNavStateNodeUpdateModelParams : public imu_integration::ImuIntegratorParams {
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(imu_integration::ImuIntegratorParams);
+  }
+};
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#endif  // NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATE_MODEL_PARAMS_H_

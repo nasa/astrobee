@@ -32,13 +32,16 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateM
 using Base = graph_optimizer::NodeUpdaterWithPriors<NodeType, gtsam::SharedNoiseModel>;
 class TimestampedNodeUpdater : public Base {
  public:
-  explicit TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes);
+  // TODO(rsoussan): Construct nodes and node update model internally?
+  TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes,
+                         std::shared_ptr<NodeUpdateModelType> node_update_model);
   TimestampedNodeUpdater() = default;
   virtual ~TimestampedNodeUpdater() = default;
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
-  void AddInitialValuesAndPriors(const NodeType& initial_node, const gtsam::SharedNoiseModel& initial_noise,
+  void AddInitialValuesAndPriors(const NodeType& initial_node,
+                                 const std::vector<gtsam::SharedNoiseModel>& initial_noise,
                                  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // TODO(rsousan): Rename this?
@@ -80,6 +83,7 @@ class TimestampedNodeUpdater : public Base {
     ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
+  // TODO(rsoussan): do these need to be shared ptrs?
   std::shared_ptr<TimestampedNodesType> nodes_;
   std::shared_ptr<NodeUpdateModelType> node_update_model_;
   TimestampedNodeUpdaterParams params_;
@@ -97,10 +101,9 @@ void TimestampedNodeUpdater<NodeType>::AddInitialValuesAndPriors(gtsam::Nonlinea
 }
 
 template <typename NodeType>
-void TimestampedNodeUpdater<NodeType>::AddInitialValuesAndPriors(const NodeType& initial_node,
-                                                                 const gtsam::SharedNoiseModel& initial_noise,
-                                                                 const lc::Time timestamp,
-                                                                 gtsam::NonlinearFactorGraph& factors) {
+void TimestampedNodeUpdater<NodeType>::AddInitialValuesAndPriors(
+  const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise, const lc::Time timestamp,
+  gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
   node_update_model_->AddPriors(initial_node, initial_noise, timestamp, factors);
 }

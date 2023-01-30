@@ -75,8 +75,6 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
   ~GraphVIO() = default;
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
-  boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
-    const localization_common::Time time) const;
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances() const;
   bool AddOpticalFlowMeasurement(
@@ -86,8 +84,6 @@ class GraphVIO : public graph_optimizer::GraphOptimizer {
   const vision_common::FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
-
-  boost::optional<localization_common::Time> LatestExtrapolatedPoseTime() const;
 
   int NumFeatures() const;
 

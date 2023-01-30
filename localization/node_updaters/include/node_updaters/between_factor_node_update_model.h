@@ -20,7 +20,6 @@
 #define NODE_UPDATERS_BETWEEN_FACTOR_NODE_UPDATE_MODEL_H_
 
 #include <graph_optimizer/timestamped_nodes.h>
-#include <localization_common/pose_with_covariance_interpolater.h>
 #include <node_updaters/node_update_model.h>
 
 #include <gtsam/inference/Key.h>
@@ -62,10 +61,7 @@ class BetweenFactorNodeUpdateModel : public NodeUpdateModel<NodeType, graph_opti
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
-    ar& BOOST_SERIALIZATION_NVP(pose_interpolater_);
   }
-
-  localization_common::PoseWithCovarianceInterpolater pose_interpolater_;
 };
 
 // Implementation
@@ -90,11 +86,14 @@ bool BetweenFactorNodeUpdateModel<NodeType>::AddNodesAndRelativeFactors(const lo
                                                                         const localization_common::Time timestamp_b,
                                                                         NodesType& nodes,
                                                                         gtsam::NonlinearFactorGraph& factors) const {
-  const auto keys = AddNode(timestamp_b, nodes);
-  if (keys.empty()) {
-    LogError("AddNodesAndRelativeFactors: Failed to add node.");
-    return false;
+  if (!nodes.Contains(timestamp_b)) {
+    const auto keys = AddNode(timestamp_b, nodes);
+    if (keys.empty()) {
+      LogError("AddNodesAndRelativeFactors: Failed to add node.");
+      return false;
+    }
   }
+
   if (!AddRelativeFactors(timestamp_a, timestamp_b, nodes, factors)) {
     LogError("AddNodesAndRelativeFactors: Failed to add relative factor.");
     return false;

@@ -46,7 +46,8 @@ gtsam::KeyVector TestCombinedNodes::Add(const CombinedObject& node) {
 }
 
 template <>
-boost::optional<CombinedObject> TestCombinedNodes::Node(const gtsam::KeyVector& keys) const {
+boost::optional<CombinedObject> TestCombinedNodes::Node(const gtsam::KeyVector& keys,
+                                                        const localization_common::Time timestamp) const {
   const auto val_a = nodes_->Node<double>(keys[0]);
   const auto val_b = nodes_->Node<double>(keys[1]);
   if (!val_a || !val_b) return boost::none;

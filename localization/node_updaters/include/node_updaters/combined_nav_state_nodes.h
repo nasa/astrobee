@@ -34,12 +34,13 @@ gtsam::KeyVector CombinedNavStateNodes::Add(const localization_common::CombinedN
 }
 
 template <>
-boost::optional<localization_common::CombinedNavState> CombinedNavStateNodes::Node(const gtsam::KeyVector& keys) const {
-  const gtsam::Pose3 pose = nodes_->Node<gtsam::Pose3>(keys[0]);
-  const gtsam::Velocity3 velocity = nodes_->Node<gtsam::Velocity3>(keys[1]);
-  const gtsam::imuBias::ConstantBias bias = nodes_->Node<gtsam::imuBias::ConstantBias>(keys[2]);
+boost::optional<localization_common::CombinedNavState> CombinedNavStateNodes::Node(
+  const gtsam::KeyVector& keys, const localization_common::Time timestamp) const {
+  const auto pose = nodes_->Node<gtsam::Pose3>(keys[0]);
+  const auto velocity = nodes_->Node<gtsam::Velocity3>(keys[1]);
+  const auto bias = nodes_->Node<gtsam::imuBias::ConstantBias>(keys[2]);
   if (!pose || !velocity || !bias) return boost::none;
-  return localization_common::CombinedNavState(*pose, *velocity, *bias);
+  return localization_common::CombinedNavState(*pose, *velocity, *bias, timestamp);
 }
 }  // namespace graph_optimizer
 

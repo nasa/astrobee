@@ -153,31 +153,6 @@ boost::optional<lc::CombinedNavState> GraphVIO::LatestCombinedNavState() const {
   return global_N_body_latest;
 }
 
-boost::optional<lc::CombinedNavState> GraphVIO::GetCombinedNavState(const lc::Time time) const {
-  const auto lower_bound_or_equal_combined_nav_state =
-    combined_nav_state_node_updater_->graph_values().LowerBoundOrEqualCombinedNavState(time);
-  if (!lower_bound_or_equal_combined_nav_state) {
-    LogDebug("GetCombinedNavState: Failed to get lower bound or equal combined nav state.");
-    return boost::none;
-  }
-
-  if (lower_bound_or_equal_combined_nav_state->timestamp() == time) {
-    return lower_bound_or_equal_combined_nav_state;
-  }
-
-  // Pim predict from lower bound state rather than closest state so there is no
-  // need to reverse predict (going backwards in time) using a pim prediction which is not yet supported in gtsam.
-  auto integrated_pim = latest_imu_integrator_->IntegratedPim(lower_bound_or_equal_combined_nav_state->bias(),
-                                                              lower_bound_or_equal_combined_nav_state->timestamp(),
-                                                              time, latest_imu_integrator_->pim_params());
-  if (!integrated_pim) {
-    LogDebug("GetCombinedNavState: Failed to create integrated pim.");
-    return boost::none;
-  }
-
-  return ii::PimPredict(*lower_bound_or_equal_combined_nav_state, *integrated_pim);
-}
-
 boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphVIO::LatestBiases() const {
   const auto latest_bias = combined_nav_state_node_updater_->graph_values().LatestBias();
   if (!latest_bias) {
@@ -185,11 +160,6 @@ boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphVIO::Lat
     return boost::none;
   }
   return latest_bias;
-}
-
-// Latest extrapolated pose time is limited by latest imu time
-boost::optional<lc::Time> GraphVIO::LatestExtrapolatedPoseTime() const {
-  return latest_imu_integrator_->LatestTime();
 }
 
 void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {

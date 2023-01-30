@@ -1,12 +1,18 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
-   - make sure node updaters (w/o combined and feature point) compile! (AA)
-      - add relativefactors function to betweennodeupdater that takes key vectors and relative node and noise!
-      - add base implementations to between node updater that work for single type???
   - test combinednavstatenodes! (AB)
+    - fix combinednavstatenodeupdatemodel! (AA)
+      - construct noise vec in param loading!
+      - construct start node somewhere else!
     - update combined nav state node updater! (AC)
-      - used combinednavstatenodes and timestampednodeupdater!
       - test and compile!
 - test timestamped pose node updater! (AE)
+  - add more functions (removing measurements, showing if it's ready to add a node at a timestamp, add measurements, etc.) to timestamped node updater! 
+      - add to node update model???
+- remove latest imu integrator!
+  - update imu integrator to use timestamped set for imu measurements!
+  - remove from graph_vio!
+  - use own pim params in integrated pim call!
+-  remove makecombinedimufactor function in imu integration!
 - update factor adders with changes described below
 - compile graph vio!
 - test graph vio!!! (AD)

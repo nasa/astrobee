@@ -89,7 +89,7 @@ class TimestampedCombinedNodes {
 
   gtsam::KeyVector Add(const NodeType& node);
 
-  boost::optional<NodeType> Node(const gtsam::KeyVector& keys) const;
+  boost::optional<NodeType> Node(const gtsam::KeyVector& keys, const localization_common::Time timestamp) const;
 
   friend class boost::serialization::access;
   template <class ARCHIVE>
@@ -122,7 +122,8 @@ gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Add(const Nod
 }
 
 template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(const gtsam::KeyVector& keys) const {
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
+  const gtsam::KeyVector& keys, const localization_common::Time timestamp) const {
   static_assert(!CombinedType, "This needs to be specialized for combined types.");
   // Implementation for non-combined type
   // Assumes keys only has a single key since using non-combined type
@@ -149,7 +150,7 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node
   const localization_common::Time timestamp) const {
   const auto keys = Keys(timestamp);
   if (keys.empty()) return boost::none;
-  return Node(keys);
+  return Node(keys, timestamp);
 }
 
 template <typename NodeType, bool CombinedType>
