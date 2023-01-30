@@ -21,10 +21,10 @@
 
 #include <imu_integration/imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
-#include <localization_common/pose_with_covariance_interpolater.h>
+#include <localization_measurements/imu_measurement.h>
 #include <node_updaters/combined_nav_state_node_update_model_params.h>
 #include <node_updaters/combined_nav_state_nodes.h>
-#include <node_updaters/node_update_model.h>
+#include <node_updaters/measurement_based_node_update_model.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
@@ -33,7 +33,9 @@
 
 namespace node_updaters {
 class CombinedNavStateNodeUpdateModel
-    : public NodeUpdateModel<localization_common::CombinedNavState, graph_optimizer::CombinedNavStateNodes> {
+    : public MeasurementBasedNodeUpdateModel<localization_measurements::ImuMeasurement,
+                                             localization_common::CombinedNavState,
+                                             graph_optimizer::CombinedNavStateNodes> {
  public:
   using NodeType = localization_common::CombinedNavState;
   using NodesType = graph_optimizer::CombinedNavStateNodes;
@@ -47,6 +49,9 @@ class CombinedNavStateNodeUpdateModel
                                   gtsam::NonlinearFactorGraph& factors) const final;
   bool AddRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
                           const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
+
+  void AddMeasurement(const localization_measurements::ImuMeasurement& measurement) final;
+  void RemoveMeasurements(const localization_common::Time oldest_allowed_time) final;
 
  private:
   bool AddRelativeFactors(const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a,

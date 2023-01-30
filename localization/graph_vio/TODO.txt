@@ -1,18 +1,20 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
   - test combinednavstatenodes! (AB)
-    - fix combinednavstatenodeupdatemodel! (AA)
-      - construct noise vec in param loading!
-      - construct start node somewhere else!
-    - update combined nav state node updater! (AC)
-      - test and compile!
+      - add timestamped measurementnode updater, measurementnodeupdatemodel! (AA)
+          - add functions to these to add and remove measurements!
+            - remove measurements based on oldest timest allowed!
+      - add function to timestamped measurement node updater for if it's ready to add a node at a timestamp! (AB)
+            - add to node update model!
+      - add other functions as needed by graph vio? -> see where imu integrator is called!  (AC)
+- test combined nav state nodes! (AD)
 - test timestamped pose node updater! (AE)
-  - add more functions (removing measurements, showing if it's ready to add a node at a timestamp, add measurements, etc.) to timestamped node updater! 
-      - add to node update model???
-- remove latest imu integrator!
+- imu integration changes:
+  - remove latest imu integrator!
   - update imu integrator to use timestamped set for imu measurements!
   - remove from graph_vio!
   - use own pim params in integrated pim call!
--  remove makecombinedimufactor function in imu integration!
+  - add more tests to imu integrator???
+  -  remove makecombinedimufactor function in imu integration!
 - update factor adders with changes described below
 - compile graph vio!
 - test graph vio!!! (AD)

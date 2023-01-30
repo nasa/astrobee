@@ -16,23 +16,24 @@
  * under the License.
  */
 
-#ifndef NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
-#define NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#ifndef NODE_UPDATERS_MEASUREMENT_BASED_NODE_UPDATE_MODEL_H_
+#define NODE_UPDATERS_MEASUREMENT_BASED_NODE_UPDATE_MODEL_H_
 
-#include <localization_measurements/imu_measurement.h>
-#include <node_updaters/combined_nav_state_node_update_model.h>
-#include <node_updaters/combined_nav_state_nodes.h>
-#include <node_updaters/measurement_based_timestamped_node_updater.h>
+#include <node_updaters/node_update_model.h>
+
+#include <gtsam/inference/Key.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+
+#include <vector>
 
 namespace node_updaters {
-using CombinedNavStateNodeUpdater =
-  MeasurementBasedTimestampedNodeUpdater<localization_measurements::ImuMeasurement, CombinedNavStateNodes,
-                                         CombinedNavStateNodeUpdateModel>;
-
-template <>
-graph_optimizer::NodeUpdaterType CombinedNavStateNodeUpdater::type() const final {
-  return go::NodeUpdaterType::CombinedNavState;
-}
+template <typename MeasurementType, typename NodeType, typename NodesType>
+class MeasurementBasedNodeUpdateModel : public NodeUpdateModel<NodeType, NodesType> {
+ public:
+  virtual ~MeasurementBasedNodeUpdateModel() = 0;
+  virtual void AddMeasurement(const MeasurementType& measurement) = 0;
+  virtual void RemoveMeasurements(const localization_common::Time oldest_allowed_time) = 0;
+};
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATER_H_
+#endif  // NODE_UPDATERS_MEASUREMENT_BASED_NODE_UPDATE_MODEL_H_

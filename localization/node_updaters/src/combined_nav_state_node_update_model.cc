@@ -26,6 +26,7 @@ namespace node_updaters {
 namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 CombinedNavStateNodeUpdateModel::CombinedNavStateNodeUpdateModel(const CombinedNavStateNodeUpdateModelParams& params)
     : imu_integrator_(params) {}
 
@@ -125,5 +126,13 @@ bool CombinedNavStateNodeUpdateModel::AddRelativeFactors(const lc::Time timestam
   const gtsam::CombinedImuFactor::shared_ptr combined_imu_factor(
     new gtsam::CombinedImuFactor(pose_key_a, velocity_key_a, pose_key_b, velocity_key_b, bias_key_a, bias_key_b, *pim));
   factors.push_back(combined_imu_factor);
+}
+
+void CombinedNavStateNodeUpdateModel::AddMeasurement(const lm::ImuMeasurement& measurement) {
+  imu_integrator_.BufferImuMeasurement(measurement);
+}
+
+void CombinedNavStateNodeUpdateModel::RemoveMeasurements(const lc::Time oldest_allowed_time) {
+  imu_integrator_.RemoveOldMeasurements(oldest_allowed_time);
 }
 }  // namespace node_updaters
