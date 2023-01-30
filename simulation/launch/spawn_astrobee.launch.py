@@ -19,74 +19,34 @@
 from utilities.utilities import *
 
 
+def read_pose(context, *args, **kwargs):
+    pose_arg = LaunchConfiguration("pose")
+    pose = str(pose_arg.perform(context)).split(" ")
+
+    return [
+        DeclareLaunchArgument('x', default_value=pose[0]),
+        DeclareLaunchArgument('y', default_value=pose[1]),
+        DeclareLaunchArgument('z', default_value=pose[2]),
+        DeclareLaunchArgument('R', default_value=pose[3]),
+        DeclareLaunchArgument('P', default_value=pose[4]),
+        DeclareLaunchArgument('Y', default_value=pose[5]),
+    ]
+
 def generate_launch_description():
-    # use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    # robot_name = 'rrbot_description'
-    # world_file_name = 'empty.world'
-
-    # world = os.path.join(get_package_share_directory(
-    #     robot_name), 'worlds', world_file_name)
-
-    # urdf = os.path.join(get_package_share_directory(
-    #     robot_name), 'urdf', 'my_robot.urdf')
-
-    # xml = open(urdf, 'r').read()
-
-    # xml = xml.replace('"', '\\"')
-
-    # spawn_args = '{name: \"bsharp\", xml: \"' + xml + '\" }'
     return LaunchDescription([
         DeclareLaunchArgument("ns",    default_value=""),     # Robot namespace
         DeclareLaunchArgument("pose"),                        # Robot pose
+        OpaqueFunction(function=read_pose),
         DeclareLaunchArgument("robot_description"),           # Robot description
 
-        # Use the namespace forward-slash to signify that this model has no name
-        # Node(
-        #     package="astrobee_gazebo",
-        #     namespace="",
-        #     executable="spawn_model",
-        #     name="spawn_astrobee",
-        #     respawn="false",
-        #     output='screen',
-        #     arguments=['-param', 'robot_description', '-model', 'bsharp', '-urdf', '-pose', LaunchConfiguration("pose")],
-        #     parameters=[{'respawn': "false",
-        #                  'robot_description': LaunchConfiguration("robot_description")}],
-        #     condition=LaunchConfigurationEquals("ns", "")
-        # ),
-
-        # # Spawn with an actual string namespace
-        # Node(
-        #     package="astrobee_gazebo",
-        #     namespace=LaunchConfiguration("ns"),
-        #     executable="spawn_astrobee",
-        #     name="spawn_astrobee",
-        #     respawn="false",
-        #     output='screen',
-        #     arguments=[['-param', 'robot_description', '-urdf -model ', LaunchConfiguration("ns"), ' -pose ', LaunchConfiguration("pose")]],
-        #     parameters=[{'respawn': "false",
-        #                  'robot_description': LaunchConfiguration("robot_description")}],
-        #     condition=LaunchConfigurationNotEquals("ns", "")
-        # ),
-        # ExecuteProcess(
-        #     cmd=['gazebo', '--verbose', world,
-        #          '-s', 'libgazebo_ros_factory.so'],
-        #     output='screen'),
-
-        # ExecuteProcess(
-        #     cmd=['ros2', 'param', 'set', '/gazebo',
-        #          'use_sim_time', use_sim_time],
-        #     output='screen'),
-
-        # ExecuteProcess(
-        #     cmd=['ros2', 'service', 'call', '/spawn_entity',
-        #          'gazebo_msgs/SpawnEntity', spawn_args],
-        #     output='screen'),
         Node(
             package='gazebo_ros',
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
-            arguments=["-topic", "/robot_description", "-entity", "bsharp", "-timeout", "30.0"],
+            arguments=["-topic", "/robot_description", "-entity", "bsharp", "-timeout", "30.0",
+                        "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
+                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
             condition=LaunchConfigurationEquals("ns", "")
         ),
         Node(
@@ -94,7 +54,9 @@ def generate_launch_description():
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
-            arguments=["-topic", "/robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0"],
+            arguments=["-topic", "/robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0",
+                        "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
+                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
             condition=LaunchConfigurationNotEquals("ns", "")
         )
 

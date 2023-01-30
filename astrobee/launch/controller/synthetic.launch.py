@@ -27,6 +27,8 @@ def generate_launch_description():
     #              address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
     if LaunchConfigurationNotEquals("bag", ""):
         return LaunchDescription([
+            DeclareLaunchArgument("ns"),                    # Robot namespace
+            DeclareLaunchArgument("pose"),                  # Robot pose
             DeclareLaunchArgument("robot_description"),     # Robot description
             #   <group if="$(eval arg('bag')=='')" >
             SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",
