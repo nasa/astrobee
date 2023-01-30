@@ -41,6 +41,8 @@ class NodeUpdateModel {
                                   const localization_common::Time timestamp_b, const NodesType& nodes,
                                   gtsam::NonlinearFactorGraph& factors) const = 0;
 
+  virtual bool CanUpdate(const localization_common::Time timestamp) const = 0;
+
  protected:
   // TODO(rsoussan): Add constructor to set these, template on params?
   NodeUpdateModelParams params_;

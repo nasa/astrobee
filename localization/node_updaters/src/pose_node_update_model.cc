@@ -45,4 +45,8 @@ boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> PoseNodeUpdate
   return std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>(localization_common::GtPose(relative_pose->pose),
                                                           relative_pose_noise);
 }
+
+bool PoseNodeUpdateModel::CanUpdate(const localization_common::Time timestamp) const {
+  return pose_interpolater_.WithinBounds(timestamp);
+}
 }  // namespace node_updaters

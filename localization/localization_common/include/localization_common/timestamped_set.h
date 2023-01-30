@@ -61,6 +61,8 @@ class TimestampedSet {
 
   boost::optional<TimestampedValue<T>> Latest() const;
 
+  bool WithinBounds(const Time timestamp) const;
+
   // Return lower and upper bounds.  Equal values are set as upper bound only.
   std::pair<boost::optional<TimestampedValue<T>>, boost::optional<TimestampedValue<T>>> LowerAndUpperBound(
     const Time timestamp) const;
@@ -144,6 +146,18 @@ boost::optional<TimestampedValue<T>> TimestampedSet<T>::Latest() const {
     return boost::none;
   }
   return TimestampedValue<T>(*timestamp_value_map_.crbegin());
+}
+
+// TODO(rsoussan): Test this
+template <typename T>
+bool TimestampedSet<T>::WithinBounds(const Time time) const {
+  const auto oldest = Oldest();
+  const auto latest = Latest();
+  if (!oldest || !latest) {
+    LogError("WithinBounds: Failed to get time bounds.");
+    return false;
+  }
+  return (time >= oldest->timestamp && time <= latest->timestamp);
 }
 
 template <typename T>

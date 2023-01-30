@@ -51,6 +51,8 @@ class NodeUpdater {
 
   virtual boost::optional<localization_common::Time> LatestTimestamp() const = 0;
 
+  virtual bool CanUpdate(const localization_common::Time timestamp) const = 0;
+
   virtual NodeUpdaterType type() const = 0;
 };
 }  // namespace graph_optimizer

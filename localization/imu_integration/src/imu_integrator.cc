@@ -173,7 +173,7 @@ bool ImuIntegrator::Empty() const { return measurements_.empty(); }
 
 int ImuIntegrator::Size() const { return measurements_.size(); }
 
-bool ImuIntegrator::WithinBounds(const localization_common::Time timestamp) {
+bool ImuIntegrator::WithinBounds(const localization_common::Time timestamp) const {
   const auto oldest_time = OldestTime();
   const auto latest_time = LatestTime();
   if (!oldest_time || !latest_time) {

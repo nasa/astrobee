@@ -53,6 +53,8 @@ class CombinedNavStateNodeUpdateModel
   void AddMeasurement(const localization_measurements::ImuMeasurement& measurement) final;
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time) final;
 
+  bool CanUpdate(const localization_common::Time timestamp) const final;
+
  private:
   bool AddRelativeFactors(const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a,
                           const gtsam::KeyVector& keys_b, const localization_common::Time timestamp_b,

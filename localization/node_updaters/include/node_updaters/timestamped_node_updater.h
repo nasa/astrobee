@@ -67,6 +67,8 @@ class TimestampedNodeUpdater : public Base {
 
   boost::optional<localization_common::Time> LatestTimestamp() const final;
 
+  bool CanUpdate(const localization_common::Time timestamp) const final;
+
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
   bool AddLatestNodesAndRelativeFactors(const localization_common::Time timestamp,
@@ -209,6 +211,11 @@ boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::OldestTimestamp() co
 template <typename NodeType>
 boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::LatestTimestamp() const {
   return nodes_->LatestTimestamp();
+}
+
+template <typename NodeType>
+bool TimestampedNodeUpdater<NodeType>::CanUpdate(const localization_common::Time timestamp) const {
+  return node_update_model_->CanUpdate(timestamp);
 }
 
 template <typename NodeType>

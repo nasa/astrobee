@@ -1,13 +1,10 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
   - test combinednavstatenodes! (AB)
-      - add timestamped measurementnode updater, measurementnodeupdatemodel! (AA)
-          - add functions to these to add and remove measurements!
-            - remove measurements based on oldest timest allowed!
-      - add function to timestamped measurement node updater for if it's ready to add a node at a timestamp! (AB)
-            - add to node update model!
-      - add other functions as needed by graph vio? -> see where imu integrator is called!  (AC)
-- test combined nav state nodes! (AD)
-- test timestamped pose node updater! (AE)
+            - how to add a second measurement to updater?????
+              - combined imu needs fan speed!!!
+- test withinbounds in timestamped set (AA)
+- test timestamped pose node updater! (AD)
+- test combined nav state nodes! (AE)
 - imu integration changes:
   - remove latest imu integrator!
   - update imu integrator to use timestamped set for imu measurements!
