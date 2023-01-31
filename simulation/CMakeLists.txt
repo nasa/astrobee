@@ -33,11 +33,14 @@ find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 find_package(ff_hw_msgs REQUIRED)
+find_package(pmc REQUIRED)
+find_package(camera REQUIRED)
 
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 
 #   visualization_msgs
@@ -73,7 +76,6 @@ find_package(JsonCpp REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
-  ${config_reader_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
@@ -115,12 +117,12 @@ ament_target_dependencies(gazebo_model_plugin_truth rclcpp tf2 tf2_ros gazebo_de
 ament_export_libraries(gazebo_model_plugin_truth)
 
 # Create a model plugin for the propulsion system
-# add_library(gazebo_model_plugin_pmc SHARED
-#   src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
-# )
-# target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo)
-# ament_target_dependencies(gazebo_model_plugin_pmc rclcpp ff_msgs ff_hw_msgs gazebo_dev gazebo_ros)
-# ament_export_libraries(gazebo_model_plugin_pmc)
+add_library(gazebo_model_plugin_pmc SHARED
+  src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
+)
+target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_pmc rclcpp ff_msgs ff_hw_msgs gazebo_dev gazebo_ros pmc)
+ament_export_libraries(gazebo_model_plugin_pmc)
 
 # Create a model plugin for the perching arm
 add_library(gazebo_model_plugin_perching_arm SHARED
@@ -139,13 +141,12 @@ ament_target_dependencies(gazebo_model_plugin_flashlight rclcpp ff_hw_msgs visua
 ament_export_libraries(gazebo_model_plugin_flashlight)
 
 # Create a model plugin for the laser
-# add_library(gazebo_model_plugin_laser
-#   src/gazebo_model_plugin_laser/gazebo_model_plugin_laser.cc
-# )
-# add_dependencies(gazebo_model_plugin_laser ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_laser astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_model_plugin_laser SHARED
+  src/gazebo_model_plugin_laser/gazebo_model_plugin_laser.cc
+)
+target_link_libraries(gazebo_model_plugin_laser astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_laser rclcpp ff_hw_msgs visualization_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_model_plugin_laser)
 
 # Create a model plugin to publish heartbeats
 add_library(gazebo_model_plugin_heartbeat SHARED
@@ -155,41 +156,21 @@ target_link_libraries(gazebo_model_plugin_heartbeat astrobee_gazebo)
 ament_target_dependencies(gazebo_model_plugin_heartbeat rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_model_plugin_heartbeat)
 
-# Create a model plugin for the speed camera
-# add_library(gazebo_model_plugin_speed_cam
-#   src/gazebo_model_plugin_speed_cam/gazebo_model_plugin_speed_cam.cc
-# )
-# add_dependencies(gazebo_model_plugin_speed_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_speed_cam astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
 # Create a model plugin for the signal lights
-# add_library(gazebo_model_plugin_signal_lights
-#   src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
-# )
-# add_dependencies(gazebo_model_plugin_signal_lights ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_model_plugin_signal_lights astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_model_plugin_signal_lights SHARED
+  src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
+)
+target_link_libraries(gazebo_model_plugin_signal_lights astrobee_gazebo)
+ament_target_dependencies(gazebo_model_plugin_signal_lights rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_model_plugin_signal_lights)
 
 # Create a sensor plugin for the IMU
-# add_library(gazebo_sensor_plugin_imu
-#   src/gazebo_sensor_plugin_imu/gazebo_sensor_plugin_imu.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_imu ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
-# Create a sensor plugin for the perch camera
-# add_library(gazebo_sensor_plugin_perch_cam
-#   src/gazebo_sensor_plugin_perch_cam/gazebo_sensor_plugin_perch_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_perch_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_perch_cam astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_sensor_plugin_imu SHARED
+   src/gazebo_sensor_plugin_imu/gazebo_sensor_plugin_imu.cc
+)
+target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_imu rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_imu)
 
 # Create a sensor plugin for the handrail detection algorithm
 # add_library(gazebo_sensor_plugin_handrail_detect
@@ -200,41 +181,37 @@ ament_export_libraries(gazebo_model_plugin_heartbeat)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# # Create a sensor plugin for the hazard camera
-# add_library(gazebo_sensor_plugin_haz_cam
-#   src/gazebo_sensor_plugin_haz_cam/gazebo_sensor_plugin_haz_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_haz_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_haz_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the depth camera
+add_library(gazebo_sensor_plugin_depth_cam SHARED
+   src/gazebo_sensor_plugin_depth_cam/gazebo_sensor_plugin_depth_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_depth_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_depth_cam rclcpp gazebo_dev gazebo_ros sensor_msgs)
+ament_export_libraries(gazebo_sensor_plugin_depth_cam)
 
-# # Create a sensor plugin for the nav cam
-# add_library(gazebo_sensor_plugin_nav_cam
-#   src/gazebo_sensor_plugin_nav_cam/gazebo_sensor_plugin_nav_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_nav_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_nav_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the nav cam
+add_library(gazebo_sensor_plugin_nav_cam SHARED
+  src/gazebo_sensor_plugin_nav_cam/gazebo_sensor_plugin_nav_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_nav_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_nav_cam rclcpp tf2 tf2_ros sensor_msgs geometry_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_nav_cam)
 
-# # Create a sensor plugin for the dock cam
-# add_library(gazebo_sensor_plugin_dock_cam
-#   src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_dock_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_dock_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the dock cam
+add_library(gazebo_sensor_plugin_dock_cam SHARED
+  src/gazebo_sensor_plugin_dock_cam/gazebo_sensor_plugin_dock_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_dock_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_dock_cam rclcpp tf2 tf2_ros sensor_msgs gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_sensor_plugin_dock_cam)
 
-# # Create a model plugin for sparse mapping
-# add_library(gazebo_sensor_plugin_sparse_map
-#   src/gazebo_sensor_plugin_sparse_map/gazebo_sensor_plugin_sparse_map.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_sparse_map ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_sparse_map
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin for sparse mapping
+add_library(gazebo_sensor_plugin_sparse_map SHARED
+  src/gazebo_sensor_plugin_sparse_map/gazebo_sensor_plugin_sparse_map.cc
+)
+target_link_libraries(gazebo_sensor_plugin_sparse_map astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_sparse_map rclcpp gazebo_dev gazebo_ros camera)
+ament_export_libraries(gazebo_sensor_plugin_sparse_map)
 
 # # Create a model plugin for AR localization
 # add_library(gazebo_sensor_plugin_ar_tags
@@ -254,7 +231,7 @@ ament_export_libraries(gazebo_model_plugin_heartbeat)
 #   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 # )
 
-# # Create a world plugin for speed
+# Create a world plugin for speed
 add_library(gazebo_world_plugin_speed SHARED
   src/gazebo_world_plugin_speed/gazebo_world_plugin_speed.cc
 )
@@ -262,14 +239,13 @@ target_link_libraries(gazebo_world_plugin_speed astrobee_gazebo)
 ament_target_dependencies(gazebo_world_plugin_speed rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_world_plugin_speed)
 
-# # Create a system plugin for the client gui
-# add_library(gazebo_system_plugin_client
-#   src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
-# )
-# add_dependencies(gazebo_system_plugin_client ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_system_plugin_client
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a system plugin for the client gui
+add_library(gazebo_system_plugin_client SHARED
+  src/gazebo_system_plugin_client/gazebo_system_plugin_client.cc
+)
+target_link_libraries(gazebo_system_plugin_client astrobee_gazebo)
+ament_target_dependencies(gazebo_system_plugin_client rclcpp gazebo_dev gazebo_ros)
+ament_export_libraries(gazebo_system_plugin_client)
 
 #############
 ## Install ##
@@ -287,12 +263,20 @@ install(TARGETS
   astrobee_gazebo
   gazebo_model_plugin_eps
   gazebo_model_plugin_drag
-  gazebo_model_plugin_heartbeat
   gazebo_model_plugin_truth
-  # gazebo_model_plugin_pmc
+  gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
   gazebo_model_plugin_flashlight
+  gazebo_model_plugin_laser
+  gazebo_model_plugin_heartbeat
+  gazebo_model_plugin_signal_lights
+  gazebo_sensor_plugin_imu
+  gazebo_sensor_plugin_depth_cam
+  gazebo_sensor_plugin_nav_cam
+  gazebo_sensor_plugin_dock_cam
+  gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
+  gazebo_system_plugin_client
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION bin

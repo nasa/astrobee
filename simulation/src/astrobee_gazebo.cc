@@ -55,11 +55,7 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::strin
   nh_ = gazebo_ros::Node::Get(sdf);
   // Initialize ROS node for Gazebo
   FreeFlyerComponent::FreeFlyerComponentGazeboInit(nh_, plugin_name);
-
-  // Make sure the ROS node for Gazebo has already been initialized
-  // if (!ros::isInitialized())
-  //   FF_FATAL_STREAM("A ROS node for Gazebo has not been initialized");
-  // FF_DEBUG_STREAM("Loading " << plugin_name_ << " on robot " << robot_name_);
+  FF_DEBUG_STREAM("Loading " << plugin_name_  << plugin_name << " on robot " << robot_name_);
 
   // Get nodehandle based on the model name.
   // nh_.setCallbackQueue(&callback_queue_);
@@ -226,7 +222,7 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   InitializePlugin(ns, plugin_name, sdf_);
 
   // Now load the rest of the plugin
-  // LoadCallback(nh_, sensor_, sdf_);
+  LoadCallback(nh_, sensor_, sdf_);
 }
 
 // Get the sensor world

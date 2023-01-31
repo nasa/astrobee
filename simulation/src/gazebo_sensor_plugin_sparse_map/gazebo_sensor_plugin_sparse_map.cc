@@ -16,28 +16,33 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
-
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
 // FSW includes
 #include <config_reader/config_reader.h>
 
-// FSW messages
-#include <ff_msgs/VisualLandmarks.h>
-#include <ff_msgs/CameraRegistration.h>
-#include <ff_msgs/SetBool.h>
-
 // Camera model
 #include <camera/camera_model.h>
 #include <camera/camera_params.h>
+
+// FSW messages
+#include <ff_msgs/msg/visual_landmarks.hpp>
+#include <ff_msgs/msg/camera_registration.hpp>
+#include <ff_msgs/srv/set_bool.hpp>
+namespace ff_msgs {
+typedef msg::VisualLandmark VisualLandmark;
+typedef msg::VisualLandmarks VisualLandmarks;
+typedef msg::CameraRegistration CameraRegistration;
+typedef srv::SetBool SetBool;
+}  // namespace ff_msgs
 
 // STL includes
 #include <string>
 
 namespace gazebo {
+
+FF_DEFINE_LOGGER("gazebo_sensor_plugin_sparse_map");
 
 class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
  public:
@@ -49,8 +54,10 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle *nh,
+  void LoadCallback(NodeHandle &nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+    node_ = nh;
+    clock_ = nh->get_clock();
     // Get a link to the parent sensor
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
@@ -60,43 +67,43 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
     // Check that we have a mono camera
     if (sensor_->Camera()->ImageFormat() != "L8")
-      ROS_FATAL_STREAM("Camera format must be L8");
+      FF_FATAL_STREAM("Camera format must be L8");
 
     // Build the nav cam Camera Model
     config_.AddFile("cameras.config");
     config_.AddFile("simulation/sparse_map.config");
     if (!config_.ReadFiles()) {
-        ROS_ERROR("Failed to read config files.");
+        FF_ERROR("Failed to read config files.");
         return;
     }
 
     if (!config_.GetReal("rate", &rate_))
-      ROS_FATAL("Could not read the rate parameter.");
+      FF_FATAL("Could not read the rate parameter.");
 
     if (!config_.GetReal("delay_camera", &delay_camera_))
-      ROS_FATAL("Could not read the delay_camera parameter.");
+      FF_FATAL("Could not read the delay_camera parameter.");
 
     if (!config_.GetReal("delay_features", &delay_features_))
-      ROS_FATAL("Could not read the delay_features parameter.");
+      FF_FATAL("Could not read the delay_features parameter.");
 
     if (!config_.GetReal("near_clip", &near_clip_))
-      ROS_FATAL("Could not read the near_clip parameter.");
+      FF_FATAL("Could not read the near_clip parameter.");
 
     if (!config_.GetReal("far_clip", &far_clip_))
-      ROS_FATAL("Could not read the far_clip parameter.");
+      FF_FATAL("Could not read the far_clip parameter.");
 
     if (!config_.GetUInt("num_samp", &num_samp_))
-      NODELET_ERROR("Could not read the num_samp parameter.");
+      FF_ERROR("Could not read the num_samp parameter.");
 
     if (!config_.GetUInt("num_features", &num_features_))
-      ROS_FATAL("Could not read the num_features parameter.");
+      FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
-    pub_reg_ = nh->advertise<ff_msgs::CameraRegistration>(
+    pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(
       TOPIC_LOCALIZATION_ML_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    pub_feat_ = nh->advertise<ff_msgs::VisualLandmarks>(
+    pub_feat_ = nh->create_publisher<ff_msgs::VisualLandmarks>(
       TOPIC_LOCALIZATION_ML_FEATURES, 1);
 
     // Create a shape for collision testing
@@ -116,31 +123,31 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
   }
 
   // Only send measurements when extrinsics are available
-  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+  void OnExtrinsicsReceived(NodeHandle &nh) {
     // Sercide for enabling mapped landmarks
-    srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE,
-      &GazeboSensorPluginSparseMap::EnableService, this);
+    srv_enable_ = nh->create_service<ff_msgs::SetBool>(SERVICE_LOCALIZATION_ML_ENABLE,
+      std::bind(&GazeboSensorPluginSparseMap::EnableService, this, std::placeholders::_1, std::placeholders::_2));
 
     // Timer triggers registration
-    timer_registration_ = nh->createTimer(ros::Duration(ros::Rate(rate_)),
-      &GazeboSensorPluginSparseMap::SendRegistration, this, false, true);
+    timer_registration_.createTimer(1 / rate_,
+      std::bind(&GazeboSensorPluginSparseMap::SendRegistration, this), nh, false, true);
 
     // Timer triggers features
-    timer_features_ = nh->createTimer(ros::Duration(0.8 / rate_),
-      &GazeboSensorPluginSparseMap::SendFeatures, this, true, false);
+    timer_features_.createTimer(0.8 / rate_,
+      std::bind(&GazeboSensorPluginSparseMap::SendFeatures, this), nh, true, false);
   }
 
   // Enable or disable the feature timer
-  bool EnableService(ff_msgs::SetBool::Request & req,
-                     ff_msgs::SetBool::Response & res) {
-    active_ = req.enable;
-    res.success = true;
+  bool EnableService(const std::shared_ptr<ff_msgs::SetBool::Request> req,
+                     std::shared_ptr<ff_msgs::SetBool::Response> res) {
+    active_ = req->enable;
+    res->success = true;
     return true;
   }
 
 
   // Send a registration pulse
-  void SendRegistration(ros::TimerEvent const& event) {
+  void SendRegistration() {
     if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
@@ -148,10 +155,10 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     timer_features_.start();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = ros::Time::now() + ros::Duration(delay_camera_);
+    msg_reg_.header.stamp = FF_TIME_NOW() + rclcpp::Duration::from_seconds(delay_camera_);
     msg_reg_.camera_id++;
-    pub_reg_.publish(msg_reg_);
-    ros::spinOnce();
+    pub_reg_->publish(msg_reg_);
+    // FF_SPIN_ONCE();
 
     // Copy over the camera id to the feature message
     msg_feat_.camera_id = msg_reg_.camera_id;
@@ -163,7 +170,7 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->GetWorldPose(), sensor_->Pose());
     #endif
 
-    msg_feat_.header.stamp = ros::Time::now();
+    msg_feat_.header.stamp = FF_TIME_NOW();
 
     // Initialize the camera parameters
     static camera::CameraParameters cam_params(&config_, "nav_cam");
@@ -249,16 +256,19 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
   }
 
   // Send off the features
-  void SendFeatures(ros::TimerEvent const& event) {
+  void SendFeatures() {
     if (!active_) return;
-    pub_feat_.publish(msg_feat_);
+    pub_feat_->publish(msg_feat_);
   }
 
  private:
+  NodeHandle node_;
+  std::shared_ptr<rclcpp::Clock> clock_;
   config_reader::ConfigReader config_;
-  ros::Publisher pub_reg_, pub_feat_;
-  ros::ServiceServer srv_enable_;
-  ros::Timer timer_registration_, timer_features_;
+  rclcpp::Publisher<ff_msgs::CameraRegistration>::SharedPtr pub_reg_;
+  rclcpp::Publisher<ff_msgs::VisualLandmarks>::SharedPtr pub_feat_;
+  rclcpp::Service<ff_msgs::SetBool>::SharedPtr srv_enable_;
+  ff_util::FreeFlyerTimer timer_registration_, timer_features_;
   std::shared_ptr<sensors::WideAngleCameraSensor> sensor_;
   gazebo::physics::RayShapePtr shape_;
   bool active_;

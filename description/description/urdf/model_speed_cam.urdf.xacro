@@ -19,8 +19,8 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
-<!--     <plugin name="speed_cam_ros" filename="libgazebo_model_plugin_speed_cam.so">
-      <namespace>/${ns}/</namespace>
-    </plugin> -->
+    <plugin name="speed_cam_ros" filename="libgazebo_model_plugin_heartbeat.so">
+      <plugin_name>speed_cam</plugin_name>
+    </plugin>
   </gazebo>
 </robot>

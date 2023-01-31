@@ -62,6 +62,13 @@ ament_export_targets(config_reader HAS_LIBRARY_TARGET)
 
 ament_export_include_directories(include ${LUAJIT_INCLUDE_DIR})
 
+target_include_directories(config_reader
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${LUAJIT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:${LUAJIT_INCLUDE_DIR}>)
+
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION include

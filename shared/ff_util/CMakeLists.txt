@@ -46,7 +46,6 @@ find_package(config_reader REQUIRED)
 # Your package locations should be listed before other locations
 include_directories(
   include
-  ${config_reader_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
 

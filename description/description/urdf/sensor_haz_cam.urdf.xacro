@@ -38,9 +38,11 @@
           <output>points</output>
         </depth_camera>
       </camera>
-<!--       <plugin name="haz_cam_ros" filename="libgazebo_sensor_plugin_haz_cam.so">
-        <namespace>/${ns}/</namespace>
-      </plugin> -->
+       <plugin name="haz_cam_ros" filename="libgazebo_sensor_plugin_depth_cam.so">
+        <plugin_name>haz_cam</plugin_name>
+        <plugin_frame>haz_cam</plugin_frame>
+        <haz_cam>true</haz_cam>
+      </plugin>
     </sensor>
   </gazebo>
 </robot>

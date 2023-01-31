@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Fault info message is used in the fault config message to contain all the 
+# Fault info message is used in the fault config message to contain all the
 # information GDS needs to know about a fault
 
 uint16 subsystem    # index into subsystem names array found in fault config msg
