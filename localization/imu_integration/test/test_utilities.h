@@ -19,14 +19,14 @@
 #ifndef IMU_INTEGRATOR_TEST_UTILITIES_H_  // NOLINT
 #define IMU_INTEGRATOR_TEST_UTILITIES_H_  // NOLINT
 
-#include <imu_integrator/imu_integrator_params.h>
 #include <imu_integration/imu_integrator.h>
+#include <imu_integration/imu_integrator_params.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <vector>
 
-namespace imu_integrator {
+namespace imu_integration {
 ImuIntegratorParams DefaultImuIntegratorParams();
 
 std::vector<localization_measurements::ImuMeasurement> ConstantMeasurements(const Eigen::Vector3d& acceleration,
@@ -48,6 +48,6 @@ gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measuremen
                                        const localization_common::Time starting_time);
 
 sensor_msgs::Imu ImuMsg(const localization_measurements::ImuMeasurement& imu_measurement);
-}  // namespace imu_integrator
+}  // namespace imu_integration
 
 #endif  // IMU_INTEGRATOR_TEST_UTILITIES_H_ // NOLINT

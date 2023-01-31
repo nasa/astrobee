@@ -21,7 +21,7 @@
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
-namespace imu_integrator {
+namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
@@ -91,4 +91,4 @@ sensor_msgs::Imu ImuMsg(const localization_measurements::ImuMeasurement& imu_mea
   lc::TimeToHeader(imu_measurement.timestamp, imu_msg.header);
   return imu_msg;
 }
-}  // namespace imu_integrator
+}  // namespace imu_integration

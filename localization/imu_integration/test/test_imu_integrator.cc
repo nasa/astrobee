@@ -16,13 +16,14 @@
  * under the License.
  */
 
+#include "test_utilities.h"  // NOLINT
 #include <imu_integration/imu_integrator.h>
 #include <localization_common/test_utilities.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <gtest/gtest.h>
 
-namespace ii = imu_integrator;
+namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
@@ -43,7 +44,7 @@ class ConstantAccelerationTest : public ::testing::Test {
     const std::vector<lm::ImuMeasurement> imu_measurements =
       ii::ConstantAccelerationMeasurements(acceleration_, num_measurements_, start_time_, time_increment_);
     for (const auto& imu_measurement : imu_measurements) {
-      imu_integrator_->BufferImuMeasurement(imu_measurement);
+      imu_integrator_->AddImuMeasurement(imu_measurement);
     }
   }
 
@@ -85,7 +86,7 @@ class ConstantAngularVelocityTest : public ::testing::Test {
     imu_measurements_ =
       ii::ConstantAngularVelocityMeasurements(angular_velocity_, num_measurements_, start_time_, time_increment_);
     for (const auto& imu_measurement : imu_measurements_) {
-      imu_integrator_->BufferImuMeasurement(imu_measurement);
+      imu_integrator_->AddImuMeasurement(imu_measurement);
     }
   }
 
@@ -116,8 +117,7 @@ class ConstantAngularVelocityTest : public ::testing::Test {
 TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), 0);
-  lc::CombinedNavState imu_augmented_state = initial_state;
-  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   const double expected_velocity_i = acceleration_i() * num_measurements() * time_increment();
@@ -135,7 +135,7 @@ TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
   const lc::Time imu_augmented_state_start_time = num_measurements() / 2 * time_increment();
   lc::CombinedNavState imu_augmented_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
-  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+  imu_augmented_state = imu_integrator().ExtrapolateLatest(imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   const double expected_velocity_i = acceleration_i() * num_measurements() / 2 * time_increment();
@@ -150,8 +150,7 @@ TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
 TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(acceleration(), gtsam::Vector3::Zero()), 0);
-  lc::CombinedNavState imu_augmented_state = initial_state;
-  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), gtsam::Vector3::Zero(), 1e-6);
@@ -161,8 +160,7 @@ TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), 0);
-  lc::CombinedNavState imu_augmented_state = initial_state;
-  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
@@ -176,7 +174,7 @@ TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
   const lc::Time imu_augmented_state_start_time = num_measurements() / 2 * time_increment();
   lc::CombinedNavState imu_augmented_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
-  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+  imu_augmented_state = imu_integrator().ExtrapolateLatest(imu_augmented_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   gtsam::Rot3 expected_orientation =
@@ -187,8 +185,7 @@ TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
 TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(gtsam::Vector3::Zero(), angular_velocity()), 0);
-  lc::CombinedNavState imu_augmented_state = initial_state;
-  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), gtsam::Rot3::identity(), 1e-6);
