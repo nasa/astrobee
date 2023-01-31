@@ -1,9 +1,10 @@
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
       - Do combined nav state tests! (AA)
+        - const vel non zero bias! (AA)
         - nonzero bias const acc (AB)
             - reuse const acc function!
-        - nonzero bias const acc const ang
+        - nonzero bias const acc const ang (AC)
       - test: make sure biases aren't changed during extrapolation!! (AB)
       - test other functions! (AC)
       - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?
@@ -25,6 +26,7 @@
 - compile graph vio!
 - test graph vio!!! (AD)
 - compiple graph loc! (AB)
+  - convert velocity from odom frame to global frame!!!
 - test graph loc!!! (AC)
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
