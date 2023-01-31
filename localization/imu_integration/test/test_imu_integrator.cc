@@ -194,7 +194,6 @@ TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), gtsam::Rot3::identity(), 1e-6);
 }
 
-
 /*TEST(ImuIntegratorTester, ConstantVelocity) {
   // TODO(rsoussan): add default imu integrator params! pass these!
   ii::ImuIntegrator imu_integrator;

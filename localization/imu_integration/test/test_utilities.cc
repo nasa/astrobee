@@ -38,7 +38,6 @@ ImuIntegratorParams DefaultImuIntegratorParams() {
   params.gyro_bias_sigma = 0.1;
   params.integration_variance = 0.1;
   params.bias_acc_omega_int = 0.1;
-  params.standstill_enabled = true;
   return params;
 }
 

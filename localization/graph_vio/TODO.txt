@@ -1,7 +1,6 @@
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
       - merge imu augmentor and imu integrator tests! (AA)
-        - make defualt imu integrator params! (AAA)
         - update pim predict calls! (AAB)
         - compile and run! (AAC)
         - remove from imu augmentor!! (AAD)
