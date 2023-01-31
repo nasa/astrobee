@@ -1,10 +1,12 @@
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
       - Do combined nav state tests! (AA)
+        - const vel
         - nonzero bias const acc
             - reuse const acc function!
         - nonzero bias const acc const ang
-      - test: make sure biases aren't changed during extrapolation!! (AC)
+      - test: make sure biases aren't changed during extrapolation!! (AB)
+      - test other functions! (AC)
       - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?
       - test extrapolate vs extrapolate with resets!! (AD)
       - update combinednavstate with new extrapolate fcns (AE)
