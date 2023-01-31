@@ -66,8 +66,7 @@ bool CombinedNavStateNodeUpdateModel::AddNodesAndRelativeFactors(const lc::Time 
       return false;
     }
     // TODO(rsoussan): avoid repeated pim integration in addrelativefactors?
-    // TODO(Rsoussan): change this method to automatically use own pim params
-    auto pim = imu_integrator_.IntegratedPim(node_a->bias(), timestamp_a, timestamp_b, imu_integrator_.pim_params());
+    auto pim = imu_integrator_.IntegratedPim(node_a->bias(), timestamp_a, timestamp_b);
     if (!pim) {
       LogError("AddNodesAndRelativeFactors: Failed to create pim.");
       return false;
@@ -116,8 +115,7 @@ bool CombinedNavStateNodeUpdateModel::AddRelativeFactors(const lc::Time timestam
     return false;
   }
 
-  // TODO(Rsoussan): change this method to automatically use own pim params
-  auto pim = imu_integrator_.IntegratedPim(node_a->bias(), timestamp_a, timestamp_b, imu_integrator_.pim_params());
+  auto pim = imu_integrator_.IntegratedPim(node_a->bias(), timestamp_a, timestamp_b);
   if (!pim) {
     LogError("AddRelativeFactors: Failed to create pim.");
     return false;

@@ -52,8 +52,7 @@ class ImuIntegrator {
 
   boost::optional<gtsam::PreintegratedCombinedMeasurements> IntegratedPim(
     const gtsam::imuBias::ConstantBias& bias, const localization_common::Time start_time,
-    const localization_common::Time end_time,
-    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const;
+    const localization_common::Time end_time) const;
 
   void RemoveOldMeasurements(const localization_common::Time new_start_time);
 

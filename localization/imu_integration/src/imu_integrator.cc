@@ -120,9 +120,8 @@ void ImuIntegrator::RemoveOldMeasurements(const lc::Time new_start_time) {
 }
 
 boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::IntegratedPim(
-  const gtsam::imuBias::ConstantBias& bias, const lc::Time start_time, const lc::Time end_time,
-  boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const {
-  auto pim = Pim(bias, params);
+  const gtsam::imuBias::ConstantBias& bias, const lc::Time start_time, const lc::Time end_time) const {
+  auto pim = Pim(bias, pim_params());
   const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
   if (!last_integrated_measurement_time) {
     LogDebug("IntegratedPim: Failed to integrate imu measurments.");
