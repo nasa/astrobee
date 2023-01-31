@@ -66,6 +66,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_imu_integrator
     test/test_imu_integrator.test
     test/test_imu_integrator.cc
+    test/test_utilities.cc
   )
   target_link_libraries(test_imu_integrator
     ${PROJECT_NAME} ${catkin_LIBRARIES} 

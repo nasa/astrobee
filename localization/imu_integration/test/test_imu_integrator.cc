@@ -26,7 +26,176 @@ namespace ii = imu_integrator;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
-TEST(ImuIntegratorTester, ConstantVelocity) {
+class ConstantAccelerationTest : public ::testing::Test {
+ public:
+  // Start at time increment so first IMU measurement is after starting combined nav state time
+  ConstantAccelerationTest()
+      : acceleration_i_(0.1),
+        acceleration_(acceleration_i_, acceleration_i_, acceleration_i_),
+        time_increment_(1.0 / 125.0),
+        start_time_(time_increment_),
+        num_measurements_(20) {
+    const ii::ImuIntegratorParams params = ii::DefaultImuIntegratorParams();
+    imu_integrator_.reset(new ii::ImuIntegrator(params));
+  }
+
+  void SetUp() final {
+    const std::vector<lm::ImuMeasurement> imu_measurements =
+      ii::ConstantAccelerationMeasurements(acceleration_, num_measurements_, start_time_, time_increment_);
+    for (const auto& imu_measurement : imu_measurements) {
+      imu_integrator_->BufferImuMeasurement(imu_measurement);
+    }
+  }
+
+  ii::ImuIntegrator& imu_integrator() { return *imu_integrator_; }
+
+  double acceleration_i() { return acceleration_i_; }
+
+  const Eigen::Vector3d& acceleration() { return acceleration_; }
+
+  double time_increment() { return time_increment_; }
+
+  double start_time() { return start_time_; }
+
+  int num_measurements() { return num_measurements_; }
+
+ private:
+  std::unique_ptr<ii::ImuIntegrator> imu_integrator_;
+  const double acceleration_i_;
+  const Eigen::Vector3d acceleration_;
+  const double time_increment_;
+  const lc::Time start_time_;
+  const int num_measurements_;
+};
+
+class ConstantAngularVelocityTest : public ::testing::Test {
+ public:
+  // Start at time increment so first IMU measurement is after starting combined nav state time
+  ConstantAngularVelocityTest()
+      : angular_velocity_i_(0.1),
+        angular_velocity_(angular_velocity_i_, angular_velocity_i_, angular_velocity_i_),
+        time_increment_(1.0 / 125.0),
+        start_time_(time_increment_),
+        num_measurements_(20) {
+    const ii::ImuIntegratorParams params = ii::DefaultImuIntegratorParams();
+    imu_integrator_.reset(new ii::ImuIntegrator(params));
+  }
+
+  void SetUp() final {
+    imu_measurements_ =
+      ii::ConstantAngularVelocityMeasurements(angular_velocity_, num_measurements_, start_time_, time_increment_);
+    for (const auto& imu_measurement : imu_measurements_) {
+      imu_integrator_->BufferImuMeasurement(imu_measurement);
+    }
+  }
+
+  ii::ImuIntegrator& imu_integrator() { return *imu_integrator_; }
+
+  double angular_velocity_i() { return angular_velocity_i_; }
+
+  const Eigen::Vector3d& angular_velocity() { return angular_velocity_; }
+
+  double time_increment() { return time_increment_; }
+
+  double start_time() { return start_time_; }
+
+  int num_measurements() { return num_measurements_; }
+
+  const std::vector<lm::ImuMeasurement>& imu_measurements() { return imu_measurements_; }
+
+ private:
+  std::unique_ptr<ii::ImuIntegrator> imu_integrator_;
+  const double angular_velocity_i_;
+  const Eigen::Vector3d angular_velocity_;
+  const double time_increment_;
+  const lc::Time start_time_;
+  const int num_measurements_;
+  std::vector<lm::ImuMeasurement> imu_measurements_;
+};
+
+TEST_F(ConstantAccelerationTest, AddAllMeasurements) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), 0);
+  lc::CombinedNavState imu_augmented_state = initial_state;
+  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  const double expected_velocity_i = acceleration_i() * num_measurements() * time_increment();
+  const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
+  // x = 1/2*a*t^2
+  const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() * time_increment(), 2);
+  const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
+}
+
+TEST_F(ConstantAccelerationTest, AddHalfOfMeasurements) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), 0);
+  const lc::Time imu_augmented_state_start_time = num_measurements() / 2 * time_increment();
+  lc::CombinedNavState imu_augmented_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
+  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  const double expected_velocity_i = acceleration_i() * num_measurements() / 2 * time_increment();
+  const gtsam::Vector3 expected_velocity(expected_velocity_i, expected_velocity_i, expected_velocity_i);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
+  // x = 1/2*a*t^2
+  const double expected_position_i = acceleration_i() * 0.5 * std::pow(num_measurements() / 2 * time_increment(), 2);
+  const gtsam::Vector3 expected_position(expected_position_i, expected_position_i, expected_position_i);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
+}
+
+TEST_F(ConstantAccelerationTest, AddAllMeasurementsWithAccelBias) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(acceleration(), gtsam::Vector3::Zero()), 0);
+  lc::CombinedNavState imu_augmented_state = initial_state;
+  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), gtsam::Vector3::Zero(), 1e-6);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), gtsam::Vector3::Zero(), 1e-6);
+}
+
+TEST_F(ConstantAngularVelocityTest, AddAllMeasurements) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), 0);
+  lc::CombinedNavState imu_augmented_state = initial_state;
+  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  gtsam::Rot3 expected_orientation =
+    ii::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
+}
+
+TEST_F(ConstantAngularVelocityTest, AddHalfOfMeasurements) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), 0);
+  const lc::Time imu_augmented_state_start_time = num_measurements() / 2 * time_increment();
+  lc::CombinedNavState imu_augmented_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
+  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  gtsam::Rot3 expected_orientation =
+    ii::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), imu_augmented_state_start_time);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
+}
+
+TEST_F(ConstantAngularVelocityTest, AddAllMeasurementsWithAccelBias) {
+  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
+                                           gtsam::imuBias::ConstantBias(gtsam::Vector3::Zero(), angular_velocity()), 0);
+  lc::CombinedNavState imu_augmented_state = initial_state;
+  imu_integrator().PimPredict(initial_state, imu_augmented_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), gtsam::Rot3::identity(), 1e-6);
+}
+
+
+/*TEST(ImuIntegratorTester, ConstantVelocity) {
   // TODO(rsoussan): add default imu integrator params! pass these!
   ii::ImuIntegrator imu_integrator;
   constexpr double kInitialVelocity = 0.1;
@@ -54,7 +223,7 @@ TEST(ImuIntegratorTester, ConstantVelocity) {
     EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
     EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
   }
-}
+}*/
 
 /*TEST(ImuIntegratorTester, ConstantAcceleration) {
   auto params = gl::DefaultGraphLocalizerParams();

@@ -1,26 +1,27 @@
-- update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
-      - merge imu augmentor and imu integrator tests! (AB)
-        - remove from imu augmentor!! (AC)
-      - test extrapolate vs extrapolate with resets!!
-      - test: make sure biases aren't changed during extrapolation!!
-      - update tools relying on imu integration commands! (AD)
-          - test interpolate! is this used anywhere else?
-
-    Tests:
-      - Do combined nav state tests!
+      - merge imu augmentor and imu integrator tests! (AA)
+        - make defualt imu integrator params! (AAA)
+        - update pim predict calls! (AAB)
+        - compile and run! (AAC)
+        - remove from imu augmentor!! (AAD)
+      - Do combined nav state tests! (AB)
         - constant velocity
         - const acc
         - bias/no bias
         - more?
-  - rename pimpredict in other packages to extrapolate
+      - test: make sure biases aren't changed during extrapolation!! (AC)
+      - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?
+      - test extrapolate vs extrapolate with resets!! (AD)
+      - update combinednavstate with new extrapolate fcns (AE)
+        - make sure it compiles!
+    - rename pimpredict in other packages to extrapolate
+      - tools: loc rvz plugins, imu bias tester
+    - update imu_augmentor, make sure it compiles!
+      - add tests?
 
-  - move some imu augmentor tests to imu integrator?
-    - remove imu augmentor??? is resetting pim really necessary?
-      - how is gravity integration done? velocity integration?
-  - test utilities????
-  - remove from graph_vio! (AB)
+  - is resetting pim really necessary?
+    - how is gravity integration done? velocity integration?
 - test timestamped pose node updater! (AC)
 - test combined nav state nodes! (AD)
   - how to add a second measurement to updater?????
