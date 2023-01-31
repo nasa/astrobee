@@ -73,7 +73,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_combined_nav_state_node_updater.cc
   )
   target_link_libraries(test_combined_nav_state_node_updater
-    graph_vio ${catkin_LIBRARIES} 
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
 endif()
 

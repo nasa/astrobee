@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <imu_integration/dynamic_imu_filter.h>
+#include <imu_integration/parameter_reader.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 

@@ -55,6 +55,7 @@ add_library(${PROJECT_NAME}
   src/identity_filter.cc
   src/imu_filter.cc
   src/imu_integrator.cc
+  src/parameter_reader.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
@@ -67,7 +68,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_imu_integrator.cc
   )
   target_link_libraries(test_imu_integrator
-    graph_vio ${catkin_LIBRARIES} 
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
 endif()
 
