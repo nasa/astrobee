@@ -129,8 +129,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
   // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(NodeHandle& nh) {
     // Enable mapped landmarks
-    srv_enable_ = nh->create_service<ff_msgs::SetBool>(
-      SERVICE_LOCALIZATION_AR_ENABLE,
+    srv_enable_ = nh->create_service<ff_msgs::SetBool>(SERVICE_LOCALIZATION_AR_ENABLE,
       std::bind(&GazeboSensorPluginARTags::EnableService, this, std::placeholders::_1, std::placeholders::_2));
 
     // Timer triggers registration
