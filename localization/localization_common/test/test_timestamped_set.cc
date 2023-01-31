@@ -114,12 +114,13 @@ TEST(TimestampedSetTester, AddRemoveContainsEmptySize) {
   }
 }
 
-TEST(TimestampedSetTester, OldestLatest) {
+TEST(TimestampedSetTester, OldestLatestWithinBounds) {
   lc::TimestampedSet<double> timestamped_set;
   // No elements
   {
     EXPECT_TRUE(timestamped_set.Oldest() == boost::none);
     EXPECT_TRUE(timestamped_set.Latest() == boost::none);
+    EXPECT_FALSE(timestamped_set.WithinBounds(123.1));
   }
   const double value_1 = 101.0;
   const localization_common::Time timestamp_1 = 1.0;
@@ -134,6 +135,9 @@ TEST(TimestampedSetTester, OldestLatest) {
     ASSERT_TRUE(latest_value != boost::none);
     EXPECT_EQ(latest_value->value, value_1);
     EXPECT_EQ(latest_value->timestamp, timestamp_1);
+    EXPECT_FALSE(timestamped_set.WithinBounds(11.01));
+    EXPECT_FALSE(timestamped_set.WithinBounds(30009));
+    EXPECT_FALSE(timestamped_set.WithinBounds(value_1));
   }
   // 2 elements
   const double value_2 = 100.3;
@@ -148,6 +152,11 @@ TEST(TimestampedSetTester, OldestLatest) {
     ASSERT_TRUE(latest_value != boost::none);
     EXPECT_EQ(latest_value->value, value_2);
     EXPECT_EQ(latest_value->timestamp, timestamp_2);
+    EXPECT_FALSE(timestamped_set.WithinBounds(timestamp_1 - 1));
+    EXPECT_FALSE(timestamped_set.WithinBounds(timestamp_2 + 3.5));
+    EXPECT_TRUE(timestamped_set.WithinBounds(2.2));
+    EXPECT_TRUE(timestamped_set.WithinBounds(timestamp_1));
+    EXPECT_TRUE(timestamped_set.WithinBounds(timestamp_2));
   }
 
   // 3 elements
@@ -163,6 +172,8 @@ TEST(TimestampedSetTester, OldestLatest) {
     ASSERT_TRUE(latest_value != boost::none);
     EXPECT_EQ(latest_value->value, value_3);
     EXPECT_EQ(latest_value->timestamp, timestamp_3);
+    EXPECT_FALSE(timestamped_set.WithinBounds(timestamp_3 + 100));
+    EXPECT_TRUE(timestamped_set.WithinBounds(15.1));
   }
 
   ASSERT_TRUE(timestamped_set.Remove(timestamp_1));

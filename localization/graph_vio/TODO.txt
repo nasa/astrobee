@@ -1,17 +1,15 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
-  - test combinednavstatenodes! (AB)
-            - how to add a second measurement to updater?????
-              - combined imu needs fan speed!!!
-- test withinbounds in timestamped set (AA)
-- test timestamped pose node updater! (AD)
-- test combined nav state nodes! (AE)
-- imu integration changes:
+- test timestamped pose node updater! (AA)
+- imu integration changes: (AB)
   - remove latest imu integrator!
   - update imu integrator to use timestamped set for imu measurements!
   - remove from graph_vio!
   - use own pim params in integrated pim call!
-  - add more tests to imu integrator???
+  - add more tests to imu integrator!
   -  remove makecombinedimufactor function in imu integration!
+- test combined nav state nodes! (AC)
+  - how to add a second measurement to updater?????
+    - add to imu measurement???
 - update factor adders with changes described below
 - compile graph vio!
 - test graph vio!!! (AD)
