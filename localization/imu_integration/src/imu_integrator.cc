@@ -126,6 +126,65 @@ boost::optional<lc::CombinedNavState> ImuIntegrator::Extrapolate(const lc::Combi
   return PimPredict(combined_nav_state, *pim);
 }
 
+boost::optional<lc::CombinedNavState> ImuIntegrator::ExtrapolateWithResets(
+  const lc::CombinedNavState& combined_nav_state, const lc::Time end_time) {
+  if (empty()) return boost::none;
+  // Start with least upper bound measurement
+  // Don't add measurements with same timestamp as start_time
+  // since these would have a dt of 0 (wrt the pim start time) and cause errors for the pim
+  auto measurement_it = set().upper_bound(combined_nav_state.timestamp());
+  if (measurement_it == set().cend()) return boost::none;
+  auto pim = Pim(combined_nav_state.bias(), pim_params_);
+  int num_measurements_added = 0;
+  lc::CombinedNavState extrapolated_combined_nav_state = combined_nav_state;
+  // Create new pim each time since pim uses beginning orientation and velocity for
+  // gravity integration and initial velocity integration.
+  for (; measurement_it != set().cend(); ++measurement_it) {
+    pim.resetIntegrationAndSetBias(combined_nav_state.bias());
+    auto time = extrapolated_combined_nav_state.timestamp();
+    AddMeasurement(measurement_it->second, time, pim);
+    extrapolated_combined_nav_state = PimPredict(extrapolated_combined_nav_state, pim);
+    ++num_measurements_added;
+  }
+
+  LogDebug("ExtrapolateWithResets: Added " << num_measurements_added << " measurements.");
+  return extrapolated_combined_nav_state;
+}
+
+localization_common::CombinedNavState ImuIntegrator::ExtrapolateLatest(
+  const localization_common::CombinedNavState& combined_nav_state) {
+  const auto latest = Latest();
+  if (!latest) {
+    LogError("ExtrapolateLatest: Failed to get latest measurement.");
+    return combined_nav_state;
+  }
+
+  const auto extrapolated_combined_nav_state = Extrapolate(combined_nav_state, latest->timestamp);
+  if (!latest) {
+    LogError("ExtrapolateLatest: Failed to extrapolate combined nav state.");
+    return combined_nav_state;
+  }
+
+  return *extrapolated_combined_nav_state;
+}
+
+localization_common::CombinedNavState ImuIntegrator::ExtrapolateLatestWithResets(
+  const localization_common::CombinedNavState& combined_nav_state) {
+  const auto latest = Latest();
+  if (!latest) {
+    LogError("ExtrapolateLatest: Failed to get latest measurement.");
+    return combined_nav_state;
+  }
+
+  const auto extrapolated_combined_nav_state = ExtrapolateWithResets(combined_nav_state, latest->timestamp);
+  if (!latest) {
+    LogError("ExtrapolateLatest: Failed to extrapolate combined nav state.");
+    return combined_nav_state;
+  }
+
+  return *extrapolated_combined_nav_state;
+}
+
 void ImuIntegrator::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
   imu_filter_->SetFanSpeedMode(fan_speed_mode);
 }

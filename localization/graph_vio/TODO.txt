@@ -1,8 +1,9 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
-      - add seperate function "extrapoloatewithresets", add TODO if it is really necessary! (AA)
       - remove imu augmentor! (AB)
+            - add TODO to see if this is necessary!
+            - make sure latest_imu_aug combined nav state has biases set to latest_combined_nav_state!
       - move some utils fcns into imu integrator as private!
       - move parameter loading to parameter_reader file!!
       - merge imu augmentor and imu integrator tests!
