@@ -277,6 +277,9 @@ install(TARGETS
   gazebo_model_plugin_perching_arm
   gazebo_sensor_plugin_nav_cam
   gazebo_sensor_plugin_dock_cam
+  gazebo_sensor_plugin_ar_tags
+  gazebo_sensor_plugin_optical_flow
+  gazebo_sensor_plugin_handrail_detect
   gazebo_model_plugin_pmc
   gazebo_model_plugin_signal_lights
   gazebo_model_plugin_truth
