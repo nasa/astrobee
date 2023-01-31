@@ -62,6 +62,8 @@ class ConstantIMUTest : public ::testing::Test {
 
   double time_increment() const { return time_increment_; }
 
+  double Duration() const { return num_measurements_ * time_increment_; }
+
   double start_time() const { return start_time_; }
 
   int num_measurements() const { return num_measurements_; }
@@ -76,17 +78,29 @@ class ConstantIMUTest : public ::testing::Test {
   const int num_measurements_;
 };
 
+TEST_F(ConstantIMUTest, ConstVelocity) {
+  SetAndAddMeasurements(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+  const lc::CombinedNavState initial_state(lc::RandomPose(), lc::RandomVector3d(), gtsam::imuBias::ConstantBias(), 0);
+  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
+
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
+  EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), initial_state.velocity(), 1e-6);
+  const Eigen::Vector3d expected_position =
+    Eigen::Vector3d(initial_state.pose().translation() + initial_state.velocity() * Duration());
+  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
+}
+
 TEST_F(ConstantIMUTest, ConstAccelerationAddAllMeasurements) {
   SetAndAddMeasurements(lc::RandomVector3d(), Eigen::Vector3d::Zero());
   const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                            gtsam::imuBias::ConstantBias(), 0);
   const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
-  const Eigen::Vector3d expected_velocity = acceleration() * num_measurements() * time_increment();
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
+  const Eigen::Vector3d expected_velocity = acceleration() * Duration();
   EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
   // x = 1/2*a*t^2
-  const Eigen::Vector3d expected_position = acceleration() * 0.5 * std::pow(num_measurements() * time_increment(), 2);
+  const Eigen::Vector3d expected_position = acceleration() * 0.5 * std::pow(Duration(), 2);
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
 }
 
@@ -99,7 +113,7 @@ TEST_F(ConstantIMUTest, ConstAccelerationAddHalfOfMeasurements) {
                                            gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
   imu_augmented_state = imu_integrator().ExtrapolateLatest(imu_augmented_state);
 
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
   const Eigen::Vector3d expected_velocity = acceleration() * num_measurements() / 2 * time_increment();
   EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
   // x = 1/2*a*t^2
@@ -114,7 +128,7 @@ TEST_F(ConstantIMUTest, ConstAccelerationAddAllMeasurementsWithAccelBias) {
                                            gtsam::imuBias::ConstantBias(acceleration(), gtsam::Vector3::Zero()), 0);
   const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
   EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), gtsam::Vector3::Zero(), 1e-6);
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), gtsam::Vector3::Zero(), 1e-6);
 }
@@ -125,7 +139,7 @@ TEST_F(ConstantIMUTest, ConstAngularVelocityAddAllMeasurements) {
                                            gtsam::imuBias::ConstantBias(), 0);
   const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
   gtsam::Rot3 expected_orientation =
     ii::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
@@ -140,7 +154,7 @@ TEST_F(ConstantIMUTest, ConstAngularVelocityAddHalfOfMeasurements) {
                                            gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
   imu_augmented_state = imu_integrator().ExtrapolateLatest(imu_augmented_state);
 
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
   gtsam::Rot3 expected_orientation =
     ii::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), imu_augmented_state_start_time);
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
@@ -152,7 +166,7 @@ TEST_F(ConstantIMUTest, ConstAngularVelocityAddAllMeasurementsWithAccelBias) {
                                            gtsam::imuBias::ConstantBias(gtsam::Vector3::Zero(), angular_velocity()), 0);
   const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
-  EXPECT_NEAR(imu_augmented_state.timestamp(), num_measurements() * time_increment(), 1e-6);
+  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), gtsam::Rot3::identity(), 1e-6);
 }
 

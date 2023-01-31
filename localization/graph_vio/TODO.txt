@@ -1,8 +1,7 @@
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
       - Do combined nav state tests! (AA)
-        - const vel
-        - nonzero bias const acc
+        - nonzero bias const acc (AB)
             - reuse const acc function!
         - nonzero bias const acc const ang
       - test: make sure biases aren't changed during extrapolation!! (AB)
