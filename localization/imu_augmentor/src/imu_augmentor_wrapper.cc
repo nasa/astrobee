@@ -113,7 +113,10 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
                                                                             *latest_covariances_};
   }
 
-  imu_augmentor_->PimPredict(*latest_combined_nav_state_, *latest_imu_augmented_combined_nav_state_);
+  imu_augmentor_->ExtrapolateLatestWithResets(*latest_imu_augmented_combined_nav_state_);
+  // Only remove measurements up to the latest_combined_nav_state timestamp so when a new combined
+  // nav state is received from the localizer IMU measurements can still be added to this
+  imu_augmentor_->RemoveOldMeasurements(latest_combined_nav_state_->timestamp());
   if (!latest_imu_augmented_combined_nav_state_) {
     LogError("LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.");
     return boost::none;

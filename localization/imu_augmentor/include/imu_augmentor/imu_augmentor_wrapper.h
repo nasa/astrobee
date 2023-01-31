@@ -21,7 +21,7 @@
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/GraphState.h>
-#include <imu_augmentor/imu_augmentor.h>
+#include <imu_integration/imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/rate_timer.h>
@@ -63,7 +63,7 @@ class ImuAugmentorWrapper {
 
   bool standstill() const;
 
-  std::unique_ptr<ImuAugmentor> imu_augmentor_;
+  std::unique_ptr<ImuIntegrator> imu_augmentor_;
   boost::optional<localization_common::CombinedNavState> latest_combined_nav_state_;
   boost::optional<localization_common::CombinedNavState> latest_imu_augmented_combined_nav_state_;
   boost::optional<localization_common::CombinedNavStateCovariances> latest_covariances_;

@@ -61,7 +61,6 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/imu_augmentor.cc
   src/imu_augmentor_nodelet.cc
   src/imu_augmentor_wrapper.cc
 )
@@ -69,15 +68,6 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_imu_augmentor
-    test/test_imu_augmentor.test
-    test/test_imu_augmentor.cc
-    test/test_utilities.cc
-  )
-  target_link_libraries(test_imu_augmentor
-    imu_augmentor ${catkin_LIBRARIES} 
-  )
   find_package(rostest REQUIRED)
   add_rostest_gtest(test_imu_augmentor_wrapper
     test/test_imu_augmentor_wrapper.test
