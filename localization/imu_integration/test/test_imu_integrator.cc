@@ -99,10 +99,10 @@ TEST_F(ConstantIMUTest, ConstVelocityNonZeroAccBias) {
 
   EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
   const Eigen::Vector3d world_F_acceleration_bias = initial_state.pose().rotation() * acceleration_bias;
-  const Eigen::Vector3d expected_velocity = initial_state.velocity() + world_F_acceleration_bias * Duration();
+  const Eigen::Vector3d expected_velocity = initial_state.velocity() + -1.0 * world_F_acceleration_bias * Duration();
   EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
   const Eigen::Vector3d expected_position = initial_state.pose().translation() + initial_state.velocity() * Duration() +
-                                            world_F_acceleration_bias * 0.5 * std::pow(Duration(), 2);
+                                            -1.0 * world_F_acceleration_bias * 0.5 * std::pow(Duration(), 2);
   EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
 }
 
