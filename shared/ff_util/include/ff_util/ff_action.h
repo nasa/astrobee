@@ -119,14 +119,18 @@ class FreeFlyerActionServer {
   // Send incremental feedback for the current goal
   void SendFeedback(std::shared_ptr<typename ActionType::Feedback> const
                                                                     feedback) {
-    if (!current_goal_handle_) return;
+    if (!current_goal_handle_ || !feedback) {
+      return;
+    }
     current_goal_handle_->publish_feedback(feedback);
   }
 
   // Send the final result for the current goal
   void SendResult(FreeFlyerActionState::Enum result_code,
                   std::shared_ptr<typename ActionType::Result> const result) {
-    if (!current_goal_handle_) return;
+    if (!current_goal_handle_ || !result) {
+      return;
+    }
 
     switch (result_code) {
       case FreeFlyerActionState::SUCCESS:     // Everything worked
@@ -165,7 +169,7 @@ class FreeFlyerActionServer {
         }
       }
     }
-    current_goal_handle_ = nullptr;
+    // current_goal_handle_ = nullptr;
     state_ = WAITING_FOR_GOAL;
   }
 
@@ -222,10 +226,12 @@ class FreeFlyerActionServer {
     // First check to see if this goal id matches the latest goal id. If it
     // doesn't we don't care about this goal
     if (goal_handle->get_goal_id() != latest_uuid_) {
+      std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
       if (state_ == WAITING_FOR_ACCEPTED) {
       // This cancel will be called when there is one goal that got canceled
       // before its accepted callback was called. This should be very rare.
-        goal_handle->canceled(nullptr);
+        goal_handle->canceled(result);
       } else {
         // This abort will get called if multiple goals were received before
         // the accepted callback was called. It is unlikely that more than one
@@ -236,7 +242,7 @@ class FreeFlyerActionServer {
         // the server. Since these cases are very unlikely, output a warning in
         // case debugging is needed.
         FF_DEBUG("Rare abort goal case. This may need some attention.");
-        goal_handle->abort(nullptr);
+        goal_handle->abort(result);
       }
     } else {
       // Check if nominal or preempted case. For preempted, we already checked
@@ -259,7 +265,9 @@ class FreeFlyerActionServer {
       } else {
         // Handle the case were we get a goal handle and don't know what to do
         FF_ERROR("ff action: Got accepted goal callback in state %d.", state_);
-        goal_handle->abort(nullptr);
+        std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+        goal_handle->abort(result);
       }
     }
   }
@@ -312,7 +320,9 @@ class FreeFlyerActionServer {
           // If accepted was called for the new goal, cancel it and set latest
           // uuid to the current goal uuid if that goal hasn't finished
           if (next_goal_handle_) {
-            next_goal_handle_->canceled(nullptr);
+            std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+            next_goal_handle_->canceled(result);
             latest_uuid_ = current_goal_handle_->get_goal_id();
             next_goal_handle_ = nullptr;
           } else {
@@ -464,9 +474,13 @@ class FreeFlyerActionClient {
   }
 
   // Send a new goal
-  bool SendGoal(std::shared_ptr<typename ActionType::Goal> const goal) {
-    if (!IsConnected()) return false;
+  bool SendGoal(typename ActionType::Goal const& goal) {
+    if (!sac_) return false;
 
+    // If we are preempting another goal, stop all timers.
+    if (current_goal_handle_) {
+      StopAllTimers();
+    }
     // In ros1, if a previous goal is active and send goal is called, the old
     // goal is simply forgotten and the new goal is tracked. To preserve this
     // functionality, set the current goal_handle to null so we ignore any
@@ -587,6 +601,8 @@ class FreeFlyerActionClient {
                                                                       future) {
     timer_active_.stop();
 
+    if (!sac_) return;
+
     // In ros2, it is possible for a goal to be rejected. Check that here and
     // save goal handle for later use.
     current_goal_handle_ = future.get();
@@ -622,10 +638,7 @@ class FreeFlyerActionClient {
   // Called when a result is received
   void ResultCallback(typename GoalHandle::WrappedResult const& result) {
     if (current_goal_handle_ &&
-        current_goal_handle_->get_goal_id() != result.goal_id) {
-      // Feedback has been received after a result before. Stop tracking the
-      // goal so that this doesn't happen
-      current_goal_handle_ = nullptr;
+        current_goal_handle_->get_goal_id() == result.goal_id) {
       // The response we send depends on the state
       result_ = result.result;
 
@@ -644,6 +657,11 @@ class FreeFlyerActionClient {
         // portion of the result in all free flyer actions is 0 for preemption.
         state_response_ = FreeFlyerActionState::ABORTED;
       }
+
+      // Stop timers now. If another timer times out before the result delay
+      // timer, cancel goal will be called which in this case will try to cancel
+      // an already completed goal which will result in a very cryptic error
+      StopAllTimers();
 
       // TODO(Katie) See if this is still necessary
       StartOptionalTimer(timer_response_delay_, to_response_delay_);
