@@ -1,14 +1,9 @@
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
-      - merge imu augmentor and imu integrator tests! (AA)
-        - update pim predict calls! (AAB)
-        - compile and run! (AAC)
-        - remove from imu augmentor!! (AAD)
-      - Do combined nav state tests! (AB)
-        - constant velocity
-        - const acc
-        - bias/no bias
-        - more?
+      - Do combined nav state tests! (AA)
+        - nonzero bias const acc
+            - reuse const acc function!
+        - nonzero bias const acc const ang
       - test: make sure biases aren't changed during extrapolation!! (AC)
       - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?
       - test extrapolate vs extrapolate with resets!! (AD)

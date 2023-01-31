@@ -35,14 +35,6 @@ std::vector<localization_measurements::ImuMeasurement> ConstantMeasurements(cons
                                                                             const localization_common::Time start_time,
                                                                             const double time_increment);
 
-std::vector<localization_measurements::ImuMeasurement> ConstantAccelerationMeasurements(
-  const Eigen::Vector3d& acceleration, const int num_measurements, const localization_common::Time start_time,
-  const double time_increment);
-
-std::vector<localization_measurements::ImuMeasurement> ConstantAngularVelocityMeasurements(
-  const Eigen::Vector3d& angular_velocity, const int num_measurements, const localization_common::Time start_time,
-  const double time_increment);
-
 gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measurements::ImuMeasurement>& imu_measurements,
                                        const gtsam::Rot3& starting_orientation,
                                        const localization_common::Time starting_time);

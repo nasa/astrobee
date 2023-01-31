@@ -53,21 +53,6 @@ std::vector<lm::ImuMeasurement> ConstantMeasurements(const Eigen::Vector3d& acce
   return imu_measurements;
 }
 
-std::vector<lm::ImuMeasurement> ConstantAccelerationMeasurements(const Eigen::Vector3d& acceleration,
-                                                                 const int num_measurements, const lc::Time start_time,
-                                                                 const double time_increment) {
-  const Eigen::Vector3d zero_angular_velocity(Eigen::Vector3d::Zero());
-  return ConstantMeasurements(acceleration, zero_angular_velocity, num_measurements, start_time, time_increment);
-}
-
-std::vector<lm::ImuMeasurement> ConstantAngularVelocityMeasurements(const Eigen::Vector3d& angular_velocity,
-                                                                    const int num_measurements,
-                                                                    const lc::Time start_time,
-                                                                    const double time_increment) {
-  const Eigen::Vector3d zero_acceleration(Eigen::Vector3d::Zero());
-  return ConstantMeasurements(zero_acceleration, angular_velocity, num_measurements, start_time, time_increment);
-}
-
 gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measurements::ImuMeasurement>& imu_measurements,
                                        const gtsam::Rot3& starting_orientation,
                                        const localization_common::Time starting_time) {
