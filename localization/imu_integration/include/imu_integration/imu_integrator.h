@@ -41,14 +41,14 @@ class ImuIntegrator : public localization_common::TimestampedSet<localization_me
  public:
   explicit ImuIntegrator(const ImuIntegratorParams& params = ImuIntegratorParams());
 
-  // Buffers imu measurement so they can be integrated when needed.
-  // Delayed integration useful so imu integation does not advance
-  // past latest sensor measurement timestamps.
-  void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
+  void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
   boost::optional<gtsam::PreintegratedCombinedMeasurements> IntegratedPim(
     const gtsam::imuBias::ConstantBias& bias, const localization_common::Time start_time,
     const localization_common::Time end_time) const;
+
+  boost::optional<localization_common::CombinedNavState> Extrapolate(
+    const localization_common::CombinedNavState& combined_nav_state, const localization_common::Time end_time);
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
 

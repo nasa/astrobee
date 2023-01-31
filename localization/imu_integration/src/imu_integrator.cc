@@ -41,7 +41,7 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params
   pim_params_->setBodyPSensor(params_.body_T_imu);
 }
 
-void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
+void ImuIntegrator::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
   if (filtered_imu_measurement) {
     // TODO(rsoussan): Prevent measurements_ from growing too large, add optional window size
@@ -113,6 +113,17 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
     return boost::none;
   }
   return pim;
+}
+
+boost::optional<lc::CombinedNavState> ImuIntegrator::Extrapolate(const lc::CombinedNavState& combined_nav_state,
+                                                                 const lc::Time end_time) {
+  const auto pim = IntegratedPim(combined_nav_state.bias(), combined_nav_state.timestamp(), end_time);
+  if (!pim) {
+    LogError("Extrapolate: Failed to get pim.");
+    return boost::none;
+  }
+
+  return PimPredict(combined_nav_state, *pim);
 }
 
 void ImuIntegrator::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {

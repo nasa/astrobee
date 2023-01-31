@@ -1,11 +1,28 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
-- test timestamped pose node updater! (AA)
-- imu integration changes: (AB)
-  - update imu integrator to use timestamped set for imu measurements! (A)
+- imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
-  - add more tests to imu integrator!
-  - remove from graph_vio!
-- test combined nav state nodes! (AC)
+      - add seperate function "extrapoloatewithresets", add TODO if it is really necessary! (AA)
+      - remove imu augmentor! (AB)
+      - move some utils fcns into imu integrator as private!
+      - move parameter loading to parameter_reader file!!
+      - merge imu augmentor and imu integrator tests!
+      - test extrapolate vs extrapolate with resets!!
+
+    Tests:
+      - Do combined nav state tests!
+        - constant velocity
+        - const acc
+        - bias/no bias
+        - more?
+  - rename pimpredict in other packages to extrapolate
+
+  - move some imu augmentor tests to imu integrator?
+    - remove imu augmentor??? is resetting pim really necessary?
+      - how is gravity integration done? velocity integration?
+  - test utilities????
+  - remove from graph_vio! (AB)
+- test timestamped pose node updater! (AC)
+- test combined nav state nodes! (AD)
   - how to add a second measurement to updater?????
     - add to imu measurement???
 - update factor adders with changes described below
