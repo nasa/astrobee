@@ -1,12 +1,11 @@
 - update combinednavstatenodeupdater to use timestamped node updater and timestamped nodes!
 - test timestamped pose node updater! (AA)
 - imu integration changes: (AB)
-  - remove latest imu integrator!
-  - update imu integrator to use timestamped set for imu measurements!
+  - update imu integrator to use timestamped set for imu measurements! (A)
+    - test this!! -> use no imu filter! no notch filter!
   - remove from graph_vio!
   - use own pim params in integrated pim call!
   - add more tests to imu integrator!
-  -  remove makecombinedimufactor function in imu integration!
 - test combined nav state nodes! (AC)
   - how to add a second measurement to updater?????
     - add to imu measurement???

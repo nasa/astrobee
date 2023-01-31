@@ -78,13 +78,6 @@ lc::CombinedNavState PimPredict(const lc::CombinedNavState& combined_nav_state,
   return lc::CombinedNavState(predicted_nav_state, pim.biasHat(), timestamp);
 }
 
-gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements& pim) {
-  return gtsam::CombinedImuFactor::shared_ptr(
-    new gtsam::CombinedImuFactor(sym::P(key_index_0), sym::V(key_index_0), sym::P(key_index_1), sym::V(key_index_1),
-                                 sym::B(key_index_0), sym::B(key_index_1), pim));
-}
-
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector");
   const bool ignore_gravity = mc::LoadBool(config, "ignore_gravity");

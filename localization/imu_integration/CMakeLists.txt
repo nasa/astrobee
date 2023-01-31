@@ -55,7 +55,6 @@ add_library(${PROJECT_NAME}
   src/identity_filter.cc
   src/imu_filter.cc
   src/imu_integrator.cc
-  src/latest_imu_integrator.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})

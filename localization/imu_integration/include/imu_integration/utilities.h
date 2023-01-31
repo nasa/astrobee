@@ -26,7 +26,6 @@
 #include <localization_measurements/imu_measurement.h>
 
 #include <gtsam/inference/Symbol.h>
-#include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
 
 #include <Eigen/Core>
@@ -50,9 +49,6 @@ void AddMeasurement(const localization_measurements::ImuMeasurement& imu_measure
 
 localization_common::CombinedNavState PimPredict(const localization_common::CombinedNavState& combined_nav_state,
                                                  const gtsam::PreintegratedCombinedMeasurements& pim);
-
-gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements& pim);
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params);
 
