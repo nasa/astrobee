@@ -3,9 +3,8 @@
 - imu integration changes: (AB)
   - update imu integrator to use timestamped set for imu measurements! (A)
     - test this!! -> use no imu filter! no notch filter!
-  - remove from graph_vio!
-  - use own pim params in integrated pim call!
   - add more tests to imu integrator!
+  - remove from graph_vio!
 - test combined nav state nodes! (AC)
   - how to add a second measurement to updater?????
     - add to imu measurement???

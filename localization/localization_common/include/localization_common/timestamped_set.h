@@ -43,6 +43,7 @@ template <typename T>
 class TimestampedSet {
  public:
   TimestampedSet();
+  ~TimestampedSet() = default;
 
   // Assumes values indices have corresponding timestamps in timestamps vectors and each timestamp is unique.
   TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values);
@@ -80,6 +81,8 @@ class TimestampedSet {
   std::vector<TimestampedValue<T>> OldValues(const Time oldest_allowed_timestamp) const;
 
   int RemoveOldValues(const Time oldest_allowed_timestamp);
+
+  const std::map<Time, T>& set() const;
 
  private:
   friend class boost::serialization::access;
@@ -148,7 +151,6 @@ boost::optional<TimestampedValue<T>> TimestampedSet<T>::Latest() const {
   return TimestampedValue<T>(*timestamp_value_map_.crbegin());
 }
 
-// TODO(rsoussan): Test this
 template <typename T>
 bool TimestampedSet<T>::WithinBounds(const Time time) const {
   const auto oldest = Oldest();
@@ -266,6 +268,9 @@ int TimestampedSet<T>::RemoveOldValues(const Time oldest_allowed_timestamp) {
 
   return num_removed_values;
 }
+
+template <typename T>
+const std::map<Time, T>& TimestampedSet<T>::set() const { return timestamp_value_map_; }
 
 template <typename T>
 template <class ARCHIVE>
