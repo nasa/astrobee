@@ -38,9 +38,11 @@
           <output>points</output>
         </depth_camera>
       </camera>
-  <!--     <plugin name="perch_cam_ros" filename="libgazebo_sensor_plugin_perch_cam.so">
-        <namespace>/${ns}/</namespace>
-      </plugin> -->
+      <plugin name="perch_cam_ros" filename="libgazebo_sensor_plugin_depth_cam.so">
+        <plugin_name>perch_cam</plugin_name>
+        <plugin_frame>perch_cam</plugin_frame>
+        <haz_cam>false</haz_cam>
+      </plugin>
     </sensor>
   </gazebo>
 </robot>

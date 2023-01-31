@@ -172,15 +172,6 @@ target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_imu rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_sensor_plugin_imu)
 
-# Create a sensor plugin for the perch camera
-# add_library(gazebo_sensor_plugin_perch_cam
-#   src/gazebo_sensor_plugin_perch_cam/gazebo_sensor_plugin_perch_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_perch_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_perch_cam astrobee_gazebo
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
-
 # Create a sensor plugin for the handrail detection algorithm
 add_library(gazebo_sensor_plugin_handrail_detect SHARED
   src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
@@ -189,16 +180,15 @@ target_link_libraries(gazebo_sensor_plugin_handrail_detect astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_handrail_detect rclcpp gazebo_dev gazebo_ros geometry_msgs tf2_ros camera)
 ament_export_libraries(gazebo_sensor_plugin_handrail_detect)
 
-# # Create a sensor plugin for the hazard camera
-# add_library(gazebo_sensor_plugin_haz_cam
-#   src/gazebo_sensor_plugin_haz_cam/gazebo_sensor_plugin_haz_cam.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_haz_cam ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_haz_cam
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a sensor plugin for the depth camera
+add_library(gazebo_sensor_plugin_depth_cam SHARED
+   src/gazebo_sensor_plugin_depth_cam/gazebo_sensor_plugin_depth_cam.cc
+)
+target_link_libraries(gazebo_sensor_plugin_depth_cam astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_depth_cam rclcpp gazebo_dev gazebo_ros sensor_msgs)
+ament_export_libraries(gazebo_sensor_plugin_depth_cam)
 
-# # Create a sensor plugin for the nav cam
+# Create a sensor plugin for the nav cam
 add_library(gazebo_sensor_plugin_nav_cam SHARED
   src/gazebo_sensor_plugin_nav_cam/gazebo_sensor_plugin_nav_cam.cc
 )
@@ -268,24 +258,25 @@ ament_export_include_directories(include)
 ## Install
 install(TARGETS
   astrobee_gazebo
-  gazebo_model_plugin_drag
   gazebo_model_plugin_eps
-  gazebo_model_plugin_flashlight
-  gazebo_model_plugin_heartbeat
-  gazebo_sensor_plugin_imu
-  gazebo_model_plugin_laser
+  gazebo_model_plugin_drag
+  gazebo_model_plugin_truth
+  gazebo_model_plugin_pmc
   gazebo_model_plugin_perching_arm
+  gazebo_model_plugin_flashlight
+  gazebo_model_plugin_laser
+  gazebo_model_plugin_heartbeat
+  gazebo_model_plugin_signal_lights
+  gazebo_sensor_plugin_imu
+  gazebo_sensor_plugin_depth_cam
   gazebo_sensor_plugin_nav_cam
   gazebo_sensor_plugin_dock_cam
   gazebo_sensor_plugin_ar_tags
   gazebo_sensor_plugin_optical_flow
   gazebo_sensor_plugin_handrail_detect
-  gazebo_model_plugin_pmc
-  gazebo_model_plugin_signal_lights
-  gazebo_model_plugin_truth
   gazebo_sensor_plugin_sparse_map
-  gazebo_system_plugin_client
   gazebo_world_plugin_speed
+  gazebo_system_plugin_client
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION bin
