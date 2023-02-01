@@ -6,7 +6,6 @@
       - Finish imu integration tests! (AC)
         - sensor offet
           - need to compensate for coriolis!!
-        - gravity
       - test: make sure biases aren't changed during extrapolation!! (AB)
       - test other functions! (AC)
       - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?

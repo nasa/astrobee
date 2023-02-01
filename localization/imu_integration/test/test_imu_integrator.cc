@@ -91,6 +91,8 @@ class ConstantIMUTest : public ::testing::Test {
     EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
     const Eigen::Vector3d expected_position = AccelerationOnlyIntegratedPosition(params, duration);
     EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state.bias().accelerometer(), initial_state.bias().accelerometer(), 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state.bias().gyroscope(), initial_state.bias().gyroscope(), 1e-6);
   }
 
   void Test(const TestParams& params) {
