@@ -35,6 +35,8 @@ struct TestParams {
   Eigen::Vector3d angular_velocity = Eigen::Vector3d::Zero();
   Eigen::Vector3d accelerometer_bias = Eigen::Vector3d::Zero();
   Eigen::Vector3d gyroscope_bias = Eigen::Vector3d::Zero();
+  gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  Eigen::Vector3d gravity = Eigen::Vector3d::Zero();
   gtsam::Pose3 initial_pose = lc::RandomPose();
   Eigen::Vector3d initial_velocity = lc::RandomVector3d();
   double integration_start_time = 0;
@@ -109,10 +111,14 @@ class ConstantIMUTest : public ::testing::Test {
       if (std::abs(imu_measurement.timestamp - params.integration_start_time) < 1e-6) continue;
       const Eigen::Matrix3d relative_orientation =
         (gtsam::Rot3::Expmap(corrected_angular_velocity * time_increment())).matrix();
-      const Eigen::Vector3d relative_velocity = pose.rotation() * (corrected_acceleration * time_increment());
+      const Eigen::Vector3d relative_velocity =
+        pose.rotation() * (corrected_acceleration * time_increment()) + params.gravity * time_increment();
       // Convert velocity to body frame
-      const Eigen::Vector3d relative_translation = pose.rotation().inverse() * (velocity * time_increment()) +
-                                                   0.5 * corrected_acceleration * time_increment() * time_increment();
+      const Eigen::Vector3d relative_translation =
+        pose.rotation().inverse() * (velocity * time_increment()) +
+
+        pose.rotation().inverse() * (0.5 * params.gravity * time_increment() * time_increment()) +
+        0.5 * corrected_acceleration * time_increment() * time_increment();
       velocity += relative_velocity;
       const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
       pose = pose * lc::GtPose(relative_pose);
@@ -122,6 +128,8 @@ class ConstantIMUTest : public ::testing::Test {
   }
 
   ii::ImuIntegrator& imu_integrator() { return *imu_integrator_; }
+
+  void SetImuIntegrator(const ii::ImuIntegratorParams& params) { imu_integrator_.reset(new ii::ImuIntegrator(params)); }
 
   const Eigen::Vector3d& acceleration() const { return acceleration_; }
 
@@ -189,10 +197,28 @@ TEST_F(ConstantIMUTest, ConstAngularVelocity) {
   Test(params);
 }
 
+TEST_F(ConstantIMUTest, ConstAngularVelocityNonZeroAngBias) {
+  TestParams params;
+  params.angular_velocity = lc::RandomVector3d();
+  params.gyroscope_bias = lc::RandomVector3d();
+  Test(params);
+}
+
 TEST_F(ConstantIMUTest, ConstAccelerationAngularVelocity) {
   TestParams params;
   params.acceleration = lc::RandomVector3d();
   params.angular_velocity = lc::RandomVector3d();
+  Test(params);
+}
+
+TEST_F(ConstantIMUTest, ConstAccelerationAngularVelocityGravity) {
+  TestParams params;
+  params.acceleration = lc::RandomVector3d();
+  params.angular_velocity = lc::RandomVector3d();
+  params.gravity = lc::RandomVector3d();
+  auto integrator_params = ii::DefaultImuIntegratorParams();
+  integrator_params.gravity = params.gravity;
+  SetImuIntegrator(integrator_params);
   Test(params);
 }
 

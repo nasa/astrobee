@@ -1,30 +1,25 @@
 - imu integration changes: (AA)
-    - test this!! -> use no imu filter! no notch filter!
-      - Do combined nav state tests! (AA)
-        - add ang vel tests using refactored format!! (AA)
-          - add new test that does both, increments imu measurments! (AA)
-        - const vel gravity vector! (AB)
-        - const acc sensor offset! (AB)
-        - nonzero bias const acc sensor offset! (AB)
-       - nonzero bias const acc gravity vector! (AC)
-        - nonzero bias const acc const ang (AC)
+      - update combinednavstate with new extrapolate fcns (AA)
+        - make sure it compiles!
+      - test timestamped pose node updater! (AB)
+
+      - Finish imu integration tests! (AC)
+        - sensor offet
+          - need to compensate for coriolis!!
+        - gravity
       - test: make sure biases aren't changed during extrapolation!! (AB)
       - test other functions! (AC)
       - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?
       - test extrapolate vs extrapolate with resets!! (AD)
-      - update combinednavstate with new extrapolate fcns (AE)
-        - make sure it compiles!
-    - rename pimpredict in other packages to extrapolate
-      - tools: loc rvz plugins, imu bias tester
-    - update imu_augmentor, make sure it compiles!
-      - add tests?
 
   - is resetting pim really necessary?
     - how is gravity integration done? velocity integration?
-- test timestamped pose node updater! (AC)
 - test combined nav state nodes! (AD)
+  - how?? 
+    - copy old combined nav state tests? add factors and make sure everything goes accordingly?
   - how to add a second measurement to updater?????
     - add to imu measurement???
+
 - update factor adders with changes described below
 - compile graph vio!
 - test graph vio!!! (AD)
@@ -40,7 +35,10 @@
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
     - set start pose fixed after maginalize????
-
+- rename pimpredict in other packages to extrapolate 
+  - tools: loc rvz plugins, imu bias tester
+- update imu_augmentor, make sure it compiles!
+  - add tests?
 
 // Nice to have:
 - change factor adders to store data until it is ready to create factors
