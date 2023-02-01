@@ -224,6 +224,8 @@ TEST_F(ConstantIMUTest, ConstAccelerationAngularVelocityGravity) {
   Test(params);
 }
 
+// TODO(rsoussan): Add test with sensor offset and centrifugal compensation
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
