@@ -103,8 +103,12 @@ class ConstantIMUTest : public ::testing::Test {
 
     const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
 
-    const Eigen::Vector3d corrected_angular_velocity = params.angular_velocity - params.gyroscope_bias;
-    const Eigen::Vector3d corrected_acceleration = params.acceleration - params.accelerometer_bias;
+    const Eigen::Vector3d corrected_angular_velocity =
+      params.body_T_sensor.rotation() * (params.angular_velocity - params.gyroscope_bias);
+    const Eigen::Vector3d centrifugal_acceleration =
+      corrected_angular_velocity.cross(corrected_angular_velocity.cross(params.body_T_sensor.translation()));
+    const Eigen::Vector3d corrected_acceleration =
+      params.body_T_sensor.rotation() * (params.acceleration - params.accelerometer_bias) - centrifugal_acceleration;
     Eigen::Vector3d velocity = params.initial_velocity;
     gtsam::Pose3 pose = params.initial_pose;
     for (const auto& imu_measurement : imu_measurements()) {
@@ -224,7 +228,18 @@ TEST_F(ConstantIMUTest, ConstAccelerationAngularVelocityGravity) {
   Test(params);
 }
 
-// TODO(rsoussan): Add test with sensor offset and centrifugal compensation
+TEST_F(ConstantIMUTest, ConstAccelerationAngularVelocityGravitySensorOffset) {
+  TestParams params;
+  params.acceleration = lc::RandomVector3d();
+  params.angular_velocity = lc::RandomVector3d();
+  params.gravity = lc::RandomVector3d();
+  params.body_T_sensor = lc::RandomPose();
+  auto integrator_params = ii::DefaultImuIntegratorParams();
+  integrator_params.gravity = params.gravity;
+  integrator_params.body_T_imu = params.body_T_sensor;
+  SetImuIntegrator(integrator_params);
+  Test(params);
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
