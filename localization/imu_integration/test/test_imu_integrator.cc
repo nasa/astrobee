@@ -104,12 +104,15 @@ class ConstantIMUTest : public ::testing::Test {
     Eigen::Vector3d velocity = params.initial_velocity;
     gtsam::Pose3 pose = params.initial_pose;
     for (const auto& imu_measurement : imu_measurements()) {
+      if (imu_measurement.timestamp <= params.integration_start_time) continue;
+      // Catch float equality
+      if (std::abs(imu_measurement.timestamp - params.integration_start_time) < 1e-6) continue;
       const Eigen::Matrix3d relative_orientation =
         (gtsam::Rot3::Expmap(corrected_angular_velocity * time_increment())).matrix();
       const Eigen::Vector3d relative_velocity = pose.rotation() * (corrected_acceleration * time_increment());
-      const Eigen::Vector3d relative_translation =
-        velocity * time_increment() +
-        pose.rotation() * (0.5 * corrected_acceleration * time_increment() * time_increment());
+      // Convert velocity to body frame
+      const Eigen::Vector3d relative_translation = pose.rotation().inverse() * (velocity * time_increment()) +
+                                                   0.5 * corrected_acceleration * time_increment() * time_increment();
       velocity += relative_velocity;
       const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
       pose = pose * lc::GtPose(relative_pose);
@@ -147,18 +150,21 @@ class ConstantIMUTest : public ::testing::Test {
 TEST_F(ConstantIMUTest, ConstVelocity) {
   TestParams params;
   TestAccelerationOnly(params);
+  Test(params);
 }
 
 TEST_F(ConstantIMUTest, ConstVelocityNonZeroAccBias) {
   TestParams params;
   params.accelerometer_bias = lc::RandomVector3d();
   TestAccelerationOnly(params);
+  Test(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAcc) {
   TestParams params;
   params.acceleration = lc::RandomVector3d();
   TestAccelerationOnly(params);
+  Test(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAccHalfMeasurements) {
@@ -166,6 +172,7 @@ TEST_F(ConstantIMUTest, ConstAccHalfMeasurements) {
   params.acceleration = lc::RandomVector3d();
   params.integration_start_time = Duration() / 2;
   TestAccelerationOnly(params);
+  Test(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAccNonZeroAccBias) {
@@ -173,6 +180,7 @@ TEST_F(ConstantIMUTest, ConstAccNonZeroAccBias) {
   params.acceleration = lc::RandomVector3d();
   params.accelerometer_bias = lc::RandomVector3d();
   TestAccelerationOnly(params);
+  Test(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAngularVelocity) {
@@ -181,91 +189,12 @@ TEST_F(ConstantIMUTest, ConstAngularVelocity) {
   Test(params);
 }
 
-/*
-TEST_F(ConstantIMUTest, ConstAngularVelocityAddAllMeasurements) {
-  SetAndAddMeasurements(Eigen::Vector3d::Zero(), lc::RandomVector3d());
-  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                           gtsam::imuBias::ConstantBias(), 0);
-  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
-
-  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
-  gtsam::Rot3 expected_orientation =
-    ii::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), initial_state.timestamp());
-  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
+TEST_F(ConstantIMUTest, ConstAccelerationAngularVelocity) {
+  TestParams params;
+  params.acceleration = lc::RandomVector3d();
+  params.angular_velocity = lc::RandomVector3d();
+  Test(params);
 }
-
-TEST_F(ConstantIMUTest, ConstAngularVelocityAddHalfOfMeasurements) {
-  SetAndAddMeasurements(Eigen::Vector3d::Zero(), lc::RandomVector3d());
-  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                           gtsam::imuBias::ConstantBias(), 0);
-  const lc::Time imu_augmented_state_start_time = Duration() / 2;
-  lc::CombinedNavState imu_augmented_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                           gtsam::imuBias::ConstantBias(), imu_augmented_state_start_time);
-  imu_augmented_state = imu_integrator().ExtrapolateLatest(imu_augmented_state);
-
-  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
-  gtsam::Rot3 expected_orientation =
-    ii::IntegrateAngularVelocities(imu_measurements(), gtsam::Rot3::identity(), imu_augmented_state_start_time);
-  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), expected_orientation, 1e-6);
-}
-
-TEST_F(ConstantIMUTest, ConstAngularVelocityAddAllMeasurementsWithAccelBias) {
-  SetAndAddMeasurements(Eigen::Vector3d::Zero(), lc::RandomVector3d());
-  const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                           gtsam::imuBias::ConstantBias(gtsam::Vector3::Zero(), angular_velocity()), 0);
-  const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
-
-  EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
-  EXPECT_MATRIX_NEAR(imu_augmented_state.pose().rotation(), gtsam::Rot3::identity(), 1e-6);
-}*/
-
-/*
-TEST(ImuIntegratorTester, ConstantAccelerationConstantAngularVelocityNonZeroBias) {
-  const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
-  const Eigen::Vector3d angular_velocity(0.04, 0.05, 0.06);
-  const Eigen::Vector3d acceleration_bias = 0.5 * acceleration;
-  const Eigen::Vector3d angular_velocity_bias = 0.5 * angular_velocity;
-  const Eigen::Vector3d bias_corrected_acceleration = acceleration - acceleration_bias;
-  const Eigen::Vector3d bias_corrected_angular_velocity = angular_velocity - angular_velocity_bias;
-  auto params = gl::DefaultGraphLocalizerParams();
-  params.graph_initializer.initial_imu_bias = gtsam::imuBias::ConstantBias(acceleration_bias, angular_velocity_bias);
-  // Use depth odometry factor adder since it can add relative pose factors
-  params.factor.depth_odometry_adder = gl::DefaultDepthOdometryFactorAdderParams();
-  gl::GraphLocalizer graph_localizer(params);
-  constexpr int kNumIterations = 100;
-  constexpr double kTimeDiff = 0.1;
-  lc::Time time = 0.0;
-  Eigen::Isometry3d current_pose = lc::EigenPose(params.graph_initializer.global_T_body_start);
-  Eigen::Vector3d velocity = params.graph_initializer.global_V_body_start;
-  // Add initial zero imu value so the imu integrator has more than one measurement when the subsequent
-  // measurement is added
-  const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
-  graph_localizer.AddImuMeasurement(zero_imu_measurement);
-  for (int i = 0; i < kNumIterations; ++i) {
-    time += kTimeDiff;
-    const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
-    graph_localizer.AddImuMeasurement(imu_measurement);
-    const Eigen::Matrix3d relative_orientation =
-      (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
-    const Eigen::Vector3d relative_translation =
-      velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
-    velocity += bias_corrected_acceleration * kTimeDiff;
-    // Put velocity in new body frame after integrating accelerations
-    velocity = relative_orientation.transpose() * velocity;
-    const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
-    current_pose = current_pose * relative_pose;
-    const lc::Time source_time = time - kTimeDiff;
-    const lc::Time target_time = time;
-    const lm::DepthOdometryMeasurement constant_acceleration_measurement =
-      gl::DepthOdometryMeasurementFromPose(relative_pose, source_time, target_time);
-    graph_localizer.AddDepthOdometryMeasurement(constant_acceleration_measurement);
-    graph_localizer.Update();
-    const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
-    ASSERT_TRUE(latest_combined_nav_state != boost::none);
-    EXPECT_NEAR(latest_combined_nav_state->timestamp(), time, 1e-6);
-    EXPECT_MATRIX_NEAR(latest_combined_nav_state->pose(), current_pose, 1e-5);
-  }
-}*/
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
