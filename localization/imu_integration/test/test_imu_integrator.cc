@@ -39,13 +39,13 @@ struct TestParams {
   double integration_start_time = 0;
 };
 
-Eigen::Vector3d IntegratedPosition(const TestParams& params, const double duration) {
+Eigen::Vector3d AccelerationOnlyIntegratedPosition(const TestParams& params, const double duration) {
   return params.initial_pose.translation() + params.initial_velocity * duration +
          params.initial_pose.rotation() * (params.acceleration - params.accelerometer_bias) * 0.5 *
            std::pow(duration, 2);
 }
 
-Eigen::Vector3d IntegratedVelocity(const TestParams& params, const double duration) {
+Eigen::Vector3d AccelerationOnlyIntegratedVelocity(const TestParams& params, const double duration) {
   return params.initial_velocity +
          params.initial_pose.rotation() * (params.acceleration - params.accelerometer_bias) * duration;
 }
@@ -76,7 +76,7 @@ class ConstantIMUTest : public ::testing::Test {
                           Eigen::Vector3d(angular_velocity, angular_velocity, angular_velocity));
   }
 
-  void Test(const TestParams& params) {
+  void TestAccelerationOnly(const TestParams& params) {
     SetAndAddMeasurements(params.acceleration, params.angular_velocity);
     const lc::CombinedNavState initial_state(
       params.initial_pose, params.initial_velocity,
@@ -84,9 +84,9 @@ class ConstantIMUTest : public ::testing::Test {
     const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
     const double duration = Duration() - params.integration_start_time;
     EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
-    const Eigen::Vector3d expected_velocity = IntegratedVelocity(params, duration);
+    const Eigen::Vector3d expected_velocity = AccelerationOnlyIntegratedVelocity(params, duration);
     EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
-    const Eigen::Vector3d expected_position = IntegratedPosition(params, duration);
+    const Eigen::Vector3d expected_position = AccelerationOnlyIntegratedPosition(params, duration);
     EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
   }
 
@@ -118,33 +118,33 @@ class ConstantIMUTest : public ::testing::Test {
 
 TEST_F(ConstantIMUTest, ConstVelocity) {
   TestParams params;
-  Test(params);
+  TestAccelerationOnly(params);
 }
 
 TEST_F(ConstantIMUTest, ConstVelocityNonZeroAccBias) {
   TestParams params;
   params.accelerometer_bias = lc::RandomVector3d();
-  Test(params);
+  TestAccelerationOnly(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAcc) {
   TestParams params;
   params.acceleration = lc::RandomVector3d();
-  Test(params);
+  TestAccelerationOnly(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAccHalfMeasurements) {
   TestParams params;
   params.acceleration = lc::RandomVector3d();
   params.integration_start_time = Duration() / 2;
-  Test(params);
+  TestAccelerationOnly(params);
 }
 
 TEST_F(ConstantIMUTest, ConstAccNonZeroAccBias) {
   TestParams params;
   params.acceleration = lc::RandomVector3d();
   params.accelerometer_bias = lc::RandomVector3d();
-  Test(params);
+  TestAccelerationOnly(params);
 }
 
 /*TEST_F(ConstantIMUTest, ConstAngularVelocity) {

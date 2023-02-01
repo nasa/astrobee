@@ -1,9 +1,9 @@
 - imu integration changes: (AA)
     - test this!! -> use no imu filter! no notch filter!
       - Do combined nav state tests! (AA)
-        - nonzero bias const acc (AA)
-            - reuse const acc function!
-        - const vel gravity vector! (AA)
+        - add ang vel tests using refactored format!! (AA)
+          - add new test that does both, increments imu measurments! (AA)
+        - const vel gravity vector! (AB)
         - const acc sensor offset! (AB)
         - nonzero bias const acc sensor offset! (AB)
        - nonzero bias const acc gravity vector! (AC)
