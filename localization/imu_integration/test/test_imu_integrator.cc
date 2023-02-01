@@ -19,6 +19,7 @@
 #include "test_utilities.h"  // NOLINT
 #include <imu_integration/imu_integrator.h>
 #include <localization_common/test_utilities.h>
+#include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <gtest/gtest.h>
@@ -90,6 +91,33 @@ class ConstantIMUTest : public ::testing::Test {
     EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
   }
 
+  void Test(const TestParams& params) {
+    SetAndAddMeasurements(params.acceleration, params.angular_velocity);
+    const lc::CombinedNavState initial_state(
+      params.initial_pose, params.initial_velocity,
+      gtsam::imuBias::ConstantBias(params.accelerometer_bias, params.gyroscope_bias), params.integration_start_time);
+
+    const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
+
+    const Eigen::Vector3d corrected_angular_velocity = params.angular_velocity - params.gyroscope_bias;
+    const Eigen::Vector3d corrected_acceleration = params.acceleration - params.accelerometer_bias;
+    Eigen::Vector3d velocity = params.initial_velocity;
+    gtsam::Pose3 pose = params.initial_pose;
+    for (const auto& imu_measurement : imu_measurements()) {
+      const Eigen::Matrix3d relative_orientation =
+        (gtsam::Rot3::Expmap(corrected_angular_velocity * time_increment())).matrix();
+      const Eigen::Vector3d relative_velocity = pose.rotation() * (corrected_acceleration * time_increment());
+      const Eigen::Vector3d relative_translation =
+        velocity * time_increment() +
+        pose.rotation() * (0.5 * corrected_acceleration * time_increment() * time_increment());
+      velocity += relative_velocity;
+      const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
+      pose = pose * lc::GtPose(relative_pose);
+    }
+    EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), velocity, 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state.pose(), pose, 1e-6);
+  }
+
   ii::ImuIntegrator& imu_integrator() { return *imu_integrator_; }
 
   const Eigen::Vector3d& acceleration() const { return acceleration_; }
@@ -147,11 +175,11 @@ TEST_F(ConstantIMUTest, ConstAccNonZeroAccBias) {
   TestAccelerationOnly(params);
 }
 
-/*TEST_F(ConstantIMUTest, ConstAngularVelocity) {
+TEST_F(ConstantIMUTest, ConstAngularVelocity) {
   TestParams params;
   params.angular_velocity = lc::RandomVector3d();
   Test(params);
-}*/
+}
 
 /*
 TEST_F(ConstantIMUTest, ConstAngularVelocityAddAllMeasurements) {
