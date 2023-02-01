@@ -50,21 +50,8 @@ class ImuIntegrator : public localization_common::TimestampedSet<localization_me
   boost::optional<localization_common::CombinedNavState> Extrapolate(
     const localization_common::CombinedNavState& combined_nav_state, const localization_common::Time end_time);
 
-  // More expensive form of extrapolation, creates a new pim each time a measurement is added since the
-  // pim uses beginning orientation and velocity for
-  // gravity integration and initial velocity integration.
-  // TODO(rsoussan): Is this necessary?
-  boost::optional<localization_common::CombinedNavState> ExtrapolateWithResets(
-    const localization_common::CombinedNavState& combined_nav_state, const localization_common::Time end_time);
-
   // Extrapolates using all IMU measurements more recent than the combined nav state
   localization_common::CombinedNavState ExtrapolateLatest(
-    const localization_common::CombinedNavState& combined_nav_state);
-
-  // Extrapolates using all IMU measurements more recent than the combined nav state using
-  // ExtrapolateWithResets
-  // TODO(rsoussan): Is this necessary?
-  localization_common::CombinedNavState ExtrapolateLatestWithResets(
     const localization_common::CombinedNavState& combined_nav_state);
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
