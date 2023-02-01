@@ -19,14 +19,15 @@
 #define NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
 
 #include <localization_common/time.h>
+#include <node_updaters/timestamped_node_updater_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 
 #include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-using Base = TimestampedNodeUpdaterParams<gtsam::Pose3>;
-struct PoseNodeUpdaterParams : Base {
+struct PoseNodeUpdaterParams : public TimestampedNodeUpdaterParams<gtsam::Pose3> {
+  using Base = TimestampedNodeUpdaterParams<gtsam::Pose3>;
   double starting_prior_translation_stddev;
   double starting_prior_quaternion_stddev;
 

@@ -68,13 +68,21 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_combined_nav_state_node_updater
-    test/test_combined_nav_state_node_updater.test
-    test/test_combined_nav_state_node_updater.cc
+  add_rostest_gtest(test_pose_node_updater
+    test/test_pose_node_updater.test
+    test/test_pose_node_updater.cc
+    test/test_utilities.cc
   )
-  target_link_libraries(test_combined_nav_state_node_updater
+  target_link_libraries(test_pose_node_updater
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
+  #add_rostest_gtest(test_combined_nav_state_node_updater
+  #  test/test_combined_nav_state_node_updater.test
+  #  test/test_combined_nav_state_node_updater.cc
+  #)
+  #target_link_libraries(test_combined_nav_state_node_updater
+  #  ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  #)
 endif()
 
 #############

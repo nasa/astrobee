@@ -1,11 +1,13 @@
-- imu integration changes: (AA)
-      - update combinednavstate with new extrapolate fcns (AA)
-        - make sure it compiles!
-      - test timestamped pose node updater! (AB)
+- test timestamped pose node updater! (AA)
+  - add default pose node updater params!
+      - add test utils!
+  - populate pose interpolater!
+  - test each timestamped node updater function!
+- test combined nav state nodes! (AB)
+  - popuate imu measurements!
+  - test each timestamped node updater function?
+      - or just ones unique to combined nav state?
 
-- test combined nav state nodes! (AD)
-  - how?? 
-    - copy old combined nav state tests? add factors and make sure everything goes accordingly?
   - how to add a second measurement to updater?????
     - add to imu measurement???
 

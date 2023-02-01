@@ -16,24 +16,13 @@
  * under the License.
  */
 
-#ifndef NODE_UPDATERS_POSE_NODE_UPDATER_H_
-#define NODE_UPDATERS_POSE_NODE_UPDATER_H_
+#ifndef NODE_UPDATERS_TEST_UTILITIES_H_  // NOLINT
+#define NODE_UPDATERS_TEST_UTILITIES_H_  // NOLINT
 
-#include <graph_optimizer/timestamped_nodes.h>
-#include <node_updaters/pose_node_update_model.h>
-#include <node_updaters/timestamped_node_updater.h>
-
-#include <gtsam/geometry/Pose3.h>
+#include <node_updaters/pose_node_updater_params.h>
 
 namespace node_updaters {
-namespace go = graph_optimizer;
-using PoseNodeUpdater =
-  TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
-
-template <>
-graph_optimizer::NodeUpdaterType PoseNodeUpdater::type() const {
-  return go::NodeUpdaterType::Pose;
-}
+PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams();
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_POSE_NODE_UPDATER_H_
+#endif  // NODE_UPDATERS_TEST_UTILITIES_H_ // NOLINT

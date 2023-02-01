@@ -21,6 +21,7 @@
 
 #include <graph_optimizer/node_updater_with_priors.h>
 #include <graph_optimizer/timestamped_nodes.h>
+#include <graph_optimizer/utilities.h>
 #include <node_updaters/node_update_model.h>
 #include <node_updaters/timestamped_node_updater_params.h>
 
@@ -29,8 +30,10 @@
 
 namespace node_updaters {
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-using Base = graph_optimizer::NodeUpdaterWithPriors<NodeType, gtsam::SharedNoiseModel>;
-class TimestampedNodeUpdater : public Base {
+class TimestampedNodeUpdater
+    : public graph_optimizer::NodeUpdaterWithPriors<NodeType, std::vector<gtsam::SharedNoiseModel>> {
+  using Base = graph_optimizer::NodeUpdaterWithPriors<NodeType, gtsam::SharedNoiseModel>;
+
  public:
   // TODO(rsoussan): Construct nodes and node update model internally?
   TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes,
@@ -88,33 +91,33 @@ class TimestampedNodeUpdater : public Base {
   // TODO(rsoussan): do these need to be shared ptrs?
   std::shared_ptr<TimestampedNodesType> nodes_;
   std::shared_ptr<NodeUpdateModelType> node_update_model_;
-  TimestampedNodeUpdaterParams params_;
+  TimestampedNodeUpdaterParams<NodeType> params_;
 };
 
 // Implementation
-template <typename NodeType>
-TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes,
-                       std::shared_ptr<NodeUpdateModelType> node_update_model)
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::TimestampedNodeUpdater(
+  std::shared_ptr<TimestampedNodesType> nodes, std::shared_ptr<NodeUpdateModelType> node_update_model)
     : nodes_(nodes), node_update_model_(node_update_model) {}
 
-template <typename NodeType>
-void TimestampedNodeUpdater<NodeType>::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialValuesAndPriors(
+  gtsam::NonlinearFactorGraph& factors) {
   AddInitialValuesAndPriors(params_.start_node, params_.start_noise, params_.starting_time, factors);
 }
 
-template <typename NodeType>
-void TimestampedNodeUpdater<NodeType>::AddInitialValuesAndPriors(
-  const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise, const lc::Time timestamp,
-  gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialValuesAndPriors(
+  const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise,
+  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
   node_update_model_->AddPriors(initial_node, initial_noise, timestamp, factors);
 }
 
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::SlideWindow(const lc::Time oldest_allowed_timestamp,
-                                                   const boost::optional<gtsam::Marginals>& marginals,
-                                                   const gtsam::KeyVector& old_keys, const double huber_k,
-                                                   gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::SlideWindow(
+  const localization_common::Time oldest_allowed_timestamp, const boost::optional<gtsam::Marginals>& marginals,
+  const gtsam::KeyVector& old_keys, const double huber_k, gtsam::NonlinearFactorGraph& factors) {
   nodes_->RemoveOldNodes(oldest_allowed_timestamp);
   if (params_.add_priors) {
     // Add prior to oldest pose using covariances from last round of
@@ -137,8 +140,8 @@ bool TimestampedNodeUpdater<NodeType>::SlideWindow(const lc::Time oldest_allowed
 
       std::vector<gtsam::SharedNoiseModel> prior_noise_models;
       for (const auto& key : keys) {
-        const auto prior_noise =
-          go::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(*key)), huber_k);
+        const auto prior_noise = graph_optimizer::Robust(
+          gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(*key)), huber_k);
         prior_noise_models.emplace_back(prior_noise);
       }
       node_update_model_->AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, factors);
@@ -151,12 +154,15 @@ bool TimestampedNodeUpdater<NodeType>::SlideWindow(const lc::Time oldest_allowed
   return true;
 }
 
-template <typename NodeType>
-go::NodeUpdaterType TimestampedNodeUpdater<NodeType>::type() const {
-  static_assert(sizeof(T) == std::size_t(-1), "This needs to be specialized by template class.");
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+graph_optimizer::NodeUpdaterType TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::type()
+  const {
+  static_assert(sizeof(NodeType) == std::size_t(-1), "This needs to be specialized by template class.");
 }
 
-boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::SlideWindowNewOldestTime() const {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+boost::optional<localization_common::Time>
+TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::SlideWindowNewOldestTime() const {
   // TODO(rsoussan): Generalize this with CombinedNavStateGraphValues
   if (nodes_->empty()) {
     LogDebug("SlideWindowOldestTime: No states in map.");
@@ -172,7 +178,8 @@ boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::SlideWindowNewOldest
   const double total_duration = nodes_->Duration();
   LogDebug("SlideWindowOldestTime: Starting total num states: " << nodes_->size());
   LogDebug("SlideWindowOldestTime: Starting total duration is " << total_duration);
-  const lc::Time ideal_oldest_allowed_state = std::max(0.0, *(nodes_->LatestTimestamp()) - params_.ideal_duration);
+  const localization_common::Time ideal_oldest_allowed_state =
+    std::max(0.0, *(nodes_->LatestTimestamp()) - params_.ideal_duration);
 
   int num_states_to_be_removed = 0;
   // Ensures that new oldest time is consistent with a number of states <= max_num_states
@@ -190,37 +197,40 @@ boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::SlideWindowNewOldest
   return boost::none;
 }
 
-template <typename NodeType>
-gtsam::KeyVector TimestampedNodeUpdater<NodeType>::OldKeys(const lc::Time oldest_allowed_time,
-                                                           const gtsam::NonlinearFactorGraph& graph) const {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+gtsam::KeyVector TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::OldKeys(
+  const localization_common::Time oldest_allowed_time, const gtsam::NonlinearFactorGraph& graph) const {
   return nodes_->OldKeys(oldest_allowed_time);
 }
 
 // TODO(rsoussan): Change this interface
-template <typename NodeType>
-boost::optional<gtsam::Key> TimestampedNodeUpdater<NodeType>::GetKey(go::KeyCreatorFunction key_creator_function,
-                                                                     const lc::Time timestamp) const {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+boost::optional<gtsam::Key> TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::GetKey(
+  graph_optimizer::KeyCreatorFunction key_creator_function, const localization_common::Time timestamp) const {
   return nodes_->Key(timestamp);
 }
 
-template <typename NodeType>
-boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::OldestTimestamp() const {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+boost::optional<localization_common::Time>
+TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::OldestTimestamp() const {
   return nodes_->OldestTimestamp();
 }
 
-template <typename NodeType>
-boost::optional<lc::Time> TimestampedNodeUpdater<NodeType>::LatestTimestamp() const {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+boost::optional<localization_common::Time>
+TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::LatestTimestamp() const {
   return nodes_->LatestTimestamp();
 }
 
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::CanUpdate(const localization_common::Time timestamp) const {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::CanUpdate(
+  const localization_common::Time timestamp) const {
   return node_update_model_->CanUpdate(timestamp);
 }
 
-template <typename NodeType>
-void TimestampedNodeUpdater<NodeType>::RemovePriors(const gtsam::KeyVector& old_keys,
-                                                    gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::RemovePriors(
+  const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     bool erase_factor = false;
@@ -242,8 +252,9 @@ void TimestampedNodeUpdater<NodeType>::RemovePriors(const gtsam::KeyVector& old_
   LogDebug("RemovePriors: Erase " << removed_factors << " factors.");
 }
 
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Update(
+  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   if (nodes_->Contains(timestamp)) {
     LogDebug(
       "Update: Node exists at "
@@ -266,9 +277,9 @@ bool TimestampedNodeUpdater<NodeType>::Update(const lc::Time timestamp, gtsam::N
   }
 }
 
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::AddLatestNodesAndRelativeFactors(const lc::Time timestamp,
-                                                                        gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddLatestNodesAndRelativeFactors(
+  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto timestamp_a = nodes_->LatestTimestamp();
   if (!timestamp_a) {
     LogError("AddLatestNodeAndRelativeFactor: Failed to get latest timestamp.");
@@ -277,17 +288,17 @@ bool TimestampedNodeUpdater<NodeType>::AddLatestNodesAndRelativeFactors(const lc
   return node_update_model_->AddNodesAndRelativeFactors(*timestamp_a, timestamp, factors);
 }
 
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::SplitOldRelativeFactor(const lc::Time timestamp,
-                                                              gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::SplitOldRelativeFactor(
+  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto timestamp_bounds = nodes_->LowerAndUpperBoundTimestamps(timestamp);
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldRelativeFactor: Failed to get upper and lower bound timestamp.");
     return false;
   }
 
-  const lc::Time lower_bound_time = *(timestamp_bounds.first);
-  const lc::Time upper_bound_time = *(timestamp_bounds.second);
+  const localization_common::Time lower_bound_time = *(timestamp_bounds.first);
+  const localization_common::Time upper_bound_time = *(timestamp_bounds.second);
 
   if (timestamp < lower_bound_time || timestamp > upper_bound_time) {
     LogError("SplitOldRelativeFactor: Timestamp is not within bounds of existing timestamps.");
@@ -311,8 +322,9 @@ bool TimestampedNodeUpdater<NodeType>::SplitOldRelativeFactor(const lc::Time tim
   }
 }
 
-template <typename NodeType>
-bool TimestampedNodeUpdater<NodeType>::RemoveFactors(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::RemoveFactors(
+  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto keys = nodes_->Keys(timestamp);
   if (!keys) {
     LogError("RemoveFactors: Failed to get keys.");

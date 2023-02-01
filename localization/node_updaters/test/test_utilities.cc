@@ -16,24 +16,27 @@
  * under the License.
  */
 
-#ifndef NODE_UPDATERS_POSE_NODE_UPDATER_H_
-#define NODE_UPDATERS_POSE_NODE_UPDATER_H_
-
-#include <graph_optimizer/timestamped_nodes.h>
-#include <node_updaters/pose_node_update_model.h>
-#include <node_updaters/timestamped_node_updater.h>
-
-#include <gtsam/geometry/Pose3.h>
+#include "test_utilities.h"  // NOLINT
+#include <localization_common/logger.h>
+#include <localization_common/utilities.h>
 
 namespace node_updaters {
-namespace go = graph_optimizer;
-using PoseNodeUpdater =
-  TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
+namespace lc = localization_common;
 
-template <>
-graph_optimizer::NodeUpdaterType PoseNodeUpdater::type() const {
-  return go::NodeUpdaterType::Pose;
+PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams() {
+  PoseNodeUpdaterParams params;
+  params.starting_prior_translation_stddev = 0.1;
+  params.starting_prior_quaternion_stddev = 0.1;
+  // Base
+  params.start_node = gtsam::Pose3::identity();
+  params.start_noise_models = {gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(0.1, 0.1, 0.1))};
+  params.huber_k = 1.345;
+  params.add_priors = true;
+  params.starting_time = 0;
+  // Only kept if there are at least min_num_states and not more than max_num_states
+  params.ideal_duration = 5;
+  params.min_num_states = 5;
+  params.max_num_states = 20;
+  return params;
 }
 }  // namespace node_updaters
-
-#endif  // NODE_UPDATERS_POSE_NODE_UPDATER_H_

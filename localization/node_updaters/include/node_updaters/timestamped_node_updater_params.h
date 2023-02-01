@@ -22,6 +22,9 @@
 
 #include <boost/serialization/serialization.hpp>
 
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/linear/NoiseModel.h>
+
 #include <vector>
 
 namespace node_updaters {
