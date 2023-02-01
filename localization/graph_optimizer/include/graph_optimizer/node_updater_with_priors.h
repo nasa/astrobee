@@ -32,9 +32,6 @@ class NodeUpdaterWithPriors : public NodeUpdater {
   virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
                                          const localization_common::Time timestamp,
                                          gtsam::NonlinearFactorGraph& graph) = 0;
-
-  virtual void AddPriors(const NodeType& node, const NoiseType& noise, const localization_common::Time timestamp,
-                         gtsam::NonlinearFactorGraph& factors) = 0;
 };
 }  // namespace graph_optimizer
 

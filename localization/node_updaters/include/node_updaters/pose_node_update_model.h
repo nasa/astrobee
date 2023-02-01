@@ -20,6 +20,7 @@
 #define NODE_UPDATERS_POSE_NODE_UPDATE_MODEL_H_
 
 #include <localization_common/pose_with_covariance_interpolater.h>
+#include <localization_measurements/timestamped_pose_with_covariance.h>
 #include <node_updaters/between_factor_node_update_model.h>
 
 #include <gtsam/inference/Key.h>
@@ -36,6 +37,8 @@ class PoseNodeUpdateModel : BetweenFactorNodeUpdateModel<gtsam::Pose3> {
   gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const final;
   boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;
+  void AddMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement);
+  void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
   bool CanUpdate(const localization_common::Time timestamp) const final;
 
  private:

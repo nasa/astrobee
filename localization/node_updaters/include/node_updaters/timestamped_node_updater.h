@@ -72,6 +72,9 @@ class TimestampedNodeUpdater
 
   bool CanUpdate(const localization_common::Time timestamp) const final;
 
+ protected:
+  std::shared_ptr<NodeUpdateModelType> node_update_model_;
+
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
   bool AddLatestNodesAndRelativeFactors(const localization_common::Time timestamp,
@@ -90,7 +93,6 @@ class TimestampedNodeUpdater
 
   // TODO(rsoussan): do these need to be shared ptrs?
   std::shared_ptr<TimestampedNodesType> nodes_;
-  std::shared_ptr<NodeUpdateModelType> node_update_model_;
   TimestampedNodeUpdaterParams<NodeType> params_;
 };
 

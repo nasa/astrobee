@@ -18,11 +18,13 @@
 
 #include <graph_optimizer/utilities.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/timestamped_pose.h>
 #include <node_updaters/pose_node_update_model.h>
 
 namespace node_updaters {
-namespace lc = localization_common;
 namespace go = graph_optimizer;
+namespace lc = localization_common;
+namespace lm = localization_measurements;
 
 gtsam::KeyVector PoseNodeUpdateModel::AddNode(const lc::Time timestamp, NodesType& nodes) const {
   const auto pose = pose_interpolater_.Interpolate(timestamp);
@@ -44,6 +46,14 @@ boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> PoseNodeUpdate
 
   return std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>(localization_common::GtPose(relative_pose->pose),
                                                           relative_pose_noise);
+}
+
+void PoseNodeUpdateModel::AddMeasurement(const lm::TimestampedPoseWithCovariance& measurement) {
+  pose_interpolater_.Add(measurement.time, measurement.pose_with_covariance);
+}
+
+void PoseNodeUpdateModel::RemoveMeasurements(const lc::Time oldest_allowed_time) {
+  pose_interpolater_.RemoveOldValues(oldest_allowed_time);
 }
 
 bool PoseNodeUpdateModel::CanUpdate(const localization_common::Time timestamp) const {

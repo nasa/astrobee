@@ -1,6 +1,8 @@
 - test timestamped pose node updater! (AA)
-  - add default pose node updater params!
-      - add test utils!
+  - change to be measurementbasedtimestampednodeupdater!
+  - add constructor!
+    - add to base class? template or something?
+  - fix compile errors!
   - populate pose interpolater!
   - test each timestamped node updater function!
 - test combined nav state nodes! (AB)

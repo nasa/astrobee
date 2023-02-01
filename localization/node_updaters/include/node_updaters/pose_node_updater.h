@@ -20,15 +20,17 @@
 #define NODE_UPDATERS_POSE_NODE_UPDATER_H_
 
 #include <graph_optimizer/timestamped_nodes.h>
+#include <localization_measurements/timestamped_pose_with_covariance.h>
 #include <node_updaters/pose_node_update_model.h>
-#include <node_updaters/timestamped_node_updater.h>
+#include <node_updaters/measurement_based_timestamped_node_updater.h>
 
 #include <gtsam/geometry/Pose3.h>
 
 namespace node_updaters {
 namespace go = graph_optimizer;
 using PoseNodeUpdater =
-  TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
+  MeasurementBasedTimestampedNodeUpdater<localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3,
+                                         graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
 
 template <>
 graph_optimizer::NodeUpdaterType PoseNodeUpdater::type() const {

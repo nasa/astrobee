@@ -22,7 +22,8 @@
 #include <node_updaters/timestamped_node_updater.h>
 
 namespace node_updaters {
-template <typename MeasurementType, typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
+          typename MeasurementBasedNodeUpdateModelType>
 class MeasurementBasedTimestampedNodeUpdater
     : public TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedNodeUpdateModelType> {
   using Base = TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedNodeUpdateModelType>;
@@ -41,14 +42,16 @@ class MeasurementBasedTimestampedNodeUpdater
 };
 
 // Implementation
-template <typename MeasurementType, typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
+          typename MeasurementBasedNodeUpdateModelType>
 void MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,
                                             MeasurementBasedNodeUpdateModelType>::AddMeasurement(const MeasurementType&
                                                                                                    measurement) {
   node_update_model_->AddMeasurement(measurement);
 }
 
-template <typename MeasurementType, typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
+template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
+          typename MeasurementBasedNodeUpdateModelType>
 void MeasurementBasedTimestampedNodeUpdater<
   MeasurementType, NodeType, TimestampedNodesType,
   MeasurementBasedNodeUpdateModelType>::RemoveMeasurements(const localization_common::Time oldest_allowed_time) {

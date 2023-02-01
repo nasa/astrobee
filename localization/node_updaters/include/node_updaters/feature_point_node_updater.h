@@ -36,7 +36,7 @@ class FeaturePointNodeUpdater
 
   void AddPriors(const localization_common::FeaturePoint3d& global_N_body,
                  const localization_common::FeaturePoint3dNoise& noise, const localization_common::Time timestamp,
-                 gtsam::NonlinearFactorGraph& factors) final;
+                 gtsam::NonlinearFactorGraph& factors);
 
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
