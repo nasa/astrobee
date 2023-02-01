@@ -65,14 +65,14 @@ bool CombinedNavStateNodeUpdateModel::AddNodesAndRelativeFactors(const lc::Time 
       LogError("AddNodesAndRelativeFactors: Failed to get node a.");
       return false;
     }
-    // TODO(rsoussan): avoid repeated pim integration in addrelativefactors?
-    auto pim = imu_integrator_.IntegratedPim(node_a->bias(), timestamp_a, timestamp_b);
-    if (!pim) {
-      LogError("AddNodesAndRelativeFactors: Failed to create pim.");
+
+    const auto node_b = imu_integrator_.Extrapolate(*node_a, timestamp_b);
+    if (!node_b) {
+      LogError("AddNodesAndRelativeFactors: Failed to get node b by extrapolating node a.");
       return false;
     }
-    const auto node_b = ii::PimPredict(*node_a, *pim);
-    const auto keys = nodes.Add(timestamp_b, node_b);
+
+    const auto keys = nodes.Add(timestamp_b, *node_b);
     if (keys.empty()) {
       LogError("AddNodesAndRelativeFactors: Failed to add node b.");
       return false;
@@ -127,11 +127,11 @@ bool CombinedNavStateNodeUpdateModel::AddRelativeFactors(const lc::Time timestam
 }
 
 void CombinedNavStateNodeUpdateModel::AddMeasurement(const lm::ImuMeasurement& measurement) {
-  imu_integrator_.BufferImuMeasurement(measurement);
+  imu_integrator_.AddImuMeasurement(measurement);
 }
 
 void CombinedNavStateNodeUpdateModel::RemoveMeasurements(const lc::Time oldest_allowed_time) {
-  imu_integrator_.RemoveOldMeasurements(oldest_allowed_time);
+  imu_integrator_.RemoveOldValues(oldest_allowed_time);
 }
 
 bool CombinedNavStateNodeUpdateModel::CanUpdate(const localization_common::Time timestamp) const {

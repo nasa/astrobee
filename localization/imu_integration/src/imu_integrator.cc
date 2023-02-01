@@ -116,7 +116,7 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
 }
 
 boost::optional<lc::CombinedNavState> ImuIntegrator::Extrapolate(const lc::CombinedNavState& combined_nav_state,
-                                                                 const lc::Time end_time) {
+                                                                 const lc::Time end_time) const {
   const auto pim = IntegratedPim(combined_nav_state.bias(), combined_nav_state.timestamp(), end_time);
   if (!pim) {
     LogError("Extrapolate: Failed to get pim.");
@@ -127,7 +127,7 @@ boost::optional<lc::CombinedNavState> ImuIntegrator::Extrapolate(const lc::Combi
 }
 
 localization_common::CombinedNavState ImuIntegrator::ExtrapolateLatest(
-  const localization_common::CombinedNavState& combined_nav_state) {
+  const localization_common::CombinedNavState& combined_nav_state) const {
   const auto latest = Latest();
   if (!latest) {
     LogError("ExtrapolateLatest: Failed to get latest measurement.");

@@ -3,16 +3,6 @@
         - make sure it compiles!
       - test timestamped pose node updater! (AB)
 
-      - Finish imu integration tests! (AC)
-        - sensor offet
-          - need to compensate for coriolis!!
-      - test: make sure biases aren't changed during extrapolation!! (AB)
-      - test other functions! (AC)
-      - add seperate tests for extrapolate with reset!! copy others!! see if there's a diff?
-      - test extrapolate vs extrapolate with resets!! (AD)
-
-  - is resetting pim really necessary?
-    - how is gravity integration done? velocity integration?
 - test combined nav state nodes! (AD)
   - how?? 
     - copy old combined nav state tests? add factors and make sure everything goes accordingly?
