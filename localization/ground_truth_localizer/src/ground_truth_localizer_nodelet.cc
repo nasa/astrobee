@@ -18,74 +18,84 @@
 
 #include <ground_truth_localizer/ground_truth_localizer_nodelet.h>
 #include <ground_truth_localizer/utilities.h>
-#include <ff_msgs/EkfState.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/utilities.h>
 
 #include <glog/logging.h>
 
-#include <std_msgs/Empty.h>
-
 namespace ground_truth_localizer {
-namespace lc = localization_common;
-GroundTruthLocalizerNodelet::GroundTruthLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_SIM_LOC, true) {}
 
-void GroundTruthLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+FF_DEFINE_LOGGER("ground_truth_localizer");
+
+namespace lc = localization_common;
+GroundTruthLocalizerNodelet::GroundTruthLocalizerNodelet(const rclcpp::NodeOptions& options)
+    : ff_util::FreeFlyerComponent(options, NODE_SIM_LOC, true) {}
+
+void GroundTruthLocalizerNodelet::Initialize(NodeHandle &nh) {
   platform_name_ = GetPlatform();
   platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
-  ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
+  // Initialize the transform broadcaster
+  transform_pub_ = std::make_unique<tf2_ros::TransformBroadcaster>(*nh);
 }
 
-void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
-  twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
-  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
-  heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
-  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
+void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(NodeHandle &nh) {
+  node_ = nh;
+  pose_pub_ = nh->create_publisher<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
+  twist_pub_ = nh->create_publisher<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
+  state_pub_ = nh->create_publisher<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
+  heartbeat_pub_ = nh->create_publisher<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5);
+  reset_pub_ = nh->create_publisher<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
 
-  pose_sub_ = nh->subscribe(TOPIC_LOCALIZATION_TRUTH, 1, &GroundTruthLocalizerNodelet::PoseCallback, this,
-                            ros::TransportHints().tcpNoDelay());
-  twist_sub_ = nh->subscribe(TOPIC_LOCALIZATION_TRUTH_TWIST, 1, &GroundTruthLocalizerNodelet::TwistCallback, this,
-                             ros::TransportHints().tcpNoDelay());
+  pose_sub_ = nh->create_subscription<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_TRUTH, 1,
+    std::bind(&GroundTruthLocalizerNodelet::PoseCallback, this, std::placeholders::_1));
+  twist_sub_ = nh->create_subscription<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TRUTH_TWIST, 1,
+    std::bind(&GroundTruthLocalizerNodelet::TwistCallback, this, std::placeholders::_1));
 
-  input_mode_srv_ = nh->advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GroundTruthLocalizerNodelet::SetMode, this);
-  bias_srv_ =
-    nh->advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GroundTruthLocalizerNodelet::DefaultServiceResponse, this);
-  bias_from_file_srv_ = nh->advertiseService(SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE,
-                                             &GroundTruthLocalizerNodelet::DefaultServiceResponse, this);
-  reset_srv_ = nh->advertiseService(SERVICE_GNC_EKF_RESET, &GroundTruthLocalizerNodelet::DefaultServiceResponse, this);
+  input_mode_srv_ = nh->create_service<ff_msgs::SetEkfInput>(
+    SERVICE_GNC_EKF_SET_INPUT,
+    std::bind(&GroundTruthLocalizerNodelet::SetMode, this, std::placeholders::_1, std::placeholders::_2));
+  bias_srv_ = nh->create_service<std_srvs::Empty>(SERVICE_GNC_EKF_INIT_BIAS,
+      std::bind(&GroundTruthLocalizerNodelet::DefaultServiceResponse,
+                              this, std::placeholders::_1, std::placeholders::_2));
+  bias_from_file_srv_ = nh->create_service<std_srvs::Empty>(SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE,
+      std::bind(&GroundTruthLocalizerNodelet::DefaultServiceResponse,
+                              this, std::placeholders::_1, std::placeholders::_2));
+  reset_srv_ = nh->create_service<std_srvs::Empty>(SERVICE_GNC_EKF_RESET,
+      std::bind(&GroundTruthLocalizerNodelet::DefaultServiceResponse,
+                              this, std::placeholders::_1, std::placeholders::_2));
 }
 
-bool GroundTruthLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
-  input_mode_ = req.mode;
+bool GroundTruthLocalizerNodelet::SetMode(const std::shared_ptr<ff_msgs::SetEkfInput::Request> req,
+                                          std::shared_ptr<ff_msgs::SetEkfInput::Response> res) {
+  input_mode_ = req->mode;
   return true;
 }
 
-bool GroundTruthLocalizerNodelet::DefaultServiceResponse(std_srvs::Empty::Request& req,
-                                                         std_srvs::Empty::Response& res) {
+bool GroundTruthLocalizerNodelet::DefaultServiceResponse(const std::shared_ptr<std_srvs::Empty::Request> req,
+                                                         std::shared_ptr<std_srvs::Empty::Response> res) {
   return true;
 }
 
 void GroundTruthLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose) {
   assert(pose->header.frame_id == "world");
   pose_ = PoseFromMsg(*pose);
-  pose_pub_.publish(pose);
+  pose_pub_->publish(*pose);
   const lc::Time timestamp = lc::TimeFromHeader(pose->header);
   PublishLocState(timestamp);
-  heartbeat_.header.stamp = ros::Time::now();
+  heartbeat_.header.stamp = GetTimeNow();
   // Publish heartbeat for graph localizer and imu augmentor since flight software expects this
   // and this runs in place of them
   heartbeat_.node = NODE_GRAPH_LOC;
-  heartbeat_pub_.publish(heartbeat_);
+  heartbeat_pub_->publish(heartbeat_);
   heartbeat_.node = NODE_IMU_AUG;
-  heartbeat_pub_.publish(heartbeat_);
+  heartbeat_pub_->publish(heartbeat_);
 }
 
 void GroundTruthLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {
   assert(twist->header.frame_id == "world");
   twist_ = TwistFromMsg(*twist);
-  twist_pub_.publish(twist);
+  twist_pub_->publish(*twist);
   const lc::Time timestamp = lc::TimeFromHeader(twist->header);
   PublishLocState(timestamp);
 }
@@ -93,7 +103,7 @@ void GroundTruthLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::Con
 void GroundTruthLocalizerNodelet::PublishLocState(const lc::Time& timestamp) {
   if (!twist_ || !pose_) return;
   const auto loc_state_msg = LocStateMsg(*pose_, *twist_, timestamp);
-  state_pub_.publish(loc_state_msg);
+  state_pub_->publish(loc_state_msg);
 
   // Also publish world_T_body TF
   const auto world_T_body_tf = lc::PoseToTF(*pose_, "world", "body", timestamp, platform_name_);
@@ -102,8 +112,13 @@ void GroundTruthLocalizerNodelet::PublishLocState(const lc::Time& timestamp) {
   if (world_T_body_tf.header.stamp == last_time_) return;
   last_time_ = world_T_body_tf.header.stamp;
 
-  transform_pub_.sendTransform(world_T_body_tf);
+  transform_pub_->sendTransform(world_T_body_tf);
 }
 }  // namespace ground_truth_localizer
 
-PLUGINLIB_EXPORT_CLASS(ground_truth_localizer::GroundTruthLocalizerNodelet, nodelet::Nodelet);
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(ground_truth_localizer::GroundTruthLocalizerNodelet)

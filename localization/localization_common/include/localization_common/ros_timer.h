@@ -22,8 +22,12 @@
 #include <localization_common/averager.h>
 #include <localization_common/time.h>
 
-#include <ros/time.h>
-#include <std_msgs/Header.h>
+#include <rclcpp/time.hpp>
+
+#include <std_msgs/msg/header.hpp>
+namespace std_msgs {
+typedef msg::Header Header;
+}  // namespace std_msgs
 
 #include <string>
 
@@ -42,7 +46,7 @@ class RosTimer {
 
  private:
   Averager averager_;
-  ros::Time start_time_;
+  rclcpp::Time start_time_;
 };
 }  // namespace localization_common
 

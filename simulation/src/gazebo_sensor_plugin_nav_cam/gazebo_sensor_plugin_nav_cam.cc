@@ -59,7 +59,6 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle& nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    clock_ = nh->get_clock();
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
       gzerr << "GazeboSensorPluginNavCam requires a parent camera sensor.\n";
@@ -123,7 +122,7 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
   // Called when a new image must be rendered
   void ImageCallback() {
     // Quickly record the current time and current pose before doing other computations
-    rclcpp::Time curr_time = FF_TIME_NOW();
+    rclcpp::Time curr_time = GetTimeNow();
 // Publish the nav cam pose
 #if GAZEBO_MAJOR_VERSION > 7
     Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->WorldPose(), sensor_->Pose());
@@ -161,7 +160,6 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FreeFlyerTimer timer_toggle_;
   sensor_msgs::Image image_msg_;
   geometry_msgs::PoseStamped pose_msg_;

@@ -56,8 +56,6 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle &nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
-    node_ = nh;
-    clock_ = nh->get_clock();
     // Get a link to the parent sensor
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
@@ -155,7 +153,7 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     timer_features_.start();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = FF_TIME_NOW() + rclcpp::Duration::from_seconds(delay_camera_);
+    msg_reg_.header.stamp = GetTimeNow() + rclcpp::Duration::from_seconds(delay_camera_);
     msg_reg_.camera_id++;
     pub_reg_->publish(msg_reg_);
     // FF_SPIN_ONCE();
@@ -170,7 +168,7 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->GetWorldPose(), sensor_->Pose());
     #endif
 
-    msg_feat_.header.stamp = FF_TIME_NOW();
+    msg_feat_.header.stamp = GetTimeNow();
 
     // Initialize the camera parameters
     static camera::CameraParameters cam_params(&config_, "nav_cam");
@@ -262,8 +260,6 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
   }
 
  private:
-  NodeHandle node_;
-  std::shared_ptr<rclcpp::Clock> clock_;
   config_reader::ConfigReader config_;
   rclcpp::Publisher<ff_msgs::CameraRegistration>::SharedPtr pub_reg_;
   rclcpp::Publisher<ff_msgs::VisualLandmarks>::SharedPtr pub_feat_;

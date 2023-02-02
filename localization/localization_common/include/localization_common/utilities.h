@@ -20,8 +20,6 @@
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
 #include <config_reader/config_reader.h>
-#include <ff_msgs/GraphState.h>
-#include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/pose_with_covariance.h>
@@ -33,10 +31,25 @@
 
 #include <Eigen/Core>
 
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <std_msgs/Header.h>
+#include <ff_msgs/msg/graph_state.hpp>
+#include <ff_msgs/msg/visual_landmarks.hpp>
+namespace ff_msgs {
+typedef msg::GraphState GraphState;
+typedef msg::VisualLandmarks VisualLandmarks;
+}  // namespace ff_msgs
+
+#include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <std_msgs/msg/header.hpp>
+namespace geometry_msgs {
+typedef msg::Pose Pose;
+typedef msg::PoseStamped PoseStamped;
+typedef msg::TransformStamped TransformStamped;
+}  // namespace geometry_msgs
+namespace std_msgs {
+typedef msg::Header Header;
+}  // namespace std_msgs
 
 #include <string>
 #include <utility>
@@ -64,15 +77,15 @@ void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::st
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
                            const std::string& robot_config_file);
 
-ros::Time RosTimeFromHeader(const std_msgs::Header& header);
+rclcpp::Time RosTimeFromHeader(const std_msgs::Header& header);
 
 Time TimeFromHeader(const std_msgs::Header& header);
 
-Time TimeFromRosTime(const ros::Time& time);
+Time TimeFromRosTime(const rclcpp::Time& time);
 
 void TimeToHeader(const Time timestamp, std_msgs::Header& header);
 
-void TimeToMsg(const Time timestamp, ros::Time& time_msg);
+void TimeToMsg(const Time timestamp, rclcpp::Time& time_msg);
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg);
 

@@ -20,9 +20,9 @@
 #define LOCALIZATION_COMMON_LOGGER_H_
 
 // Needed for ros include
+#include <ff_common/ff_ros.h>
 #include <ff_common/eigen_vectors.h>
 
-#include <ros/console.h>
 
 #include <glog/logging.h>
 
@@ -37,40 +37,42 @@
 #ifdef USE_ROS_LOGGING
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
+FF_DEFINE_LOGGER("localization_common");
+
 // clang-format off
 #define LogInfo(msg) \
   do { \
     std::stringstream ss; \
     ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-    ROS_INFO_STREAM(ss.str()); \
+    FF_INFO_STREAM(ss.str()); \
   } while (0)
 
 #define LogWarning(msg) \
   do { \
     std::stringstream ss; \
     ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-    ROS_WARN_STREAM(ss.str()); \
+    FF_WARN_STREAM(ss.str()); \
   } while (0)
 
 #define LogError(msg) \
   do { \
     std::stringstream ss; \
     ss << __FILENAME__  << ":" << __LINE__ << ": " << msg << std::endl; \
-    ROS_ERROR_STREAM(ss.str()); \
+    FF_ERROR_STREAM(ss.str()); \
   } while (0)
 
 #define LogFatal(msg) \
   do { \
     std::stringstream ss; \
     ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-    ROS_FATAL_STREAM(ss.str()); \
+    FF_FATAL_STREAM(ss.str()); \
   } while (0)
 
 #define LogDebug(msg) \
   do { \
     std::stringstream ss; \
     ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-    ROS_DEBUG_STREAM(ss.str()); \
+    FF_DEBUG_STREAM(ss.str()); \
   } while (0)
 
 #define LogInfoEveryN(n, msg) \
@@ -80,7 +82,7 @@
     if (count % n == 0) { \
       std::stringstream ss; \
       ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-      ROS_INFO_STREAM(ss.str()); \
+      FF_INFO_STREAM(ss.str()); \
     } \
   } while (0)
 
@@ -91,7 +93,7 @@
     if (count % n == 0) { \
       std::stringstream ss; \
       ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-      ROS_WARN_STREAM(ss.str()); \
+      FF_WARN_STREAM(ss.str()); \
     } \
   } while (0)
 
@@ -102,7 +104,7 @@
     if (count % n == 0) { \
       std::stringstream ss; \
       ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-      ROS_ERROR_STREAM(ss.str()); \
+      FF_ERROR_STREAM(ss.str()); \
     } \
   } while (0)
 
@@ -113,7 +115,7 @@
     if (count % n == 0) { \
       std::stringstream ss; \
       ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
-      ROS_DEBUG_STREAM(ss.str()); \
+      FF_DEBUG_STREAM(ss.str()); \
     } \
   } while (0)
 

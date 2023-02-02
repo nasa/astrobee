@@ -15,75 +15,76 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(ground_truth_localizer)
 
-if (USE_ROS)
+# if (USE_ROS)
  
-  ## Compile as C++14, supported in ROS Kinetic and newer
-  add_compile_options(-std=c++14)
-add_definitions(-DROS1)
-
-  ## Find catkin macros and libraries
-  find_package(catkin2 REQUIRED COMPONENTS
-    roscpp
-    nodelet
-    ff_msgs
-    ff_util
-    localization_common
-  )
-
-  # System dependencies are found with CMake's conventions
-  find_package(Eigen3 REQUIRED)
-
-  # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
-  catkin_package(
-    LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} 
-    INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} 
-    CATKIN_DEPENDS roscpp ff_msgs ff_util localization_common nodelet
-  )
-
-  ###########
-  ## Build ##
-  ###########
-  # Specify additional locations of header files
-  include_directories(
-    include
-    ${catkin_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
-  )
-
-  # Declare C++ libraries
-  add_library(${PROJECT_NAME}
-    src/ground_truth_localizer_nodelet.cc
-    src/utilities.cc
-  )
-  add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${QT_LIBRARIES})
+## Compile as C++14, supported in ROS Kinetic and newer
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 
-  #############
-  ## Install ##
-  #############
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
 
-  # Mark libraries for installation
-  install(TARGETS ${PROJECT_NAME}
-    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-  )
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rcutils REQUIRED)
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+find_package(std_srvs REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(localization_common REQUIRED)
+find_package(ff_common REQUIRED)
+find_package(camera REQUIRED)
+
+
+
+###########
+## Build ##
+###########
+# Specify additional locations of header files
+include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
-  # Mark launch files for installation
-  install(DIRECTORY launch/
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-    PATTERN ".svn" EXCLUDE)
+# Declare C++ libraries
+add_library(${PROJECT_NAME} SHARED
+  src/ground_truth_localizer_nodelet.cc
+  src/utilities.cc
+)
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_util localization_common std_srvs)
+rclcpp_components_register_nodes(${PROJECT_NAME} "ground_truth_localizer::GroundTruthLocalizerNodelet")
 
-else (USE_ROS)
-  find_package(catkin REQUIRED COMPONENTS)
-  catkin_package()
-endif (USE_ROS)
+
+#############
+## Install ##
+#############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Mark launch files for installation
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+  PATTERN ".svn" EXCLUDE)
+
+ament_package()
+
+# else (USE_ROS)
+#   find_package(catkin REQUIRED COMPONENTS)
+#   catkin_package()
+# endif (USE_ROS)

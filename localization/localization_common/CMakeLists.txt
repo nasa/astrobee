@@ -15,20 +15,25 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(localization_common)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-	camera
-	config_reader
-	msg_conversions
-  ff_msgs
-)
+
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+
+find_package(ff_common REQUIRED)
+find_package(camera REQUIRED)
+find_package(config_reader REQUIRED)
+find_package(msg_conversions REQUIRED)
+find_package(ff_msgs REQUIRED)
 
 # Find GTSAM
 find_package(GTSAM REQUIRED)
@@ -36,18 +41,9 @@ find_package(GTSAM REQUIRED)
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
-# Allow other packages to use python scripts from this package
-catkin_python_setup()
-
-catkin_package(
-  INCLUDE_DIRS include 
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam
-  CATKIN_DEPENDS
-    camera
-    config_reader
-    msg_conversions
-    ff_msgs
-)
+# Find OpenCV
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV331 REQUIRED)
 
 ###########
 ## Build ##
@@ -56,57 +52,45 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   src/averager.cc
   src/combined_nav_state.cc
   src/combined_nav_state_covariances.cc
   src/pose_interpolater.cc
-  src/rate_timer.cc
-  src/ros_timer.cc
+  # src/rate_timer.cc
+  # src/ros_timer.cc
   src/time.cc
   src/timer.cc
   src/test_utilities.cc
   src/utilities.cc
 )
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} gtsam)
+target_link_libraries(${PROJECT_NAME} gtsam ${OpenCV_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} rclcpp ff_msgs config_reader camera msg_conversions)
+ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
-#############
-## Install ##
-#############
+if(BUILD_TESTING)
 
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+  find_package(ament_cmake_gtest REQUIRED)
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_pose_interpolater
-    test/test_pose_interpolater.test
+  ament_add_gtest(test_pose_interpolater
     test/test_pose_interpolater.cc
   )
   target_link_libraries(test_pose_interpolater
     ${PROJECT_NAME}  
   )
 
-  add_rostest_gtest(test_timestamped_set
-    test/test_timestamped_set.test
+  ament_add_gtest(test_timestamped_set
     test/test_timestamped_set.cc
   )
   target_link_libraries(test_timestamped_set
     ${PROJECT_NAME}  
   )
-  add_rostest_gtest(test_utilities_localization_common
-    test/test_utilities.test
+  ament_add_gtest(test_utilities_localization_common
     test/test_utilities.cc
   )
   target_link_libraries(test_utilities_localization_common
@@ -114,9 +98,26 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
+#############
+## Install ##
+#############
+
+ament_export_include_directories(include)
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+ament_package()

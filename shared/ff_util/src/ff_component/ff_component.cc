@@ -346,7 +346,7 @@ void FreeFlyerComponent::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger:
 
 void FreeFlyerComponent::PublishHeartbeat() {
   if (initialized_) {
-    heartbeat_.header.stamp = FF_TIME_NOW();
+    heartbeat_.header.stamp = GetTimeNow();
     pub_heartbeat_->publish(heartbeat_);
   }
 }
@@ -382,7 +382,7 @@ void FreeFlyerComponent::SendDiagnostics(
   }
   // Publish the diagnostics
   diagnostic_msgs::DiagnosticArray da;
-  da.header.stamp = FF_TIME_NOW();
+  da.header.stamp = GetTimeNow();
   da.status.push_back(ds);
   pub_diagnostics_->publish(da);
 }
@@ -402,6 +402,11 @@ std::string FreeFlyerComponent::GetTransform(std::string const& child) {
   if (!platform_.empty())
     frame = platform_ + "/" + child;
   return frame;
+}
+
+
+rclcpp::Time FreeFlyerComponent::GetTimeNow() {
+  return node_->get_clock()->now();
 }
 
 }  // namespace ff_util

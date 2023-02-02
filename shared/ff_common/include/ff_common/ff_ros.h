@@ -75,8 +75,6 @@ using Duration = ros::Duration*;
 #define FF_ERROR_STREAM(...)   ROS_ERROR_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
 #define FF_FATAL_STREAM(...)   ROS_FATAL_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
 
-
-#define FF_TIME_NOW()  ros::Time::now()
 #define FF_SPIN()      ros::spin()
 #define FF_SPIN_ONCE() ros::spinOnce()
 #define FF_OK()        ros::ok()
@@ -127,7 +125,6 @@ using Duration = std::shared_ptr<rclcpp::Duration>;
 
 #define toSec() seconds()
 
-#define FF_TIME_NOW()  clock_->now()
 #define FF_SPIN()      rclcpp::spin(node_)
 #define FF_SPIN_ONCE() rclcpp::spin_some(node_)
 #define FF_OK()        rclcpp::ok()

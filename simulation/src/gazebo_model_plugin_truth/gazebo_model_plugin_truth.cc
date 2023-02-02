@@ -53,7 +53,6 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
     // If we specify a frame name different to our sensor tag name
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
@@ -80,7 +79,7 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
 
     // If we are
     if (static_) {
-      msg_.header.stamp = FF_TIME_NOW();
+      msg_.header.stamp = GetTimeNow();
       #if GAZEBO_MAJOR_VERSION > 7
         msg_.transform.translation.x = GetModel()->WorldPose().Pos().X();
         msg_.transform.translation.y = GetModel()->WorldPose().Pos().Y();
@@ -118,7 +117,7 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
 
   // Called on every discrete time tick in the simulated world
   void TimerCallback() {
-    msg_.header.stamp = FF_TIME_NOW();
+    msg_.header.stamp = GetTimeNow();
     // If the rate is higher than the sim time, prevent repeated timestamps
     bool publish_tf = true;
     if (msg_.header.stamp == last_time_) {
@@ -199,7 +198,6 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   double rate_;
   bool tf_, pose_, twist_, static_;

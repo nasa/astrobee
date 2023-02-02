@@ -38,15 +38,15 @@ def generate_launch_description():
                                value=LaunchConfiguration("mlp")),
 
 
-#   <!-- Additional options -->
-#   <arg name="drivers"/>                          <!-- Start platform drivers    -->
-#   <arg name="spurn" default=""/>                 <!-- PRevent a specific node   -->
-#   <arg name="nodes" default=""/>                 <!-- Launch specific nodes     -->
-#   <arg name="extra" default=""/>                 <!-- Inject an additional node -->
-#   <arg name="debug" default=""/>                 <!-- Debug a node set          -->
-#   <arg name="dds" default="true"/>               <!-- Should DDS be started     -->
-#   <arg name="output" default="log"/>             <!-- Where nodes should log    -->
-#   <arg name="gtloc" default="false"/>   <!-- Runs ground_truth localizer -->
+        DeclareLaunchArgument("drivers",),                    # Start platform drivers
+        DeclareLaunchArgument("spurn", default_value=""),     # Prevent a specific node
+        DeclareLaunchArgument("nodes", default_value=""),     # Launch specific nodes
+        DeclareLaunchArgument("extra", default_value=""),     # Inject an additional node
+        DeclareLaunchArgument("debug", default_value=""),     # Debug node group
+        DeclareLaunchArgument("dds",   default_value="true"), # Enable DDS
+
+        DeclareLaunchArgument("output",  default_value="log"),    # Output to screen or log
+        DeclareLaunchArgument("gtloc",   default_value="false"),  # Use Ground Truth Localizer
 
         ComposableNodeContainer(
         name='mlp_localization',
@@ -59,13 +59,12 @@ def generate_launch_description():
             #     plugin='localization_manager::LocalizationManagerNodelet',
             #     name='localization_manager',
             #     extra_arguments=[{'use_intra_process_comms': True}]),
-            # ComposableNode(
-            #     package='ground_truth_localizer',
-            #     plugin='ground_truth_localizer::GroundTruthLocalizerNodelet',
-            #     name='ground_truth_localizer',
-            #     remappings=[('/image', '/burgerimage')],
-            #     parameters=[{'history': 'keep_last'}],
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='ground_truth_localizer',
+                plugin='ground_truth_localizer::GroundTruthLocalizerNodelet',
+                name='ground_truth_localizer',
+                # condition=IfCondition(LaunchConfiguration("gtloc"))
+                ),
             # ComposableNode(
             #     package='image_sampler',
             #     plugin='image_sampler::ImageSampler',

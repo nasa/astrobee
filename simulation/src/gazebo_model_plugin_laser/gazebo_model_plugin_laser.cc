@@ -53,8 +53,6 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
  protected:
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle& nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
-
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
     if (sdf->HasElement("range"))
@@ -118,7 +116,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     pub_gazebo_->Publish(visual_);
 
     // Setup boilerplate marke code for rviz
-    marker_.header.stamp = FF_TIME_NOW();
+    marker_.header.stamp = GetTimeNow();
     marker_.header.frame_id = GetFrame("laser");
     marker_.ns = GetFrame("laser_visual", "_");
     marker_.id = 0;
@@ -158,7 +156,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
 
     // Update RVIZ marker
     marker_.action = visualization_msgs::Marker::MODIFY;
-    marker_.header.stamp = FF_TIME_NOW();
+    marker_.header.stamp = GetTimeNow();
     marker_.color.a = (req->enabled ? 0.9 : 0.0);
     pub_rviz_->publish(marker_);
 
@@ -184,7 +182,6 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   double rate_, range_, width_;
   transport::NodePtr gz_;
   transport::PublisherPtr pub_gazebo_;

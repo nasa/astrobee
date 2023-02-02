@@ -56,7 +56,6 @@ class GazeboSensorPluginDepthCam : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle& nh,
                     sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
     if (sdf->HasElement("haz_cam"))
       is_haz_cam_ = sdf->Get<bool>("haz_cam");
     // Get a link to the parent sensor
@@ -187,7 +186,7 @@ class GazeboSensorPluginDepthCam : public FreeFlyerSensorPlugin {
                      unsigned int len, const std::string & type) {
     // Publish the haz cam intrinsics
     info_msg_.header.frame_id = GetFrame();
-    info_msg_.header.stamp = FF_TIME_NOW();  // it is very important to get the time right
+    info_msg_.header.stamp = GetTimeNow();  // it is very important to get the time right
     FillCameraInfo(sensor_->DepthCamera(), info_msg_);  // fill in from the camera pointer
     pub_info_->publish(info_msg_);
 
@@ -211,7 +210,7 @@ class GazeboSensorPluginDepthCam : public FreeFlyerSensorPlugin {
     // Publish the haz cam pose
     Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->WorldPose(), sensor_->Pose());
     pose_msg_.header.frame_id = GetFrame();
-    pose_msg_.header.stamp = FF_TIME_NOW();  // it is very important to get the time right
+    pose_msg_.header.stamp = GetTimeNow();  // it is very important to get the time right
     pose_msg_.pose.position.x = sensor_to_world.translation().x();
     pose_msg_.pose.position.y = sensor_to_world.translation().y();
     pose_msg_.pose.position.z = sensor_to_world.translation().z();
@@ -269,7 +268,6 @@ class GazeboSensorPluginDepthCam : public FreeFlyerSensorPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FreeFlyerTimer timer_;
   // Published topics
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_image_;

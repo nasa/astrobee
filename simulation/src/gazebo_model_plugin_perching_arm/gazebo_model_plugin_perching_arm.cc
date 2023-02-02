@@ -104,7 +104,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle &nh, physics::ModelPtr model,
     sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
     // Get parameters
     if (sdf->HasElement("bay"))
       bay_ = sdf->Get<std::string>("bay");
@@ -344,7 +343,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   void TimerCallback() {
     // Package all joint states, inclusind the left and right proximal
     // and distal joints of the gripper (for visualization reasons)
-    msg_.header.stamp = FF_TIME_NOW();
+    msg_.header.stamp = GetTimeNow();
     size_t i = 0;
     for (; i < joints_.size(); i++) {
       msg_.name[i] = joints_[i]->GetName();
@@ -428,7 +427,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   double rate_;                                                        // Rate of joint state update
   std::string bay_;                                                    // Prefix to avoid name collisions
   ff_util::FreeFlyerTimer timer_;                                      // Timer for sending updates

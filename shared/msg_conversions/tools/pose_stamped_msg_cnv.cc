@@ -45,11 +45,11 @@ DEFINE_string(output_frame, "ground_truth",
               "The frame to output to tf2.");
 
 std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-std::shared_ptr<rclcpp::Clock> clock_;
+NodeHandle node_;
 
 void odometry_callback(geometry_msgs::PoseStampedPtr const odometry) {
   geometry_msgs::TransformStamped transform;
-  transform.header.stamp = FF_TIME_NOW();
+  transform.header.stamp = node_->get_clock()->now();
   transform.header.frame_id = FLAGS_input_frame;
   transform.child_frame_id = FLAGS_output_frame;
   transform.transform.translation.x = odometry->pose.position.x;
@@ -62,7 +62,6 @@ void odometry_callback(geometry_msgs::PoseStampedPtr const odometry) {
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   ROS_CREATE_NODE("pose_stamped_msg_cnv");
-  clock_ = node_->get_clock();
 
 
   auto odometry_sub = ROS_CREATE_SUBSCRIBER(geometry_msgs::PoseStamped, FLAGS_input_topic, 5, odometry_callback);
