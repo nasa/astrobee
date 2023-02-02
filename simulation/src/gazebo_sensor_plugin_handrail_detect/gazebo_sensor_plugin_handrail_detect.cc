@@ -84,19 +84,26 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
       return;
     }
 
-    if (!config_.GetReal("rate", &rate_)) FF_FATAL("Could not read the rate parameter.");
+    if (!config_.GetReal("rate", &rate_)) 
+      FF_FATAL("Could not read the rate parameter.");
 
-    if (!config_.GetReal("delay_camera", &delay_camera_)) FF_FATAL("Could not read the delay_camera parameter.");
+    if (!config_.GetReal("delay_camera", &delay_camera_))
+      FF_FATAL("Could not read the delay_camera parameter.");
 
-    if (!config_.GetReal("delay_features", &delay_features_)) FF_FATAL("Could not read the delay_features parameter.");
+    if (!config_.GetReal("delay_features", &delay_features_))
+      FF_FATAL("Could not read the delay_features parameter.");
 
-    if (!config_.GetReal("near_clip", &near_clip_)) FF_FATAL("Could not read the near_clip parameter.");
+    if (!config_.GetReal("near_clip", &near_clip_))
+      FF_FATAL("Could not read the near_clip parameter.");
 
-    if (!config_.GetReal("far_clip", &far_clip_)) FF_FATAL("Could not read the far_clip parameter.");
+    if (!config_.GetReal("far_clip", &far_clip_))
+      FF_FATAL("Could not read the far_clip parameter.");
 
-    if (!config_.GetUInt("num_samp", &num_samp_)) FF_ERROR("Could not read the num_samp parameter.");
+    if (!config_.GetUInt("num_samp", &num_samp_))
+      FF_ERROR("Could not read the num_samp parameter.");
 
-    if (!config_.GetUInt("num_features", &num_features_)) FF_FATAL("Could not read the num_features parameter.");
+    if (!config_.GetUInt("num_features", &num_features_)) 
+      FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
     pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(TOPIC_LOCALIZATION_HR_REGISTRATION, 1);
@@ -156,7 +163,8 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
     msg_feat_.landmarks.clear();
 
     // Handle the transform for all sensor types
-    Eigen::Affine3d wTb = (Eigen::Translation3d(GetModel()->WorldPose().Pos().X(), GetModel()->WorldPose().Pos().Y(),
+    Eigen::Affine3d wTb = (Eigen::Translation3d(GetModel()->WorldPose().Pos().X(),
+                                                GetModel()->WorldPose().Pos().Y(),
                                                 GetModel()->WorldPose().Pos().Z()) *
                            Eigen::Quaterniond(GetModel()->WorldPose().Rot().W(), GetModel()->WorldPose().Rot().X(),
                                               GetModel()->WorldPose().Rot().Y(), GetModel()->WorldPose().Rot().Z()));
@@ -168,7 +176,8 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "perch_cam");
-    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), Eigen::Matrix3d::Identity(), cam_params);
+    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), 
+      Eigen::Matrix3d::Identity(), cam_params);
 
     // Look for all models with the name "handrail". This will find every
     // handrail of every size that exists in the gazebo simulation

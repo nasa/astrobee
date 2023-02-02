@@ -80,23 +80,31 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
       return;
     }
 
-    if (!config_.GetReal("rate", &rate_)) FF_FATAL("Could not read the rate parameter.");
+    if (!config_.GetReal("rate", &rate_)) 
+      FF_FATAL("Could not read the rate parameter.");
 
-    if (!config_.GetReal("delay_camera", &delay_camera_)) FF_FATAL("Could not read the delay_camera parameter.");
+    if (!config_.GetReal("delay_camera", &delay_camera_)) 
+      FF_FATAL("Could not read the delay_camera parameter.");
 
-    if (!config_.GetReal("delay_features", &delay_features_)) FF_FATAL("Could not read the delay_features parameter.");
+    if (!config_.GetReal("delay_features", &delay_features_))
+      FF_FATAL("Could not read the delay_features parameter.");
 
-    if (!config_.GetReal("near_clip", &near_clip_)) FF_FATAL("Could not read the near_clip parameter.");
+    if (!config_.GetReal("near_clip", &near_clip_))
+      FF_FATAL("Could not read the near_clip parameter.");
 
-    if (!config_.GetReal("far_clip", &far_clip_)) FF_FATAL("Could not read the far_clip parameter.");
+    if (!config_.GetReal("far_clip", &far_clip_))
+      FF_FATAL("Could not read the far_clip parameter.");
 
-    if (!config_.GetUInt("num_features", &num_features_)) FF_FATAL("Could not read the num_features parameter.");
+    if (!config_.GetUInt("num_features", &num_features_))
+      FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
-    pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(TOPIC_LOCALIZATION_OF_REGISTRATION, 1);
+    pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(
+      TOPIC_LOCALIZATION_OF_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    pub_feat_ = nh->create_publisher<ff_msgs::Feature2dArray>(TOPIC_LOCALIZATION_OF_FEATURES, 1);
+    pub_feat_ = nh->create_publisher<ff_msgs::Feature2dArray>(
+      TOPIC_LOCALIZATION_OF_FEATURES, 1);
 
     // Create a shape for collision testing
     GetWorld()->Physics()->InitForThread();
