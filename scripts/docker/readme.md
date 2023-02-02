@@ -60,10 +60,12 @@ this needs to be done everytime you restart vscode, and enables the screen forwa
 
 ```bash
 cd $ASTROBEE_WS
-source /opt/ros/rolling/setup.bash
-colcon build --symlink-install
-colcon test
-coldon test-result --verbose
+source /opt/ros/noetic/setup.bash
+catkin build
+catkin build --make-args tests
+catkin build --make-args test
+source devel/setup.astrobee_base_toolchain
+catkin_test_results build
 ```
 
 (Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
