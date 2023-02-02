@@ -163,20 +163,32 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
     msg_feat_.landmarks.clear();
 
     // Handle the transform for all sensor types
-    Eigen::Affine3d wTb = (Eigen::Translation3d(GetModel()->WorldPose().Pos().X(),
-                                                GetModel()->WorldPose().Pos().Y(),
-                                                GetModel()->WorldPose().Pos().Z()) *
-                           Eigen::Quaterniond(GetModel()->WorldPose().Rot().W(), GetModel()->WorldPose().Rot().X(),
-                                              GetModel()->WorldPose().Rot().Y(), GetModel()->WorldPose().Rot().Z()));
-    Eigen::Affine3d bTc =
-      (Eigen::Translation3d(sensor_->Pose().Pos().X(), sensor_->Pose().Pos().Y(), sensor_->Pose().Pos().Z()) *
-       Eigen::Quaterniond(sensor_->Pose().Rot().W(), sensor_->Pose().Rot().X(), sensor_->Pose().Rot().Y(),
-                          sensor_->Pose().Rot().Z()));
+    Eigen::Affine3d wTb = (
+        Eigen::Translation3d(
+          GetModel()->WorldPose().Pos().X(),
+          GetModel()->WorldPose().Pos().Y(),
+          GetModel()->WorldPose().Pos().Z()) *
+        Eigen::Quaterniond(
+          GetModel()->WorldPose().Rot().W(),
+          GetModel()->WorldPose().Rot().X(),
+          GetModel()->WorldPose().Rot().Y(),
+          GetModel()->WorldPose().Rot().Z()));
+    Eigen::Affine3d bTc = (
+        Eigen::Translation3d(
+          sensor_->Pose().Pos().X(),
+          sensor_->Pose().Pos().Y(),
+          sensor_->Pose().Pos().Z()) *
+        Eigen::Quaterniond(
+          sensor_->Pose().Rot().W(),
+          sensor_->Pose().Rot().X(),
+          sensor_->Pose().Rot().Y(),
+          sensor_->Pose().Rot().Z()));
     Eigen::Affine3d wTc = wTb * bTc;
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "perch_cam");
-    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), Eigen::Matrix3d::Identity(), cam_params);
+    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0),
+      Eigen::Matrix3d::Identity(), cam_params);
 
     // Look for all models with the name "handrail". This will find every
     // handrail of every size that exists in the gazebo simulation

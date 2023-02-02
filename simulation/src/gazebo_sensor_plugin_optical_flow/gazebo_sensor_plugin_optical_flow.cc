@@ -157,15 +157,27 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     msg_feat_.camera_id = msg_reg_.camera_id;
 
     // Handle the transform for all sensor types
-    Eigen::Affine3d wTb = (Eigen::Translation3d(GetModel()->WorldPose().Pos().X(), GetModel()->WorldPose().Pos().Y(),
-                                                GetModel()->WorldPose().Pos().Z()) *
-                           Eigen::Quaterniond(GetModel()->WorldPose().Rot().W(), GetModel()->WorldPose().Rot().X(),
-                                              GetModel()->WorldPose().Rot().Y(), GetModel()->WorldPose().Rot().Z()));
+    Eigen::Affine3d wTb = (
+        Eigen::Translation3d(
+          GetModel()->WorldPose().Pos().X(),
+          GetModel()->WorldPose().Pos().Y(),
+          GetModel()->WorldPose().Pos().Z()) *
+        Eigen::Quaterniond(
+          GetModel()->WorldPose().Rot().W(),
+          GetModel()->WorldPose().Rot().X(),
+          GetModel()->WorldPose().Rot().Y(),
+          GetModel()->WorldPose().Rot().Z()));
 
-    Eigen::Affine3d bTs =
-      (Eigen::Translation3d(sensor_->Pose().Pos().X(), sensor_->Pose().Pos().Y(), sensor_->Pose().Pos().Z()) *
-       Eigen::Quaterniond(sensor_->Pose().Rot().W(), sensor_->Pose().Rot().X(), sensor_->Pose().Rot().Y(),
-                          sensor_->Pose().Rot().Z()));
+    Eigen::Affine3d bTs = (
+        Eigen::Translation3d(
+          sensor_->Pose().Pos().X(),
+          sensor_->Pose().Pos().Y(),
+          sensor_->Pose().Pos().Z()) *
+        Eigen::Quaterniond(
+          sensor_->Pose().Rot().W(),
+          sensor_->Pose().Rot().X(),
+          sensor_->Pose().Rot().Y(),
+          sensor_->Pose().Rot().Z()));
     Eigen::Affine3d wTs = wTb * bTs;
 
     msg_feat_.header.stamp = FF_TIME_NOW();
