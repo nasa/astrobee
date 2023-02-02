@@ -98,7 +98,6 @@ def main():
             if (
                 not "external/" in filename
                 and not "Software/" in filename
-                and not "gnc/matlab/" in filename
                 and not "agast_score" in filename
                 and not "brisk" in filename
                 and not "debian" in filename
