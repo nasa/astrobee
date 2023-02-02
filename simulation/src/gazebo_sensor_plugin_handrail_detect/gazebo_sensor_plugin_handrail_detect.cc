@@ -84,7 +84,7 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
       return;
     }
 
-    if (!config_.GetReal("rate", &rate_)) 
+    if (!config_.GetReal("rate", &rate_))
       FF_FATAL("Could not read the rate parameter.");
 
     if (!config_.GetReal("delay_camera", &delay_camera_))
@@ -102,7 +102,7 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
     if (!config_.GetUInt("num_samp", &num_samp_))
       FF_ERROR("Could not read the num_samp parameter.");
 
-    if (!config_.GetUInt("num_features", &num_features_)) 
+    if (!config_.GetUInt("num_features", &num_features_))
       FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
@@ -176,8 +176,7 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "perch_cam");
-    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), 
-      Eigen::Matrix3d::Identity(), cam_params);
+    static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), Eigen::Matrix3d::Identity(), cam_params);
 
     // Look for all models with the name "handrail". This will find every
     // handrail of every size that exists in the gazebo simulation

@@ -80,10 +80,10 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
       return;
     }
 
-    if (!config_.GetReal("rate", &rate_)) 
+    if (!config_.GetReal("rate", &rate_))
       FF_FATAL("Could not read the rate parameter.");
 
-    if (!config_.GetReal("delay_camera", &delay_camera_)) 
+    if (!config_.GetReal("delay_camera", &delay_camera_))
       FF_FATAL("Could not read the delay_camera parameter.");
 
     if (!config_.GetReal("delay_features", &delay_features_))
