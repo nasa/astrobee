@@ -30,7 +30,6 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_hw_msgs
   ff_util
   config_reader
-  gnc_autocode
   pmc
 )
 
@@ -47,7 +46,6 @@ catkin_package(
     ff_hw_msgs
     ff_util
     config_reader
-    gnc_autocode
     pmc
 )
 
