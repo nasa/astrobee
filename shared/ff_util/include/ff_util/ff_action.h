@@ -85,7 +85,7 @@ class FreeFlyerActionServer {
   typedef std::function < void (void) > CancelCallbackType;
 
   // Constructor
-  FreeFlyerActionServer() : state_(WAITING_FOR_CREATE) {}
+  FreeFlyerActionServer() : result_sent_(false), state_(WAITING_FOR_CREATE) {}
 
   // Destructor
   ~FreeFlyerActionServer() {}
@@ -105,6 +105,7 @@ class FreeFlyerActionServer {
 
   // Start the server
   void Create(NodeHandle node, std::string const& topic) {
+    FF_INFO("FFS: Begin create!");
     sas_ = rclcpp_action::create_server<ActionType>(node,
       topic,
       std::bind(&FreeFlyerActionServer::GoalCallback, this,
@@ -114,20 +115,24 @@ class FreeFlyerActionServer {
       std::bind(&FreeFlyerActionServer::AcceptedCallback, this,
                                                         std::placeholders::_1));
     state_ = WAITING_FOR_GOAL;
+    FF_INFO("FFS: End create!");
   }
 
   // Send incremental feedback for the current goal
   void SendFeedback(std::shared_ptr<typename ActionType::Feedback> const
                                                                     feedback) {
+    FF_INFO("FFS: Begin send feedback!");
     if (!current_goal_handle_ || !feedback) {
       return;
     }
     current_goal_handle_->publish_feedback(feedback);
+    FF_INFO("FFS: End send feedback!");
   }
 
   // Send the final result for the current goal
   void SendResult(FreeFlyerActionState::Enum result_code,
                   std::shared_ptr<typename ActionType::Result> const result) {
+    FF_INFO("FFS: Begin send result.");
     if (!current_goal_handle_ || !result) {
       return;
     }
@@ -147,6 +152,8 @@ class FreeFlyerActionServer {
       default:
         break;
     }
+
+    result_sent_ = true;
 
     // Check to see if this goal was canceled and there is another goal waiting
     // to be executed
@@ -169,8 +176,10 @@ class FreeFlyerActionServer {
         }
       }
     }
-    // current_goal_handle_ = nullptr;
+
+    current_goal_handle_ = nullptr;
     state_ = WAITING_FOR_GOAL;
+    FF_INFO("FFS: End send result.");
   }
 
  protected:
@@ -191,6 +200,7 @@ class FreeFlyerActionServer {
     // Not sure if this is correct but the goal is part of the goal handle in
     // the accepted callback so the goal passed in to this callback is not
     // being saved.
+    FF_INFO("FFS: Begin goal callback!");
 
     latest_uuid_ = uuid;
     // If we are waiting for last goal to go active, this new goal is preempting
@@ -219,10 +229,12 @@ class FreeFlyerActionServer {
 
     // Nominal case where we are waiting for goal
     state_ = WAITING_FOR_ACCEPTED;
+    FF_INFO("FFS: End goal callback!");
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
   void AcceptedCallback(const std::shared_ptr<GoalHandle> goal_handle) {
+    FF_INFO("FFS: Begin accepted callback!");
     // First check to see if this goal id matches the latest goal id. If it
     // doesn't we don't care about this goal
     if (goal_handle->get_goal_id() != latest_uuid_) {
@@ -270,24 +282,41 @@ class FreeFlyerActionServer {
         goal_handle->abort(result);
       }
     }
+    FF_INFO("FFS: End accepted callback!");
   }
 
   void StartGoal(const std::shared_ptr<GoalHandle> goal_handle) {
+    FF_INFO("FFS: Begin start goal callback!");
     state_ = WAITING_FOR_RESPONSE;
     current_goal_handle_ = goal_handle;
     if (cb_goal_) {
       std::thread(cb_goal_, current_goal_handle_->get_goal()).detach();
     }
+    FF_INFO("FFS: End start goal callback!");
   }
 
   // Handles request to cancel a goal
   rclcpp_action::CancelResponse CancelCallback(
                               const std::shared_ptr<GoalHandle> goal_handle) {
+    FF_INFO("FFS: Begin cancel goal");
     // Nominal case
     if (state_ == WAITING_FOR_RESPONSE) {
+      FF_INFO("FFS: In waiting for response if.");
+      // A result must be sent when a goal is canceled. If not, the action
+      // server will throw an exception.
+      result_sent_ = false;
       state_ = CANCELED;
       if (cb_cancel_) {
         cb_cancel_();
+      }
+      // Send result if it wasn't sent
+      if (!result_sent_) {
+        FF_INFO("FFS: In if not result sent!");
+        std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+        // Weirdly sending a canceled result causes a failure/exception in the
+        // action server so send succeeded instead which totally makes sense
+        goal_handle->succeed(result);
       }
     } else if (state_ == WAITING_FOR_ACCEPTED) {
       // This assumes actions allow a goal to be canceled before fully being
@@ -307,11 +336,7 @@ class FreeFlyerActionServer {
         latest_uuid_ = {};
       }
     } else if (state_ == CANCELED) {
-      // If this is a cancel for the old goal, set state to canceled so the
-      // goal gets canceled in the send result code
-      if (current_goal_handle_->get_goal_id() == goal_handle->get_goal_id()) {
-        state_ = CANCELED;
-      } else {
+      if (current_goal_handle_->get_goal_id() != goal_handle->get_goal_id()) {
         // Check to make sure the latest goal is being canceled. If we had
         // multiple goals come in while the oldest was being canceled, they will
         // be aborted in the accepted callback. Again, do we care that the goals
@@ -334,10 +359,12 @@ class FreeFlyerActionServer {
         }
       }
     }
+    FF_INFO("FFS: End cancel goal.");
     return rclcpp_action::CancelResponse::ACCEPT;
   }
 
  protected:
+  bool result_sent_;
   State state_;
   rclcpp_action::GoalUUID latest_uuid_;
   typename rclcpp_action::Server<ActionType>::SharedPtr sas_;
@@ -432,6 +459,7 @@ class FreeFlyerActionClient {
 
   // Initialize the action client and return whether connected by end of call
   bool Create(NodeHandle nh, std::string const& topic) {
+    FF_INFO("FFC: Begin create!");
     // Initialize all timers, but do not start them.
     timer_connected_.createTimer(to_connect_,
         std::bind(&FreeFlyerActionClient::ConnectedTimeoutCallback, this),
@@ -464,17 +492,20 @@ class FreeFlyerActionClient {
       StartOptionalTimer(timer_poll_, to_poll_);
       ConnectPollCallback();
     }
+    FF_INFO("FFC: End create!");
     // Return whether the server is ready by the end of this function
     return IsConnected();
   }
 
   // Check if connected
   bool IsConnected() {
+    FF_INFO("FFC: Is connected!");
     return (sac_ && sac_->action_server_is_ready());
   }
 
   // Send a new goal
   bool SendGoal(typename ActionType::Goal const& goal) {
+    FF_INFO("FFC: Begin send goal!");
     if (!sac_) return false;
 
     // If we are preempting another goal, stop all timers.
@@ -510,11 +541,13 @@ class FreeFlyerActionClient {
     sac_->async_send_goal(goal, sgo);
     // Update the state
     state_ = WAITING_FOR_ACTIVE;
+    FF_INFO("FFC: End send goal!");
     return true;
   }
 
   // Cancel the goal that is currently running
   bool CancelGoal() {
+    FF_INFO("FFC: Begin cancel goal!");
     if (!sac_ || !current_goal_handle_) return false;
     // Only cancel a goal if we are in the correct state
     switch (state_) {
@@ -526,10 +559,12 @@ class FreeFlyerActionClient {
         // Set goal handle to null so we stop tracking the goal
         current_goal_handle_ = nullptr;
         state_ = WAITING_FOR_GOAL;
+        FF_INFO("FFC: End cancel goal!");
         return true;
       default:
         break;
     }
+    FF_INFO("FFC: End cancel goal!");
     return false;
   }
 
@@ -544,15 +579,18 @@ class FreeFlyerActionClient {
 
   // Stop all timers
   void StopAllTimers() {
+    FF_INFO("FFC: Begin stop all timers!");
     timer_connected_.stop();
     timer_active_.stop();
     timer_response_.stop();
     timer_deadline_.stop();
+    FF_INFO("FFC: End stop all timers!");
   }
 
   // Completes the current goal
   void Complete(FreeFlyerActionState::Enum state,
                 std::shared_ptr<const typename ActionType::Result> result) {
+    FF_INFO("FFC: Begin complete!");
     // Stop all timers
     StopAllTimers();
     // Send response
@@ -561,44 +599,56 @@ class FreeFlyerActionClient {
     // Reset state
     state_ = WAITING_FOR_GOAL;
     current_goal_handle_ = nullptr;
+    FF_INFO("FFC: End complete!");
   }
 
   // Called periodically until the server is connected
   void ConnectPollCallback() {
+    FF_INFO("FFC: Begin connect poll callback!");
     if (!sac_ || !sac_->action_server_is_ready()) return;
     timer_connected_.stop();
     timer_poll_.stop();
     state_ = WAITING_FOR_GOAL;
     if (cb_connected_)
       cb_connected_();
+    FF_INFO("FFC: End connect poll callback!");
   }
 
   // Called when the server cannot be connected to
   void ConnectedTimeoutCallback() {
+    FF_INFO("FFC: Begin connected timeout callback!");
     Complete(FreeFlyerActionState::TIMEOUT_ON_CONNECT, nullptr);
+    FF_INFO("FFC: End connected timeout callback!");
   }
 
   // Called when the goal does not go active
   void ActiveTimeoutCallback() {
     FF_WARN("Freeflyer action timed out on going active.");
+    FF_INFO("FFC: Active timeout callback!");
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_ACTIVE, nullptr);
+    FF_INFO("FFC: Active timeout callback!");
   }
 
   // Called when the task deadline was not met
   void DeadlineTimeoutCallback() {
+    FF_INFO("FFC: Begin deadline timeout callback!");
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_DEADLINE, nullptr);
+    FF_INFO("FFC: End deadline timeout callback!");
   }
 
   // Called when no feedback/result is received within a certain period of time
   void ResponseTimeoutCallback() {
+    FF_INFO("FFC: Begin response timeout callback!");
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_RESPONSE, nullptr);
+    FF_INFO("FFC: End response timeout callback!");
   }
   // Goal is now active, restart timer and switch state
   void ActiveCallback(std::shared_future<typename GoalHandle::SharedPtr>
                                                                       future) {
+    FF_INFO("FFC: Begin active callback!");
     timer_active_.stop();
 
     if (!sac_) return;
@@ -617,11 +667,13 @@ class FreeFlyerActionClient {
       // We are now waiting on a response
       state_ = WAITING_FOR_RESPONSE;
     }
+    FF_INFO("FFC: End active callback!");
   }
 
   // Feedback received
   void FeedbackCallback(typename GoalHandle::SharedPtr goal_handle,
           const std::shared_ptr<const typename ActionType::Feedback> feedback) {
+    FF_INFO("FFC: Begin feedback callback!");
     timer_response_.stop();
     // Need to check if this is the newest goal being executed. We can ignore
     // the feedback from preempted/canceled goals
@@ -633,10 +685,12 @@ class FreeFlyerActionClient {
       if (cb_feedback_)
         cb_feedback_(feedback);
     }
+    FF_INFO("FFC: End feedback callback!");
   }
 
   // Called when a result is received
   void ResultCallback(typename GoalHandle::WrappedResult const& result) {
+    FF_INFO("FFC: Begin result callback!");
     if (current_goal_handle_ &&
         current_goal_handle_->get_goal_id() == result.goal_id) {
       // The response we send depends on the state
@@ -666,6 +720,7 @@ class FreeFlyerActionClient {
       // TODO(Katie) See if this is still necessary
       StartOptionalTimer(timer_response_delay_, to_response_delay_);
     }
+    FF_INFO("FFC: End result callback!");
   }
 
   // This delayed callback is necessary because on Ubuntu 20 / ROS noetic,
@@ -675,11 +730,13 @@ class FreeFlyerActionClient {
   // failed because the previous action is technically not finished and
   // returns an error.
   void ResultDelayCallback() {
+    FF_INFO("FFC: Begin result delay callback!");
     // Call the result callback on the client side
     Complete(state_response_, result_);
 
     // Return to waiting for a goal
     state_ = WAITING_FOR_GOAL;
+    FF_INFO("FFC: End result delay callback!");
   }
 
  protected:

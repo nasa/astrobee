@@ -105,19 +105,19 @@ if(BUILD_TESTING)
   target_link_libraries(test_ff_action_nominal_behavior ff_component)
   add_ros_test(test/launch/test_ff_action_nominal_behavior.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
-#  ament_add_gtest_executable(test_ff_action_active_timeout
-#    test/test_ff_action_active_timeout.cc
-#  )
-#  ament_target_dependencies(test_ff_action_active_timeout rclcpp_action)
-#  target_link_libraries(test_ff_action_active_timeout ff_component)
-#  add_ros_test(test/launch/test_ff_action_active_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+  ament_add_gtest_executable(test_ff_action_active_timeout
+    test/test_ff_action_active_timeout.cc
+  )
+  ament_target_dependencies(test_ff_action_active_timeout rclcpp_action)
+  target_link_libraries(test_ff_action_active_timeout ff_component)
+  add_ros_test(test/launch/test_ff_action_active_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
-#  ament_add_gtest_executable(test_ff_action_cancel_own_goal
-#    test/test_ff_action_cancel_own_goal.cc
-#  )
-#  ament_target_dependencies(test_ff_action_cancel_own_goal rclcpp_action)
-#  target_link_libraries(test_ff_action_cancel_own_goal ff_component)
-#  add_ros_test(test/launch/test_ff_action_cancel_own_goal.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+  ament_add_gtest_executable(test_ff_action_cancel_own_goal
+    test/test_ff_action_cancel_own_goal.cc
+  )
+  ament_target_dependencies(test_ff_action_cancel_own_goal rclcpp_action)
+  target_link_libraries(test_ff_action_cancel_own_goal ff_component)
+  add_ros_test(test/launch/test_ff_action_cancel_own_goal.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
 #  add_rostest_gtest(ff_action_connect_timeout
 #    test/ff_action_connect_timeout.test

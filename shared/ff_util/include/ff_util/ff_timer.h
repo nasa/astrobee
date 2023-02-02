@@ -118,8 +118,10 @@ class FreeFlyerTimer {
   // ARS never passed false for reset so the following two functions don't
   // take a reset argument and implement the reset is true functionality
   // from ROS1
-  void setPeriod(double period_sec) {
-    setPeriod(std::make_shared<rclcpp::Duration>(period_sec, 0));
+  void setPeriod(double period) {
+    int period_sec = std::floor(period);
+    int period_nsec = (period - period_sec) * 1e9;
+    setPeriod(std::make_shared<rclcpp::Duration>(period_sec, period_nsec));
   }
 
   void setPeriod(std::shared_ptr<rclcpp::Duration> period) {
