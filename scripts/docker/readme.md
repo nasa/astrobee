@@ -48,6 +48,24 @@ You can manage your Dev Containers configuration using the files in the `.devcon
 
 You can start by selecting `View->Terminal` in the VSCode graphical interface. This will display a terminal session inside the Docker container where you can run arbitrary commands. Your container will persist throughout your VSCode session, and changes you make using the VSCode editor will be reflected inside the container, making it easy to do quick interactive edit/build/test cycles.
 
+## Enable x-forwarding from the Dev Container
+
+In a cmd line in your system run:
+```bash
+xhost local:docker
+```
+this needs to be done everytime you restart vscode, and enables the screen forwarding such that you can open graphical guis like rviz.
+
+## Building + testing the code
+
+```bash
+cd $ASTROBEE_WS
+source /opt/ros/rolling/setup.bash
+colcon build --symlink-install
+colcon test
+coldon test-result --verbose
+```
+
 (Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
 
 # Option 2: Using the Docker support scripts
