@@ -1,8 +1,0 @@
-
-*.tlc
-*.mex*
-*ile_checksums.ma*
-*twmakecfg*
-*cxx_functions/Eigen*
-ex_*.cpp
-
