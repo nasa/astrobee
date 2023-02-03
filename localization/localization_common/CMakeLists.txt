@@ -62,8 +62,8 @@ add_library(${PROJECT_NAME} SHARED
   src/combined_nav_state.cc
   src/combined_nav_state_covariances.cc
   src/pose_interpolater.cc
-  # src/rate_timer.cc
-  # src/ros_timer.cc
+  src/rate_timer.cc
+  src/ros_timer.cc
   src/time.cc
   src/timer.cc
   src/test_utilities.cc
