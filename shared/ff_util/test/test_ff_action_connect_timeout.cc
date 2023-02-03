@@ -16,10 +16,9 @@
  * under the License.
  */
 
-// Tests action active timeout
-// This tests allows the client to connect to the server, and then kills the
-// server. When a goal is sent to the server, after 4 seconds, an active
-// timeout result should be triggered showing that it did not receive the goal.
+// Tests action connect timeout
+// In this test a server is not spawned, therefore the client can't connect.
+// This test passes if a timeout on connect result is issued.
 
 // Required for the test framework
 #include <gtest/gtest.h>
@@ -30,6 +29,7 @@
 // Action interface
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_component.h>
+#include <ff_util/ff_timer.h>
 
 // Use one of the simplest actions
 #include <ff_msgs/action/dock.hpp>
@@ -38,51 +38,13 @@
 #include <functional>
 #include <memory>
 
-FF_DEFINE_LOGGER("test_ff_action_active_timeout")
-
-// SERVER CALLBACKS
-class Server : ff_util::FreeFlyerComponent {
- public:
-  explicit Server(const rclcpp::NodeOptions& options) :
-      ff_util::FreeFlyerComponent(options, "action_server_test", true) {}
-
-  void Initialize(NodeHandle nh) {
-    FF_INFO("S:Initialize");
-    action_.SetGoalCallback(std::bind(&Server::GoalCallback,
-                            this,
-                            std::placeholders::_1));
-    action_.SetPreemptCallback(std::bind(&Server::PreemptCallback, this));
-    action_.SetCancelCallback(std::bind(&Server::CancelCallback, this));
-    action_.Create(nh, "test_action");
-  }
-
- protected:
-  void GoalCallback(std::shared_ptr<const ff_msgs::action::Dock::Goal> goal) {
-    FF_INFO("S:GoalCallback()");
-    EXPECT_TRUE(false);
-  }
-
-  void CancelCallback() {
-    FF_INFO("S:CancelCallback()");
-    EXPECT_TRUE(false);
-  }
-
-  void PreemptCallback() {
-    FF_INFO("S:PreemptCallback()");
-    EXPECT_TRUE(false);
-  }
-
- private:
-  ff_util::FreeFlyerActionServer<ff_msgs::action::Dock> action_;
-};
-
-std::shared_ptr<Server> server = nullptr;
+FF_DEFINE_LOGGER("test_ff_action_connect_timeout")
 
 // CLIENT CALLBACKS
 class Client : ff_util::FreeFlyerComponent {
  public:
   explicit Client(const rclcpp::NodeOptions& options) :
-      ff_util::FreeFlyerComponent(options, "client_test", true) {}
+      ff_util::FreeFlyerComponent(options, "action_client_test", true) {}
 
   void Initialize(NodeHandle nh) {
     // Setters for callbacks
@@ -114,17 +76,13 @@ class Client : ff_util::FreeFlyerComponent {
   void ResultCallback(ff_util::FreeFlyerActionState::Enum state,
                   std::shared_ptr<const ff_msgs::action::Dock::Result> result) {
     FF_INFO("C:ResultCallback()");
-    EXPECT_TRUE(state == ff_util::FreeFlyerActionState::TIMEOUT_ON_ACTIVE);
+    EXPECT_TRUE(state == ff_util::FreeFlyerActionState::TIMEOUT_ON_CONNECT);
     rclcpp::shutdown();
   }
 
   void ConnectedCallback() {
     FF_INFO("C:ConnectedCallback()");
-    // Destroy the server
-    server = nullptr;
-    // Send a goal to the destroyed server!
-    ff_msgs::action::Dock::Goal goal = ff_msgs::action::Dock::Goal();
-    action_.SendGoal(goal);
+    EXPECT_TRUE(false);;
   }
 
   void ActiveCallback() {
@@ -133,26 +91,23 @@ class Client : ff_util::FreeFlyerComponent {
   }
 
  private:
-  ff_util::FreeFlyerActionClient <ff_msgs::action::Dock> action_;
+  ff_util::FreeFlyerActionClient<ff_msgs::action::Dock> action_;
 };
 
 // Perform a test of the simple action client
-TEST(ff_action, active_timeout) {
+TEST(ff_action, connect_timeout) {
   rclcpp::NodeOptions node_options;
   rclcpp::Node::SharedPtr nh =
-                std::make_shared<rclcpp::Node>("test_ff_action_active_timeout");
-  server = std::make_shared<Server>(node_options);
+              std::make_shared<rclcpp::Node>("test_ff_action_connect_timeout");
   Client client(node_options);
-  server->Initialize(nh);
   client.Initialize(nh);
-  // Wait until shutdown is called
   rclcpp::spin(nh);
 }
 
 // Required for the test framework
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  rclcpp::init(argc, argv);
+  ros::init(argc, argv);
   int result = RUN_ALL_TESTS();
   rclcpp::shutdown();
   return result;

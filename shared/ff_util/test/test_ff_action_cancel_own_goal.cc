@@ -45,11 +45,10 @@ FF_DEFINE_LOGGER("test_ff_action_cancel_own_goal")
 bool done = false;
 
 // SERVER CALLBACKS
-
 class Server : ff_util::FreeFlyerComponent {
  public:
   explicit Server(const rclcpp::NodeOptions& options) :
-      FreeFlyerComponent(options, "action_server_test", true) {}
+      ff_util::FreeFlyerComponent(options, "action_server_test", true) {}
 
   void Initialize(NodeHandle nh) {
     action_.SetGoalCallback(std::bind(&Server::GoalCallback,
@@ -107,7 +106,6 @@ class Server : ff_util::FreeFlyerComponent {
 };
 
 // CLIENT CALLBACKS
-
 class Client : ff_util::FreeFlyerComponent {
  public:
   explicit Client(const rclcpp::NodeOptions& options) :

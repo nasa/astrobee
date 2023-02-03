@@ -25,91 +25,104 @@
 #include <gtest/gtest.h>
 
 // Required for the test cases
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // Action interface
 #include <ff_util/ff_action.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
+#include <ff_util/ff_timer.h>
 
-// Borrow the example from actionlib
-#include <actionlib/TwoIntsAction.h>
+// Use one of the simplest action
+#include <ff_msgs/action/dock.hpp>
 
 // C++ includes
 #include <functional>
 #include <memory>
 
 // SERVER CALLBACKS
-
-class Server : ff_util::FreeFlyerNodelet {
+class Server : ff_util::FreeFlyerComponent {
  public:
-  Server() : ff_util::FreeFlyerNodelet("server_test", true), messages_(0) {}
+  explicit Server(const rclcpp::NodeOptions& options) :
+      ff_util::FreeFlyerComponent(options, "action_server_test", true),
+      messages_(0) {}
 
-  void Initialize(ros::NodeHandle *nh) {
-    action_.SetGoalCallback(std::bind(&Server::GoalCallback, this, std::placeholders::_1));
+  void Initialize(NodeHandle nh) {
+    action_.SetGoalCallback(std::bind(&Server::GoalCallback,
+                            this,
+                            std::placeholders::_1));
     action_.SetPreemptCallback(std::bind(&Server::PreemptCallback, this));
     action_.SetCancelCallback(std::bind(&Server::CancelCallback, this));
-    action_.Create(nh, "two_ints_action");
-    timer_ = nh->createTimer(ros::Duration(0.2), &Server::TimerCallback, this, false, false);
+    action_.Create(nh, "test_action");
+    timer_.createTimer(0.2,
+                       std::bind(&Server::TimerCallback, this),
+                       nh,
+                       false,
+                       false);
   }
 
  protected:
-  void GoalCallback(actionlib::TwoIntsGoalConstPtr const& goal) {
-    ROS_INFO("S:GoalCallback()");
+  void GoalCallback(std::shared_ptr<const ff_msgs::action::Dock::Goal> goal) {
+    FF_INFO("S:GoalCallback()");
     messages_ = 0;
     timer_.start();
   }
 
   void CancelCallback() {
-    ROS_INFO("S:CancelCallback()");
+    FF_INFO("S:CancelCallback()");
     EXPECT_TRUE(false);
   }
 
   void PreemptCallback() {
-    ROS_INFO("S:PreemptCallback()");
+    FF_INFO("S:PreemptCallback()");
   }
 
-  void TimerCallback(ros::TimerEvent const& event) {
+  void TimerCallback() {
+    FF_INFO("S:TimerCallback()");
     if (messages_++ < 10) {
-      actionlib::TwoIntsFeedback feedback;
+      ff_msgs::action::Dock::Feedback::SharedPtr feedback =
+                            std::make_shared<ff_msgs::action::Dock::Feedback>();
       action_.SendFeedback(feedback);
     } else {
       timer_.stop();
-      actionlib::TwoIntsResult result;
+      ff_msgs::action::Dock::Result::SharedPtr result =
+                              std::make_shared<ff_msgs::action::Dock::Result>();
       action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
     }
   }
 
  private:
-  size_t messages_;
-  ff_util::FreeFlyerActionServer < actionlib::TwoIntsAction > action_;
-  ros::Timer timer_;
+  int messages_;
+  ff_util::FreeFlyerActionServer<ff_msgs::action::Dock> action_;
+  ff_util::FreeFlyerTimer timer_;
 };
 
 // CLIENT CALLBACKS
-
-class Client1 : ff_util::FreeFlyerNodelet {
+class Client1 : ff_util::FreeFlyerComponent {
  public:
-  Client1() : ff_util::FreeFlyerNodelet("client_test", true) {}
+  explicit Client1(const rclcpp::NodeOptions& options) :
+      ff_util::FreeFlyerComponent(option, "action_client_test", true) {}
 
-  void Initialize(ros::NodeHandle *nh) {
+  void Initialize(NodeHandle nh) {
     // Setters for callbacks
-    action_.SetFeedbackCallback(
-      std::bind(&Client1::FeedbackCallback, this, std::placeholders::_1));
-    action_.SetResultCallback(
-      std::bind(&Client1::ResultCallback, this, std::placeholders::_1, std::placeholders::_2));
-    action_.SetConnectedCallback(
-      std::bind(&Client1::ConnectedCallback, this));
-    action_.SetActiveCallback(
-      std::bind(&Client1::ActiveCallback, this));
+    action_.SetFeedbackCallback(std::bind(&Client1::FeedbackCallback,
+                                          this,
+                                          std::placeholders::_1));
+    action_.SetResultCallback(std::bind(&Client1::ResultCallback,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2));
+    action_.SetConnectedCallback(std::bind(&Client1::ConnectedCallback, this));
+    action_.SetActiveCallback(std::bind(&Client1::ActiveCallback, this));
     // Setters for timeout values
     action_.SetConnectedTimeout(2.0);
     action_.SetActiveTimeout(4.0);
     action_.SetResponseTimeout(4.0);
     action_.SetDeadlineTimeout(10.0);
     // Call connect
-    action_.Create(nh, "two_ints_action");
+    action_.Create(nh, "test_action");
   }
 
+  // TODO (Katie) Finish from here!!!
  protected:
   void FeedbackCallback(actionlib::TwoIntsFeedbackConstPtr const& feedback) {
     ROS_INFO("C:FeedbackCallback()");
