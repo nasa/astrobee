@@ -80,8 +80,8 @@ This plugin does nothing beyond repositioning the dock dynamically in simulation
 
 This simulates the dock state produced by the actual EPS. It continually checks how close the Free Flyer is to the dock. When the Free Flier moves within a threshold distance, a virtual joint is created to lock the Free Flyer to the dock. The EPS then updates the state from DOCKING to DOCKED similar to the hardware driver. This provides sufficient information for the \ref dock to dock and undock a real or simulated Free Flyer. To test
 
-    rosrun dock dock_tool -ns %ns% -dock
-    rosrun dock dock_tool -ns %ns% -undock
+    ros2 run dock dock_tool -ns %ns% -dock
+    ros2 run dock dock_tool -ns %ns% -undock
 
 Customization: description/description/model_eps.urdf.xacro
     rate:     Rate at which dock state checked
@@ -92,8 +92,8 @@ Customization: description/description/model_eps.urdf.xacro
 
 This simulates front and aft facing flashlights. Unfortunately, Gazebo doesn't support model-fixed flashlights. So, for each flashlight a free-floating spot light is created in Gazebo, and the model plugin dynamically positions this light to be rigidly attached to the Free Flyer. To set the brightness of each light you can use the following commands:
 
-    rosservice call /%ns%/hw/light_front/control "brightness: 0"
-    rosservice call /%ns%/hw/light_aft/control "brightness: 200"
+    ros2 service call /%ns%/hw/light_front/control "brightness: 0"
+    ros2 service call /%ns%/hw/light_aft/control "brightness: 200"
 
 Customization: description/description/model_flashlights.urdf.xacro
     rate:   doesn't do anything (should this be removed?)
@@ -105,7 +105,7 @@ Customization: description/description/model_flashlights.urdf.xacro
 
 To toggle the laser model:
 
-    rosservice call /%ns%/hw/laser/enable "enabled: true"
+    ros2 service call /%ns%/hw/laser/enable "enabled: true"
 
 Customization: description/description/model_laser.urdf.xacro
     rate:  doesn't do anything (should this be removed?)
@@ -116,10 +116,10 @@ Customization: description/description/model_laser.urdf.xacro
 
 The perching arm plugin mimics the real hardware by accepting joint goals and broadcasting joint states to the /joint_goals and /joint_states respectively. In so doing it retains compatibility with the robot_state_publisher, allowing a consistent visualization between Gazebo and rviz. To test:
 
-    rosrun arm arm_tool -ns %ns% -deploy
-    rosrun arm arm_tool -ns %ns% -pan 45
-    rosrun arm arm_tool -ns %ns% -open
-    rosrun arm arm_tool -ns %ns% -stow
+    ros2 run arm arm_tool -ns %ns% -deploy
+    ros2 run arm arm_tool -ns %ns% -pan 45
+    ros2 run arm arm_tool -ns %ns% -open
+    ros2 run arm arm_tool -ns %ns% -stow
 
 Customization: description/description/macro_perching_arm.urdf.xacro
     rate:     rate at which the arm joints are published
@@ -131,8 +131,8 @@ Customization: description/description/macro_perching_arm.urdf.xacro
 
 This plugin subscribes to the PMC command topic, which includes an impeller speed and nozzle apertures. When a new PMC command is received, this information is passed, along with the battery voltage and current velocity, into a dynamic model that converts this information to a force and torque to apply to the Free Flyer. The dynamic model takes into account the delay between spinning the impellers up and down. This force and torque is applied to the Gazebo model, allowing its physics engine to update the state of the Free Flyer. In addition to publishing basic telemetry (current impeller speed, etc) the PMC plugin also tracks the state of the PMC, thereby realistically simulating ramp-up and ramp-down delay. To test:
 
-    rostopic echo /%ns$/hw/pmc/state
-    rostopic echo /%ns$/hw/pmc/telemetry
+    ros2 topic echo /%ns$/hw/pmc/state
+    ros2 topic echo /%ns$/hw/pmc/telemetry
 
 Customization: description/description/macro_pmc.urdf.xacro
     rate:                rate is not used and the plugin doesn't even read it
@@ -142,14 +142,14 @@ Customization: description/description/macro_pmc.urdf.xacro
 
 The NavCam and DockCam are forward and aft-facing grayscale fisheye cameras. The SciCam is a forward-facing camera with no distortion and typically of higher resolution than the other two. These plugins copy the image data from the gazebo camera sensor into sensor_msgs::Image messages and publishe them to the to the appropriate ROS topic. To test:
 
-    rostopic hz /%ns$/hw/cam_nav
-    rostopic hz /%ns$/hw/cam_dock
-    rostopic hz /%ns$/hw/cam_sci
+    ros2 topic hz /%ns$/hw/cam_nav
+    ros2 topic hz /%ns$/hw/cam_dock
+    ros2 topic hz /%ns$/hw/cam_sci
 
 Each camera also publishes its pose and intrinsics. Those can be seen, for example for sci cam, as:
 
-    rostopic echo /sim/sci_cam/pose
-    rostopic echo /sim/sci_cam/info
+    ros2 topic echo /sim/sci_cam/pose
+    ros2 topic echo /sim/sci_cam/info
 
 By default, the cameras are disabled, for performance reasons. To enable one of more of them, one can edit
 
@@ -179,8 +179,8 @@ Customization: description/description/sensor_nav_cam.urdf.xacro
 
 These are forward and aft facing depth cameras. The plugin copies the point cloud data from the gazebo depth camera sensor into a sensor_msgs::PointCloud2 message and publishes it to the appropriate ROS topic. To test:
 
-    rostopic hz /%ns$/hw/depth_haz/points
-    rostopic hz /%ns$/hw/depth_perch/points
+    ros2 topic hz /%ns$/hw/depth_haz/points
+    ros2 topic hz /%ns$/hw/depth_perch/points
 
 The haz cam plugin also publishes the haz cam camera pose and image intensity measured at the points in the cloud.
 
@@ -199,7 +199,7 @@ Customization: description/description/sensor_haz_cam.urdf.xacro
 
 On every update of the gazebo world, this plugin obtains the true angular velocity and linear acceleration of the Gazebo IMU sensor and publishes this information as a sensor_msgs::Imu message on the appropriate ROS topic. To test:
 
-    rostopic echo /%ns$/hw/imu
+    ros2 topic echo /%ns$/hw/imu
 
 Customization: description/description/sensor_imu.urdf.xacro
     pose:        pose of the imu wrt the body reference frame
@@ -209,26 +209,26 @@ Customization: description/description/sensor_imu.urdf.xacro
 
 This publishes camera registration and feature messages for sparse mapping localization. The plugin constructs a virtual image plane and casts rays through randomly-sampled points on this plane. It then calculates the intersection of these rays with the environment to synthetically produce features (image and world coordinate correspondences). A timer is used to introduce an artificial delay between the registration and feature messages being published to reproduce the latency of actual localization. To test:
 
-    rosrun mobility teleop -ns %ns% -loc ml
-    rostopic hz /%ns$/loc/ml/registration
-    rostopic hz /%ns$/loc/ml/features
+    ros2 run mobility teleop -ns %ns% -loc ml
+    ros2 topic hz /%ns$/loc/ml/registration
+    ros2 topic hz /%ns$/loc/ml/features
 
 **AR Tags plugin**
 
 This publishes camera registration and feature messages for AR marker tracking localization. The plugin randomly samples coordinates on the AR target centered on the dock. It then back-projects these coordinates to a virtual image plane to obtain image coordinates. A timer is used to introduce an artificial delay between the registration and feature messages being published to reproduce the latency of actual localization. To use this the Free Flyer must be in front a dock, facing away from the dock. To test:
 
-    rosrun mobility teleop -ns %ns% -loc ar
-    rostopic hz /%ns$/loc/ar/registration
-    rostopic hz /%ns$/loc/ar/features
+    ros2 run mobility teleop -ns %ns% -loc ar
+    ros2 topic hz /%ns$/loc/ar/registration
+    ros2 topic hz /%ns$/loc/ar/features
 
 **Ground truth plugin**
 
 This model plugin publishes the truth values of the pose, twist and acceleration values. These can be used to close the control loop in place of localization, allowing use to separate estimation from control error.
 
-    rosrun mobility teleop -ns %ns% -loc gt
-    rostopic echo /%ns$/loc/truth/pose
-    rostopic echo /%ns$/loc/truth/twist
-    rostopic echo /%ns$/loc/truth/accel
+    ros2 run mobility teleop -ns %ns% -loc gt
+    ros2 topic echo /%ns$/loc/truth/pose
+    ros2 topic echo /%ns$/loc/truth/twist
+    ros2 topic echo /%ns$/loc/truth/accel
 
 Customization: description/description/sensor_imu.urdf.xacro
     rate:   rate of which the ground truth is published

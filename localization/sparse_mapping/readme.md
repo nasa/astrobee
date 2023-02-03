@@ -339,7 +339,7 @@ be large which would make merging very slow. A very useful option can
 then be the flag `-fast_merge` for this tool. It won't create matches
 among the two maps, but will instead identify the shared images among
 the two maps thus merging the maps, if shared images exist.
-
+  
 If no such images are available, but the two maps do see the same
 physical location in some portions (if from different views), each of
 the two maps can be first merged with the same small map of that

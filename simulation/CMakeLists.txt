@@ -173,13 +173,12 @@ ament_target_dependencies(gazebo_sensor_plugin_imu rclcpp gazebo_dev gazebo_ros)
 ament_export_libraries(gazebo_sensor_plugin_imu)
 
 # Create a sensor plugin for the handrail detection algorithm
-# add_library(gazebo_sensor_plugin_handrail_detect
-#   src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_handrail_detect ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_handrail_detect
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+add_library(gazebo_sensor_plugin_handrail_detect SHARED
+  src/gazebo_sensor_plugin_handrail_detect/gazebo_sensor_plugin_handrail_detect.cc
+)
+target_link_libraries(gazebo_sensor_plugin_handrail_detect astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_handrail_detect rclcpp gazebo_dev gazebo_ros geometry_msgs tf2_ros camera)
+ament_export_libraries(gazebo_sensor_plugin_handrail_detect)
 
 # Create a sensor plugin for the depth camera
 add_library(gazebo_sensor_plugin_depth_cam SHARED
@@ -213,23 +212,21 @@ target_link_libraries(gazebo_sensor_plugin_sparse_map astrobee_gazebo)
 ament_target_dependencies(gazebo_sensor_plugin_sparse_map rclcpp gazebo_dev gazebo_ros camera)
 ament_export_libraries(gazebo_sensor_plugin_sparse_map)
 
-# # Create a model plugin for AR localization
-# add_library(gazebo_sensor_plugin_ar_tags
-#   src/gazebo_sensor_plugin_ar_tags/gazebo_sensor_plugin_ar_tags.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_ar_tags ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_ar_tags
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin for AR localization
+add_library(gazebo_sensor_plugin_ar_tags SHARED
+  src/gazebo_sensor_plugin_ar_tags/gazebo_sensor_plugin_ar_tags.cc
+)
+target_link_libraries(gazebo_sensor_plugin_ar_tags astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_ar_tags rclcpp gazebo_dev gazebo_ros camera)
+ament_export_libraries(gazebo_sensor_plugin_ar_tags)
 
-# # Create a model plugin for optical flow
-# add_library(gazebo_sensor_plugin_optical_flow
-#   src/gazebo_sensor_plugin_optical_flow/gazebo_sensor_plugin_optical_flow.cc
-# )
-# add_dependencies(gazebo_sensor_plugin_optical_flow ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(gazebo_sensor_plugin_optical_flow
-#   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-# )
+# Create a model plugin for optical flow
+add_library(gazebo_sensor_plugin_optical_flow SHARED
+  src/gazebo_sensor_plugin_optical_flow/gazebo_sensor_plugin_optical_flow.cc
+)
+target_link_libraries(gazebo_sensor_plugin_optical_flow astrobee_gazebo)
+ament_target_dependencies(gazebo_sensor_plugin_optical_flow rclcpp gazebo_dev gazebo_ros sensor_msgs camera)
+ament_export_libraries(gazebo_sensor_plugin_optical_flow)
 
 # Create a world plugin for speed
 add_library(gazebo_world_plugin_speed SHARED
@@ -274,6 +271,9 @@ install(TARGETS
   gazebo_sensor_plugin_depth_cam
   gazebo_sensor_plugin_nav_cam
   gazebo_sensor_plugin_dock_cam
+  gazebo_sensor_plugin_ar_tags
+  gazebo_sensor_plugin_optical_flow
+  gazebo_sensor_plugin_handrail_detect
   gazebo_sensor_plugin_sparse_map
   gazebo_world_plugin_speed
   gazebo_system_plugin_client

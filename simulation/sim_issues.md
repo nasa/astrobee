@@ -24,11 +24,11 @@ this, you will need to open 2 terminals. Please make sure you setup your
 environment in both terminals (see the 'Setting up your environment' section
 in \ref running-the-sim). In the first terminal, run:
 
-    roslaunch astrobee sim.launch default_robot:=false rviz:=true
+    ros2 launch astrobee sim.launch.py default_robot:=false rviz:=true
 
 After everything in the first terminal starts up, in the second terminal, run:
 
-    roslaunch astrobee spawn.launch dds:=false robot:=sim_pub
+    ros2 launch astrobee spawn.launch.py dds:=false robot:=sim_pub
 
 *Note: If you have the dds ros bridge compiled or installed, please omit the
 dds and robot flags.*

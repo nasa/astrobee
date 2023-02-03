@@ -13,14 +13,14 @@ communication nodes, please contact your Astrobee point of contact.
 You will need to setup your environment so that ROS knows about the new packages
 provided by Astrobee flight software:
 
-    pushd $BUILD_PATH
-    source devel/setup.bash
+    pushd $WORKSPACE_PATH
+    source install/setup.bash
     popd
 
 In case of a Zsh session, do
 
-    pushd $BUILD_PATH
-    source devel/setup.zsh
+    pushd $WORKSPACE_PATH
+    source install/setup.zsh
     popd
 
 After this command has completed, you should be able to run `ros` commands from
@@ -34,11 +34,11 @@ following:
 If you don't have the Astrobee communication nodes compiled or installed,
 please run:
 
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true
+    ros2 launch astrobee sim.launch.py dds:=false robot:=sim_pub rviz:=true
 
 If you have the Astrobee communication nodes compiled or installed, please run:
 
-    roslaunch astrobee sim.launch rviz:=true
+    ros2 launch astrobee sim.launch.py rviz:=true
 
 - Note 1: The very first time Gazebo starts, it could take a long time because
   it loads some large models
@@ -46,12 +46,9 @@ If you have the Astrobee communication nodes compiled or installed, please run:
   `sviz:=true`. This allows one to see the ISS module used for the simulation.
   However this is resource intensive.
 
-This command tells ROS to look for the `sim.launch` file provided by the
+This command tells ROS to look for the `sim.launch.py` file provided by the
 `astrobee` package, and use roslaunch to run it. Internally, ROS maintains a
-cache of information about package locations, libraries and executables. If you
-find that the above command doesn't work, try rebuilding the cache:
-
-    rospack profile
+cache of information about package locations, libraries and executables.
 
 This command launches both the world and Astrobee. There are things in the
 world that need to be started up before Astrobee is started up. There is a
@@ -81,7 +78,7 @@ This is the pose/location that Astrobee starts up at. The first 3 values are
 position and the last 4 are the orientation expressed as a quaternion. By
 default, Astrobee starts up docked in the JEM module of the ISS. To start up
 
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true pose:="11.25 -6.95 4.49 0 0 0 1"
+    ros2 launch astrobee sim.launch.py dds:=false robot:=sim_pub rviz:=true pose:="11.25 -6.95 4.49 0 0 0"
 
 *Note: If you have the Astrobee communication nodes compiled or installed,
 please omit the dds and robot flags.*
@@ -97,7 +94,7 @@ Also note, GDS is the least computationally intensive GUI out of the 3 we offer
 and it is the only GUI that allows users to send commands. Thus, it may be a
 convenient tool for external users to use.
 
-    roslaunch astrobee sim.launch gds:=true
+    ros2 launch astrobee sim.launch.py gds:=true
 
 *Note: If you don't have the Astrobee communication nodes compiled or
 installed, the roslaunch above will throw a dds ros bridge fault and you will
@@ -141,7 +138,7 @@ meaning the simulator runs in real time. If you are having issues with simulator
 performance, you can slow the simulator down by specifying a value less than
 one. For example, the following would slow the simulator down to half speed:
 
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true speed:=0.5
+    ros2 launch astrobee sim.launch.py dds:=false robot:=sim_pub rviz:=true speed:=0.5
 
 *Note: If you have the Astrobee communication nodes compiled or installed,
 please omit the dds and robot flags.*
@@ -194,7 +191,7 @@ starts up. For more information on this, please see the 'Issues Starting up the
 Simulator' section in \ref sim-issues. To launch the world without the default
 robot, please run:
 
-    roslaunch astrobee sim.launch default_robot:=false
+    ros2 launch astrobee sim.launch.py default_robot:=false
 
 #### perch
 
@@ -209,7 +206,7 @@ and the granite lab (a model of the actual testbed at Ames). By default, this is
 set to the ISS world. If you want to test in the granite lab, launch the
 simulation using the following:
 
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true world:="granite"
+    ros2 launch astrobee sim.launch.py dds:=false robot:=sim_pub rviz:=true world:="granite"
 
 *Note: If you have the Astrobee communication nodes compiled or installed,
 please omit the dds and robot flags.*
@@ -227,7 +224,7 @@ terminal, type `bt`, and hit enter. This should display a backtrace. Please copy
 the backtrace and send it to us. Here is an example of launching the simulator
 and debugging the executive node:
 
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true debug:="executive" 
+    ros2 launch astrobee sim.launch.py dds:=false robot:=sim_pub rviz:=true debug:="executive" 
 
 *Note: If you have the Astrobee communication nodes compiled or installed,
 please omit the dds and robot flags.*
@@ -345,16 +342,16 @@ NOT capitalize the namespace. When starting the simulator, you can either start
 with no robots or you can start with the default robot and one of the
 namespaces. To start the simulator without a robot, please run:
 
-    roslaunch astrobee sim.launch default_robot:=false
+    ros2 launch astrobee sim.launch.py default_robot:=false
 
 To start with the default robot using a namespace, please run:
 
-    roslaunch astrobee sim.launch ns:=honey dds:=false robot:=sim_pub
+    ros2 launch astrobee sim.launch.py ns:=honey dds:=false robot:=sim_pub
 
 To spawn robots into the simulator, run: 
 
-    roslaunch astrobee spawn.launch ns:=bumble dds:=false robot:=sim_pub pose:="11 -7 4.5 0 0 0 1"
-    roslaunch astrobee spawn.launch ns:=queen dds:=false robot:=sim_pub pose:="11 -4 4.5 0 0 0 1"
+    ros2 launch astrobee spawn.launch.py ns:=bumble dds:=false robot:=sim_pub pose:="11 -7 4.5 0 0 0"
+    ros2 launch astrobee spawn.launch.py ns:=queen dds:=false robot:=sim_pub pose:="11 -4 4.5 0 0 0"
 
 *Note: If you have the Astrobee communication nodes compiled or installed,
 please omit the dds and robot flags.*

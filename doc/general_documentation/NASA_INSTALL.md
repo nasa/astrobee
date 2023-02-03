@@ -64,7 +64,7 @@ entering your password (`m` is used to tunnel to `astrobee.ndc.nasa.gov`):
 The command should succeed without entering your password. Once this is verified,
 exit this session on `m` with `<ctrl>+D`.
 
-- These notes apply to `install_desktop_16.04_packages.sh` and `make_xenial.sh`
+- These notes apply to `install_desktop_16.04_packages.sh` and `make_chroot.sh`
 
 
 ### Checkout the project source code
@@ -132,7 +132,7 @@ Next, download the cross toolchain and install the chroot:
     mkdir -p $ARMHF_TOOLCHAIN
     cd $HOME/arm_cross
     $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
-    $ASTROBEE_WS/src/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+    $ASTROBEE_WS/src/submodules/platform/rootfs/make_chroot.sh xenial dev $ARMHF_CHROOT_DIR
 
 *Note: The last script shown above needs the packages `qemu-user-static` (not
 `qemu-arm-static`) and `multistrap` to be installed (can be installed through apt).*
