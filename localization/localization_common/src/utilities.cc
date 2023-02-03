@@ -21,9 +21,6 @@
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
-// #include <geometry_msgs/Point.h>
-// #include <geometry_msgs/Quaternion.h>
-
 #include <cstdlib>
 #include <string>
 
