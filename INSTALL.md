@@ -16,6 +16,19 @@ Your host OS must have an X11 server installed if you want to use graphical appl
 
 If you plan to develop inside Docker, see [this page on using ROS with Docker](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more details.
 
+For users installing Astrobee on a Virtual Machine with the intent on running simulations:
+VMWare and VirtualBox have been both tested to work well; Allocate an appropriate amount of RAM, number
+of processors and video memory given your total computer capabilities; If graphics acceleration is
+available on the settings, turn it on.
+For reference (not required), an example of a setup capable of running the
+simulation smoothly has 8GB RAM, 4 Processors and 128MB Video memory.
+
+*Note: You will need 4 GBs of RAM to compile the software. If you don't have
+that much RAM available, please use swap space.*
+
+*Note: Please ensure you install the 64-bit PC (AMD64) version of Ubuntu (desktop for simulation and
+development). We do not support running Astrobee Robot Software on 32-bit systems.*
+
 ## Option 1: Install inside a Docker container
 
 1. Make sure you have Docker installed in your system by following:
@@ -47,16 +60,3 @@ The native installation instructions below walk you through manually running the
 - If you are an external developer, see: \subpage install-nonNASA
 
 - If you have NASA internal access and need to cross-compile for the robot hardware, see: \subpage install-NASA
-
-For users installing Astrobee on a Virtual Machine with the intent on running simulations:
-VMWare and VirtualBox have been both tested to work well; Allocate an appropriate amount of RAM, number
-of processors and video memory given your total computer capabilities; If graphics acceleration is
-available on the settings, turn it on.
-For reference (not required), an example of a setup capable of running the
-simulation smoothly has 8GB RAM, 4 Processors and 128MB Video memory.
-
-*Note: You will need 4 GBs of RAM to compile the software. If you don't have
-that much RAM available, please use swap space.*
-
-*Note: Please ensure you install the 64-bit PC (AMD64) version of Ubuntu (desktop for simulation and
-development). We do not support running Astrobee Robot Software on 32-bit systems.*

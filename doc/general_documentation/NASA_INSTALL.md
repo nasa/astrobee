@@ -170,31 +170,15 @@ rebuilt, and not the entire code base.
     catkin build
     popd
 
+Note: In low-memory systems, it is common to run out of memory while trying to compile
+ARS, which triggers a compilation error mentioning "arm-linux-gnueabihf-g++: internal 
+compiler error: Killed (program cc1plus)". A contributing factor is that
+catkin build by default runs multiple jobs in parallel based on the number of cores
+available in your environment, and all of these jobs draw on the same memory resources.
+If you run into this compile error, try compiling again with the -j1 option to restrict
+catkin to running one job at a time.
 
-### Running a simulation
-
-In order to run a simulation you must have build natively. You will need to
-first setup your environment, so that ROS knows about the new packages provided
-by Astrobee flight software:
-
-    pushd $ASTROBEE_WS
-    source devel/setup.bash
-    popd
-
-After this command has completed, you should be able to run a simulator from any
-directory in your Linux filesystem. So, for example, to start a simulation of a
-single Astrobee in the Granite Lab, run the following:
-
-    roslaunch astrobee sim.launch
-
-This command tells ROS to look for the `sim.launch` file provided by the
-`astrobee` package, and use roslaunch to run it. Internally, ROS maintains a
-cache of information about package locations, libraries and executables. If you
-find that the above command doesn't work, try rebuilding the cache:
-
-    rospack profile
-
-For more information on running the simulator and moving the robot, please see the \ref sim-readme.
+For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
 
 
 ## Cross-compile - Running the code on a real robot
