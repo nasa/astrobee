@@ -62,7 +62,6 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle& nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    clock_ = nh->get_clock();
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
       gzerr << "GazeboSensorPluginOpticalFlow requires a parent camera sensor.\n";
@@ -149,7 +148,7 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     timer_features_.start();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = FF_TIME_NOW();
+    msg_reg_.header.stamp = GetTimeNow();
     msg_reg_.camera_id++;
     pub_reg_->publish(msg_reg_);
 
@@ -180,7 +179,7 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
           sensor_->Pose().Rot().Z()));
     Eigen::Affine3d wTs = wTb * bTs;
 
-    msg_feat_.header.stamp = FF_TIME_NOW();
+    msg_feat_.header.stamp = GetTimeNow();
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "nav_cam");
@@ -267,7 +266,6 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
  private:
   config_reader::ConfigReader config_;
-  std::shared_ptr<rclcpp::Clock> clock_;
 
   rclcpp::Publisher<ff_msgs::CameraRegistration>::SharedPtr pub_reg_;
   rclcpp::Publisher<ff_msgs::Feature2dArray>::SharedPtr pub_feat_;
