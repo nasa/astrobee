@@ -64,7 +64,7 @@ This runs inside the Docker container:
 catkin build
 catkin build --make-args tests
 catkin build --make-args test
-source devel/setup.astrobee_base_toolchain
+source devel/setup.bash
 catkin_test_results build
 ```
 
