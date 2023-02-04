@@ -32,7 +32,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 
 # Find OpenCV
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
 catkin_package(
