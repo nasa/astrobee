@@ -33,13 +33,6 @@
 
 using NodeHandle = ros::NodeHandle*;
 
-// #define ROS_NODE_VAR &nh_private_
-
-#define ROS_CREATE_NODE(name)  \
-  ros::init(argc, argv, name); \
-  ros::NodeHandle nh;          \
-  ros::NodeHandle nh_private_("~");
-
 template<class MessageType>
 using Publisher = ros::Publisher*;
 
@@ -85,12 +78,6 @@ using Duration = ros::Duration*;
 namespace ros = rclcpp;
 
 using NodeHandle = std::shared_ptr<rclcpp::Node>;
-
-#define ROS_NODE_VAR node_
-
-#define ROS_CREATE_NODE(name) \
-  rclcpp::init(argc, argv);   \
-  auto node_ = rclcpp::Node::make_shared(name, "/" name);
 
 template<class MessageType>
 using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;

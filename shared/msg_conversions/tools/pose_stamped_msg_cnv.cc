@@ -44,34 +44,33 @@ DEFINE_string(input_frame, "world",
 DEFINE_string(output_frame, "ground_truth",
               "The frame to output to tf2.");
 
-std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-NodeHandle node_;
+std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster;
+NodeHandle node;
 
 void odometry_callback(geometry_msgs::PoseStampedPtr const odometry) {
   geometry_msgs::TransformStamped transform;
-  transform.header.stamp = node_->get_clock()->now();
+  transform.header.stamp = node->get_clock()->now();
   transform.header.frame_id = FLAGS_input_frame;
   transform.child_frame_id = FLAGS_output_frame;
   transform.transform.translation.x = odometry->pose.position.x;
   transform.transform.translation.y = odometry->pose.position.y;
   transform.transform.translation.z = odometry->pose.position.z;
   transform.transform.rotation = odometry->pose.orientation;
-  tf_broadcaster_->sendTransform(transform);
+  tf_broadcaster->sendTransform(transform);
 }
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
-  ROS_CREATE_NODE("pose_stamped_msg_cnv");
+  rclcpp::init(argc, argv);   \
+  node = rclcpp::Node::make_shared("pose_stamped_msg_cnv");
 
-
-  auto odometry_sub = ROS_CREATE_SUBSCRIBER(geometry_msgs::PoseStamped, FLAGS_input_topic, 5, odometry_callback);
-
+  auto odometry_sub = node->create_subscription<geometry_msgs::PoseStamped>(FLAGS_input_topic, 5, odometry_callback);
 
   // Initialize the transform broadcaster
-  tf_broadcaster_ =
-    std::make_unique<tf2_ros::TransformBroadcaster>(*node_);
+  tf_broadcaster =
+    std::make_unique<tf2_ros::TransformBroadcaster>(*node);
 
-  FF_SPIN();
+  rclcpp::spin(node);
 
   return 0;
 }

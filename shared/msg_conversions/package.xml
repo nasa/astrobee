@@ -14,12 +14,9 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <build_depend condition="$ROS_VERSION == 1">catkin</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">ament_cmake</build_depend>
-  
-  <build_depend condition="$ROS_VERSION == 1">roscpp</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">rclcpp</build_depend>
 
+  <build_depend>ament_cmake</build_depend>
+  <build_depend>rclcpp</build_depend>
   <build_depend>message_runtime</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
@@ -45,7 +42,6 @@
   <exec_depend>tf2_geometry_msgs</exec_depend>
   
   <export>
-    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
-    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

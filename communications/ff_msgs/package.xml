@@ -15,46 +15,32 @@
     Astrobee Flight Software
   </maintainer>
 
-  <build_depend condition="$ROS_VERSION == 1">message_generation</build_depend>
-  <exec_depend condition="$ROS_VERSION == 1">message_runtime</exec_depend>
-  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
-  <build_depend condition="$ROS_VERSION == 1">std_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 1">geometry_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 1">sensor_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 1">trajectory_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 1">actionlib_msgs</build_depend>
-  <exec_depend condition="$ROS_VERSION == 1">std_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 1">geometry_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 1">sensor_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 1">trajectory_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 1">actionlib_msgs</exec_depend>
 
-  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
-  <build_depend condition="$ROS_VERSION == 2">rosidl_default_generators</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">builtin_interfaces</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">sensor_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">geometry_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">std_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">trajectory_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">actionlib_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">diagnostic_msgs</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">tf2_geometry_msgs</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <build_depend>builtin_interfaces</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
+  <build_depend>diagnostic_msgs</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
 
-  <exec_depend condition="$ROS_VERSION == 2">rosidl_default_runtime</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">builtin_interfaces</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">sensor_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">geometry_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">std_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">trajectory_msgs</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">actionlib_msgs</exec_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>builtin_interfaces</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
 
-  <test_depend condition="$ROS_VERSION == 2">ament_lint_common</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
-  <member_of_group condition="$ROS_VERSION == 2">rosidl_interface_packages</member_of_group>
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
-    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
-    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 
 </package>

@@ -34,7 +34,8 @@ FF_DEFINE_LOGGER("framestore");
 
 // Main entry point of application
 int main(int argc, char **argv) {
-  ROS_CREATE_NODE("global_transforms");
+  rclcpp::init(argc, argv);   \
+  auto node = rclcpp::Node::make_shared("global_transforms");
   // Parse the framestore config
   config_reader::ConfigReader cfg;
   cfg.AddFile("transforms.config");
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   // Read all transforms, broadcasting only world -> xxx
-  tf2_ros::StaticTransformBroadcaster bc(node_);
+  tf2_ros::StaticTransformBroadcaster bc(node);
   geometry_msgs::TransformStamped tf;
   Eigen::Vector3d trans;
   Eigen::Quaterniond rot;
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
           && msg_conversions::config_read_vector(&t_trans, &trans)) {
           // Only send global transforms
           if (global) {
-            tf.header.stamp = node_->get_clock()->now();
+            tf.header.stamp = node->get_clock()->now();
             tf.header.frame_id = parent;
             tf.child_frame_id = child;
             tf.transform.translation =
@@ -77,6 +78,6 @@ int main(int argc, char **argv) {
       }
     }
   }
-  FF_SPIN();
+  rclcpp::spin(node);
   return 0;
 }

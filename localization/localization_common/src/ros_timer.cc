@@ -20,15 +20,16 @@
 #include <localization_common/utilities.h>
 
 namespace localization_common {
-RosTimer::RosTimer(const std::string& timer_name) : averager_(timer_name, "time", "seconds"), start_time_(0) {}
-void RosTimer::Start() { start_time_ = rclcpp::Clock().now(); }
+RosTimer::RosTimer(rclcpp::Node::SharedPtr node, const std::string& timer_name)
+    : averager_(timer_name, "time", "seconds"), node_(node), start_time_(0) {}
+void RosTimer::Start() { start_time_ = node_->get_clock()->now(); }
 void RosTimer::HeaderDiff(const std_msgs::Header& header) {
   start_time_ = RosTimeFromHeader(header);
   Stop();
 }
 
 void RosTimer::Stop() {
-  const auto end_time = rclcpp::Clock().now();
+  const auto end_time = node_->get_clock()->now();
   const double elapsed_time = (end_time - start_time_).seconds();
   averager_.Update(elapsed_time);
 }
