@@ -45,7 +45,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 find_package(gazebo REQUIRED)
 
 # Find jsoncpp
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 find_package(JsonCpp REQUIRED)
 
 # Add gazebo to the link directorries
