@@ -33,13 +33,6 @@
 
 using NodeHandle = ros::NodeHandle*;
 
-// #define ROS_NODE_VAR &nh_private_
-
-#define ROS_CREATE_NODE(name)  \
-  ros::init(argc, argv, name); \
-  ros::NodeHandle nh;          \
-  ros::NodeHandle nh_private_("~");
-
 template<class MessageType>
 using Publisher = ros::Publisher*;
 
@@ -75,8 +68,6 @@ using Duration = ros::Duration*;
 #define FF_ERROR_STREAM(...)   ROS_ERROR_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
 #define FF_FATAL_STREAM(...)   ROS_FATAL_STREAM_NAMED(ros::this_node::getName(), __VA_ARGS__)
 
-
-#define FF_TIME_NOW()  ros::Time::now()
 #define FF_SPIN()      ros::spin()
 #define FF_SPIN_ONCE() ros::spinOnce()
 #define FF_OK()        ros::ok()
@@ -87,12 +78,6 @@ using Duration = ros::Duration*;
 namespace ros = rclcpp;
 
 using NodeHandle = std::shared_ptr<rclcpp::Node>;
-
-#define ROS_NODE_VAR node_
-
-#define ROS_CREATE_NODE(name) \
-  rclcpp::init(argc, argv);   \
-  auto node_ = rclcpp::Node::make_shared(name, "/" name);
 
 template<class MessageType>
 using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
@@ -127,7 +112,6 @@ using Duration = std::shared_ptr<rclcpp::Duration>;
 
 #define toSec() seconds()
 
-#define FF_TIME_NOW()  clock_->now()
 #define FF_SPIN()      rclcpp::spin(node_)
 #define FF_SPIN_ONCE() rclcpp::spin_some(node_)
 #define FF_OK()        rclcpp::ok()

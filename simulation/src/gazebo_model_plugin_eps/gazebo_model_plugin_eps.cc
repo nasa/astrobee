@@ -221,10 +221,9 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
 
     // Initialize Transform lookup
-    buffer_.reset(new tf2_ros::Buffer(clock_));
+    buffer_.reset(new tf2_ros::Buffer(nh->get_clock()));
     listener_.reset(new tf2_ros::TransformListener(*buffer_));
 
     // Get parameters
@@ -510,7 +509,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // in the system, and in particular the dock procedure.
     ff_hw_msgs::EpsDockStateStamped msg;
     msg.header.frame_id = GetPlatform();
-    msg.header.stamp = FF_TIME_NOW();
+    msg.header.stamp = GetTimeNow();
     switch (fsm_.GetState()) {
     case UNDOCKED:
     case UNDOCKING:
@@ -710,7 +709,6 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FSM fsm_;
   double rate_, distance_near_, distance_far_ , delay_;
   bool lock_;

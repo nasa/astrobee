@@ -59,7 +59,6 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
     // Get parameters from the SDF
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
@@ -103,7 +102,7 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
     }
 
     // Create the rviz marker
-    marker_.header.stamp = FF_TIME_NOW();
+    marker_.header.stamp = GetTimeNow();
     marker_.header.frame_id = GetFrame();
     marker_.ns = GetFrame(plugin_frame_, "_");
     marker_.id = 0;
@@ -191,7 +190,7 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
   bool ToggleCallback(const std::shared_ptr<ff_hw_msgs::SetFlashlight::Request> req,
                       std::shared_ptr<ff_hw_msgs::SetFlashlight::Response> res) {
     // Update the alpha channel in rviz
-    marker_.header.stamp = FF_TIME_NOW();
+    marker_.header.stamp = GetTimeNow();
     marker_.color.a = static_cast<double>(req->brightness) / 200.0;
     visualization_msgs::MarkerArray msg;
     msg.markers.push_back(marker_);
@@ -224,7 +223,6 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   double rate_, width_, height_, depth_;
   transport::NodePtr gz_;
   transport::PublisherPtr pub_visual_, pub_factory_, pub_light_;

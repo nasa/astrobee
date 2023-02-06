@@ -133,7 +133,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   void StateCallback(FSM::State const& state, FSM::FSM::Event const& event) {
     ff_hw_msgs::PmcState msg;
     msg.header.frame_id = frame_id_;
-    msg.header.stamp = FF_TIME_NOW();
+    msg.header.stamp = GetTimeNow();
     msg.states.resize(NUMBER_OF_PMCS);
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
       switch (state) {
@@ -173,7 +173,6 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Called when the plugin is loaded into the simulator
   void LoadCallback(NodeHandle &nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) {
-    clock_ = nh->get_clock();
     config_params.AddFile("hw/pmc_actuator.config");
     if (!GetParams()) {
       FF_ERROR("PMC Actuator: Failed to get parameters.");
@@ -308,7 +307,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // ros::getGlobalCallbackQueue()->clear();
     timer_watchdog_.start();
     // Update the null command time
-    null_command_.header.stamp = FF_TIME_NOW();
+    null_command_.header.stamp = GetTimeNow();
     // set the blower speed to zero in case we do not receive messages from FAM
     SendCommand(null_command_);
   }
@@ -381,7 +380,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Send the commands to the PMCs
   void PublishTelemetry() {
     telemetry_vector_.header.frame_id = GetFrame();
-    telemetry_vector_.header.stamp = FF_TIME_NOW();
+    telemetry_vector_.header.stamp = GetTimeNow();
     telemetry_vector_.statuses.clear();
     // Check if we need to change state based on the motor speed
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
@@ -463,7 +462,6 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FSM fsm_;                                                     // Finite state machine
   bool ready_[NUMBER_OF_PMCS];                                           // Ready flags
   config_reader::ConfigReader config_params;                             // LUA configuration reader

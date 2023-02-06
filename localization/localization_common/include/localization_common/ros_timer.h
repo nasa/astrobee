@@ -22,15 +22,19 @@
 #include <localization_common/averager.h>
 #include <localization_common/time.h>
 
-#include <ros/time.h>
-#include <std_msgs/Header.h>
+#include <rclcpp/rclcpp.hpp>
+
+#include <std_msgs/msg/header.hpp>
+namespace std_msgs {
+typedef msg::Header Header;
+}  // namespace std_msgs
 
 #include <string>
 
 namespace localization_common {
 class RosTimer {
  public:
-  explicit RosTimer(const std::string& timer_name);
+  explicit RosTimer(rclcpp::Node::SharedPtr node, const std::string& timer_name);
   void Start();
   // Uses header time as start time and ros::Time::now as stop time
   void HeaderDiff(const std_msgs::Header& header);
@@ -42,7 +46,8 @@ class RosTimer {
 
  private:
   Averager averager_;
-  ros::Time start_time_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Time start_time_;
 };
 }  // namespace localization_common
 

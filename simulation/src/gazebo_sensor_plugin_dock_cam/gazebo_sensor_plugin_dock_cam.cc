@@ -53,7 +53,6 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle& nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    clock_ = nh->get_clock();
     sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
       gzerr << "GazeboSensorPluginDockCam requires a parent camera sensor.\n";
@@ -112,7 +111,7 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
 
   // Called on each sensor update event
   void UpdateCallback() {
-    msg_.header.stamp = FF_TIME_NOW();
+    msg_.header.stamp = GetTimeNow();
     msg_.height = sensor_->ImageHeight();
     msg_.width = sensor_->ImageWidth();
     msg_.step = msg_.width;
@@ -123,7 +122,6 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   ff_util::FreeFlyerTimer timer_toggle_;
   sensor_msgs::Image msg_;
   rclcpp::Publisher<sensor_msgs::Image>::SharedPtr pub_img_;

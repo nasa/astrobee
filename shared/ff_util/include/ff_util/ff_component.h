@@ -98,11 +98,12 @@ class FreeFlyerComponent {
   std::string GetName();
   std::string GetPlatform();
   std::string GetTransform(std::string const& child);
+  rclcpp::Time GetTimeNow();
 
  protected:
   // Virtual methods that *can* be implemented by FF nodes. We don't make
   // these mandatory, as there is already a load callback in Gazebo.
-  virtual void Initialize(NodeHandle node) {}
+  virtual void Initialize(NodeHandle &nh) {}
   virtual void Reset() {}
   virtual void Sleep() {}
   virtual void Wakeup() {}

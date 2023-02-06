@@ -18,18 +18,35 @@
 #ifndef GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
 #define GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
 
-#include <ff_msgs/Heartbeat.h>
-#include <ff_msgs/SetEkfInput.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 #include <ground_truth_localizer/twist.h>
 #include <localization_common/time.h>
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <ros/node_handle.h>
-#include <ros/publisher.h>
-#include <ros/subscriber.h>
-#include <std_srvs/Empty.h>
+#include <ff_msgs/msg/heartbeat.hpp>
+#include <ff_msgs/srv/set_ekf_input.hpp>
+#include <ff_msgs/msg/ekf_state.hpp>
+namespace ff_msgs {
+typedef msg::Heartbeat Heartbeat;
+typedef srv::SetEkfInput SetEkfInput;
+typedef msg::EkfState EkfState;
+}  // namespace ff_msgs
+
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::PoseStamped PoseStamped;
+typedef msg::TwistStamped TwistStamped;
+}  // namespace geometry_msgs
+
+#include <std_msgs/msg/empty.hpp>
+namespace std_msgs {
+typedef msg::Empty Empty;
+}  // namespace std_msgs
+#include <std_srvs/srv/empty.hpp>
+namespace std_srvs {
+typedef srv::Empty Empty;
+}  // namespace std_srvs
+
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <boost/optional.hpp>
@@ -40,18 +57,20 @@
 #include <string>
 
 namespace ground_truth_localizer {
-class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerNodelet {
+class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerComponent {
  public:
-  GroundTruthLocalizerNodelet();
+  explicit GroundTruthLocalizerNodelet(const rclcpp::NodeOptions& options);
 
  private:
-  void Initialize(ros::NodeHandle* nh);
+  void Initialize(NodeHandle &nh);
 
-  void SubscribeAndAdvertise(ros::NodeHandle* nh);
+  void SubscribeAndAdvertise(NodeHandle &nh);
 
-  bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
+  bool SetMode(const std::shared_ptr<ff_msgs::SetEkfInput::Request> req,
+               std::shared_ptr<ff_msgs::SetEkfInput::Response> res);
 
-  bool DefaultServiceResponse(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+  bool DefaultServiceResponse(const std::shared_ptr<std_srvs::Empty::Request> req,
+                              std::shared_ptr<std_srvs::Empty::Response> res);
 
   void PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose);
 
@@ -59,16 +78,25 @@ class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishLocState(const localization_common::Time& timestamp);
 
+  NodeHandle node_;
   std::string platform_name_;
-  ros::Time last_time_;
+  rclcpp::Time last_time_;
   boost::optional<Eigen::Isometry3d> pose_;
   boost::optional<Twist> twist_;
-  int input_mode_ = ff_msgs::SetEkfInputRequest::MODE_TRUTH;
-  ros::Subscriber pose_sub_, twist_sub_;
-  ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_, reset_pub_;
+  int input_mode_ = ff_msgs::SetEkfInput::Request::MODE_TRUTH;
+  rclcpp::Subscription<geometry_msgs::PoseStamped>::SharedPtr pose_sub_;
+  rclcpp::Subscription<geometry_msgs::TwistStamped>::SharedPtr twist_sub_;
+  rclcpp::Publisher<ff_msgs::EkfState>::SharedPtr state_pub_;
+  rclcpp::Publisher<geometry_msgs::PoseStamped>::SharedPtr pose_pub_;
+  rclcpp::Publisher<geometry_msgs::TwistStamped>::SharedPtr twist_pub_;
+  rclcpp::Publisher<ff_msgs::Heartbeat>::SharedPtr heartbeat_pub_;
+  rclcpp::Publisher<std_msgs::Empty>::SharedPtr reset_pub_;
   ff_msgs::Heartbeat heartbeat_;
-  tf2_ros::TransformBroadcaster transform_pub_;
-  ros::ServiceServer input_mode_srv_, bias_srv_, bias_from_file_srv_, reset_srv_;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> transform_pub_;
+  rclcpp::Service<ff_msgs::SetEkfInput>::SharedPtr input_mode_srv_;
+  rclcpp::Service<std_srvs::Empty>::SharedPtr bias_srv_;
+  rclcpp::Service<std_srvs::Empty>::SharedPtr bias_from_file_srv_;
+  rclcpp::Service<std_srvs::Empty>::SharedPtr reset_srv_;
 };
 }  // namespace ground_truth_localizer
 

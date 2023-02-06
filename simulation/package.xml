@@ -14,12 +14,8 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <build_depend condition="$ROS_VERSION == 1">catkin</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">ament_cmake</build_depend>
-  
-  <build_depend condition="$ROS_VERSION == 1">roscpp</build_depend>
-  <build_depend condition="$ROS_VERSION == 2">rclcpp</build_depend>
-
+  <build_depend>ament_cmake</build_depend>
+  <build_depend>rclcpp</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
@@ -35,6 +31,7 @@
   <build_depend>camera</build_depend>
   <build_depend>cv_bridge</build_depend>
   <build_depend>jsonloader</build_depend>
+
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>tf2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
@@ -51,8 +48,7 @@
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>jsonloader</exec_depend>
   <export>
-    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
-    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+    <build_type>ament_cmake</build_type>
     <gazebo_ros gazebo_plugin_path="${prefix}/lib"/>
     <gazebo_ros plugin_path="${prefix}" />
     <gazebo_ros gazebo_media_path="${prefix}/worlds"/>

@@ -69,7 +69,6 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
   // Called when plugin is loaded into gazebo
   void LoadCallback(NodeHandle& nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     bc_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(nh);
-    clock_ = nh->get_clock();
     // Get a link to the parent sensor
     sensor_ = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(sensor);
     if (!sensor_) {
@@ -154,7 +153,7 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
     timer_features_.start();
 
     // Send the registration pulse
-    msg_reg_.header.stamp = FF_TIME_NOW() + rclcpp::Duration::from_seconds(delay_camera_);
+    msg_reg_.header.stamp = GetTimeNow() + rclcpp::Duration::from_seconds(delay_camera_);
     msg_reg_.camera_id++;
     pub_reg_->publish(msg_reg_);
 
@@ -239,7 +238,7 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
     Eigen::Affine3d wTh = wTc * closest_pose;
     Eigen::Quaterniond wTc_q(wTh.rotation());
     geometry_msgs::TransformStamped tf;
-    tf.header.stamp = FF_TIME_NOW();
+    tf.header.stamp = GetTimeNow();
     tf.header.frame_id = "world";
     tf.child_frame_id = "handrail/body";
     tf.transform.translation.x = wTh.translation()[0];
@@ -314,12 +313,11 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
   // Send off the features
   void SendFeatures() {
     if (!active_) return;
-    msg_feat_.header.stamp = FF_TIME_NOW();
+    msg_feat_.header.stamp = GetTimeNow();
     pub_feat_->publish(msg_feat_);
   }
 
  private:
-  std::shared_ptr<rclcpp::Clock> clock_;
   config_reader::ConfigReader config_;
 
   rclcpp::Publisher<ff_msgs::CameraRegistration>::SharedPtr pub_reg_;

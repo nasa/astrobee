@@ -17,13 +17,9 @@
  */
 
 #include <camera/camera_params.h>
-#include <ff_msgs/GraphState.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
-
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Quaternion.h>
 
 #include <cstdlib>
 #include <string>
@@ -76,15 +72,15 @@ void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 
-ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
+rclcpp::Time RosTimeFromHeader(const std_msgs::Header& header) {
+  return rclcpp::Time(header.stamp.sec, header.stamp.nanosec);
+}
 
-Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stamp.sec, header.stamp.nsec); }
+Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stamp.sec, header.stamp.nanosec); }
 
-Time TimeFromRosTime(const ros::Time& time) { return GetTime(time.sec, time.nsec); }
+Time TimeFromRosTime(const rclcpp::Time& time) { return GetTime(time.seconds(), time.nanoseconds()); }
 
-void TimeToHeader(const Time timestamp, std_msgs::Header& header) { TimeToMsg(timestamp, header.stamp); }
-
-void TimeToMsg(const Time timestamp, ros::Time& time_msg) { time_msg = ros::Time(timestamp); }
+void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = rclcpp::Time(timestamp); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
 
