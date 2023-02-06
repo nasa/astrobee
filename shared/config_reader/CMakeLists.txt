@@ -29,7 +29,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Luajit20 REQUIRED)
 
 catkin_package(
