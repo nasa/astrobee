@@ -27,14 +27,14 @@
 #include <alvar/Line.h>
 
 marker_tracking::Labeling::Labeling(camera::CameraParameters const& cam) :
-  bw_(NULL), cam_(cam) {
+  bw_(nullptr), cam_(cam) {
   thresh_param1_ = 31;
   thresh_param2_ = 5;
 }
 
 marker_tracking::Labeling::~Labeling() {
-  if (bw_)
-    cvReleaseImage(&bw_);
+  /*if (bw_.get() != nullptr)
+    cvReleaseImage(&bw_);*/
 }
 
 bool marker_tracking::Labeling::CheckBorder(CvSeq* contour, int width, int height) {
@@ -53,7 +53,7 @@ void marker_tracking::Labeling::SetThreshParams(int param1, int param2) {
 
 marker_tracking::LabelingCvSeq::LabelingCvSeq(camera::CameraParameters const& cam) :
   Labeling(cam), n_blobs_(0), min_edge_(20), min_area_(25) {
-  storage_ = cvCreateMemStorage(0);
+  // storage_ = cvCreateMemStorage(0);
 }
 
 marker_tracking::LabelingCvSeq::~LabelingCvSeq() {
@@ -61,31 +61,33 @@ marker_tracking::LabelingCvSeq::~LabelingCvSeq() {
     cvReleaseMemStorage(&storage_);
 }
 
-void marker_tracking::LabelingCvSeq::LabelSquares(IplImage* image) {
+void marker_tracking::LabelingCvSeq::LabelSquares(std::shared_ptr<cv::Mat> image) {
   if (bw_ == NULL) {
-    bw_ = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 1);
+    bw_.reset(image->width, image->height), CV_8UC1);
   }
 
   // Convert grayscale and threshold
-  assert(image->nChannels == 1);
+assert(image->channels() == 1);
 
-  cvAdaptiveThreshold(image, bw_, 255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY_INV, thresh_param1_, thresh_param2_);
+  cv::adaptiveThreshold(*image, *bw_, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, thresh_param1_, thresh_param2_);
 
   CvSeq* contours;
   CvSeq* squares = cvCreateSeq(0, sizeof(CvSeq), sizeof(CvSeq), storage_);
   CvSeq* square_contours = cvCreateSeq(0, sizeof(CvSeq), sizeof(CvSeq), storage_);
 
-  cvFindContours(bw_, storage_, &contours, sizeof(CvContour),
-                 CV_RETR_LIST, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+  std::vector<std::vector<cv::Point>> contours;
+std::vector<cv::Vec4i> hierarchy;
+cv::findContours(*bw_, contours, hierarchy,
+		 cv::RETR_LIST, cv::CHAIN_APPROX_NONE, cv::Point(0, 0));
 
-  while (contours) {
-    if (contours->total < min_edge_) {
-      contours = contours->h_next;
+
+for(size_t i = 0; i < contours.size(); ++i)
+  {
+    if (contours.size() < min_edge_) {
       continue;
     }
 
-    CvSeq* result = cvApproxPoly(contours, sizeof(CvContour), storage_,
-                                 CV_POLY_APPROX_DP, cvContourPerimeter(contours) * 0.035, 0);
+    CvSeq* result = cv::approxPolyDP(contours, cvContourPerimeter(contours) * 0.035, 0);
 
     if ( result->total == 4 && CheckBorder(result, image->width, image->height) &&
          fabs(cvContourArea(result, CV_WHOLE_SEQ)) > min_area_ &&
@@ -94,7 +96,8 @@ void marker_tracking::LabelingCvSeq::LabelSquares(IplImage* image) {
       cvSeqPush(square_contours, contours);
     }
     contours = contours->h_next;
-  }
+    
+  } // for loop
 
   n_blobs_ = squares->total;
   blob_corners.resize(n_blobs_);

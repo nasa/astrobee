@@ -33,22 +33,21 @@ find_package(catkin2 REQUIRED COMPONENTS
   camera 
   nodelet
   msg_conversions
+  ar_track_alvar
 )
 
 # System dependencies are found with CMake's conventions
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Alvar REQUIRED)
-find_package(Alvar REQUIRED)
 
 
 # Find OpenCV
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV331 REQUIRED)
+find_package(OpenCV 4.0 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions nodelet
+  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions nodelet ar_track_alvar
 )
 
 ###########
