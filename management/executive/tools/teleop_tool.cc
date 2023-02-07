@@ -728,7 +728,7 @@ int main(int argc, char** argv) {
   tf2_ros::TransformListener tf_listener(tf_buffer);
 
   // Initialize publishers
-  cmd_pub = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
+  cmd_pub = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10);
 
   // Initialize subscribers
   ros::Subscriber ack_sub, agent_state_sub, fault_state_sub, dock_sub, move_sub;
