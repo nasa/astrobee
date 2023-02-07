@@ -106,13 +106,13 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   cam_frustum_pub_ = nh->advertise<visualization_msgs::Marker>(
     TOPIC_MAPPER_FRUSTRUM_MARKERS, 1);
   free_space_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
-    TOPIC_MAPPER_OCTOMAP_FREE_CLOUD, 1, true);
+    TOPIC_MAPPER_OCTOMAP_FREE_CLOUD, 1);
   obstacle_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
-    TOPIC_MAPPER_OCTOMAP_CLOUD, 1, true);
+    TOPIC_MAPPER_OCTOMAP_CLOUD, 1);
   inflated_free_space_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
-    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_CLOUD, 1, true);
+    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_CLOUD, 1);
   inflated_obstacle_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
-    TOPIC_MAPPER_OCTOMAP_INFLATED_CLOUD, 1, true);
+    TOPIC_MAPPER_OCTOMAP_INFLATED_CLOUD, 1);
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
 
