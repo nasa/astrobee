@@ -187,7 +187,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
     // State publisher as a latched topic
     pub_state_ = nh->advertise<ff_hw_msgs::PmcState>(
-      TOPIC_HARDWARE_PMC_STATE, 1, true);
+      TOPIC_HARDWARE_PMC_STATE, 1);
 
     // Subscibe to PMC commands
     sub_command_ = nh->subscribe(TOPIC_HARDWARE_PMC_COMMAND, 5,
