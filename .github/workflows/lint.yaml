@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Check repo for lint errors
       run: ./scripts/git/cpplint_repo.py .
 
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install linters
       run: |
         pip install click==8.0.1 black==22.1.0 isort==5.10.1
