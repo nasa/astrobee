@@ -62,7 +62,7 @@ void DiskMonitor::Initialize(ros::NodeHandle * nh) {
 
   // Setup the publisher
   pub_disk_stats_ = nh->advertise<ff_msgs::DiskStateStamped>(
-                    TOPIC_MANAGEMENT_DISK_MONITOR_STATE, pub_queue_size_, true);
+                    TOPIC_MANAGEMENT_DISK_MONITOR_STATE, pub_queue_size_);
 
   stats_timer_ = nh->createTimer(ros::Duration(update_freq_),
                               &DiskMonitor::OnCheckTimer, this);
