@@ -85,7 +85,7 @@ class FreeFlyerActionServer {
   typedef std::function < void (void) > CancelCallbackType;
 
   // Constructor
-  FreeFlyerActionServer() : state_(WAITING_FOR_CREATE) {}
+  FreeFlyerActionServer() : result_sent_(false), state_(WAITING_FOR_CREATE) {}
 
   // Destructor
   ~FreeFlyerActionServer() {}
@@ -148,6 +148,8 @@ class FreeFlyerActionServer {
         break;
     }
 
+    result_sent_ = true;
+
     // Check to see if this goal was canceled and there is another goal waiting
     // to be executed
     if (state_ == CANCELED) {
@@ -169,7 +171,8 @@ class FreeFlyerActionServer {
         }
       }
     }
-    // current_goal_handle_ = nullptr;
+
+    current_goal_handle_ = nullptr;
     state_ = WAITING_FOR_GOAL;
   }
 
@@ -205,12 +208,21 @@ class FreeFlyerActionServer {
       // If the current goal is being execution, we need to cancel it.
       // In the ros1 astrobee code, this was referred to as preemption
       state_ = CANCELED;
+      result_sent_ = false;
       if (cb_preempt_) {
         cb_preempt_();
       }
-      // Accept but don't start executing the goal until the previous goal has
-      // been completed.
-      return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
+      // Check if the result was send. If it was, we can accept and execute the
+      // the goal. Otherwise, we need to accept but don't start executing the
+      // goal until the previous goal has been completed.
+      if (result_sent_) {
+        // Set state to waiting for accepted so we don't call execute on an
+        // already executing goal
+        state_ = WAITING_FOR_ACCEPTED;
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+      } else {
+        return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
+      }
     } else if (state_ == CANCELED) {
       // We are receive yet another goal before working on the last goal or a
       // user canceled a goal and sent a new one before the cancel finished.
@@ -285,9 +297,21 @@ class FreeFlyerActionServer {
                               const std::shared_ptr<GoalHandle> goal_handle) {
     // Nominal case
     if (state_ == WAITING_FOR_RESPONSE) {
+      FF_INFO("FFS: In waiting for response if.");
+      // A result must be sent when a goal is canceled. If not, the action
+      // server will throw an exception.
+      result_sent_ = false;
       state_ = CANCELED;
       if (cb_cancel_) {
         cb_cancel_();
+      }
+      // Send result if it wasn't sent
+      if (!result_sent_) {
+        std::shared_ptr<typename ActionType::Result> result =
+                                std::make_shared<typename ActionType::Result>();
+        // Weirdly sending a canceled result causes a failure/exception in the
+        // action server so send succeeded instead which totally makes sense
+        goal_handle->succeed(result);
       }
     } else if (state_ == WAITING_FOR_ACCEPTED) {
       // This assumes actions allow a goal to be canceled before fully being
@@ -307,11 +331,7 @@ class FreeFlyerActionServer {
         latest_uuid_ = {};
       }
     } else if (state_ == CANCELED) {
-      // If this is a cancel for the old goal, set state to canceled so the
-      // goal gets canceled in the send result code
-      if (current_goal_handle_->get_goal_id() == goal_handle->get_goal_id()) {
-        state_ = CANCELED;
-      } else {
+      if (current_goal_handle_->get_goal_id() != goal_handle->get_goal_id()) {
         // Check to make sure the latest goal is being canceled. If we had
         // multiple goals come in while the oldest was being canceled, they will
         // be aborted in the accepted callback. Again, do we care that the goals
@@ -338,6 +358,7 @@ class FreeFlyerActionServer {
   }
 
  protected:
+  bool result_sent_;
   State state_;
   rclcpp_action::GoalUUID latest_uuid_;
   typename rclcpp_action::Server<ActionType>::SharedPtr sas_;
@@ -384,7 +405,6 @@ class FreeFlyerActionClient {
   static constexpr double DEFAULT_TIMEOUT_RESPONSE       = 0.0;
   static constexpr double DEFAULT_TIMEOUT_DEADLINE       = 0.0;
   static constexpr double DEFAULT_POLL_DURATION          = 0.1;
-  static constexpr double DEFAULT_TIMEOUT_RESPONSE_DELAY = 0.1;
 
  public:
   using GoalHandle = rclcpp_action::ClientGoalHandle<ActionType>;
@@ -403,8 +423,7 @@ class FreeFlyerActionClient {
     to_active_(DEFAULT_TIMEOUT_ACTIVE),
     to_response_(DEFAULT_TIMEOUT_RESPONSE),
     to_deadline_(DEFAULT_TIMEOUT_DEADLINE),
-    to_poll_(DEFAULT_POLL_DURATION),
-    to_response_delay_(DEFAULT_TIMEOUT_RESPONSE_DELAY) {}
+    to_poll_(DEFAULT_POLL_DURATION) {}
 
   // Destructor
   ~FreeFlyerActionClient() {}
@@ -448,9 +467,6 @@ class FreeFlyerActionClient {
     timer_poll_.createTimer(to_poll_,
         std::bind(&FreeFlyerActionClient::ConnectPollCallback, this),
         nh, false, false);
-    timer_response_delay_.createTimer(to_response_delay_,
-        std::bind(&FreeFlyerActionClient::ResultDelayCallback, this),
-        nh, true, false);
     // Initialize the action client
     sac_ = rclcpp_action::create_client<ActionType>(nh, topic);
     // Set the state
@@ -596,6 +612,7 @@ class FreeFlyerActionClient {
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_RESPONSE, nullptr);
   }
+
   // Goal is now active, restart timer and switch state
   void ActiveCallback(std::shared_future<typename GoalHandle::SharedPtr>
                                                                       future) {
@@ -663,23 +680,12 @@ class FreeFlyerActionClient {
       // an already completed goal which will result in a very cryptic error
       StopAllTimers();
 
-      // TODO(Katie) See if this is still necessary
-      StartOptionalTimer(timer_response_delay_, to_response_delay_);
+      // Call the result callback on the client side
+      Complete(state_response_, result_);
+
+      // Return to waiting for a goal
+      state_ = WAITING_FOR_GOAL;
     }
-  }
-
-  // This delayed callback is necessary because on Ubuntu 20 / ROS noetic,
-  // an action is only considered finished once the ResultCallback returns.
-  // This raises the problem where, if another action of the same type is
-  // called in the ResultCallback or immediately afterwards, it returns
-  // failed because the previous action is technically not finished and
-  // returns an error.
-  void ResultDelayCallback() {
-    // Call the result callback on the client side
-    Complete(state_response_, result_);
-
-    // Return to waiting for a goal
-    state_ = WAITING_FOR_GOAL;
   }
 
  protected:
@@ -689,7 +695,6 @@ class FreeFlyerActionClient {
   double to_response_;
   double to_deadline_;
   double to_poll_;
-  double to_response_delay_;
   typename rclcpp_action::Client<ActionType>::SharedPtr sac_;
   FeedbackCallbackType cb_feedback_;
   ResultCallbackType cb_result_;
@@ -701,7 +706,6 @@ class FreeFlyerActionClient {
   ff_util::FreeFlyerTimer timer_response_;
   ff_util::FreeFlyerTimer timer_deadline_;
   ff_util::FreeFlyerTimer timer_poll_;
-  ff_util::FreeFlyerTimer timer_response_delay_;
   // Save response
   FreeFlyerActionState::Enum state_response_;
   std::shared_ptr<const typename ActionType::Result> result_;

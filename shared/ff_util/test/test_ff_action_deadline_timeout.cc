@@ -16,9 +16,10 @@
  * under the License.
  */
 
-// Test action nominal behaviour
-// Client sends a goal, after 5 messages a SUCCESS result is issued.
-// Test succeeds if the client receives the success response.
+// Test action deadline timeout
+// In this test the client sends a goal when the server connects. The deadline
+// for the action is set to 10 seconds. After the 10 seconds, even if it receives
+// feedback, given that no result was issued, a deadline timeout is issued.
 
 // Required for the test framework
 #include <gtest/gtest.h>
@@ -38,14 +39,13 @@
 #include <functional>
 #include <memory>
 
-FF_DEFINE_LOGGER("test_ff_action_nominal_behavior")
+FF_DEFINE_LOGGER("test_ff_action_deadline_timeout")
 
 // SERVER CALLBACKS
 class Server : ff_util::FreeFlyerComponent {
  public:
   explicit Server(const rclcpp::NodeOptions& options) :
-      ff_util::FreeFlyerComponent(options, "action_server_test", true),
-      messages_(ff_msgs::msg::DockState::DOCKING_MAX_STATE) {}
+      ff_util::FreeFlyerComponent(options, "action_server_test", true) {}
 
   void Initialize(NodeHandle nh) {
     action_.SetGoalCallback(std::bind(&Server::GoalCallback,
@@ -64,16 +64,12 @@ class Server : ff_util::FreeFlyerComponent {
  protected:
   void GoalCallback(std::shared_ptr<const ff_msgs::action::Dock::Goal> goal) {
     FF_INFO("S:GoalCallback()");
-    messages_ = ff_msgs::msg::DockState::DOCKING_MAX_STATE;
-    EXPECT_EQ(goal->command, ff_msgs::action::Dock::Goal::DOCK);
-    EXPECT_EQ(goal->berth, ff_msgs::action::Dock::Goal::BERTH_1);
-    EXPECT_FALSE(goal->return_dock);
     timer_.start();
   }
 
   void CancelCallback() {
     FF_INFO("S:CancelCallback()");
-    EXPECT_TRUE(false);
+    EXPECT_TRUE(true);
   }
 
   void PreemptCallback() {
@@ -82,35 +78,22 @@ class Server : ff_util::FreeFlyerComponent {
   }
 
   void TimerCallback() {
-    FF_INFO("S:TimerCallback()");
-    if (messages_ > 0) {
-      ff_msgs::action::Dock::Feedback::SharedPtr feedback =
+    ff_msgs::action::Dock::Feedback::SharedPtr feedback =
                             std::make_shared<ff_msgs::action::Dock::Feedback>();
-      feedback->state.state = messages_;
-      action_.SendFeedback(feedback);
-      messages_--;
-    } else {
-      timer_.stop();
-      ff_msgs::action::Dock::Result::SharedPtr result =
-                              std::make_shared<ff_msgs::action::Dock::Result>();
-      result->response = ff_msgs::action::Dock::Result::DOCKED;
-      result->fsm_result = "Success!";
-      action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
-    }
+    action_.SendFeedback(feedback);
   }
 
  private:
-  int messages_;
   ff_util::FreeFlyerActionServer<ff_msgs::action::Dock> action_;
   ff_util::FreeFlyerTimer timer_;
 };
+
 
 // CLIENT CALLBACKS
 class Client : ff_util::FreeFlyerComponent {
  public:
   explicit Client(const rclcpp::NodeOptions& options) :
-      ff_util::FreeFlyerComponent(options, "action_client_test", true),
-      messages_(ff_msgs::msg::DockState::DOCKING_MAX_STATE) {}
+      ff_util::FreeFlyerComponent(options, "action_client_test", true) {}
 
   void Initialize(NodeHandle nh) {
     // Setters for callbacks
@@ -130,7 +113,7 @@ class Client : ff_util::FreeFlyerComponent {
     action_.SetDeadlineTimeout(10.0);
     // Call connect
     action_.Create(nh, "test_action");
-    // Setup a timer to preempt or cancel ones own task
+    // Setup a timer for shutdown
     timer_.createTimer(0.2,
                        std::bind(&Client::TimerCallback, this),
                        nh,
@@ -141,26 +124,21 @@ class Client : ff_util::FreeFlyerComponent {
  protected:
   void FeedbackCallback(
         const std::shared_ptr<const ff_msgs::action::Dock::Feedback> feedback) {
-    EXPECT_EQ(feedback->state.state, messages_);
-    messages_--;
     FF_INFO("C:FeedbackCallback()");
   }
 
   void ResultCallback(ff_util::FreeFlyerActionState::Enum state,
                   std::shared_ptr<const ff_msgs::action::Dock::Result> result) {
     FF_INFO("C:ResultCallback()");
-    EXPECT_TRUE(state == ff_util::FreeFlyerActionState::SUCCESS);
-    EXPECT_EQ(result->response, ff_msgs::action::Dock::Result::DOCKED);
-    EXPECT_EQ(result->fsm_result, "Success!");
-    rclcpp::shutdown();
+    EXPECT_TRUE(state == ff_util::FreeFlyerActionState::TIMEOUT_ON_DEADLINE);
+    // If we call shutdown now, ros will complain about publishing the result.
+    // Give some time for the goal to be canceled.
+    timer_.start();
   }
 
   void ConnectedCallback() {
     FF_INFO("C:ConnectedCallback()");
     ff_msgs::action::Dock::Goal goal = ff_msgs::action::Dock::Goal();
-    goal.command = ff_msgs::action::Dock::Goal::DOCK;
-    goal.berth = ff_msgs::action::Dock::Goal::BERTH_1;
-    goal.return_dock = false;
     action_.SendGoal(goal);
   }
 
@@ -170,33 +148,30 @@ class Client : ff_util::FreeFlyerComponent {
 
   // Timer callback
   void TimerCallback() {
-    EXPECT_TRUE(false);
+    rclcpp::shutdown();
   }
 
  private:
-  int messages_;
   ff_util::FreeFlyerActionClient<ff_msgs::action::Dock> action_;
   ff_util::FreeFlyerTimer timer_;
 };
 
-// Perform a test of the freeflyer action
-TEST(ff_action, nominal_behaviour) {
+// Perform a test of the simple action client
+TEST(ff_action, deadline_timeout) {
   rclcpp::NodeOptions node_options;
   rclcpp::Node::SharedPtr nh =
-              std::make_shared<rclcpp::Node>("test_ff_action_nominal_behavior");
+              std::make_shared<rclcpp::Node>("test_ff_action_deadline_timeout");
   Server server(node_options);
   Client client(node_options);
-  // Initialize the client before the server to make things difficult
-  client.Initialize(nh);
   server.Initialize(nh);
-  // Wait until shutdown is called
+  client.Initialize(nh);
   rclcpp::spin(nh);
 }
 
 // Required for the test framework
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  rclcpp::init(argc, argv);
+  ros::init(argc, argv);
   int result = RUN_ALL_TESTS();
   rclcpp::shutdown();
   return result;
