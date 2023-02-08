@@ -82,8 +82,10 @@ using NodeHandle = std::shared_ptr<rclcpp::Node>;
 template<class MessageType>
 using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 
-#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)        pub = node_->create_publisher<msg>(topic, queue)
-#define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  node_->create_subscription<msg>(topic, queue, callback)
+#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue_size) \
+  pub = node_->create_publisher<msg>(topic, qosType(topic, queue_size))
+#define ROS_CREATE_SUBSCRIBER(msg, topic, queue_size, callback) \
+  node_->create_subscription<msg>(topic, qosType(topic, queue_size), callback)
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;

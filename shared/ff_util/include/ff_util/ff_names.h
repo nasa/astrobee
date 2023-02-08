@@ -19,6 +19,9 @@
 #ifndef FF_UTIL_FF_NAMES_H_
 #define FF_UTIL_FF_NAMES_H_
 
+#include <unordered_set>
+#include <string>
+
 // UNIVERSAL ///////////////////////////////////////////////////////////////////
 
 ////////////
@@ -451,5 +454,39 @@
 #define SERVICE_HARDWARE_PMC_TIMEOUT                "hw/pmc/set_timeout"
 
 #define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
+
+inline rclcpp::QoS qosType(const std::string& topic, size_t history_depth) {
+  std::unordered_set<std::string> latched_topics = {
+                                        TOPIC_BEHAVIORS_ARM_STATE,
+                                        TOPIC_BEHAVIORS_DOCKING_STATE,
+                                        TOPIC_BEHAVIORS_PERCHING_STATE,
+                                        TOPIC_GNC_CTL_SEGMENT,
+                                        TOPIC_HARDWARE_LASER_RVIZ,
+                                        TOPIC_HARDWARE_LIGHTS_RVIZ,
+                                        TOPIC_LOCALIZATION_MANAGER_STATE,
+                                        TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
+                                        TOPIC_MANAGEMENT_CAMERA_STATE,
+                                        TOPIC_MANAGEMENT_DATA_BAGGER_STATE,
+                                        TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS,
+                                        TOPIC_MANAGEMENT_EXEC_AGENT_STATE,
+                                        TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
+                                        TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT,
+                                        TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG,
+                                        TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
+                                        TOPIC_MOBILITY_FLIGHT_MODE,
+                                        TOPIC_MOBILITY_INERTIA,
+                                        TOPIC_MOBILITY_MOTION_STATE,
+                                        TOPIC_MOBILITY_ZONES,
+                                        TOPIC_ROBOT_NAME,
+                                        TOPIC_SIGNALS,
+                                        "parameter_descriptions",
+                                        "parameter_updates", };
+  if (latched_topics.find(topic) != latched_topics.end()) {
+    rclcpp::QoS latched_qos(1);
+    latched_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+    return latched_qos;
+  }
+  return rclcpp::QoS(history_depth);
+}
 
 #endif  // FF_UTIL_FF_NAMES_H_
