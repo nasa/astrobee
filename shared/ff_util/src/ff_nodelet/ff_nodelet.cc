@@ -96,7 +96,6 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   // Immediately, setup a publisher for faults coming from this node
-  // Topic needs to be latched for initialization faults
   pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
     TOPIC_HEARTBEAT, heartbeat_queue_size_);
   pub_diagnostics_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(
