@@ -27,14 +27,14 @@ TrajRosBridge &TrajRosBridge::instance() {
 ros::Publisher TrajRosBridge::getPub(std::string topic) {
   if (instance().pubs_.find(topic) == instance().pubs_.end()) {
     instance().pubs_[topic] =
-        instance().nh_.advertise<traj_opt_msgs::Trajectory>(topic, 1, true);
+        instance().nh_.advertise<traj_opt_msgs::Trajectory>(topic, 1);
   }
   return instance().pubs_[topic];
 }
 ros::Publisher TrajRosBridge::getInfoPub(std::string topic) {
   if (instance().pubs_.find(topic) == instance().pubs_.end()) {
     instance().pubs_[topic] =
-        instance().nh_.advertise<traj_opt_msgs::SolverInfo>(topic, 1, true);
+        instance().nh_.advertise<traj_opt_msgs::SolverInfo>(topic, 1);
   }
   return instance().pubs_[topic];
 }

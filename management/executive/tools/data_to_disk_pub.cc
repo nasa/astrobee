@@ -145,8 +145,7 @@ int main(int argc, char** argv) {
                               std::bind(&on_connect, std::placeholders::_1, cf));
 
   // After the zones are received, commands a set zones to the executive
-  command_pub = n.advertise<ff_msgs::CommandStamped>(
-                                                    TOPIC_COMMAND, 5, true);
+  command_pub = n.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 5, false);
 
   // Subscriber that receives confirmation that the zones were received
   ros::Subscriber cf_acK_pub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10, &on_cf_ack);

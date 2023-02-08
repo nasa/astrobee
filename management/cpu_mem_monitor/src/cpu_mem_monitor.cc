@@ -46,13 +46,11 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   // All state messages are latching
   cpu_state_pub_ = nh->advertise<ff_msgs::CpuStateStamped>(
                                             TOPIC_MANAGEMENT_CPU_MONITOR_STATE,
-                                            pub_queue_size_,
-                                            true);
+                                            pub_queue_size_);
   // All state messages are latching
   mem_state_pub_ = nh->advertise<ff_msgs::MemStateStamped>(
                                             TOPIC_MANAGEMENT_MEM_MONITOR_STATE,
-                                            pub_queue_size_,
-                                            true);
+                                            pub_queue_size_);
 
   // Timer for asserting the cpu load too high fault
   assert_cpu_load_fault_timer_ = nh->createTimer(
