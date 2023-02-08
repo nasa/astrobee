@@ -61,7 +61,7 @@ void AccessControl::Initialize(ros::NodeHandle *nh) {
   failed_cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(
                                             TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
                                             pub_queue_size_,
-                                            true);
+                                            false);
 
   state_.controller = "No Controller";
 

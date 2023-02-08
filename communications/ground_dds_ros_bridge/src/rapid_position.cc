@@ -30,7 +30,7 @@ RapidPositionToRos::RapidPositionToRos(const std::string& subscribe_topic,
                    "RapidPositionToRos",
                    queue_size) {
   // advertise ros topic, make it latched
-  pub_ = nh_.advertise<ff_msgs::EkfState>(publish_topic_, queue_size, true);
+  pub_ = nh_.advertise<ff_msgs::EkfState>(publish_topic_, queue_size);
 
   // connect to ddsEventLoop
   try {
