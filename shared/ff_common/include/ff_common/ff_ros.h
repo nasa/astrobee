@@ -36,10 +36,10 @@ using NodeHandle = ros::NodeHandle*;
 template<class MessageType>
 using Publisher = ros::Publisher*;
 
-#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue)                \
-  ros::Publisher __publ = nh_private_.advertise<msg>(topic, queue); \
+#define FF_CREATE_PUBLISHER(pub, node, msg, topic, queue)                \
+  ros::Publisher __publ = node.advertise<msg>(topic, queue); \
   pub = &__publ
-#define ROS_CREATE_SUBSCRIBER(msg, topic, queue, callback)  nh_private_.subscribe(topic, queue, callback)
+#define FF_CREATE_SUBSCRIBER(node, msg, topic, queue, callback)  node.subscribe(topic, queue, callback)
 
 
 template<class MessageType>
@@ -50,7 +50,7 @@ using Service = ros::ServiceServer*;
 
 template<class MessageType>
 using ServiceClient = ros::ServiceClient*;
-#define ROS_CREATE_SERVICE_(serv_client, msg, topic)
+#define FF_CREATE_SERVICE_CLIENT(serv_client, msg, topic)
 ros::ServiceClient __serv_client = nh_private_.serviceClient<msg>(topic);
 serv_client = &__serv_client
 
@@ -82,10 +82,10 @@ using NodeHandle = std::shared_ptr<rclcpp::Node>;
 template<class MessageType>
 using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 
-#define ROS_CREATE_PUBLISHER(pub, msg, topic, queue_size) \
-  pub = node_->create_publisher<msg>(topic, qosType(topic, queue_size))
-#define ROS_CREATE_SUBSCRIBER(msg, topic, queue_size, callback) \
-  node_->create_subscription<msg>(topic, qosType(topic, queue_size), callback)
+#define FF_CREATE_PUBLISHER(pub, node, msg, topic, queue_size) \
+  pub = node->create_publisher<msg>(topic, qosType(topic, queue_size))
+#define FF_CREATE_SUBSCRIBER(node, msg, topic, queue_size, callback) \
+  node->create_subscription<msg>(topic, qosType(topic, queue_size), callback)
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
@@ -94,7 +94,7 @@ using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 
 template<class MessageType>
 using ServiceClient = std::shared_ptr<rclcpp::Client<MessageType>>;
-#define ROS_CREATE_SERVICE_CLIENT(serv_client, msg, topic) \
+#define FF_CREATE_SERVICE_CLIENT(serv_client, msg, topic) \
   serv_client = node_->create_client<msg>(topic)
 
 using Duration = std::shared_ptr<rclcpp::Duration>;

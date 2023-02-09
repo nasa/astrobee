@@ -41,11 +41,11 @@ void GroundTruthLocalizerNodelet::Initialize(NodeHandle &nh) {
 
 void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(NodeHandle &nh) {
   node_ = nh;
-  pose_pub_ = nh->create_publisher<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
-  twist_pub_ = nh->create_publisher<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
-  state_pub_ = nh->create_publisher<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
-  heartbeat_pub_ = nh->create_publisher<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5);
-  reset_pub_ = nh->create_publisher<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
+  FF_CREATE_PUBLISHER(pose_pub_, nh, geometry_msgs::PoseStamped, TOPIC_LOCALIZATION_POSE, 1);
+  FF_CREATE_PUBLISHER(twist_pub_, nh, geometry_msgs::TwistStamped, TOPIC_LOCALIZATION_TWIST, 1);
+  FF_CREATE_PUBLISHER(state_pub_, nh, ff_msgs::EkfState, TOPIC_GNC_EKF, 1);
+  FF_CREATE_PUBLISHER(heartbeat_pub_, nh, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, 5);
+  FF_CREATE_PUBLISHER(reset_pub_, nh, std_msgs::Empty, TOPIC_GNC_EKF_RESET, 10);
 
   pose_sub_ = nh->create_subscription<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_TRUTH, 1,
     std::bind(&GroundTruthLocalizerNodelet::PoseCallback, this, std::placeholders::_1));

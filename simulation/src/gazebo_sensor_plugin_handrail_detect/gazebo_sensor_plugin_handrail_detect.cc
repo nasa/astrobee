@@ -105,10 +105,10 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
       FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
-    pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(TOPIC_LOCALIZATION_HR_REGISTRATION, 1);
+    FF_CREATE_PUBLISHER(pub_reg_, nh, ff_msgs::CameraRegistration, TOPIC_LOCALIZATION_HR_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    pub_feat_ = nh->create_publisher<ff_msgs::DepthLandmarks>(TOPIC_LOCALIZATION_HR_FEATURES, 1);
+    FF_CREATE_PUBLISHER(pub_feat_, nh, ff_msgs::DepthLandmarks, TOPIC_LOCALIZATION_HR_FEATURES, 1);
 
     // Create a shape for collision testing
     GetWorld()->Physics()->InitForThread();

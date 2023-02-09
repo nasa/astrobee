@@ -68,7 +68,7 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
     msg_.encoding = sensor_msgs::image_encodings::MONO8;
 
     // Create a publisher
-    pub_img_ = nh->create_publisher<sensor_msgs::Image>(TOPIC_HARDWARE_DOCK_CAM, 1);
+    FF_CREATE_PUBLISHER(pub_img_, nh, sensor_msgs::Image, TOPIC_HARDWARE_DOCK_CAM, 1);
 
     // Read configuration
     config_reader::ConfigReader config;

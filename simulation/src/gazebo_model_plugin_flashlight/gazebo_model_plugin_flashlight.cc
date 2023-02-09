@@ -79,9 +79,7 @@ class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
     pub_light_ = gz_->Advertise<msgs::Light>("~/light/modify");
 
     // For the RVIZ marker array
-    pub_rviz_ = nh->create_publisher<visualization_msgs::MarkerArray>(
-      TOPIC_HARDWARE_LIGHTS_RVIZ, 0);
-      // TOPIC_HARDWARE_LIGHTS_RVIZ, 0, true); // TODO (@mgouveia): figure out latched topics
+    FF_CREATE_PUBLISHER(pub_rviz_, nh, visualization_msgs::MarkerArray, TOPIC_HARDWARE_LIGHTS_RVIZ, 0);
 
     // Rotate from the flaslight frame to the visual frame
     pose_ = ignition::math::Pose3d(0.0, 0, 0, 0.70710678, 0, -0.70710678, 0);

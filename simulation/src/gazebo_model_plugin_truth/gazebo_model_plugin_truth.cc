@@ -102,10 +102,8 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
     }
 
     // Ground truth
-    pub_truth_pose_ = nh->create_publisher<geometry_msgs::PoseStamped>(
-      TOPIC_LOCALIZATION_TRUTH, 1);
-    pub_truth_twist_ = nh->create_publisher<geometry_msgs::TwistStamped>(
-      TOPIC_LOCALIZATION_TRUTH_TWIST, 1);
+    FF_CREATE_PUBLISHER(pub_truth_pose_, nh, geometry_msgs::PoseStamped, TOPIC_LOCALIZATION_TRUTH, 1);
+    FF_CREATE_PUBLISHER(pub_truth_twist_, nh, geometry_msgs::TwistStamped, TOPIC_LOCALIZATION_TRUTH_TWIST, 1);
 
     // Called before each iteration of simulated world update
     timer_.createTimer(1 / rate_,

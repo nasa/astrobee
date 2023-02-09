@@ -74,10 +74,10 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     image_msg_.encoding = sensor_msgs::image_encodings::MONO8;
 
     // Create a publisher
-    pub_img_ = nh->create_publisher<sensor_msgs::Image>(TOPIC_HARDWARE_NAV_CAM, 1);
+    FF_CREATE_PUBLISHER(pub_img_, nh, sensor_msgs::Image, TOPIC_HARDWARE_NAV_CAM, 1);
 
-    pub_pose_ = nh->create_publisher<geometry_msgs::PoseStamped>(TOPIC_NAV_CAM_SIM_POSE, 10);
-    pub_info_ = nh->create_publisher<sensor_msgs::CameraInfo>(TOPIC_NAV_CAM_SIM_INFO, 10);
+    FF_CREATE_PUBLISHER(pub_pose_, nh, geometry_msgs::PoseStamped, TOPIC_NAV_CAM_SIM_POSE, 10);
+    FF_CREATE_PUBLISHER(pub_info_, nh, sensor_msgs::CameraInfo, TOPIC_NAV_CAM_SIM_INFO, 10);
 
     // Read configuration
     config_reader::ConfigReader config;

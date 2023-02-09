@@ -78,7 +78,7 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
   // Only send IMU when we have the correct extrinsics
   void OnExtrinsicsReceived(NodeHandle& nh) {
     // Offer IMU messages to those which need them
-    pub_ = nh->create_publisher< sensor_msgs::Imu > (TOPIC_HARDWARE_IMU, 1);
+    FF_CREATE_PUBLISHER(pub_, nh, sensor_msgs::Imu, TOPIC_HARDWARE_IMU, 1);
 
     // Connect to the sensor update event.
     update_ = sensor_->ConnectUpdated(

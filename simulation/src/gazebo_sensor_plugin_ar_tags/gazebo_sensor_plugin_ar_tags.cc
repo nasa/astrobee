@@ -115,10 +115,10 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     }
 
     // Create a publisher for the registration messages
-    pub_reg_ = nh->create_publisher<ff_msgs::CameraRegistration>(TOPIC_LOCALIZATION_AR_REGISTRATION, 1);
+    FF_CREATE_PUBLISHER(pub_reg_, nh, ff_msgs::CameraRegistration, TOPIC_LOCALIZATION_AR_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    pub_feat_ = nh->create_publisher<ff_msgs::VisualLandmarks>(TOPIC_LOCALIZATION_AR_FEATURES, 1);
+    FF_CREATE_PUBLISHER(pub_feat_, nh, ff_msgs::VisualLandmarks, TOPIC_LOCALIZATION_AR_FEATURES, 1);
 
     // Only do this once
     msg_feat_.header.frame_id = std::string(FRAME_NAME_DOCK);

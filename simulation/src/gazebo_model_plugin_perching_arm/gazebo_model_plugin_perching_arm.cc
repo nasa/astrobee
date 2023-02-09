@@ -171,9 +171,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     msg_.effort.resize(joints_.size() + 1);
 
     // Create a joint state publisher for the arm
-    pub_ = nh->create_publisher<sensor_msgs::JointState>("joint_states", 100);
-    // pub_ = nh->create_publisher<sensor_msgs::JointState>("joint_states", 100, true); // TODO (@mgouveia): figure out
-    // latched topics
+    FF_CREATE_PUBLISHER(pub_, nh, sensor_msgs::JointState, "joint_states", 100);
 
     // Now register to be called back every time FAM has new wrench
     sub_ = nh->create_subscription<sensor_msgs::JointState>("joint_goals", 1,
