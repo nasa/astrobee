@@ -32,11 +32,11 @@ from utilities.utilities import *
 @pytest.mark.launch_test
 @launch_testing.markers.keep_alive
 def generate_test_description():
-    test_latched_topic = Node(
+    test_latched_topics = Node(
         executable=launch.substitutions.PathJoinSubstitution(
             [
                 launch.substitutions.LaunchConfiguration("test_binary_dir"),
-                "test_latched_topic",
+                "test_latched_topics",
             ]
         ),
         output="screen",
@@ -68,16 +68,16 @@ def generate_test_description():
                 description="Binary directory of package containing test executables",
                 default_value="/src/astrobee/build/ff_util",
             ),
-            test_latched_topic,
+            test_latched_topics,
             # Tell launch when to start the test
             launch_testing.actions.ReadyToTest(),
         ]
-    ), {"test_latched_topic": test_latched_topic}
+    ), {"test_latched_topics": test_latched_topics}
 
 
 class TestTerminatingProcessStops(unittest.TestCase):
-    def test_proc_terminates(self, proc_info, test_latched_topic):
-        proc_info.assertWaitForShutdown(process=test_latched_topic, timeout=30)
+    def test_proc_terminates(self, proc_info, test_latched_topics):
+        proc_info.assertWaitForShutdown(process=test_latched_topics, timeout=30)
 
 
 # These tests are run after the processes in generate_test_description() have shutdown.

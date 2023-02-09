@@ -33,19 +33,40 @@ class TestPublisher : ff_util::FreeFlyerComponent {
     ff_util::FreeFlyerComponent(options, "latched_topic_publisher", true) {}
 
   void Initialize(NodeHandle nh) {
-    FF_CREATE_PUBLISHER(publisher_,
+    FF_CREATE_PUBLISHER(latched_publisher_,
                         nh,
                         std_msgs::msg::String,
                         TOPIC_ROBOT_NAME,
                         1);
+    FF_CREATE_PUBLISHER(not_latched_publisher_,
+                        nh,
+                        std_msgs::msg::String,
+                        TOPIC_COMMAND,
+                        1);
 
-    std_msgs::msg::String robot_name_msg = std_msgs::msg::String();
-    robot_name_msg.data = "test_robot";
-    publisher_->publish(robot_name_msg);
+    std_msgs::msg::String msg = std_msgs::msg::String();
+    msg.data = "test_robot";
+    latched_publisher_->publish(msg);
+    msg.data = "stopAllMotion";
+    not_latched_publisher_->publish(msg);
+    timer_.createTimer(15,
+                       std::bind(&TestPublisher::TimerCallback, this),
+                       nh,
+                       true,
+                       true);
+  }
+
+  // Timer callback
+  void TimerCallback() {
+    std_msgs::msg::String msg = std_msgs::msg::String();
+    msg.data = "stopAllMotion";
+    not_latched_publisher_->publish(msg);
   }
 
  private:
-  Publisher<std_msgs::msg::String> publisher_;
+  Publisher<std_msgs::msg::String> latched_publisher_;
+  Publisher<std_msgs::msg::String> not_latched_publisher_;
+  ff_util::FreeFlyerTimer timer_;
 };
 
 class TestSubscriber : ff_util::FreeFlyerComponent {
@@ -53,13 +74,42 @@ class TestSubscriber : ff_util::FreeFlyerComponent {
   explicit TestSubscriber(const rclcpp::NodeOptions& options) :
     ff_util::FreeFlyerComponent(options, "latched_topic_subscriber", true) {}
 
-  void Initialize(NodeHandle nh) {
-    // subscriber_ = FF_CREATE_SUBSCRIBER(nh, std_msgs::msg::String, )
+  void InitializeNotLatched(NodeHandle nh) {
+    topic_timeout_ = false;
+    FF_CREATE_SUBSCRIBER(not_latched_subscriber_,
+                         nh,
+                         std_msgs::msg::String,
+                         TOPIC_COMMAND,
+                         1,
+                         &TestSubscriber::NotLatchedCallback);
+  }
+
+  void InitializeLatched(NodeHandle nh) {
+    topic_timeout_ = true;
+    FF_CREATE_SUBSCRIBER(latched_subscriber_,
+                         nh,
+                         std_msgs::msg::String,
+                         TOPIC_ROBOT_NAME,
+                         1,
+                         &TestSubscriber::LatchedCallback);
+  }
+
+  void LatchedCallback(std_msgs::msg::String const& msg) {
+    FF_INFO("TS: Latched Callback");
+    EXPECT_EQ(msg.data, "test_robot");
+  }
+  
+  void NotLatchedCallback(std_msgs::msg::String const& msg) {
+    FF_INFO("TS: Not Latched Callback");
+    EXPECT_TRUE(topic_timeout_);
+    EXPECT_EQ(msg.data, "stopAllMotion");
+    rclcpp::shutdown();
   }
 
  private:
-  Subscriber<std_msgs::msg::String> subscriber_;
-  ff_util::FreeFlyerTimer timer_;
+  Subscriber<std_msgs::msg::String> latched_subscriber_;
+  Subscriber<std_msgs::msg::String> not_latched_subscriber_;
+  bool topic_timeout_;
 };
 
 TEST(latched_topic, LatchedTopicTimeout) {
@@ -67,8 +117,17 @@ TEST(latched_topic, LatchedTopicTimeout) {
   rclcpp::Node::SharedPtr nh =
                   std::make_shared<rclcpp::Node>("test_latched_topic_timeout");
   TestPublisher publisher(node_options);
+  TestSubscriber subscriber(node_options);
   publisher.Initialize(nh);
-  EXPECT_TRUE(true);
+  subscriber.InitializeNotLatched(nh);
+  std::chrono::nanoseconds ns(1000000000);
+  // Sleep for 10 seconds
+  for (int i = 0; i < 10; i++) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
+  }
+  subscriber.InitializeLatched(nh);
+  rclcpp::spin(nh);
 }
 
 // Run all the tests that were declared with TEST()
