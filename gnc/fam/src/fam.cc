@@ -19,51 +19,52 @@
 #include <fam/fam.h>
 #include <msg_conversions/msg_conversions.h>
 #include <ff_util/ff_names.h>
-#include <ff_hw_msgs/PmcCommand.h>
 
 #include <Eigen/QR>
 
 // parameters fam_force_allocation_module_P are set in
 //  matlab/code_generation/fam_force_allocation_module_ert_rtw/fam_force_allocation_module_data.c
 
+using std::placeholders::_1;
+
 namespace fam {
 
-Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
+Fam::Fam(NodeHandle & nh) : inertia_received_(false) {
   // config_.AddFile("gnc.config");
   // config_.AddFile("geometry.config");
   // ReadParams();
   // config_timer_ = nh->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
   //     config_.CheckFilesUpdated(std::bind(&Fam::ReadParams, this));}, false, true);
 
-  pt_fam_.Initialize("fam");
+  clock_ = nh->get_clock();
 
-  pmc_pub_ = nh->advertise<ff_hw_msgs::PmcCommand>(TOPIC_HARDWARE_PMC_COMMAND, 1);
+  pmc_pub_ = nh->create_publisher<ff_hw_msgs::msg::PmcCommand>(TOPIC_HARDWARE_PMC_COMMAND, 1);
 
   // Subscribe to the flight mode to be notified of speed gain command
-  flight_mode_sub_ = nh->subscribe(
-    TOPIC_MOBILITY_FLIGHT_MODE, 1, &Fam::FlightModeCallback, this);
-  inertia_sub_ = nh->subscribe(
-    TOPIC_MOBILITY_INERTIA, 1, &Fam::InertiaCallback, this);
+  flight_mode_sub_ = nh->create_subscription<ff_msgs::msg::FlightMode>(
+    TOPIC_MOBILITY_FLIGHT_MODE, 1, std::bind(&Fam::FlightModeCallback, this, _1));
+  inertia_sub_ = nh->create_subscription<geometry_msgs::msg::InertiaStamped>(
+    TOPIC_MOBILITY_INERTIA, 1, std::bind(&Fam::InertiaCallback, this, _1));
 
-  ctl_sub_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5,
-    &Fam::CtlCallBack, this, ros::TransportHints().tcpNoDelay());
+  ctl_sub_ = nh->create_subscription<ff_msgs::msg::FamCommand>(TOPIC_GNC_CTL_COMMAND, 5,
+                                   std::bind(&Fam::CtlCallBack, this, _1));
 }
 
 Fam::~Fam() {}
 
-void Fam::CtlCallBack(const ff_msgs::FamCommand & c) {
-  input_.body_force_cmd =  msg_conversions::ros_to_eigen_vector(c.wrench.force).cast<float>();
-  input_.body_torque_cmd =  msg_conversions::ros_to_eigen_vector(c.wrench.torque).cast<float>();
+void Fam::CtlCallBack(const std::shared_ptr<ff_msgs::msg::FamCommand> c) {
+  input_.body_force_cmd =  msg_conversions::ros_to_eigen_vector(c->wrench.force).cast<float>();
+  input_.body_torque_cmd =  msg_conversions::ros_to_eigen_vector(c->wrench.torque).cast<float>();
 
   Step();
 }
 
-void Fam::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
+void Fam::FlightModeCallback(const std::shared_ptr<ff_msgs::msg::FlightMode> mode) {
   std::lock_guard<std::mutex> lock(mutex_speed_);
   input_.speed_gain_cmd = mode->speed;
 }
 
-void Fam::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
+void Fam::InertiaCallback(const std::shared_ptr<geometry_msgs::msg::InertiaStamped> inertia) {
   std::lock_guard<std::mutex> lock(mutex_mass_);
   center_of_mass_ = msg_conversions::ros_to_eigen_vector(inertia->inertia.com).cast<float>();
   fam_.UpdateCOM(center_of_mass_);
@@ -72,12 +73,10 @@ void Fam::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia
 
 void Fam::Step() {
   if (!inertia_received_) {
-    ROS_DEBUG_STREAM_THROTTLE(10, "FAM step waiting for inertia.");
     return;
   }
 
   // Step the FAM simulink code
-  pt_fam_.Tick();
   uint8_t speed_cmd[2];
   Eigen::Matrix<float, 12, 1> servo_pwm_cmd;
   {
@@ -85,11 +84,10 @@ void Fam::Step() {
     std::lock_guard<std::mutex> lock(mutex_speed_);
     fam_.Step(input_, speed_cmd, servo_pwm_cmd);
   }
-  pt_fam_.Tock();
 
   // Send the PMC command
-  static ff_hw_msgs::PmcCommand pmc;
-  pmc.header.stamp = ros::Time::now();
+  static ff_hw_msgs::msg::PmcCommand pmc;
+  pmc.header.stamp = clock_->now();
   pmc.header.frame_id = "body";
   pmc.goals.resize(2);
   pmc.goals[0].motor_speed = speed_cmd[0];
@@ -98,9 +96,7 @@ void Fam::Step() {
     pmc.goals[0].nozzle_positions[i] = (unsigned char)servo_pwm_cmd[i];
     pmc.goals[1].nozzle_positions[i] = (unsigned char)servo_pwm_cmd[6 + i];
   }
-  pmc_pub_.publish<ff_hw_msgs::PmcCommand>(pmc);
-
-  pt_fam_.Send();
+  pmc_pub_->publish<ff_hw_msgs::msg::PmcCommand>(pmc);
 }
 
 // void Fam::ReadParams(void) {

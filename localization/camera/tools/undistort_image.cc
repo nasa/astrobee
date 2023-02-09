@@ -182,7 +182,7 @@ int main(int argc, char ** argv) {
                        round(scale * cam_params.GetDistortedSize()[1]));
   int img_cols = dims[0], img_rows = dims[1];
 
-  cv::Vec2f start = floating_remap.at<cv::Vec2f>(0, 0);
+  // cv::Vec2f start = floating_remap.at<cv::Vec2f>(0, 0);
   double min_x = 0.0, max_x = 0.0, min_y = 0.0, max_y = 0.0;  // will change very soon
   for (int col = 0; col < floating_remap.cols; col++) {
     for (int row = 0; row < floating_remap.rows; row++) {

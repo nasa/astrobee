@@ -15,39 +15,29 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(fam)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  ff_msgs
-  ff_hw_msgs
-  ff_util
-  config_reader
-  pmc
-)
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
-# System dependencies are found with CMake's conventions
+find_package(ff_common REQUIRED)
+find_package(ff_hw_msgs REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(config_reader REQUIRED)
+find_package(msg_conversions REQUIRED)
+find_package(pmc REQUIRED)
+
 find_package(Eigen3 REQUIRED)
-
-catkin_package(
-  LIBRARIES
-    fam
-  CATKIN_DEPENDS
-    roscpp
-    nodelet
-    ff_msgs
-    ff_hw_msgs
-    ff_util
-    config_reader
-    pmc
-)
 
 ###########
 ## Build ##
@@ -56,37 +46,43 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
 )
 
 # Declare C++ libraries
-add_library(fam
+add_library(fam SHARED
   src/fam.cc
-  src/fam_nodelet.cc
+  src/fam_component.cc
 )
-add_dependencies(fam ${catkin_EXPORTED_TARGETS})
-target_link_libraries(fam ${catkin_LIBRARIES})
+target_compile_definitions(fam
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(fam rclcpp rclcpp_components ff_common config_reader ff_msgs ff_hw_msgs ff_util msg_conversions pmc)
+rclcpp_components_register_nodes(fam "fam::FamComponent")
 
 #############
 ## Install ##
 #############
 
+ament_export_include_directories(include)
+
+target_include_directories(fam
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT fam
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
-
-
+ament_package()

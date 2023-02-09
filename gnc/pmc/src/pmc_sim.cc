@@ -157,7 +157,6 @@ void Blower::BlowerBodyDynamics(const Eigen::Vector3f & omega_body, Eigen::Matri
 
   Eigen::Vector3f momentum_B = impeller_orientation_ * PMCConstants::impeller_inertia * impeller_speed_;
 
-  Eigen::Matrix<float, 6, 1> a = nozzle_thrusts;
   force_B_ = thrust2force * nozzle_thrusts;
   torque_B_ = impeller_orientation_ * -motor_torque + omega_body.cross(momentum_B) + thrust2torque * nozzle_thrusts;
 }

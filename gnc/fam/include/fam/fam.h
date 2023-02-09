@@ -19,18 +19,16 @@
 #ifndef FAM_FAM_H_
 #define FAM_FAM_H_
 
-#include <ros/node_handle.h>
-#include <ros/publisher.h>
-#include <ros/subscriber.h>
+#include <ff_common/ff_ros.h>
 
-#include <ff_msgs/FamCommand.h>
-#include <ff_msgs/FlightMode.h>
+#include <ff_msgs/msg/fam_command.hpp>
+#include <ff_msgs/msg/flight_mode.hpp>
+#include <ff_hw_msgs/msg/pmc_command.hpp>
 
 #include <ff_util/ff_names.h>
-#include <ff_util/perf_timer.h>
 
 #include <Eigen/Dense>
-#include <geometry_msgs/InertiaStamped.h>
+#include <geometry_msgs/msg/inertia_stamped.hpp>
 
 #include <config_reader/config_reader.h>
 #include <pmc/fam.h>
@@ -44,24 +42,25 @@ namespace fam {
 */
 class Fam {
  public:
-  explicit Fam(ros::NodeHandle* nh);
+  explicit Fam(NodeHandle & nh);
   ~Fam();
   void Step();
 
  protected:
   void ReadParams(void);
-  void CtlCallBack(const ff_msgs::FamCommand & c);
-  void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
-  void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
+  void CtlCallBack(const std::shared_ptr<ff_msgs::msg::FamCommand> c);
+  void FlightModeCallback(const std::shared_ptr<ff_msgs::msg::FlightMode> mode);
+  void InertiaCallback(const std::shared_ptr<geometry_msgs::msg::InertiaStamped> inertia);
 
   pmc::Fam fam_;
 
-  ros::Subscriber ctl_sub_;
-  ros::Subscriber flight_mode_sub_, inertia_sub_;
-  ros::Publisher pmc_pub_;
+  rclcpp::Subscription<ff_msgs::msg::FamCommand>::SharedPtr ctl_sub_;
+  rclcpp::Subscription<ff_msgs::msg::FlightMode>::SharedPtr flight_mode_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::InertiaStamped>::SharedPtr inertia_sub_;
+  rclcpp::Publisher<ff_hw_msgs::msg::PmcCommand>::SharedPtr pmc_pub_;
+  rclcpp::Clock::SharedPtr clock_;
 
   // config_reader::ConfigReader config_;
-  ff_util::PerfTimer pt_fam_;
   // ros::Timer config_timer_;
 
   std::mutex mutex_speed_;

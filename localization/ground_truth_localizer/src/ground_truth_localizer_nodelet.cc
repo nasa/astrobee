@@ -77,7 +77,7 @@ bool GroundTruthLocalizerNodelet::DefaultServiceResponse(const std::shared_ptr<s
   return true;
 }
 
-void GroundTruthLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose) {
+void GroundTruthLocalizerNodelet::PoseCallback(const std::shared_ptr<geometry_msgs::PoseStamped> pose) {
   assert(pose->header.frame_id == "world");
   pose_ = PoseFromMsg(*pose);
   pose_pub_->publish(*pose);
@@ -92,7 +92,7 @@ void GroundTruthLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::Const
   heartbeat_pub_->publish(heartbeat_);
 }
 
-void GroundTruthLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {
+void GroundTruthLocalizerNodelet::TwistCallback(const std::shared_ptr<geometry_msgs::TwistStamped> twist) {
   assert(twist->header.frame_id == "world");
   twist_ = TwistFromMsg(*twist);
   twist_pub_->publish(*twist);

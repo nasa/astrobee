@@ -93,7 +93,7 @@ TimestampedSet<T>::TimestampedSet() {}
 
 template <typename T>
 TimestampedSet<T>::TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values) {
-  for (int i = 0; i < values.size(); ++i) {
+  for (unsigned int i = 0; i < values.size(); ++i) {
     Add(timestamps[i], values[i]);
   }
 }

@@ -16,34 +16,32 @@
  * under the License.
  */
 
-#include <ctl/ctl_ros.h>
+#include <fam/fam.h>
 
 #include <ff_common/init.h>
-#include <ff_util/ff_nodelet.h>
-
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
+#include <ff_util/ff_component.h>
 
 #include <memory>
 
-namespace ctl {
+namespace fam {
 
-class CtlNodelet : public ff_util::FreeFlyerNodelet {
+class FamComponent : public ff_util::FreeFlyerComponent {
  public:
-  CtlNodelet() : ff_util::FreeFlyerNodelet(NODE_CTL, true) {}
-  ~CtlNodelet() {}
+  explicit FamComponent(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options, NODE_CTL) {}
+  ~FamComponent() {}
   // This is called when the nodelet is loaded into the nodelet manager
-  void Initialize(ros::NodeHandle *nh) {
-    // Bootstrap our environment
-    ff_common::InitFreeFlyerApplication(getMyArgv(), false);
-    ctl_.reset(new ctl::Ctl(this->GetPlatformHandle(true), getName()));
+  void Initialize(NodeHandle nh) {
+    // this used to be multi-threaded, but don't think it needs to be
+    fam_.reset(new fam::Fam(nh));
   }
 
  private:
-  std::shared_ptr<ctl::Ctl> ctl_;
+  std::shared_ptr<fam::Fam> fam_;
 };
 
-}  // end namespace ctl
+}  // end namespace fam
+
+#include "rclcpp_components/register_node_macro.hpp"
 
 // Declare the plugin
-PLUGINLIB_EXPORT_CLASS(ctl::CtlNodelet, nodelet::Nodelet);
+RCLCPP_COMPONENTS_REGISTER_NODE(fam::FamComponent)
