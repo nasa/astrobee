@@ -98,7 +98,7 @@ class TestSubscriber : ff_util::FreeFlyerComponent {
     FF_INFO("TS: Latched Callback");
     EXPECT_EQ(msg.data, "test_robot");
   }
-  
+
   void NotLatchedCallback(std_msgs::msg::String const& msg) {
     FF_INFO("TS: Not Latched Callback");
     EXPECT_TRUE(topic_timeout_);

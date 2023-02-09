@@ -88,7 +88,9 @@ using Subscriber = std::shared_ptr<rclcpp::Subscription<MessageType>>;
 #define FF_CREATE_PUBLISHER(pub, node, msg, topic, queue_size) \
   pub = node->create_publisher<msg>(topic, qosType(topic, queue_size))
 #define FF_CREATE_SUBSCRIBER(sub, node, msg, topic, queue_size, callback) \
-  sub = node->create_subscription<msg>(topic, qosType(topic, queue_size), std::bind(callback, this, std::placeholders::_1))
+  sub = node->create_subscription<msg>(topic, \
+                                       qosType(topic, queue_size), \
+                                       std::bind(callback, this, std::placeholders::_1))
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
