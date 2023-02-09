@@ -82,6 +82,9 @@ using NodeHandle = std::shared_ptr<rclcpp::Node>;
 template<class MessageType>
 using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 
+template<class MessageType>
+using Subscriber = std::shared_ptr<rclcpp::Subscription<MessageType>>;
+
 #define FF_CREATE_PUBLISHER(pub, node, msg, topic, queue_size) \
   pub = node->create_publisher<msg>(topic, qosType(topic, queue_size))
 #define FF_CREATE_SUBSCRIBER(node, msg, topic, queue_size, callback) \

@@ -455,7 +455,7 @@
 
 #define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
 
-inline rclcpp::QoS qosType(const std::string& topic, size_t history_depth) {
+inline rclcpp::QoS qosType(std::string const& topic, size_t history_depth) {
   std::unordered_set<std::string> latched_topics = {
                                         TOPIC_BEHAVIORS_ARM_STATE,
                                         TOPIC_BEHAVIORS_DOCKING_STATE,
