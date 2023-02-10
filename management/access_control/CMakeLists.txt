@@ -15,12 +15,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(access_control)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS "${CMAKE_CXXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
