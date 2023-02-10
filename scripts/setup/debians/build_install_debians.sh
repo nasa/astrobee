@@ -33,9 +33,9 @@ case $dist in
   xenial)
     echo "Ubuntu 16 detected"
     ;;
-  bionic|focal)
-    build_list+=( opencv )
-    ;;&
+  #bionic|focal)
+  #  build_list+=( opencv )
+  #  ;;&
   bionic)
     echo "Ubuntu 18 detected"
      # jps3d deps
@@ -52,7 +52,7 @@ case $dist in
 esac
 
 # Add public debians to build list
-build_list+=( alvar dlib dbow2 gtsam decomputil jps3d openmvg )
+build_list+=( dlib dbow2 gtsam decomputil jps3d openmvg ) # alvar
 # If restricted rti-dev debian is present, add miro and soracore as well
 dpkg-query -W -f='${Status}\n' rti-dev 2>&1 | grep -q "install ok installed" &&
 echo "Package rti-dev exists. Including miro and soracore to build list..." &&

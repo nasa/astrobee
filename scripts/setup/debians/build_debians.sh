@@ -61,7 +61,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Build opencv if ubuntu 18 or 20
-[[ "$dist" =~ ^bionic|focal$ ]] && build_list+=( opencv )
+#[[ "$dist" =~ ^bionic|focal$ ]] && build_list+=( opencv )
 
 # Add public debians to build list
 build_list+=( alvar dlib dbow2 gtsam decomputil jps3d openmvg )
