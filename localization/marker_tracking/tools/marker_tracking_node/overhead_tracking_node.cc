@@ -30,8 +30,8 @@
 #endif
 #include <opencv2/imgproc.hpp>
 
-#include <alvar/Camera.h>
-#include <alvar/MarkerDetector.h>
+#include <ar_track_alvar/Camera.h>
+#include <ar_track_alvar/MarkerDetector.h>
 
 #include <Eigen/Geometry>
 
@@ -189,20 +189,20 @@ class RosMarkerTrackingAdaptor {
   void VideoCallback(const sensor_msgs::ImageConstPtr & image_msg) {
     // Convert the image
     auto cv_ptr = cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
-    IplImage ipl_image = cv_ptr->image;
+    std::shared_ptr<cv::Mat> image = std::make_shared<cv::Mat>(cv_ptr->image);
 
     // Check that the camera has been loaded
     if (!camera_) {
       camera_.reset(new alvar::Camera());
       if (cam_filename_.empty()) {
-        camera_->SetRes(ipl_image.width, ipl_image.height);
+        camera_->SetRes(image->cols, image->rows);
       } else {
-        camera_->SetCalib(cam_filename_.c_str(), ipl_image.width, ipl_image.height);
+        camera_->SetCalib(cam_filename_.c_str(), image->cols, image->rows);
       }
     }
 
     // Detect our AR Tags
-    if (detector_.Detect(&ipl_image, camera_.get(), true) > 0) {
+    if (detector_.Detect(*image, camera_.get(), true) > 0) {
       // If we got markers .. let's publish an estimate
       PublishVO(image_msg->header.stamp);
     }

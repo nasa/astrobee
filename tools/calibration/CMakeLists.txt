@@ -30,9 +30,8 @@ find_package(catkin2 REQUIRED COMPONENTS
   vision_common
 )
 
-# Find OpenCV3
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV 3.3.1 REQUIRED)
+# Find OpenCV
+find_package(OpenCV 4.0 REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
