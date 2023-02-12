@@ -97,10 +97,10 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
-    FF_CREATE_PUBLISHER(pub_reg_, nh, ff_msgs::CameraRegistration, TOPIC_LOCALIZATION_ML_REGISTRATION, 1);
+    pub_reg_ = FF_CREATE_PUBLISHER(nh, ff_msgs::CameraRegistration, TOPIC_LOCALIZATION_ML_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    FF_CREATE_PUBLISHER(pub_feat_, nh, ff_msgs::VisualLandmarks, TOPIC_LOCALIZATION_ML_FEATURES, 1);
+    pub_feat_ = FF_CREATE_PUBLISHER(nh, ff_msgs::VisualLandmarks, TOPIC_LOCALIZATION_ML_FEATURES, 1);
 
     // Create a shape for collision testing
     #if GAZEBO_MAJOR_VERSION > 7

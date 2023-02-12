@@ -98,10 +98,10 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
       FF_FATAL("Could not read the num_features parameter.");
 
     // Create a publisher for the registration messages
-    FF_CREATE_PUBLISHER(pub_reg_, nh, ff_msgs::CameraRegistration, TOPIC_LOCALIZATION_OF_REGISTRATION, 1);
+    pub_reg_ = FF_CREATE_PUBLISHER(nh, ff_msgs::CameraRegistration, TOPIC_LOCALIZATION_OF_REGISTRATION, 1);
 
     // Create a publisher for the feature messages
-    FF_CREATE_PUBLISHER(pub_feat_, nh, ff_msgs::Feature2dArray, TOPIC_LOCALIZATION_OF_FEATURES, 1);
+    pub_feat_ = FF_CREATE_PUBLISHER(nh, ff_msgs::Feature2dArray, TOPIC_LOCALIZATION_OF_FEATURES, 1);
 
     // Create a shape for collision testing
     GetWorld()->Physics()->InitForThread();

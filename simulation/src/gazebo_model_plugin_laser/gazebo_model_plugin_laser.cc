@@ -66,7 +66,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     pub_gazebo_ = gz_->Advertise<msgs::Visual>("~/visual");
 
     // For the RVIZ marker array
-    FF_CREATE_PUBLISHER(pub_rviz_, nh, visualization_msgs::Marker, TOPIC_HARDWARE_LASER_RVIZ, 0);
+    pub_rviz_ = FF_CREATE_PUBLISHER(nh, visualization_msgs::Marker, TOPIC_HARDWARE_LASER_RVIZ, 0);
   }
 
   // Only send measurements when extrinsics are available

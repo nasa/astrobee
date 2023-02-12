@@ -33,16 +33,14 @@ class TestPublisher : ff_util::FreeFlyerComponent {
     ff_util::FreeFlyerComponent(options, "latched_topic_publisher", true) {}
 
   void Initialize(NodeHandle nh) {
-    FF_CREATE_PUBLISHER(latched_publisher_,
-                        nh,
-                        std_msgs::msg::String,
-                        TOPIC_ROBOT_NAME,
-                        1);
-    FF_CREATE_PUBLISHER(not_latched_publisher_,
-                        nh,
-                        std_msgs::msg::String,
-                        TOPIC_COMMAND,
-                        1);
+    latched_publisher_ = FF_CREATE_PUBLISHER(nh,
+                                             std_msgs::msg::String,
+                                             TOPIC_ROBOT_NAME,
+                                             1);
+    not_latched_publisher_ = FF_CREATE_PUBLISHER(nh,
+                                                 std_msgs::msg::String,
+                                                 TOPIC_COMMAND,
+                                                 1);
 
     std_msgs::msg::String msg = std_msgs::msg::String();
     msg.data = "test_robot";
@@ -76,22 +74,20 @@ class TestSubscriber : ff_util::FreeFlyerComponent {
 
   void InitializeNotLatched(NodeHandle nh) {
     topic_timeout_ = false;
-    FF_CREATE_SUBSCRIBER(not_latched_subscriber_,
-                         nh,
-                         std_msgs::msg::String,
-                         TOPIC_COMMAND,
-                         1,
-                         &TestSubscriber::NotLatchedCallback);
+    not_latched_subscriber_ = FF_CREATE_SUBSCRIBER(nh,
+                                          std_msgs::msg::String,
+                                          TOPIC_COMMAND,
+                                          1,
+                                          &TestSubscriber::NotLatchedCallback);
   }
 
   void InitializeLatched(NodeHandle nh) {
     topic_timeout_ = true;
-    FF_CREATE_SUBSCRIBER(latched_subscriber_,
-                         nh,
-                         std_msgs::msg::String,
-                         TOPIC_ROBOT_NAME,
-                         1,
-                         &TestSubscriber::LatchedCallback);
+    latched_subscriber_ = FF_CREATE_SUBSCRIBER(nh,
+                                              std_msgs::msg::String,
+                                              TOPIC_ROBOT_NAME,
+                                              1,
+                                              &TestSubscriber::LatchedCallback);
   }
 
   void LatchedCallback(std_msgs::msg::String const& msg) {

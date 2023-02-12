@@ -85,10 +85,14 @@ void FreeFlyerComponent::Setup(std::string plugin_name) {
 
   // Immediately, setup a publisher for faults coming from this node
   // Topic needs to be latched!!!! for initialization faults
-  FF_CREATE_PUBLISHER(pub_heartbeat_, node_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, heartbeat_queue_size_);
-  // pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
-  //   TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
-  FF_CREATE_PUBLISHER(pub_diagnostics_, node_, diagnostic_msgs::DiagnosticArray, TOPIC_DIAGNOSTICS, 5);
+  pub_heartbeat_ = FF_CREATE_PUBLISHER(node_,
+                                       ff_msgs::Heartbeat,
+                                       TOPIC_HEARTBEAT,
+                                       heartbeat_queue_size_);
+  pub_diagnostics_ = FF_CREATE_PUBLISHER(node_,
+                                         diagnostic_msgs::DiagnosticArray,
+                                         TOPIC_DIAGNOSTICS,
+                                         5);
 
   // Setup a heartbeat timer for this node if auto start was requested
   if (autostart_hb_timer_) {

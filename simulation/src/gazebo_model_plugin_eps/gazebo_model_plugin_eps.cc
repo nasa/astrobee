@@ -236,13 +236,13 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     if (sdf->HasElement("delay"))
       delay_ = sdf->Get<double>("delay");
     // Setup telemetry publishers
-    FF_CREATE_PUBLISHER(pub_dock_state_, nh, ff_hw_msgs::EpsDockStateStamped, TOPIC_HARDWARE_EPS_DOCK_STATE, 1);
-    FF_CREATE_PUBLISHER(pub_housekeeping_, nh, ff_hw_msgs::EpsHousekeeping, TOPIC_HARDWARE_EPS_HOUSEKEEPING, 1);
-    FF_CREATE_PUBLISHER(pub_power_, nh, ff_hw_msgs::EpsPowerState, TOPIC_HARDWARE_EPS_POWER_STATE, 1);
-    FF_CREATE_PUBLISHER(battery_state_pub_tl_, nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_TL, 5);
-    FF_CREATE_PUBLISHER(battery_state_pub_tr_, nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_TR, 5);
-    FF_CREATE_PUBLISHER(battery_state_pub_bl_, nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_BL, 5);
-    FF_CREATE_PUBLISHER(battery_state_pub_br_, nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_BR, 5);
+    pub_dock_state_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::EpsDockStateStamped, TOPIC_HARDWARE_EPS_DOCK_STATE, 1);
+    pub_housekeeping_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::EpsHousekeeping, TOPIC_HARDWARE_EPS_HOUSEKEEPING, 1);
+    pub_power_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::EpsPowerState, TOPIC_HARDWARE_EPS_POWER_STATE, 1);
+    battery_state_pub_tl_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_TL, 5);
+    battery_state_pub_tr_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_TR, 5);
+    battery_state_pub_bl_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_BL, 5);
+    battery_state_pub_br_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::BatteryState, TOPIC_HARDWARE_EPS_BATTERY_STATE_BR, 5);
 
     // Provide an undock service to call to release the robot from the dock
     srv_undock_ = nh->create_service<ff_hw_msgs::Undock>(
