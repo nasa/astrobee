@@ -19,7 +19,9 @@
 // Required for the test framework
 #include <gtest/gtest.h>
 
+#include <ff_common/ff_names.h>
 #include <ff_common/ff_ros.h>
+
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_timer.h>
 

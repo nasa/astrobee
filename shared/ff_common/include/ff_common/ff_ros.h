@@ -74,7 +74,10 @@ using Duration = ros::Duration*;
 #define FF_SHUTDOWN()  ros::shutdown()
 
 #else
+#include "ff_common/ff_names.h"
+#include <string>
 #include "rclcpp/rclcpp.hpp"
+
 namespace ros = rclcpp;
 
 using NodeHandle = std::shared_ptr<rclcpp::Node>;
@@ -85,11 +88,20 @@ using Publisher = std::shared_ptr<rclcpp::Publisher<MessageType>>;
 template<class MessageType>
 using Subscriber = std::shared_ptr<rclcpp::Subscription<MessageType>>;
 
+inline rclcpp::QoS QoSType(std::string const& topic, size_t history_depth) {
+  if (LatchedTopic(topic)) {
+    rclcpp::QoS latched_qos(1);
+    latched_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+    return latched_qos;
+  }
+  return rclcpp::QoS(history_depth);
+}
+
 #define FF_CREATE_PUBLISHER(node, msg, topic, queue_size) \
-  node->create_publisher<msg>(topic, qosType(topic, queue_size))
+  node->create_publisher<msg>(topic, QoSType(topic, queue_size))
 #define FF_CREATE_SUBSCRIBER(node, msg, topic, queue_size, callback) \
   node->create_subscription<msg>(topic, \
-                              qosType(topic, queue_size), \
+                              QoSType(topic, queue_size), \
                               std::bind(callback, this, std::placeholders::_1))
 
 template<class MessageType>

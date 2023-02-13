@@ -91,8 +91,7 @@ void FreeFlyerComponent::Setup(std::string plugin_name) {
                                        heartbeat_queue_size_);
   pub_diagnostics_ = FF_CREATE_PUBLISHER(node_,
                                          diagnostic_msgs::DiagnosticArray,
-                                         TOPIC_DIAGNOSTICS,
-                                         5);
+                                         TOPIC_DIAGNOSTICS, 5);
 
   // Setup a heartbeat timer for this node if auto start was requested
   if (autostart_hb_timer_) {
