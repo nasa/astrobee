@@ -614,15 +614,14 @@ class FreeFlyerActionClient {
   }
 
   // Goal is now active, restart timer and switch state
-  void ActiveCallback(std::shared_future<typename GoalHandle::SharedPtr>
-                                                                      future) {
+  void ActiveCallback(typename GoalHandle::SharedPtr goal_handle) {
     timer_active_.stop();
 
     if (!sac_) return;
 
     // In ros2, it is possible for a goal to be rejected. Check that here and
     // save goal handle for later use.
-    current_goal_handle_ = future.get();
+    current_goal_handle_ = goal_handle;
     if (!current_goal_handle_) {
       Complete(FreeFlyerActionState::ABORTED, nullptr);
     } else {
