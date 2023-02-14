@@ -11,10 +11,9 @@ import subprocess
 import sys
 import timeit
 
+import constants
 import numpy as np
 from tf.transformations import *
-
-import constants
 
 
 class Coverage_Analyzer:
