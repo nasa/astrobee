@@ -154,6 +154,13 @@ if(BUILD_TESTING)
   target_link_libraries(test_ff_action_response_timeout ff_component)
   add_ros_test(test/launch/test_ff_action_response_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
+  # latched topics
+  ament_add_gtest_executable(test_latched_topics
+    test/test_latched_topics.cc
+  )
+  target_link_libraries(test_latched_topics ff_component)
+  add_ros_test(test/launch/test_latched_topics.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+
 endif()
 
 

@@ -84,7 +84,7 @@ class GazeboSensorPluginDepthCam : public FreeFlyerSensorPlugin {
 
     // Create a publisher for the depth camera intensity
     std::string amplitude_topic = topic_prefix + "/extended/amplitude_int";
-    pub_image_ = nh->create_publisher<sensor_msgs::msg::Image>(amplitude_topic, 2);
+    pub_image_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::msg::Image, amplitude_topic, 2);
 
     // Set image constants
     image_msg_.is_bigendian = false;
@@ -94,13 +94,13 @@ class GazeboSensorPluginDepthCam : public FreeFlyerSensorPlugin {
     // Create a publisher for the depth camera point cloud
     std::string point_topic = topic_prefix
                             + (std::string) TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
-    pub_point_cloud_ = nh->create_publisher<sensor_msgs::msg::PointCloud2>(point_topic, 1);
-    pub_pose_ = nh->create_publisher<geometry_msgs::msg::PoseStamped>(
-      is_haz_cam_ ? TOPIC_HAZ_CAM_SIM_POSE : TOPIC_PERCH_CAM_SIM_POSE, 10);
+    pub_point_cloud_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::msg::PointCloud2, point_topic, 1);
+    pub_pose_ = FF_CREATE_PUBLISHER(nh, geometry_msgs::msg::PoseStamped,
+                        is_haz_cam_ ? TOPIC_HAZ_CAM_SIM_POSE : TOPIC_PERCH_CAM_SIM_POSE, 10);
 
     // Create a publisher for the intrinsics
-    pub_info_ = nh->create_publisher<sensor_msgs::msg::CameraInfo>(
-      is_haz_cam_ ? TOPIC_HAZ_CAM_SIM_INFO: TOPIC_PERCH_CAM_SIM_INFO, 10);
+    pub_info_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::msg::CameraInfo,
+                        is_haz_cam_ ? TOPIC_HAZ_CAM_SIM_INFO : TOPIC_PERCH_CAM_SIM_INFO, 10);
 
     // Basic header information
     // Must set in <format>L8</format> in sensor_haz_cam.urdf.xacro
