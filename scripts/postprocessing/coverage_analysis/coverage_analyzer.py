@@ -11,9 +11,10 @@ import subprocess
 import sys
 import timeit
 
-import constants
 import numpy as np
 from tf.transformations import *
+
+import constants
 
 
 class Coverage_Analyzer:
@@ -223,11 +224,7 @@ class Coverage_Analyzer:
         """
         Write the specified lines to the file.
         """
-        print(
-            "Writing unique feature positions to {:s}".format(
-                feat_only_fileOut
-            )
-        )
+        print("Writing unique feature positions to {:s}".format(feat_only_fileOut))
         with open(feat_only_fileOut, "w") as f_out:
             for line in unique_feat_pos_lines:
                 f_out.write(line)
@@ -257,9 +254,7 @@ class Coverage_Analyzer:
                 result.extend((float(vals[0]), float(vals[1]), float(vals[2])))
         return np.array(result).reshape((-1, 3))
 
-    def find_nearby_cube_pos(
-        self, px, py, pz, grid_size, feat_pos, coverage_out
-    ):
+    def find_nearby_cube_pos(self, px, py, pz, grid_size, feat_pos, coverage_out):
         """
         Output the number of feature positions within the cube.
 
@@ -283,8 +278,8 @@ class Coverage_Analyzer:
         # in_cube = (np.max(np.absolute(feat_pos - cube_center), axis=1) < 0.5 * grid_size)
 
         # But instead we'll try to be backward-compatible and do a sphere:
-        dist_to_corner = np.sqrt(3 * (0.5 * grid_size)**2)
-        in_cube = (np.linalg.norm(feat_pos - cube_center, axis=1) < dist_to_corner)
+        dist_to_corner = np.sqrt(3 * (0.5 * grid_size) ** 2)
+        in_cube = np.linalg.norm(feat_pos - cube_center, axis=1) < dist_to_corner
 
         num_ml = np.count_nonzero(in_cube)
         coverage_out.write("{:d} {:.3f} {:.3f} {:.3f}\n".format(num_ml, px, py, pz))
@@ -372,9 +367,7 @@ class Coverage_Analyzer:
             for j in range(ylen):
                 px = (start_pos_x - grid_size * i) - p_center
                 py = (start_pos_y - grid_size * j) - p_center
-                self.find_nearby_cube_pos(
-                    px, py, pz, grid_size, feat_pos, coverage_out
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_forward(
         self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
@@ -397,7 +390,9 @@ class Coverage_Analyzer:
 
         ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
 
-        coverage_out.write("# Wall Forward_" + str(current_bay) + " " + str(grid_size) + "\n")
+        coverage_out.write(
+            "# Wall Forward_" + str(current_bay) + " " + str(grid_size) + "\n"
+        )
 
         for i in range(ylen):
             for j in range(zlen):
@@ -405,9 +400,7 @@ class Coverage_Analyzer:
                 pz = (
                     constants.ZMAX_BAY16 + grid_size * j
                 ) + p_center  # Using z_max to have better coverage on the overhead.
-                self.find_nearby_cube_pos(
-                    px, py, pz, grid_size, feat_pos, coverage_out
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_aft(
         self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
@@ -430,7 +423,9 @@ class Coverage_Analyzer:
 
         ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
 
-        coverage_out.write("# Wall Aft_" + str(current_bay) + " " + str(grid_size) + "\n")
+        coverage_out.write(
+            "# Wall Aft_" + str(current_bay) + " " + str(grid_size) + "\n"
+        )
 
         for i in range(ylen):
             for j in range(zlen):
@@ -438,9 +433,7 @@ class Coverage_Analyzer:
                 pz = (
                     constants.ZMAX_BAY16 + grid_size * j
                 ) + p_center  # Using z_max to have better coverage on the overhead.
-                self.find_nearby_cube_pos(
-                    px, py, pz, grid_size, feat_pos, coverage_out
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_deck(
         self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
@@ -470,9 +463,7 @@ class Coverage_Analyzer:
             for j in range(ylen):
                 px = (start_pos_x - grid_size * i) - p_center
                 py = (start_pos_y - grid_size * j) - p_center
-                self.find_nearby_cube_pos(
-                    px, py, pz, grid_size, feat_pos, coverage_out
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_airlock(self, feat_pos, coverage_out):
         coverage_out.write("# Wall Airlock" + " " + str(self.grid_size) + "\n")
@@ -527,8 +518,7 @@ class Coverage_Analyzer:
         print("Removing temporary file: {:s}".format(fileToRemove))
 
 
-if __name__ == "__main__":
-
+def main():
     try:
 
         if len(sys.argv) < 1:
@@ -564,7 +554,7 @@ if __name__ == "__main__":
             print(
                 "Finding matches from feature positions, creating coverage file: {:s}".format(
                     coverage_fileOut
-                 )
+                )
             )
             obj.find_nearby_features_from_file(feat_pos, coverage_out)
         toc = timeit.default_timer()
@@ -576,3 +566,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n <-CTRL-C EXIT: USER manually exited!->")
         sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
