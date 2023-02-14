@@ -76,10 +76,14 @@ os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 build_astrobee_base="false"
 build_astrobee="false"
 build_test_astrobee="false"
+rolling_base="false"
+humble_base="false"
 rolling="false"
+humble="false"
 push_astrobee_base="false"
 push_astrobee="false"
 push_rolling="false"
+push_humble="false"
 
 remote="false"
 owner="nasa"
@@ -138,6 +142,10 @@ while [ "$1" != "" ]; do
                                    ;;
         rolling )                  rolling="true"
                                    ;;
+        humble_base )              humble_base="true"
+                                   ;;
+        humble )                   humble="true"
+                                   ;;
         push_astrobee_base )       push_astrobee_base="true"
                                    ;;
         push_astrobee )            push_astrobee="true"
@@ -145,6 +153,10 @@ while [ "$1" != "" ]; do
         push_rolling_base )        push_rolling_base="true"
                                    ;;
         push_rolling )             push_rolling="true"
+                                   ;;
+        push_rolling_base )        push_humble_base="true"
+                                   ;;
+        push_rolling )             push_humble="true"
                                    ;;
         push_astrobee_ros2 )       push_astrobee_ros2="true"
                                    ;;
@@ -282,7 +294,7 @@ if [ "$rolling" = "true" ]; then
     ROS_VERSION=rolling
     build ros2/ros2_base "${revision}-" "rolling_base-"
     build ros2/ros2_rolling_deb "${revision}-" "rolling-"
-    build ros2/ros2_astrobee "${revision}-" "ros2-"
+    build ros2/ros2_astrobee "${revision}-" "ros2-rolling-"
 fi
 
 if [ "$humble_base" = "true" ] | [ "$remote" = "false" ] & [ "$humble" = "true" ]; then
@@ -292,7 +304,7 @@ fi
 
 if [ "$humble" = "true" ]; then
     ROS_VERSION=humble
-    build ros2/ros2_astrobee "${revision}-" "ros2-"
+    build ros2/ros2_astrobee "${revision}-" "ros2-humble-"
 fi
 
 if [ "$push_astrobee_base" = "true" ]; then
@@ -306,6 +318,10 @@ fi
 if [ "$push_rolling" = "true" ]; then
     push rolling_base "${revision}-" "rolling_base-"
     push rolling "${revision}-" "rolling-"
+fi
+
+if [ "$push_rolling" = "true" ]; then
+    push [ "$remote" = "false" ] &  "${revision}-" "humble-"
 fi
 
 if [ "$push_astrobee_ros2" = "true" ]; then

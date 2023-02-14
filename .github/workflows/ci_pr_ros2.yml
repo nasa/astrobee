@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  build-focal:
+  build-rolling:
 
     runs-on: ubuntu-20.04
 
@@ -20,4 +20,19 @@ jobs:
       run: git submodule update --init --depth 1 description/media
 
     - name: Build, test
-      run: ./scripts/docker/build.sh  --focal --remote rolling humble
+      run: ./scripts/docker/build.sh  --focal --remote rolling 
+
+  build-humble:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
+    - name: Build, test
+      run: ./scripts/docker/build.sh  --focal --remote humble
