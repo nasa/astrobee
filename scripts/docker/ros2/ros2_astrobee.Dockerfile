@@ -1,9 +1,8 @@
 
 ARG UBUNTU_VERSION=20.04
 ARG REMOTE=astrobee
-FROM ${REMOTE}/astrobee:latest-rolling-ubuntu${UBUNTU_VERSION}
-
 ARG ROS_DISTRO=rolling
+FROM ${REMOTE}/astrobee:latest-${ROS_DISTRO}-ubuntu${UBUNTU_VERSION}
 
 COPY . /src/astrobee/src/
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh \

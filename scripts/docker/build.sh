@@ -272,12 +272,26 @@ if [ "$astrobee_quick" = "true" ]; then
     build astrobee_quick "${revision}-" "quick-"
 fi
 
-if [ "$rolling" = "true" ]; then
+if [ "$rolling_base" = "true" ] | [ "$remote" = "false" ] & [ "$rolling" = "true" ]; then
+    ROS_VERSION=rolling
     build ros2/ros2_base "${revision}-" "rolling_base-"
     build ros2/ros2_rolling_deb "${revision}-" "rolling-"
 fi
 
-if [ "$build_astrobee_ros2" = "true" ]; then
+if [ "$rolling" = "true" ]; then
+    ROS_VERSION=rolling
+    build ros2/ros2_base "${revision}-" "rolling_base-"
+    build ros2/ros2_rolling_deb "${revision}-" "rolling-"
+    build ros2/ros2_astrobee "${revision}-" "ros2-"
+fi
+
+if [ "$humble_base" = "true" ] | [ "$remote" = "false" ] & [ "$humble" = "true" ]; then
+    ROS_VERSION=humble
+    build ros2/ros2_humble_deb "${revision}-" "humble-"
+fi
+
+if [ "$humble" = "true" ]; then
+    ROS_VERSION=humble
     build ros2/ros2_astrobee "${revision}-" "ros2-"
 fi
 

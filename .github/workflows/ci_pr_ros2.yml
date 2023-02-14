@@ -1,4 +1,4 @@
-name: Build and Test CI for Pull Requests
+name: Build and Test CI for Pull Requests in ROS2
 
 on:
   pull_request:
@@ -20,4 +20,4 @@ jobs:
       run: git submodule update --init --depth 1 description/media
 
     - name: Build, test
-      run: ./scripts/docker/build.sh  --focal --remote rolling astrobee_ros2
+      run: ./scripts/docker/build.sh  --focal --remote rolling humble
