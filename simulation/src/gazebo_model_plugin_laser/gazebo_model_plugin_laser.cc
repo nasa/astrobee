@@ -66,8 +66,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     pub_gazebo_ = gz_->Advertise<msgs::Visual>("~/visual");
 
     // For the RVIZ marker array
-    pub_rviz_ = nh->create_publisher<visualization_msgs::Marker>(
-      TOPIC_HARDWARE_LASER_RVIZ, 0);  // TODO(@mgouveia): figure out latched topics
+    pub_rviz_ = FF_CREATE_PUBLISHER(nh, visualization_msgs::Marker, TOPIC_HARDWARE_LASER_RVIZ, 0);
   }
 
   // Only send measurements when extrinsics are available
