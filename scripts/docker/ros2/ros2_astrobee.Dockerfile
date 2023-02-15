@@ -4,6 +4,8 @@ ARG REMOTE=astrobee
 ARG ROS_DISTRO=rolling
 FROM ${REMOTE}/astrobee:latest-${ROS_DISTRO}-ubuntu${UBUNTU_VERSION}
 
+ARG ROS_DISTRO=rolling
+
 COPY . /src/astrobee/src/
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh \
     && cd /src/astrobee \
