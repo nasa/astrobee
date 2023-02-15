@@ -25,7 +25,7 @@
 #include <ff_msgs/msg/flight_mode.hpp>
 #include <ff_hw_msgs/msg/pmc_command.hpp>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <Eigen/Dense>
 #include <geometry_msgs/msg/inertia_stamped.hpp>
