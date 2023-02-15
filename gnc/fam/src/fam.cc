@@ -38,16 +38,16 @@ Fam::Fam(NodeHandle & nh) : inertia_received_(false) {
 
   clock_ = nh->get_clock();
 
-  pmc_pub_ = nh->create_publisher<ff_hw_msgs::msg::PmcCommand>(TOPIC_HARDWARE_PMC_COMMAND, 1);
+  pmc_pub_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::msg::PmcCommand, TOPIC_HARDWARE_PMC_COMMAND, 1);
 
   // Subscribe to the flight mode to be notified of speed gain command
-  flight_mode_sub_ = nh->create_subscription<ff_msgs::msg::FlightMode>(
-    TOPIC_MOBILITY_FLIGHT_MODE, 1, std::bind(&Fam::FlightModeCallback, this, _1));
-  inertia_sub_ = nh->create_subscription<geometry_msgs::msg::InertiaStamped>(
-    TOPIC_MOBILITY_INERTIA, 1, std::bind(&Fam::InertiaCallback, this, _1));
+  flight_mode_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::FlightMode,
+    TOPIC_MOBILITY_FLIGHT_MODE, 1, &Fam::FlightModeCallback);
+  inertia_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::InertiaStamped,
+    TOPIC_MOBILITY_INERTIA, 1, &Fam::InertiaCallback);
 
-  ctl_sub_ = nh->create_subscription<ff_msgs::msg::FamCommand>(TOPIC_GNC_CTL_COMMAND, 5,
-                                   std::bind(&Fam::CtlCallBack, this, _1));
+  ctl_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::FamCommand, TOPIC_GNC_CTL_COMMAND, 5,
+                                   &Fam::CtlCallBack);
 }
 
 Fam::~Fam() {}

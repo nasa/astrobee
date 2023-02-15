@@ -119,26 +119,26 @@ Ctl::Ctl(NodeHandle& nh, std::string const& name) :
       config_.CheckFilesUpdated(std::bind(&Ctl::ReadParams, this));}, nh, false, true);
 
   // Subscribers
-  ekf_sub_ = nh->create_subscription<ff_msgs::msg::EkfState>(
-    TOPIC_GNC_EKF, 1, std::bind(&Ctl::EkfCallback, this, _1));
-  pose_sub_ = nh->create_subscription<geometry_msgs::msg::PoseStamped>(
-    TOPIC_LOCALIZATION_POSE, 1, std::bind(&Ctl::PoseCallback, this, _1));
-  twist_sub_ = nh->create_subscription<geometry_msgs::msg::TwistStamped>(
-    TOPIC_LOCALIZATION_TWIST, 1, std::bind(&Ctl::TwistCallback, this, _1));
-  inertia_sub_ = nh->create_subscription<geometry_msgs::msg::InertiaStamped>(
-    TOPIC_MOBILITY_INERTIA, 1, std::bind(&Ctl::InertiaCallback, this, _1));
-  flight_mode_sub_ = nh->create_subscription<ff_msgs::msg::FlightMode>(
-    TOPIC_MOBILITY_FLIGHT_MODE, 1, std::bind(&Ctl::FlightModeCallback, this, _1));
-  command_sub_ = nh->create_subscription<ff_msgs::msg::ControlState>(
-    TOPIC_GNC_CTL_SETPOINT, 1, std::bind(&Ctl::SetpointCallback, this, _1));
+  ekf_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::EkfState,
+    TOPIC_GNC_EKF, 1, &Ctl::EkfCallback);
+  pose_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::PoseStamped,
+    TOPIC_LOCALIZATION_POSE, 1, &Ctl::PoseCallback);
+  twist_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::TwistStamped,
+    TOPIC_LOCALIZATION_TWIST, 1, &Ctl::TwistCallback);
+  inertia_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::InertiaStamped,
+    TOPIC_MOBILITY_INERTIA, 1, &Ctl::InertiaCallback);
+  flight_mode_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::FlightMode,
+    TOPIC_MOBILITY_FLIGHT_MODE, 1, &Ctl::FlightModeCallback);
+  command_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::ControlState,
+    TOPIC_GNC_CTL_SETPOINT, 1, &Ctl::SetpointCallback);
 
   // Advertised messages
-  ctl_pub_ = nh->create_publisher<ff_msgs::msg::FamCommand>(
+  ctl_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::msg::FamCommand,
     TOPIC_GNC_CTL_COMMAND, 5);
-  traj_pub_ = nh->create_publisher<ff_msgs::msg::ControlState>(
+  traj_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::msg::ControlState,
     TOPIC_GNC_CTL_TRAJ, 5);
   // TODO(kbrowne): make segment_pub_ latching
-  segment_pub_ = nh->create_publisher<ff_msgs::msg::Segment>(
+  segment_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::msg::Segment,
     TOPIC_GNC_CTL_SEGMENT, 5);
 
   // Enable / Disable control module
