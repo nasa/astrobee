@@ -19,10 +19,10 @@
 #ifndef FF_UTIL_FF_COMPONENT_H_
 #define FF_UTIL_FF_COMPONENT_H_
 
+#include <ff_common/ff_names.h>
 #include <ff_common/ff_ros.h>
 
 #include <ff_util/ff_faults.h>
-#include <ff_util/ff_names.h>
 #include <ff_util/ff_timer.h>
 
 #include <boost/filesystem.hpp>
