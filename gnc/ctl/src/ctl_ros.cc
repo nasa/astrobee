@@ -22,7 +22,7 @@
 #include <ff_msgs/msg/control_state.hpp>
 #include <msg_conversions/msg_conversions.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
