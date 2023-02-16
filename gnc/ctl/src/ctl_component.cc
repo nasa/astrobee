@@ -19,24 +19,20 @@
 #include <ctl/ctl_ros.h>
 
 #include <ff_common/init.h>
-#include <ff_util/ff_nodelet.h>
-
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
+#include <ff_util/ff_component.h>
 
 #include <memory>
 
 namespace ctl {
 
-class CtlNodelet : public ff_util::FreeFlyerNodelet {
+class CtlComponent : public ff_util::FreeFlyerComponent {
  public:
-  CtlNodelet() : ff_util::FreeFlyerNodelet(NODE_CTL, true) {}
-  ~CtlNodelet() {}
+  explicit CtlComponent(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options, NODE_CTL) {}
+  ~CtlComponent() {}
   // This is called when the nodelet is loaded into the nodelet manager
-  void Initialize(ros::NodeHandle *nh) {
-    // Bootstrap our environment
-    ff_common::InitFreeFlyerApplication(getMyArgv(), false);
-    ctl_.reset(new ctl::Ctl(this->GetPlatformHandle(true), getName()));
+  void Initialize(NodeHandle nh) {
+    // this used to be multi-threaded, but don't think it needs to be
+    ctl_.reset(new ctl::Ctl(nh, GetName()));
   }
 
  private:
@@ -45,5 +41,7 @@ class CtlNodelet : public ff_util::FreeFlyerNodelet {
 
 }  // end namespace ctl
 
+#include "rclcpp_components/register_node_macro.hpp"
+
 // Declare the plugin
-PLUGINLIB_EXPORT_CLASS(ctl::CtlNodelet, nodelet::Nodelet);
+RCLCPP_COMPONENTS_REGISTER_NODE(ctl::CtlComponent)

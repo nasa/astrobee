@@ -36,24 +36,24 @@ def generate_launch_description():
 
         SetEnvironmentVariable(name="ROS_HOSTNAME", condition=LaunchConfigurationNotEquals("llp", "local"),
                                value=LaunchConfiguration("llp")),
-        # ComposableNodeContainer(
-        # name='llp_gnc',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
-        #     ComposableNode(
-        #         package='ctl',
-        #         plugin='ctl::ctl',
-        #         name='ctl',
-        #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ComposableNode(
-        #         package='fam',
-        #         plugin='fam::fam',
-        #         name='fam',
-        #         extra_arguments=[{'use_intra_process_comms': True}])
-        #     ]
-        # ),
+        ComposableNodeContainer(
+        name='llp_gnc',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        composable_node_descriptions=[
+            ComposableNode(
+                package='ctl',
+                plugin='ctl::CtlComponent',
+                name='ctl',
+                extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='fam',
+                plugin='fam::FamComponent',
+                name='fam',
+                extra_arguments=[{'use_intra_process_comms': True}])
+            ]
+        ),
         # ComposableNodeContainer(
         # name='llp_imu_aug',
         # namespace='',

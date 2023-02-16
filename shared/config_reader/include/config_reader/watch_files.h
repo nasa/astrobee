@@ -69,11 +69,14 @@ class WatchFiles{
    protected:
     WatchFiles *parent;
     int wd;  // watch descriptor
+
    public:
     Watch()
       {parent = NULL; wd = -1;}
     Watch(const Watch &w)
       {parent = w.parent; wd = w.wd;}
+    constexpr Watch& operator=(const Watch& w)
+      {parent = w.parent; wd = w.wd; return *this;}
 
     bool valid()
       {return(parent != NULL && wd >= 0);}
