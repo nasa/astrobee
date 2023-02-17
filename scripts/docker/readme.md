@@ -48,6 +48,33 @@ You can manage your Dev Containers configuration using the files in the `.devcon
 
 You can start by selecting `View->Terminal` in the VSCode graphical interface. This will display a terminal session inside the Docker container where you can run arbitrary commands. Your container will persist throughout your VSCode session, and changes you make using the VSCode editor will be reflected inside the container, making it easy to do quick interactive edit/build/test cycles.
 
+## Enable x-forwarding from the Dev Container
+
+In a cmd line in your host environment (not in the docker container) run:
+```bash
+xhost local:docker
+```
+this needs to be done everytime you restart vscode, and enables the screen forwarding such that you can open graphical guis like rviz.
+
+## Building + testing the code
+
+This runs inside the Docker container:
+
+```bash
+catkin build
+catkin build --make-args tests
+catkin build --make-args test
+source devel/setup.bash
+catkin_test_results build
+```
+
+For testing, you can alternatively use the script to produces better debug output if there is a failed test:
+```bash
+./scripts/run_tests.sh
+```
+
+For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
+
 (Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
 
 # Option 2: Using the Docker support scripts
@@ -283,7 +310,7 @@ Next, download the cross toolchain and install the chroot:
 mkdir -p $ARMHF_TOOLCHAIN
 cd $HOME/arm_cross
 $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
-$SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+$SOURCE_PATH/submodules/platform/rootfs/make_chroot.sh xenial dev $ARMHF_CHROOT_DIR
 ```
 
 From the root of the repository, run:

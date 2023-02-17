@@ -127,31 +127,25 @@ if __name__ == "__main__":
     )
     parser.add_argument("inbag", nargs="+", help="Input bagfile with bayer images.")
     parser.add_argument(
-        "-o",
-        "--output",
-        help="path for output bag",
-        default="filtered_{inbag}",
+        "-o", "--output", help="path for output bag", default="filtered_{inbag}"
     )
     parser.add_argument(
         "-a",
         "--accept",
-        nargs="*",
+        nargs="?",
         help="Add topic pattern to accept list",
         default=[],
+        action="append",
     )
     parser.add_argument(
         "-r",
         "--reject",
-        nargs="*",
+        nargs="?",
         help="Add topic pattern to reject list",
         default=[],
+        action="append",
     )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Print debug info",
-        action="store_true",
-    )
+    parser.add_argument("-v", "--verbose", help="Print debug info", action="store_true")
 
     args = parser.parse_args()
 

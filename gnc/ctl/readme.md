@@ -2,8 +2,12 @@
 
 The control subsystem takes the pose from the EKF, as well as control commands, to
 determine the forces and torques that should be applied to the robot for smooth control.
-If executes the given segment based on a trajectory given by the choreographer, the faul
+If executes the given segment based on a trajectory given by the choreographer, the fault
 checking on the execution is done in the choreographer based on the feedback.
+
+The layout of this module is a bit complicated for historical reasons--- the ctl\_nodelet
+is a thin wrapper to the Ctl class in ctl\_ros.h which interfaces between different
+modules via ROS. The Control class in ctl.h then implements the main underlying functionality.
 
 # Inputs
 
@@ -27,9 +31,9 @@ checking on the execution is done in the choreographer based on the feedback.
 * STOPPING: Commands internal Matlab into stopping mode. When the velocity and angular velocity fall under a certain stop threshould, it succeeds.
 
 
-# Autocode Matlab Internal behavior
+# Modes
 
-The internal Matlab behavior has 4 modes:
+The controller internally has four modes:
 * Idle: No control is present.
 * Stopping: Position error is calculated based on the delayed current position and the current position. Velocity and acceleration commands are zero.
 * Nominal: It follows the trajectory given for position, velocity and acceleraion.

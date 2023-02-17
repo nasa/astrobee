@@ -164,8 +164,7 @@ int main(int argc, char** argv) {
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;
 
   std::string sub_topic_command = TOPIC_COMMAND;
-  command_pub = n.advertise<ff_msgs::CommandStamped>(
-                                                    sub_topic_command, 5, true);
+  command_pub = n.advertise<ff_msgs::CommandStamped>(sub_topic_command, 5);
 
   ros::Subscriber cf_ack_sub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10,
                                            &on_cf_ack);

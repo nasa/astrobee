@@ -101,7 +101,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
     // State publisher as a latched topic
     pub_state_ = nh->advertise<ff_hw_msgs::PmcState>(
-      TOPIC_HARDWARE_PMC_STATE, pub_queue_size_, true);
+      TOPIC_HARDWARE_PMC_STATE, pub_queue_size_);
 
     // PMC enable/disable service
     srv_ = nh->advertiseService(
