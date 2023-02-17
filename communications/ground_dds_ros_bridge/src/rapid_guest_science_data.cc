@@ -31,9 +31,7 @@ RapidGuestScienceDataToRos::RapidGuestScienceDataToRos(
                    "RapidGuestScienceDataToRos",
                    queue_size) {
   // advertise ros topic, make it latched
-  pub_ = nh_.advertise<ff_msgs::GuestScienceData>(publish_topic_,
-                                                  queue_size,
-                                                  true);
+  pub_ = nh_.advertise<ff_msgs::GuestScienceData>(publish_topic_, queue_size);
 
   // connect to ddsEventLoop
   try {

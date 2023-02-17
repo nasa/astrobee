@@ -28,7 +28,6 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_msgs
   ff_util
   config_reader
-  gnc_autocode
 )
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
@@ -42,7 +41,6 @@ catkin_package(
     ff_msgs
     ff_util
     config_reader
-    gnc_autocode
 )
 
 ###########
@@ -60,6 +58,7 @@ include_directories(
 add_library(ctl
   src/ctl.cc
   src/ctl_nodelet.cc
+  src/ctl_ros.cc
 )
 add_dependencies(ctl ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ctl ${catkin_LIBRARIES})

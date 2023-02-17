@@ -42,7 +42,7 @@ find_package(dbow2 REQUIRED)
 
 
 # Find OpenCV
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
 

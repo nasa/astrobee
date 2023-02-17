@@ -24,8 +24,6 @@
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 
-#include <gnc_autocode/autocode.h>
-
 #include <memory>
 
 namespace fam {
@@ -38,7 +36,6 @@ class FamNodelet : public ff_util::FreeFlyerNodelet {
   void Initialize(ros::NodeHandle *nh) {
     // Bootstrap our environment
     ff_common::InitFreeFlyerApplication(getMyArgv(), false);
-    gnc_autocode::InitializeAutocode(this);
     fam_.reset(new fam::Fam(this->GetPlatformHandle(true)));
   }
 

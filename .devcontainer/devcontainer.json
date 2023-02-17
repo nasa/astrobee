@@ -40,5 +40,5 @@
 		"zachflower.uncrustify"
 	],
 	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/src,type=bind",
-	"workspaceFolder": "/workspace"
+	"workspaceFolder": "/src/astrobee/src"
 }
