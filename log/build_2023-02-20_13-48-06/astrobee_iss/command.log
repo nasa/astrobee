@@ -1,4 +1,0 @@
-Invoking command in '/src/astrobee/src/build/astrobee_iss': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_iss -- -j20 -l20
-Invoked command in '/src/astrobee/src/build/astrobee_iss' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_iss -- -j20 -l20
-Invoking command in '/src/astrobee/src/build/astrobee_iss': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_iss
-Invoked command in '/src/astrobee/src/build/astrobee_iss' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_iss

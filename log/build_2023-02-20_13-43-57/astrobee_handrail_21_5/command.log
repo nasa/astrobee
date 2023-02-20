@@ -1,6 +1,0 @@
-Invoking command in '/src/astrobee/src/build/astrobee_handrail_21_5': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/media/astrobee_handrail_21_5 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee_handrail_21_5
-Invoked command in '/src/astrobee/src/build/astrobee_handrail_21_5' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/media/astrobee_handrail_21_5 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee_handrail_21_5
-Invoking command in '/src/astrobee/src/build/astrobee_handrail_21_5': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_handrail_21_5 -- -j20 -l20
-Invoked command in '/src/astrobee/src/build/astrobee_handrail_21_5' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_handrail_21_5 -- -j20 -l20
-Invoking command in '/src/astrobee/src/build/astrobee_handrail_21_5': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_handrail_21_5
-Invoked command in '/src/astrobee/src/build/astrobee_handrail_21_5' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_handrail_21_5
