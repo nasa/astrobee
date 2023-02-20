@@ -74,7 +74,7 @@ target_link_libraries(create_undistorted_images
 add_executable(run_camera_target_based_intrinsics_calibrator tools/run_camera_target_based_intrinsics_calibrator.cc)
 add_dependencies(run_camera_target_based_intrinsics_calibrator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(run_camera_target_based_intrinsics_calibrator
-  ${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+  glog ${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 
 #############
 ## Install ##
