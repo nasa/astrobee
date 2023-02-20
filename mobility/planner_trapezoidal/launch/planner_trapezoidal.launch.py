@@ -29,7 +29,7 @@ def generate_launch_description():
                                 "name"   : LaunchConfiguration("name"),
                                 "manager": LaunchConfiguration("manager"),
                                 "name"   : "planner_trapezoidal/PlannerTrapezoidalNodelet",
-                                "debug"  : "false",
+                                "debug"  : "false"
             }
         )
     ])
