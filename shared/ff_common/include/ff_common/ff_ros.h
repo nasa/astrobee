@@ -100,14 +100,12 @@ inline rclcpp::QoS QoSType(std::string const& topic, size_t history_depth) {
 #define FF_CREATE_PUBLISHER(node, msg, topic, queue_size) \
   node->create_publisher<msg>(topic, QoSType(topic, queue_size))
 #define FF_CREATE_SUBSCRIBER(node, msg, topic, queue_size, callback) \
-  node->create_subscription<msg>(topic, \
-                              QoSType(topic, queue_size), \
-                              std::bind(callback, this, std::placeholders::_1))
+  node->create_subscription<msg>(topic, QoSType(topic, queue_size), callback)
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 #define FF_CREATE_SERVICE(serv, msg, topic, callback) \
-  serv = node_->create_service<msg>(topic, std::bind(callback, this, std::placeholders::_1, std::placeholders::_2))
+  serv = node_->create_service<msg>(topic, callback)
 
 template<class MessageType>
 using ServiceClient = std::shared_ptr<rclcpp::Client<MessageType>>;
