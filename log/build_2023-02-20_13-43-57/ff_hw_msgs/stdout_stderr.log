@@ -1,0 +1,1218 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found builtin_interfaces: 1.1.0 (/opt/ros/rolling/share/builtin_interfaces/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found std_msgs: 4.0.0 (/opt/ros/rolling/share/std_msgs/cmake)
+-- Found sensor_msgs: 4.0.0 (/opt/ros/rolling/share/sensor_msgs/cmake)
+-- Found rosidl_default_generators: 1.1.1 (/opt/ros/rolling/share/rosidl_default_generators/cmake)
+-- Found ament_cmake_cppcheck: 0.11.4 (/opt/ros/rolling/share/ament_cmake_cppcheck/cmake)
+-- Found ament_cmake_cpplint: 0.11.4 (/opt/ros/rolling/share/ament_cmake_cpplint/cmake)
+-- Found ament_cmake_uncrustify: 0.11.4 (/opt/ros/rolling/share/ament_cmake_uncrustify/cmake)
+-- Found ament_cmake_ros: 0.10.0 (/opt/ros/rolling/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+-- Found python_cmake_module: 0.8.1 (/opt/ros/rolling/share/python_cmake_module/cmake)
+-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+-- Found PythonExtra: .so  
+-- Found ament_cmake_flake8: 0.11.4 (/opt/ros/rolling/share/ament_cmake_flake8/cmake)
+-- Found ament_cmake_pep257: 0.11.4 (/opt/ros/rolling/share/ament_cmake_pep257/cmake)
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /src/astrobee/src/build/ff_hw_msgs
+[35m[1mScanning dependencies of target ament_cmake_python_symlink_ff_hw_msgs[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__cpp[0m
+[  0%] [34m[1mGenerating C code for ROS interfaces[0m
+[  0%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[  0%] Built target ament_cmake_python_symlink_ff_hw_msgs
+[35m[1mScanning dependencies of target ament_cmake_python_build_ff_hw_msgs_egg[0m
+running egg_info
+creating ff_hw_msgs.egg-info
+writing ff_hw_msgs.egg-info/PKG-INFO
+writing dependency_links to ff_hw_msgs.egg-info/dependency_links.txt
+writing top-level names to ff_hw_msgs.egg-info/top_level.txt
+writing manifest file 'ff_hw_msgs.egg-info/SOURCES.txt'
+reading manifest file 'ff_hw_msgs.egg-info/SOURCES.txt'
+writing manifest file 'ff_hw_msgs.egg-info/SOURCES.txt'
+[  0%] Built target ament_cmake_python_build_ff_hw_msgs_egg
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_generator_c[0m
+[  1%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/arm_command__functions.c.o[0m
+[  1%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/arm_state__functions.c.o[0m
+[  2%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/configure_led_group__functions.c.o[0m
+[  2%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/eps_battery_location__functions.c.o[0m
+[  2%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/configure_led__functions.c.o[0m
+[  2%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/eps_dock_state_stamped__functions.c.o[0m
+[  2%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/eps_housekeeping__functions.c.o[0m
+[  3%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/eps_housekeeping_value__functions.c.o[0m
+[  3%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/eps_power_state__functions.c.o[0m
+[  4%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/optical_flow__functions.c.o[0m
+[  4%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/eps_power_state_value__functions.c.o[0m
+[  4%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/pmc_command__functions.c.o[0m
+[  4%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/pmc_state__functions.c.o[0m
+[  4%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/pmc_telemetry__functions.c.o[0m
+[  4%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_button__functions.c.o[0m
+[  5%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_light__functions.c.o[0m
+[  5%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_lighthouses__functions.c.o[0m
+[  6%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/pmc_status__functions.c.o[0m
+[  7%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_pulse__functions.c.o[0m
+[  7%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/pmc_goal__functions.c.o[0m
+[  7%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_motor__functions.c.o[0m
+[  7%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_lighthouse__functions.c.o[0m
+[  7%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_sensor__functions.c.o[0m
+[  7%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_tracker__functions.c.o[0m
+[  8%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/msg/detail/vive_trackers__functions.c.o[0m
+[  8%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/calibrate_gripper__functions.c.o[0m
+[  9%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/configure_advanced_power__functions.c.o[0m
+[  9%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/configure_payload_power__functions.c.o[0m
+[  9%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/get_battery_status__functions.c.o[0m
+[  9%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/clear_terminate__functions.c.o[0m
+[ 10%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/get_board_info__functions.c.o[0m
+[ 10%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/configure_system_leds__functions.c.o[0m
+[ 10%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/get_temperatures__functions.c.o[0m
+[ 11%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/reset__functions.c.o[0m
+[ 11%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/ring_buzzer__functions.c.o[0m
+[ 11%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/set_enabled__functions.c.o[0m
+[ 11%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/set_flashlight__functions.c.o[0m
+[ 11%] Built target ff_hw_msgs__cpp
+[ 11%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/set_joint_max_velocity__functions.c.o[0m
+[ 12%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/set_led_matrix__functions.c.o[0m
+[ 12%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[ 12%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[ 13%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[ 13%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_c.dir/rosidl_generator_c/ff_hw_msgs/srv/detail/undock__functions.c.o[0m
+[ 13%] [32m[1mLinking C shared library libff_hw_msgs__rosidl_generator_c.so[0m
+[ 13%] Built target ff_hw_msgs__rosidl_generator_c
+[ 14%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[ 15%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_cpp[0m
+[ 16%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/arm_state__type_support.cpp.o[0m
+[ 16%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/arm_command__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/configure_led_group__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/eps_battery_location__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/configure_led__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/eps_housekeeping__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/eps_dock_state_stamped__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/eps_power_state_value__type_support.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/eps_power_state__type_support.cpp.o[0m
+[ 18%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/eps_housekeeping_value__type_support.cpp.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/optical_flow__type_support.cpp.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/pmc_command__type_support.cpp.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/pmc_goal__type_support.cpp.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/pmc_state__type_support.cpp.o[0m
+[ 20%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/pmc_status__type_support.cpp.o[0m
+[ 20%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/pmc_telemetry__type_support.cpp.o[0m
+[ 20%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_button__type_support.cpp.o[0m
+[ 21%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_light__type_support.cpp.o[0m
+[ 21%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_lighthouse__type_support.cpp.o[0m
+[ 21%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_lighthouses__type_support.cpp.o[0m
+[ 22%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_motor__type_support.cpp.o[0m
+[ 22%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_pulse__type_support.cpp.o[0m
+[ 22%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_sensor__type_support.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_trackers__type_support.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/msg/vive_tracker__type_support.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/calibrate_gripper__type_support.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/clear_terminate__type_support.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/configure_payload_power__type_support.cpp.o[0m
+[ 24%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/configure_advanced_power__type_support.cpp.o[0m
+[ 24%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/get_battery_status__type_support.cpp.o[0m
+[ 24%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/configure_system_leds__type_support.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/get_board_info__type_support.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/get_temperatures__type_support.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/reset__type_support.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/set_enabled__type_support.cpp.o[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/ring_buzzer__type_support.cpp.o[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/set_flashlight__type_support.cpp.o[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/set_led_matrix__type_support.cpp.o[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/undock__type_support.cpp.o[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/ff_hw_msgs/srv/set_joint_max_velocity__type_support.cpp.o[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_introspection_c[0m
+[ 28%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/eps_power_state_value__type_support.c.o[0m
+[ 28%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/arm_command__type_support.c.o[0m
+[ 28%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/arm_state__type_support.c.o[0m
+[ 29%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/configure_led__type_support.c.o[0m
+[ 29%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/configure_led_group__type_support.c.o[0m
+[ 29%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/eps_dock_state_stamped__type_support.c.o[0m
+[ 29%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/eps_battery_location__type_support.c.o[0m
+[ 29%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/eps_housekeeping_value__type_support.c.o[0m
+[ 29%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/eps_power_state__type_support.c.o[0m
+[ 30%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/eps_housekeeping__type_support.c.o[0m
+[ 30%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/optical_flow__type_support.c.o[0m
+[ 30%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/pmc_command__type_support.c.o[0m
+[ 31%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/pmc_goal__type_support.c.o[0m
+[ 31%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/pmc_state__type_support.c.o[0m
+[ 32%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/pmc_telemetry__type_support.c.o[0m
+[ 32%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/pmc_status__type_support.c.o[0m
+[ 32%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_button__type_support.c.o[0m
+[ 32%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_light__type_support.c.o[0m
+[ 33%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_lighthouses__type_support.c.o[0m
+[ 33%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_motor__type_support.c.o[0m
+[ 33%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_pulse__type_support.c.o[0m
+[ 33%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_lighthouse__type_support.c.o[0m
+[ 34%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_tracker__type_support.c.o[0m
+[ 34%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_sensor__type_support.c.o[0m
+[ 34%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/msg/detail/vive_trackers__type_support.c.o[0m
+[ 34%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/calibrate_gripper__type_support.c.o[0m
+[ 35%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/configure_advanced_power__type_support.c.o[0m
+[ 35%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/clear_terminate__type_support.c.o[0m
+[ 36%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/get_battery_status__type_support.c.o[0m
+[ 36%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/configure_payload_power__type_support.c.o[0m
+[ 36%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/get_board_info__type_support.c.o[0m
+[ 36%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/get_temperatures__type_support.c.o[0m
+[ 37%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/reset__type_support.c.o[0m
+[ 37%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/configure_system_leds__type_support.c.o[0m
+[ 37%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/set_enabled__type_support.c.o[0m
+[ 38%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/set_flashlight__type_support.c.o[0m
+[ 38%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/ring_buzzer__type_support.c.o[0m
+[ 38%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/set_joint_max_velocity__type_support.c.o[0m
+[ 38%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/set_led_matrix__type_support.c.o[0m
+[ 38%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/ff_hw_msgs/srv/detail/undock__type_support.c.o[0m
+[ 38%] [32m[1mLinking CXX shared library libff_hw_msgs__rosidl_typesupport_cpp.so[0m
+[ 39%] [32m[1mLinking C shared library libff_hw_msgs__rosidl_typesupport_introspection_c.so[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_c[0m
+[ 39%] Built target ff_hw_msgs__rosidl_typesupport_cpp
+[ 39%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/arm_command__type_support.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/configure_led_group__type_support.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/arm_state__type_support.cpp.o[0m
+[ 40%] Built target ff_hw_msgs__rosidl_typesupport_introspection_c
+[ 40%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/configure_led__type_support.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/eps_battery_location__type_support.cpp.o[0m
+[ 41%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/eps_housekeeping__type_support.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/optical_flow__type_support.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/eps_power_state_value__type_support.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/pmc_command__type_support.cpp.o[0m
+[ 41%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/eps_housekeeping_value__type_support.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/eps_power_state__type_support.cpp.o[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_fastrtps_cpp[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/pmc_goal__type_support.cpp.o[0m
+[ 43%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/pmc_state__type_support.cpp.o[0m
+[ 43%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/pmc_status__type_support.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/eps_dock_state_stamped__type_support.cpp.o[0m
+[ 43%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/pmc_telemetry__type_support.cpp.o[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_button__type_support.cpp.o[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_lighthouse__type_support.cpp.o[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_light__type_support.cpp.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_motor__type_support.cpp.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_lighthouses__type_support.cpp.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_pulse__type_support.cpp.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_sensor__type_support.cpp.o[0m
+[ 46%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_tracker__type_support.cpp.o[0m
+[ 46%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/msg/vive_trackers__type_support.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/configure_advanced_power__type_support.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/calibrate_gripper__type_support.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/clear_terminate__type_support.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/configure_payload_power__type_support.cpp.o[0m
+[ 48%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/get_battery_status__type_support.cpp.o[0m
+[ 48%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/get_board_info__type_support.cpp.o[0m
+[ 48%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/get_temperatures__type_support.cpp.o[0m
+[ 48%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/configure_system_leds__type_support.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/arm_command__type_support.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/arm_state__type_support.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/reset__type_support.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/configure_led__type_support.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/set_enabled__type_support.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/ring_buzzer__type_support.cpp.o[0m
+[ 51%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/set_joint_max_velocity__type_support.cpp.o[0m
+[ 52%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/configure_led_group__type_support.cpp.o[0m
+[ 52%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/set_flashlight__type_support.cpp.o[0m
+[ 52%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/eps_battery_location__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/eps_housekeeping__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/eps_dock_state_stamped__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/eps_housekeeping_value__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/eps_power_state__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/set_led_matrix__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/eps_power_state_value__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/ff_hw_msgs/srv/undock__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/pmc_command__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/pmc_goal__type_support.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/pmc_status__type_support.cpp.o[0m
+[ 54%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/pmc_state__type_support.cpp.o[0m
+[ 55%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/optical_flow__type_support.cpp.o[0m
+[ 56%] [32m[1mLinking CXX shared library libff_hw_msgs__rosidl_typesupport_c.so[0m
+[ 56%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/pmc_telemetry__type_support.cpp.o[0m
+[ 56%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_button__type_support.cpp.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_light__type_support.cpp.o[0m
+[ 57%] Built target ff_hw_msgs__rosidl_typesupport_c
+[ 57%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_lighthouse__type_support.cpp.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_lighthouses__type_support.cpp.o[0m
+[ 58%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_motor__type_support.cpp.o[0m
+[ 58%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_pulse__type_support.cpp.o[0m
+[ 58%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_tracker__type_support.cpp.o[0m
+[ 58%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_sensor__type_support.cpp.o[0m
+[ 58%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/calibrate_gripper__type_support.cpp.o[0m
+[ 59%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/msg/detail/dds_fastrtps/vive_trackers__type_support.cpp.o[0m
+[ 59%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/clear_terminate__type_support.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/configure_advanced_power__type_support.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/configure_payload_power__type_support.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/configure_system_leds__type_support.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/get_battery_status__type_support.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/get_board_info__type_support.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/get_temperatures__type_support.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/reset__type_support.cpp.o[0m
+[ 62%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/ring_buzzer__type_support.cpp.o[0m
+[ 62%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/set_enabled__type_support.cpp.o[0m
+[ 62%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/set_flashlight__type_support.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/set_joint_max_velocity__type_support.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/set_led_matrix__type_support.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/ff_hw_msgs/srv/detail/dds_fastrtps/undock__type_support.cpp.o[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_introspection_cpp[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/eps_battery_location__type_support.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/configure_led__type_support.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/arm_command__type_support.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/arm_state__type_support.cpp.o[0m
+[ 64%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/configure_led_group__type_support.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/eps_housekeeping__type_support.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/eps_dock_state_stamped__type_support.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/eps_power_state__type_support.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/eps_power_state_value__type_support.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/eps_housekeeping_value__type_support.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/optical_flow__type_support.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/pmc_command__type_support.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/pmc_goal__type_support.cpp.o[0m
+[ 67%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/pmc_state__type_support.cpp.o[0m
+[ 67%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/pmc_telemetry__type_support.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_button__type_support.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/pmc_status__type_support.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_light__type_support.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_lighthouse__type_support.cpp.o[0m
+[ 68%] [32m[1mLinking CXX shared library libff_hw_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_lighthouses__type_support.cpp.o[0m
+[ 68%] Built target ff_hw_msgs__rosidl_typesupport_fastrtps_cpp
+[ 69%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_pulse__type_support.cpp.o[0m
+[ 69%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_motor__type_support.cpp.o[0m
+[ 70%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_sensor__type_support.cpp.o[0m
+[ 70%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_tracker__type_support.cpp.o[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/msg/detail/vive_trackers__type_support.cpp.o[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/calibrate_gripper__type_support.cpp.o[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/clear_terminate__type_support.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/configure_advanced_power__type_support.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/configure_payload_power__type_support.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/configure_system_leds__type_support.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/get_board_info__type_support.cpp.o[0m
+[ 73%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/get_battery_status__type_support.cpp.o[0m
+[ 73%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/get_temperatures__type_support.cpp.o[0m
+[ 73%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/reset__type_support.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/ring_buzzer__type_support.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/set_enabled__type_support.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/set_flashlight__type_support.cpp.o[0m
+[ 75%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/set_joint_max_velocity__type_support.cpp.o[0m
+[ 75%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/undock__type_support.cpp.o[0m
+[ 75%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/ff_hw_msgs/srv/detail/set_led_matrix__type_support.cpp.o[0m
+[ 76%] [32m[1mLinking CXX shared library libff_hw_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[ 76%] Built target ff_hw_msgs__rosidl_typesupport_introspection_cpp
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_fastrtps_c[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/arm_command__type_support_c.cpp.o[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/configure_led_group__type_support_c.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/arm_state__type_support_c.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/configure_led__type_support_c.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/eps_dock_state_stamped__type_support_c.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/eps_battery_location__type_support_c.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/eps_housekeeping_value__type_support_c.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/optical_flow__type_support_c.cpp.o[0m
+[ 78%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/eps_housekeeping__type_support_c.cpp.o[0m
+[ 78%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/eps_power_state__type_support_c.cpp.o[0m
+[ 79%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/pmc_goal__type_support_c.cpp.o[0m
+[ 79%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/pmc_state__type_support_c.cpp.o[0m
+[ 79%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/pmc_status__type_support_c.cpp.o[0m
+[ 80%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_button__type_support_c.cpp.o[0m
+[ 80%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/pmc_command__type_support_c.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/eps_power_state_value__type_support_c.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/pmc_telemetry__type_support_c.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_light__type_support_c.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_lighthouse__type_support_c.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_lighthouses__type_support_c.cpp.o[0m
+[ 82%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_motor__type_support_c.cpp.o[0m
+[ 82%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_sensor__type_support_c.cpp.o[0m
+[ 82%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_pulse__type_support_c.cpp.o[0m
+[ 83%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_tracker__type_support_c.cpp.o[0m
+[ 83%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/msg/detail/vive_trackers__type_support_c.cpp.o[0m
+[ 83%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/calibrate_gripper__type_support_c.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/clear_terminate__type_support_c.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/configure_advanced_power__type_support_c.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/configure_payload_power__type_support_c.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/configure_system_leds__type_support_c.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/get_board_info__type_support_c.cpp.o[0m
+[ 85%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/get_battery_status__type_support_c.cpp.o[0m
+[ 86%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/reset__type_support_c.cpp.o[0m
+[ 86%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/get_temperatures__type_support_c.cpp.o[0m
+[ 86%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/set_enabled__type_support_c.cpp.o[0m
+[ 86%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/set_flashlight__type_support_c.cpp.o[0m
+[ 86%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/ring_buzzer__type_support_c.cpp.o[0m
+[ 87%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/set_joint_max_velocity__type_support_c.cpp.o[0m
+[ 87%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/set_led_matrix__type_support_c.cpp.o[0m
+[ 87%] [32mBuilding CXX object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/ff_hw_msgs/srv/detail/undock__type_support_c.cpp.o[0m
+[ 88%] [32m[1mLinking CXX shared library libff_hw_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[ 88%] Built target ff_hw_msgs__rosidl_typesupport_fastrtps_c
+[35m[1mScanning dependencies of target ff_hw_msgs[0m
+[ 88%] Built target ff_hw_msgs
+[35m[1mScanning dependencies of target ff_hw_msgs__py[0m
+[ 88%] [34m[1mGenerating Python code for ROS interfaces[0m
+[ 88%] Built target ff_hw_msgs__py
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_generator_py[0m
+[ 88%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_configure_led_s.c.o[0m
+[ 88%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_configure_led_group_s.c.o[0m
+[ 88%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_arm_state_s.c.o[0m
+[ 89%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_arm_command_s.c.o[0m
+[ 89%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_eps_dock_state_stamped_s.c.o[0m
+[ 90%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_eps_battery_location_s.c.o[0m
+[ 90%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_eps_housekeeping_s.c.o[0m
+[ 91%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_eps_housekeeping_value_s.c.o[0m
+[ 91%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_eps_power_state_s.c.o[0m
+[ 91%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_eps_power_state_value_s.c.o[0m
+[ 92%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_optical_flow_s.c.o[0m
+[ 92%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_pmc_command_s.c.o[0m
+[ 92%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_pmc_goal_s.c.o[0m
+[ 92%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_pmc_state_s.c.o[0m
+[ 93%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_pmc_status_s.c.o[0m
+[ 93%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_button_s.c.o[0m
+[ 93%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_pmc_telemetry_s.c.o[0m
+[ 94%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_light_s.c.o[0m
+[ 94%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_lighthouse_s.c.o[0m
+[ 94%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_motor_s.c.o[0m
+[ 94%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_lighthouses_s.c.o[0m
+[ 95%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_sensor_s.c.o[0m
+[ 95%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_pulse_s.c.o[0m
+[ 96%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_trackers_s.c.o[0m
+[ 96%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_calibrate_gripper_s.c.o[0m
+[ 96%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/msg/_vive_tracker_s.c.o[0m
+[ 96%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_clear_terminate_s.c.o[0m
+[ 96%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_configure_advanced_power_s.c.o[0m
+[ 97%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_configure_payload_power_s.c.o[0m
+[ 97%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_get_battery_status_s.c.o[0m
+[ 97%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_configure_system_leds_s.c.o[0m
+[ 98%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_get_board_info_s.c.o[0m
+[ 98%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_get_temperatures_s.c.o[0m
+[ 99%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_ring_buzzer_s.c.o[0m
+[ 99%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_reset_s.c.o[0m
+[ 99%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_set_enabled_s.c.o[0m
+[ 99%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_set_flashlight_s.c.o[0m
+[ 99%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_set_joint_max_velocity_s.c.o[0m
+[ 99%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_undock_s.c.o[0m
+[100%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_generator_py.dir/rosidl_generator_py/ff_hw_msgs/srv/_set_led_matrix_s.c.o[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/ff_hw_msgs/libff_hw_msgs__rosidl_generator_py.so[0m
+[100%] Built target ff_hw_msgs__rosidl_generator_py
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_c__pyext[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_fastrtps_c__pyext[0m
+[35m[1mScanning dependencies of target ff_hw_msgs__rosidl_typesupport_introspection_c__pyext[0m
+[100%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/ff_hw_msgs/_ff_hw_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[100%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/ff_hw_msgs/_ff_hw_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[100%] [32mBuilding C object CMakeFiles/ff_hw_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/ff_hw_msgs/_ff_hw_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so[0m
+[100%] Built target ff_hw_msgs__rosidl_typesupport_introspection_c__pyext
+[100%] [32m[1mLinking C shared library rosidl_generator_py/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so[0m
+[100%] Built target ff_hw_msgs__rosidl_typesupport_c__pyext
+[100%] Built target ff_hw_msgs__rosidl_typesupport_fastrtps_c__pyext
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ament_index/resource_index/rosidl_interfaces/ff_hw_msgs
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/arm_command.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/arm_state.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/configure_led.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/configure_led_group.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_battery_location.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_dock_state_stamped.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_housekeeping.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_housekeeping_value.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_power_state.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_power_state_value.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/optical_flow.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_command.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_goal.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_state.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_status.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_telemetry.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/rosidl_generator_c__visibility_control.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_button.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_light.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_lighthouse.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_lighthouses.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_motor.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_pulse.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_sensor.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_tracker.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_trackers.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/calibrate_gripper.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/clear_terminate.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/configure_advanced_power.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/configure_payload_power.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/configure_system_leds.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__functions.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__struct.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__type_support.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/get_battery_status.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/get_board_info.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/get_temperatures.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/reset.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/ring_buzzer.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_enabled.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_flashlight.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_joint_max_velocity.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_led_matrix.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/undock.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/library_path.sh
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/library_path.dsv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_fastrtps_c.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_fastrtps_cpp.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__rosidl_typesupport_introspection_c.h
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/arm_command.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/arm_state.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/configure_led.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/configure_led_group.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_battery_location.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_dock_state_stamped.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_housekeeping.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_housekeeping_value.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_power_state.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/eps_power_state_value.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/optical_flow.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_command.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_goal.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_state.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_status.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/pmc_telemetry.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_button.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_light.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_lighthouse.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_lighthouses.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_motor.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_pulse.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_sensor.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_tracker.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/vive_trackers.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/calibrate_gripper.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/clear_terminate.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/configure_advanced_power.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/configure_payload_power.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/configure_system_leds.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__builder.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__struct.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__traits.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/get_battery_status.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/get_board_info.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/get_temperatures.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/reset.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/ring_buzzer.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_enabled.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_flashlight.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_joint_max_velocity.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/set_led_matrix.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/undock.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_command__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/arm_state__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/configure_led_group__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_battery_location__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_dock_state_stamped__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_housekeeping_value__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/eps_power_state_value__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/optical_flow__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_command__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_goal__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_state__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_status__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/pmc_telemetry__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_button__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_light__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouse__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_lighthouses__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_motor__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_pulse__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_sensor__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_tracker__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/msg/detail/vive_trackers__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/calibrate_gripper__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/clear_terminate__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_advanced_power__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_payload_power__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/configure_system_leds__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_battery_status__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_board_info__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/get_temperatures__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/reset__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/ring_buzzer__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_enabled__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_flashlight__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_joint_max_velocity__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/set_led_matrix__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/include/ff_hw_msgs/srv/detail/undock__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/pythonpath.sh
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/pythonpath.dsv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs-0.0.0-py3.8.egg-info/PKG-INFO
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs-0.0.0-py3.8.egg-info/SOURCES.txt
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs-0.0.0-py3.8.egg-info/dependency_links.txt
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs-0.0.0-py3.8.egg-info/top_level.txt
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/__init__.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/_ff_hw_msgs_s.ep.rosidl_typesupport_c.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/_ff_hw_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/_ff_hw_msgs_s.ep.rosidl_typesupport_introspection_c.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/libff_hw_msgs__rosidl_generator_py.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/__init__.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_arm_command.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_arm_command_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_arm_state.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_arm_state_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_configure_led.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_configure_led_group.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_configure_led_group_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_configure_led_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_battery_location.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_battery_location_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_dock_state_stamped.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_dock_state_stamped_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_housekeeping.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_housekeeping_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_housekeeping_value.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_housekeeping_value_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_power_state.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_power_state_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_power_state_value.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_power_state_value_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_optical_flow.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_optical_flow_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_command.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_command_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_goal.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_goal_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_state.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_state_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_status.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_status_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_telemetry.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_telemetry_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_button.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_button_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_light.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_light_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_lighthouse.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_lighthouse_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_lighthouses.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_lighthouses_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_motor.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_motor_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_pulse.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_pulse_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_sensor.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_sensor_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_tracker.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_tracker_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_trackers.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_trackers_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/__init__.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_calibrate_gripper.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_calibrate_gripper_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_clear_terminate.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_clear_terminate_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_advanced_power.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_advanced_power_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_payload_power.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_payload_power_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_system_leds.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_system_leds_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_battery_status.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_battery_status_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_board_info.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_board_info_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_temperatures.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_temperatures_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_reset.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_reset_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_ring_buzzer.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_ring_buzzer_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_enabled.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_enabled_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_flashlight.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_flashlight_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_joint_max_velocity.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_joint_max_velocity_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_led_matrix.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_led_matrix_s.c
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_undock.py
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_undock_s.c
+-- Up-to-date symlink: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+-- Up-to-date symlink: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+-- Up-to-date symlink: /src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/ff_hw_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ArmCommand.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ArmState.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ConfigureLED.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ConfigureLEDGroup.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsBatteryLocation.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsDockStateStamped.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsHousekeeping.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsHousekeepingValue.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsPowerState.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsPowerStateValue.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/OpticalFlow.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcCommand.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcGoal.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcState.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcStatus.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcTelemetry.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveButton.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveLight.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveLighthouse.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveLighthouses.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveMotor.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/VivePulse.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveSensor.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveTracker.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveTrackers.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/CalibrateGripper.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ClearTerminate.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureAdvancedPower.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigurePayloadPower.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureSystemLeds.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBatteryStatus.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBoardInfo.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetTemperatures.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Reset.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/RingBuzzer.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetEnabled.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetFlashlight.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetJointMaxVelocity.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetLedMatrix.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Undock.idl
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ArmCommand.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ArmState.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ConfigureLED.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ConfigureLEDGroup.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsBatteryLocation.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsDockStateStamped.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsHousekeeping.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsHousekeepingValue.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsPowerState.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/EpsPowerStateValue.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/OpticalFlow.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcCommand.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcGoal.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcState.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcStatus.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/PmcTelemetry.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveButton.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveLight.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveLighthouse.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveLighthouses.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveMotor.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/VivePulse.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveSensor.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveTracker.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/msg/ViveTrackers.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/CalibrateGripper.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/CalibrateGripper_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/CalibrateGripper_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ClearTerminate.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ClearTerminate_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ClearTerminate_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureAdvancedPower.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureAdvancedPower_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureAdvancedPower_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigurePayloadPower.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigurePayloadPower_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigurePayloadPower_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureSystemLeds.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureSystemLeds_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/ConfigureSystemLeds_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBatteryStatus.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBatteryStatus_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBatteryStatus_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBoardInfo.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBoardInfo_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetBoardInfo_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetTemperatures.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetTemperatures_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/GetTemperatures_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Reset.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Reset_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Reset_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/RingBuzzer.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/RingBuzzer_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/RingBuzzer_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetEnabled.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetEnabled_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetEnabled_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetFlashlight.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetFlashlight_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetFlashlight_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetJointMaxVelocity.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetJointMaxVelocity_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetJointMaxVelocity_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetLedMatrix.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetLedMatrix_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/SetLedMatrix_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Undock.srv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Undock_Request.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/srv/Undock_Response.msg
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ament_index/resource_index/package_run_dependencies/ff_hw_msgs
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ament_index/resource_index/parent_prefix_path/ff_hw_msgs
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/ament_prefix_path.sh
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/ament_prefix_path.dsv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/path.sh
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/environment/path.dsv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/local_setup.bash
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/local_setup.sh
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/local_setup.zsh
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/package.dsv
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ament_index/resource_index/packages/ff_hw_msgs
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/rosidl_cmake-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ament_cmake_export_targets-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgsConfig.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgsConfig-version.cmake
+-- Symlinking: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/package.xml
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_generator_c.so
+-- Set runtime path of "/src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_generator_c.so" to ""
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_introspection_c.so
+-- Set runtime path of "/src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_c.so
+-- Set runtime path of "/src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_c.so" to ""
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_introspection_cpp.so
+-- Set runtime path of "/src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_cpp.so
+-- Set runtime path of "/src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_typesupport_cpp.so" to ""
+Listing '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/__init__.py'...
+Listing '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/__init__.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_arm_command.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_arm_state.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_configure_led.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_configure_led_group.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_battery_location.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_dock_state_stamped.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_housekeeping.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_housekeeping_value.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_power_state.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_eps_power_state_value.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_optical_flow.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_command.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_goal.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_state.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_status.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_pmc_telemetry.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_button.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_light.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_lighthouse.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_lighthouses.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_motor.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_pulse.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_sensor.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_tracker.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/msg/_vive_trackers.py'...
+Listing '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/__init__.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_calibrate_gripper.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_clear_terminate.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_advanced_power.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_payload_power.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_configure_system_leds.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_battery_status.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_board_info.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_get_temperatures.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_reset.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_ring_buzzer.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_enabled.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_flashlight.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_joint_max_velocity.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_set_led_matrix.py'...
+Compiling '/src/astrobee/src/install/ff_hw_msgs/lib/python3.8/site-packages/ff_hw_msgs/srv/_undock.py'...
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_generator_py.so
+-- Set runtime path of "/src/astrobee/src/install/ff_hw_msgs/lib/libff_hw_msgs__rosidl_generator_py.so" to ""
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_generator_cExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_generator_cExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_cExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_cExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_generator_cppExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_cppExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/ff_hw_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/export_ff_hw_msgs__rosidl_generator_pyExport.cmake
+-- Installing: /src/astrobee/src/install/ff_hw_msgs/share/ff_hw_msgs/cmake/export_ff_hw_msgs__rosidl_generator_pyExport-noconfig.cmake

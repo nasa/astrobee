@@ -1,0 +1,43 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /src/astrobee/src/build/astrobee_handrail_8_5
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/environment/astrobee_handrail_8_5.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/urdf/model.urdf
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/media/materials/textures/blue.png
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/media/materials/textures/silver.png
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/meshes/handrail_8_5.dae
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/model.config
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/ament_index/resource_index/package_run_dependencies/astrobee_handrail_8_5
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/ament_index/resource_index/parent_prefix_path/astrobee_handrail_8_5
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/environment/ament_prefix_path.sh
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/environment/ament_prefix_path.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/environment/path.sh
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/environment/path.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/local_setup.bash
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/local_setup.sh
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/local_setup.zsh
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/package.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/ament_index/resource_index/packages/astrobee_handrail_8_5
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/cmake/astrobee_handrail_8_5Config.cmake
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/cmake/astrobee_handrail_8_5Config-version.cmake
+-- Symlinking: /src/astrobee/src/install/astrobee_handrail_8_5/share/astrobee_handrail_8_5/package.xml

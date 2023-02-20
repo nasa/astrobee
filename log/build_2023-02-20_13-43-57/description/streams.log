@@ -1,0 +1,60 @@
+[0.048s] Invoking command in '/src/astrobee/src/build/description': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/description
+[0.650s] -- The C compiler identification is GNU 9.4.0
+[0.650s] -- The CXX compiler identification is GNU 9.4.0
+[0.650s] -- Check for working C compiler: /usr/bin/cc
+[0.650s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.650s] -- Detecting C compiler ABI info
+[0.650s] -- Detecting C compiler ABI info - done
+[0.650s] -- Detecting C compile features
+[0.650s] -- Detecting C compile features - done
+[0.650s] -- Check for working CXX compiler: /usr/bin/c++
+[0.650s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.650s] -- Detecting CXX compiler ABI info
+[0.650s] -- Detecting CXX compiler ABI info - done
+[0.650s] -- Detecting CXX compile features
+[0.651s] -- Detecting CXX compile features - done
+[0.651s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.651s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.651s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.671s] -- Configuring done
+[0.672s] -- Generating done
+[0.673s] -- Build files have been written to: /src/astrobee/src/build/description
+[0.677s] Invoked command in '/src/astrobee/src/build/description' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/description
+[0.680s] Invoking command in '/src/astrobee/src/build/description': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/description -- -j20 -l20
+[0.717s] Invoked command in '/src/astrobee/src/build/description' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/description -- -j20 -l20
+[0.749s] Invoking command in '/src/astrobee/src/build/description': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/description
+[0.757s] -- Install configuration: ""
+[0.757s] -- Execute custom install script
+[0.757s] -- Symlinking: /src/astrobee/src/install/description/share/ament_index/resource_index/package_run_dependencies/description
+[0.768s] -- Symlinking: /src/astrobee/src/install/description/share/ament_index/resource_index/parent_prefix_path/description
+[0.770s] -- Symlinking: /src/astrobee/src/install/description/share/description/environment/ament_prefix_path.sh
+[0.775s] -- Symlinking: /src/astrobee/src/install/description/share/description/environment/ament_prefix_path.dsv
+[0.784s] -- Symlinking: /src/astrobee/src/install/description/share/description/environment/path.sh
+[0.790s] -- Symlinking: /src/astrobee/src/install/description/share/description/environment/path.dsv
+[0.795s] -- Symlinking: /src/astrobee/src/install/description/share/description/local_setup.bash
+[0.800s] -- Symlinking: /src/astrobee/src/install/description/share/description/local_setup.sh
+[0.808s] -- Symlinking: /src/astrobee/src/install/description/share/description/local_setup.zsh
+[0.816s] -- Symlinking: /src/astrobee/src/install/description/share/description/local_setup.dsv
+[0.822s] -- Symlinking: /src/astrobee/src/install/description/share/description/package.dsv
+[0.831s] -- Symlinking: /src/astrobee/src/install/description/share/ament_index/resource_index/packages/description
+[0.839s] -- Symlinking: /src/astrobee/src/install/description/share/description/cmake/descriptionConfig.cmake
+[0.847s] -- Symlinking: /src/astrobee/src/install/description/share/description/cmake/descriptionConfig-version.cmake
+[0.853s] -- Symlinking: /src/astrobee/src/install/description/share/description/package.xml
+[0.860s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/macro_perching_arm.urdf.xacro
+[0.866s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model.urdf.xacro
+[0.874s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_carriage.urdf.xacro
+[0.879s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_drag.urdf.xacro
+[0.887s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_eps.urdf.xacro
+[0.895s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_flashlights.urdf.xacro
+[0.903s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_laser.urdf.xacro
+[0.909s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_monitors.urdf.xacro
+[0.916s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_pmc.urdf.xacro
+[0.921s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_signal_lights.urdf.xacro
+[0.926s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_speed_cam.urdf.xacro
+[0.930s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/model_truth.urdf.xacro
+[0.938s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/sensor_dock_cam.urdf.xacro
+[0.942s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/sensor_haz_cam.urdf.xacro
+[0.949s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/sensor_imu.urdf.xacro
+[0.956s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/sensor_nav_cam.urdf.xacro
+[0.960s] -- Symlinking: /src/astrobee/src/install/description/share/description/urdf/sensor_perch_cam.urdf.xacro
+[1.010s] Invoked command in '/src/astrobee/src/build/description' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/description

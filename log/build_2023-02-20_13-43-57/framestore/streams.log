@@ -1,0 +1,69 @@
+[0.014s] Invoking command in '/src/astrobee/src/build/framestore': AMENT_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/ff_util/lib:/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake /src/astrobee/src/mobility/framestore -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/framestore
+[0.054s] -- The C compiler identification is GNU 9.4.0
+[0.092s] -- The CXX compiler identification is GNU 9.4.0
+[0.095s] -- Check for working C compiler: /usr/bin/cc
+[0.147s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.148s] -- Detecting C compiler ABI info
+[0.197s] -- Detecting C compiler ABI info - done
+[0.205s] -- Detecting C compile features
+[0.206s] -- Detecting C compile features - done
+[0.207s] -- Check for working CXX compiler: /usr/bin/c++
+[0.267s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.268s] -- Detecting CXX compiler ABI info
+[0.335s] -- Detecting CXX compiler ABI info - done
+[0.345s] -- Detecting CXX compile features
+[0.345s] -- Detecting CXX compile features - done
+[0.347s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.455s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.501s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.524s] -- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+[0.565s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.571s] -- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+[0.607s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.662s] -- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+[0.665s] -- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+[0.683s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.827s] -- Found rclcpp_components: 15.0.0 (/opt/ros/rolling/share/rclcpp_components/cmake)
+[0.883s] -- Found ff_common: 1.0.0 (/src/astrobee/src/install/ff_common/share/ff_common/cmake)
+[0.885s] -- Found ff_util: 1.0.0 (/src/astrobee/src/install/ff_util/share/ff_util/cmake)
+[0.893s] -- Found ff_msgs: 0.0.0 (/src/astrobee/src/install/ff_msgs/share/ff_msgs/cmake)
+[1.216s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/rolling/share/eigen3_cmake_module/cmake)
+[1.219s] -- Found Eigen3: TRUE (found version "3.3.7") 
+[2.157s] -- Configuring done
+[2.173s] -- Generating done
+[2.174s] -- Build files have been written to: /src/astrobee/src/build/framestore
+[2.181s] Invoked command in '/src/astrobee/src/build/framestore' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/ff_util/lib:/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake /src/astrobee/src/mobility/framestore -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/framestore
+[2.182s] Invoking command in '/src/astrobee/src/build/framestore': AMENT_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/ff_util/lib:/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /src/astrobee/src/build/framestore -- -j20 -l20
+[2.212s] [35m[1mScanning dependencies of target framestore[0m
+[2.252s] [ 25%] [32mBuilding CXX object CMakeFiles/framestore.dir/src/framestore.cc.o[0m
+[6.995s] [ 50%] [32m[1mLinking CXX shared library libframestore.so[0m
+[7.132s] [ 50%] Built target framestore
+[7.140s] [35m[1mScanning dependencies of target global_transforms[0m
+[7.175s] [ 75%] [32mBuilding CXX object CMakeFiles/global_transforms.dir/tools/global_transforms.cc.o[0m
+[11.306s] [100%] [32m[1mLinking CXX executable global_transforms[0m
+[11.428s] [100%] Built target global_transforms
+[11.440s] Invoked command in '/src/astrobee/src/build/framestore' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/ff_util/lib:/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /src/astrobee/src/build/framestore -- -j20 -l20
+[11.457s] Invoking command in '/src/astrobee/src/build/framestore': AMENT_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/ff_util/lib:/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /src/astrobee/src/build/framestore
+[11.463s] -- Install configuration: ""
+[11.463s] -- Execute custom install script
+[11.464s] -- Symlinking: /src/astrobee/src/install/framestore/lib/libframestore.so
+[11.470s] -- Symlinking: /src/astrobee/src/install/framestore/lib/framestore/global_transforms
+[11.477s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/launch/framestore.launch
+[11.484s] -- Symlinking: /src/astrobee/src/install/framestore/share/ament_index/resource_index/package_run_dependencies/framestore
+[11.490s] -- Symlinking: /src/astrobee/src/install/framestore/share/ament_index/resource_index/parent_prefix_path/framestore
+[11.496s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/environment/ament_prefix_path.sh
+[11.503s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/environment/ament_prefix_path.dsv
+[11.509s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/environment/path.sh
+[11.515s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/environment/path.dsv
+[11.522s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/local_setup.bash
+[11.528s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/local_setup.sh
+[11.535s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/local_setup.zsh
+[11.542s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/local_setup.dsv
+[11.548s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/package.dsv
+[11.556s] -- Symlinking: /src/astrobee/src/install/framestore/share/ament_index/resource_index/packages/framestore
+[11.562s] -- Symlinking: /src/astrobee/src/install/framestore/share/ament_index/resource_index/rclcpp_components/framestore
+[11.569s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/cmake/ament_cmake_export_include_directories-extras.cmake
+[11.575s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/cmake/framestoreConfig.cmake
+[11.582s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/cmake/framestoreConfig-version.cmake
+[11.588s] -- Symlinking: /src/astrobee/src/install/framestore/share/framestore/package.xml
+[11.600s] Invoked command in '/src/astrobee/src/build/framestore' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/ff_util:/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/ff_util/lib:/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /src/astrobee/src/build/framestore

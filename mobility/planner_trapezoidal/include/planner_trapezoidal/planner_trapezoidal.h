@@ -20,7 +20,7 @@
 #define PLANNER_TRAPEZOIDAL_PLANNER_TRAPEZOIDAL_H_
 
 // Standard includes
-#include <ros/ros.h>
+#include <rclpp/rclcpp.hpp>
 
 // FSW includes
 #include <ff_util/ff_nodelet.h>
@@ -33,7 +33,7 @@
  */
 namespace planner_trapezoidal {
   // Insert a trapezoid between two poses
-  void InsertTrapezoid(ff_util::Segment &segment, ros::Time & offset, double dt,
+  void InsertTrapezoid(ff_util::Segment &segment, rclcpp::Time & offset, double dt,
                        const Eigen::Affine3d & p0, const Eigen::Affine3d & p1,
                        double lin_v, double rot_v, double lin_a, double rot_a,
                        double min_control_period, double epsilon);

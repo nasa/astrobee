@@ -1,0 +1,48 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /src/astrobee/src/build/astrobee_granite
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/environment/astrobee_granite.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/urdf/model.urdf
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/face1.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/face2.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/face3.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/face4.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/face5.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/face6.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/media/materials/textures/granite.png
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/meshes/granite.dae
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/model.config
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/ament_index/resource_index/package_run_dependencies/astrobee_granite
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/ament_index/resource_index/parent_prefix_path/astrobee_granite
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/environment/ament_prefix_path.sh
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/environment/ament_prefix_path.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/environment/path.sh
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/environment/path.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/local_setup.bash
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/local_setup.sh
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/local_setup.zsh
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/package.dsv
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/ament_index/resource_index/packages/astrobee_granite
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/cmake/astrobee_graniteConfig.cmake
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/cmake/astrobee_graniteConfig-version.cmake
+-- Symlinking: /src/astrobee/src/install/astrobee_granite/share/astrobee_granite/package.xml

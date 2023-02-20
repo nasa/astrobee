@@ -1,0 +1,39 @@
+[0.063s] Invoking command in '/src/astrobee/src/build/ff_common': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/ff_common -- -j20 -l20
+[0.113s] [ 40%] Built target ff_common
+[0.115s] [ 70%] Built target gtest_main
+[0.115s] [ 80%] Built target gtest
+[0.134s] [100%] Built target test_thread
+[0.172s] Invoked command in '/src/astrobee/src/build/ff_common' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/ff_common -- -j20 -l20
+[0.272s] Invoking command in '/src/astrobee/src/build/ff_common': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/ff_common
+[0.332s] -- Install configuration: ""
+[0.335s] -- Execute custom install script
+[0.335s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/environment/library_path.sh
+[0.335s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/environment/library_path.dsv
+[0.335s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ament_index/resource_index/package_run_dependencies/ff_common
+[0.335s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ament_index/resource_index/parent_prefix_path/ff_common
+[0.335s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/environment/ament_prefix_path.sh
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/environment/ament_prefix_path.dsv
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/environment/path.sh
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/environment/path.dsv
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/local_setup.bash
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/local_setup.sh
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/local_setup.zsh
+[0.336s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/local_setup.dsv
+[0.337s] -- Symlinking: /src/astrobee/src/install/ff_common/share/ff_common/package.dsv
+[0.337s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ament_index/resource_index/packages/ff_common
+[0.337s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/cmake/ament_cmake_export_targets-extras.cmake
+[0.337s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/cmake/ament_cmake_export_include_directories-extras.cmake
+[0.337s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/cmake/ff_commonConfig.cmake
+[0.337s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/cmake/ff_commonConfig-version.cmake
+[0.337s] -- Up-to-date symlink: /src/astrobee/src/install/ff_common/share/ff_common/package.xml
+[0.339s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common
+[0.340s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common/utils.h
+[0.340s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common/thread.h
+[0.340s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common/ff_names.h
+[0.340s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common/eigen_vectors.h
+[0.340s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common/init.h
+[0.340s] -- Up-to-date: /src/astrobee/src/install/ff_common/include/ff_common/ff_ros.h
+[0.341s] -- Up-to-date: /src/astrobee/src/install/ff_common/lib/libff_common.a
+[0.341s] -- Up-to-date: /src/astrobee/src/install/ff_common/share/ff_common/cmake/ff_commonExport.cmake
+[0.341s] -- Up-to-date: /src/astrobee/src/install/ff_common/share/ff_common/cmake/ff_commonExport-noconfig.cmake
+[0.380s] Invoked command in '/src/astrobee/src/build/ff_common' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/ff_common

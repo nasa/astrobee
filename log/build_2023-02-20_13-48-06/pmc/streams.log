@@ -1,0 +1,32 @@
+[0.015s] Invoking command in '/src/astrobee/src/build/pmc': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /src/astrobee/src/build/pmc -- -j20 -l20
+[0.057s] [100%] Built target pmc
+[0.064s] Invoked command in '/src/astrobee/src/build/pmc' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /src/astrobee/src/build/pmc -- -j20 -l20
+[0.101s] Invoking command in '/src/astrobee/src/build/pmc': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /src/astrobee/src/build/pmc
+[0.106s] -- Install configuration: ""
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/environment/library_path.sh
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/environment/library_path.dsv
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/include/pmc
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/include/pmc/pmc_sim.h
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/include/pmc/shared.h
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/include/pmc/fam.h
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/lib/libpmc.a
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/ament_index/resource_index/package_run_dependencies/pmc
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/ament_index/resource_index/parent_prefix_path/pmc
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/environment/ament_prefix_path.sh
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/environment/ament_prefix_path.dsv
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/environment/path.sh
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/environment/path.dsv
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/local_setup.bash
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/local_setup.sh
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/local_setup.zsh
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/local_setup.dsv
+[0.107s] -- Installing: /src/astrobee/src/install/pmc/share/pmc/package.dsv
+[0.107s] -- Up-to-date: /src/astrobee/src/install/pmc/share/ament_index/resource_index/packages/pmc
+[0.108s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/cmake/pmcExport.cmake
+[0.108s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/cmake/pmcExport-noconfig.cmake
+[0.108s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/cmake/ament_cmake_export_targets-extras.cmake
+[0.108s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/cmake/ament_cmake_export_include_directories-extras.cmake
+[0.108s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/cmake/pmcConfig.cmake
+[0.108s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/cmake/pmcConfig-version.cmake
+[0.109s] -- Up-to-date: /src/astrobee/src/install/pmc/share/pmc/package.xml
+[0.109s] Invoked command in '/src/astrobee/src/build/pmc' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /src/astrobee/src/build/pmc

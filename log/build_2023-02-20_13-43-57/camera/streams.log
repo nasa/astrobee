@@ -1,0 +1,108 @@
+[0.016s] Invoking command in '/src/astrobee/src/build/camera': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /src/astrobee/src/localization/camera -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/camera
+[0.064s] -- The C compiler identification is GNU 9.4.0
+[0.108s] -- The CXX compiler identification is GNU 9.4.0
+[0.113s] -- Check for working C compiler: /usr/bin/cc
+[0.169s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.169s] -- Detecting C compiler ABI info
+[0.218s] -- Detecting C compiler ABI info - done
+[0.231s] -- Detecting C compile features
+[0.231s] -- Detecting C compile features - done
+[0.234s] -- Check for working CXX compiler: /usr/bin/c++
+[0.292s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.293s] -- Detecting CXX compiler ABI info
+[0.352s] -- Detecting CXX compiler ABI info - done
+[0.365s] -- Detecting CXX compile features
+[0.365s] -- Detecting CXX compile features - done
+[0.379s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake (found version "1.71.0") found components: system filesystem 
+[0.398s] -- Found OpenCV: /usr/local (found suitable version "3.3.1", minimum required is "3.3.1") 
+[0.400s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.507s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.575s] -- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+[0.618s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.623s] -- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+[0.656s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.707s] -- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+[0.709s] -- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+[0.726s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.864s] -- Found ff_common: 1.0.0 (/src/astrobee/src/install/ff_common/share/ff_common/cmake)
+[0.865s] -- Found config_reader: 1.0.0 (/src/astrobee/src/install/config_reader/share/config_reader/cmake)
+[0.870s] -- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)
+[0.872s] -- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+[0.874s] -- Looking for pthread.h
+[0.928s] -- Looking for pthread.h - found
+[0.928s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.981s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+[0.981s] -- Check if compiler accepts -pthread
+[1.042s] -- Check if compiler accepts -pthread - yes
+[1.043s] -- Found Threads: TRUE  
+[1.095s] -- Configuring done
+[1.125s] -- Generating done
+[1.126s] CMake Warning:
+[1.126s]   Manually-specified variables were not used by the project:
+[1.126s] 
+[1.126s]     CATKIN_INSTALL_INTO_PREFIX_ROOT
+[1.127s]     CATKIN_SYMLINK_INSTALL
+[1.127s] 
+[1.127s] 
+[1.127s] -- Build files have been written to: /src/astrobee/src/build/camera
+[1.133s] Invoked command in '/src/astrobee/src/build/camera' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /src/astrobee/src/localization/camera -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/camera
+[1.135s] Invoking command in '/src/astrobee/src/build/camera': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /src/astrobee/src/build/camera -- -j20 -l20
+[1.178s] [35m[1mScanning dependencies of target camera[0m
+[1.179s] [35m[1mScanning dependencies of target gtest_main[0m
+[1.179s] [35m[1mScanning dependencies of target gtest[0m
+[1.193s] [  7%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[1.196s] [ 15%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[1.224s] [ 30%] [32mBuilding CXX object CMakeFiles/camera.dir/src/camera_model.cc.o[0m
+[1.224s] [ 30%] [32mBuilding CXX object CMakeFiles/camera.dir/src/camera_params.cc.o[0m
+[1.672s] [ 38%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[1.697s] [ 38%] Built target gtest_main
+[4.987s] [ 46%] [32m[1mLinking CXX static library libcamera.a[0m
+[5.013s] [ 46%] Built target camera
+[5.021s] [35m[1mScanning dependencies of target undistort_image[0m
+[5.040s] [ 53%] [32mBuilding CXX object CMakeFiles/undistort_image.dir/tools/undistort_image.cc.o[0m
+[6.637s] [01m[K/src/astrobee/src/localization/camera/tools/undistort_image.cc:[m[K In function ‘[01m[Kint main(int, char**)[m[K’:
+[6.637s] [01m[K/src/astrobee/src/localization/camera/tools/undistort_image.cc:185:13:[m[K [01;35m[Kwarning: [m[Kvariable ‘[01m[Kstart[m[K’ set but not used [[01;35m[K-Wunused-but-set-variable[m[K]
+[6.637s]   185 |   cv::Vec2f [01;35m[Kstart[m[K = floating_remap.at<cv::Vec2f>(0, 0);
+[6.637s]       |             [01;35m[K^~~~~[m[K
+[7.776s] [ 61%] [32m[1mLinking CXX executable undistort_image[0m
+[7.981s] [ 61%] Built target undistort_image
+[8.552s] [ 69%] [32m[1mLinking CXX static library libgtest.a[0m
+[8.585s] [ 69%] Built target gtest
+[8.593s] [35m[1mScanning dependencies of target test_camera_params[0m
+[8.596s] [35m[1mScanning dependencies of target test_camera_model[0m
+[8.626s] [ 76%] [32mBuilding CXX object CMakeFiles/test_camera_params.dir/test/test_camera_params.cc.o[0m
+[8.638s] [ 84%] [32mBuilding CXX object CMakeFiles/test_camera_model.dir/test/test_camera_model.cc.o[0m
+[11.131s] [ 92%] [32m[1mLinking CXX executable test_camera_params[0m
+[11.337s] [ 92%] Built target test_camera_params
+[11.452s] [100%] [32m[1mLinking CXX executable test_camera_model[0m
+[11.650s] [100%] Built target test_camera_model
+[11.660s] Invoked command in '/src/astrobee/src/build/camera' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /src/astrobee/src/build/camera -- -j20 -l20
+[11.735s] Invoking command in '/src/astrobee/src/build/camera': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /src/astrobee/src/build/camera
+[11.746s] -- Install configuration: ""
+[11.747s] -- Installing: /src/astrobee/src/install/camera/share/camera/environment/library_path.sh
+[11.747s] -- Installing: /src/astrobee/src/install/camera/share/camera/environment/library_path.dsv
+[11.747s] -- Installing: /src/astrobee/src/install/camera/lib/libcamera.a
+[11.747s] -- Installing: /src/astrobee/src/install/camera/bin/undistort_image
+[11.748s] -- Set runtime path of "/src/astrobee/src/install/camera/bin/undistort_image" to ""
+[11.751s] -- Installing: /src/astrobee/src/install/camera/include/camera
+[11.751s] -- Installing: /src/astrobee/src/install/camera/include/camera/camera_params.h
+[11.751s] -- Installing: /src/astrobee/src/install/camera/include/camera/camera_model.h
+[11.752s] -- Installing: /src/astrobee/src/install/camera/share/ament_index/resource_index/package_run_dependencies/camera
+[11.752s] -- Installing: /src/astrobee/src/install/camera/share/ament_index/resource_index/parent_prefix_path/camera
+[11.752s] -- Installing: /src/astrobee/src/install/camera/share/camera/environment/ament_prefix_path.sh
+[11.752s] -- Installing: /src/astrobee/src/install/camera/share/camera/environment/ament_prefix_path.dsv
+[11.752s] -- Installing: /src/astrobee/src/install/camera/share/camera/environment/path.sh
+[11.752s] -- Installing: /src/astrobee/src/install/camera/share/camera/environment/path.dsv
+[11.753s] -- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.bash
+[11.753s] -- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.sh
+[11.753s] -- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.zsh
+[11.753s] -- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.dsv
+[11.753s] -- Installing: /src/astrobee/src/install/camera/share/camera/package.dsv
+[11.753s] -- Installing: /src/astrobee/src/install/camera/share/ament_index/resource_index/packages/camera
+[11.754s] -- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraExport.cmake
+[11.754s] -- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraExport-noconfig.cmake
+[11.754s] -- Installing: /src/astrobee/src/install/camera/share/camera/cmake/ament_cmake_export_targets-extras.cmake
+[11.754s] -- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraConfig.cmake
+[11.754s] -- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraConfig-version.cmake
+[11.754s] -- Installing: /src/astrobee/src/install/camera/share/camera/package.xml
+[11.756s] Invoked command in '/src/astrobee/src/build/camera' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_common LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /src/astrobee/src/build/camera

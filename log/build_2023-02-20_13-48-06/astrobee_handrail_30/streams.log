@@ -1,0 +1,27 @@
+[0.056s] Invoking command in '/src/astrobee/src/build/astrobee_handrail_30': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_handrail_30 -- -j20 -l20
+[0.100s] Invoked command in '/src/astrobee/src/build/astrobee_handrail_30' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_handrail_30 -- -j20 -l20
+[0.151s] Invoking command in '/src/astrobee/src/build/astrobee_handrail_30': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_handrail_30
+[0.164s] -- Install configuration: ""
+[0.164s] -- Execute custom install script
+[0.164s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/environment/astrobee_handrail_30.dsv
+[0.164s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/urdf/model.urdf
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/media/materials/textures/blue.png
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/media/materials/textures/silver.png
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/meshes/handrail_30.dae
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/model.config
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/ament_index/resource_index/package_run_dependencies/astrobee_handrail_30
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/ament_index/resource_index/parent_prefix_path/astrobee_handrail_30
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/environment/ament_prefix_path.sh
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/environment/ament_prefix_path.dsv
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/environment/path.sh
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/environment/path.dsv
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/local_setup.bash
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/local_setup.sh
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/local_setup.zsh
+[0.165s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/local_setup.dsv
+[0.165s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/package.dsv
+[0.174s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/ament_index/resource_index/packages/astrobee_handrail_30
+[0.174s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/cmake/astrobee_handrail_30Config.cmake
+[0.174s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/cmake/astrobee_handrail_30Config-version.cmake
+[0.174s] -- Up-to-date symlink: /src/astrobee/src/install/astrobee_handrail_30/share/astrobee_handrail_30/package.xml
+[0.253s] Invoked command in '/src/astrobee/src/build/astrobee_handrail_30' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_handrail_30

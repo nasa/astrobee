@@ -1,0 +1,9 @@
+[01m[K/src/astrobee/src/shared/config_reader/src/config_reader.cc:[m[K In copy constructor ‘[01m[Kconfig_reader::ConfigReader::FileHeader::FileHeader(const config_reader::ConfigReader::FileHeader&)[m[K’:
+[01m[K/src/astrobee/src/shared/config_reader/src/config_reader.cc:468:15:[m[K [01;35m[Kwarning: [m[Kimplicitly-declared ‘[01m[Kconstexpr config_reader::WatchFiles::Watch& config_reader::WatchFiles::Watch::operator=(const config_reader::WatchFiles::Watch&)[m[K’ is deprecated [[01;35m[K-Wdeprecated-copy[m[K]
+  468 |   watch_ = fh.[01;35m[Kwatch_[m[K;
+      |               [01;35m[K^~~~~~[m[K
+In file included from [01m[K/src/astrobee/src/shared/config_reader/include/config_reader/config_reader.h:44[m[K,
+                 from [01m[K/src/astrobee/src/shared/config_reader/src/config_reader.cc:22[m[K:
+[01m[K/src/astrobee/src/shared/config_reader/include/config_reader/watch_files.h:75:5:[m[K [01;36m[Knote: [m[Kbecause ‘[01m[Kconfig_reader::WatchFiles::Watch[m[K’ has user-provided ‘[01m[Kconfig_reader::WatchFiles::Watch::Watch(const config_reader::WatchFiles::Watch&)[m[K’
+   75 |     [01;36m[KWatch[m[K(const Watch &w)
+      |     [01;36m[K^~~~~[m[K

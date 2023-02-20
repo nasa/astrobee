@@ -1,0 +1,11 @@
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CATKIN_INSTALL_INTO_PREFIX_ROOT
+    CATKIN_SYMLINK_INSTALL
+
+
+[01m[K/src/astrobee/src/gnc/pmc/src/pmc_sim.cc:[m[K In member function ‘[01m[Kvoid pmc::Blower::BlowerBodyDynamics(const Vector3f&, Eigen::Matrix<float, 6, 1>&, float)[m[K’:
+[01m[K/src/astrobee/src/gnc/pmc/src/pmc_sim.cc:160:30:[m[K [01;35m[Kwarning: [m[Kvariable ‘[01m[Ka[m[K’ set but not used [[01;35m[K-Wunused-but-set-variable[m[K]
+  160 |   Eigen::Matrix<float, 6, 1> [01;35m[Ka[m[K = nozzle_thrusts;
+      |                              [01;35m[K^[m[K

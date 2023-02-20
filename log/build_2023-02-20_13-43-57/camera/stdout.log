@@ -1,0 +1,91 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake (found version "1.71.0") found components: system filesystem 
+-- Found OpenCV: /usr/local (found suitable version "3.3.1", minimum required is "3.3.1") 
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+-- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+-- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+-- Found ff_common: 1.0.0 (/src/astrobee/src/install/ff_common/share/ff_common/cmake)
+-- Found config_reader: 1.0.0 (/src/astrobee/src/install/config_reader/share/config_reader/cmake)
+-- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)
+-- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /src/astrobee/src/build/camera
+[35m[1mScanning dependencies of target camera[0m
+[35m[1mScanning dependencies of target gtest_main[0m
+[35m[1mScanning dependencies of target gtest[0m
+[  7%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[ 15%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[ 30%] [32mBuilding CXX object CMakeFiles/camera.dir/src/camera_model.cc.o[0m
+[ 30%] [32mBuilding CXX object CMakeFiles/camera.dir/src/camera_params.cc.o[0m
+[ 38%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[ 38%] Built target gtest_main
+[ 46%] [32m[1mLinking CXX static library libcamera.a[0m
+[ 46%] Built target camera
+[35m[1mScanning dependencies of target undistort_image[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/undistort_image.dir/tools/undistort_image.cc.o[0m
+[ 61%] [32m[1mLinking CXX executable undistort_image[0m
+[ 61%] Built target undistort_image
+[ 69%] [32m[1mLinking CXX static library libgtest.a[0m
+[ 69%] Built target gtest
+[35m[1mScanning dependencies of target test_camera_params[0m
+[35m[1mScanning dependencies of target test_camera_model[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/test_camera_params.dir/test/test_camera_params.cc.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/test_camera_model.dir/test/test_camera_model.cc.o[0m
+[ 92%] [32m[1mLinking CXX executable test_camera_params[0m
+[ 92%] Built target test_camera_params
+[100%] [32m[1mLinking CXX executable test_camera_model[0m
+[100%] Built target test_camera_model
+-- Install configuration: ""
+-- Installing: /src/astrobee/src/install/camera/share/camera/environment/library_path.sh
+-- Installing: /src/astrobee/src/install/camera/share/camera/environment/library_path.dsv
+-- Installing: /src/astrobee/src/install/camera/lib/libcamera.a
+-- Installing: /src/astrobee/src/install/camera/bin/undistort_image
+-- Set runtime path of "/src/astrobee/src/install/camera/bin/undistort_image" to ""
+-- Installing: /src/astrobee/src/install/camera/include/camera
+-- Installing: /src/astrobee/src/install/camera/include/camera/camera_params.h
+-- Installing: /src/astrobee/src/install/camera/include/camera/camera_model.h
+-- Installing: /src/astrobee/src/install/camera/share/ament_index/resource_index/package_run_dependencies/camera
+-- Installing: /src/astrobee/src/install/camera/share/ament_index/resource_index/parent_prefix_path/camera
+-- Installing: /src/astrobee/src/install/camera/share/camera/environment/ament_prefix_path.sh
+-- Installing: /src/astrobee/src/install/camera/share/camera/environment/ament_prefix_path.dsv
+-- Installing: /src/astrobee/src/install/camera/share/camera/environment/path.sh
+-- Installing: /src/astrobee/src/install/camera/share/camera/environment/path.dsv
+-- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.bash
+-- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.sh
+-- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.zsh
+-- Installing: /src/astrobee/src/install/camera/share/camera/local_setup.dsv
+-- Installing: /src/astrobee/src/install/camera/share/camera/package.dsv
+-- Installing: /src/astrobee/src/install/camera/share/ament_index/resource_index/packages/camera
+-- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraExport.cmake
+-- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/camera/share/camera/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraConfig.cmake
+-- Installing: /src/astrobee/src/install/camera/share/camera/cmake/cameraConfig-version.cmake
+-- Installing: /src/astrobee/src/install/camera/share/camera/package.xml

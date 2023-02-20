@@ -1,0 +1,156 @@
+[0.011s] Invoking command in '/src/astrobee/src/build/ff_util': AMENT_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake /src/astrobee/src/shared/ff_util -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/ff_util
+[0.052s] -- The C compiler identification is GNU 9.4.0
+[0.088s] -- The CXX compiler identification is GNU 9.4.0
+[0.091s] -- Check for working C compiler: /usr/bin/cc
+[0.135s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.136s] -- Detecting C compiler ABI info
+[0.181s] -- Detecting C compiler ABI info - done
+[0.188s] -- Detecting C compile features
+[0.188s] -- Detecting C compile features - done
+[0.190s] -- Check for working CXX compiler: /usr/bin/c++
+[0.240s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.241s] -- Detecting CXX compiler ABI info
+[0.294s] -- Detecting CXX compiler ABI info - done
+[0.302s] -- Detecting CXX compile features
+[0.303s] -- Detecting CXX compile features - done
+[0.304s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.395s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.433s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.453s] -- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+[0.489s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.494s] -- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+[0.524s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.569s] -- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+[0.571s] -- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+[0.586s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.700s] -- Found ff_common: 1.0.0 (/src/astrobee/src/install/ff_common/share/ff_common/cmake)
+[0.701s] -- Found config_reader: 1.0.0 (/src/astrobee/src/install/config_reader/share/config_reader/cmake)
+[0.703s] -- Found ff_msgs: 0.0.0 (/src/astrobee/src/install/ff_msgs/share/ff_msgs/cmake)
+[0.964s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/rolling/share/eigen3_cmake_module/cmake)
+[0.966s] -- Found Eigen3: TRUE (found version "3.3.7") 
+[1.811s] -- Found msg_conversions: 1.0.0 (/src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake)
+[1.826s] -- Found ament_lint_auto: 0.11.4 (/opt/ros/rolling/share/ament_lint_auto/cmake)
+[1.868s] -- Found launch_testing_ament_cmake: 0.21.0 (/opt/ros/rolling/share/launch_testing_ament_cmake/cmake)
+[1.869s] -- Found python_cmake_module: 0.8.1 (/opt/ros/rolling/share/python_cmake_module/cmake)
+[1.884s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+[1.888s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+[1.888s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.888s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+[1.888s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+[1.902s] -- Found PythonExtra: .so  
+[1.915s] -- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+[1.917s] -- Looking for pthread.h
+[1.964s] -- Looking for pthread.h - found
+[1.964s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[2.010s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+[2.010s] -- Check if compiler accepts -pthread
+[2.060s] -- Check if compiler accepts -pthread - yes
+[2.061s] -- Found Threads: TRUE  
+[2.087s] -- Configuring done
+[2.146s] -- Generating done
+[2.148s] -- Build files have been written to: /src/astrobee/src/build/ff_util
+[2.156s] Invoked command in '/src/astrobee/src/build/ff_util' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake /src/astrobee/src/shared/ff_util -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/ff_util
+[2.158s] Invoking command in '/src/astrobee/src/build/ff_util': AMENT_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /src/astrobee/src/build/ff_util -- -j20 -l20
+[2.186s] [35m[1mScanning dependencies of target gtest[0m
+[2.187s] [35m[1mScanning dependencies of target gtest_main[0m
+[2.187s] [35m[1mScanning dependencies of target ff_component[0m
+[2.187s] [35m[1mScanning dependencies of target ff_flight[0m
+[2.195s] [  3%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[2.196s] [  6%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[2.215s] [ 10%] [32mBuilding CXX object CMakeFiles/ff_component.dir/src/ff_component/ff_component.cc.o[0m
+[2.234s] [ 13%] [32mBuilding CXX object CMakeFiles/ff_flight.dir/src/ff_flight/ff_flight.cc.o[0m
+[2.814s] [ 16%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[2.879s] [ 16%] Built target gtest_main
+[6.571s] [ 20%] [32m[1mLinking CXX static library libff_flight.a[0m
+[6.596s] [ 20%] Built target ff_flight
+[8.950s] [ 23%] [32m[1mLinking CXX static library libgtest.a[0m
+[8.980s] [ 23%] Built target gtest
+[9.580s] [ 26%] [32m[1mLinking CXX static library libff_component.a[0m
+[9.607s] [ 26%] Built target ff_component
+[9.618s] [35m[1mScanning dependencies of target test_ff_action_deadline_timeout[0m
+[9.618s] [35m[1mScanning dependencies of target test_ff_action_active_timeout[0m
+[9.619s] [35m[1mScanning dependencies of target test_ff_service[0m
+[9.619s] [35m[1mScanning dependencies of target test_ff_timer[0m
+[9.619s] [35m[1mScanning dependencies of target test_latched_topics[0m
+[9.619s] [35m[1mScanning dependencies of target test_ff_action_preempt_own_goal[0m
+[9.619s] [35m[1mScanning dependencies of target test_ff_action_cancel_own_goal[0m
+[9.619s] [35m[1mScanning dependencies of target test_ff_action_response_timeout[0m
+[9.619s] [35m[1mScanning dependencies of target test_ff_action_connect_timeout[0m
+[9.620s] [35m[1mScanning dependencies of target test_ff_action_nominal_behavior[0m
+[9.620s] [35m[1mScanning dependencies of target test_ff_action_preempt_others_goal[0m
+[9.674s] [ 30%] [32mBuilding CXX object CMakeFiles/test_latched_topics.dir/test/test_latched_topics.cc.o[0m
+[9.677s] [ 33%] [32mBuilding CXX object CMakeFiles/test_ff_timer.dir/test/test_ff_timer.cc.o[0m
+[9.684s] [ 36%] [32mBuilding CXX object CMakeFiles/test_ff_service.dir/test/test_ff_service.cc.o[0m
+[9.692s] [ 40%] [32mBuilding CXX object CMakeFiles/test_ff_action_response_timeout.dir/test/test_ff_action_response_timeout.cc.o[0m
+[9.695s] [ 43%] [32mBuilding CXX object CMakeFiles/test_ff_action_nominal_behavior.dir/test/test_ff_action_nominal_behavior.cc.o[0m
+[9.695s] [ 46%] [32mBuilding CXX object CMakeFiles/test_ff_action_preempt_own_goal.dir/test/test_ff_action_preempt_own_goal.cc.o[0m
+[9.696s] [ 50%] [32mBuilding CXX object CMakeFiles/test_ff_action_connect_timeout.dir/test/test_ff_action_connect_timeout.cc.o[0m
+[9.700s] [ 53%] [32mBuilding CXX object CMakeFiles/test_ff_action_active_timeout.dir/test/test_ff_action_active_timeout.cc.o[0m
+[9.703s] [ 56%] [32mBuilding CXX object CMakeFiles/test_ff_action_deadline_timeout.dir/test/test_ff_action_deadline_timeout.cc.o[0m
+[9.703s] [ 60%] [32mBuilding CXX object CMakeFiles/test_ff_action_preempt_others_goal.dir/test/test_ff_action_preempt_others_goal.cc.o[0m
+[9.715s] [ 63%] [32mBuilding CXX object CMakeFiles/test_ff_action_cancel_own_goal.dir/test/test_ff_action_cancel_own_goal.cc.o[0m
+[13.640s] [ 66%] [32m[1mLinking CXX executable test_ff_timer[0m
+[13.784s] [ 66%] Built target test_ff_timer
+[17.852s] [ 70%] [32m[1mLinking CXX executable test_ff_action_active_timeout[0m
+[18.038s] [ 70%] Built target test_ff_action_active_timeout
+[18.149s] [ 73%] [32m[1mLinking CXX executable test_ff_action_connect_timeout[0m
+[18.375s] [ 73%] Built target test_ff_action_connect_timeout
+[18.573s] [ 76%] [32m[1mLinking CXX executable test_ff_action_deadline_timeout[0m
+[18.647s] [ 80%] [32m[1mLinking CXX executable test_ff_action_preempt_own_goal[0m
+[18.749s] [ 80%] Built target test_ff_action_deadline_timeout
+[18.775s] [ 83%] [32m[1mLinking CXX executable test_ff_service[0m
+[18.820s] [ 83%] Built target test_ff_action_preempt_own_goal
+[18.925s] [ 83%] Built target test_ff_service
+[19.377s] [ 86%] [32m[1mLinking CXX executable test_ff_action_cancel_own_goal[0m
+[19.597s] [ 86%] Built target test_ff_action_cancel_own_goal
+[20.598s] [ 90%] [32m[1mLinking CXX executable test_ff_action_nominal_behavior[0m
+[20.759s] [ 90%] Built target test_ff_action_nominal_behavior
+[20.838s] [ 93%] [32m[1mLinking CXX executable test_ff_action_preempt_others_goal[0m
+[20.892s] [ 96%] [32m[1mLinking CXX executable test_ff_action_response_timeout[0m
+[20.998s] [ 96%] Built target test_ff_action_preempt_others_goal
+[21.050s] [ 96%] Built target test_ff_action_response_timeout
+[21.505s] [100%] [32m[1mLinking CXX executable test_latched_topics[0m
+[21.660s] [100%] Built target test_latched_topics
+[21.673s] Invoked command in '/src/astrobee/src/build/ff_util' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /src/astrobee/src/build/ff_util -- -j20 -l20
+[21.706s] Invoking command in '/src/astrobee/src/build/ff_util': AMENT_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /src/astrobee/src/build/ff_util
+[21.712s] -- Install configuration: ""
+[21.712s] -- Execute custom install script
+[21.712s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/environment/library_path.sh
+[21.720s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/environment/library_path.dsv
+[21.727s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/ff_nodelet.launch
+[21.733s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ament_index/resource_index/package_run_dependencies/ff_util
+[21.740s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ament_index/resource_index/parent_prefix_path/ff_util
+[21.746s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/environment/ament_prefix_path.sh
+[21.753s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/environment/ament_prefix_path.dsv
+[21.760s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/environment/path.sh
+[21.766s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/environment/path.dsv
+[21.772s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/local_setup.bash
+[21.778s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/local_setup.sh
+[21.785s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/local_setup.zsh
+[21.791s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/local_setup.dsv
+[21.798s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/package.dsv
+[21.805s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ament_index/resource_index/packages/ff_util
+[21.812s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ament_cmake_export_targets-extras.cmake
+[21.819s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ament_cmake_export_dependencies-extras.cmake
+[21.825s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ament_cmake_export_include_directories-extras.cmake
+[21.831s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ff_utilConfig.cmake
+[21.838s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ff_utilConfig-version.cmake
+[21.844s] -- Symlinking: /src/astrobee/src/install/ff_util/share/ff_util/package.xml
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/config_client.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/config_server.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_faults.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_service.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_fsm.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_action.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_flight.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_timer.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_serialization.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/conversion.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/perf_timer.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/include/ff_util/ff_component.h
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/lib/libff_component.a
+[21.851s] -- Installing: /src/astrobee/src/install/ff_util/lib/libff_flight.a
+[21.852s] -- Installing: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ff_componentExport.cmake
+[21.852s] -- Installing: /src/astrobee/src/install/ff_util/share/ff_util/cmake/ff_componentExport-noconfig.cmake
+[21.854s] Invoked command in '/src/astrobee/src/build/ff_util' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/msg_conversions:/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/msg_conversions/lib:/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PATH=/src/astrobee/src/install/msg_conversions/bin:${PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /src/astrobee/src/build/ff_util

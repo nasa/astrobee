@@ -1,0 +1,66 @@
+[0.078s] Invoking command in '/src/astrobee/src/build/astrobee_freeflyer': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/media/astrobee_freeflyer -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee_freeflyer
+[0.136s] -- The C compiler identification is GNU 9.4.0
+[0.189s] -- The CXX compiler identification is GNU 9.4.0
+[0.192s] -- Check for working C compiler: /usr/bin/cc
+[0.240s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.241s] -- Detecting C compiler ABI info
+[0.299s] -- Detecting C compiler ABI info - done
+[0.311s] -- Detecting C compile features
+[0.311s] -- Detecting C compile features - done
+[0.314s] -- Check for working CXX compiler: /usr/bin/c++
+[0.392s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.393s] -- Detecting CXX compiler ABI info
+[0.463s] -- Detecting CXX compiler ABI info - done
+[0.473s] -- Detecting CXX compile features
+[0.474s] -- Detecting CXX compile features - done
+[0.476s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.589s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.650s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.737s] -- Configuring done
+[0.738s] -- Generating done
+[0.738s] -- Build files have been written to: /src/astrobee/src/build/astrobee_freeflyer
+[0.748s] Invoked command in '/src/astrobee/src/build/astrobee_freeflyer' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/media/astrobee_freeflyer -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee_freeflyer
+[0.751s] Invoking command in '/src/astrobee/src/build/astrobee_freeflyer': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_freeflyer -- -j20 -l20
+[0.795s] Invoked command in '/src/astrobee/src/build/astrobee_freeflyer' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_freeflyer -- -j20 -l20
+[0.825s] Invoking command in '/src/astrobee/src/build/astrobee_freeflyer': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_freeflyer
+[0.834s] -- Install configuration: ""
+[0.834s] -- Execute custom install script
+[0.834s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/environment/astrobee_freeflyer.dsv
+[0.840s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/media/materials/scripts/astrobee.material
+[0.848s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/media/materials/textures/black.png
+[0.856s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/media/materials/textures/skin_bumble.png
+[0.862s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/media/materials/textures/skin_default.png
+[0.867s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/media/materials/textures/skin_honey.png
+[0.873s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/media/materials/textures/skin_queen.png
+[0.882s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/arm_distal_link.dae
+[0.888s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/arm_proximal_link.dae
+[0.894s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/base_link.dae
+[0.902s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/body.dae
+[0.908s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/carriage.dae
+[0.913s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/gripper_left_distal_link.dae
+[0.920s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/gripper_left_proximal_link.dae
+[0.925s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/gripper_right_distal_link.dae
+[0.935s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/gripper_right_proximal_link.dae
+[0.939s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/pmc.dae
+[0.944s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/pmc_bumper.dae
+[0.950s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/pmc_skin_.dae
+[0.959s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/pmc_skin_bumble.dae
+[0.962s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/pmc_skin_honey.dae
+[0.967s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/meshes/pmc_skin_queen.dae
+[0.972s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/model.config
+[0.977s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/ament_index/resource_index/package_run_dependencies/astrobee_freeflyer
+[0.984s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/ament_index/resource_index/parent_prefix_path/astrobee_freeflyer
+[0.989s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/environment/ament_prefix_path.sh
+[0.993s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/environment/ament_prefix_path.dsv
+[1.000s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/environment/path.sh
+[1.010s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/environment/path.dsv
+[1.010s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/local_setup.bash
+[1.017s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/local_setup.sh
+[1.024s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/local_setup.zsh
+[1.028s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/local_setup.dsv
+[1.034s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/package.dsv
+[1.042s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/ament_index/resource_index/packages/astrobee_freeflyer
+[1.049s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/cmake/astrobee_freeflyerConfig.cmake
+[1.054s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/cmake/astrobee_freeflyerConfig-version.cmake
+[1.062s] -- Symlinking: /src/astrobee/src/install/astrobee_freeflyer/share/astrobee_freeflyer/package.xml
+[1.103s] Invoked command in '/src/astrobee/src/build/astrobee_freeflyer' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_freeflyer

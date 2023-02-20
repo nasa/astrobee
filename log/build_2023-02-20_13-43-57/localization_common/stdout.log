@@ -1,0 +1,115 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+-- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+-- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+-- Found ff_common: 1.0.0 (/src/astrobee/src/install/ff_common/share/ff_common/cmake)
+-- Found camera: 1.0.0 (/src/astrobee/src/install/camera/share/camera/cmake)
+-- Found config_reader: 1.0.0 (/src/astrobee/src/install/config_reader/share/config_reader/cmake)
+-- Found msg_conversions: 1.0.0 (/src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake)
+-- Found ff_msgs: 0.0.0 (/src/astrobee/src/install/ff_msgs/share/ff_msgs/cmake)
+-- Found eigen3_cmake_module: 0.1.1 (/opt/ros/rolling/share/eigen3_cmake_module/cmake)
+-- Found Eigen3: TRUE (found version "3.3.7") 
+-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake (found suitable version "1.71.0", minimum required is "1.43") found components: serialization system filesystem thread program_options date_time timer chrono regex 
+-- GTSAM include directory:  /usr/share/gtsam/cmake/../../../include
+-- Found OpenCV: /usr/local (found suitable version "3.3.1", minimum required is "3.3.1") 
+-- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)
+-- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /src/astrobee/src/build/localization_common
+[35m[1mScanning dependencies of target gtest[0m
+[35m[1mScanning dependencies of target gtest_main[0m
+[35m[1mScanning dependencies of target localization_common[0m
+[  4%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[  9%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/combined_nav_state.cc.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/averager.cc.o[0m
+[ 28%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/combined_nav_state_covariances.cc.o[0m
+[ 28%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/pose_interpolater.cc.o[0m
+[ 33%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/rate_timer.cc.o[0m
+[ 38%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/ros_timer.cc.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/time.cc.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/test_utilities.cc.o[0m
+[ 52%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/utilities.cc.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/localization_common.dir/src/timer.cc.o[0m
+[ 61%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[ 61%] Built target gtest_main
+[ 66%] [32m[1mLinking CXX static library libgtest.a[0m
+[ 66%] Built target gtest
+[ 71%] [32m[1mLinking CXX shared library liblocalization_common.so[0m
+[ 71%] Built target localization_common
+[35m[1mScanning dependencies of target test_utilities_localization_common[0m
+[35m[1mScanning dependencies of target test_timestamped_set[0m
+[35m[1mScanning dependencies of target test_pose_interpolater[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/test_utilities_localization_common.dir/test/test_utilities.cc.o[0m
+[ 80%] [32mBuilding CXX object CMakeFiles/test_timestamped_set.dir/test/test_timestamped_set.cc.o[0m
+[ 85%] [32mBuilding CXX object CMakeFiles/test_pose_interpolater.dir/test/test_pose_interpolater.cc.o[0m
+[ 90%] [32m[1mLinking CXX executable test_pose_interpolater[0m
+[ 95%] [32m[1mLinking CXX executable test_timestamped_set[0m
+[ 95%] Built target test_timestamped_set
+[ 95%] Built target test_pose_interpolater
+[100%] [32m[1mLinking CXX executable test_utilities_localization_common[0m
+[100%] Built target test_utilities_localization_common
+-- Install configuration: ""
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/environment/library_path.sh
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/environment/library_path.dsv
+-- Installing: /src/astrobee/src/install/localization_common/lib/liblocalization_common.so
+-- Set runtime path of "/src/astrobee/src/install/localization_common/lib/liblocalization_common.so" to ""
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/timer.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/utilities.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/rate_timer.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/measurement_buffer.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/combined_nav_state.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/pose_interpolater.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/combined_nav_state_covariances.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/time.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/feature_point_3d.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/averager.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/pose_with_covariance.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/test_utilities.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/image_correspondences.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/ros_timer.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/timestamped_set.h
+-- Installing: /src/astrobee/src/install/localization_common/include/localization_common/logger.h
+-- Installing: /src/astrobee/src/install/localization_common/share/ament_index/resource_index/package_run_dependencies/localization_common
+-- Installing: /src/astrobee/src/install/localization_common/share/ament_index/resource_index/parent_prefix_path/localization_common
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/environment/ament_prefix_path.sh
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/environment/ament_prefix_path.dsv
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/environment/path.sh
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/environment/path.dsv
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.bash
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.sh
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.zsh
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.dsv
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/package.dsv
+-- Installing: /src/astrobee/src/install/localization_common/share/ament_index/resource_index/packages/localization_common
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonExport.cmake
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonExport-noconfig.cmake
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonConfig.cmake
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonConfig-version.cmake
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/package.xml

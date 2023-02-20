@@ -1,0 +1,253 @@
+[0.088s] Invoking command in '/src/astrobee/src/build/astrobee': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/astrobee -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee
+[0.152s] -- The C compiler identification is GNU 9.4.0
+[0.198s] -- The CXX compiler identification is GNU 9.4.0
+[0.203s] -- Check for working C compiler: /usr/bin/cc
+[0.246s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.247s] -- Detecting C compiler ABI info
+[0.304s] -- Detecting C compiler ABI info - done
+[0.312s] -- Detecting C compile features
+[0.312s] -- Detecting C compile features - done
+[0.314s] -- Check for working CXX compiler: /usr/bin/c++
+[0.383s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.385s] -- Detecting CXX compiler ABI info
+[0.454s] -- Detecting CXX compiler ABI info - done
+[0.467s] -- Detecting CXX compile features
+[0.467s] -- Detecting CXX compile features - done
+[0.468s] -- ------------------------------------------
+[0.468s] -- Astrobee is being built using ROS2.
+[0.468s] -- ------------------------------------------
+[0.470s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.609s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.668s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.704s] -- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+[0.764s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.765s] -- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+[0.795s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.850s] -- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+[0.851s] -- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+[0.876s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[1.163s] -- Configuring done
+[1.166s] -- Generating done
+[1.166s] -- Build files have been written to: /src/astrobee/src/build/astrobee
+[1.182s] Invoked command in '/src/astrobee/src/build/astrobee' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/astrobee -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee
+[1.184s] Invoking command in '/src/astrobee/src/build/astrobee': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee -- -j20 -l20
+[1.215s] [35m[1mScanning dependencies of target ament_cmake_python_symlink_utilities[0m
+[1.224s] Built target ament_cmake_python_symlink_utilities
+[1.232s] [35m[1mScanning dependencies of target ament_cmake_python_build_utilities_egg[0m
+[1.369s] running egg_info
+[1.370s] creating utilities.egg-info
+[1.370s] writing utilities.egg-info/PKG-INFO
+[1.370s] writing dependency_links to utilities.egg-info/dependency_links.txt
+[1.370s] writing top-level names to utilities.egg-info/top_level.txt
+[1.372s] writing manifest file 'utilities.egg-info/SOURCES.txt'
+[1.400s] reading manifest file 'utilities.egg-info/SOURCES.txt'
+[1.401s] writing manifest file 'utilities.egg-info/SOURCES.txt'
+[1.418s] Built target ament_cmake_python_build_utilities_egg
+[1.426s] Invoked command in '/src/astrobee/src/build/astrobee' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee -- -j20 -l20
+[1.442s] Invoking command in '/src/astrobee/src/build/astrobee': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee
+[1.447s] -- Install configuration: ""
+[1.448s] -- Execute custom install script
+[1.448s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/environment/pythonpath.sh
+[1.454s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/environment/pythonpath.dsv
+[1.461s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities-0.0.0-py3.8.egg-info/PKG-INFO
+[1.467s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities-0.0.0-py3.8.egg-info/SOURCES.txt
+[1.473s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities-0.0.0-py3.8.egg-info/dependency_links.txt
+[1.479s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities-0.0.0-py3.8.egg-info/top_level.txt
+[1.486s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities/__init__.py
+[1.492s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities/utilities.py
+[1.500s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/astrobee_markers_ids.config
+[1.506s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/arm.config
+[1.512s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/dock.config
+[1.518s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow.config
+[1.524s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/audio_recording.json
+[1.530s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/charging.json
+[1.536s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/failiure.json
+[1.543s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/hibernate.json
+[1.548s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/low_battery.json
+[1.554s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/moving.json
+[1.563s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/need_help.json
+[1.569s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/power_left_only.json
+[1.575s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/power_off.json
+[1.581s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/power_on.json
+[1.590s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/stop_all_lights.json
+[1.596s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/success.json
+[1.602s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/turning_down.json
+[1.608s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/turning_left.json
+[1.614s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/light_flow/turning_up.json
+[1.620s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/behaviors/perch.config
+[1.627s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/cameras.config
+[1.633s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/commands.config
+[1.639s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/common_lua.config
+[1.646s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/astrobee_astrobee_bridge.config
+[1.654s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/dds/NDDS_DISCOVERY_PEERS
+[1.662s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/dds/RAPID_QOS_PROFILES.xml
+[1.671s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/dds_intercomms/NDDS_DISCOVERY_PEERS
+[1.680s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/dds_intercomms/RAPID_QOS_PROFILES.xml
+[1.686s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/dds_ros_bridge.config
+[1.693s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/communications/ground_dds_ros_bridge.config
+[1.699s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/context.config
+[1.705s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/dock_markers_print.config
+[1.712s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/dock_markers_specs.config
+[1.718s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/dock_markers_world.config
+[1.724s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/faults.config
+[1.730s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/flight.config
+[1.736s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/geometry.config
+[1.743s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/gnc.config
+[1.749s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/graph_localizer.config
+[1.755s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/eps_driver.config
+[1.762s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/epson_imu.config
+[1.768s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/flashlights.config
+[1.774s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/laser.config
+[1.781s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/perching_arm.config
+[1.789s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/pmc_actuator.config
+[1.796s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/signal_lights.config
+[1.802s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/smart_dock.config
+[1.809s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/speed_cam.config
+[1.815s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/temp_monitor.config
+[1.821s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/hw/vive.config
+[1.827s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/localization.config
+[1.835s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/localization/depth_odometry.config
+[1.841s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/localization/handrail_detect.config
+[1.847s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/localization/localization_manager.config
+[1.853s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/localization/marker_tracker.config
+[1.859s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/localization/vive_localization.config
+[1.864s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/cpu_mem_monitor.config
+[1.870s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/data_bagger.config
+[1.876s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/disk_monitor.config
+[1.883s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/executive.config
+[1.889s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/fault_functions.config
+[1.895s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/fault_table.config
+[1.902s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/sys_monitor.config
+[1.909s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/management/sys_monitor_fault_info.config
+[1.916s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/marker_margins_1.config
+[1.922s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/marker_margins_2.config
+[1.928s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/markers_in_world.config
+[1.934s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/matrix.config
+[1.940s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/matrix.lua
+[1.945s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/mobility/choreographer.config
+[1.951s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/mobility/mapper.config
+[1.957s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/mobility/planner_qp.config
+[1.962s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/mobility/planner_trapezoidal.config
+[1.968s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/optical_flow.config
+[1.973s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/overhead_tracker.config
+[1.979s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/bsharp.config
+[1.984s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/bsharp2.config
+[1.990s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/bumble.config
+[1.995s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/flatsat.config
+[2.001s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/honey.config
+[2.007s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/killer.config
+[2.014s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/melissa.config
+[2.020s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/p4c.config
+[2.027s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/p4d.config
+[2.033s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/queen.config
+[2.039s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/sim.config
+[2.045s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/sim_pub.config
+[2.050s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/robots/wannabee.config
+[2.056s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/rotations.lua
+[2.062s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/simulation/ar_tags.config
+[2.067s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/simulation/handrail_detect.config
+[2.072s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/simulation/optical_flow.config
+[2.078s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/simulation/simulation.config
+[2.083s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/simulation/sparse_map.config
+[2.088s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/simulation/vive.config
+[2.094s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/test.lua
+[2.100s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tests/common_lua.config
+[2.105s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tests/context.config
+[2.111s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tests/faults.config
+[2.116s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tests/test_rotations.lua
+[2.123s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tools/camera_target_based_intrinsics_calibrator.config
+[2.128s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tools/ekf_bag.config
+[2.134s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tools/graph_bag.config
+[2.140s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tools/visualeyez.config
+[2.146s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/tools/visualization_node.config
+[2.152s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/transforms.config
+[2.158s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/worlds/granite.config
+[2.163s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/worlds/iss.config
+[2.169s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/config/worlds/mgtf.config
+[2.176s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/astrobee.launch
+[2.181s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/astrobee.launch.py
+[2.186s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/bagrecord.launch
+[2.192s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/bagreplay.launch
+[2.198s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/descriptions.launch
+[2.204s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/descriptions.launch.py
+[2.210s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/gds.launch
+[2.216s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/gds.launch.py
+[2.222s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/gviz.launch
+[2.228s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/gviz.launch.py
+[2.234s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/rqt.launch
+[2.240s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/rqt.launch.py
+[2.245s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/rviz.launch
+[2.250s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/rviz.launch.py
+[2.256s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/sim_start.launch
+[2.261s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/sim_start.launch.py
+[2.267s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/stats.launch
+[2.272s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/stats.launch.py
+[2.278s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/synthetic.launch
+[2.283s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/synthetic.launch.py
+[2.289s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/visualeyez.launch
+[2.295s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/controller/vive.launch
+[2.300s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/granite.launch
+[2.306s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/mgtf.launch
+[2.312s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/enable_localization
+[2.318s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/loc_only.launch
+[2.325s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/loc_rviz.launch
+[2.330s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/localization_from_bag.launch
+[2.335s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/record_localization.launch
+[2.340s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/replay_localization.launch
+[2.345s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/offline_localization/sparse_mapping_matching_from_bag.launch
+[2.350s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/pico.launch
+[2.356s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/robot/LLP.launch
+[2.361s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/robot/LLP.launch.py
+[2.367s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/robot/MLP.launch
+[2.373s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/robot/MLP.launch.py
+[2.378s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/sim.launch
+[2.384s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/sim.launch.py
+[2.389s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/spawn.launch
+[2.396s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/launch/spawn.launch.py
+[2.402s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/.gitignore
+[2.408s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/debug.config
+[2.414s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/depthcams.rviz
+[2.419s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/diagnostics.yaml
+[2.425s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/granite_lab_markers.config
+[2.431s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/granite_lab_tags.xml
+[2.437s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/gui.perspective
+[2.442s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/logging.config
+[2.448s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/gateway.rviz
+[2.454s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/granite.rviz
+[2.459s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/granite_viz.rviz
+[2.465s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/iss.rviz
+[2.470s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/iss_ros2.rviz
+[2.475s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/iss_viz.rviz
+[2.481s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/loc_granite.rviz
+[2.486s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/loc_iss.rviz
+[2.492s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/rviz/video.rviz
+[2.497s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/signal_config/.gitignore
+[2.503s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/visualeyez.bin
+[2.509s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/vive_granite.bin
+[2.514s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/zones/granite.bin
+[2.519s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/resources/zones/iss.bin
+[2.525s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/astrobee/apk_print_version.sh
+[2.531s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/astrobee/check_env.sh
+[2.536s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/astrobee/print_version.sh
+[2.541s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/astrobee/cpu_print_version.sh
+[2.549s] -- Symlinking: /src/astrobee/src/install/astrobee/lib/astrobee/launch_gds.sh
+[2.555s] -- Symlinking: /src/astrobee/src/install/astrobee/env_wrapper.sh
+[2.560s] -- Symlinking: /src/astrobee/src/install/astrobee/share/ament_index/resource_index/package_run_dependencies/astrobee
+[2.565s] -- Symlinking: /src/astrobee/src/install/astrobee/share/ament_index/resource_index/parent_prefix_path/astrobee
+[2.571s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/environment/ament_prefix_path.sh
+[2.576s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/environment/ament_prefix_path.dsv
+[2.582s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/environment/path.sh
+[2.588s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/environment/path.dsv
+[2.594s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/local_setup.bash
+[2.600s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/local_setup.sh
+[2.606s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/local_setup.zsh
+[2.612s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/local_setup.dsv
+[2.621s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/package.dsv
+[2.628s] -- Symlinking: /src/astrobee/src/install/astrobee/share/ament_index/resource_index/packages/astrobee
+[2.634s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/cmake/astrobeeConfig.cmake
+[2.640s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/cmake/astrobeeConfig-version.cmake
+[2.646s] -- Symlinking: /src/astrobee/src/install/astrobee/share/astrobee/package.xml
+[2.674s] Listing '/src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities'...
+[2.674s] Compiling '/src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities/__init__.py'...
+[2.674s] Compiling '/src/astrobee/src/install/astrobee/lib/python3.8/site-packages/utilities/utilities.py'...
+[2.681s] Invoked command in '/src/astrobee/src/build/astrobee' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee

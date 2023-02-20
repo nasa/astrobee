@@ -1,0 +1,49 @@
+[0.058s] Invoking command in '/src/astrobee/src/build/astrobee_handrail_41_5': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/media/astrobee_handrail_41_5 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee_handrail_41_5
+[0.106s] -- The C compiler identification is GNU 9.4.0
+[0.152s] -- The CXX compiler identification is GNU 9.4.0
+[0.157s] -- Check for working C compiler: /usr/bin/cc
+[0.201s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.202s] -- Detecting C compiler ABI info
+[0.259s] -- Detecting C compiler ABI info - done
+[0.272s] -- Detecting C compile features
+[0.272s] -- Detecting C compile features - done
+[0.275s] -- Check for working CXX compiler: /usr/bin/c++
+[0.333s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.334s] -- Detecting CXX compiler ABI info
+[0.399s] -- Detecting CXX compiler ABI info - done
+[0.412s] -- Detecting CXX compile features
+[0.413s] -- Detecting CXX compile features - done
+[0.415s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.534s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[0.587s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.667s] -- Configuring done
+[0.668s] -- Generating done
+[0.669s] -- Build files have been written to: /src/astrobee/src/build/astrobee_handrail_41_5
+[0.678s] Invoked command in '/src/astrobee/src/build/astrobee_handrail_41_5' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /src/astrobee/src/description/media/astrobee_handrail_41_5 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/src/astrobee/src/install/astrobee_handrail_41_5
+[0.680s] Invoking command in '/src/astrobee/src/build/astrobee_handrail_41_5': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_handrail_41_5 -- -j20 -l20
+[0.725s] Invoked command in '/src/astrobee/src/build/astrobee_handrail_41_5' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /src/astrobee/src/build/astrobee_handrail_41_5 -- -j20 -l20
+[0.764s] Invoking command in '/src/astrobee/src/build/astrobee_handrail_41_5': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_handrail_41_5
+[0.775s] -- Install configuration: ""
+[0.775s] -- Execute custom install script
+[0.775s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/environment/astrobee_handrail_41_5.dsv
+[0.776s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/urdf/model.urdf
+[0.786s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/media/materials/textures/blue.png
+[0.789s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/media/materials/textures/silver.png
+[0.796s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/meshes/handrail_41_5.dae
+[0.804s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/model.config
+[0.805s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/ament_index/resource_index/package_run_dependencies/astrobee_handrail_41_5
+[0.813s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/ament_index/resource_index/parent_prefix_path/astrobee_handrail_41_5
+[0.818s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/environment/ament_prefix_path.sh
+[0.823s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/environment/ament_prefix_path.dsv
+[0.829s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/environment/path.sh
+[0.834s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/environment/path.dsv
+[0.841s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/local_setup.bash
+[0.847s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/local_setup.sh
+[0.854s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/local_setup.zsh
+[0.861s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/local_setup.dsv
+[0.868s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/package.dsv
+[0.874s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/ament_index/resource_index/packages/astrobee_handrail_41_5
+[0.881s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/cmake/astrobee_handrail_41_5Config.cmake
+[0.889s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/cmake/astrobee_handrail_41_5Config-version.cmake
+[0.894s] -- Symlinking: /src/astrobee/src/install/astrobee_handrail_41_5/share/astrobee_handrail_41_5/package.xml
+[0.902s] Invoked command in '/src/astrobee/src/build/astrobee_handrail_41_5' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /src/astrobee/src/build/astrobee_handrail_41_5

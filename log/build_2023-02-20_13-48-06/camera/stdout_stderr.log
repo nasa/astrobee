@@ -1,0 +1,32 @@
+[ 15%] Built target gtest
+[ 30%] Built target gtest_main
+[ 53%] Built target camera
+[ 69%] Built target undistort_image
+[ 84%] Built target test_camera_params
+[100%] Built target test_camera_model
+-- Install configuration: ""
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/environment/library_path.sh
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/environment/library_path.dsv
+-- Up-to-date: /src/astrobee/src/install/camera/lib/libcamera.a
+-- Up-to-date: /src/astrobee/src/install/camera/bin/undistort_image
+-- Up-to-date: /src/astrobee/src/install/camera/include/camera
+-- Up-to-date: /src/astrobee/src/install/camera/include/camera/camera_params.h
+-- Up-to-date: /src/astrobee/src/install/camera/include/camera/camera_model.h
+-- Up-to-date: /src/astrobee/src/install/camera/share/ament_index/resource_index/package_run_dependencies/camera
+-- Up-to-date: /src/astrobee/src/install/camera/share/ament_index/resource_index/parent_prefix_path/camera
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/environment/ament_prefix_path.sh
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/environment/ament_prefix_path.dsv
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/environment/path.sh
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/environment/path.dsv
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/local_setup.bash
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/local_setup.sh
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/local_setup.zsh
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/local_setup.dsv
+-- Installing: /src/astrobee/src/install/camera/share/camera/package.dsv
+-- Up-to-date: /src/astrobee/src/install/camera/share/ament_index/resource_index/packages/camera
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/cmake/cameraExport.cmake
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/cmake/cameraExport-noconfig.cmake
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/cmake/cameraConfig.cmake
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/cmake/cameraConfig-version.cmake
+-- Up-to-date: /src/astrobee/src/install/camera/share/camera/package.xml

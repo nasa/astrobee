@@ -1,0 +1,35 @@
+[0.010s] Invoking command in '/src/astrobee/src/build/msg_conversions': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /src/astrobee/src/build/msg_conversions -- -j20 -l20
+[0.050s] [ 33%] Built target msg_conversions
+[0.074s] [ 83%] Built target pose_stamped_msg_cnv
+[0.074s] [100%] Built target landmark_msg_cnv
+[0.082s] Invoked command in '/src/astrobee/src/build/msg_conversions' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /src/astrobee/src/build/msg_conversions -- -j20 -l20
+[0.100s] Invoking command in '/src/astrobee/src/build/msg_conversions': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /src/astrobee/src/build/msg_conversions
+[0.105s] -- Install configuration: ""
+[0.106s] -- Execute custom install script
+[0.106s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/library_path.sh
+[0.106s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/library_path.dsv
+[0.106s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/bin/landmark_msg_cnv
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/bin/pose_stamped_msg_cnv
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/package_run_dependencies/msg_conversions
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/parent_prefix_path/msg_conversions
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/ament_prefix_path.sh
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/ament_prefix_path.dsv
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/path.sh
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/path.dsv
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.bash
+[0.107s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.sh
+[0.108s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.zsh
+[0.108s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.dsv
+[0.108s] -- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/package.dsv
+[0.114s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/packages/msg_conversions
+[0.114s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/ament_cmake_export_targets-extras.cmake
+[0.114s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/ament_cmake_export_include_directories-extras.cmake
+[0.114s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsConfig.cmake
+[0.114s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsConfig-version.cmake
+[0.114s] -- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/package.xml
+[0.114s] -- Up-to-date: /src/astrobee/src/install/msg_conversions/include/msg_conversions
+[0.114s] -- Up-to-date: /src/astrobee/src/install/msg_conversions/include/msg_conversions/msg_conversions.h
+[0.114s] -- Up-to-date: /src/astrobee/src/install/msg_conversions/lib/libmsg_conversions.a
+[0.116s] -- Up-to-date: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsExport.cmake
+[0.116s] -- Up-to-date: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsExport-noconfig.cmake
+[0.119s] Invoked command in '/src/astrobee/src/build/msg_conversions' returned '0': AMENT_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/src/astrobee/src/install/config_reader:/src/astrobee/src/install/ff_msgs:/src/astrobee/src/install/ff_common:/opt/ros/rolling LD_LIBRARY_PATH=/src/astrobee/src/install/config_reader/lib:/src/astrobee/src/install/ff_msgs/lib:/src/astrobee/src/install/ff_common/lib:${LD_LIBRARY_PATH} PYTHONPATH=/src/astrobee/src/install/ff_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /src/astrobee/src/build/msg_conversions

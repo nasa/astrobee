@@ -1,0 +1,11 @@
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CATKIN_INSTALL_INTO_PREFIX_ROOT
+    CATKIN_SYMLINK_INSTALL
+
+
+[01m[K/src/astrobee/src/localization/camera/tools/undistort_image.cc:[m[K In function ‘[01m[Kint main(int, char**)[m[K’:
+[01m[K/src/astrobee/src/localization/camera/tools/undistort_image.cc:185:13:[m[K [01;35m[Kwarning: [m[Kvariable ‘[01m[Kstart[m[K’ set but not used [[01;35m[K-Wunused-but-set-variable[m[K]
+  185 |   cv::Vec2f [01;35m[Kstart[m[K = floating_remap.at<cv::Vec2f>(0, 0);
+      |             [01;35m[K^~~~~[m[K

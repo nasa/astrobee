@@ -1,0 +1,38 @@
+In file included from [01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:19[m[K:
+[01m[K/src/astrobee/src/localization/ground_truth_localizer/include/ground_truth_localizer/ground_truth_localizer_nodelet.h:75:69:[m[K [01;35m[Kwarning: [m[K‘[01m[Kgeometry_msgs::msg::PoseStamped_<std::allocator<void> >::ConstPtr[m[K’ is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+   75 |   void PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose[01;35m[K)[m[K;
+      |                                                                     [01;35m[K^[m[K
+In file included from [01m[K/opt/ros/rolling/include/geometry_msgs/msg/pose_stamped.hpp:7[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/include/ground_truth_localizer/ground_truth_localizer_nodelet.h:34[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:19[m[K:
+[01m[K/opt/ros/rolling/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp:115:5:[m[K [01;36m[Knote: [m[Kdeclared here
+  115 |     [01;36m[KConstPtr[m[K;
+      |     [01;36m[K^~~~~~~~[m[K
+In file included from [01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:19[m[K:
+[01m[K/src/astrobee/src/localization/ground_truth_localizer/include/ground_truth_localizer/ground_truth_localizer_nodelet.h:77:72:[m[K [01;35m[Kwarning: [m[K‘[01m[Kgeometry_msgs::msg::TwistStamped_<std::allocator<void> >::ConstPtr[m[K’ is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+   77 |   void TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist[01;35m[K)[m[K;
+      |                                                                        [01;35m[K^[m[K
+In file included from [01m[K/opt/ros/rolling/include/geometry_msgs/msg/twist_stamped.hpp:7[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/include/ground_truth_localizer/ground_truth_localizer_nodelet.h:35[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:19[m[K:
+[01m[K/opt/ros/rolling/include/geometry_msgs/msg/detail/twist_stamped__struct.hpp:115:5:[m[K [01;36m[Knote: [m[Kdeclared here
+  115 |     [01;36m[KConstPtr[m[K;
+      |     [01;36m[K^~~~~~~~[m[K
+[01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:86:96:[m[K [01;35m[Kwarning: [m[K‘[01m[Kgeometry_msgs::msg::PoseStamped_<std::allocator<void> >::ConstPtr[m[K’ is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+   86 | void GroundTruthLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose[01;35m[K)[m[K {
+      |                                                                                                [01;35m[K^[m[K
+In file included from [01m[K/opt/ros/rolling/include/geometry_msgs/msg/pose_stamped.hpp:7[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/include/ground_truth_localizer/ground_truth_localizer_nodelet.h:34[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:19[m[K:
+[01m[K/opt/ros/rolling/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp:115:5:[m[K [01;36m[Knote: [m[Kdeclared here
+  115 |     [01;36m[KConstPtr[m[K;
+      |     [01;36m[K^~~~~~~~[m[K
+[01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:101:99:[m[K [01;35m[Kwarning: [m[K‘[01m[Kgeometry_msgs::msg::TwistStamped_<std::allocator<void> >::ConstPtr[m[K’ is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+  101 | void GroundTruthLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist[01;35m[K)[m[K {
+      |                                                                                                   [01;35m[K^[m[K
+In file included from [01m[K/opt/ros/rolling/include/geometry_msgs/msg/twist_stamped.hpp:7[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/include/ground_truth_localizer/ground_truth_localizer_nodelet.h:35[m[K,
+                 from [01m[K/src/astrobee/src/localization/ground_truth_localizer/src/ground_truth_localizer_nodelet.cc:19[m[K:
+[01m[K/opt/ros/rolling/include/geometry_msgs/msg/detail/twist_stamped__struct.hpp:115:5:[m[K [01;36m[Knote: [m[Kdeclared here
+  115 |     [01;36m[KConstPtr[m[K;
+      |     [01;36m[K^~~~~~~~[m[K

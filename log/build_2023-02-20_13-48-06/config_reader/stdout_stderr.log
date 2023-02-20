@@ -1,0 +1,27 @@
+[100%] Built target config_reader
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/environment/library_path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/environment/library_path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/include/config_reader/config_reader.h
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/include/config_reader/watch_files.h
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/ament_index/resource_index/package_run_dependencies/config_reader
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/ament_index/resource_index/parent_prefix_path/config_reader
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/environment/path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/environment/path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/local_setup.bash
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/local_setup.sh
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/local_setup.zsh
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/config_reader/share/config_reader/package.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/ament_index/resource_index/packages/config_reader
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/cmake/config_readerConfig.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/cmake/config_readerConfig-version.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/config_reader/share/config_reader/package.xml
+-- Up-to-date: /src/astrobee/src/install/config_reader/lib/libconfig_reader.a
+-- Up-to-date: /src/astrobee/src/install/config_reader/share/config_reader/cmake/config_readerExport.cmake
+-- Up-to-date: /src/astrobee/src/install/config_reader/share/config_reader/cmake/config_readerExport-noconfig.cmake

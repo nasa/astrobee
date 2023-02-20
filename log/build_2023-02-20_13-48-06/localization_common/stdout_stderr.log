@@ -1,0 +1,46 @@
+[  9%] Built target gtest
+[ 19%] Built target gtest_main
+[ 71%] Built target localization_common
+[ 80%] Built target test_timestamped_set
+[ 90%] Built target test_pose_interpolater
+[100%] Built target test_utilities_localization_common
+-- Install configuration: ""
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/environment/library_path.sh
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/environment/library_path.dsv
+-- Up-to-date: /src/astrobee/src/install/localization_common/lib/liblocalization_common.so
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/timer.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/utilities.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/rate_timer.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/measurement_buffer.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/combined_nav_state.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/pose_interpolater.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/combined_nav_state_covariances.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/time.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/feature_point_3d.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/averager.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/pose_with_covariance.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/test_utilities.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/image_correspondences.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/ros_timer.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/timestamped_set.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/include/localization_common/logger.h
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/ament_index/resource_index/package_run_dependencies/localization_common
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/ament_index/resource_index/parent_prefix_path/localization_common
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/environment/ament_prefix_path.sh
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/environment/ament_prefix_path.dsv
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/environment/path.sh
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/environment/path.dsv
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.bash
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.sh
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.zsh
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/local_setup.dsv
+-- Installing: /src/astrobee/src/install/localization_common/share/localization_common/package.dsv
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/ament_index/resource_index/packages/localization_common
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonExport.cmake
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonExport-noconfig.cmake
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonConfig.cmake
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/cmake/localization_commonConfig-version.cmake
+-- Up-to-date: /src/astrobee/src/install/localization_common/share/localization_common/package.xml

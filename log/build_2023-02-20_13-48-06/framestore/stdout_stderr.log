@@ -1,0 +1,24 @@
+[ 50%] Built target framestore
+[100%] Built target global_transforms
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/lib/libframestore.so
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/lib/framestore/global_transforms
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/launch/framestore.launch
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/ament_index/resource_index/package_run_dependencies/framestore
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/ament_index/resource_index/parent_prefix_path/framestore
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/environment/path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/environment/path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/local_setup.bash
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/local_setup.sh
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/local_setup.zsh
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/framestore/share/framestore/package.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/ament_index/resource_index/packages/framestore
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/ament_index/resource_index/rclcpp_components/framestore
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/cmake/framestoreConfig.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/cmake/framestoreConfig-version.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/framestore/share/framestore/package.xml

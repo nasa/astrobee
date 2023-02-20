@@ -1,0 +1,31 @@
+[ 33%] Built target msg_conversions
+[ 83%] Built target pose_stamped_msg_cnv
+[100%] Built target landmark_msg_cnv
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/library_path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/library_path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/bin/landmark_msg_cnv
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/bin/pose_stamped_msg_cnv
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/package_run_dependencies/msg_conversions
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/parent_prefix_path/msg_conversions
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/path.sh
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/path.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.bash
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.sh
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.zsh
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/package.dsv
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/packages/msg_conversions
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsConfig.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsConfig-version.cmake
+-- Up-to-date symlink: /src/astrobee/src/install/msg_conversions/share/msg_conversions/package.xml
+-- Up-to-date: /src/astrobee/src/install/msg_conversions/include/msg_conversions
+-- Up-to-date: /src/astrobee/src/install/msg_conversions/include/msg_conversions/msg_conversions.h
+-- Up-to-date: /src/astrobee/src/install/msg_conversions/lib/libmsg_conversions.a
+-- Up-to-date: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsExport.cmake
+-- Up-to-date: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsExport-noconfig.cmake

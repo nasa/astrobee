@@ -1,0 +1,73 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+-- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+-- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+-- Found geometry_msgs: 4.0.0 (/opt/ros/rolling/share/geometry_msgs/cmake)
+-- Found config_reader: 1.0.0 (/src/astrobee/src/install/config_reader/share/config_reader/cmake)
+-- Found ff_common: 1.0.0 (/src/astrobee/src/install/ff_common/share/ff_common/cmake)
+-- Found ff_msgs: 0.0.0 (/src/astrobee/src/install/ff_msgs/share/ff_msgs/cmake)
+-- Found eigen3_cmake_module: 0.1.1 (/opt/ros/rolling/share/eigen3_cmake_module/cmake)
+-- Found Eigen3: TRUE (found version "3.3.7") 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /src/astrobee/src/build/msg_conversions
+[35m[1mScanning dependencies of target msg_conversions[0m
+[ 16%] [32mBuilding CXX object CMakeFiles/msg_conversions.dir/src/msg_conversions.cc.o[0m
+[ 33%] [32m[1mLinking CXX static library libmsg_conversions.a[0m
+[ 33%] Built target msg_conversions
+[35m[1mScanning dependencies of target landmark_msg_cnv[0m
+[35m[1mScanning dependencies of target pose_stamped_msg_cnv[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/landmark_msg_cnv.dir/tools/landmark_msg_cnv.cc.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/pose_stamped_msg_cnv.dir/tools/pose_stamped_msg_cnv.cc.o[0m
+[ 83%] [32m[1mLinking CXX executable pose_stamped_msg_cnv[0m
+[ 83%] Built target pose_stamped_msg_cnv
+[100%] [32m[1mLinking CXX executable landmark_msg_cnv[0m
+[100%] Built target landmark_msg_cnv
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/library_path.sh
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/library_path.dsv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/bin/landmark_msg_cnv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/bin/pose_stamped_msg_cnv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/package_run_dependencies/msg_conversions
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/parent_prefix_path/msg_conversions
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/ament_prefix_path.sh
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/ament_prefix_path.dsv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/path.sh
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/environment/path.dsv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.bash
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.sh
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.zsh
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/local_setup.dsv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/package.dsv
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/ament_index/resource_index/packages/msg_conversions
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/ament_cmake_export_targets-extras.cmake
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsConfig.cmake
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsConfig-version.cmake
+-- Symlinking: /src/astrobee/src/install/msg_conversions/share/msg_conversions/package.xml
+-- Installing: /src/astrobee/src/install/msg_conversions/include/msg_conversions
+-- Installing: /src/astrobee/src/install/msg_conversions/include/msg_conversions/msg_conversions.h
+-- Installing: /src/astrobee/src/install/msg_conversions/lib/libmsg_conversions.a
+-- Installing: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsExport.cmake
+-- Installing: /src/astrobee/src/install/msg_conversions/share/msg_conversions/cmake/msg_conversionsExport-noconfig.cmake
