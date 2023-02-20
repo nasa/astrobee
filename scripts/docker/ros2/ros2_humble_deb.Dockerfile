@@ -3,6 +3,13 @@ ARG UBUNTU_VERSION=20.04
 ARG REMOTE=astrobee
 FROM osrf/ros:humble-desktop
 
+# setup timezone
+RUN echo 'Etc/UTC' > /etc/timezone \
+    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime \
+    && apt-get update \
+    && apt-get install -q -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
 # install gazebo and dependencies
 RUN apt-get update && apt-get install -q -y --fix-missing \
     binutils \
