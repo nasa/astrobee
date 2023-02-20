@@ -33,7 +33,7 @@ find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 
-find_package(nodelet REQUIRED)
+# find_package(nodelet REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(actionlib REQUIRED)
 find_package(choreographer REQUIRED)

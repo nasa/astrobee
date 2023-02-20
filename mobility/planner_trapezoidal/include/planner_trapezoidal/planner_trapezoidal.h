@@ -23,7 +23,7 @@
 #include <rclpp/rclcpp.hpp>
 
 // FSW includes
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_names.h>
 #include <msg_conversions/msg_conversions.h>
