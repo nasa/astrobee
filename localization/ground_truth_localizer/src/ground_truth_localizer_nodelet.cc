@@ -47,16 +47,12 @@ void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(NodeHandle &nh) {
   heartbeat_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, 5);
   reset_pub_ = FF_CREATE_PUBLISHER(nh, std_msgs::Empty, TOPIC_GNC_EKF_RESET, 10);
 
-  pose_sub_ = FF_CREATE_SUBSCRIBER(nh,
-                                   geometry_msgs::PoseStamped,
-                                   TOPIC_LOCALIZATION_TRUTH,
-                                   1,
-                                   &GroundTruthLocalizerNodelet::PoseCallback);
-  twist_sub_ = FF_CREATE_SUBSCRIBER(nh,
-                                  geometry_msgs::TwistStamped,
-                                  TOPIC_LOCALIZATION_TRUTH_TWIST,
-                                  1,
-                                  &GroundTruthLocalizerNodelet::TwistCallback);
+  pose_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::PoseStamped,
+    TOPIC_LOCALIZATION_TRUTH, 1,
+    std::bind(&GroundTruthLocalizerNodelet::PoseCallback, this, std::placeholders::_1));
+  twist_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::TwistStamped,
+    TOPIC_LOCALIZATION_TRUTH_TWIST, 1,
+    std::bind(&GroundTruthLocalizerNodelet::TwistCallback, this, std::placeholders::_1));
 
   input_mode_srv_ = nh->create_service<ff_msgs::SetEkfInput>(
     SERVICE_GNC_EKF_SET_INPUT,

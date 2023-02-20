@@ -120,17 +120,23 @@ Ctl::Ctl(NodeHandle& nh, std::string const& name) :
 
   // Subscribers
   ekf_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::EkfState,
-    TOPIC_GNC_EKF, 1, &Ctl::EkfCallback);
+    TOPIC_GNC_EKF, 1,
+    std::bind(&Ctl::EkfCallback, this, std::placeholders::_1));
   pose_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::PoseStamped,
-    TOPIC_LOCALIZATION_POSE, 1, &Ctl::PoseCallback);
+    TOPIC_LOCALIZATION_POSE, 1,
+    std::bind(&Ctl::PoseCallback, this, std::placeholders::_1));
   twist_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::TwistStamped,
-    TOPIC_LOCALIZATION_TWIST, 1, &Ctl::TwistCallback);
+    TOPIC_LOCALIZATION_TWIST, 1,
+    std::bind(&Ctl::TwistCallback, this, std::placeholders::_1));
   inertia_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::msg::InertiaStamped,
-    TOPIC_MOBILITY_INERTIA, 1, &Ctl::InertiaCallback);
+    TOPIC_MOBILITY_INERTIA, 1,
+    std::bind(&Ctl::InertiaCallback, this, std::placeholders::_1));
   flight_mode_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::FlightMode,
-    TOPIC_MOBILITY_FLIGHT_MODE, 1, &Ctl::FlightModeCallback);
+    TOPIC_MOBILITY_FLIGHT_MODE, 1,
+    std::bind(&Ctl::FlightModeCallback, this, std::placeholders::_1));
   command_sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::msg::ControlState,
-    TOPIC_GNC_CTL_SETPOINT, 1, &Ctl::SetpointCallback);
+    TOPIC_GNC_CTL_SETPOINT, 1,
+    std::bind(&Ctl::SetpointCallback, this, std::placeholders::_1));
 
   // Advertised messages
   ctl_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::msg::FamCommand,

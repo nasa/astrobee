@@ -174,11 +174,8 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     pub_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, "joint_states", 100);
 
     // Now register to be called back every time FAM has new wrench
-    sub_ = FF_CREATE_SUBSCRIBER(nh,
-                                sensor_msgs::JointState,
-                                "joint_goals",
-                                1,
-                                &GazeboModelPluginPerchingArm::GoalCallback);
+    sub_ = FF_CREATE_SUBSCRIBER(nh, sensor_msgs::JointState, "joint_goals", 1,
+      std::bind(&GazeboModelPluginPerchingArm::GoalCallback, this, std::placeholders::_1));
 
     // Set the distal velocity
     srv_p_ = nh->create_service<ff_hw_msgs::SetJointMaxVelocity>(
