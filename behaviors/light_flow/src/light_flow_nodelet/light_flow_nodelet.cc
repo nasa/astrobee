@@ -34,14 +34,14 @@
 #include <ff_hw_msgs/msg/configure_led_group.hpp>
 namespace ff_hw_msgs {
   typedef msg::ConfigureLEDGroup ConfigureLEDGroup;
-} // namespace ff_hw_msgs
+}  // namespace ff_hw_msgs
 
 #include <ff_msgs/srv/set_streaming_lights.hpp>
 #include <ff_msgs/msg/signal_state.hpp>
 namespace ff_msgs {
   typedef srv::SetStreamingLights SetStreamingLights;
   typedef msg::SignalState SignalState;
-} // namespace ff_msgs
+}  // namespace ff_msgs
 #include <cerrno>
 #include <cstring>
 
@@ -51,7 +51,8 @@ FF_DEFINE_LOGGER("light_flow");
 
 class LightFlowNodelet : public ff_util::FreeFlyerComponent {
  public:
-  explicit LightFlowNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "light_flow", true) {}
+  explicit LightFlowNodelet(const rclcpp::NodeOptions& options) : 
+  ff_util::FreeFlyerComponent(options, "light_flow", true) {}
 
   virtual ~LightFlowNodelet() {}
 
@@ -62,7 +63,8 @@ class LightFlowNodelet : public ff_util::FreeFlyerComponent {
     // live video
     streaming_service_ =
         nh->create_service<ff_msgs::SetStreamingLights>(SERVICE_STREAMING_LIGHTS,
-                             std::bind(&LightFlowNodelet::StreamingLightsCallback, this, std::placeholders::_1, std::placeholders::_2));
+                             std::bind(&LightFlowNodelet::StreamingLightsCallback, 
+                             this, std::placeholders::_1, std::placeholders::_2));
     currentStreamingLightsState = false;
 
     pub_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::ConfigureLEDGroup, 
