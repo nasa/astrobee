@@ -171,6 +171,7 @@ endif()
 ament_export_dependencies(
   config_reader
   msg_conversions
+  ff_common
 )
 
 ament_export_include_directories(include)
