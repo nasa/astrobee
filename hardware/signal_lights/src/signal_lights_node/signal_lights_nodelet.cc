@@ -54,7 +54,8 @@ class SignalPair {
 
 class SignalLightsNodelet : public ff_util::FreeFlyerComponent {
  public:
-  explicit SignalLightsNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, NODE_SIGNAL_LIGHTS, true) {}
+  explicit SignalLightsNodelet(const rclcpp::NodeOptions& options) :
+  ff_util::FreeFlyerComponent(options, NODE_SIGNAL_LIGHTS, true) {}
 
   virtual ~SignalLightsNodelet() {
     FF_INFO("Signal lights nodelet is shutting down");

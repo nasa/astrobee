@@ -51,7 +51,7 @@ FF_DEFINE_LOGGER("light_flow");
 
 class LightFlowNodelet : public ff_util::FreeFlyerComponent {
  public:
-  explicit LightFlowNodelet(const rclcpp::NodeOptions& options) : 
+  explicit LightFlowNodelet(const rclcpp::NodeOptions& options) :
   ff_util::FreeFlyerComponent(options, "light_flow", true) {}
 
   virtual ~LightFlowNodelet() {}
@@ -63,11 +63,11 @@ class LightFlowNodelet : public ff_util::FreeFlyerComponent {
     // live video
     streaming_service_ =
         nh->create_service<ff_msgs::SetStreamingLights>(SERVICE_STREAMING_LIGHTS,
-                             std::bind(&LightFlowNodelet::StreamingLightsCallback, 
+                             std::bind(&LightFlowNodelet::StreamingLightsCallback,
                              this, std::placeholders::_1, std::placeholders::_2));
     currentStreamingLightsState = false;
 
-    pub_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::ConfigureLEDGroup, 
+    pub_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::ConfigureLEDGroup,
         TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG, 5);
 
     config_params.AddFile("behaviors/light_flow.config");
@@ -118,8 +118,8 @@ class LightFlowNodelet : public ff_util::FreeFlyerComponent {
       light_flow_states.emplace(id, compiledLightFlow);
     }
 
-    sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::SignalState, TOPIC_SIGNALS, 5, std::bind(&LightFlowNodelet::ConfigureCallback,
-                         this, std::placeholders::_1));
+    sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::SignalState, TOPIC_SIGNALS, 5,
+                              std::bind(&LightFlowNodelet::ConfigureCallback, this, std::placeholders::_1));
   }
 
   void ConfigureCallback(const std::shared_ptr<ff_msgs::SignalState> msg) {
