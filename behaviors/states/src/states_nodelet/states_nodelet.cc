@@ -54,8 +54,6 @@ typedef msg::BatteryState BatteryState;
 #include <cerrno>
 #include <cstring>
 
-//#include <rclcpp_action/rclcpp_action.hpp>
-
 FF_DEFINE_LOGGER("states");
 
 namespace states {
@@ -75,9 +73,7 @@ class StatesNodelet : public ff_util::FreeFlyerComponent {
         SERVICE_HARDWARE_EPS_CONF_LED_STATE);
     client_streaming_lights_ = nh->create_client<ff_msgs::SetStreamingLights>(
         SERVICE_STREAMING_LIGHTS);
-    //pub_ = nh->create_publisher<ff_msgs::SignalState>(
-    //    TOPIC_SIGNALS, 1, true);  // TOPIC_SIGNALS is a latched topic
-    pub_ = nh->create_publisher<ff_msgs::SignalState>(TOPIC_SIGNALS, QoSType(TOPIC_SIGNALS, 1));
+    pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::SignalState, TOPIC_SIGNALS, 1);
     sub_.push_back(FF_CREATE_SUBSCRIBER(nh, ff_msgs::CameraStatesStamped, TOPIC_MANAGEMENT_CAMERA_STATE, 1,
                                  std::bind(&StatesNodelet::LiveStreamingCallback, this, std::placeholders::_1)));
     // on nodelet start, send a wakeup message on TOPIC_SIGNALS
