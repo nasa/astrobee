@@ -16,40 +16,53 @@
  * under the License.
  */
 
-// Standard ROS includes
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
-#include <ros/ros.h>
-
-// FSW shared libraries
-#include <config_reader/config_reader.h>
-
 // FSW nodelet
-#include <ff_util/ff_names.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_common/ff_names.h>
+#include <ff_util/ff_component.h>
 
-// Services
-#include <ff_msgs/SetStreamingLights.h>
 
-#include <ff_hw_msgs/ConfigureSystemLeds.h>
-#include <ff_msgs/CameraStatesStamped.h>
-#include <ff_msgs/DockActionResult.h>
-#include <ff_msgs/DockState.h>
-#include <ff_msgs/EkfState.h>
-#include <ff_msgs/Heartbeat.h>
-#include <ff_msgs/MotionActionResult.h>
-#include <ff_msgs/MotionState.h>
-#include <ff_msgs/SignalState.h>
-#include <sensor_msgs/BatteryState.h>
+#include <ff_hw_msgs/srv/configure_system_leds.hpp>
+namespace ff_hw_msgs {
+typedef srv::ConfigureSystemLeds ConfigureSystemLeds;
+} // namespace ff_hw_msgs
+
+
+#include <ff_msgs/srv/set_streaming_lights.hpp>
+#include <ff_msgs/msg/camera_states_stamped.hpp>
+#include <ff_msgs/action/dock.hpp>
+#include <ff_msgs/msg/dock_state.hpp>
+#include <ff_msgs/msg/ekf_state.hpp>
+#include <ff_msgs/msg/heartbeat.hpp>
+#include <ff_msgs/action/motion.hpp>
+#include <ff_msgs/msg/motion_state.hpp>
+#include <ff_msgs/msg/signal_state.hpp>
+namespace ff_msgs {
+typedef srv::SetStreamingLights SetStreamingLights;
+typedef msg::CameraStatesStamped CameraStatesStamped;
+typedef msg::DockState DockState;
+typedef msg::EkfState EkfState;
+typedef msg::Heartbeat Heartbeat;
+typedef msg::MotionState MotionState;
+typedef msg::SignalState SignalState;
+} // namespace ff_msgs
+
+#include <sensor_msgs/msg/battery_state.hpp>
+namespace sensor_msgs {
+typedef msg::BatteryState BatteryState;
+} // namespace sensor_msgs
 
 #include <cerrno>
 #include <cstring>
 
+//#include <rclcpp_action/rclcpp_action.hpp>
+
+FF_DEFINE_LOGGER("states");
+
 namespace states {
 
-class StatesNodelet : public ff_util::FreeFlyerNodelet {
+class StatesNodelet : public ff_util::FreeFlyerComponent {
  public:
-  StatesNodelet() : ff_util::FreeFlyerNodelet("states") {}
+  StatesNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "states", true) {}
 
   virtual ~StatesNodelet() {
     // on nodelet shutdown, send a shutdown message on TOPIC_SIGNALS
@@ -57,15 +70,16 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
   }
 
  protected:
-  virtual void Initialize(ros::NodeHandle* nh) {
-    client_ = nh->serviceClient<ff_hw_msgs::ConfigureSystemLeds>(
+  virtual void Initialize(NodeHandle &nh) {
+    client_ = nh->create_client<ff_hw_msgs::ConfigureSystemLeds>(
         SERVICE_HARDWARE_EPS_CONF_LED_STATE);
-    client_streaming_lights_ = nh->serviceClient<ff_msgs::SetStreamingLights>(
+    client_streaming_lights_ = nh->create_client<ff_msgs::SetStreamingLights>(
         SERVICE_STREAMING_LIGHTS);
-    pub_ = nh->advertise<ff_msgs::SignalState>(
-        TOPIC_SIGNALS, 1, true);  // TOPIC_SIGNALS is a latched topic
-    sub_.push_back(nh->subscribe(TOPIC_MANAGEMENT_CAMERA_STATE, 1,
-                                 &StatesNodelet::LiveStreamingCallback, this));
+    //pub_ = nh->create_publisher<ff_msgs::SignalState>(
+    //    TOPIC_SIGNALS, 1, true);  // TOPIC_SIGNALS is a latched topic
+    pub_ = nh->create_publisher<ff_msgs::SignalState>(TOPIC_SIGNALS, QoSType(TOPIC_SIGNALS, 1));
+    sub_.push_back(FF_CREATE_SUBSCRIBER(nh, ff_msgs::CameraStatesStamped, TOPIC_MANAGEMENT_CAMERA_STATE, 1,
+                                 std::bind(&StatesNodelet::LiveStreamingCallback, this, std::placeholders::_1)));
     // on nodelet start, send a wakeup message on TOPIC_SIGNALS
     Startup();
   }
@@ -73,23 +87,23 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
   void Startup() {
     ff_msgs::SignalState s;
     s.state = ff_msgs::SignalState::WAKE;
-    pub_.publish(s);
+    pub_->publish(s);
   }
 
   void Shutdown() {
     ff_msgs::SignalState s;
     s.state = ff_msgs::SignalState::SLEEP;
-    pub_.publish(s);
+    pub_->publish(s);
   }
 
-  void BatteryStateCallback(const sensor_msgs::BatteryState::ConstPtr& msg) {
+  void BatteryStateCallback(const std::shared_ptr<sensor_msgs::BatteryState> msg) {
     switch (msg->power_supply_status) {
       case sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_CHARGING:
-        ROS_INFO("We're charging!");
+        FF_INFO("We're charging!");
         ChangeCurrentState(ff_msgs::SignalState::CHARGING);
         return;
       case sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_FULL:
-        ROS_INFO("Batteries are full!");
+        FF_INFO("Batteries are full!");
         return;
       default:
         return;
@@ -97,7 +111,7 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   void LiveStreamingCallback(
-      const ff_msgs::CameraStatesStamped::ConstPtr& msg) {
+      const std::shared_ptr<ff_msgs::CameraStatesStamped> msg) {
     bool anyCameraStreaming = false;
     bool anyCameraRecording = false;
     for (uint i = 0; i < msg->states.size(); i++) {
@@ -105,40 +119,42 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
       anyCameraRecording |= msg->states[i].recording;
     }
 
-    ff_hw_msgs::ConfigureSystemLeds systemLeds;
+    auto systemLeds = std::make_shared<ff_hw_msgs::ConfigureSystemLeds::Request>();
 
     if (anyCameraStreaming) {
-      systemLeds.request.live = systemLeds.request.ON;
+      systemLeds->live = ff_hw_msgs::ConfigureSystemLeds::Request::ON;
     } else {
-      systemLeds.request.live = systemLeds.request.OFF;
+      systemLeds->live = ff_hw_msgs::ConfigureSystemLeds::Request::OFF;
     }
 
     if (anyCameraRecording)
-      systemLeds.request.video = systemLeds.request.ON;
+      systemLeds->video = ff_hw_msgs::ConfigureSystemLeds::Request::ON;
     else
-      systemLeds.request.video = systemLeds.request.OFF;
+      systemLeds->video = ff_hw_msgs::ConfigureSystemLeds::Request::OFF;
 
     // we no longer call the system LEDs from the states nodelet
     // as that occurs elsewhere in FSW
     // this will be cleaned up in a later commit
 
-    ff_msgs::SetStreamingLights streamingLights;
+    auto streamingLights = std::make_shared<ff_msgs::SetStreamingLights::Request>();
 
-    streamingLights.request.state = (anyCameraRecording || anyCameraStreaming);
-    if (!client_streaming_lights_.call(streamingLights)) {
-      ROS_ERROR("Failiure occurred when trying to configure streaming LEDs");
+    streamingLights->state = (anyCameraRecording || anyCameraStreaming);
+    auto result = client_streaming_lights_->async_send_request(streamingLights);
+
+    if (rclcpp::spin_until_future_complete(get_node_base_interface(), result) != rclcpp::FutureReturnCode::SUCCESS) {
+      FF_ERROR("Failure occurred when trying to configure streaming LEDs");
     } else {
-      ROS_INFO("Successfully changed the streaming LEDs");
+      FF_INFO("Successfully changed the streaming LEDs");
     }
   }
 
-  void MobilityMotionStateCallback(const ff_msgs::MotionState::ConstPtr& msg) {
+  void MobilityMotionStateCallback(const std::shared_ptr<ff_msgs::MotionState> msg) {
     if (msg->state == ff_msgs::MotionState::CONTROLLING) {
       ChangeCurrentState(ff_msgs::SignalState::THRUST_FORWARD);
     }
   }
 
-  void DockStateCallback(const ff_msgs::DockState::ConstPtr& msg) {
+  void DockStateCallback(const std::shared_ptr<ff_msgs::DockState> msg) {
     if (msg->state == ff_msgs::DockState::DOCKING_MOVING_TO_COMPLETE_POSE) {
       // we are docking!
     } else if (msg->state ==
@@ -146,32 +162,39 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
       // we are undocking!
     }
   }
-
+/*
   void MotionActionResultCallback(
-      const ff_msgs::MotionActionResult::ConstPtr& msg) {
-    if (msg->result.response == 1) {
+      const rclcpp_action::ClientGoalHandle<ff_msgs::action::Motion>::WrappedResult& result) {
+    if (result.result->response == 1) {
       ChangeCurrentState(ff_msgs::SignalState::SUCCESS);
     } else {
       ChangeCurrentState(ff_msgs::SignalState::MOTION_IMPAIRED);
     }
   }
-
+*/
   void ChangeCurrentState(uint8_t new_state) {
     // if (current_state == new_state) return;
     current_state = new_state;
     ff_msgs::SignalState s;
     s.state = current_state;
-    pub_.publish(s);
+    pub_->publish(s);
   }
 
  private:
-  ros::ServiceClient client_;
-  ros::ServiceClient client_streaming_lights_;
-  std::vector<ros::Subscriber> sub_;
-  ros::Publisher pub_;
+  rclcpp::Client<ff_hw_msgs::ConfigureSystemLeds>::SharedPtr client_;
+  rclcpp::Client<ff_msgs::SetStreamingLights>::SharedPtr client_streaming_lights_;
+  std::vector<rclcpp::Subscription<ff_msgs::CameraStatesStamped>::SharedPtr> sub_;
+  rclcpp::Publisher<ff_msgs::SignalState>::SharedPtr pub_;
   uint8_t current_state;
 };
 
-PLUGINLIB_EXPORT_CLASS(states::StatesNodelet, nodelet::Nodelet);
 
 }  // namespace states
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(states::StatesNodelet)
+
