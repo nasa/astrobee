@@ -30,7 +30,7 @@
 #include <ff_hw_msgs/msg/configure_led_group.hpp>
 namespace ff_hw_msgs {
 typedef msg::ConfigureLEDGroup ConfigureLEDGroup;
-} // namespace ff_hw_msgs
+}  // namespace ff_hw_msgs
 
 #include <cerrno>
 #include <cstring>
