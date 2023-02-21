@@ -23,56 +23,60 @@
 #include <jsoncpp/json/reader.h>
 #include <jsoncpp/json/value.h>
 
-// Standard ROS includes
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
-#include <ros/ros.h>
-
 // FSW shared libraries
 #include <config_reader/config_reader.h>
 
 // FSW nodelet
-#include <ff_util/ff_names.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_common/ff_names.h>
+#include <ff_util/ff_component.h>
 
 // Services
-#include <ff_hw_msgs/ConfigureLEDGroup.h>
-#include <ff_msgs/SetStreamingLights.h>
-#include <ff_msgs/SignalState.h>
+#include <ff_hw_msgs/msg/configure_led_group.hpp>
+namespace ff_hw_msgs {
+  typedef msg::ConfigureLEDGroup ConfigureLEDGroup;
+} // namespace ff_hw_msgs
 
+#include <ff_msgs/srv/set_streaming_lights.hpp>
+#include <ff_msgs/msg/signal_state.hpp>
+namespace ff_msgs {
+  typedef srv::SetStreamingLights SetStreamingLights;
+  typedef msg::SignalState SignalState;
+} // namespace ff_msgs
 #include <cerrno>
 #include <cstring>
 
 namespace light_flow {
 
-class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
+FF_DEFINE_LOGGER("light_flow");
+
+class LightFlowNodelet : public ff_util::FreeFlyerComponent {
  public:
-  LightFlowNodelet() : ff_util::FreeFlyerNodelet("light_flow") {}
+  explicit LightFlowNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "light_flow", true) {}
 
   virtual ~LightFlowNodelet() {}
 
  protected:
-  virtual void Initialize(ros::NodeHandle* nh) {
+  virtual void Initialize(NodeHandle &nh) {
     // this service is a special case for when we need to light
     // two AMBER leds on each side only when we are streaming
     // live video
     streaming_service_ =
-        nh->advertiseService(SERVICE_STREAMING_LIGHTS,
-                             &LightFlowNodelet::StreamingLightsCallback, this);
+        nh->create_service<ff_msgs::SetStreamingLights>(SERVICE_STREAMING_LIGHTS,
+                             std::bind(&LightFlowNodelet::StreamingLightsCallback, this, std::placeholders::_1, std::placeholders::_2));
     currentStreamingLightsState = false;
 
-    pub_ = nh->advertise<ff_hw_msgs::ConfigureLEDGroup>(
+    pub_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::ConfigureLEDGroup, 
         TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG, 5);
 
     config_params.AddFile("behaviors/light_flow.config");
     if (!config_params.ReadFiles()) {
-      ROS_ERROR("Could not open config file");
+      FF_ERROR("Could not open config file");
       return;
     }
 
     std::string folder;
     if (!config_params.GetStr("folder", &folder)) {
-      ROS_ERROR("Could not get state file");
+      FF_ERROR("Could not get state file");
       return;
     }
 
@@ -80,18 +84,18 @@ class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
     for (int i = 0; i < states.GetSize(); i++) {
       config_reader::ConfigReader::Table state;
       if (!states.GetTable(i + 1, &state)) {
-        ROS_ERROR("Could not get state table");
+        FF_ERROR("Could not get state table");
         return;
       }
 
       std::string id;
       if (!state.GetStr("id", &id)) {
-        ROS_ERROR("Could not get state id");
+        FF_ERROR("Could not get state id");
         return;
       }
       std::string file;
       if (!state.GetStr("file", &file)) {
-        ROS_ERROR("Could not get state file");
+        FF_ERROR("Could not get state file");
         return;
       }
 
@@ -102,21 +106,21 @@ class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
       Json::Reader reader;
       Json::Value compiledLightFlow;
       if (!reader.parse(document.str(), compiledLightFlow)) {
-        ROS_ERROR("Could not parse a lightflow json string");
+        FF_ERROR("Could not parse a lightflow json string");
         continue;
       } else {
         compileLightFlow(compiledLightFlow);
-        ROS_INFO("Compiled a light flow proc successfully");
+        FF_INFO("Compiled a light flow proc successfully");
       }
 
       light_flow_states.emplace(id, compiledLightFlow);
     }
 
-    sub_ = nh->subscribe(TOPIC_SIGNALS, 5, &LightFlowNodelet::ConfigureCallback,
-                         this);
+    sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::SignalState, TOPIC_SIGNALS, 5, std::bind(&LightFlowNodelet::ConfigureCallback,
+                         this, std::placeholders::_1));
   }
 
-  void ConfigureCallback(const ff_msgs::SignalState::ConstPtr& msg) {
+  void ConfigureCallback(const std::shared_ptr<ff_msgs::SignalState> msg) {
     switch (msg->state) {
       case ff_msgs::SignalState::VIDEO_ON:
         RunLightFlow("VIDEO_ON");
@@ -173,7 +177,7 @@ class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
         RunLightFlow("CHARGING");
         return;
       default:
-        ROS_ERROR("Encountered a strange state in a signal state message");
+        FF_ERROR("Encountered a strange state in a signal state message");
     }
   }
 
@@ -181,17 +185,17 @@ class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
     current_state_id = s;
     auto it = light_flow_states.find(s);
     if (it == light_flow_states.end()) {
-      ROS_ERROR("RunLightFlow function was given a strange string");
+      FF_ERROR("RunLightFlow function was given a strange string");
       return;
     }
     publishLightFlow(it->second, pub_, currentStreamingLightsState);
   }
 
   bool StreamingLightsCallback(
-      ff_msgs::SetStreamingLights::Request& request,
-      ff_msgs::SetStreamingLights::Response& response) {
-    currentStreamingLightsState = request.state;
-    response.success = true;
+      const std::shared_ptr<ff_msgs::SetStreamingLights::Request> request,
+      std::shared_ptr<ff_msgs::SetStreamingLights::Response> response) {
+    currentStreamingLightsState = request->state;
+    response->success = true;
     // turn off all the lights but keep the amber streaming lights on
     RunLightFlow("STOP_ALL_LIGHTS");
     return true;
@@ -200,13 +204,19 @@ class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
  private:
   config_reader::ConfigReader config_params;  // LUA configuration reader
   std::map<std::string, Json::Value> light_flow_states;  // Available states
-  ros::Subscriber sub_;                                  // Configure service
-  ros::Publisher pub_;
+
+  rclcpp::Subscription<ff_msgs::SignalState>::SharedPtr sub_;                                  // Configure service
+  rclcpp::Publisher<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr pub_;
   std::string current_state_id;
-  ros::ServiceServer streaming_service_;
+  rclcpp::Service<ff_msgs::SetStreamingLights>::SharedPtr streaming_service_;
   bool currentStreamingLightsState;
 };
 
-PLUGINLIB_EXPORT_CLASS(light_flow::LightFlowNodelet, nodelet::Nodelet);
-
 }  // namespace light_flow
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(light_flow::LightFlowNodelet)

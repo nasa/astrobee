@@ -15,33 +15,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(light_flow)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
+## Find ament macros and libraries
+set(dependencies
+  rclcpp
+  rclcpp_components
   ff_hw_msgs
   ff_msgs
-  nodelet
   ff_util
 )
 
-catkin_package(
-  LIBRARIES
-    light_flow
-  CATKIN_DEPENDS
-    roscpp
-    ff_hw_msgs
-    ff_msgs
-    ff_util
-    nodelet
-    pluginlib
-)
+find_package(ament_cmake REQUIRED)
+
+foreach(dep ${dependencies})
+  find_package(${dep} REQUIRED)
+endforeach()
+
 
 ###########
 ## Build ##
@@ -50,28 +47,29 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
 add_library(light_flow
   src/light_flow/light_flow.cc
 )
-add_dependencies(light_flow ${catkin_EXPORTED_TARGETS})
-target_link_libraries(light_flow ${catkin_LIBRARIES})
+ament_target_dependencies(light_flow rclcpp ff_hw_msgs ff_util ff_common)
+target_link_libraries(light_flow jsoncpp)
 
 # Declare C++ libraries
-add_library(light_flow_nodelet
+add_library(light_flow_nodelet SHARED
   src/light_flow_nodelet/light_flow_nodelet.cc
 )
-add_dependencies(light_flow_nodelet ${catkin_EXPORTED_TARGETS})
-target_link_libraries(light_flow_nodelet light_flow jsoncpp ${catkin_LIBRARIES})
+target_compile_definitions(light_flow_nodelet PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(light_flow_nodelet light_flow jsoncpp)
+ament_target_dependencies(light_flow_nodelet ${dependencies})
+rclcpp_components_register_nodes(light_flow_nodelet "light_flow_nodelet::LightFlowNodelet")
 
 ## Declare a C++ executable: inspection_tool
 add_executable(light_flow_tool tools/light_flow_tool.cc)
-add_dependencies(light_flow_tool ${catkin_EXPORTED_TARGETS})
+ament_target_dependencies(light_flow_tool ${dependencies})
 target_link_libraries(light_flow_tool
-  light_flow gflags jsoncpp ${catkin_LIBRARIES})
+  light_flow gflags jsoncpp )
 
 #############
 ## Install ##
@@ -79,19 +77,14 @@ target_link_libraries(light_flow_tool
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 install(TARGETS ${PROJECT_NAME}_nodelet
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Install C++ executables
@@ -104,6 +97,8 @@ install(CODE "execute_process(
   )")
 
 # Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)
+
+ament_package()
