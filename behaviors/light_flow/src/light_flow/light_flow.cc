@@ -779,7 +779,7 @@ ff_hw_msgs::ConfigureLED createLED(uint red, uint green, uint blue,
 }
 
 void publishLightFlow(const Json::Value &statesOfExecution,
-                      const rclcpp::Publisher<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr &publishLEDGroup, 
+                      const rclcpp::Publisher<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr &publishLEDGroup,
                       bool isStreaming) {
   const double period = 33.33 / 1000.0;
   const auto delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
