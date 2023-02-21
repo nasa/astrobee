@@ -31,7 +31,6 @@ ff_hw_msgs
 ff_msgs
 ff_util
 ff_common
-#rclcpp_action
 )
 
 ## Find ament and libraries

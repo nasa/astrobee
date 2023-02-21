@@ -24,7 +24,7 @@
 #include <ff_hw_msgs/srv/configure_system_leds.hpp>
 namespace ff_hw_msgs {
 typedef srv::ConfigureSystemLeds ConfigureSystemLeds;
-} // namespace ff_hw_msgs
+}  // namespace ff_hw_msgs
 
 
 #include <ff_msgs/srv/set_streaming_lights.hpp>
@@ -44,12 +44,12 @@ typedef msg::EkfState EkfState;
 typedef msg::Heartbeat Heartbeat;
 typedef msg::MotionState MotionState;
 typedef msg::SignalState SignalState;
-} // namespace ff_msgs
+}  // namespace ff_msgs
 
 #include <sensor_msgs/msg/battery_state.hpp>
 namespace sensor_msgs {
 typedef msg::BatteryState BatteryState;
-} // namespace sensor_msgs
+}  // namespace sensor_msgs
 
 #include <cerrno>
 #include <cstring>
@@ -60,7 +60,7 @@ namespace states {
 
 class StatesNodelet : public ff_util::FreeFlyerComponent {
  public:
-  StatesNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "states", true) {}
+  explicit StatesNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "states", true) {}
 
   virtual ~StatesNodelet() {
     // on nodelet shutdown, send a shutdown message on TOPIC_SIGNALS
