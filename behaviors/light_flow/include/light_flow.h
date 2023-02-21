@@ -24,7 +24,7 @@
 namespace ff_hw_msgs {
 typedef ff_hw_msgs::msg::ConfigureLED ConfigureLED;
 typedef ff_hw_msgs::msg::ConfigureLEDGroup ConfigureLEDGroup;
-} // namespace ff_hw_msgs
+}  // namespace ff_hw_msgs
 
 #include <ff_common/ff_names.h>
 #include <jsoncpp/json/value.h>
