@@ -46,11 +46,11 @@ struct V4LStruct;
 
 class PeriodicTrigger {
  public:
-  inline PeriodicTrigger(unsigned int period) : period_(period), counter_(0) {}
+  inline explicit PeriodicTrigger(unsigned int period) : period_(period), counter_(0) {}
   inline bool IsTriggered() { return counter_ == 0; }
   inline bool Tick() {
     bool result = IsTriggered();
-    counter_ = (counter_ + 1 ) % period_;
+    counter_ = (counter_ + 1) % period_;
     return result;
   }
   inline void SetPeriod(unsigned int period) {

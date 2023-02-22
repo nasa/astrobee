@@ -32,7 +32,6 @@
 #include <linux/videodev2.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
-#include <algorithm>
 
 namespace is_camera {
 
@@ -178,8 +177,8 @@ namespace is_camera {
     auto_exposure_(false),
     err_p_(0),
     err_i_(0),
-    read_params_trigger_(frames_per_second), // 1 Hz
-    auto_exposure_trigger_(frames_per_second) // 1 Hz
+    read_params_trigger_(frames_per_second),  // 1 Hz
+    auto_exposure_trigger_(frames_per_second)  // 1 Hz
     {}
 
   CameraNodelet::~CameraNodelet() {
