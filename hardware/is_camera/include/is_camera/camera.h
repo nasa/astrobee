@@ -44,9 +44,29 @@ static void xioctl(int fh, int request, void *arg);
 // Class to hide V4L structures
 struct V4LStruct;
 
+class PeriodicTrigger {
+ public:
+  inline PeriodicTrigger(unsigned int period) : period_(period), counter_(0) {}
+  inline bool IsTriggered() { return counter_ == 0; }
+  inline bool Tick() {
+    bool result = IsTriggered();
+    counter_ = (counter_ + 1 ) % period_;
+    return result;
+  }
+  inline void SetPeriod(unsigned int period) {
+    period_ = period;
+  }
+
+ private:
+  unsigned int period_;
+  size_t counter_;
+};
+
 // Nodelet class
 class CameraNodelet : public ff_util::FreeFlyerNodelet {
  public:
+  static constexpr size_t frames_per_second = 15;
+
   // The size of the image message ring buffer for publishing
   // grayscale images.  30 images = 35.2 MB of buffer space. This
   // number is so large because it sets the lifetime for each image
@@ -54,7 +74,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   // handed out. At 15 Hz, 30 frames means an image will stay valid
   // for 2.0 seconds.  Localization can process at 1 Hz, so it only
   // needs an image for 1.0 second.
-  static constexpr size_t kImageMsgBuffer = 30;
+  static constexpr size_t kImageMsgBuffer = frames_per_second * 2;
 
   // The size of the image message ring buffer for publishing raw
   // Bayer format images.  The same comments apply about message
@@ -77,8 +97,11 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   void PublishLoop();
   void LoadCameraInfo();
   void EnableBayer(bool enable);
-  void AutoExposure();
+  void UpdateAutoExposure();
+  void PublishExposure();
   size_t getNumBayerSubscribers();
+  void SetGain(int gain);
+  void SetExposure(int exposure);
 
   sensor_msgs::CameraInfo info_msg_;
 
@@ -96,24 +119,23 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;
-  ros::Timer config_timer_;
-  ros::Timer auto_exposure_timer_;
+  PeriodicTrigger read_params_trigger_;
+  PeriodicTrigger auto_exposure_trigger_;
   std::string camera_device_;
   std::string camera_topic_;
   std::string bayer_camera_topic_;
   std::string config_name_;
-  int camera_gain_, camera_exposure_, camera_auto_exposure_;
+  int camera_gain_, camera_exposure_;
   bool calibration_mode_;
 
   // bayer_enable: Set to true to enable publishing raw Bayer image
   // (can be converted to RGB). May incur significant I/O overhead.
   bool bayer_enable_;
 
-  // bayer_throttle_ratio: Set to n to publish 1 raw Bayer image for
-  // every n images grabbed. With n = 1, every image is
-  // published. Larger n reduces I/O overhead.
-  unsigned int bayer_throttle_ratio_;
-  size_t bayer_throttle_ratio_counter_;
+  // bayer_trigger_: Set Bayer throttle ratio to n to publish 1 raw
+  // Bayer image for every n images grabbed. With n = 1, every image
+  // is published. Larger n reduces I/O overhead.
+  PeriodicTrigger bayer_trigger_;
 
   // Auto exposure parameters
   bool auto_exposure_;

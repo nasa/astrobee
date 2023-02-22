@@ -32,6 +32,7 @@
 #include <linux/videodev2.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <algorithm>
 
 namespace is_camera {
 
@@ -92,7 +93,7 @@ namespace is_camera {
       //
       parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       xioctl(fd, VIDIOC_G_PARM, &parm);
-      parm.parm.output.timeperframe.denominator = 15;
+      parm.parm.output.timeperframe.denominator = CameraNodelet::frames_per_second;
       xioctl(fd, VIDIOC_S_PARM, &parm);
       xioctl(fd, VIDIOC_G_PARM, &parm);
 
@@ -133,7 +134,8 @@ namespace is_camera {
       type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       xioctl(fd, VIDIOC_STREAMON, &type);
 
-      SetParameters(camera_gain, camera_exposure);
+      SetGain(camera_gain);
+      SetExposure(camera_exposure);
     }
 
     ~V4LStruct() {
@@ -147,18 +149,20 @@ namespace is_camera {
       v4l2_close(fd);
     }
 
-    void SetParameters(int gain, int exposure) {
-      // Set the camera gain
+    void SetGain(int gain) {
       struct v4l2_control ctrl;
       memset(&ctrl, 0, sizeof(ctrl));
       ctrl.id = V4L2_CID_GAIN;
       ctrl.value = gain;
-      ioctl(fd, VIDIOC_S_CTRL, &ctrl);
-      // Set the exposure
+      xioctl(fd, VIDIOC_S_CTRL, &ctrl);
+    }
+
+    void SetExposure(int exposure) {
+      struct v4l2_control ctrl;
       memset(&ctrl, 0, sizeof(ctrl));
       ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
       ctrl.value = exposure;
-      ioctl(fd, VIDIOC_S_CTRL, &ctrl);
+      xioctl(fd, VIDIOC_S_CTRL, &ctrl);
     }
   };
 
@@ -169,11 +173,13 @@ namespace is_camera {
     camera_topic_(""),
     bayer_camera_topic_(""),
     calibration_mode_(false),
-    bayer_throttle_ratio_counter_(0),
+    bayer_trigger_(3),
     bayer_enable_(false),
     auto_exposure_(false),
     err_p_(0),
-    err_i_(0)
+    err_i_(0),
+    read_params_trigger_(frames_per_second), // 1 Hz
+    auto_exposure_trigger_(frames_per_second) // 1 Hz
     {}
 
   CameraNodelet::~CameraNodelet() {
@@ -205,24 +211,6 @@ namespace is_camera {
 
     config_.AddFile("cameras.config");
     ReadParams();
-    config_timer_ = GetPrivateHandle()->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
-      config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));}, false, true);
-    auto_exposure_timer_ = GetPrivateHandle()->createTimer(
-      ros::Duration(1),
-      [this](ros::TimerEvent e) {
-        // Publish exposure data
-        std_msgs::Int32MultiArray msg;
-        msg.data.push_back(camera_gain_);
-        if (auto_exposure_) {
-          AutoExposure();
-          msg.data.push_back(camera_auto_exposure_);
-        } else {
-          msg.data.push_back(camera_exposure_);
-        }
-        pub_exposure_.publish(msg);
-      }
-      ,
-      false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
     info_pub_ = nh->advertise<sensor_msgs::CameraInfo>(camera_topic_ + "/camera_info", 1);
@@ -267,24 +255,26 @@ namespace is_camera {
       exit(EXIT_FAILURE);
     }
 
-    if (!camera.GetInt("gain", &camera_gain_)) {
+    int desired_camera_gain;
+    if (!camera.GetInt("gain", &desired_camera_gain)) {
       FF_FATAL("Gain not specified.");
       exit(EXIT_FAILURE);
     }
 
-    if (!camera.GetInt("exposure", &camera_exposure_)) {
+    int desired_camera_exposure;
+    if (!camera.GetInt("exposure", &desired_camera_exposure)) {
       FF_FATAL("Gain not specified.");
       exit(EXIT_FAILURE);
     }
 
     // overwrite gain and exposure in calibration mode
     if (calibration_mode_) {
-      if (!camera.GetInt("calibration_gain", &camera_gain_)) {
+      if (!camera.GetInt("calibration_gain", &desired_camera_gain)) {
         FF_FATAL("Calibration gain not specified.");
         exit(EXIT_FAILURE);
       }
 
-      if (!camera.GetInt("calibration_exposure", &camera_exposure_)) {
+      if (!camera.GetInt("calibration_exposure", &desired_camera_exposure)) {
         FF_FATAL("Calibration exposure not specified.");
         exit(EXIT_FAILURE);
       }
@@ -327,13 +317,16 @@ namespace is_camera {
       exit(EXIT_FAILURE);
     }
 
-    if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio_)) {
+    unsigned int bayer_throttle_ratio;
+    if (!camera.GetUInt("bayer_throttle_ratio", &bayer_throttle_ratio)) {
       FF_FATAL("Bayer throttle ratio not specified.");
       exit(EXIT_FAILURE);
     }
+    bayer_trigger_.SetPeriod(bayer_throttle_ratio);
 
-    if (thread_running_ && !auto_exposure_) {
-      v4l_->SetParameters(camera_gain_, camera_exposure_);
+    if (!auto_exposure_) {
+      SetGain(desired_camera_gain);
+      SetExposure(desired_camera_exposure);
     }
   }
 
@@ -398,12 +391,12 @@ namespace is_camera {
   }
 
   // Timer that periodically changes camera exposure based on the captured image's histogram
-  void CameraNodelet::AutoExposure() {
+  void CameraNodelet::UpdateAutoExposure() {
     // If images not being captured, do not adjust exposure
     if (!thread_running_ || ((pub_.getNumSubscribers() == 0) && (getNumBayerSubscribers() == 0))) return;
 
     // Get last generated image from buffer (index incremented after image completed)
-    sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ - 1) % kImageMsgBuffer];
+    sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ + kImageMsgBuffer - 1) % kImageMsgBuffer];
 
     cv::Mat input(kImageHeight, kImageWidth,
                      cv::DataType<uint8_t>::type,
@@ -438,11 +431,36 @@ namespace is_camera {
         err_i_ = (err_i_ > 0) ? max_i_ : - max_i_;
       }
       // Update camera exposure parameter
-      camera_auto_exposure_ = std::round(camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
-      if (camera_auto_exposure_ < 50.0) camera_auto_exposure_ = 50.0;
-      else if (camera_auto_exposure_ > 250.0) camera_auto_exposure_ = 250.0;
+      int desired_camera_exposure = std::round(camera_exposure_ + k_p_ * err_p_ + k_i_ * err_i_);
+      if (desired_camera_exposure < 50.0) desired_camera_exposure = 50.0;
+      else if (desired_camera_exposure > 250.0) desired_camera_exposure = 250.0;
 
-      v4l_->SetParameters(camera_gain_, camera_auto_exposure_);
+      SetExposure(desired_camera_exposure);
+    }
+  }
+
+  void CameraNodelet::PublishExposure() {
+    std_msgs::Int32MultiArray msg;
+    msg.data.push_back(camera_gain_);
+    msg.data.push_back(camera_exposure_);
+    pub_exposure_.publish(msg);
+  }
+
+  void CameraNodelet::SetGain(int gain) {
+    if (gain != camera_gain_) {
+      if (thread_running_) {
+        v4l_->SetGain(gain);
+      }
+      camera_gain_ = gain;
+    }
+  }
+
+  void CameraNodelet::SetExposure(int exposure) {
+    if (exposure != camera_exposure_) {
+      if (thread_running_) {
+        v4l_->SetExposure(exposure);
+      }
+      camera_exposure_ = exposure;
     }
   }
 
@@ -532,13 +550,17 @@ namespace is_camera {
 
           // Increment index in ring buffer
           img_msg_buffer_idx_ = (img_msg_buffer_idx_ + 1) % kImageMsgBuffer;
+
+          if (auto_exposure_) {
+            if (auto_exposure_trigger_.Tick()) {
+              UpdateAutoExposure();
+              PublishExposure();
+            }
+          }
         }
 
         if (getNumBayerSubscribers() > 0) {
-          bayer_throttle_ratio_counter_ = (bayer_throttle_ratio_counter_ + 1)
-            % bayer_throttle_ratio_;
-
-          if (bayer_throttle_ratio_counter_ == 0) {
+          if (bayer_trigger_.Tick()) {
             sensor_msgs::ImagePtr& out_image = bayer_img_msg_buffer_[bayer_img_msg_buffer_idx_];
 
             // Copy the raw Bayer format data into the pre-allocated
@@ -566,7 +588,19 @@ namespace is_camera {
         }
       }
 
-      ros::spinOnce();
+      if (read_params_trigger_.Tick()) {
+        config_.CheckFilesUpdated(std::bind(&CameraNodelet::ReadParams, this));
+      }
+
+      // This spin call is unexpected because this loop is running in
+      // its own dedicated thread, vs. the normal threading model for
+      // nodelets is that their ROS callbacks (invoked from within a
+      // spin call) are processed in a thread in the nodelet manager's
+      // thread pool. In fact, it's not clear what this call actually
+      // does. Perhaps it's a no-op? If so, better to remove it and
+      // avoid confusion. I recommend removing it at least on an
+      // experimental basis.
+      // ros::spinOnce();
     }
   }
 }  // end namespace is_camera
