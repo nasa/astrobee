@@ -16,23 +16,21 @@
  * under the License.
  */
 
-// Standard ROS includes
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
-#include <ros/ros.h>
-
 // FSW shared libraries
 #include <config_reader/config_reader.h>
 
 // FSW nodelet
-#include <ff_util/ff_names.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_common/ff_names.h>
+#include <ff_util/ff_component.h>
 
 // Proxy library
 #include <signal_lights/signal_lights.h>
 
 // Services
-#include <ff_hw_msgs/ConfigureLEDGroup.h>
+#include <ff_hw_msgs/msg/configure_led_group.hpp>
+namespace ff_hw_msgs {
+typedef msg::ConfigureLEDGroup ConfigureLEDGroup;
+}  // namespace ff_hw_msgs
 
 #include <cerrno>
 #include <cstring>
@@ -42,43 +40,46 @@
  */
 namespace signal_lights {
 
+FF_DEFINE_LOGGER("signal_lights")
+
 class SignalPair {
  public:
   std::string name;
-  ros::Timer timer;
+  ff_util::FreeFlyerTimer timer;
   signal_lights::SignalLights signal_lights;
 
   SignalPair(std::string name, signal_lights::Device device)
       : name(name), signal_lights(device) {}
 };
 
-class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
+class SignalLightsNodelet : public ff_util::FreeFlyerComponent {
  public:
-  SignalLightsNodelet() : ff_util::FreeFlyerNodelet(NODE_SIGNAL_LIGHTS) {}
+  explicit SignalLightsNodelet(const rclcpp::NodeOptions& options) :
+  ff_util::FreeFlyerComponent(options, NODE_SIGNAL_LIGHTS, true) {}
 
   virtual ~SignalLightsNodelet() {
-    ROS_INFO("Signal lights nodelet is shutting down");
+    FF_INFO("Signal lights nodelet is shutting down");
     for (size_t i = 0; i < devices_.size(); i++) {
       devices_[i].signal_lights.SetAll(1, 1, 1);
       for (size_t p = 0; p < 4; p++) {
         devices_[i].signal_lights.Poll();
       }
     }
-    ROS_INFO("Signal lights nodelet shut down complete");
+    FF_INFO("Signal lights nodelet shut down complete");
   }
 
  protected:
-  virtual void Initialize(ros::NodeHandle* nh) {
+  virtual void Initialize(NodeHandle nh) {
     config_params.AddFile("hw/signal_lights.config");
     if (!config_params.ReadFiles()) {
-      ROS_ERROR("Could not open config file");
+      FF_ERROR("Could not open config file");
       return;
     }
 
     // Get the bus
     std::string i2c_bus;
     if (!config_params.GetStr("i2c_bus", &i2c_bus)) {
-      ROS_ERROR("Could not get i2c bus");
+      FF_ERROR("Could not get i2c bus");
       return;
     }
 
@@ -86,7 +87,7 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
     double rate;
     // Get the max update rate
     if (!config_params.GetPosReal("control_rate_hz", &rate)) {
-      ROS_ERROR("Could not get the max update rate.");
+      FF_ERROR("Could not get the max update rate.");
       return;
     }
 
@@ -99,17 +100,17 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
     for (int i = 0; i < devices.GetSize(); i++) {
       config_reader::ConfigReader::Table device;
       if (!devices.GetTable(i + 1, &device)) {
-        ROS_ERROR("Could not get device table");
+        FF_ERROR("Could not get device table");
         return;
       }
       std::string name;
       if (!device.GetStr("name", &name)) {
-        ROS_ERROR("Could not get device name");
+        FF_ERROR("Could not get device name");
         return;
       }
       int addr;
       if (!device.GetInt("addr", &addr)) {
-        ROS_ERROR("Could not get device address");
+        FF_ERROR("Could not get device address");
         return;
       }
 
@@ -117,27 +118,26 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
       devices_.push_back(
           SignalPair(name, signal_lights::Device("/dev/i2c-2", (uint8_t)addr)));
 
-      devices_[i].timer =
-          nh->createTimer(ros::Duration(1.0 / rate),
-                          boost::bind(&SignalLightsNodelet::TimerCallback, this,
-                                      _1, &devices_[i]),
-                          false, true);
+      devices_[i].timer.createTimer(1.0 / rate,
+                          std::bind(&SignalLightsNodelet::TimerCallback, this,
+                                    &devices_[i]),
+                          nh, false, true);
 
-      ROS_INFO("Setup one signal lights device!");
+      FF_INFO("Setup one signal lights device!");
     }
 
     // LED update services
-    sub_ = nh->subscribe(TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG, 5,
-                         &SignalLightsNodelet::ConfigureCallback, this);
+    sub_ = FF_CREATE_SUBSCRIBER(nh, ff_hw_msgs::ConfigureLEDGroup, TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG, 5,
+                         std::bind(&SignalLightsNodelet::ConfigureCallback, this, std::placeholders::_1));
   }
 
   // Callback for polling the signal light system
-  void TimerCallback(ros::TimerEvent const& timer, SignalPair* s) {
+  void TimerCallback(SignalPair* s) {
     s->signal_lights.Poll();
   }
 
   // Callback for configuring the signal lights
-  void ConfigureCallback(const ff_hw_msgs::ConfigureLEDGroup::ConstPtr& msg) {
+  void ConfigureCallback(const std::shared_ptr<ff_hw_msgs::ConfigureLEDGroup> msg) {
     for (auto& d : devices_) {
       if (msg->side == d.name) {
         for (const auto& i : msg->leds) {
@@ -146,15 +146,21 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
         return;
       }
     }
-    ROS_ERROR("Signal light update received for unknown subsystem");
+    FF_ERROR("Signal light update received for unknown subsystem");
   }
 
  private:
   config_reader::ConfigReader config_params;  // LUA configuration reader
   std::vector<SignalPair> devices_;
-  ros::Subscriber sub_;  // Configure service
+  rclcpp::Subscription<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr sub_;  // Configure service
 };
 
-PLUGINLIB_EXPORT_CLASS(signal_lights::SignalLightsNodelet, nodelet::Nodelet);
 
 }  // namespace signal_lights
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(signal_lights::SignalLightsNodelet)

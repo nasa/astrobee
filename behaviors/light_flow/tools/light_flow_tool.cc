@@ -16,21 +16,26 @@
  * under the License.
  */
 
-#include <ff_hw_msgs/ConfigureLED.h>
-#include <ff_hw_msgs/ConfigureLEDGroup.h>
-#include <ff_util/ff_names.h>
+#include <ff_hw_msgs/msg/configure_led_group.hpp>
+namespace ff_hw_msgs {
+  typedef msg::ConfigureLEDGroup ConfigureLEDGroup;
+}  // namespace ff_hw_msgs
+
+#include <ff_common/ff_names.h>
+#include <ff_common/ff_ros.h>
 #include <jsoncpp/json/allocator.h>
 #include <jsoncpp/json/json.h>
 #include <jsoncpp/json/value.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <stdio.h>
 #include <iostream>
 #include "../include/light_flow.h"
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "light_flow_publisher");
-  ros::NodeHandle nh;
-  ros::Publisher publishLEDGroup = nh.advertise<ff_hw_msgs::ConfigureLEDGroup>(
+  rclcpp::init(argc, argv);
+  auto nh = std::make_shared<rclcpp::Node>("light_flow_publisher");
+  rclcpp::Publisher<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr publishLEDGroup;
+  publishLEDGroup = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::ConfigureLEDGroup,
       TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG, 1000);
   Json::Value input;
   std::cin >> input;

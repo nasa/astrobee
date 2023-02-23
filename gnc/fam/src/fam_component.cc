@@ -19,24 +19,20 @@
 #include <fam/fam.h>
 
 #include <ff_common/init.h>
-#include <ff_util/ff_nodelet.h>
-
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
+#include <ff_util/ff_component.h>
 
 #include <memory>
 
 namespace fam {
 
-class FamNodelet : public ff_util::FreeFlyerNodelet {
+class FamComponent : public ff_util::FreeFlyerComponent {
  public:
-  FamNodelet() : ff_util::FreeFlyerNodelet(NODE_FAM, true) {}
-  ~FamNodelet() {}
+  explicit FamComponent(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options, NODE_FAM) {}
+  ~FamComponent() {}
   // This is called when the nodelet is loaded into the nodelet manager
-  void Initialize(ros::NodeHandle *nh) {
-    // Bootstrap our environment
-    ff_common::InitFreeFlyerApplication(getMyArgv(), false);
-    fam_.reset(new fam::Fam(this->GetPlatformHandle(true)));
+  void Initialize(NodeHandle nh) {
+    // this used to be multi-threaded, but don't think it needs to be
+    fam_.reset(new fam::Fam(nh));
   }
 
  private:
@@ -45,5 +41,7 @@ class FamNodelet : public ff_util::FreeFlyerNodelet {
 
 }  // end namespace fam
 
+#include "rclcpp_components/register_node_macro.hpp"
+
 // Declare the plugin
-PLUGINLIB_EXPORT_CLASS(fam::FamNodelet, nodelet::Nodelet);
+RCLCPP_COMPONENTS_REGISTER_NODE(fam::FamComponent)

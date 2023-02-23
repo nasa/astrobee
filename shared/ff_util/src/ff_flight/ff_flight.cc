@@ -32,6 +32,8 @@
 #define THRESHOLD_RADIAN   0.01
 #define INVALID_VALUE      -1.0
 
+FF_DEFINE_LOGGER("ff_flight");
+
 namespace ff_util {
 
   //////////////////////////////////////////////////////////////////////

@@ -47,16 +47,12 @@ void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(NodeHandle &nh) {
   heartbeat_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, 5);
   reset_pub_ = FF_CREATE_PUBLISHER(nh, std_msgs::Empty, TOPIC_GNC_EKF_RESET, 10);
 
-  pose_sub_ = FF_CREATE_SUBSCRIBER(nh,
-                                   geometry_msgs::PoseStamped,
-                                   TOPIC_LOCALIZATION_TRUTH,
-                                   1,
-                                   &GroundTruthLocalizerNodelet::PoseCallback);
-  twist_sub_ = FF_CREATE_SUBSCRIBER(nh,
-                                  geometry_msgs::TwistStamped,
-                                  TOPIC_LOCALIZATION_TRUTH_TWIST,
-                                  1,
-                                  &GroundTruthLocalizerNodelet::TwistCallback);
+  pose_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::PoseStamped,
+    TOPIC_LOCALIZATION_TRUTH, 1,
+    std::bind(&GroundTruthLocalizerNodelet::PoseCallback, this, std::placeholders::_1));
+  twist_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::TwistStamped,
+    TOPIC_LOCALIZATION_TRUTH_TWIST, 1,
+    std::bind(&GroundTruthLocalizerNodelet::TwistCallback, this, std::placeholders::_1));
 
   input_mode_srv_ = nh->create_service<ff_msgs::SetEkfInput>(
     SERVICE_GNC_EKF_SET_INPUT,
@@ -83,7 +79,7 @@ bool GroundTruthLocalizerNodelet::DefaultServiceResponse(const std::shared_ptr<s
   return true;
 }
 
-void GroundTruthLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose) {
+void GroundTruthLocalizerNodelet::PoseCallback(const std::shared_ptr<geometry_msgs::PoseStamped> pose) {
   assert(pose->header.frame_id == "world");
   pose_ = PoseFromMsg(*pose);
   pose_pub_->publish(*pose);
@@ -98,7 +94,7 @@ void GroundTruthLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::Const
   heartbeat_pub_->publish(heartbeat_);
 }
 
-void GroundTruthLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {
+void GroundTruthLocalizerNodelet::TwistCallback(const std::shared_ptr<geometry_msgs::TwistStamped> twist) {
   assert(twist->header.frame_id == "world");
   twist_ = TwistFromMsg(*twist);
   twist_pub_->publish(*twist);

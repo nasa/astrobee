@@ -22,7 +22,7 @@ project(ff_util)
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
-set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
 # Find amend and libraries
 find_package(ament_cmake REQUIRED)
@@ -171,6 +171,7 @@ endif()
 ament_export_dependencies(
   config_reader
   msg_conversions
+  ff_common
 )
 
 ament_export_include_directories(include)

@@ -22,17 +22,6 @@
 // ROS includes
 #include <ff_common/ff_ros.h>
 
-#if ROS1
-// General information
-#include <geometry_msgs/InertiaStamped.h>
-
-// Message includes
-#include <ff_msgs/EkfState.h>
-#include <ff_msgs/ControlState.h>
-#include <ff_msgs/FlightMode.h>
-
-#else
-FF_DEFINE_LOGGER("ff_flight");
 // General information
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/inertia_stamped.hpp>
@@ -50,7 +39,6 @@ typedef msg::EkfState EkfState;
 typedef msg::ControlState ControlState;
 typedef msg::FlightMode FlightMode;
 }  // namespace ff_msgs
-#endif
 
 // Eigen includes
 #include <Eigen/Dense>

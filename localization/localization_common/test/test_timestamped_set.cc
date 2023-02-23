@@ -31,7 +31,7 @@ TEST(TimestampedSetTester, Constructor) {
   std::vector<lc::Time> timestamps{5.2, 7.1, 11.3};
   lc::TimestampedSet<double> timestamped_set(timestamps, values);
   EXPECT_EQ(timestamped_set.size(), values.size());
-  for (int i = 0; i < timestamps.size(); ++i) {
+  for (unsigned int i = 0; i < timestamps.size(); ++i) {
     ASSERT_TRUE(timestamped_set.Contains(timestamps[i]));
     const auto value = timestamped_set.Get(timestamps[i]);
     ASSERT_TRUE(value != boost::none);
@@ -42,14 +42,14 @@ TEST(TimestampedSetTester, Constructor) {
 
 TEST(TimestampedSetTester, AddRemoveContainsEmptySize) {
   lc::TimestampedSet<double> timestamped_set;
-  EXPECT_EQ(timestamped_set.size(), 0);
+  EXPECT_EQ(timestamped_set.size(), 0U);
   EXPECT_TRUE(timestamped_set.empty());
 
   // Add element 1
   const double value_1 = 100.3;
   const localization_common::Time timestamp_1 = 1.0;
   EXPECT_TRUE(timestamped_set.Add(timestamp_1, value_1));
-  EXPECT_EQ(timestamped_set.size(), 1);
+  EXPECT_EQ(timestamped_set.size(), 1U);
   EXPECT_FALSE(timestamped_set.empty());
   {
     EXPECT_TRUE(timestamped_set.Get(2.0) == boost::none);
@@ -64,7 +64,7 @@ TEST(TimestampedSetTester, AddRemoveContainsEmptySize) {
   const double value_2 = 100.3;
   const localization_common::Time timestamp_2 = 3.3;
   EXPECT_TRUE(timestamped_set.Add(timestamp_2, value_2));
-  EXPECT_EQ(timestamped_set.size(), 2);
+  EXPECT_EQ(timestamped_set.size(), 2U);
   EXPECT_FALSE(timestamped_set.empty());
   {
     EXPECT_TRUE(timestamped_set.Get(7.0) == boost::none);
@@ -87,7 +87,7 @@ TEST(TimestampedSetTester, AddRemoveContainsEmptySize) {
   EXPECT_TRUE(timestamped_set.Get(timestamp_2) != boost::none);
   EXPECT_TRUE(timestamped_set.Contains(timestamp_2));
   EXPECT_TRUE(timestamped_set.Get(timestamp_2) != boost::none);
-  EXPECT_EQ(timestamped_set.size(), 1);
+  EXPECT_EQ(timestamped_set.size(), 1U);
   EXPECT_FALSE(timestamped_set.empty());
   {
     const auto good_val = timestamped_set.Get(timestamp_2);
@@ -106,7 +106,7 @@ TEST(TimestampedSetTester, AddRemoveContainsEmptySize) {
   EXPECT_FALSE(timestamped_set.Contains(timestamp_1));
   EXPECT_TRUE(timestamped_set.Get(timestamp_2) == boost::none);
   EXPECT_FALSE(timestamped_set.Contains(timestamp_2));
-  EXPECT_EQ(timestamped_set.size(), 0);
+  EXPECT_EQ(timestamped_set.size(), 0U);
   EXPECT_TRUE(timestamped_set.empty());
   {
     const auto bad_val = timestamped_set.Get(timestamp_2);
@@ -398,17 +398,17 @@ TEST(TimestampedSetTester, OldValues) {
   ASSERT_TRUE(timestamped_set.Add(t3, v3));
   {
     const auto old_values = timestamped_set.OldValues(0);
-    EXPECT_EQ(old_values.size(), 0);
+    EXPECT_EQ(old_values.size(), 0U);
   }
   {
     const auto old_values = timestamped_set.OldValues(0.1);
-    ASSERT_EQ(old_values.size(), 1);
+    ASSERT_EQ(old_values.size(), 1U);
     EXPECT_EQ(old_values[0].value, v0);
     EXPECT_EQ(old_values[0].timestamp, t0);
   }
   {
     const auto old_values = timestamped_set.OldValues(1.7);
-    ASSERT_EQ(old_values.size(), 2);
+    ASSERT_EQ(old_values.size(), 2U);
     EXPECT_EQ(old_values[0].value, v0);
     EXPECT_EQ(old_values[0].timestamp, t0);
     EXPECT_EQ(old_values[1].value, v1);
@@ -416,7 +416,7 @@ TEST(TimestampedSetTester, OldValues) {
   }
   {
     const auto old_values = timestamped_set.OldValues(1999);
-    ASSERT_EQ(old_values.size(), 4);
+    ASSERT_EQ(old_values.size(), 4U);
     EXPECT_EQ(old_values[0].value, v0);
     EXPECT_EQ(old_values[0].timestamp, t0);
     EXPECT_EQ(old_values[1].value, v1);
@@ -445,7 +445,7 @@ TEST(TimestampedSetTester, RemoveOldValues) {
     ASSERT_TRUE(timestamped_set.Add(t3, v3));
     const int num_values_removed = timestamped_set.RemoveOldValues(0);
     EXPECT_EQ(num_values_removed, 0);
-    EXPECT_EQ(timestamped_set.size(), 4);
+    EXPECT_EQ(timestamped_set.size(), 4U);
   }
   {
     lc::TimestampedSet<double> timestamped_set;
@@ -463,7 +463,7 @@ TEST(TimestampedSetTester, RemoveOldValues) {
     ASSERT_TRUE(timestamped_set.Add(t3, v3));
     const int num_values_removed = timestamped_set.RemoveOldValues(0.1);
     EXPECT_EQ(num_values_removed, 1);
-    EXPECT_EQ(timestamped_set.size(), 3);
+    EXPECT_EQ(timestamped_set.size(), 3U);
     const auto timestamps = timestamped_set.Timestamps();
     EXPECT_EQ(timestamps[0], t1);
     EXPECT_EQ(timestamps[1], t2);
@@ -485,7 +485,7 @@ TEST(TimestampedSetTester, RemoveOldValues) {
     ASSERT_TRUE(timestamped_set.Add(t3, v3));
     const int num_values_removed = timestamped_set.RemoveOldValues(1.334);
     EXPECT_EQ(num_values_removed, 2);
-    EXPECT_EQ(timestamped_set.size(), 2);
+    EXPECT_EQ(timestamped_set.size(), 2U);
     const auto timestamps = timestamped_set.Timestamps();
     EXPECT_EQ(timestamps[0], t2);
     EXPECT_EQ(timestamps[1], t3);
@@ -507,7 +507,7 @@ TEST(TimestampedSetTester, RemoveOldValues) {
     ASSERT_TRUE(timestamped_set.Add(t3, v3));
     const int num_values_removed = timestamped_set.RemoveOldValues(2.78);
     EXPECT_EQ(num_values_removed, 3);
-    EXPECT_EQ(timestamped_set.size(), 1);
+    EXPECT_EQ(timestamped_set.size(), 1U);
     const auto timestamps = timestamped_set.Timestamps();
     EXPECT_EQ(timestamps[0], t3);
   }
@@ -528,7 +528,7 @@ TEST(TimestampedSetTester, RemoveOldValues) {
     ASSERT_TRUE(timestamped_set.Add(t3, v3));
     const int num_values_removed = timestamped_set.RemoveOldValues(1923.78);
     EXPECT_EQ(num_values_removed, 4);
-    EXPECT_EQ(timestamped_set.size(), 0);
+    EXPECT_EQ(timestamped_set.size(), 0U);
   }
 }
 
@@ -547,7 +547,7 @@ TEST(TimestampedSetTester, Timestamps) {
   lc::TimestampedSet<double> timestamped_set;
   {
     const auto timestamps = timestamped_set.Timestamps();
-    EXPECT_EQ(timestamps.size(), 0);
+    EXPECT_EQ(timestamps.size(), 0U);
   }
   const double t0 = 0;
   const double t1 = 1;
