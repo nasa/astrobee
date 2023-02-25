@@ -54,15 +54,11 @@ class Serialization {
     contents.assign(std::istreambuf_iterator<char>(ifs),
                 std::istreambuf_iterator<char>());
     ifs.close();
-    fprintf(stderr, "a\n");
     rcl_serialized_message_t m = rmw_get_zero_initialized_serialized_message();
-    fprintf(stderr, "b\n");
     m.buffer = reinterpret_cast<unsigned char*>(const_cast<char*>(contents.c_str()));
     m.buffer_length = contents.size();
     m.buffer_capacity = contents.size();
-    fprintf(stderr, "c %p %d %d\n", m.buffer, m.buffer_length, m.buffer_capacity);
     rclcpp::SerializedMessage s(m);
-    fprintf(stderr, "d\n");
     auto serializer = rclcpp::Serialization<RosMessage>();
     serializer.deserialize_message(&s, reinterpret_cast<void*>(&msg));
     return true;

@@ -247,14 +247,12 @@ bool Validator::Init(NodeHandle & nh, ff_util::ConfigServer & cfg) {
   overwrite_ = cfg.Get<bool>("zone_overwrite");
   // Try and open the zone file. If this doesn't work, that's OK. It just means
   // that we need to wait for them to be updated.
-  FF_WARN_STREAM("start");
   // TODO(bcoltin): fix serialization
   // if (!ff_util::Serialization::ReadFile(zone_file_, zones_)) {
   //   FF_WARN_STREAM("Cannot open zone file " << zone_file_);
   // } else {
   //   PublishMarkers();
   // }
-  FF_WARN_STREAM("done");
   // Update map
   GetZonesMap();
   // Success
