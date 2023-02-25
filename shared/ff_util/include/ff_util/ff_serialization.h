@@ -20,7 +20,7 @@
 #define FF_UTIL_FF_SERIALIZATION_H_
 
 // ROS includes
-#include <ros/ros.h>
+#include <rclcpp/serialization.hpp>
 
 // STL includes
 #include <fstream>
@@ -36,11 +36,11 @@ class Serialization {
     std::ofstream ofs(file_name, std::ios::out | std::ios::binary);
     if (!ofs.is_open())
       return false;
-    uint32_t serial_size = ros::serialization::serializationLength(msg);
-    boost::shared_array < uint8_t > obuffer(new uint8_t[serial_size]);
-    ros::serialization::OStream ostream(obuffer.get(), serial_size);
-    ros::serialization::serialize(ostream, msg);
-    ofs.write(reinterpret_cast < char* > (obuffer.get()), serial_size);
+    auto serializer = rclcpp::Serialization<RosMessage>();
+    rclcpp::SerializedMessage s;
+    serializer.serialize_message(reinterpret_cast<const void*>(&msg), &s);
+    uint32_t serial_size = s.size();
+    ofs.write(reinterpret_cast < char* > (s.get_rcl_serialized_message().buffer), serial_size);
     ofs.close();
     return true;
   }
@@ -50,16 +50,21 @@ class Serialization {
     std::ifstream ifs(file_name, std::ios::in | std::ios::binary);
     if (!ifs.is_open())
       return false;
-    ifs.seekg(0, std::ios::end);
-    std::streampos end = ifs.tellg();
-    ifs.seekg(0, std::ios::beg);
-    std::streampos begin = ifs.tellg();
-    uint32_t file_size = end - begin;
-    boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
-    ifs.read(reinterpret_cast<char*> (ibuffer.get()), file_size);
-    ros::serialization::IStream istream(ibuffer.get(), file_size);
-    ros::serialization::deserialize(istream, msg);
+    std::string contents;
+    contents.assign(std::istreambuf_iterator<char>(ifs),
+                std::istreambuf_iterator<char>());
     ifs.close();
+    fprintf(stderr, "a\n");
+    rcl_serialized_message_t m = rmw_get_zero_initialized_serialized_message();
+    fprintf(stderr, "b\n");
+    m.buffer = reinterpret_cast<unsigned char*>(const_cast<char*>(contents.c_str()));
+    m.buffer_length = contents.size();
+    m.buffer_capacity = contents.size();
+    fprintf(stderr, "c %p %d %d\n", m.buffer, m.buffer_length, m.buffer_capacity);
+    rclcpp::SerializedMessage s(m);
+    fprintf(stderr, "d\n");
+    auto serializer = rclcpp::Serialization<RosMessage>();
+    serializer.deserialize_message(&s, reinterpret_cast<void*>(&msg));
     return true;
   }
 };

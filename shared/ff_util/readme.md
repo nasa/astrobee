@@ -55,6 +55,3 @@ The FreeFlyerActionClient and FreeFlyerActionServer classes are essentially wrap
 
 Similar to FreeFlyerAction, the FreeFlyerServiceClient augments ROS services with various timeouts, preventing unnecessary boilerplate code.
 
-# Performance timer (perf_timer)
-
-This class provides a simple mechanism for timing segments of code using a pattern similar to tic() and toc() in matlab. Under the hood it uses std::chrono to query the current time according to the high-resolution clock. It maintains a running average, variance and standard deviation of the duration between the tic() and toc() calls, which can then be printed out as debug or sent as a ROS message for introspection elsewhere.

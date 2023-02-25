@@ -15,40 +15,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(choreographer)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  ff_util
-  mapper
-  ff_msgs
-  ff_hw_msgs
-  tf2_ros
-  jsonloader
-)
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-catkin_package(
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    choreographer
-  CATKIN_DEPENDS
-    roscpp
-    nodelet
-    mapper
-    ff_msgs
-    ff_util
-    tf2
-    tf2_ros
-    jsonloader
-)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rcutils REQUIRED)
+
+find_package(ff_common REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(ff_hw_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(jsonloader REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 ###########
 ## Build ##
@@ -57,94 +47,89 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(choreographer
-  src/choreographer_nodelet.cc
+add_library(choreographer SHARED
+  src/choreographer_component.cc
   src/validator.cc
 )
-add_dependencies(choreographer ${catkin_EXPORTED_TARGETS})
-target_link_libraries(choreographer ${catkin_LIBRARIES})
+target_compile_definitions(choreographer
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(choreographer rclcpp rclcpp_components ff_common ff_util ff_msgs ff_hw_msgs jsonloader geometry_msgs nav_msgs visualization_msgs)
+rclcpp_components_register_nodes(choreographer "choreographer::ChoreographerComponent")
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  # Choreographer initialization fault tester
-  add_rostest_gtest(test_init_choreographer
-    test/test_init_choreographer.test
-    test/test_init_choreographer.cc
-  )
-  target_link_libraries(test_init_choreographer
-    ${catkin_LIBRARIES} glog
-  )
-  if(ENABLE_INTEGRATION_TESTING)
-    # Choreographer test obstacles
-    add_rostest_gtest(test_obstacle
-      test/test_obstacle.test
-      test/test_obstacle.cc
-    )
-
-    target_link_libraries(test_obstacle
-      ${catkin_LIBRARIES}
-    )
-
-    # Choreographer test zones keepin
-    add_rostest_gtest(test_zones_keepin
-      test/test_zones_keepin.test
-      test/test_zones_keepin.cc
-    )
-
-    target_link_libraries(test_zones_keepin
-      ${catkin_LIBRARIES}
-    )
-
-    # Choreographer test zones keepout
-    add_rostest_gtest(test_zones_keepout
-      test/test_zones_keepout.test
-      test/test_zones_keepout.cc
-    )
-
-    target_link_libraries(test_zones_keepout
-      ${catkin_LIBRARIES}
-    )
-
-    # Choreographer test zones nominal
-    add_rostest_gtest(test_zones_nominal
-      test/test_zones_nominal.test
-      test/test_zones_nominal.cc
-    )
-
-    target_link_libraries(test_zones_nominal
-      ${catkin_LIBRARIES}
-    )
-  endif()
-endif()
+#if(CATKIN_ENABLE_TESTING)
+#  find_package(rostest REQUIRED)
+#  # Choreographer initialization fault tester
+#  add_rostest_gtest(test_init_choreographer
+#    test/test_init_choreographer.test
+#    test/test_init_choreographer.cc
+#  )
+#  target_link_libraries(test_init_choreographer
+#    ${catkin_LIBRARIES} glog
+#  )
+#  if(ENABLE_INTEGRATION_TESTING)
+#    # Choreographer test obstacles
+#    add_rostest_gtest(test_obstacle
+#      test/test_obstacle.test
+#      test/test_obstacle.cc
+#    )
+#
+#    target_link_libraries(test_obstacle
+#      ${catkin_LIBRARIES}
+#    )
+#
+#    # Choreographer test zones keepin
+#    add_rostest_gtest(test_zones_keepin
+#      test/test_zones_keepin.test
+#      test/test_zones_keepin.cc
+#    )
+#
+#    target_link_libraries(test_zones_keepin
+#      ${catkin_LIBRARIES}
+#    )
+#
+#    # Choreographer test zones keepout
+#    add_rostest_gtest(test_zones_keepout
+#      test/test_zones_keepout.test
+#      test/test_zones_keepout.cc
+#    )
+#
+#    target_link_libraries(test_zones_keepout
+#      ${catkin_LIBRARIES}
+#    )
+#
+#    # Choreographer test zones nominal
+#    add_rostest_gtest(test_zones_nominal
+#      test/test_zones_nominal.test
+#      test/test_zones_nominal.cc
+#    )
+#
+#    target_link_libraries(test_zones_nominal
+#      ${catkin_LIBRARIES}
+#    )
+#  endif()
+#endif()
 
 #############
 ## Install ##
 #############
 
+ament_export_include_directories(include)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
 
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
+ament_package()

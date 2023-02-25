@@ -20,7 +20,7 @@
 #define CHOREOGRAPHER_PLANNER_H_
 
 // Standard includes
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 #include <pcl/point_types.h>
 
 // FSW libraries
@@ -36,13 +36,13 @@
 #include <mapper/point_cloud.h>
 
 // FSW messages
-#include <ff_msgs/PlanAction.h>
-#include <ff_msgs/ControlState.h>
-#include <ff_msgs/Zone.h>
-#include <ff_msgs/RegisterPlanner.h>
-#include <ff_msgs/GetZones.h>
-#include <ff_msgs/GetOccupancyMap.h>
-#include <ff_msgs/GetMap.h>
+#include <ff_msgs/action/plan.hpp>
+#include <ff_msgs/msg/control_state.hpp>
+#include <ff_msgs/msg/zone.hpp>
+#include <ff_msgs/srv/register_planner.hpp>
+#include <ff_msgs/srv/get_zones.hpp>
+#include <ff_msgs/srv/get_occupancy_map.hpp>
+#include <ff_msgs/srv/get_map.hpp>
 
 // Voxel map
 #include <jps3d/planner/jps_3d_util.h>
@@ -57,10 +57,10 @@
 namespace planner {
 
 // Convenience declarations
-using RESPONSE = ff_msgs::PlanResult;
+using RESPONSE = ff_msgs::action::Plan::Result;
 
 // Abstract class for implementing planners
-class PlannerImplementation : public ff_util::FreeFlyerNodelet {
+class PlannerImplementation : public ff_util::FreeFlyerComponent {
  private:
   enum State {
     INITIALIZING,
@@ -88,10 +88,10 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
  protected:
   // Derived classes must implement these functions
   virtual bool InitializePlanner(ros::NodeHandle *nh) = 0;
-  virtual void PlanCallback(ff_msgs::PlanGoal const& goal) = 0;
+  virtual void PlanCallback(ff_msgs::action::Plan::Goal const& goal) = 0;
 
   // Send the planner result
-  void PlanResult(ff_msgs::PlanResult const& result) {
+  void PlanResult(ff_msgs::action::Plan::Result const& result) {
     switch (state_) {
     case PLANNING:
       NODELET_DEBUG_STREAM("Plan result received");
@@ -105,7 +105,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
   // Send some planner feedback
-  void PlanFeedback(ff_msgs::PlanFeedback const& feedback) {
+  void PlanFeedback(ff_msgs::action::Plan::Feedback const& feedback) {
     switch (state_) {
     case PLANNING:
       server_p_.SendFeedback(feedback);
@@ -118,7 +118,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
 
   // Get the keepin and keepout zones
   bool GetZones(std::vector < ff_msgs::Zone > & zones) {
-    ff_msgs::GetZones srv;
+    ff_msgs::srv::GetZones srv;
     if (client_z_.Call(srv)) {
       zones = srv.response.zones;
       return true;
@@ -127,7 +127,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
   // Get the keepin and keepout zones
   bool GetZonesMap(std::vector<signed char> &map, Vec3f &origin, Vec3i &dim, double &map_res) {
-    ff_msgs::GetOccupancyMap srv;
+    ff_msgs::srv::GetOccupancyMap srv;
     if (client_z_m_.Call(srv)) {
       map.resize(srv.response.map.size());
       map = srv.response.map;
@@ -143,7 +143,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
     return false;
   }
   bool GetFreeMap(pcl::PointCloud<pcl::PointXYZ> *points, float *resolution) {
-    ff_msgs::GetMap srv;
+    ff_msgs::srv::GetMap srv;
     if (client_f_.Call(srv)) {
       pcl::fromROSMsg(srv.response.points, *points);
       *resolution = srv.response.resolution;
@@ -152,7 +152,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
     return false;
   }
   bool GetObstacleMap(pcl::PointCloud<pcl::PointXYZ> *points, float *resolution) {
-    ff_msgs::GetMap srv;
+    ff_msgs::srv::GetMap srv;
     if (client_o_.Call(srv)) {
       pcl::fromROSMsg(srv.response.points, *points);
       *resolution = srv.response.resolution;
@@ -207,7 +207,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
   // Finish this action
-  void Complete(int32_t response_code, ff_msgs::PlanResult result = ff_msgs::PlanResult()) {
+  void Complete(int32_t response_code, ff_msgs::action::Plan::Result result = ff_msgs::action::Plan::Result()) {
     switch (state_) {
     case PLANNING:
       result.response = response_code;
@@ -280,7 +280,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
   // Called when a new planning goal arrives
-  void GoalCallback(ff_msgs::PlanGoalConstPtr const& old_goal) {
+  void GoalCallback(const std::shared_ptr<ff_msgs::action::Plan::Goal> & old_goal) {
     NODELET_DEBUG_STREAM("A new plan request was just received");
     NODELET_DEBUG_STREAM(*old_goal);
     switch (state_) {
@@ -310,11 +310,11 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
 
  private:
   State state_;                                          // Planner state
-  ff_util::FreeFlyerActionServer<ff_msgs::PlanAction> server_p_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::GetZones> client_z_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::GetOccupancyMap> client_z_m_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::RegisterPlanner> client_r_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::GetMap> client_f_, client_o_;
+  ff_util::FreeFlyerActionServer<ff_msgs::action::PlanAction> server_p_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetZones> client_z_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetOccupancyMap> client_z_m_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::RegisterPlanner> client_r_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetMap> client_f_, client_o_;
   ff_msgs::RegisterPlanner registration_;                // Registration info
   config_reader::ConfigReader cfg_fm_;                   // Configuration
 };

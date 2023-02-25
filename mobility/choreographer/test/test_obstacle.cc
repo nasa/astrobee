@@ -105,7 +105,6 @@ TEST(choreographer_nominal, ZoneBreach) {
   cfg.Set<bool>("enable_validation", true);
   cfg.Set<bool>("enable_bootstrapping", true);
   cfg.Set<bool>("enable_immediate", true);
-  cfg.Set<bool>("enable_timesync", false);
   cfg.Set<bool>("enable_replanning", false);
   cfg.Set<bool>("enable_faceforward", true);
   cfg.Set<std::string>("planner", "trapezoidal");

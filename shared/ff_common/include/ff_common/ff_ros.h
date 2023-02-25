@@ -104,13 +104,13 @@ inline rclcpp::QoS QoSType(std::string const& topic, size_t history_depth) {
 
 template<class MessageType>
 using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
-#define FF_CREATE_SERVICE(serv, msg, topic, callback) \
-  serv = node_->create_service<msg>(topic, callback)
+#define FF_CREATE_SERVICE(node, msg, topic, callback) \
+  node->create_service<msg>(topic, callback)
 
 template<class MessageType>
 using ServiceClient = std::shared_ptr<rclcpp::Client<MessageType>>;
-#define FF_CREATE_SERVICE_CLIENT(serv_client, msg, topic) \
-  serv_client = node_->create_client<msg>(topic)
+#define FF_CREATE_SERVICE_CLIENT(node, msg, topic) \
+  node->create_client<msg>(topic)
 
 using Duration = std::shared_ptr<rclcpp::Duration>;
 

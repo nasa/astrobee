@@ -285,11 +285,11 @@ def generate_launch_description():
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='choreographer',
-            #     plugin='choreographer::ChoreographerNodelet',
-            #     name='choreographer',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='choreographer',
+                plugin='choreographer::ChoreographerComponent',
+                name='choreographer',
+                extra_arguments=[{'use_intra_process_comms': False}]),
             # ComposableNode(
             #     package='planner_trapezoidal',
             #     plugin='planner_trapezoidal::PlannerTrapezoidalNodelet',

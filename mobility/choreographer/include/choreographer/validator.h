@@ -20,22 +20,23 @@
 #define CHOREOGRAPHER_VALIDATOR_H_
 
 // ROS libraries
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // ROS messages
-#include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 // FSW utils
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_serialization.h>
+#include <ff_util/ff_service.h>
 #include <ff_util/config_server.h>
 
 // FSW messages
-#include <ff_msgs/Zone.h>
-#include <ff_msgs/SetZones.h>
-#include <ff_msgs/GetZones.h>
-#include <ff_msgs/GetOccupancyMap.h>
-#include <ff_msgs/GetFloat.h>
+#include <ff_msgs/msg/zone.hpp>
+#include <ff_msgs/srv/set_zones.hpp>
+#include <ff_msgs/srv/get_zones.hpp>
+#include <ff_msgs/srv/get_occupancy_map.hpp>
+#include <ff_msgs/srv/get_float.hpp>
 
 // Voxel map
 #include <jps3d/planner/jps_3d_util.h>
@@ -67,11 +68,11 @@ class Validator {
   };
 
   // Load the keep in the keeo out zones and return if successful
-  bool Init(ros::NodeHandle *nh, ff_util::ConfigServer & cfg);
+  bool Init(NodeHandle& nh, ff_util::ConfigServer & cfg);
 
   // If the check fails, then the info block is populated
   Response CheckSegment(ff_util::Segment const& msg,
-    ff_msgs::FlightMode const& flight_mode, bool face_forward);
+    ff_msgs::msg::FlightMode const& flight_mode, bool face_forward);
 
  protected:
   // Markers for keep in / keep out zones
@@ -84,27 +85,28 @@ class Validator {
   bool GetZonesMap();
 
   // Callback to get the keep in/out zones
-  bool GetZonesCallback(ff_msgs::GetZones::Request& req,
-                       ff_msgs::GetZones::Response& res);
+  void GetZonesCallback(const std::shared_ptr<ff_msgs::srv::GetZones::Request> req,
+                        std::shared_ptr<ff_msgs::srv::GetZones::Response> res);
 
   // Callback to get the keep in/out zones map
-  bool GetZonesMapCallback(ff_msgs::GetOccupancyMap::Request& req,
-                       ff_msgs::GetOccupancyMap::Response& res);
+  void GetZonesMapCallback(const std::shared_ptr<ff_msgs::srv::GetOccupancyMap::Request> req,
+                       std::shared_ptr<ff_msgs::srv::GetOccupancyMap::Response> res);
 
   // Callback to set the keep in/out zones
-  bool SetZonesCallback(ff_msgs::SetZones::Request& req,
-                       ff_msgs::SetZones::Response& res);
+  void SetZonesCallback(const std::shared_ptr<ff_msgs::srv::SetZones::Request> req,
+                       std::shared_ptr<ff_msgs::srv::SetZones::Response> res);
 
  private:
+  NodeHandle* nh_;
   std::string zone_file_;                             // Zone file path
   bool overwrite_;                                    // New zones overwrite
-  ff_msgs::SetZones::Request zones_;                  // Zones
-  ros::Publisher pub_zones_;                          // Zone publisher
-  ros::ServiceServer get_zones_srv_;                  // Get zones service
-  ros::ServiceServer get_zones_map_srv_;              // Get zones map
-  ros::ServiceServer set_zones_srv_;                  // Set zones service
-  ros::ServiceClient get_resolution_;                 // Get the zones map resolution
-  ros::ServiceClient get_map_inflation_;              // Get the zones map inflation
+  ff_msgs::srv::SetZones::Request zones_;             // Zones
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr  pub_zones_;                  // Zone publisher
+  rclcpp::Service<ff_msgs::srv::GetZones>::SharedPtr get_zones_srv_;             // Get zones service
+  rclcpp::Service<ff_msgs::srv::GetOccupancyMap>::SharedPtr get_zones_map_srv_;  // Get zones map
+  rclcpp::Service<ff_msgs::srv::SetZones>::SharedPtr set_zones_srv_;             // Set zones service
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetFloat> get_resolution_;             // Get the zones map resolution
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetFloat> get_map_inflation_;          // Get the zones map inflation
 
   double map_res_ = 0.08;
   std::shared_ptr<JPS::VoxelMapUtil> jps_map_util_;
