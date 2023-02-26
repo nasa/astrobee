@@ -37,7 +37,7 @@ ff_common
 find_package(ament_cmake REQUIRED)
 
 foreach(dep ${dependencies})
-  find_package(${dep})
+  find_package(${dep} REQUIRED)
 endforeach()
 
 ###########
