@@ -41,10 +41,10 @@
 
 
 // ROS2 CONVERSION
-// TODO:  - check if DiagnosticsCallback can be performed without an argument 
-//          (it does align with the rclcpp::create_timer)
-//        - check PlannerResult etc. when choreographer is completed
-//        - how do we want to change the nodelet debug stream? now I use FF_DEBUG_STREAM
+// TODO(joris997):  - check if DiagnosticsCallback can be performed without an argument
+//                    (it does align with the rclcpp::create_timer)
+//                  - check PlannerResult etc. when choreographer is completed
+//                  - how do we want to change the nodelet debug stream? now I use FF_DEBUG_STREAM
 
 
 /**
