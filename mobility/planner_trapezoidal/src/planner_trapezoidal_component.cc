@@ -17,12 +17,11 @@
  */
 
 // Standard includes
-#include <ros/ros.h>
-#include <nodelet/nodelet.h>
+#include <rclpp/rclcpp.hpp>
 #include <pluginlib/class_list_macros.h>
 
 // FSW includes
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_names.h>
 #include <ff_util/config_server.h>
@@ -40,6 +39,14 @@
 #include <algorithm>
 #include <cmath>
 
+
+// ROS2 CONVERSION
+// TODO:  - check if DiagnosticsCallback can be performed without an argument 
+//          (it does align with the rclcpp::create_timer)
+//        - check PlannerResult etc. when choreographer is completed
+//        - how do we want to change the nodelet debug stream? now I use FF_DEBUG_STREAM
+
+
 /**
  * \ingroup planner
  */
@@ -47,33 +54,41 @@ namespace planner_trapezoidal {
 
 using RESPONSE = ff_msgs::PlanResult;
 
-class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
+class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
  public:
-  PlannerTrapezoidalNodelet() :
+  PlannerTrapezoidalComponent() :
     planner::PlannerImplementation("trapezoidal", "Trapezoidal path planner") {}
-  ~PlannerTrapezoidalNodelet() {}
+  ~PlannerTrapezoidalComponent() {}
 
  protected:
-  bool InitializePlanner(ros::NodeHandle *nh) {
-    // Grab some configuration parameters for this node
+  bool InitializePlanner(NodeHandle *nh) {
+    // Grab some configuration parameters for this component
     cfg_.Initialize(GetPrivateHandle(), "mobility/planner_trapezoidal.config");
     cfg_.Listen(boost::bind(
-      &PlannerTrapezoidalNodelet::ReconfigureCallback, this, _1));
+      &PlannerTrapezoidalComponent::ReconfigureCallback, this, _1));
+
     // Setup a timer to forward diagnostics
-    timer_d_ = nh->createTimer(
-      ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-        &PlannerTrapezoidalNodelet::DiagnosticsCallback, this, false, true);
+    timer_d_ = rclcpp::create_timer(this, this->get_clock(),
+      rclcpp::Duration(rclcpp::Rate(DEFAULT_DIAGNOSTICS_RATE)),
+        &PlannerTrapezoidalComponent::DiagnosticsCallback);
+    // timer_d_ = nh->createTimer(
+    //   ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
+    //     &PlannerTrapezoidalComponent::DiagnosticsCallback, this, false, true);
+
     // Save the epsilon value
     epsilon_ = cfg_.Get<double>("epsilon");
-      // Notify initialization complete
-    NODELET_DEBUG_STREAM("Initialization complete");
+    // Notify initialization complete
+    FF_DEBUG_STREAM("Initialization complete");
     // Success
     return true;
   }
 
-  void DiagnosticsCallback(const ros::TimerEvent &event) {
+  void DiagnosticsCallback() {
     SendDiagnostics(cfg_.Dump());
   }
+  // void DiagnosticsCallback(const ros::TimerEvent &event) {
+  //   SendDiagnostics(cfg_.Dump());
+  // }
 
   bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
     if (!cfg_.Reconfigure(config))
@@ -101,7 +116,7 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
     // Setup header and keep track of time as we generate trapezoidal ramps
     plan_result.segment.clear();
     // Generate the trapezoidal ramp
-    ros::Time offset = goal.states.front().header.stamp;
+    rclcpp::Time offset = goal.states.front().header.stamp;
     for (size_t i = 1; i < goal.states.size(); i++) {
       // Get the requested duration and offset
       double dt =
@@ -193,7 +208,7 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
   double epsilon_;
 };
 
-PLUGINLIB_EXPORT_CLASS(planner_trapezoidal::PlannerTrapezoidalNodelet,
-  nodelet::Nodelet);
+// Declare the plugin
+RCLCPP_COMPONENTS_REGISTER_NODE(planner_trapezoidal::PlannerTrapezoidalComponent);
 
 }  // namespace planner_trapezoidal

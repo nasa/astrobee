@@ -83,7 +83,7 @@ include_directories(
 # Declare C++ libraries
 add_library(planner_trapezoidal
   src/planner_trapezoidal.cc
-  src/planner_trapezoidal_nodelet.cc
+  src/planner_trapezoidal_component.cc
 )
 ament_target_dependencies(planner_trapezoidal rclcpp ff_common ff_util PCL)
 

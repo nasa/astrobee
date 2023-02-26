@@ -17,7 +17,6 @@
 
   <build_depend>ament_cmake</build_depend>
   <build_depend>rclcpp</build_depend>
-  <build_depend>nodelet</build_depend>
   <build_depend>pluginlib</build_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>choreographer</build_depend>
@@ -36,6 +35,6 @@
   <exec_depend>ff_msgs</exec_depend>
   <exec_depend>mapper</exec_depend>
   <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
