@@ -28,47 +28,20 @@ set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 ## Find amend and libraries
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
 find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 
-find_package(pluginlib REQUIRED)
-find_package(actionlib REQUIRED)
-find_package(choreographer REQUIRED)
+# find_package(pluginlib REQUIRED)
+# find_package(actionlib REQUIRED)
+# find_package(choreographer REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(mapper REQUIRED)
-
-# find_package(catkin2 REQUIRED COMPONENTS
-#   roscpp
-#   nodelet
-#   pluginlib
-#   actionlib
-#   choreographer
-#   tf2_geometry_msgs
-#   ff_util
-#   ff_msgs
-#   mapper
-# )
+# find_package(mapper REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 find_package(PCL REQUIRED COMPONENTS common)
-
-# catkin_package(
-#   INCLUDE_DIRS include
-#   LIBRARIES
-#     planner_trapezoidal
-#   CATKIN_DEPENDS
-#     roscpp
-#     nodelet
-#     pluginlib
-#     actionlib
-#     choreographer
-#     tf2_geometry_msgs
-#     ff_util
-#     ff_msgs
-#     mapper
-# )
 
 ###########
 ## Build ##
@@ -81,11 +54,15 @@ include_directories(
 )
 
 # Declare C++ libraries
-add_library(planner_trapezoidal
+add_library(${PROJECT_NAME}
   src/planner_trapezoidal.cc
   src/planner_trapezoidal_component.cc
 )
-ament_target_dependencies(planner_trapezoidal rclcpp ff_common ff_util PCL)
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_common ff_util PCL)
+# rclcpp_components_register_nodes(${PROJECT_NAME} "planner_trapezoidal::PlannerTrapezoidalComponent")
 
 # add_dependencies(planner_trapezoidal ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(planner_trapezoidal ${catkin_LIBRARIES})
@@ -93,10 +70,7 @@ ament_target_dependencies(planner_trapezoidal rclcpp ff_common ff_util PCL)
 #############
 ## Install ##
 #############
-ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")
-
 ament_export_dependencies(ament_cmake rclcpp)
-
 ament_export_include_directories(include)
 
 # Mark libraries for installation

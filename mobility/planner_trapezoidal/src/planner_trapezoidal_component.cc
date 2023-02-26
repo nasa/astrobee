@@ -17,13 +17,14 @@
  */
 
 // Standard includes
-#include <rclpp/rclcpp.hpp>
-#include <pluginlib/class_list_macros.h>
+#include <rclcpp/rclcpp.hpp>
+// #include <pluginlib/class_list_macros.h>
 
 // FSW includes
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_flight.h>
-#include <ff_util/ff_names.h>
+#include <ff_util/ff_timer.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/config_server.h>
 #include <ff_util/config_client.h>
 #include <msg_conversions/msg_conversions.h>
@@ -43,7 +44,7 @@
 // ROS2 CONVERSION
 // TODO(joris997):  - check if DiagnosticsCallback can be performed without an argument
 //                    (it does align with the rclcpp::create_timer)
-//                  - check PlannerResult etc. when choreographer is completed
+//                  - check PlanResult etc. when choreographer is completed
 //                  - how do we want to change the nodelet debug stream? now I use FF_DEBUG_STREAM
 
 
@@ -68,9 +69,9 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
       &PlannerTrapezoidalComponent::ReconfigureCallback, this, _1));
 
     // Setup a timer to forward diagnostics
-    timer_d_ = rclcpp::create_timer(this, this->get_clock(),
-      rclcpp::Duration(rclcpp::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-        &PlannerTrapezoidalComponent::DiagnosticsCallback);
+    createTimer(
+      rclcpp::Duration(rclcpp::Rate(DEFAULT_DIAGNOSTICS_RATE)), timer_d_,
+      &PlannerTrapezoidalComponent::DiagnosticsCallback, this, false, true);
     // timer_d_ = nh->createTimer(
     //   ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
     //     &PlannerTrapezoidalComponent::DiagnosticsCallback, this, false, true);
@@ -86,9 +87,6 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   void DiagnosticsCallback() {
     SendDiagnostics(cfg_.Dump());
   }
-  // void DiagnosticsCallback(const ros::TimerEvent &event) {
-  //   SendDiagnostics(cfg_.Dump());
-  // }
 
   bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
     if (!cfg_.Reconfigure(config))
@@ -199,7 +197,7 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
 
  protected:
   ff_util::ConfigServer cfg_;
-  ros::Timer timer_d_;
+  ff_util::FreeFlyerTimer timer_d_;
   double desired_vel_;
   double desired_omega_;
   double desired_accel_;
@@ -207,8 +205,11 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   double min_control_period_;
   double epsilon_;
 };
-
-// Declare the plugin
-RCLCPP_COMPONENTS_REGISTER_NODE(planner_trapezoidal::PlannerTrapezoidalComponent);
-
 }  // namespace planner_trapezoidal
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(planner_trapezoidal::PlannerTrapezoidalComponent)

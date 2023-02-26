@@ -20,7 +20,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 // FSW includes
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // For the trapezoidal planner implementation
 #include <planner_trapezoidal/planner_trapezoidal.h>
@@ -230,7 +230,7 @@ namespace planner_trapezoidal {
       }
       // Add the setpoint to the segment
       ff_util::Setpoint sp;
-      sp.when = offset + ros::Duration(state.t);
+      sp.when = offset + rclcpp::Duration::from_seconds(state.t);
       sp.pose.position = msg_conversions::eigen_to_ros_point(state.p);
       sp.pose.orientation = msg_conversions::eigen_to_ros_quat(state.q);
       sp.twist.linear = msg_conversions::eigen_to_ros_vector(state.v);
@@ -240,7 +240,7 @@ namespace planner_trapezoidal {
       segment.push_back(sp);
     }
     // Increment the offset by the total time
-    offset += ros::Duration(tmin);
+    offset += rclcpp::Duration::from_seconds(tmin);
   }
 
 
