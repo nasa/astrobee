@@ -16,13 +16,13 @@
 # under the License.
 
 import launch
+from launch_ros.actions import Node
 import launch_testing
 import launch_testing.actions
 import launch_testing.markers
 import os
 import pytest
 import unittest
-from launch_ros.actions import Node
 from utilities.utilities import *
 
 # This function specifies the processes to be run for the test.
