@@ -22,21 +22,18 @@ project(access_control)
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
+
 set( CMAKE_CXX_FLAGS "${CMAKE_CXXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  ff_msgs
-  nodelet
-  config_reader
-  ff_util
-)
+## Find ament and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
-catkin_package(
-  LIBRARIES access_control
-  DEPENDS roscpp ff_msgs nodelet config_reader ff_util
-)
+find_package(ff_common REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(config_reader REQUIRED)
+find_package(ff_msgs REQUIRED)
 
 ###########
 ## Build ##
@@ -45,45 +42,51 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(access_control
+add_library(access_control SHARED
   src/access_control.cc
 )
-add_dependencies(access_control ${catkin_EXPORTED_TARGETS})
-target_link_libraries(access_control ${catkin_LIBRARIES})
+target_compile_definitions(access_control PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(access_control rclcpp rclcpp_components ff_common ff_util config_reader ff_msgs)
+rclcpp_components_register_nodes(access_control "access_control::AccessControl")
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_access_control 
-    test/test_access_control.test
+##########
+## Test ##
+##########
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ros_testing REQUIRED)
+
+  ament_add_gtest_executable(test_access_control 
     test/test_access_control.cc
   )
-
-  target_link_libraries(test_access_control
-    ${catkin_LIBRARIES} glog
-  )
+  target_link_libraries(test_access_control access_control)
+  add_ros_test(test/test_access_control.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 #############
 ## Install ##
 #############
 
+ament_export_include_directories(include)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT access_control
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
+ament_package()
