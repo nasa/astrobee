@@ -27,9 +27,6 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from utilities.utilities import *
 
-
-
-
 # This function specifies the processes to be run for the test.
 @pytest.mark.launch_test
 @launch_testing.markers.keep_alive
