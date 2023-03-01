@@ -19,35 +19,35 @@
 #ifndef FF_UTIL_CONVERSION_H_
 #define FF_UTIL_CONVERSION_H_
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <geometry_msgs/Quaternion.h>
-#include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/Point.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
+#include <geometry_msgs/msg/point.hpp>
 
 namespace ff_util {
 
 class Conversion {
  public:
-  static void Convert(const geometry_msgs::Point &in, tf2::Vector3 &out) {
+  static void Convert(const geometry_msgs::msg::Point &in, tf2::Vector3 &out) {
     out = tf2::Vector3(in.x, in.y, in.z);
   }
-  static void Convert(const geometry_msgs::Vector3 &in, tf2::Vector3 &out) {
+  static void Convert(const geometry_msgs::msg::Vector3 &in, tf2::Vector3 &out) {
     out = tf2::Vector3(in.x, in.y, in.z);
   }
-  static void Convert(const geometry_msgs::Quaternion &in, tf2::Quaternion &out) {
+  static void Convert(const geometry_msgs::msg::Quaternion &in, tf2::Quaternion &out) {
     out = tf2::Quaternion(in.x, in.y, in.z, in.w);
   }
-  static void Convert(const tf2::Vector3 &in, geometry_msgs::Point &out) {
+  static void Convert(const tf2::Vector3 &in, geometry_msgs::msg::Point &out) {
     out.x = in.x();
     out.y = in.y();
     out.z = in.z();
   }
-  static void Convert(const tf2::Vector3 &in, geometry_msgs::Vector3 &out) {
+  static void Convert(const tf2::Vector3 &in, geometry_msgs::msg::Vector3 &out) {
     out.x = in.x();
     out.y = in.y();
     out.z = in.z();
   }
-  static void Convert(const tf2::Quaternion &in, geometry_msgs::Quaternion &out) {
+  static void Convert(const tf2::Quaternion &in, geometry_msgs::msg::Quaternion &out) {
     out.w = in.w();
     out.x = in.x();
     out.y = in.y();

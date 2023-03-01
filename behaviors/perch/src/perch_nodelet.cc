@@ -890,7 +890,6 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     cfg.Set<bool>("enable_validation", false);
     cfg.Set<bool>("enable_bootstrapping", true);
     cfg.Set<bool>("enable_immediate", true);
-    cfg.Set<bool>("enable_timesync", false);
     cfg.Set<bool>("enable_faceforward", false);
     cfg.Set<double>("desired_vel", -1.0);
     cfg.Set<double>("desired_accel", -1.0);
