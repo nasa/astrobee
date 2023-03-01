@@ -33,18 +33,12 @@ AccessControl::AccessControl(const rclcpp::NodeOptions & options) :
     ff_util::FreeFlyerComponent(options, NODE_ACCESS_CONTROL, true),
     pub_queue_size_(10),
     sub_queue_size_(10) {
-  FF_INFO("Access control constructor.");
-  FF_WARN("Access control constructor.");
-  FF_ERROR("Access control constructor.");
 }
 
 AccessControl::~AccessControl() {
 }
 
 void AccessControl::Initialize(NodeHandle &nh) {
-  FF_INFO("Access control initialize function.");
-  FF_WARN("Access control initialize function.");
-  FF_ERROR("Access control initialize function.");
   state_.header.frame_id = "world";
   ack_.header.frame_id = "world";
 
