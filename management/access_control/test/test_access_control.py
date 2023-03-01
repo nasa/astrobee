@@ -17,12 +17,12 @@
 
 import os
 import unittest
+import pytest
 
 import launch
 import launch_testing
 import launch_testing.actions
 import launch_testing.markers
-import pytest
 from launch_ros.actions import Node
 from utilities.utilities import *
 
