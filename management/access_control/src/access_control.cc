@@ -179,7 +179,7 @@ void AccessControl::PublishAck(std::string const& cmd_id,
                                std::string const& message,
                                uint8_t completed_status,
                                uint8_t status) {
-  ack_.header.stamp = node_->get_clock()->now();
+  ack_.header.stamp = GetTimeNow();
   ack_.cmd_id = cmd_id;
   ack_.status.status = status;
   ack_.completed_status.status = completed_status;
@@ -192,7 +192,7 @@ void AccessControl::PublishCommand(ff_msgs::CommandStamped const& cmd) {
 }
 
 void AccessControl::PublishState() {
-  state_.header.stamp = node_->get_clock()->now();
+  state_.header.stamp = GetTimeNow();
   state_pub_->publish(state_);
 }
 
