@@ -242,6 +242,14 @@ bool Validator::Init(NodeHandle & nh, ff_util::ConfigServer & cfg) {
   get_resolution_.Create(nh, SERVICE_MOBILITY_GET_MAP_RESOLUTION);
   get_map_inflation_.Create(nh, SERVICE_MOBILITY_GET_MAP_INFLATION);
 
+  // Wait for services to exist
+  if (!get_resolution_.waitForExistence(5.0)) {
+    FF_ERROR("Mapper service to get map resolution not working");
+  }
+  if (!get_map_inflation_.waitForExistence(5.0)) {
+    FF_ERROR("Mapper service to get map inflation not working");
+  }
+
   // Check if overwriting is allowed
   zone_file_ = cfg.Get<std::string>("zone_file");
   overwrite_ = cfg.Get<bool>("zone_overwrite");
