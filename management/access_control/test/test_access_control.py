@@ -22,16 +22,12 @@ import launch
 import launch_testing
 import launch_testing.actions
 import launch_testing.markers
-import launch.substitutions
 import pytest
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from utilities.utilities import *
-from launch.substitutions import LaunchConfiguration
-from launch.conditions import LaunchConfigurationEquals, LaunchConfigurationNotEquals
-from launch_ros.descriptions import ComposableNode
-from launch_ros.actions import ComposableNodeContainer, LoadComposableNodes
-from launch.actions import DeclareLaunchArgument
+
+
 
 
 # This function specifies the processes to be run for the test.
@@ -47,15 +43,6 @@ def generate_test_description():
         ),
         output="screen",
     )
-
-    #DeclareLaunchArgument (
-    #    name='container', default_value='',
-    #),
-    #load_component = LoadComposableNodes(
-    #    condition=LaunchConfigurationEquals('container', ''),
-    #    composable_node_descriptions=[access_control],
-    #    target_container=LaunchConfiguration('container'),
-    #)
 
     # This is necessary to get unbuffered output from the process under test
     proc_env = os.environ.copy()

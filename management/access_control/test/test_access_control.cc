@@ -76,6 +76,7 @@ void PublishCommand(std::vector<ff_msgs::CommandArg> *args) {
   if (args != NULL) {
     cmd.args = *args;
   }
+
   cmd_pub->publish(cmd);
 }
 
@@ -199,8 +200,6 @@ TEST(access_control, GrabControl) {
                                 TOPIC_COMMUNICATIONS_DDS_COMMAND,
                                 10);
 
-  FF_INFO("Access control grab control test.");
-
   // Reinitialize global variables
   test_done = false;
   sent_grab = false;
@@ -218,8 +217,6 @@ TEST(access_control, GrabControl) {
     rclcpp::spin_some(nh);
   }
 
-  FF_INFO("After waiting for publishers and subscribers.");
-
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_REQUEST_CONTROL;
   cmd_id = "request_control";
   PublishCommand(NULL);
@@ -233,26 +230,25 @@ TEST(access_control, GrabControl) {
 TEST(access_control, CommandWithControl) {
   rclcpp::Node::SharedPtr nh =
                     std::make_shared<rclcpp::Node>("test_command_with_control");
-  Subscriber<ff_msgs::CommandStamped> cmd_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                        ff_msgs::CommandStamped,
-                                                        TOPIC_COMMAND,
-                                                        10,
-                                                        &CmdCallback);
-  Subscriber<ff_msgs::AckStamped> ack_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                          ff_msgs::AckStamped,
-                                                          TOPIC_MANAGEMENT_ACK,
-                                                          10,
-                                                          &CWCAckCallback);
-  Subscriber<ff_msgs::AccessControlStateStamped> state_sub =
-                                          FF_CREATE_SUBSCRIBER(nh,
-                                          ff_msgs::AccessControlStateStamped,
-                                          TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
-                                          10,
-                                          &StateCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  cmd_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 10,
+                                 &CmdCallback);
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &CWCAckCallback);
+  state_sub = FF_CREATE_SUBSCRIBER(nh,
+                                   ff_msgs::AccessControlStateStamped,
+                                   TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
+                                   10,
+                                   &StateCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -262,6 +258,7 @@ TEST(access_control, CommandWithControl) {
     rclcpp::sleep_for(ns);
     rclcpp::spin_some(nh);
   }
+
   test_done = false;
   sent_grab = false;
   got_request_ack = false;
@@ -283,15 +280,15 @@ TEST(access_control, CommandWithControl) {
 TEST(access_control, StopCommandWithoutControl) {
   rclcpp::Node::SharedPtr nh =
             std::make_shared<rclcpp::Node>("test_stop_command_without_control");
-  Subscriber<ff_msgs::CommandStamped> cmd_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                        ff_msgs::CommandStamped,
-                                                        TOPIC_COMMAND,
-                                                        10,
-                                                        &CmdCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  cmd_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 10,
+                                 &CmdCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -299,6 +296,7 @@ TEST(access_control, StopCommandWithoutControl) {
     rclcpp::sleep_for(ns);
     rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "engineer";
 
@@ -315,15 +313,15 @@ TEST(access_control, StopCommandWithoutControl) {
 TEST(access_control, IdlePropulsionCommandWithoutControl) {
   rclcpp::Node::SharedPtr nh =
     std::make_shared<rclcpp::Node>("test_idle_propulsion_command_wo_control");
-  Subscriber<ff_msgs::CommandStamped> cmd_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                        ff_msgs::CommandStamped,
-                                                        TOPIC_COMMAND,
-                                                        10,
-                                                        &CmdCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  cmd_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 10,
+                                 &CmdCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -331,6 +329,7 @@ TEST(access_control, IdlePropulsionCommandWithoutControl) {
     rclcpp::sleep_for(ns);
     rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "engineer";
 
@@ -347,15 +346,15 @@ TEST(access_control, IdlePropulsionCommandWithoutControl) {
 TEST(access_control, GrabControlCommandInvalidCookie) {
   rclcpp::Node::SharedPtr nh =
     std::make_shared<rclcpp::Node>("test_grab_control_command_invalid_cookie");
-  Subscriber<ff_msgs::AckStamped> ack_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                          ff_msgs::AckStamped,
-                                                          TOPIC_MANAGEMENT_ACK,
-                                                          10,
-                                                          &FailedAckCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -363,6 +362,7 @@ TEST(access_control, GrabControlCommandInvalidCookie) {
     rclcpp::sleep_for(ns);
     rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
@@ -379,15 +379,15 @@ TEST(access_control, GrabControlCommandInvalidCookie) {
 TEST(access_control, GrabControlNoArgs) {
   rclcpp::Node::SharedPtr nh =
                     std::make_shared<rclcpp::Node>("test_grab_control_no_args");
-  Subscriber<ff_msgs::AckStamped> ack_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                          ff_msgs::AckStamped,
-                                                          TOPIC_MANAGEMENT_ACK,
-                                                          10,
-                                                          &FailedAckCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -395,6 +395,7 @@ TEST(access_control, GrabControlNoArgs) {
     rclcpp::sleep_for(ns);
     rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
@@ -411,15 +412,15 @@ TEST(access_control, GrabControlNoArgs) {
 TEST(access_control, GrabControlWrongArgType) {
   rclcpp::Node::SharedPtr nh =
             std::make_shared<rclcpp::Node>("test_grab_control_wrong_arg_type");
-  Subscriber<ff_msgs::AckStamped> ack_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                          ff_msgs::AckStamped,
-                                                          TOPIC_MANAGEMENT_ACK,
-                                                          10,
-                                                          &FailedAckCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -448,15 +449,15 @@ TEST(access_control, GrabControlWrongArgType) {
 TEST(access_control, CommandWithoutControl) {
   rclcpp::Node::SharedPtr nh =
                 std::make_shared<rclcpp::Node>("test_command_without_control");
-  Subscriber<ff_msgs::AckStamped> ack_sub = FF_CREATE_SUBSCRIBER(nh,
-                                                          ff_msgs::AckStamped,
-                                                          TOPIC_MANAGEMENT_ACK,
-                                                          10,
-                                                          &FailedAckCallback);
-  Publisher<ff_msgs::CommandStamped> cmd_pub = FF_CREATE_PUBLISHER(nh,
-                                              ff_msgs::CommandStamped,
-                                              TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                              10);
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   std::chrono::nanoseconds ns(1000000000);
   while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
@@ -464,6 +465,7 @@ TEST(access_control, CommandWithoutControl) {
     rclcpp::sleep_for(ns);
     rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
