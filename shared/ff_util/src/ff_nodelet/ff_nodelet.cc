@@ -96,18 +96,15 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt, std:
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   // Immediately, setup a publisher for faults coming from this node
-  // Topic needs to be latched for initialization faults
   pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
-    TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
+    TOPIC_HEARTBEAT, heartbeat_queue_size_);
   pub_diagnostics_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(
     TOPIC_DIAGNOSTICS, 5);
 
-  // Setup a heartbeat timer for this node if auto start was requested
-  if (autostart_hb_timer_) {
-    // Don't autostart until nodelet finishes initialization function
-    timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
+  // Setup a heartbeat timer regardless of if we use it or not
+  // Don't autostart until nodelet finishes initialization function
+  timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
       &FreeFlyerNodelet::HeartbeatCallback, this, false, false);
-  }
 
   // Defer the initialization of the node to prevent a race condition with
   // nodelet registration. See this issue for more details:
@@ -315,6 +312,10 @@ void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
   // was
   if (heartbeat_.faults.size() > 0) {
     PublishHeartbeat();
+    // Start heartbeat timer to ensure the system monitor gets the
+    // initialization fault. Doesn't matter if the node doesn't want to publish
+    // a heartbeat as the system monitor will unload the nodelet.
+    timer_heartbeat_.start();
     return;
   }
 

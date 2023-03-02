@@ -36,7 +36,7 @@ find_package(PCL REQUIRED COMPONENTS common features filters octree search)
 find_package(pcl_conversions REQUIRED)
 
 # Find OpenCV
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
 # System dependencies are found with CMake's conventions

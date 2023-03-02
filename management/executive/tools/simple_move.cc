@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 
   // Make publisher to publish the command
   ros::Publisher cmd_publisher;
-  cmd_publisher = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
+  cmd_publisher = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10);
 
   // Make subscriber to receive command acks to see if the command completed
   // successfully

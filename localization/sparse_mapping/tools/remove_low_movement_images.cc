@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <ff_common/init.h>
+#include <ff_common/utils.h>
 #include <localization_common/averager.h>
 #include <localization_common/logger.h>
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
@@ -29,30 +30,9 @@
 #include "utilities.h"  // NOLINT
 
 namespace fs = boost::filesystem;
-namespace lc = localization_common;
 namespace po = boost::program_options;
 namespace sm = sparse_mapping;
 namespace vc = vision_common;
-
-bool LowMovementImageSequence(const vc::FeatureImage& current_image, const vc::FeatureImage& next_image,
-                              const double max_low_movement_mean_distance,
-                              vc::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher) {
-  const auto& matches = detector_and_matcher.Match(current_image, next_image);
-  if (matches.size() < 5) {
-    LogDebug("Too few matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                                 << ", next image keypoints: " << next_image.keypoints().size());
-    return false;
-  }
-  LogDebug("Found matches: " << matches.size() << ", current image keypoints: " << current_image.keypoints().size()
-                             << ", next image keypoints: " << next_image.keypoints().size());
-  lc::Averager distance_averager;
-  for (const auto& match : matches) {
-    distance_averager.Update(match.distance);
-  }
-  LogDebug("Mean distance: " << distance_averager.average());
-  if (distance_averager.average() <= max_low_movement_mean_distance) return true;
-  return false;
-}
 
 int RemoveLowMovementImages(const std::vector<std::string>& image_names, const double max_low_movement_mean_distance) {
   const vc::LKOpticalFlowFeatureDetectorAndMatcherParams params = sm::LoadParams();
@@ -67,8 +47,10 @@ int RemoveLowMovementImages(const std::vector<std::string>& image_names, const d
   auto next_image = sm::LoadImage(next_image_index, image_names, detector);
   int num_removed_images = 0;
   while (current_image_index < image_names.size()) {
+    ff_common::PrintProgressBar(stdout,
+                                static_cast<float>(current_image_index) / static_cast<float>(image_names.size() - 1));
     while (next_image_index < image_names.size() &&
-           LowMovementImageSequence(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
+           sm::LowMovementImagePair(current_image, next_image, max_low_movement_mean_distance, detector_and_matcher)) {
       LogDebug("Removing image index: " << next_image_index << ", current image index: " << current_image_index);
       std::remove((image_names[next_image_index++]).c_str());
       ++num_removed_images;
@@ -124,6 +106,7 @@ int main(int argc, char** argv) {
   const auto image_names = sm::GetImageNames(image_directory);
   if (image_names.empty()) LogFatal("No images found.");
 
+  LogInfo("Removing low movement images, max low movement mean distance: " << max_low_movement_mean_distance);
   const int num_original_images = image_names.size();
   const int num_removed_images = RemoveLowMovementImages(image_names, max_low_movement_mean_distance);
   LogInfo("Removed " << num_removed_images << " of " << num_original_images << " images.");

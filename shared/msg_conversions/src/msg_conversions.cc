@@ -254,6 +254,61 @@ Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform& p) {
   return transform;
 }
 
+geometry_msgs::Pose ros_transform_to_ros_pose(const geometry_msgs::Transform& p) {
+  geometry_msgs::Pose transform;
+      transform.position.x = p.translation.x;
+      transform.position.y = p.translation.y;
+      transform.position.z = p.translation.z;
+      transform.orientation = p.rotation;
+  return transform;
+}
+
+geometry_msgs::Quaternion tf2_quat_to_ros_quat(const tf2::Quaternion& q) {
+  geometry_msgs::Quaternion out;
+      out.x = q.x();
+      out.y = q.y();
+      out.z = q.z();
+      out.w = q.w();
+  return out;
+}
+
+geometry_msgs::Pose tf2_transform_to_ros_pose(const tf2::Transform& p) {
+  geometry_msgs::Pose transform;
+      transform.position.x = p.getOrigin().x();
+      transform.position.y = p.getOrigin().y();
+      transform.position.z = p.getOrigin().z();
+      transform.orientation = tf2_quat_to_ros_quat(p.getRotation());
+  return transform;
+}
+
+tf2::Transform ros_tf_to_tf2_transform(const geometry_msgs::Transform& p) {
+  tf2::Transform transform;
+  transform.setOrigin(tf2::Vector3(
+                        p.translation.x,
+                        p.translation.y,
+                        p.translation.z));
+  transform.setRotation(tf2::Quaternion(
+                        p.rotation.x,
+                        p.rotation.y,
+                        p.rotation.z,
+                        p.rotation.w));
+  return transform;
+}
+
+tf2::Transform ros_pose_to_tf2_transform(const geometry_msgs::Pose& p) {
+  tf2::Transform transform;
+  transform.setOrigin(tf2::Vector3(
+                        p.position.x,
+                        p.position.y,
+                        p.position.z));
+  transform.setRotation(tf2::Quaternion(
+                        p.orientation.x,
+                        p.orientation.y,
+                        p.orientation.z,
+                        p.orientation.w));
+  return transform;
+}
+
 Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
   Eigen::Vector3d body_t_sensor;
   Eigen::Quaterniond body_Q_sensor;

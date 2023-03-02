@@ -19,8 +19,6 @@
 #ifndef FAM_FAM_H_
 #define FAM_FAM_H_
 
-#include <gnc_autocode/fam.h>
-
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
@@ -31,13 +29,16 @@
 #include <ff_util/ff_names.h>
 #include <ff_util/perf_timer.h>
 
+#include <Eigen/Dense>
 #include <geometry_msgs/InertiaStamped.h>
 
 #include <config_reader/config_reader.h>
+#include <pmc/fam.h>
 
 #include <mutex>
 
 namespace fam {
+
 /**
 * @brief Force Allocation Module implementation using GNC module
 */
@@ -45,7 +46,7 @@ class Fam {
  public:
   explicit Fam(ros::NodeHandle* nh);
   ~Fam();
-  void Step(ex_time_msg* ex_time, cmd_msg* cmd, ctl_msg* ctl);
+  void Step();
 
  protected:
   void ReadParams(void);
@@ -53,21 +54,22 @@ class Fam {
   void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
   void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
 
-  gnc_autocode::GncFamAutocode gnc_;
+  pmc::Fam fam_;
 
   ros::Subscriber ctl_sub_;
   ros::Subscriber flight_mode_sub_, inertia_sub_;
   ros::Publisher pmc_pub_;
 
-  config_reader::ConfigReader config_;
+  // config_reader::ConfigReader config_;
   ff_util::PerfTimer pt_fam_;
-  ros::Timer config_timer_;
+  // ros::Timer config_timer_;
 
   std::mutex mutex_speed_;
-  uint8_t speed_;
   std::mutex mutex_mass_;
-  geometry_msgs::Vector3 center_of_mass_;
+  Eigen::Vector3f center_of_mass_;
   bool inertia_received_;
+
+  pmc::FamInput input_;
 };
 }  // end namespace fam
 

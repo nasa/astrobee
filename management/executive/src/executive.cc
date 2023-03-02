@@ -1476,14 +1476,33 @@ bool Executive::PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on) {
 
 bool Executive::ProcessGuestScienceCommand(ff_msgs::CommandStampedPtr
                                                                   const& cmd) {
-  // Check command arguments are correct before sending to the guest science
-  // manager
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   "Malformed arguments for guest science command.");
-    return false;
+  int gs_command_timeout_mod = gs_command_timeout_;
+  // Check if command is restart. If so, need to extract time to add to the
+  // timeout
+  if (cmd->cmd_name ==
+                    ff_msgs::CommandConstants::CMD_NAME_RESTART_GUEST_SCIENCE) {
+    // Check command arguments are correct before sending to the guest science
+    // manager
+    if (cmd->args.size() != 2 ||
+        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
+        cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_INT) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     "Malformed arguments for restart guest science command.");
+      return false;
+    }
+
+    gs_command_timeout_mod = gs_command_timeout_ + cmd->args[1].i;
+  } else {
+    // Check command arguments are correct before sending to the guest science
+    // manager
+    if (cmd->args.size() != 1 ||
+        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     "Malformed arguments for guest science command.");
+      return false;
+    }
   }
 
   if (gs_start_stop_restart_cmd_id_ != "") {
@@ -1525,12 +1544,11 @@ bool Executive::ProcessGuestScienceCommand(ff_msgs::CommandStampedPtr
 
   gs_cmd_pub_.publish(cmd);
   gs_start_stop_restart_command_timer_.setPeriod(
-                                            ros::Duration(gs_command_timeout_));
+                                        ros::Duration(gs_command_timeout_mod));
   gs_start_stop_restart_command_timer_.start();
   gs_start_stop_restart_cmd_id_ = cmd->cmd_id;
   return true;
 }
-
 
 bool Executive::ResetEkf(std::string const& cmd_id) {
   localization_goal_.command = ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER;

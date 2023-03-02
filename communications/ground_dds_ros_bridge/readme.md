@@ -29,8 +29,9 @@ name.
 
 ## Domain id
 
-The domain id needs to be either 37 for simulation or 23 for space. The default
-is set to 37.
+The domain id for simulation is 37 and this is default value. If you need the
+space domain id for use during an activity, please ask your Astrobee point of
+contactor.
 
 ## Namespace
 

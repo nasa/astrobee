@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,177 +19,132 @@
 #ifndef CTL_CTL_H_
 #define CTL_CTL_H_
 
-// Autocode includes
-#include <gnc_autocode/ctl.h>
+#include <Eigen/Dense>
 
-// For includes
-#include <ros/ros.h>
+namespace config_reader {
+  class ConfigReader;
+}
 
-// Standard messages
-#include <geometry_msgs/InertiaStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
-
-// Service message
-#include <std_srvs/SetBool.h>
-
-// FSW actions
-#include <ff_msgs/ControlAction.h>
-
-// FSW messages
-#include <ff_msgs/ControlCommand.h>
-#include <ff_msgs/FlightMode.h>
-#include <ff_msgs/EkfState.h>
-
-// Libraries to handle flight config and segment processing
-#include <ff_util/ff_flight.h>
-#include <ff_util/ff_action.h>
-#include <ff_util/ff_fsm.h>
-#include <ff_util/perf_timer.h>
-
-// Libraries to read LIA config file
-#include <config_reader/config_reader.h>
-
-// STL includes
-#include <string>
-#include <vector>
-#include <mutex>
-#include <memory>
+namespace constants {
+const unsigned int ase_status_converged = 0U;
+const unsigned int ctl_idle_mode = 0U;
+const unsigned int ctl_stopping_mode = 1U;
+const unsigned int ctl_stopped_mode = 3U;
+}  // namespace constants
 
 namespace ctl {
 
-using FSM = ff_util::FSM;
+struct ControlState {
+  Eigen::Vector3f est_P_B_ISS_ISS;
+  Eigen::Quaternionf est_quat_ISS2B;
+  Eigen::Vector3f est_V_B_ISS_ISS;
+  Eigen::Vector3f est_omega_B_ISS_B;
 
-/**
- * @brief Controller implementation using GNC module
- * @details Controller implementation using GNC module
- */
-class Ctl {
- public:
-  // Declaration of all possible states
-  enum : ff_util::FSM::State {
-    WAITING        = 1,
-    NOMINAL        = 2,
-    STOPPING       = 3
-  };
+  Eigen::Matrix<float, 3, 3> inertia;
 
-  // Declaration of all possible events
-  enum : ff_util::FSM::Event {
-    GOAL_COMPLETE  = (1<<0),
-    GOAL_NOMINAL   = (1<<1),
-    GOAL_CANCEL    = (1<<2),
-    GOAL_STOP      = (1<<3)
-  };
+  // configuration
+  Eigen::Vector3f att_kp;
+  Eigen::Vector3f att_ki;
+  Eigen::Vector3f omega_kd;
+  Eigen::Vector3f pos_kp;
+  Eigen::Vector3f pos_ki;
+  Eigen::Vector3f vel_kd;
 
-  // Maximum acceptable latency
-  static constexpr double MAX_LATENCY = 0.5;
-
-  /**
-   * Ctl allocate, register, initialize model
-   */
-  explicit Ctl(ros::NodeHandle* nh, std::string const& name);
-  /**
-   * destruct model
-   */
-  ~Ctl();
-
-  // Terminate execution in either IDLE or STOP mode
-  FSM::State Result(int32_t response);
-
-  // SERVICE CALLBACKS
-
-  // Enable/Disable Onboard Controller
-  bool EnableCtl(std_srvs::SetBoolRequest&req, std_srvs::SetBoolResponse &response);
-
-  // GENERAL MESSAGE CALLBACKS
-
-  // Called when the internal state changes
-  void UpdateCallback(FSM::State const& state, FSM::Event const& event);
-
-  // Called when a pose estimate is available
-  void EkfCallback(const ff_msgs::EkfState::ConstPtr& state);
-
-  // Called when localization has a new pose data
-  void PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth);
-
-  // Called when localization has new twist data
-  void TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth);
-
-  // Called when management updates inertial info
-  void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
-
-  // Called when a timer has called back to progress control to next setpoint
-  void ControlTimerCallback(const ros::TimerEvent & event);
-
-  // Called when the choreographer updates flight modes
-  void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
-
-  // Command GNC directly, bypassing the action-base dinterface
-  void SetpointCallback(const ff_msgs::ControlState::ConstPtr& command);
-
-  // Used to feed segments
-  void TimerCallback(const ros::TimerEvent& event);
-
-  // ACTION CLIENT
-
-  // Called when a new goal arrives
-  void GoalCallback(ff_msgs::ControlGoalConstPtr const& control_goal);
-
-  // Called when a goal is preempted
-  void PreemptCallback();
-
-  // Called when a goal is cancelled
-  void CancelCallback();
-
-  // ORIGINAL GNC FUNCTIONS
-
-  // Update control to take a new setpoint
-  bool Control(uint8_t const mode,
-    ff_msgs::ControlCommand const& poseVel = ff_msgs::ControlCommand());
-
-  // Step control forward
-  bool Step(void);
-
-  ctl_msg* GetCtlMsg(void) {return &gnc_.ctl_;}
-  cmd_msg* GetCmdMsg(void) {return &gnc_.cmd_;}
-
-  // Read the control parameters from the LUA config file
-  void ReadParams(void);
-
-  // Simple extension to allow NODELET_* logging calls
-  std::string getName();
-
- private:
-  // Proxy to gnc
-  gnc_autocode::GncCtlAutocode gnc_;
-
-  std::mutex mutex_cmd_msg_, mutex_segment_;
-
-  ros::Subscriber truth_pose_sub_, inertia_sub_, flight_mode_sub_;
-  ros::Subscriber twist_sub_, pose_sub_, ekf_sub_, command_sub_;
-  ros::Publisher ctl_pub_, traj_pub_, segment_pub_, progress_pub_;
-  ros::ServiceServer enable_srv_;
-  ros::Timer timer_;
-
-  ff_util::FreeFlyerActionServer<ff_msgs::ControlAction> action_;
-  ff_util::FSM fsm_;
-  ff_util::Segment segment_;
-  ff_util::Segment::iterator setpoint_;
-  ff_msgs::ControlFeedback feedback_;
-
-  config_reader::ConfigReader config_;
-  ff_util::PerfTimer pt_ctl_;
-  ros::Timer config_timer_;
-
-  std::string name_;
-  bool inertia_received_;
-  bool control_enabled_;
-  bool flight_enabled_;
-  bool use_truth_;
-  float stopping_vel_thresh_squared_;
-  float stopping_omega_thresh_squared_;
+  float mass;
+  uint8_t est_confidence;
 };
 
+struct ControlCommand {
+  Eigen::Vector3f P_B_ISS_ISS;
+  Eigen::Quaternionf quat_ISS2B;
+  Eigen::Vector3f V_B_ISS_ISS;
+  Eigen::Vector3f A_B_ISS_ISS;
+  Eigen::Vector3f omega_B_ISS_ISS;
+  Eigen::Vector3f alpha_B_ISS_ISS;
+
+  uint8_t mode;
+};
+
+struct ControlOutput {
+  Eigen::Vector3f body_force_cmd;
+  Eigen::Vector3f body_torque_cmd;
+  Eigen::Vector3f body_accel_cmd;
+  Eigen::Vector3f body_alpha_cmd;
+  Eigen::Vector3f pos_err;
+  Eigen::Vector3f pos_err_int;
+  Eigen::Vector3f att_err;
+  Eigen::Vector3f att_err_int;
+
+  Eigen::Vector3f traj_pos;
+  Eigen::Quaternionf traj_quat;
+  Eigen::Vector3f traj_vel;
+  Eigen::Vector3f traj_accel;
+  Eigen::Vector3f traj_omega;
+  Eigen::Vector3f traj_alpha;
+
+  float att_err_mag;
+
+  float traj_error_pos;
+  float traj_error_att;
+  float traj_error_vel;
+  float traj_error_omega;
+
+  uint8_t ctl_status;
+};
+
+class Control {
+ public:
+  Control(void);
+
+  virtual void Initialize(void);
+  virtual void Step(float time_delta, ControlState & state, ControlCommand & cmd, ControlOutput* out);
+  virtual void ReadParams(config_reader::ConfigReader* config);
+
+ private:
+  int mode_cmd_;
+  bool stopped_mode_;
+  Eigen::Vector3f prev_filter_vel_;
+  Eigen::Vector3f prev_filter_omega_;
+  int prev_mode_cmd_[5];  // for the 4 ticks required  to switch to stopped; newest val at index 0
+  Eigen::Vector3f prev_position_;
+  Eigen::Quaternionf prev_att_;
+  Eigen::Vector3f linear_integrator_;
+  Eigen::Vector3f rotational_integrator_;
+
+  bool FilterThreshold(Eigen::Vector3f vec, float threshhold, Eigen::Vector3f & previous);
+  float ButterWorthFilter(float input, float delay_val, float* sum_out);
+  float QuatError(Eigen::Quaternionf cmd, Eigen::Quaternionf actual);
+  void UpdateCtlStatus(const ControlState & state, ControlOutput* out);
+  Eigen::Vector3f SafeDivide(const Eigen::Vector3f & num, const Eigen::Vector3f & denom);
+  void FindPosErr(const ControlState & state, const ControlCommand & cmd, ControlOutput* out);
+  Eigen::Vector3f DiscreteTimeIntegrator(const Eigen::Vector3f input, Eigen::Vector3f & accumulator,
+                                         uint8_t ctl_status, float upper_limit, float lower_limit);
+  void FindBodyForceCmd(const ControlState & state, ControlOutput* out);
+  Eigen::Vector3f RotateVectorAtoB(Eigen::Vector3f, Eigen::Quaternionf);
+  Eigen::Vector3f SaturateVector(Eigen::Vector3f, float limit);
+  void FindBodyAlphaTorqueCmd(const ControlState & state, ControlOutput* out);
+  void FindAttErr(const ControlState & state, ControlOutput* out);
+
+  void ForwardTrajectory(float time_delta, const ControlState & state, const ControlCommand & cmd,
+                         ControlOutput* out);
+  void UpdateMode(const ControlState & state, const ControlCommand & cmd);
+  void UpdatePrevious(const ControlState & state);
+
+  Eigen::Matrix<float, 4, 4> OmegaMatrix(Eigen::Vector3f input);
+
+  Eigen::Vector3f tun_accel_gain;
+  Eigen::Vector3f tun_alpha_gain;
+  float tun_ctl_stopping_omega_thresh;
+  float tun_ctl_stopping_vel_thresh;
+  float tun_ctl_stopped_pos_thresh;
+  float tun_ctl_stopped_quat_thresh;
+  float tun_ctl_pos_sat_upper;
+  float tun_ctl_pos_sat_lower;
+  float tun_ctl_linear_force_limit;
+  float tun_ctl_att_sat_upper;
+  float tun_ctl_att_sat_lower;
+};
 }  // end namespace ctl
 
 #endif  // CTL_CTL_H_
+

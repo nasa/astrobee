@@ -16,15 +16,13 @@
  * under the License.
  */
 
-#include <ctl/ctl.h>
+#include <ctl/ctl_ros.h>
 
 #include <ff_common/init.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
-
-#include <gnc_autocode/autocode.h>
 
 #include <memory>
 
@@ -38,7 +36,6 @@ class CtlNodelet : public ff_util::FreeFlyerNodelet {
   void Initialize(ros::NodeHandle *nh) {
     // Bootstrap our environment
     ff_common::InitFreeFlyerApplication(getMyArgv(), false);
-    gnc_autocode::InitializeAutocode(this);
     ctl_.reset(new ctl::Ctl(this->GetPlatformHandle(true), getName()));
   }
 

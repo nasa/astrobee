@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 if [ "$1" = "configure" ]; then
   chmod -R g+rwX /opt/astrobee/config
   if [ $(getent group users) ]; then

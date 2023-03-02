@@ -1,44 +1,62 @@
 # Install
 
-## Quick start using the remote Astrobee docker images
+## System requirements
 
-*The following has been tested on native Ubuntu systems using X11 (the default). Please see [these ROS pages](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more resources.*
+Ubuntu 20.04 is the preferred host OS for most Astrobee developers to use.
 
-Make sure you have Docker installed in your Ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+Here are the available host OS options with development roadmap details (use 64-bit PC (AMD64) desktop image):
+- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is the preferred host OS for most Astrobee developers to use. The Astrobee Facility team is currently preparing to upgrade the robots on ISS from Ubuntu 16.04 to Ubuntu 20.04, but we aren't yet ready to announce a deployment date for that upgrade.
+- [Ubuntu 18.04](http://releases.ubuntu.com/18.04): We are not aware of any current robot users that still need Ubuntu 18.04 support, and expect to discontinue support in the near future. New users should not select this host OS.
+- [Ubuntu 16.04](http://releases.ubuntu.com/16.04): The Astrobee robot hardware on ISS currently runs Ubuntu 16.04. Only developers with NASA internal access can cross-compile software to run on the robot, and must use 16.04 for that. Most developers shouldn't need to work with 16.04, especially when just getting started. Support will eventually be discontinued after the robot hardware on ISS is upgraded to Ubuntu 20.04.
+(Ubuntu 22.04 not supported)
 
-For some systems (with discrete graphics cards), you may need to install [additional software](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
+Graphical interfaces will perform best if your host OS is running natively (not in a virtual machine).
 
-``` bash
-git clone https://github.com/nasa/astrobee.git
-cd astrobee
-./scripts/docker/run.sh --remote
-```
+Your host OS must have an X11 server installed if you want to use graphical applications, even if you are developing inside a Docker container (the X11 application running inside the container will forward its interface to the host's X11 server). X11 comes with Ubuntu Desktop by default.
 
-For more options, see: \ref install-docker.
+If you plan to develop inside Docker, see [this page on using ROS with Docker](http://wiki.ros.org/docker/Tutorials#Tooling_with_Docker) for more details.
 
-## Building the code natively
+For users installing Astrobee on a Virtual Machine with the intent on running simulations:
+VMWare and VirtualBox have been both tested to work well; Allocate an appropriate amount of RAM, number
+of processors and video memory given your total computer capabilities; If graphics acceleration is
+available on the settings, turn it on.
+For reference (not required), an example of a setup capable of running the
+simulation smoothly has 8GB RAM, 4 Processors and 128MB Video memory.
 
-There are different ways to build and test the code.
+*Note: You will need 4 GBs of RAM to compile the software. If you don't have
+that much RAM available, please use swap space.*
 
-### Non-NASA users
+*Note: Please ensure you install the 64-bit PC (AMD64) version of Ubuntu (desktop for simulation and
+development). We do not support running Astrobee Robot Software on 32-bit systems.*
 
-If you are a non-NASA user the preferred supported method is to use Ubuntu 16 and ROS kinetic. Ubuntu 18 and ROS melodic instructions are included, but not officially supported. This method does not require VPN access.
+## Option 1: Install inside a Docker container
 
-\subpage install-nonNASA
+1. Make sure you have Docker installed in your system by following:
+    - [Docker installation instructions](https://docs.docker.com/engine/install/ubuntu/)
+    - [Docker post-installation configuration for Linux](https://docs.docker.com/engine/install/linux-postinstall/)
+    - If your system has a discrete graphics card, you may need to install [additional software for hardware acceleration](http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration).
 
+2. Check out the Astrobee Robot Software with:
+    ```bash
+    export ASTROBEE_WS=$HOME/astrobee  # your choice where
+    git clone https://github.com/nasa/astrobee.git $ASTROBEE_WS/src
+    cd $ASTROBEE_WS/src
+    git submodule update --init --depth 1 description/media
+    ```
 
-### NASA users
+3. Here is a quick-start command to install the Astrobee Robot Software inside a Docker container and start a simulation run:
+    ```bash
+    ./scripts/docker/run.sh --remote
+    ```
 
-If you are a NASA user and want to install the cross-compiler for robot testing follow these instructions: 
+There is also experimental support for using the Visual Studio Code Dev Containers plugin to access an integrated development environment running inside the Docker container!
 
-\subpage install-NASA
+For much more discussion, see: \subpage install-docker.
 
-## Developing using Docker
+## Option 2: Install in your native OS / Virtual Machine
 
-Docker builds are available for Ubuntu 16.04, 18.04 and 20.04.
+The native installation instructions below walk you through manually running the same steps that are fully automated in a Docker installation.
 
-We recommend using Visual Studio Code Dev Containers extension that allows usage of a Docker container as a full-featured development environment. When you open the astrobee folder on vscode the prompt will show up to launch the dev container automatically.
+- If you are an external developer, see: \subpage install-nonNASA
 
-Instructions on how to build the images natively and run the containers are in:
-
-\subpage install-docker
+- If you have NASA internal access and need to cross-compile for the robot hardware, see: \subpage install-NASA

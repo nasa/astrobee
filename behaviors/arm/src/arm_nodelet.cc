@@ -518,7 +518,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     sub_joint_states_ = nh->subscribe(TOPIC_JOINT_STATES, 1,
       &ArmNodelet::JointStateCallback, this);
     pub_joint_goals_ = nh->advertise<sensor_msgs::JointState>(
-      TOPIC_JOINT_GOALS, 1, true);
+      TOPIC_JOINT_GOALS, 1);
 
     // Subscribe to Proximal Joint Servo Enabling service
     client_enable_prox_servo_ = nh->serviceClient<ff_hw_msgs::SetEnabled>(

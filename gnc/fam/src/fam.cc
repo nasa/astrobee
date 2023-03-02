@@ -21,17 +21,20 @@
 #include <ff_util/ff_names.h>
 #include <ff_hw_msgs/PmcCommand.h>
 
+#include <Eigen/QR>
+
 // parameters fam_force_allocation_module_P are set in
 //  matlab/code_generation/fam_force_allocation_module_ert_rtw/fam_force_allocation_module_data.c
 
 namespace fam {
 
 Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
-  config_.AddFile("gnc.config");
-  config_.AddFile("geometry.config");
-  ReadParams();
-  config_timer_ = nh->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
-      config_.CheckFilesUpdated(std::bind(&Fam::ReadParams, this));}, false, true);
+  // config_.AddFile("gnc.config");
+  // config_.AddFile("geometry.config");
+  // ReadParams();
+  // config_timer_ = nh->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
+  //     config_.CheckFilesUpdated(std::bind(&Fam::ReadParams, this));}, false, true);
+
   pt_fam_.Initialize("fam");
 
   pmc_pub_ = nh->advertise<ff_hw_msgs::PmcCommand>(TOPIC_HARDWARE_PMC_COMMAND, 1);
@@ -49,57 +52,39 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
 Fam::~Fam() {}
 
 void Fam::CtlCallBack(const ff_msgs::FamCommand & c) {
-  ex_time_msg time;
-  cmd_msg cmd;
-  ctl_msg ctl;
+  input_.body_force_cmd =  msg_conversions::ros_to_eigen_vector(c.wrench.force).cast<float>();
+  input_.body_torque_cmd =  msg_conversions::ros_to_eigen_vector(c.wrench.torque).cast<float>();
 
-  time.timestamp_sec  = c.header.stamp.sec;
-  time.timestamp_nsec = c.header.stamp.nsec;
-  msg_conversions::ros_to_array_vector(c.wrench.force, ctl.body_force_cmd);
-  msg_conversions::ros_to_array_vector(c.wrench.torque, ctl.body_torque_cmd);
-  msg_conversions::ros_to_array_vector(c.accel, ctl.body_accel_cmd);
-  msg_conversions::ros_to_array_vector(c.alpha, ctl.body_alpha_cmd);
-  msg_conversions::ros_to_array_vector(c.position_error, ctl.pos_err);
-  msg_conversions::ros_to_array_vector(c.position_error_integrated, ctl.pos_err_int);
-  msg_conversions::ros_to_array_vector(c.attitude_error, ctl.att_err);
-  msg_conversions::ros_to_array_vector(c.attitude_error_integrated, ctl.att_err_int);
-  ctl.att_err_mag = c.attitude_error_mag;
-  ctl.ctl_status  = c.status;
-  cmd.cmd_mode    = c.control_mode;
-
-  Step(&time, &cmd, &ctl);
+  Step();
 }
 
 void Fam::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   std::lock_guard<std::mutex> lock(mutex_speed_);
-  speed_ = mode->speed;
+  input_.speed_gain_cmd = mode->speed;
 }
 
 void Fam::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_mass_);
-  center_of_mass_ = inertia->inertia.com;
+  center_of_mass_ = msg_conversions::ros_to_eigen_vector(inertia->inertia.com).cast<float>();
+  fam_.UpdateCOM(center_of_mass_);
   inertia_received_ = true;
 }
 
-void Fam::Step(ex_time_msg* ex_time, cmd_msg* cmd, ctl_msg* ctl) {
-  {
-    std::lock_guard<std::mutex> lock(mutex_speed_);
-    // Overwrite the speed command with the cached value, provided
-    // through the flight mode message offered by the choreographer
-    cmd->speed_gain_cmd = speed_;
-  }
-  {
-    std::lock_guard<std::mutex> lock(mutex_mass_);
-    if (!inertia_received_) {
-      ROS_DEBUG_STREAM_THROTTLE(10, "FAM step waiting for inertia.");
-      return;
-    }
-    msg_conversions::ros_to_array_vector(center_of_mass_, gnc_.cmc_.center_of_mass);
+void Fam::Step() {
+  if (!inertia_received_) {
+    ROS_DEBUG_STREAM_THROTTLE(10, "FAM step waiting for inertia.");
+    return;
   }
 
   // Step the FAM simulink code
   pt_fam_.Tick();
-  gnc_.Step(ex_time, cmd, ctl);
+  uint8_t speed_cmd[2];
+  Eigen::Matrix<float, 12, 1> servo_pwm_cmd;
+  {
+    std::lock_guard<std::mutex> lock_mass(mutex_mass_);
+    std::lock_guard<std::mutex> lock(mutex_speed_);
+    fam_.Step(input_, speed_cmd, servo_pwm_cmd);
+  }
   pt_fam_.Tock();
 
   // Send the PMC command
@@ -107,23 +92,22 @@ void Fam::Step(ex_time_msg* ex_time, cmd_msg* cmd, ctl_msg* ctl) {
   pmc.header.stamp = ros::Time::now();
   pmc.header.frame_id = "body";
   pmc.goals.resize(2);
-  pmc.goals[0].motor_speed = gnc_.act_.act_impeller_speed_cmd[0];
-  pmc.goals[1].motor_speed = gnc_.act_.act_impeller_speed_cmd[1];
-  std::copy(gnc_.act_.act_servo_pwm_cmd, gnc_.act_.act_servo_pwm_cmd + 6,
-      pmc.goals[0].nozzle_positions.c_array());
-  std::copy(gnc_.act_.act_servo_pwm_cmd + 6, gnc_.act_.act_servo_pwm_cmd + 12,
-      pmc.goals[1].nozzle_positions.c_array());
+  pmc.goals[0].motor_speed = speed_cmd[0];
+  pmc.goals[1].motor_speed = speed_cmd[1];
+  for (int i = 0; i < 6; i++) {
+    pmc.goals[0].nozzle_positions[i] = (unsigned char)servo_pwm_cmd[i];
+    pmc.goals[1].nozzle_positions[i] = (unsigned char)servo_pwm_cmd[6 + i];
+  }
   pmc_pub_.publish<ff_hw_msgs::PmcCommand>(pmc);
 
   pt_fam_.Send();
 }
 
-void Fam::ReadParams(void) {
-  if (!config_.ReadFiles()) {
-    ROS_ERROR("Failed to read config files.");
-    return;
-  }
-  gnc_.ReadParams(&config_);
-}
+// void Fam::ReadParams(void) {
+//   if (!config_.ReadFiles()) {
+//     ROS_ERROR("Failed to read config files.");
+//     return;
+//   }
+// }
 
 }  // end namespace fam

@@ -120,7 +120,6 @@
 #define NODE_IMU_BIAS_TESTER                        "imu_bias_tester"
 #define NODE_SIM_LOC                                "sim_loc"
 #define NODE_FAM                                    "fam"
-#define NODE_SIM_WRAPPER                            "sim_wrapper"
 
 #define TOPIC_GRAPH_LOC                             "graph_loc/graph"
 #define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"

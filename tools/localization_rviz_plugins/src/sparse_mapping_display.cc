@@ -46,7 +46,7 @@ SparseMappingDisplay::SparseMappingDisplay() {
   if (!config.GetStr("world_vision_map_filename", &map_file))
     LogFatal("SparseMappingDisplay: Failed to load map file.");
   map_.reset(new sparse_mapping::SparseMap(map_file, true));
-  map_cloud_publisher_ = nh_.advertise<sensor_msgs::PointCloud2>("sparse_mapping/map_cloud", 1, true);
+  map_cloud_publisher_ = nh_.advertise<sensor_msgs::PointCloud2>("sparse_mapping/map_cloud", 1);
 }
 
 void SparseMappingDisplay::onInitialize() { drawMap(); }
