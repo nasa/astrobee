@@ -18,15 +18,25 @@
 
 // Required for the test framework
 #include <gtest/gtest.h>
-#include <glog/logging.h>
 
 // Required for the test cases
-#include <ros/ros.h>
-#include <ff_msgs/AccessControlStateStamped.h>
-#include <ff_msgs/AckStamped.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
+#include <ff_common/ff_ros.h>
+
+#include <ff_msgs/msg/access_control_state_stamped.hpp>
+#include <ff_msgs/msg/ack_stamped.hpp>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/command_stamped.hpp>
+namespace ff_msgs {
+  typedef msg::AckCompletedStatus AckCompletedStatus;
+  typedef msg::AccessControlStateStamped AccessControlStateStamped;
+  typedef msg::AckStamped AckStamped;
+  typedef msg::AckStatus AckStatus;
+  typedef msg::CommandArg CommandArg;
+  typedef msg::CommandConstants CommandConstants;
+  typedef msg::CommandStamped CommandStamped;
+}
+
 #include <vector>
 
 // Test access control
@@ -40,8 +50,12 @@
 // 8) Test sending a command without being the operator in control
 
 // Publisher and subscribers
-ros::Subscriber cmd_sub, ack_sub, state_sub;
-ros::Publisher cmd_pub;
+Subscriber<ff_msgs::CommandStamped> cmd_sub;
+Subscriber<ff_msgs::AckStamped> ack_sub;
+Subscriber<ff_msgs::AccessControlStateStamped> state_sub;
+Publisher<ff_msgs::CommandStamped> cmd_pub;
+
+FF_DEFINE_LOGGER("test_access_control")
 
 std::string cmd_id = "";
 std::string cookie = "";
@@ -62,7 +76,8 @@ void PublishCommand(std::vector<ff_msgs::CommandArg> *args) {
   if (args != NULL) {
     cmd.args = *args;
   }
-  cmd_pub.publish(cmd);
+
+  cmd_pub->publish(cmd);
 }
 
 void PublishGrabControl() {
@@ -78,12 +93,12 @@ void PublishGrabControl() {
   sent_grab = true;
 }
 
-void GCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
-  EXPECT_EQ(ack->cmd_id, cmd_id.c_str());
-  EXPECT_EQ(ack->status.status, ff_msgs::AckStatus::COMPLETED);
-  EXPECT_EQ(ack->completed_status.status, ff_msgs::AckCompletedStatus::OK);
+void GCAckCallback(ff_msgs::AckStamped const& ack) {
+  EXPECT_EQ(ack.cmd_id, cmd_id.c_str());
+  EXPECT_EQ(ack.status.status, ff_msgs::AckStatus::COMPLETED);
+  EXPECT_EQ(ack.completed_status.status, ff_msgs::AckCompletedStatus::OK);
   // check request ack succeed and grab control
-  if (ack->cmd_id == "request_control") {
+  if (ack.cmd_id == "request_control") {
     got_request_ack = true;
     if (cookie != "") {
       cmd_id = "grab_control";
@@ -92,7 +107,7 @@ void GCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
     }
   }
 
-  if (ack->cmd_id == "grab_control") {
+  if (ack.cmd_id == "grab_control") {
     got_grab_ack = true;
     // Make sure got and checked access state before quitting test
     if (got_state) {
@@ -101,13 +116,13 @@ void GCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
   }
 }
 
-void CWCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
-  EXPECT_EQ(ack->cmd_id, cmd_id.c_str());
-  EXPECT_EQ(ack->status.status, ff_msgs::AckStatus::COMPLETED);
-  EXPECT_EQ(ack->completed_status.status, ff_msgs::AckCompletedStatus::OK);
+void CWCAckCallback(ff_msgs::AckStamped const& ack) {
+  EXPECT_EQ(ack.cmd_id, cmd_id.c_str());
+  EXPECT_EQ(ack.status.status, ff_msgs::AckStatus::COMPLETED);
+  EXPECT_EQ(ack.completed_status.status, ff_msgs::AckCompletedStatus::OK);
 
   // send grab control command if just requested control and received cookie
-  if (ack->cmd_id == "request_control") {
+  if (ack.cmd_id == "request_control") {
     got_request_ack = true;
     if (cookie != "") {
       cmd_id = "grab_control";
@@ -116,7 +131,7 @@ void CWCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
     }
   }
 
-  if (ack->cmd_id == "grab_control") {
+  if (ack.cmd_id == "grab_control") {
     // Send a command and make sure it is published on the /command topic (i.e.
     // make sure it got passed on to the executive.
     cmd_name = ff_msgs::CommandConstants::CMD_NAME_NO_OP;
@@ -125,17 +140,17 @@ void CWCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
   }
 }
 
-void FailedAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
-  EXPECT_EQ(ack->cmd_id, cmd_id.c_str());
-  EXPECT_EQ(ack->status.status, ff_msgs::AckStatus::COMPLETED);
+void FailedAckCallback(ff_msgs::AckStamped const& ack) {
+  EXPECT_EQ(ack.cmd_id, cmd_id.c_str());
+  EXPECT_EQ(ack.status.status, ff_msgs::AckStatus::COMPLETED);
 
   // Two diffent failures bad syntex and execution failed
   // execution failed only occurs for the invalid cookie test
-  if (ack->cmd_id == "invalid_cookie") {
-    EXPECT_EQ(ack->completed_status.status,
+  if (ack.cmd_id == "invalid_cookie") {
+    EXPECT_EQ(ack.completed_status.status,
               ff_msgs::AckCompletedStatus::EXEC_FAILED);
   } else {
-    EXPECT_EQ(ack->completed_status.status,
+    EXPECT_EQ(ack.completed_status.status,
               ff_msgs::AckCompletedStatus::BAD_SYNTAX);
   }
   test_done = true;
@@ -143,13 +158,13 @@ void FailedAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
 
 // Only used for successful commands that get passed to the executive. Thus the
 // test is finished
-void CmdCallback(ff_msgs::CommandStampedConstPtr const& cmd) {
-  EXPECT_EQ(cmd->cmd_name, cmd_name);
+void CmdCallback(ff_msgs::CommandStamped const& cmd) {
+  EXPECT_EQ(cmd.cmd_name, cmd_name);
   test_done = true;
 }
 
-void StateCallback(ff_msgs::AccessControlStateStampedConstPtr const& state) {
-  cookie = state->cookie;
+void StateCallback(ff_msgs::AccessControlStateStamped const& state) {
+  cookie = state.cookie;
   if (cookie != "" && got_request_ack) {
     cmd_id = "grab_control";
     PublishGrabControl();
@@ -157,7 +172,7 @@ void StateCallback(ff_msgs::AccessControlStateStampedConstPtr const& state) {
   }
 
   if (sent_grab) {
-    EXPECT_EQ(state->controller, controller);
+    EXPECT_EQ(state.controller, controller);
     got_state = true;
     // Make sure got and checked ack before quitting
     if (got_grab_ack) {
@@ -166,16 +181,24 @@ void StateCallback(ff_msgs::AccessControlStateStampedConstPtr const& state) {
   }
 }
 
-
 // Test Grab Control
 TEST(access_control, GrabControl) {
-  ros::NodeHandle n;
-  ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
-                                             &GCAckCallback);
-  state_sub = n.subscribe<ff_msgs::AccessControlStateStamped>(
-                    TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE, 10, &StateCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+                            std::make_shared<rclcpp::Node>("test_grab_control");
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &GCAckCallback);
+  state_sub = FF_CREATE_SUBSCRIBER(nh,
+                                   ff_msgs::AccessControlStateStamped,
+                                   TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
+                                   10,
+                                   &StateCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
   // Reinitialize global variables
   test_done = false;
@@ -186,9 +209,12 @@ TEST(access_control, GrabControl) {
   cookie = "";
   controller = "operator1";
 
-  if (ack_sub.getNumPublishers() == 0 || state_sub.getNumPublishers() == 0 ||
-      cmd_pub.getNumSubscribers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(100000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACK) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_REQUEST_CONTROL;
@@ -196,30 +222,43 @@ TEST(access_control, GrabControl) {
   PublishCommand(NULL);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  ack_sub.shutdown();
-  state_sub.shutdown();
-  cmd_pub.shutdown();
 }
 
 // Test sending a command while having control
 TEST(access_control, CommandWithControl) {
-  ros::NodeHandle n;
-  cmd_sub = n.subscribe<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10,
-                                                 &CmdCallback);
-  ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
-                                             &CWCAckCallback);
-  state_sub = n.subscribe<ff_msgs::AccessControlStateStamped>(
-                    TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE, 10, &StateCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+                    std::make_shared<rclcpp::Node>("test_command_with_control");
+  cmd_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 10,
+                                 &CmdCallback);
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &CWCAckCallback);
+  state_sub = FF_CREATE_SUBSCRIBER(nh,
+                                   ff_msgs::AccessControlStateStamped,
+                                   TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
+                                   10,
+                                   &StateCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_sub.getNumPublishers() == 0 || ack_sub.getNumPublishers() == 0 ||
-      state_sub.getNumPublishers() == 0 || cmd_pub.getNumSubscribers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACK) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   sent_grab = false;
   got_request_ack = false;
@@ -233,26 +272,31 @@ TEST(access_control, CommandWithControl) {
   PublishCommand(NULL);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  cmd_sub.shutdown();
-  ack_sub.shutdown();
-  state_sub.shutdown();
-  cmd_pub.shutdown();
 }
 
 // Test sending a stop command without being the operator in control
 TEST(access_control, StopCommandWithoutControl) {
-  ros::NodeHandle n;
-  cmd_sub = n.subscribe<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10,
-                                                 &CmdCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+            std::make_shared<rclcpp::Node>("test_stop_command_without_control");
+  cmd_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 10,
+                                 &CmdCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_sub.getNumPublishers() == 0 || cmd_pub.getNumSubscribers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_COMMAND) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "engineer";
 
@@ -261,24 +305,31 @@ TEST(access_control, StopCommandWithoutControl) {
   PublishCommand(NULL);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  cmd_sub.shutdown();
-  cmd_pub.shutdown();
 }
 
 // Test sending an idle propulsion command without being the operator in control
 TEST(access_control, IdlePropulsionCommandWithoutControl) {
-  ros::NodeHandle n;
-  cmd_sub = n.subscribe<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10,
-                                                 &CmdCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+    std::make_shared<rclcpp::Node>("test_idle_propulsion_command_wo_control");
+  cmd_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 10,
+                                 &CmdCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_sub.getNumPublishers() == 0 || cmd_pub.getNumSubscribers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_COMMAND) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "engineer";
 
@@ -287,24 +338,31 @@ TEST(access_control, IdlePropulsionCommandWithoutControl) {
   PublishCommand(NULL);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  cmd_sub.shutdown();
-  cmd_pub.shutdown();
 }
 
 // Test sending a grab control command with an invalid cookie
 TEST(access_control, GrabControlCommandInvalidCookie) {
-  ros::NodeHandle n;
-  ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
-                                             &FailedAckCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+    std::make_shared<rclcpp::Node>("test_grab_control_command_invalid_cookie");
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_pub.getNumSubscribers() == 0 || ack_sub.getNumPublishers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACK) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
@@ -313,24 +371,31 @@ TEST(access_control, GrabControlCommandInvalidCookie) {
   PublishGrabControl();
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  cmd_pub.shutdown();
-  ack_sub.shutdown();
 }
 
 // Test sending a grab control command with no arguments
 TEST(access_control, GrabControlNoArgs) {
-  ros::NodeHandle n;
-  ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
-                                             &FailedAckCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+                    std::make_shared<rclcpp::Node>("test_grab_control_no_args");
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_pub.getNumSubscribers() == 0 || ack_sub.getNumPublishers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACK) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
@@ -339,24 +404,30 @@ TEST(access_control, GrabControlNoArgs) {
   PublishCommand(NULL);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  cmd_pub.shutdown();
-  ack_sub.shutdown();
 }
 
 // Test sending a grab control command with the wrong argument type
 TEST(access_control, GrabControlWrongArgType) {
-  ros::NodeHandle n;
-  ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
-                                             &FailedAckCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                          TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+            std::make_shared<rclcpp::Node>("test_grab_control_wrong_arg_type");
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_pub.getNumSubscribers() == 0 || ack_sub.getNumPublishers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACK) == 0) {
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
@@ -370,24 +441,31 @@ TEST(access_control, GrabControlWrongArgType) {
   PublishCommand(&args);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  ack_sub.shutdown();
-  cmd_pub.shutdown();
 }
 
 // Test sending a command without being the operator in control
 TEST(access_control, CommandWithoutControl) {
-  ros::NodeHandle n;
-  ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
-                                             &FailedAckCallback);
-  cmd_pub = n.advertise<ff_msgs::CommandStamped>(
-                                    TOPIC_COMMUNICATIONS_DDS_COMMAND, 10);
+  rclcpp::Node::SharedPtr nh =
+                std::make_shared<rclcpp::Node>("test_command_without_control");
+  ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                 ff_msgs::AckStamped,
+                                 TOPIC_MANAGEMENT_ACK,
+                                 10,
+                                 &FailedAckCallback);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                                10);
 
-  if (cmd_pub.getNumSubscribers() == 0 || ack_sub.getNumPublishers() == 0) {
-    ros::Duration(1.0).sleep();
+  std::chrono::nanoseconds ns(1000000000);
+  while (nh->count_subscribers(TOPIC_COMMUNICATIONS_DDS_COMMAND) == 0 ||
+         nh->count_publishers(TOPIC_MANAGEMENT_ACK) == 0) {
+    rclcpp::sleep_for(ns);
+    rclcpp::spin_some(nh);
   }
+
   test_done = false;
   controller = "rogue_operator";
 
@@ -396,20 +474,16 @@ TEST(access_control, CommandWithoutControl) {
   PublishCommand(NULL);
 
   while (!test_done) {
-    ros::spinOnce();
+    rclcpp::spin_some(nh);
   }
-
-  cmd_pub.shutdown();
-  ack_sub.shutdown();
 }
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv) {
   // Initialize the gtesttest framework
   testing::InitGoogleTest(&argc, argv);
-  google::InitGoogleLogging(argv[0]);
-  // Initialize ROS
-  ros::init(argc, argv, "test_access_control", ros::init_options::AnonymousName);
-  // Run all test procedures
-  return RUN_ALL_TESTS();
+  rclcpp::init(argc, argv);
+  int result = RUN_ALL_TESTS();
+  rclcpp::shutdown();
+  return result;
 }
