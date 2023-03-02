@@ -24,6 +24,7 @@ import os
 import sys
 
 import rosbag
+
 import utilities.utilities
 
 
