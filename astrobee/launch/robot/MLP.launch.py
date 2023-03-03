@@ -192,16 +192,16 @@ def generate_launch_description():
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='executive',
-            #     plugin='executive::Executive',
-            #     name='executive',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
-            # ComposableNode(
-            #     package='access_control',
-            #     plugin='access_control::AccessControl',
-            #     name='access_control',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='executive',
+                plugin='executive::Executive',
+                name='executive',
+                extra_arguments=[{'use_intra_process_comms': False}]),
+            ComposableNode(
+                package='access_control',
+                plugin='access_control::AccessControl',
+                name='access_control',
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(

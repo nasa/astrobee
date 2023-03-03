@@ -14,22 +14,23 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
+  <build_depend>ament_cmake</build_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclcpp_component</build_depend>
   <build_depend>ff_msgs</build_depend>
   <build_depend>ff_hw_msgs</build_depend>
-  <build_depend>nodelet</build_depend>
   <build_depend>config_reader</build_depend>
   <build_depend>ff_util</build_depend>
   <build_depend>jsonloader</build_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>ff_msgs</run_depend>
-  <run_depend>ff_hw_msgs</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>config_reader</run_depend>
-  <run_depend>ff_util</run_depend>
-  <run_depend>jsonloader</run_depend>
+
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclcpp_component</exec_depend>
+  <exec_depend>ff_msgs</exec_depend>
+  <exec_depend>ff_hw_msgs</exec_depend>
+  <exec_depend>config_reader</exec_depend>
+  <exec_depend>ff_util</exec_depend>
+  <exec_depend>jsonloader</exec_depend>
   <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
