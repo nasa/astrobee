@@ -203,19 +203,15 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // TOPIC_HARDWARE_PMC_STATE, 1, true);  //TODO(@mgouveia): latched topic
 
     // Subscibe to PMC commands
-    sub_command_ = FF_CREATE_SUBSCRIBER(nh,
-                                        ff_hw_msgs::PmcCommand,
-                                        TOPIC_HARDWARE_PMC_COMMAND,
-                                        5,
-                                        &GazeboModelPluginPmc::CommandCallback);
+    sub_command_ = FF_CREATE_SUBSCRIBER(nh, ff_hw_msgs::PmcCommand,
+      TOPIC_HARDWARE_PMC_COMMAND, 5,
+      std::bind(&GazeboModelPluginPmc::CommandCallback, this, std::placeholders::_1));
 
     // Now register to be called back every time FAM has new wrench
     if (bypass_blower_model_)
-      sub_fam_ = FF_CREATE_SUBSCRIBER(nh,
-                                        ff_msgs::FamCommand,
-                                        TOPIC_GNC_CTL_COMMAND,
-                                        5,
-                                        &GazeboModelPluginPmc::FamCallback);
+      sub_fam_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::FamCommand,
+        TOPIC_GNC_CTL_COMMAND, 5,
+        std::bind(&GazeboModelPluginPmc::FamCallback, this, std::placeholders::_1));
 
     // Create a watchdog timer to ensure the PMC commands are set
     timer_watchdog_.createTimer(watchdog_period_,

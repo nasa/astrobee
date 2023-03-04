@@ -77,19 +77,19 @@ class TestSubscriber : ff_util::FreeFlyerComponent {
   void InitializeNotLatched(NodeHandle nh) {
     topic_timeout_ = false;
     not_latched_subscriber_ = FF_CREATE_SUBSCRIBER(nh,
-                                          std_msgs::msg::String,
-                                          TOPIC_COMMAND,
-                                          1,
-                                          &TestSubscriber::NotLatchedCallback);
+      std_msgs::msg::String,
+      TOPIC_COMMAND,
+      1,
+      std::bind(&TestSubscriber::NotLatchedCallback, this, std::placeholders::_1));
   }
 
   void InitializeLatched(NodeHandle nh) {
     topic_timeout_ = true;
     latched_subscriber_ = FF_CREATE_SUBSCRIBER(nh,
-                                              std_msgs::msg::String,
-                                              TOPIC_ROBOT_NAME,
-                                              1,
-                                              &TestSubscriber::LatchedCallback);
+      std_msgs::msg::String,
+      TOPIC_ROBOT_NAME,
+      1,
+      std::bind(&TestSubscriber::LatchedCallback, this, std::placeholders::_1));
   }
 
   void LatchedCallback(std_msgs::msg::String const& msg) {

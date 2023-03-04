@@ -307,8 +307,8 @@ void FreeFlyerComponent::InitCallback() {
   Reset();
 
   // Start a trigger service on the private nodehandle /platform/pvt/name
-  FF_CREATE_SERVICE(srv_trigger_, ff_msgs::Trigger, TOPIC_TRIGGER,
-                     &FreeFlyerComponent::TriggerCallback);
+  srv_trigger_ = FF_CREATE_SERVICE(node_, ff_msgs::Trigger, TOPIC_TRIGGER,
+    std::bind(&FreeFlyerComponent::TriggerCallback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void FreeFlyerComponent::TriggerCallback(const std::shared_ptr<ff_msgs::Trigger::Request> req,

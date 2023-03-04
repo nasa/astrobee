@@ -16,13 +16,10 @@
  * under the License.
  */
 
-#include <ros/console.h>
-#include <ros/static_assert.h>
-#include <ros/platform.h>
 #include <stdlib.h>
-#include <ros/assert.h>
 #include <ctl/ctl.h>
 #include <config_reader/config_reader.h>
+#include <ff_common/ff_ros.h>
 #include <msg_conversions/msg_conversions.h>
 #include <assert.h>
 #include <Eigen/Dense>
@@ -34,6 +31,8 @@
 #include <cmath>
 
 namespace ctl {
+
+FF_DEFINE_LOGGER("ctl");
 
 void NormalizeQuaternion(Eigen::Quaternionf & out) {
   // enfore positive scalar
@@ -352,29 +351,29 @@ void Control::Initialize(void) {
 void Control::ReadParams(config_reader::ConfigReader* config) {
   Eigen::Vector3d temp;
   if (!msg_conversions::config_read_vector(config, "tun_accel_gain", &temp))
-    ROS_FATAL("Unspecified tun_accel_gain.");
+    FF_FATAL("Unspecified tun_accel_gain.");
   tun_accel_gain = temp.cast<float>();
   if (!msg_conversions::config_read_vector(config, "tun_alpha_gain", &temp))
-    ROS_FATAL("Unspecified tun_alpha_gain.");
+    FF_FATAL("Unspecified tun_alpha_gain.");
   tun_alpha_gain = temp.cast<float>();
   if (!config->GetReal("tun_ctl_stopped_pos_thresh", &tun_ctl_stopped_pos_thresh))
-    ROS_FATAL("Unspecified tun_ctl_stopped_pos_thresh.");
+    FF_FATAL("Unspecified tun_ctl_stopped_pos_thresh.");
   if (!config->GetReal("tun_ctl_stopped_quat_thresh", &tun_ctl_stopped_quat_thresh))
-    ROS_FATAL("Unspecified tun_ctl_stopped_quat_thresh.");
+    FF_FATAL("Unspecified tun_ctl_stopped_quat_thresh.");
   if (!config->GetReal("tun_ctl_stopping_omega_thresh", &tun_ctl_stopping_omega_thresh))
-    ROS_FATAL("Unspecified tun_ctl_stopping_omega_thresh.");
+    FF_FATAL("Unspecified tun_ctl_stopping_omega_thresh.");
   if (!config->GetReal("tun_ctl_stopping_vel_thresh", &tun_ctl_stopping_vel_thresh))
-    ROS_FATAL("Unspecified tun_ctl_stopping_vel_thresh.");
+    FF_FATAL("Unspecified tun_ctl_stopping_vel_thresh.");
   if (!config->GetReal("tun_ctl_att_sat_lower", &tun_ctl_att_sat_lower))
-    ROS_FATAL("Unspecified tun_ctl_att_sat_lower.");
+    FF_FATAL("Unspecified tun_ctl_att_sat_lower.");
   if (!config->GetReal("tun_ctl_att_sat_upper", &tun_ctl_att_sat_upper))
-    ROS_FATAL("Unspecified tun_ctl_att_sat_upper.");
+    FF_FATAL("Unspecified tun_ctl_att_sat_upper.");
   if (!config->GetReal("tun_ctl_linear_force_limit", &tun_ctl_linear_force_limit))
-    ROS_FATAL("Unspecified tun_ctl_linear_force_limit.");
+    FF_FATAL("Unspecified tun_ctl_linear_force_limit.");
   if (!config->GetReal("tun_ctl_pos_sat_lower", &tun_ctl_pos_sat_lower))
-    ROS_FATAL("Unspecified tun_ctl_pos_sat_lower.");
+    FF_FATAL("Unspecified tun_ctl_pos_sat_lower.");
   if (!config->GetReal("tun_ctl_pos_sat_upper", &tun_ctl_pos_sat_upper))
-    ROS_FATAL("Unspecified tun_ctl_pos_sat_upper.");
+    FF_FATAL("Unspecified tun_ctl_pos_sat_upper.");
 }
 
 }  // end namespace ctl

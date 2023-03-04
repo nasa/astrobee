@@ -764,7 +764,6 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     cfg.Set<bool>("enable_validation", false);
     cfg.Set<bool>("enable_bootstrapping", true);
     cfg.Set<bool>("enable_immediate", true);
-    cfg.Set<bool>("enable_timesync", false);
     cfg.Set<bool>("enable_faceforward", false);
     cfg.Set<double>("desired_vel", -1.0);
     cfg.Set<double>("desired_accel", -1.0);
@@ -796,7 +795,6 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
         bool validation = cfg_.Get<bool>("enable_validation");
         bool boostrapping = cfg_.Get<bool>("enable_bootstrapping");
         bool immediate = cfg_.Get<bool>("enable_immediate");
-        bool timesync = cfg_.Get<bool>("enable_timesync");
         double desired_vel = cfg_.Get<double>("desired_vel");
         double desired_accel = cfg_.Get<double>("desired_accel");
         double desired_omega = cfg_.Get<double>("desired_omega");
@@ -810,7 +808,6 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
         cfg.Set<bool>("enable_validation", validation);
         cfg.Set<bool>("enable_bootstrapping", boostrapping);
         cfg.Set<bool>("enable_immediate", immediate);
-        cfg.Set<bool>("enable_timesync", timesync);
         cfg.Set<double>("desired_vel", desired_vel);
         cfg.Set<double>("desired_accel", desired_accel);
         cfg.Set<double>("desired_omega", desired_omega);

@@ -121,6 +121,10 @@ class FreeFlyerComponent {
 
   std::map<std::string, int> faults_;
 
+  // Node
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Clock::SharedPtr clock_;
+
  private:
   void HeartbeatCallback();
   void InitCallback();
@@ -132,10 +136,6 @@ class FreeFlyerComponent {
 
   // Called in onInit to read in the config values associated with the node
   void ReadConfig();
-
-  // Node
-  rclcpp::Node::SharedPtr node_;
-  rclcpp::Clock::SharedPtr clock_;
 
   // Heartbeat autostart
   bool autostart_hb_timer_;

@@ -72,7 +72,6 @@ DEFINE_bool(nocollision, false, "Don't check for collisions during action");
 DEFINE_bool(nobootstrap, false, "Don't move to the starting station on execute");
 DEFINE_bool(noimmediate, false, "Don't execute immediately");
 DEFINE_bool(replan, false, "Enable replanning");
-DEFINE_bool(timesync, false, "Enable time synchronization");
 DEFINE_string(rec, "", "Plan and record to this file.");
 DEFINE_string(exec, "", "Execute a given segment");
 DEFINE_string(pos, "", "Desired position in cartesian format 'X Y Z' (meters)");

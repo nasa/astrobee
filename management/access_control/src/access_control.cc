@@ -18,6 +18,8 @@
 
 #include <access_control/access_control.h>
 
+FF_DEFINE_LOGGER("access_control");
+
 namespace access_control {
 
 constexpr char hex[] = "0123456789abcdef";
@@ -27,8 +29,8 @@ static inline void byte2hex(const std::uint8_t b, char dest[2]) {
   dest[1] = hex[b & 0x0f];
 }
 
-AccessControl::AccessControl() :
-    ff_util::FreeFlyerNodelet(NODE_ACCESS_CONTROL, true),
+AccessControl::AccessControl(const rclcpp::NodeOptions & options) :
+    ff_util::FreeFlyerComponent(options, NODE_ACCESS_CONTROL, true),
     pub_queue_size_(10),
     sub_queue_size_(10) {
 }
@@ -36,32 +38,38 @@ AccessControl::AccessControl() :
 AccessControl::~AccessControl() {
 }
 
-void AccessControl::Initialize(ros::NodeHandle *nh) {
+void AccessControl::Initialize(NodeHandle &nh) {
   state_.header.frame_id = "world";
   ack_.header.frame_id = "world";
 
-  cmd_sub_ = nh->subscribe<ff_msgs::CommandStamped>(
-                                            TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                                            sub_queue_size_,
-                                            &AccessControl::HandleCommand,
-                                            this);
+  node_ = nh;
 
-  cmd_ack_pub_ = nh->advertise<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK,
-                                                    pub_queue_size_, false);
+  cmd_sub_ = FF_CREATE_SUBSCRIBER(nh,
+        ff_msgs::CommandStamped,
+        TOPIC_COMMUNICATIONS_DDS_COMMAND,
+        sub_queue_size_,
+        std::bind(&AccessControl::HandleCommand, this, std::placeholders::_1));
+
+  cmd_ack_pub_ = FF_CREATE_PUBLISHER(nh,
+                                     ff_msgs::AckStamped,
+                                     TOPIC_MANAGEMENT_ACK,
+                                     pub_queue_size_);
 
   // All states should be latching
-  state_pub_ = nh->advertise<ff_msgs::AccessControlStateStamped>(
-                                          TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
-                                          pub_queue_size_,
-                                          true);
+  state_pub_ = FF_CREATE_PUBLISHER(nh,
+                                   ff_msgs::AccessControlStateStamped,
+                                   TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
+                                   pub_queue_size_);
 
-  cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND,
-                                                    pub_queue_size_, false);
+  cmd_pub_ = FF_CREATE_PUBLISHER(nh,
+                                 ff_msgs::CommandStamped,
+                                 TOPIC_COMMAND,
+                                 pub_queue_size_);
 
-  failed_cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(
-                                            TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
-                                            pub_queue_size_,
-                                            true);
+  failed_cmd_pub_ = FF_CREATE_PUBLISHER(nh,
+                                        ff_msgs::CommandStamped,
+                                        TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
+                                        pub_queue_size_);
 
   state_.controller = "No Controller";
 
@@ -91,78 +99,79 @@ std::string AccessControl::GenerateCookie() {
   return s;
 }
 
-void AccessControl::HandleCommand(ff_msgs::CommandStampedConstPtr const& cmd) {
-  if (cmd->cmd_name == ff_msgs::CommandConstants::CMD_NAME_REQUEST_CONTROL) {
+void AccessControl::HandleCommand(ff_msgs::CommandStamped const& cmd) {
+  if (cmd.cmd_name ==
+                    ff_msgs::CommandConstants::CMD_NAME_REQUEST_CONTROL) {
     HandleRequestControl(cmd);
-  } else if (cmd->cmd_name == ff_msgs::CommandConstants::CMD_NAME_GRAB_CONTROL) {
+  } else if (cmd.cmd_name ==
+                        ff_msgs::CommandConstants::CMD_NAME_GRAB_CONTROL) {
     HandleGrabControl(cmd);
-  } else if ((state_.controller != "" && state_.controller == cmd->cmd_src) ||
-        cmd->cmd_name == ff_msgs::CommandConstants::CMD_NAME_IDLE_PROPULSION ||
-        cmd->cmd_name == ff_msgs::CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
+  } else if ((state_.controller != "" && state_.controller == cmd.cmd_src) ||
+    cmd.cmd_name == ff_msgs::CommandConstants::CMD_NAME_IDLE_PROPULSION ||
+    cmd.cmd_name == ff_msgs::CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
     // Always let idle propulsion, stop, and commands sent by the operator in
     // control through. Also make sure someone has grabbed control before
     // letting commands other than stop and idle through.
     PublishCommand(cmd);
   } else {  // Operator isn't in control and cannot issue commands
-    PublishAck(cmd->cmd_id,
+    PublishAck(cmd.cmd_id,
                "Operator doesn't have control.",
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
     // Need to publish the command so that it gets echoed to the ground
-    failed_cmd_pub_.publish(cmd);
+    failed_cmd_pub_->publish(cmd);
   }
 }
 
-void AccessControl::HandleGrabControl(ff_msgs::CommandStampedConstPtr const&
-                                                                          cmd) {
+void AccessControl::HandleGrabControl(ff_msgs::CommandStamped const& cmd) {
   std::string msg;
-  if (cmd->args.size() != 1) {
+  if (cmd.args.size() != 1) {
     msg = "Invalid number of arguments to grab control command.";
-    ROS_WARN("%s", msg.c_str());
-    PublishAck(cmd->cmd_id,
+    FF_WARN("%s", msg.c_str());
+    PublishAck(cmd.cmd_id,
                msg,
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
     return;
   }
 
-  if (cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+  if (cmd.args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
     msg = "Invalid argument type to grab control command.";
-    ROS_WARN("%s", msg.c_str());
-    PublishAck(cmd->cmd_id,
+    FF_WARN("%s", msg.c_str());
+    PublishAck(cmd.cmd_id,
                msg,
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
     return;
   }
 
-  const std::string cookie = cmd->args[0].s;
+  const std::string cookie = cmd.args[0].s;
   if (cookie != state_.cookie) {
-    msg = "Agent " + cmd->cmd_src + " sent wrong cookie. Expected "
+    msg = "Agent " + cmd.cmd_src + " sent wrong cookie. Expected "
           + state_.cookie + ", got " + cookie;
-    ROS_WARN("%s", msg.c_str());
-    PublishAck(cmd->cmd_id,
+    FF_WARN("%s", msg.c_str());
+    PublishAck(cmd.cmd_id,
                msg,
                ff_msgs::AckCompletedStatus::EXEC_FAILED);
     return;
   }
 
-  if (cmd->cmd_src != requestor_) {
-    ROS_WARN("Agent %s has grabbed control, yet %s requested it",
-             cmd->cmd_src.data(), requestor_.data());
+  if (cmd.cmd_src != requestor_) {
+    FF_WARN("Agent %s has grabbed control, yet %s requested it",
+             cmd.cmd_src.data(), requestor_.data());
   }
 
-  state_.controller = cmd->cmd_src;
+  state_.controller = cmd.cmd_src;
   state_.cookie = "";
 
   PublishState();
-  PublishAck(cmd->cmd_id);
+  PublishAck(cmd.cmd_id);
   return;
 }
 
-void AccessControl::HandleRequestControl(ff_msgs::CommandStampedConstPtr const&
-                                                                          cmd) {
+void AccessControl::HandleRequestControl(
+                                      ff_msgs::CommandStamped const& cmd) {
   state_.cookie = GenerateCookie();
-  requestor_ = cmd->cmd_src;
+  requestor_ = cmd.cmd_src;
 
-  PublishAck(cmd->cmd_id);
+  PublishAck(cmd.cmd_id);
   PublishState();
 }
 
@@ -170,23 +179,25 @@ void AccessControl::PublishAck(std::string const& cmd_id,
                                std::string const& message,
                                uint8_t completed_status,
                                uint8_t status) {
-  ack_.header.stamp = ros::Time::now();
+  ack_.header.stamp = GetTimeNow();
   ack_.cmd_id = cmd_id;
   ack_.status.status = status;
   ack_.completed_status.status = completed_status;
   ack_.message = message;
-  cmd_ack_pub_.publish(ack_);
+  cmd_ack_pub_->publish(ack_);
 }
 
-void AccessControl::PublishCommand(ff_msgs::CommandStampedConstPtr const& cmd) {
-  cmd_pub_.publish(cmd);
+void AccessControl::PublishCommand(ff_msgs::CommandStamped const& cmd) {
+  cmd_pub_->publish(cmd);
 }
 
 void AccessControl::PublishState() {
-  state_.header.stamp = ros::Time::now();
-  state_pub_.publish(state_);
+  state_.header.stamp = GetTimeNow();
+  state_pub_->publish(state_);
 }
 
 }  // namespace access_control
 
-PLUGINLIB_EXPORT_CLASS(access_control::AccessControl, nodelet::Nodelet)
+#include "rclcpp_components/register_node_macro.hpp"
+
+RCLCPP_COMPONENTS_REGISTER_NODE(access_control::AccessControl)

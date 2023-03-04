@@ -15,32 +15,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(states)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  ff_hw_msgs
-  ff_msgs
-  ff_util
+set(dependencies
+rclcpp
+rclcpp_components
+ff_hw_msgs
+ff_msgs
+ff_util
+ff_common
 )
 
-catkin_package(
-  LIBRARIES
-    states
-  CATKIN_DEPENDS
-    roscpp
-    nodelet
-    ff_hw_msgs
-    ff_msgs
-    ff_util
-)
+## Find ament and libraries
+find_package(ament_cmake REQUIRED)
+
+foreach(dep ${dependencies})
+  find_package(${dep})
+endforeach()
 
 ###########
 ## Build ##
@@ -49,15 +47,15 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(states
+add_library(states SHARED
   src/states_nodelet/states_nodelet.cc
 )
-add_dependencies(states ${catkin_EXPORTED_TARGETS})
-target_link_libraries(states ${catkin_LIBRARIES})
+target_compile_definitions(states PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(states rclcpp rclcpp_components ${dependencies})
+rclcpp_components_register_nodes(states "states::StateNodelet")
 
 #############
 ## Install ##
@@ -65,17 +63,15 @@ target_link_libraries(states ${catkin_LIBRARIES})
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(DIRECTORY launch
+        DESTINATION share/${PROJECT_NAME}
+        PATTERN ".svn" EXCLUDE
 )
 
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
+ament_package()

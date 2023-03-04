@@ -22,7 +22,7 @@ project(ff_util)
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
-set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
 # Find amend and libraries
 find_package(ament_cmake REQUIRED)
@@ -50,19 +50,15 @@ include_directories(
 )
 
 # Declare C++ libraries
-add_library(ff_component
+add_library(ff_util
   src/ff_component/ff_component.cc
-)
-ament_target_dependencies(ff_component rclcpp ff_common ff_msgs diagnostic_msgs config_reader)
-ament_export_targets(ff_component HAS_LIBRARY_TARGET)
-
-# Declare C++ libraries
-add_library(ff_flight
   src/ff_flight/ff_flight.cc
+  src/config_server/config_server.cc
+  src/config_client/config_client.cc
 )
-ament_target_dependencies(ff_flight rclcpp geometry_msgs ff_msgs ff_common msg_conversions config_reader tf2_geometry_msgs)
+ament_target_dependencies(ff_util rclcpp ff_common ff_msgs geometry_msgs msg_conversions diagnostic_msgs config_reader tf2_geometry_msgs)
 
-# ament_target_dependencies(config_server rclcpp diagnostic_msgs)
+ament_export_targets(ff_util HAS_LIBRARY_TARGET)
 
 # ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
 
@@ -87,14 +83,14 @@ if(BUILD_TESTING)
   ament_add_gtest_executable(test_ff_timer
     test/test_ff_timer.cc
   )
-  target_link_libraries(test_ff_timer ff_component)
+  target_link_libraries(test_ff_timer ff_util)
   add_ros_test(test/launch/test_ff_timer.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_service
   ament_add_gtest_executable(test_ff_service
     test/test_ff_service.cc
   )
-  target_link_libraries(test_ff_service ff_component)
+  target_link_libraries(test_ff_service ff_util)
   add_ros_test(test/launch/test_ff_service.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_action
@@ -102,63 +98,63 @@ if(BUILD_TESTING)
     test/test_ff_action_nominal_behavior.cc
   )
   ament_target_dependencies(test_ff_action_nominal_behavior rclcpp_action)
-  target_link_libraries(test_ff_action_nominal_behavior ff_component)
+  target_link_libraries(test_ff_action_nominal_behavior ff_util)
   add_ros_test(test/launch/test_ff_action_nominal_behavior.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_active_timeout
     test/test_ff_action_active_timeout.cc
   )
   ament_target_dependencies(test_ff_action_active_timeout rclcpp_action)
-  target_link_libraries(test_ff_action_active_timeout ff_component)
+  target_link_libraries(test_ff_action_active_timeout ff_util)
   add_ros_test(test/launch/test_ff_action_active_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_cancel_own_goal
     test/test_ff_action_cancel_own_goal.cc
   )
   ament_target_dependencies(test_ff_action_cancel_own_goal rclcpp_action)
-  target_link_libraries(test_ff_action_cancel_own_goal ff_component)
+  target_link_libraries(test_ff_action_cancel_own_goal ff_util)
   add_ros_test(test/launch/test_ff_action_cancel_own_goal.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_connect_timeout
     test/test_ff_action_connect_timeout.cc
   )
   ament_target_dependencies(test_ff_action_connect_timeout rclcpp_action)
-  target_link_libraries(test_ff_action_connect_timeout ff_component)
+  target_link_libraries(test_ff_action_connect_timeout ff_util)
   add_ros_test(test/launch/test_ff_action_connect_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_deadline_timeout
     test/test_ff_action_deadline_timeout.cc
   )
   ament_target_dependencies(test_ff_action_deadline_timeout rclcpp_action)
-  target_link_libraries(test_ff_action_deadline_timeout ff_component)
+  target_link_libraries(test_ff_action_deadline_timeout ff_util)
   add_ros_test(test/launch/test_ff_action_deadline_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_preempt_others_goal
     test/test_ff_action_preempt_others_goal.cc
   )
   ament_target_dependencies(test_ff_action_preempt_others_goal rclcpp_action)
-  target_link_libraries(test_ff_action_preempt_others_goal ff_component)
+  target_link_libraries(test_ff_action_preempt_others_goal ff_util)
   add_ros_test(test/launch/test_ff_action_preempt_others_goal.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_preempt_own_goal
     test/test_ff_action_preempt_own_goal.cc
   )
   ament_target_dependencies(test_ff_action_preempt_own_goal rclcpp_action)
-  target_link_libraries(test_ff_action_preempt_own_goal ff_component)
+  target_link_libraries(test_ff_action_preempt_own_goal ff_util)
   add_ros_test(test/launch/test_ff_action_preempt_own_goal.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   ament_add_gtest_executable(test_ff_action_response_timeout
     test/test_ff_action_response_timeout.cc
   )
   ament_target_dependencies(test_ff_action_response_timeout rclcpp_action)
-  target_link_libraries(test_ff_action_response_timeout ff_component)
+  target_link_libraries(test_ff_action_response_timeout ff_util)
   add_ros_test(test/launch/test_ff_action_response_timeout.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # latched topics
   ament_add_gtest_executable(test_latched_topics
     test/test_latched_topics.cc
   )
-  target_link_libraries(test_latched_topics ff_component)
+  target_link_libraries(test_latched_topics ff_util)
   add_ros_test(test/launch/test_latched_topics.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
 endif()
@@ -171,6 +167,7 @@ endif()
 ament_export_dependencies(
   config_reader
   msg_conversions
+  ff_common
 )
 
 ament_export_include_directories(include)
@@ -183,8 +180,8 @@ install(DIRECTORY include/${PROJECT_NAME}
 )
 
 # Mark libraries for installation
-install(TARGETS ff_component ff_flight #config_server config_client perf_timer
-  EXPORT ff_component
+install(TARGETS ff_util
+  EXPORT ff_util
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

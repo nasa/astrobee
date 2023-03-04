@@ -20,6 +20,16 @@
 
 #include <vector>
 
+namespace ff_msgs {
+  typedef msg::Zone Zone;
+}  // namespace ff_msgs
+namespace visualization_msgs {
+  typedef msg::Marker Marker;
+  typedef msg::MarkerArray MarkerArray;
+}  // namespace visualization_msgs
+
+FF_DEFINE_LOGGER("validator");
+
 namespace choreographer {
 
 
@@ -79,9 +89,12 @@ namespace choreographer {
 
 // Get Zones Map
 bool Validator::GetZonesMap() {
-    ff_msgs::GetFloat srv;
-    if (get_resolution_.call(srv)) {
-      map_res_ = srv.response.data;
+    ff_msgs::srv::GetFloat::Request req;
+    auto result = std::make_shared<ff_msgs::srv::GetFloat::Response>();
+    if (get_resolution_.Call(req, result)) {
+      map_res_ = result->data;
+    } else {
+      FF_WARN("Failed to get resolution.");
     }
 
 
@@ -106,7 +119,7 @@ bool Validator::GetZonesMap() {
       }
     }
     if (num_keepin == 0) {
-      ROS_ERROR("Zero keepin zones!! Plan failed");
+      FF_ERROR("Zero keepin zones!! Plan failed");
       return false;
     }
 
@@ -149,8 +162,10 @@ bool Validator::GetZonesMap() {
 
     // 6) Inflate using the robot radius and the collision distance
     double inflation = map_res_;
-    if (get_map_inflation_.call(srv)) {
-      inflation = srv.response.data;
+    if (get_map_inflation_.Call(req, result)) {
+      inflation = result->data;
+    } else {
+      FF_WARN("Failed to get map inflation.");
     }
     jps_map_util_->dilate(inflation, inflation);     // sets dilating radius
     jps_map_util_->dilating();                       // this dilates the entire map
@@ -166,7 +181,7 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
   // which is smaller than the radius of the freeflyer.
   ff_util::Segment seg;
   if (ff_util::FlightUtil::Resample(msg, seg, 10.0) != ff_util::SUCCESS) {
-    ROS_DEBUG("Could not resample segment at 10Hz");
+    FF_DEBUG("Could not resample segment at 10Hz");
     return VIOLATES_RESAMPLING;
   }
   // Do some basic checks on the segment before zone validation
@@ -213,27 +228,26 @@ Validator::Response Validator::CheckSegment(ff_util::Segment const& msg,
 }
 
 // Load the keep in and keepout zones into memory
-bool Validator::Init(ros::NodeHandle *nh, ff_util::ConfigServer & cfg) {
+bool Validator::Init(NodeHandle & nh, ff_util::ConfigServer & cfg) {
+  nh_ = &nh;
   // Create the zone publisher and service getter/setter
-  pub_zones_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MOBILITY_ZONES, 1, true);
-  set_zones_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_ZONES,
-    &Validator::SetZonesCallback, this);
-  get_zones_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_ZONES,
-    &Validator::GetZonesCallback, this);
-  get_zones_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_ZONES_MAP,
-    &Validator::GetZonesMapCallback, this);
-  get_resolution_ = nh->serviceClient<ff_msgs::GetFloat>(
-    SERVICE_MOBILITY_GET_MAP_RESOLUTION);
-  get_map_inflation_ = nh->serviceClient<ff_msgs::GetFloat>(
-    SERVICE_MOBILITY_GET_MAP_INFLATION);
+  pub_zones_ = FF_CREATE_PUBLISHER(nh, visualization_msgs::msg::MarkerArray,
+    TOPIC_MOBILITY_ZONES, 1);
+  set_zones_srv_ = FF_CREATE_SERVICE(nh, ff_msgs::srv::SetZones, SERVICE_MOBILITY_SET_ZONES,
+    std::bind(&Validator::SetZonesCallback, this, std::placeholders::_1, std::placeholders::_2));
+  get_zones_srv_ = FF_CREATE_SERVICE(nh, ff_msgs::srv::GetZones, SERVICE_MOBILITY_GET_ZONES,
+    std::bind(&Validator::GetZonesCallback, this, std::placeholders::_1, std::placeholders::_2));
+  get_zones_map_srv_ = FF_CREATE_SERVICE(nh, ff_msgs::srv::GetOccupancyMap, SERVICE_MOBILITY_GET_ZONES_MAP,
+    std::bind(&Validator::GetZonesMapCallback, this, std::placeholders::_1, std::placeholders::_2));
+  get_resolution_.Create(nh, SERVICE_MOBILITY_GET_MAP_RESOLUTION);
+  get_map_inflation_.Create(nh, SERVICE_MOBILITY_GET_MAP_INFLATION);
 
   // Wait for services to exist
-  if (!get_resolution_.waitForExistence(ros::Duration(5.0))) {
-    ROS_ERROR_STREAM("Mapper service to get map resolution not working");
+  if (!get_resolution_.waitForExistence(5.0)) {
+    FF_ERROR("Mapper service to get map resolution not working");
   }
-  if (!get_map_inflation_.waitForExistence(ros::Duration(5.0))) {
-    ROS_ERROR_STREAM("Mapper service to get map inflation not working");
+  if (!get_map_inflation_.waitForExistence(5.0)) {
+    FF_ERROR("Mapper service to get map inflation not working");
   }
 
   // Check if overwriting is allowed
@@ -241,11 +255,12 @@ bool Validator::Init(ros::NodeHandle *nh, ff_util::ConfigServer & cfg) {
   overwrite_ = cfg.Get<bool>("zone_overwrite");
   // Try and open the zone file. If this doesn't work, that's OK. It just means
   // that we need to wait for them to be updated.
-  if (!ff_util::Serialization::ReadFile(zone_file_, zones_)) {
-    ROS_WARN_STREAM("Cannot open zone file " << zone_file_);
-  } else {
-    PublishMarkers();
-  }
+  // TODO(bcoltin): fix serialization
+  // if (!ff_util::Serialization::ReadFile(zone_file_, zones_)) {
+  //   FF_WARN_STREAM("Cannot open zone file " << zone_file_);
+  // } else {
+  //   PublishMarkers();
+  // }
   // Update map
   GetZonesMap();
   // Success
@@ -262,7 +277,6 @@ void Validator::PublishMarkers() {
   marker.pose.orientation.z = 0;
   marker.pose.orientation.w = 1;
   marker.header.frame_id = "world";
-  marker.header.seq = 0;
   marker.ns = "zone_visualization";
   marker.type = visualization_msgs::Marker::CUBE;
   marker.action = visualization_msgs::Marker::ADD;
@@ -302,55 +316,54 @@ void Validator::PublishMarkers() {
       markers.markers.push_back(old_markers.markers.at(i));
       markers.markers.back().action = visualization_msgs::Marker::DELETE;
   }
-  pub_zones_.publish(markers);
+  pub_zones_->publish(markers);
   old_markers = markers;
 }
 
 // Callback to get the keep in/out zones
-bool Validator::GetZonesCallback(
-  ff_msgs::GetZones::Request &req, ff_msgs::GetZones::Response &res) {
-  res.timestamp = zones_.timestamp;
-  res.zones = zones_.zones;
-  return true;
+void Validator::GetZonesCallback(
+  const std::shared_ptr<ff_msgs::srv::GetZones::Request> req, std::shared_ptr<ff_msgs::srv::GetZones::Response> res) {
+  res->timestamp = zones_.timestamp;
+  res->zones = zones_.zones;
 }
 
 // Callback to get the keep in/out zones
-bool Validator::GetZonesMapCallback(
-  ff_msgs::GetOccupancyMap::Request &req, ff_msgs::GetOccupancyMap::Response &res) {
-  res.timestamp = zones_.timestamp;
+void Validator::GetZonesMapCallback(
+  const std::shared_ptr<ff_msgs::srv::GetOccupancyMap::Request> req,
+        std::shared_ptr<ff_msgs::srv::GetOccupancyMap::Response> res) {
+  res->timestamp = zones_.timestamp;
   std::vector<signed char> map = jps_map_util_->getMap();
-  res.map.resize(map.size());
-  res.map = map;
+  res->map.resize(map.size());
+  res->map = map;
 
   Vec3f origin = jps_map_util_->getOrigin();
-  res.origin.x = origin[0];
-  res.origin.y = origin[1];
-  res.origin.z = origin[2];
+  res->origin.x = origin[0];
+  res->origin.y = origin[1];
+  res->origin.z = origin[2];
 
   Vec3i dim = jps_map_util_->getDim();
-  res.dim.x = dim[0];
-  res.dim.y = dim[1];
-  res.dim.z = dim[2];
+  res->dim.x = dim[0];
+  res->dim.y = dim[1];
+  res->dim.z = dim[2];
 
-  res.resolution = jps_map_util_->getRes();
-  return true;
+  res->resolution = jps_map_util_->getRes();
 }
 
 // Callback to set the keep in/out zones
-bool Validator::SetZonesCallback(
-  ff_msgs::SetZones::Request &req, ff_msgs::SetZones::Response &res) {
+void Validator::SetZonesCallback(
+  const std::shared_ptr<ff_msgs::srv::SetZones::Request> req, std::shared_ptr<ff_msgs::srv::SetZones::Response> res) {
   // Update the zones
-  zones_ = req;
+  zones_ = *req;
   // If we should write the new zones to a file and use them by default
-  if (overwrite_ && !ff_util::Serialization::WriteFile(zone_file_, zones_))
-    ROS_WARN_STREAM("Cannot write zone file " << zone_file_);
+  // TODO(bcoltin): fix serialization
+  // if (overwrite_ && !ff_util::Serialization::WriteFile(zone_file_, zones_))
+  //   FF_WARN_STREAM("Cannot write zone file " << zone_file_);
   // Update visualization
   PublishMarkers();
   // Update map
   GetZonesMap();
   // Send result
-  res.success = true;
-  return true;
+  res->success = true;
 }
 
 }  // namespace choreographer

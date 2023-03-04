@@ -1197,7 +1197,6 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   choreographer_cfg_->Set<bool>("enable_collision_checking",
                                                   agent_state_.check_obstacles);
   choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
-  choreographer_cfg_->Set<bool>("enable_timesync", false);
   choreographer_cfg_->Set<bool>("enable_immediate",
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);

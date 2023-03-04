@@ -18,13 +18,12 @@
 
 #include "../../include/light_flow.h"
 #include <assert.h>
-#include <ff_hw_msgs/ConfigureLED.h>
-#include <ff_hw_msgs/ConfigureLEDGroup.h>
-#include <ff_util/ff_names.h>
+
+#include <ff_common/ff_names.h>
 #include <jsoncpp/json/allocator.h>
 #include <jsoncpp/json/json.h>
 #include <jsoncpp/json/value.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <stdio.h>
 #include <chrono>
 #include <cmath>
@@ -780,7 +779,8 @@ ff_hw_msgs::ConfigureLED createLED(uint red, uint green, uint blue,
 }
 
 void publishLightFlow(const Json::Value &statesOfExecution,
-                      const ros::Publisher &publishLEDGroup, bool isStreaming) {
+                      const rclcpp::Publisher<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr &publishLEDGroup,
+                      bool isStreaming) {
   const double period = 33.33 / 1000.0;
   const auto delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
       std::chrono::duration<double>(period));
@@ -813,7 +813,7 @@ void publishLightFlow(const Json::Value &statesOfExecution,
         leftGroupConfiguration.leds.push_back(createLED(5, 5, 5, newIndex));
       }
     }
-    publishLEDGroup.publish(leftGroupConfiguration);
+    publishLEDGroup->publish(leftGroupConfiguration);
 
     for (int i = 0; i < NUM_LIGHTS; i++) {
       const int newIndex = frames.right.translateIndex(i);
@@ -836,7 +836,7 @@ void publishLightFlow(const Json::Value &statesOfExecution,
         rightGroupConfiguration.leds.push_back(createLED(5, 5, 5, newIndex));
       }
     }
-    publishLEDGroup.publish(rightGroupConfiguration);
+    publishLEDGroup->publish(rightGroupConfiguration);
 
     newTime += period;
     std::this_thread::sleep_for(

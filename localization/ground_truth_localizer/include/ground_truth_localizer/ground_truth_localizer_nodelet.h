@@ -72,9 +72,9 @@ class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerComponent {
   bool DefaultServiceResponse(const std::shared_ptr<std_srvs::Empty::Request> req,
                               std::shared_ptr<std_srvs::Empty::Response> res);
 
-  void PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose);
+  void PoseCallback(const std::shared_ptr<geometry_msgs::PoseStamped> pose);
 
-  void TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist);
+  void TwistCallback(const std::shared_ptr<geometry_msgs::TwistStamped> twist);
 
   void PublishLocState(const localization_common::Time& timestamp);
 

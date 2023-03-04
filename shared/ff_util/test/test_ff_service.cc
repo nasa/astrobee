@@ -63,35 +63,33 @@ class Client : public ff_util::FreeFlyerComponent {
   }
 
   void TestCall(bool nominal) {
-    ff_util::FreeFlyerService<ff_msgs::srv::SetRate::Request,
-                            ff_msgs::srv::SetRate::Response> srv;
-    srv.request->which = ff_msgs::srv::SetRate::Request::DISK_STATE;
-    srv.request->rate = 5.0;
+    ff_msgs::srv::SetRate::Request request;
+    auto response = std::make_shared<ff_msgs::srv::SetRate::Response>();
+    request.which = ff_msgs::srv::SetRate::Request::DISK_STATE;
+    request.rate = 5.0;
 
     client_.waitForExistence(5.0);
 
     // Test is valid for fun
     bool status = false;
     if (client_.isValid()) {
-      status = client_.call(srv);
+      status = client_.call(request, response);
     }
 
     if (nominal) {
       EXPECT_TRUE(status);
-      EXPECT_TRUE(srv.response->success);
-      EXPECT_EQ(srv.response->status, "Which is disk state.");
+      EXPECT_TRUE(response->success);
+      EXPECT_EQ(response->status, "Which is disk state.");
     } else {
       EXPECT_FALSE(status);
-      EXPECT_FALSE(srv.response->success);
-      EXPECT_EQ(srv.response->status, "");
+      EXPECT_FALSE(response->success);
+      EXPECT_EQ(response->status, "");
     }
     test_done = true;
   }
 
  private:
-  ff_util::FreeFlyerServiceClient<ff_msgs::srv::SetRate,
-                                  ff_msgs::srv::SetRate::Request,
-                                  ff_msgs::srv::SetRate::Response> client_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::srv::SetRate> client_;
 };
 
 TEST(ff_service, Nominal) {

@@ -21,30 +21,30 @@
 
 #include <ctl/ctl.h>
 
-// For includes
-#include <ros/ros.h>
-
 // Standard messages
-#include <geometry_msgs/InertiaStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/msg/inertia_stamped.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 // Service message
-#include <std_srvs/SetBool.h>
+#include <std_srvs/srv/set_bool.hpp>
+
+#include <ff_common/ff_ros.h>
 
 // FSW actions
-#include <ff_msgs/ControlAction.h>
+#include <ff_msgs/action/control.hpp>
 
 // FSW messages
-#include <ff_msgs/ControlCommand.h>
-#include <ff_msgs/FlightMode.h>
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/msg/control_command.hpp>
+#include <ff_msgs/msg/fam_command.hpp>
+#include <ff_msgs/msg/flight_mode.hpp>
+#include <ff_msgs/msg/ekf_state.hpp>
+#include <ff_msgs/msg/segment.hpp>
 
 // Libraries to handle flight config and segment processing
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_fsm.h>
-#include <ff_util/perf_timer.h>
 
 // Libraries to read LIA config file
 #include <config_reader/config_reader.h>
@@ -86,7 +86,7 @@ class Ctl {
   /**
    * Ctl allocate, register, initialize model
    */
-  explicit Ctl(ros::NodeHandle* nh, std::string const& name);
+  explicit Ctl(NodeHandle& nh, std::string const& name);
   /**
    * destruct model
    */
@@ -98,7 +98,8 @@ class Ctl {
   // SERVICE CALLBACKS
 
   // Enable/Disable Onboard Controller
-  bool EnableCtl(std_srvs::SetBoolRequest&req, std_srvs::SetBoolResponse &response);
+  bool EnableCtl(const std::shared_ptr<std_srvs::srv::SetBool::Request> req,
+                      std::shared_ptr<std_srvs::srv::SetBool::Response> response);
 
   // GENERAL MESSAGE CALLBACKS
 
@@ -106,33 +107,30 @@ class Ctl {
   void UpdateCallback(FSM::State const& state, FSM::Event const& event);
 
   // Called when a pose estimate is available
-  void EkfCallback(const ff_msgs::EkfState::ConstPtr& state);
+  void EkfCallback(const std::shared_ptr<ff_msgs::msg::EkfState> state);
 
   // Called when localization has a new pose data
-  void PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth);
+  void PoseCallback(const std::shared_ptr<geometry_msgs::msg::PoseStamped> truth);
 
   // Called when localization has new twist data
-  void TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth);
+  void TwistCallback(const std::shared_ptr<geometry_msgs::msg::TwistStamped> truth);
 
   // Called when management updates inertial info
-  void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
-
-  // Called when a timer has called back to progress control to next setpoint
-  void ControlTimerCallback(const ros::TimerEvent & event);
+  void InertiaCallback(const std::shared_ptr<geometry_msgs::msg::InertiaStamped> inertia);
 
   // Called when the choreographer updates flight modes
-  void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
+  void FlightModeCallback(const std::shared_ptr<ff_msgs::msg::FlightMode> mode);
 
   // Command GNC directly, bypassing the action-base dinterface
-  void SetpointCallback(const ff_msgs::ControlState::ConstPtr& command);
+  void SetpointCallback(const std::shared_ptr<ff_msgs::msg::ControlState> command);
 
   // Used to feed segments
-  void TimerCallback(const ros::TimerEvent& event);
+  void TimerCallback();
 
   // ACTION CLIENT
 
   // Called when a new goal arrives
-  void GoalCallback(ff_msgs::ControlGoalConstPtr const& control_goal);
+  void GoalCallback(std::shared_ptr<const ff_msgs::action::Control::Goal> goal);
 
   // Called when a goal is preempted
   void PreemptCallback();
@@ -144,7 +142,7 @@ class Ctl {
 
   // Update control to take a new setpoint
   bool Command(uint8_t const mode,
-    ff_msgs::ControlCommand const& poseVel = ff_msgs::ControlCommand());
+    ff_msgs::msg::ControlCommand const& poseVel = ff_msgs::msg::ControlCommand());
 
   // Step control forward
   bool Step(ros::Time curr_time);
@@ -161,22 +159,27 @@ class Ctl {
 
   std::mutex mutex_cmd_msg_, mutex_segment_;
 
-  ros::Subscriber truth_pose_sub_, inertia_sub_, flight_mode_sub_;
-  ros::Subscriber twist_sub_, pose_sub_, ekf_sub_, command_sub_;
-  ros::Publisher ctl_pub_, traj_pub_, segment_pub_, progress_pub_;
-  ros::ServiceServer enable_srv_;
-  ros::Timer timer_;
+  rclcpp::Subscription<geometry_msgs::msg::InertiaStamped>::SharedPtr inertia_sub_;
+  rclcpp::Subscription<ff_msgs::msg::FlightMode>::SharedPtr flight_mode_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr twist_sub_;
+  rclcpp::Subscription<ff_msgs::msg::EkfState>::SharedPtr ekf_sub_;
+  rclcpp::Subscription<ff_msgs::msg::ControlState>::SharedPtr command_sub_;
+  rclcpp::Publisher<ff_msgs::msg::FamCommand>::SharedPtr ctl_pub_;
+  rclcpp::Publisher<ff_msgs::msg::ControlState>::SharedPtr traj_pub_;
+  rclcpp::Publisher<ff_msgs::msg::Segment>::SharedPtr segment_pub_;
+  rclcpp::Publisher<ff_msgs::msg::Segment>::SharedPtr progress_pub_;
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr enable_srv_;
+  ff_util::FreeFlyerTimer timer_, config_timer_;
 
-  ff_util::FreeFlyerActionServer<ff_msgs::ControlAction> action_;
+  ff_util::FreeFlyerActionServer<ff_msgs::action::Control> action_;
   ff_util::FSM fsm_;
   ff_util::Segment segment_;
   ff_util::Segment::iterator setpoint_;
-  ff_msgs::ControlFeedback feedback_;
-  ff_msgs::ControlCommand command_;
+  ff_msgs::msg::ControlCommand command_;
+  rclcpp::Clock::SharedPtr clock_;
 
   config_reader::ConfigReader config_;
-  ff_util::PerfTimer pt_ctl_;
-  ros::Timer config_timer_;
 
   uint8_t mode_;
   ControlState state_;

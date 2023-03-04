@@ -19,10 +19,16 @@
 #ifndef LIGHT_FLOW_H_
 #define LIGHT_FLOW_H_
 
-#include <ff_hw_msgs/ConfigureLED.h>
-#include <ff_util/ff_names.h>
+#include <ff_hw_msgs/msg/configure_led.hpp>
+#include <ff_hw_msgs/msg/configure_led_group.hpp>
+namespace ff_hw_msgs {
+typedef ff_hw_msgs::msg::ConfigureLED ConfigureLED;
+typedef ff_hw_msgs::msg::ConfigureLEDGroup ConfigureLEDGroup;
+}  // namespace ff_hw_msgs
+
+#include <ff_common/ff_names.h>
 #include <jsoncpp/json/value.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -131,7 +137,7 @@ void setAllBlack(std::vector<ff_hw_msgs::ConfigureLED> &ledConfigs);
 ff_hw_msgs::ConfigureLED createLED(uint red, uint green, uint blue,
                                    uint position);
 void publishLightFlow(const Json::Value &statesOfExecution,
-                      const ros::Publisher &publishLEDGroup,
+                      const rclcpp::Publisher<ff_hw_msgs::ConfigureLEDGroup>::SharedPtr &publishLEDGroup,
                       bool isStreaming);
 
 }  // namespace light_flow
