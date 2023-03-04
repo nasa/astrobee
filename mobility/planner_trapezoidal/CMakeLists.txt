@@ -34,8 +34,6 @@ find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 
-# find_package(pluginlib REQUIRED)
-# find_package(actionlib REQUIRED)
 # find_package(choreographer REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 # find_package(mapper REQUIRED)

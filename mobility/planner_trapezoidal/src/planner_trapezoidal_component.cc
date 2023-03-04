@@ -18,14 +18,13 @@
 
 // Standard includes
 #include <rclcpp/rclcpp.hpp>
-// #include <pluginlib/class_list_macros.h>
 
 // FSW includes
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_timer.h>
 #include <ff_common/ff_names.h>
-#include <ff_util/config_server.h>
+// #include <ff_util/config_server.h>
 #include <ff_util/config_client.h>
 #include <msg_conversions/msg_conversions.h>
 
@@ -53,7 +52,7 @@
  */
 namespace planner_trapezoidal {
 
-using RESPONSE = ff_msgs::PlanResult;
+using RESPONSE = ff_msgs::action::Plan::Result;
 
 class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
  public:
@@ -95,16 +94,16 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
     return true;
   }
 
-  void PlanCallback(ff_msgs::PlanGoal const& goal) {
+  void PlanCallback(ff_msgs::action::Plan::Goal const& goal) {
     // Do some basic error checks
-    ff_msgs::PlanResult plan_result;
+    ff_msgs::action::Plan::Result plan_result;
     plan_result.response = RESPONSE::SUCCESS;
     if (goal.states.size() < 2)
       plan_result.response = RESPONSE::NOT_ENOUGH_STATES;
     if (goal.check_obstacles)
       plan_result.response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
     if (plan_result.response < 0)
-      return PlanResult(plan_result);
+      return Result(plan_result);
     // Save the information
     desired_vel_   = goal.desired_vel;
     desired_omega_ = goal.desired_omega;

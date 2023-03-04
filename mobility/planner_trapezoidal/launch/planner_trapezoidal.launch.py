@@ -25,11 +25,11 @@ def generate_launch_description():
         DeclareLaunchArgument("manager", default_value=""),
 
         IncludeLaunchDescription(
-            get_launch_file('$launch/ff_nodelet.launch.py'),
+            get_launch_file('$launch/ff_component.launch.py'),
             launch_arguments = {
                                 "name"   : LaunchConfiguration("name"),
                                 "manager": LaunchConfiguration("manager"),
-                                "name"   : "planner_trapezoidal/PlannerTrapezoidalNodelet",
+                                "name"   : "planner_trapezoidal/PlannerTrapezoidalComponent",
                                 "debug"  : "false"
             }
         )
