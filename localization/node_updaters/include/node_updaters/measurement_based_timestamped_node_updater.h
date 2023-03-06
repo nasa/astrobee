@@ -33,6 +33,9 @@ class MeasurementBasedTimestampedNodeUpdater
  public:
   void AddMeasurement(const MeasurementType& measurement);
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
+  // Returns the node updater type
+  // This needs to be specialized
+  graph_optimizer::NodeUpdaterType type() const final;
 
  private:
   std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model_;
@@ -60,6 +63,15 @@ void MeasurementBasedTimestampedNodeUpdater<
   MeasurementType, NodeType, TimestampedNodesType,
   MeasurementBasedNodeUpdateModelType>::RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
   node_update_model_->RemoveMeasurements(oldest_allowed_time);
+}
+
+template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
+          typename MeasurementBasedNodeUpdateModelType>
+graph_optimizer::NodeUpdaterType MeasurementBasedTimestampedNodeUpdater<
+  MeasurementType, NodeType, TimestampedNodesType,
+  MeasurementBasedNodeUpdateModelType>::type()
+  const {
+  static_assert(sizeof(NodeType) == std::size_t(-1), "This needs to be specialized by template class.");
 }
 }  // namespace node_updaters
 

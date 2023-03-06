@@ -68,7 +68,7 @@ class TimestampedNodeUpdater
 
   // Returns the node updater type
   // This needs to be specialized
-  graph_optimizer::NodeUpdaterType type() const final;
+  graph_optimizer::NodeUpdaterType type() const override;
 
   // Returns the oldest node time after SlideWindow is called.
   // Returns boost::none if no nodes exist.
