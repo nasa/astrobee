@@ -34,7 +34,7 @@ find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
 
-# find_package(choreographer REQUIRED)
+find_package(choreographer REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 # find_package(mapper REQUIRED)
 
@@ -45,30 +45,30 @@ find_package(PCL REQUIRED COMPONENTS common)
 ## Build ##
 ###########
 
+message(STATUS "Boost_INCLUDE_DIRS contains: ${Boost_INCLUDE_DIRS}")
 # Specify additional locations of header files
 include_directories(
   include
+  ${Boost_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   src/planner_trapezoidal.cc
   src/planner_trapezoidal_component.cc
 )
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_common ff_util PCL)
-# rclcpp_components_register_nodes(${PROJECT_NAME} "planner_trapezoidal::PlannerTrapezoidalComponent")
-
-# add_dependencies(planner_trapezoidal ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(planner_trapezoidal ${catkin_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_common ff_util ff_msgs PCL choreographer tf2_geometry_msgs)
+rclcpp_components_register_nodes(${PROJECT_NAME} "planner_trapezoidal::PlannerTrapezoidalComponent")
 
 #############
 ## Install ##
 #############
-ament_export_dependencies(ament_cmake rclcpp)
+
+# ament_export_dependencies(ament_cmake rclcpp)
 ament_export_include_directories(include)
 
 # Mark libraries for installation

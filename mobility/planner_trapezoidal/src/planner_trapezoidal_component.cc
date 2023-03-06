@@ -17,19 +17,25 @@
  */
 
 // Standard includes
-#include <rclcpp/rclcpp.hpp>
+#include <ff_common/ff_ros.h>
+#include <tf2_ros/buffer.h>
 
 // FSW includes
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_timer.h>
 #include <ff_common/ff_names.h>
-// #include <ff_util/config_server.h>
+#include <ff_util/config_server.h>
 #include <ff_util/config_client.h>
 #include <msg_conversions/msg_conversions.h>
 
 // For the planner implementation API
 #include <choreographer/planner.h>
+
+// Actions
+#include <ff_msgs/action/motion.hpp>
+#include <ff_msgs/action/control.hpp>
+#include <ff_msgs/action/plan.hpp>
 
 // For the trapezoidal planner implementation
 #include <planner_trapezoidal/planner_trapezoidal.h>
@@ -43,9 +49,6 @@
 // ROS2 CONVERSION
 // TODO(joris997):  - check if DiagnosticsCallback can be performed without an argument
 //                    (it does align with the rclcpp::create_timer)
-//                  - check PlanResult etc. when choreographer is completed
-//                  - how do we want to change the nodelet debug stream? now I use FF_DEBUG_STREAM
-
 
 /**
  * \ingroup planner

@@ -17,7 +17,7 @@
  */
 
 // Standard includes
-#include <rclcpp/rclcpp.hpp>
+#include <ff_common/ff_ros.h>
 
 // FSW includes
 #include <ff_common/ff_names.h>
