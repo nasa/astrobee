@@ -21,6 +21,7 @@
 
 #include <graph_optimizer/timestamped_nodes.h>
 #include <node_updaters/timestamped_node_update_model.h>
+#include <node_updaters/measurement_based_timestamped_node_update_model.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
@@ -31,14 +32,14 @@
 #include <vector>
 
 namespace node_updaters {
-template <typename NodeType>
 // Node update model that adds GTSAM between factors as relative factors and GTSAM prior factors as priors
 // for a given node type.
+template <typename NodeType, typename NodeUpdateModelType>
 class BetweenFactorNodeUpdateModel
-    : public TimestampedNodeUpdateModel<NodeType, graph_optimizer::TimestampedNodes<NodeType>> {
+    : public NodeUpdateModelType {
  public:
   using NodesType = graph_optimizer::TimestampedNodes<NodeType>;
-  using Base = TimestampedNodeUpdateModel<NodeType, NodesType>;
+  using Base = NodeUpdateModelType;
   // Adds prior factors for a given node using provided noise models.
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,
@@ -76,8 +77,8 @@ class BetweenFactorNodeUpdateModel
 };
 
 // Implementation
-template <typename NodeType>
-void BetweenFactorNodeUpdateModel<NodeType>::AddPriors(const NodeType& node,
+template <typename NodeType, typename NodeUpdateModelType>
+void BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddPriors(const NodeType& node,
                                                        const std::vector<gtsam::SharedNoiseModel>& noise_models,
                                                        const localization_common::Time timestamp,
                                                        const NodesType& nodes,
@@ -92,11 +93,10 @@ void BetweenFactorNodeUpdateModel<NodeType>::AddPriors(const NodeType& node,
   factors.push_back(prior_factor);
 }
 
-template <typename NodeType>
-bool BetweenFactorNodeUpdateModel<NodeType>::AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
-                                                                        const localization_common::Time timestamp_b,
-                                                                        NodesType& nodes,
-                                                                        gtsam::NonlinearFactorGraph& factors) const {
+template <typename NodeType, typename NodeUpdateModelType>
+bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddNodesAndRelativeFactors(
+  const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, NodesType& nodes,
+  gtsam::NonlinearFactorGraph& factors) const {
   if (!nodes.Contains(timestamp_b)) {
     const auto keys = AddNode(timestamp_b, nodes);
     if (keys.empty()) {
@@ -112,11 +112,10 @@ bool BetweenFactorNodeUpdateModel<NodeType>::AddNodesAndRelativeFactors(const lo
   return true;
 }
 
-template <typename NodeType>
-bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const localization_common::Time timestamp_a,
-                                                                const localization_common::Time timestamp_b,
-                                                                const NodesType& nodes,
-                                                                gtsam::NonlinearFactorGraph& factors) const {
+template <typename NodeType, typename NodeUpdateModelType>
+bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFactors(
+  const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
+  gtsam::NonlinearFactorGraph& factors) const {
   const auto keys_a = nodes.Keys(timestamp_a);
   if (keys_a.empty()) {
     LogError("AddRelativeFactors: Failed to get keys a.");
@@ -134,8 +133,8 @@ bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const localizati
   return true;
 }
 
-template <typename NodeType>
-bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const gtsam::KeyVector& keys_a,
+template <typename NodeType, typename NodeUpdateModelType>
+bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFactors(const gtsam::KeyVector& keys_a,
                                                                 const localization_common::Time timestamp_a,
                                                                 const gtsam::KeyVector& keys_b,
                                                                 const localization_common::Time timestamp_b,
@@ -149,6 +148,17 @@ bool BetweenFactorNodeUpdateModel<NodeType>::AddRelativeFactors(const gtsam::Key
     keys_a[0], keys_b[0], relative_node_and_noise->first, relative_node_and_noise->second));
   factors.push_back(relative_factor);
 }
+
+// Specialization helpers
+template <typename MeasurementType, typename NodeType>
+using BetweenFactorMeasurementBasedTimestampedNodeUpdateModel =
+  BetweenFactorNodeUpdateModel<NodeType, MeasurementBasedTimestampedNodeUpdateModel<
+                                           MeasurementType, NodeType, graph_optimizer::TimestampedNodes<NodeType>>>;
+
+template <typename NodeType>
+using BetweenFactorTimestampedNodeUpdateModel =
+  BetweenFactorNodeUpdateModel<NodeType,
+                               TimestampedNodeUpdateModel<NodeType, graph_optimizer::TimestampedNodes<NodeType>>>;
 }  // namespace node_updaters
 
 #endif  // NODE_UPDATERS_BETWEEN_FACTOR_NODE_UPDATE_MODEL_H_

@@ -29,9 +29,13 @@
 #include <utility>
 
 namespace node_updaters {
-class PoseNodeUpdateModel : BetweenFactorNodeUpdateModel<gtsam::Pose3> {
-  using Base = BetweenFactorNodeUpdateModel<gtsam::Pose3>;
-  using NodesType = Base::NodesType;
+class PoseNodeUpdateModel
+    : BetweenFactorMeasurementBasedTimestampedNodeUpdateModel<localization_measurements::TimestampedPoseWithCovariance,
+                                                              gtsam::Pose3> {
+  using Base =
+    BetweenFactorMeasurementBasedTimestampedNodeUpdateModel<localization_measurements::TimestampedPoseWithCovariance,
+                                                            gtsam::Pose3>;
+  using NodesType = graph_optimizer::TimestampedNodes<gtsam::Pose3>;
 
  public:
   gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const final;
