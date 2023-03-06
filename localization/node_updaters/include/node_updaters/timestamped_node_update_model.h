@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#ifndef NODE_UPDATERS_NODE_UPDATE_MODEL_H_
-#define NODE_UPDATERS_NODE_UPDATE_MODEL_H_
+#ifndef NODE_UPDATERS_TIMESTAMPED_NODE_UPDATE_MODEL_H_
+#define NODE_UPDATERS_TIMESTAMPED_NODE_UPDATE_MODEL_H_
 
-#include <node_updaters/node_update_model_params.h>
+#include <node_updaters/timestamped_node_update_model_params.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -31,9 +31,9 @@ namespace node_updaters {
 // Generates these factors for provided timestamps.
 // Required by TimestampedNodeUpdater.
 template <typename NodeType, typename NodesType>
-class NodeUpdateModel {
+class TimestampedNodeUpdateModel {
  public:
-  virtual ~NodeUpdateModel() = 0;
+  virtual ~TimestampedNodeUpdateModel() = 0;
   // Adds prior factors for a given node using provided noise models.
   virtual void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                          const localization_common::Time timestamp, const NodesType& nodes,
@@ -54,8 +54,8 @@ class NodeUpdateModel {
 
  protected:
   // TODO(rsoussan): Add constructor to set these, template on params?
-  NodeUpdateModelParams params_;
+  TimestampedNodeUpdateModelParams params_;
 };
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_NODE_UPDATE_MODEL_H_
+#endif  // NODE_UPDATERS_TIMESTAMPED_NODE_UPDATE_MODEL_H_

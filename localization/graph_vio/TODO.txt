@@ -1,5 +1,9 @@
 - test pose node updater! (AA)
-  - rename node_update_model to timestamped_node_update_model (AAA)
+  - pose update model should use measurement node updater????
+    - templated between node update model on node update model???
+        - enables use with either measurement or non measurement model!
+        - add timestamped node updater as default!
+        - use mmeasuremnt_timestamped for pose update model!
   - test add/remove measurements (AAA)
     - use oldest/latest timestamp as a test
     - use can update as a test

@@ -20,7 +20,7 @@
 #define NODE_UPDATERS_BETWEEN_FACTOR_NODE_UPDATE_MODEL_H_
 
 #include <graph_optimizer/timestamped_nodes.h>
-#include <node_updaters/node_update_model.h>
+#include <node_updaters/timestamped_node_update_model.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
@@ -34,10 +34,11 @@ namespace node_updaters {
 template <typename NodeType>
 // Node update model that adds GTSAM between factors as relative factors and GTSAM prior factors as priors
 // for a given node type.
-class BetweenFactorNodeUpdateModel : public NodeUpdateModel<NodeType, graph_optimizer::TimestampedNodes<NodeType>> {
+class BetweenFactorNodeUpdateModel
+    : public TimestampedNodeUpdateModel<NodeType, graph_optimizer::TimestampedNodes<NodeType>> {
  public:
   using NodesType = graph_optimizer::TimestampedNodes<NodeType>;
-  using Base = NodeUpdateModel<NodeType, NodesType>;
+  using Base = TimestampedNodeUpdateModel<NodeType, NodesType>;
   // Adds prior factors for a given node using provided noise models.
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,

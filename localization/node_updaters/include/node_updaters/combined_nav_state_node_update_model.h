@@ -24,7 +24,7 @@
 #include <localization_measurements/imu_measurement.h>
 #include <node_updaters/combined_nav_state_node_update_model_params.h>
 #include <node_updaters/combined_nav_state_nodes.h>
-#include <node_updaters/measurement_based_node_update_model.h>
+#include <node_updaters/measurement_based_timestamped_node_update_model.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
@@ -33,13 +33,14 @@
 
 namespace node_updaters {
 class CombinedNavStateNodeUpdateModel
-    : public MeasurementBasedNodeUpdateModel<localization_measurements::ImuMeasurement,
+    : public MeasurementBasedTimestampedNodeUpdateModel<localization_measurements::ImuMeasurement,
                                              localization_common::CombinedNavState,
                                              graph_optimizer::CombinedNavStateNodes> {
  public:
   using NodeType = localization_common::CombinedNavState;
   using NodesType = graph_optimizer::CombinedNavStateNodes;
-  using Base = NodeUpdateModel<NodeType, NodesType>;
+  using MeasurementType = localization_measurements::ImuMeasurement;
+  using Base = MeasurementBasedTimestampedNodeUpdateModel<MeasurementType, NodeType, NodesType>;
   explicit CombinedNavStateNodeUpdateModel(const CombinedNavStateNodeUpdateModelParams& params);
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,

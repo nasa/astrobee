@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#ifndef NODE_UPDATERS_MEASUREMENT_BASED_NODE_UPDATE_MODEL_H_
-#define NODE_UPDATERS_MEASUREMENT_BASED_NODE_UPDATE_MODEL_H_
+#ifndef NODE_UPDATERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_UPDATE_MODEL_H_
+#define NODE_UPDATERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_UPDATE_MODEL_H_
 
-#include <node_updaters/node_update_model.h>
+#include <node_updaters/timestamped_node_update_model.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -29,12 +29,12 @@
 namespace node_updaters {
 // Node update model that uses provided measurements to generate nodes and relative factors.
 template <typename MeasurementType, typename NodeType, typename NodesType>
-class MeasurementBasedNodeUpdateModel : public NodeUpdateModel<NodeType, NodesType> {
+class MeasurementBasedTimestampedNodeUpdateModel : public TimestampedNodeUpdateModel<NodeType, NodesType> {
  public:
-  virtual ~MeasurementBasedNodeUpdateModel() = 0;
+  virtual ~MeasurementBasedTimestampedNodeUpdateModel() = 0;
   virtual void AddMeasurement(const MeasurementType& measurement) = 0;
   virtual void RemoveMeasurements(const localization_common::Time oldest_allowed_time) = 0;
 };
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_MEASUREMENT_BASED_NODE_UPDATE_MODEL_H_
+#endif  // NODE_UPDATERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_UPDATE_MODEL_H_

@@ -15,13 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef NODE_UPDATERS_NODE_UPDATE_MODEL_PARAMS_H_
-#define NODE_UPDATERS_NODE_UPDATE_MODEL_PARAMS_H_
+#ifndef NODE_UPDATERS_TIMESTAMPED_NODE_UPDATE_MODEL_PARAMS_H_
+#define NODE_UPDATERS_TIMESTAMPED_NODE_UPDATE_MODEL_PARAMS_H_
 
 #include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-struct NodeUpdateModelParams {
+struct TimestampedNodeUpdateModelParams {
   double huber_k;
 
  private:
@@ -34,4 +34,4 @@ struct NodeUpdateModelParams {
 };
 }  // namespace node_updaters
 
-#endif  // NODE_UPDATERS_NODE_UPDATE_MODEL_PARAMS_H_
+#endif  // NODE_UPDATERS_TIMESTAMPED_NODE_UPDATE_MODEL_PARAMS_H_
