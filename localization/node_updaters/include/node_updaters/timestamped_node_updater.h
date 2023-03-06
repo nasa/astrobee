@@ -22,7 +22,7 @@
 #include <graph_optimizer/node_updater_with_priors.h>
 #include <graph_optimizer/timestamped_nodes.h>
 #include <graph_optimizer/utilities.h>
-#include <node_updaters/node_update_model.h>
+#include <node_updaters/timestamped_node_update_model.h>
 #include <node_updaters/timestamped_node_updater_params.h>
 
 #include <algorithm>
