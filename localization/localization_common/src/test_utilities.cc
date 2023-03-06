@@ -64,6 +64,10 @@ gtsam::Pose3 RandomPose() {
   return gtsam::Pose3(rot, trans);
 }
 
+PoseCovariance RandomPoseCovariance() { return RandomCovariance<6>(); }
+
+PoseWithCovariance RandomPoseWithCovariance() { return PoseWithCovariance(RandomIsometry3d(), RandomPoseCovariance()); }
+
 Eigen::Isometry3d RandomIsometry3d() {
   const gtsam::Pose3 random_pose = RandomPose();
   return EigenPose(random_pose);

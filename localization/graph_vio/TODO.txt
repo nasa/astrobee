@@ -1,11 +1,30 @@
-- test timestamped pose node updater! (AA)
-  - change to be measurementbasedtimestampednodeupdater!
-  - add constructor!
+- test pose node updater! (AA)
+  - test add/remove measurements (AAA)
+    - use oldest/latest timestamp as a test
+    - use can update as a test
+    - slidewindownewoldesttime?
+  - test type (AAB)
+  - test timestamped node updater functions (AAC)
+      - AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
+          - check factors, make sure the right things are added
+          - does this use params??
+      - AddInitialValuesAndPriors(const NodeType& initial_node,
+                                 const std::vector<gtsam::SharedNoiseModel>& initial_noise,
+                                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
+          - check factors, make sure the right things are added
+      - Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
+          - use old keys as test
+          - use oldest/latest/can update as test
+      - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
+                   const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                   const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
+          - use old keys as test
+          - use oldest/latest/can update as test
+          - test slidewindownewoldesttime before and after call!
+
+  - add constructor?? is this needed?
     - add to base class? template or something?
-  - fix compile errors!
-  - populate pose interpolater!
-  - test each timestamped node updater function!
-- test combined nav state nodes! (AB)
+- test combined nav state node updater! (AC)
   - popuate imu measurements!
   - test each timestamped node updater function?
       - or just ones unique to combined nav state?

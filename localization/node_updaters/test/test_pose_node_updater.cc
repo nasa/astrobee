@@ -25,6 +25,7 @@
 #include <gtest/gtest.h>
 
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace no = node_updaters;
 
 class PoseNodeUpdaterTest : public ::testing::Test {
@@ -43,7 +44,11 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   const int num_measurements_;
 };
 
-TEST_F(PoseNodeUpdaterTester, ConstantVelocity) {}
+TEST_F(PoseNodeUpdaterTester, AddRemoveCanUpdate) {
+  constexpr lc::Time time_0 = 1.1;
+  pose_0 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_0);
+  pose_node_updater_.AddMeasurement(pose_0);
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

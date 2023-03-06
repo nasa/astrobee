@@ -19,6 +19,9 @@
 #ifndef LOCALIZATION_COMMON_TEST_UTILITIES_H_
 #define LOCALIZATION_COMMON_TEST_UTILITIES_H_
 
+#include <localization_common/pose_with_covariance.h>
+
+#include <Eigen/Geometry>
 #include <gtsam/geometry/Pose3.h>
 
 #include <gtest/gtest.h>
@@ -64,9 +67,16 @@ Eigen::Vector2d RandomVector2d();
 
 Eigen::Vector2d RandomPoint2d();
 
+template <int D>
+Eigen::Matrix<double, D, D> RandomCovariance();
+
 // Translation ranges from [-100, 100]
 // Rotation spans all possible rotations
 gtsam::Pose3 RandomPose();
+
+PoseCovariance RandomPoseCovariance();
+
+PoseWithCovariance RandomPoseWithCovariance();
 
 Eigen::Isometry3d RandomIsometry3d();
 
@@ -110,6 +120,13 @@ template <int Dim>
 Eigen::Matrix<double, Dim, 1> RandomVector() {
   // Eigen::Matrix::Random() is constrained to [-1, 1]
   return RandomDouble() * Eigen::Matrix<double, Dim, 1>::Random();
+}
+
+template <int D>
+Eigen::Matrix<double, D, D> RandomCovariance() {
+  const Eigen::Matrix<double, D, D> random_matrix = Eigen::Matrix<double, D, D>::Random();
+  // Random covariance is a random symmetric matrix
+  return random_matrix.transpose()*random_matrix;
 }
 
 template <int N>
