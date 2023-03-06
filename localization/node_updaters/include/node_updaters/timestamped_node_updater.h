@@ -29,6 +29,9 @@
 #include <vector>
 
 namespace node_updaters {
+
+// Creates a node updater with timestamp-indexed nodes.
+// Enables node updater use with a time-based sliding window graph.
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 class TimestampedNodeUpdater
     : public graph_optimizer::NodeUpdaterWithPriors<NodeType, std::vector<gtsam::SharedNoiseModel>> {
@@ -41,22 +44,34 @@ class TimestampedNodeUpdater
   TimestampedNodeUpdater() = default;
   virtual ~TimestampedNodeUpdater() = default;
 
+  // Adds initial nodes and priors using default values.
+  // TODO(rsoussan): Rename this from Values to Nodes.
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
+  // Adds initial nodes and priors using provided noise values and timestamp.
+  // TODO(rsoussan): Rename this from Values to Nodes.
   void AddInitialValuesAndPriors(const NodeType& initial_node,
                                  const std::vector<gtsam::SharedNoiseModel>& initial_noise,
                                  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
+  // Adds a node using the provided timestamp if possible.
   // TODO(rsousan): Rename this?
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
+  // Slides the window, removes nodes older than oldest allowed time.
+  // Adds priors to the oldest remaining nodes using their marginalized covariances.
+  // Also removes any nodes containing any keys in old_keys.
+  // Removes any factors in factors containing a removed node.
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
 
+  // Returns the node updater type
   // This needs to be specialized
   graph_optimizer::NodeUpdaterType type() const final;
 
+  // Returns the oldest node time after SlideWindow is called.
+  // Returns boost::none if no nodes exist.
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
@@ -70,6 +85,7 @@ class TimestampedNodeUpdater
 
   boost::optional<localization_common::Time> LatestTimestamp() const final;
 
+  // Returns whether a node can be added at timestamp or not.
   bool CanUpdate(const localization_common::Time timestamp) const final;
 
  protected:

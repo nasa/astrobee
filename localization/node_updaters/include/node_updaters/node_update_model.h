@@ -27,6 +27,8 @@
 #include <vector>
 
 namespace node_updaters {
+// Handles adding priors and relative factors for a given node type.
+// Generates these factors for provided timestamps.
 template <typename NodeType, typename NodesType>
 class NodeUpdateModel {
  public:

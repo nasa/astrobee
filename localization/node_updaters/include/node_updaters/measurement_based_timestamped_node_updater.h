@@ -22,6 +22,8 @@
 #include <node_updaters/timestamped_node_updater.h>
 
 namespace node_updaters {
+
+// Timestamped node updater that uses provided measurements to create nodes.
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedNodeUpdateModelType>
 class MeasurementBasedTimestampedNodeUpdater

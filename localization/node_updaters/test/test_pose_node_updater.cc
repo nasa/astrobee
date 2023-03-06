@@ -45,8 +45,13 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 };
 
 TEST_F(PoseNodeUpdaterTester, AddRemoveCanUpdate) {
+  EXPECT_FALSE(pose_node_updater_.CanUpdate(10.1);
   constexpr lc::Time time_0 = 1.1;
   pose_0 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_0);
+  pose_node_updater_.AddMeasurement(pose_0);
+  EXPECT_FALSE(pose_node_updater_.CanUpdate(time_0);
+  constexpr lc::Time time_1 = 2.2;
+  pose_1 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_1);
   pose_node_updater_.AddMeasurement(pose_0);
 }
 

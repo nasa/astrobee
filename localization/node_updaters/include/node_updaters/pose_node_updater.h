@@ -28,6 +28,8 @@
 
 namespace node_updaters {
 namespace go = graph_optimizer;
+
+// Timestamp-based node updater using timestamped poses with covariances.
 using PoseNodeUpdater =
   MeasurementBasedTimestampedNodeUpdater<localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3,
                                          graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;

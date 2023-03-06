@@ -32,27 +32,37 @@
 
 namespace node_updaters {
 template <typename NodeType>
-// Simple class that has one node type and adds GTSAM between factors as relative factors to those
-// nodes and GTSAM prior factors as priors
+// Node update model that adds GTSAM between factors as relative factors and GTSAM prior factors as priors
+// for a given node type.
 class BetweenFactorNodeUpdateModel : public NodeUpdateModel<NodeType, graph_optimizer::TimestampedNodes<NodeType>> {
  public:
   using NodesType = graph_optimizer::TimestampedNodes<NodeType>;
   using Base = NodeUpdateModel<NodeType, NodesType>;
+  // Adds prior factors for a given node using provided noise models.
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,
                  gtsam::NonlinearFactorGraph& factors) const final;
+
+  // Adds nodes for provided timestamps and connects them with between factors.
   bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
                                   const localization_common::Time timestamp_b, NodesType& nodes,
                                   gtsam::NonlinearFactorGraph& factors) const final;
+
+  // Connects nodes at given timestamps with between factors.
   bool AddRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
                           const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
 
  private:
+  // Connects nodes at given keys with between factors.
   bool AddRelativeFactors(const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a,
                           const gtsam::KeyVector& keys_b, const localization_common::Time timestamp_b,
                           gtsam::NonlinearFactorGraph& factors) const;
+
   // These functions needs to be implemented by the child class
+  // Adds a node at the given timestamp.
   virtual gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const = 0;
+
+  // Creates a node with noise at timestamp_b relative to timestamp_a.
   virtual boost::optional<std::pair<NodeType, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const = 0;
 
