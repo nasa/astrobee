@@ -60,11 +60,12 @@ class BetweenFactorNodeUpdateModel
                           const gtsam::KeyVector& keys_b, const localization_common::Time timestamp_b,
                           gtsam::NonlinearFactorGraph& factors) const;
 
-  // These functions needs to be implemented by the child class
   // Adds a node at the given timestamp.
+  // Needs to be implemented by the child class
   virtual gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const = 0;
 
   // Creates a node with noise at timestamp_b relative to timestamp_a.
+  // Needs to be implemented by the child class
   virtual boost::optional<std::pair<NodeType, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const = 0;
 

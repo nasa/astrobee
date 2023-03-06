@@ -35,11 +35,13 @@ class MeasurementBasedTimestampedNodeUpdater
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
 
  private:
+  std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model_;
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+    ar& BOOST_SERIALIZATION_NVP(node_update_model_);
   }
 };
 

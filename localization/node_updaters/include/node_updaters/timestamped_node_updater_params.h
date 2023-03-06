@@ -46,7 +46,7 @@ struct TimestampedNodeUpdaterParams {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(start_node);
-    ar& BOOST_SERIALIZATION_NVP(start_noise);
+    ar& BOOST_SERIALIZATION_NVP(start_noise_models);
     ar& BOOST_SERIALIZATION_NVP(huber_k);
     ar& BOOST_SERIALIZATION_NVP(add_priors);
     ar& BOOST_SERIALIZATION_NVP(starting_time);
