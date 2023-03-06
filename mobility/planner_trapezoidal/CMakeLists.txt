@@ -71,19 +71,35 @@ rclcpp_components_register_nodes(${PROJECT_NAME} "planner_trapezoidal::PlannerTr
 # ament_export_dependencies(ament_cmake rclcpp)
 ament_export_include_directories(include)
 
-# Mark libraries for installation
-install(TARGETS
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
-  RUNTIME DESTINATION bin
-)
+# # Mark libraries for installation
+# install(TARGETS
+#   ARCHIVE DESTINATION lib/${PROJECT_NAME}
+#   LIBRARY DESTINATION lib/${PROJECT_NAME}
+#   RUNTIME DESTINATION bin
+# )
 
+# # Mark cpp header files for installation
+# install(DIRECTORY include/${PROJECT_NAME}
+#   DESTINATION include/${PROJECT_NAME}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION include/${PROJECT_NAME}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  EXPORT planner_trapezoidal
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 
 # Mark launch files for installation
 install(DIRECTORY launch/

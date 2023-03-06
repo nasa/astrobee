@@ -116,20 +116,42 @@ rclcpp_components_register_nodes(choreographer "choreographer::ChoreographerComp
 ## Install ##
 #############
 
-ament_export_include_directories(include)
-
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+ament_export_dependencies(
+  config_reader
+  msg_conversions
+  ff_common
+  ff_util
 )
 
+ament_export_include_directories(include)
+
+# # Mark libraries for installation
+# install(TARGETS ${PROJECT_NAME}
+#   ARCHIVE DESTINATION lib
+#   LIBRARY DESTINATION lib
+#   RUNTIME DESTINATION bin
+# )
+
+# # Mark cpp header files for installation
+# install(DIRECTORY include/${PROJECT_NAME}
+#   DESTINATION include
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
+install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
+)
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  EXPORT choreographer
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 ament_package()
