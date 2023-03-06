@@ -27,8 +27,9 @@ import sys
 import numpy as np
 import numpy.linalg
 import yaml
-from calibration_utils import *
 from tf import transformations
+
+from calibration_utils import *
 
 
 # returns extrinsics (T_cam_imu) from the yaml file
