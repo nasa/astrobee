@@ -27,6 +27,7 @@
 #include <vector>
 
 namespace node_updaters {
+// Node update model that uses provided measurements to generate nodes and relative factors.
 template <typename MeasurementType, typename NodeType, typename NodesType>
 class MeasurementBasedNodeUpdateModel : public NodeUpdateModel<NodeType, NodesType> {
  public:

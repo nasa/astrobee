@@ -29,20 +29,27 @@
 namespace node_updaters {
 // Handles adding priors and relative factors for a given node type.
 // Generates these factors for provided timestamps.
+// Required by TimestampedNodeUpdater.
 template <typename NodeType, typename NodesType>
 class NodeUpdateModel {
  public:
   virtual ~NodeUpdateModel() = 0;
+  // Adds prior factors for a given node using provided noise models.
   virtual void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                          const localization_common::Time timestamp, const NodesType& nodes,
                          gtsam::NonlinearFactorGraph& factors) const = 0;
+
+  // Adds nodes for provided timestamps and connects them with relative factors.
   virtual bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
                                           const localization_common::Time timestamp_b, NodesType& nodes,
                                           gtsam::NonlinearFactorGraph& factors) const = 0;
+
+  // Adds relative factors between nodes at timestamp_a and timestamp_b.
   virtual bool AddRelativeFactors(const localization_common::Time timestamp_a,
                                   const localization_common::Time timestamp_b, const NodesType& nodes,
                                   gtsam::NonlinearFactorGraph& factors) const = 0;
 
+  // Returns whether a node can be added at timestamp or not.
   virtual bool CanUpdate(const localization_common::Time timestamp) const = 0;
 
  protected:

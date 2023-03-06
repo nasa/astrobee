@@ -1,4 +1,5 @@
 - test pose node updater! (AA)
+  - rename node_update_model to timestamped_node_update_model (AAA)
   - test add/remove measurements (AAA)
     - use oldest/latest timestamp as a test
     - use can update as a test
