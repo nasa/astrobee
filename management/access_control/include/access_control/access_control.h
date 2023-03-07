@@ -19,18 +19,27 @@
 #ifndef ACCESS_CONTROL_ACCESS_CONTROL_H_
 #define ACCESS_CONTROL_ACCESS_CONTROL_H_
 
-#include <pluginlib/class_list_macros.h>
-#include <ros/ros.h>
+#include <ff_common/ff_names.h>
+#include <ff_util/ff_component.h>
 
 #include <config_reader/config_reader.h>
-#include <ff_msgs/AccessControlStateStamped.h>
-#include <ff_msgs/AckCompletedStatus.h>
-#include <ff_msgs/AckStamped.h>
-#include <ff_msgs/AckStatus.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_util/ff_names.h>
-#include <ff_util/ff_nodelet.h>
+
+#include <ff_msgs/msg/access_control_state_stamped.hpp>
+#include <ff_msgs/msg/ack_completed_status.hpp>
+#include <ff_msgs/msg/ack_stamped.hpp>
+#include <ff_msgs/msg/ack_status.hpp>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/command_stamped.hpp>
+
+namespace ff_msgs {
+  typedef msg::AccessControlStateStamped AccessControlStateStamped;
+  typedef msg::AckCompletedStatus AckCompletedStatus;
+  typedef msg::AckStamped AckStamped;
+  typedef msg::AckStatus AckStatus;
+  typedef msg::CommandArg CommandArg;
+  typedef msg::CommandConstants CommandConstants;
+  typedef msg::CommandStamped CommandStamped;
+}  // namespace ff_msgs
 
 #include <cstdint>
 #include <iostream>
@@ -39,40 +48,45 @@
 
 namespace access_control {
 
-class AccessControl : public ff_util::FreeFlyerNodelet {
+class AccessControl : public ff_util::FreeFlyerComponent {
  public:
-  AccessControl();
+  explicit AccessControl(const rclcpp::NodeOptions & options);
   ~AccessControl();
 
  protected:
-  virtual void Initialize(ros::NodeHandle *nh);
+  virtual void Initialize(NodeHandle &nh);
 
  private:
   std::string GenerateCookie();
 
-  void HandleCommand(ff_msgs::CommandStampedConstPtr const& cmd);
+  void HandleCommand(ff_msgs::CommandStamped const& cmd);
 
-  void HandleGrabControl(ff_msgs::CommandStampedConstPtr const& cmd);
+  void HandleGrabControl(ff_msgs::CommandStamped const& cmd);
 
-  void HandleRequestControl(ff_msgs::CommandStampedConstPtr const& cmd);
+  void HandleRequestControl(ff_msgs::CommandStamped const& cmd);
 
   void PublishAck(std::string const& cmd_id,
                   std::string const& message = "",
                   uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
                   uint8_t status = ff_msgs::AckStatus::COMPLETED);
 
-  void PublishCommand(ff_msgs::CommandStampedConstPtr const& cmd);
+  void PublishCommand(ff_msgs::CommandStamped const& cmd);
 
   void PublishState();
 
   ff_msgs::AccessControlStateStamped state_;
   ff_msgs::AckStamped ack_;
 
+  rclcpp::Node::SharedPtr node_;
+
   int pub_queue_size_;
   int sub_queue_size_;
 
-  ros::Publisher cmd_ack_pub_, state_pub_, cmd_pub_, failed_cmd_pub_;
-  ros::Subscriber cmd_sub_;
+  Publisher<ff_msgs::AckStamped> cmd_ack_pub_;
+  Publisher<ff_msgs::AccessControlStateStamped> state_pub_;
+  Publisher<ff_msgs::CommandStamped> cmd_pub_;
+  Publisher<ff_msgs::CommandStamped> failed_cmd_pub_;
+  Subscriber<ff_msgs::CommandStamped> cmd_sub_;
 
   std::string requestor_;
 };

@@ -30,6 +30,16 @@
 
 namespace ff_util {
 
+template < class ServiceSpec >
+struct FreeFlyerService {
+  FreeFlyerService() {
+    request = std::make_shared<typename ServiceSpec::Request>();
+    response = std::make_shared<typename ServiceSpec::Response>();
+  }
+  std::shared_ptr<typename ServiceSpec::Request> request;
+  std::shared_ptr<typename ServiceSpec::Response> response;
+};
+
 ///////////////////////////// SERVICE CLIENT CODE /////////////////////////////
 
 // This is a simple wrapper around a ROS2 service client.
@@ -91,14 +101,22 @@ class FreeFlyerServiceClient {
     return false;
   }
 
+  bool Call(FreeFlyerService<ServiceSpec> & service) {
+    return call(service);
+  }
+
   bool Call(const typename ServiceSpec::Request & request, std::shared_ptr<typename ServiceSpec::Response> & response) {
     return call(request, response);
   }
 
   // ROS1 functions
   bool call(const typename ServiceSpec::Request & request, std::shared_ptr<typename ServiceSpec::Response> & response) {
+    return call(std::make_shared<typename ServiceSpec::Request>(request), response);
+  }
+  bool call(const std::shared_ptr<typename ServiceSpec::Request> & request,
+            std::shared_ptr<typename ServiceSpec::Response> & response) {
     if (IsConnected()) {
-      auto result = service_client_->async_send_request(std::make_shared<typename ServiceSpec::Request>(request));
+      auto result = service_client_->async_send_request(request);
       rclcpp::FutureReturnCode return_code =
                             rclcpp::spin_until_future_complete(node_, result);
       response = result.get();
@@ -107,6 +125,10 @@ class FreeFlyerServiceClient {
       }
     }
     return false;
+  }
+
+  bool call(FreeFlyerService<ServiceSpec> & service) {
+    return call(service.request.get(), service.response);
   }
 
   bool exists() {
