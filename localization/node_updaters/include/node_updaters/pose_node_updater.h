@@ -35,7 +35,8 @@ using PoseNodeUpdater =
                                          graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
 
 template <>
-graph_optimizer::NodeUpdaterType PoseNodeUpdater::type() const {
+graph_optimizer::NodeUpdaterType TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>,
+                                                        PoseNodeUpdateModel>::type() const {
   return go::NodeUpdaterType::Pose;
 }
 }  // namespace node_updaters
