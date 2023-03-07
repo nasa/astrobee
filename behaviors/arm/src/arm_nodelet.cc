@@ -58,12 +58,12 @@ typedef srv::SetEnabled SetEnabled;
 typedef srv::CalibrateGripper CalibrateGripper;
 }
 
-FF_DEFINE_LOGGER("arm");
-
 /**
  * \ingroup beh
  */
 namespace arm {
+
+FF_DEFINE_LOGGER("arm");
 
 // Different joint types
 enum JointType { PAN, TILT, GRIPPER };
