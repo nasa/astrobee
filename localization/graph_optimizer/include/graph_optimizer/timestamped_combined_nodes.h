@@ -44,6 +44,8 @@ class TimestampedCombinedNodes {
 
   boost::optional<NodeType> Node(const localization_common::Time timestamp) const;
 
+  boost::optional<NodeType> Node(const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const;
+
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const;
 
   bool Remove(const localization_common::Time& timestamp);
@@ -154,6 +156,12 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node
 }
 
 template <typename NodeType, bool CombinedType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
+  const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const {
+  return Node(timestamped_keys.value, timestamped_keys.timestamp);
+}
+
+template <typename NodeType, bool CombinedType>
 gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Keys(
   const localization_common::Time timestamp) const {
   if (!Contains(timestamp)) return {};
@@ -181,7 +189,7 @@ template <typename NodeType, bool CombinedType>
 boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::OldestNode() const {
   const auto oldest = timestamp_keys_map_.Oldest();
   if (!oldest) return boost::none;
-  return Node(oldest->value);
+  return Node(*oldest);
 }
 
 template <typename NodeType, bool CombinedType>
@@ -195,7 +203,7 @@ template <typename NodeType, bool CombinedType>
 boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::LatestNode() const {
   const auto latest = timestamp_keys_map_.Latest();
   if (!latest) return boost::none;
-  return Node(latest->value);
+  return Node(*latest);
 }
 
 template <typename NodeType, bool CombinedType>
@@ -225,12 +233,12 @@ TimestampedCombinedNodes<NodeType, CombinedType>::LowerAndUpperBoundNodes(
   if (!lower_and_upper_bound.first)
     lower_bound = boost::none;
   else
-    lower_bound = Node((lower_and_upper_bound.first->value));
+    lower_bound = Node(*(lower_and_upper_bound.first));
   boost::optional<NodeType> upper_bound;
   if (!lower_and_upper_bound.second)
     upper_bound = boost::none;
   else
-    upper_bound = Node(lower_and_upper_bound.second->value);
+    upper_bound = Node(*(lower_and_upper_bound.second));
   return {lower_bound, upper_bound};
 }
 
@@ -239,7 +247,7 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Lowe
   const localization_common::Time timestamp) const {
   const auto lower_bound_or_equal = timestamp_keys_map_.LowerBoundOrEqual(timestamp);
   if (!lower_bound_or_equal) return boost::none;
-  return Node(lower_bound_or_equal->value);
+  return Node(*lower_bound_or_equal);
 }
 
 template <typename NodeType, bool CombinedType>
@@ -258,7 +266,7 @@ std::vector<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::OldNodes
   const auto old_values = timestamp_keys_map_.OldValues(oldest_allowed_timestamp);
   std::vector<NodeType> old_nodes;
   for (const auto& old_value : old_values) {
-    const auto old_node = Node(old_value.value);
+    const auto old_node = Node(old_value);
     if (!old_node) {
       LogError("OldNodes: Failed to get node for keys.");
       continue;
@@ -296,7 +304,7 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Clos
   const localization_common::Time timestamp) const {
   const auto closest = timestamp_keys_map_.Closest(timestamp);
   if (!closest) return boost::none;
-  return Node(closest->value);
+  return Node(*closest);
 }
 
 template <typename NodeType, bool CombinedType>
