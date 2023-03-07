@@ -77,18 +77,13 @@ target_link_libraries(light_flow_tool
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
+  ${PROJECT_NAME}_nodelet
+  light_flow_tool
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-install(TARGETS ${PROJECT_NAME}_nodelet
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install C++ executables
-install(TARGETS light_flow_tool DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/light_flow_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}

@@ -542,7 +542,8 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
     // Publishers for arm and joint state
     sub_joint_states_ = FF_CREATE_SUBSCRIBER(nh, sensor_msgs::JointState, TOPIC_JOINT_STATES, 1,
       std::bind(&ArmNodelet::JointStateCallback, this, std::placeholders::_1));
-    pub_joint_goals_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, TOPIC_JOINT_GOALS, 1); // TODO: This had a latch=true argument?
+    // TODO: This had a latch=true argument, but TOPIC_JOINT_GOALS is NOT in the LatchedTopic list  
+    pub_joint_goals_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, TOPIC_JOINT_GOALS, 1); 
 
     // Subscribe to Proximal Joint Servo Enabling service
     client_enable_prox_servo_ = nh->create_client<ff_hw_msgs::SetEnabled>(

@@ -165,7 +165,9 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  rclcpp::init(argc, argv); //, "control", ros::init_options::AnonymousName); // TODO: rclcppOptions?
+  // TODO: AnonymousName option has not yet been implemented in ROS2, but it is in the works
+  // https://github.com/ros2/rcl/issues/1034
+  rclcpp::init(argc, argv); //, "control", ros::init_options::AnonymousName); 
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun arm arm_tool <opts>");
   google::SetVersionString("0.1.0");
@@ -190,7 +192,7 @@ int main(int argc, char *argv[]) {
   // Action clients
   ff_util::FreeFlyerActionClient<ff_msgs::Arm> client;
   // Create a node handle
-  auto nh = std::make_shared<rclcpp::Node>(std::string("/") + FLAGS_ns);
+  auto nh = std::make_shared<rclcpp::Node>("arm_tool");
   // Setup SWITCH action
   client.SetConnectedTimeout(FLAGS_connect);
   client.SetActiveTimeout(FLAGS_active);

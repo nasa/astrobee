@@ -70,15 +70,13 @@ target_link_libraries(arm_tool
 ## Install ##
 #############
 
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
+# Mark libraries and tools for installation
+install(TARGETS ${PROJECT_NAME} arm_tool
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install C++ executables
-install(TARGETS arm_tool DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/arm_tool share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}

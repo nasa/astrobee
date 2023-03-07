@@ -65,7 +65,7 @@ rclcpp_components_register_nodes(states "states::StateNodelet")
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 # Mark nodelet_plugin for installation
