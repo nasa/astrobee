@@ -18,6 +18,7 @@
 #ifndef NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
 #define NODE_UPDATERS_POSE_NODE_UPDATER_PARAMS_H_
 
+#include <graph_optimizer/utilities.h>
 #include <localization_common/time.h>
 #include <node_updaters/timestamped_node_updater_params.h>
 
@@ -27,6 +28,17 @@
 
 namespace node_updaters {
 struct PoseNodeUpdaterParams : public TimestampedNodeUpdaterParams<gtsam::Pose3> {
+  void SetStartNoiseModels() {
+    const gtsam::Vector6 pose_prior_noise_sigmas(
+    (gtsam::Vector(6) << starting_prior_translation_stddev, starting_prior_translation_stddev,
+     starting_prior_translation_stddev, starting_prior_quaternion_stddev,
+     starting_prior_quaternion_stddev, starting_prior_quaternion_stddev)
+      .finished());
+  const gtsam::SharedNoiseModel pose_noise_model = graph_optimizer::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), huber_k);
+    start_noise_models.emplace_back(pose_noise_model);
+  }
+
   using Base = TimestampedNodeUpdaterParams<gtsam::Pose3>;
   double starting_prior_translation_stddev;
   double starting_prior_quaternion_stddev;

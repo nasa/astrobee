@@ -31,6 +31,9 @@ class MeasurementBasedTimestampedNodeUpdater
   using Base = TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedNodeUpdateModelType>;
 
  public:
+  MeasurementBasedTimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
+                                         std::shared_ptr<TimestampedNodesType> nodes,
+                                         std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model);
   void AddMeasurement(const MeasurementType& measurement);
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
   // Returns the node updater type
@@ -49,6 +52,15 @@ class MeasurementBasedTimestampedNodeUpdater
 };
 
 // Implementation
+template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
+          typename MeasurementBasedNodeUpdateModelType>
+MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,
+                                       MeasurementBasedNodeUpdateModelType>::
+  MeasurementBasedTimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
+                                         std::shared_ptr<TimestampedNodesType> nodes,
+                                         std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model)
+    : Base(params, std::move(nodes), std::move(node_update_model)) {}
+
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedNodeUpdateModelType>
 void MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,

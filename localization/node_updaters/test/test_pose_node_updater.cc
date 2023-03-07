@@ -24,41 +24,45 @@
 
 #include <gtest/gtest.h>
 
+namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-namespace no = node_updaters;
+namespace nu = node_updaters;
 
 class PoseNodeUpdaterTest : public ::testing::Test {
  public:
   PoseNodeUpdaterTest() : time_increment_(1.0 / 125.0), start_time_(time_increment_), num_measurements_(20) {
-    const no::PoseNodeUpdaterParams params = no::DefaultPoseNodeUpdaterParams();
-    pose_node_updater_.reset(new no::PoseNodeUpdater(params));
+    nu::PoseNodeUpdaterParams params = nu::DefaultPoseNodeUpdaterParams();
+    params.SetStartNoiseModels();
+std::shared_ptr<go::TimestampedNodes<gtsam::Pose3>> nodes(new go::TimestampedNodes<gtsam::Pose3>);
+    std::shared_ptr<nu::PoseNodeUpdateModel> node_update_model(new nu::PoseNodeUpdateModel());
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params, nodes, node_update_model));
   }
 
   void SetUp() final {}
 
+  std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
  private:
-  std::unique_ptr<no::PoseNodeUpdater> pose_node_updater_;
   const double time_increment_;
   const lc::Time start_time_;
   const int num_measurements_;
 };
 
-TEST_F(PoseNodeUpdaterTester, AddRemoveCanUpdate) {
-  EXPECT_FALSE(pose_node_updater_.CanUpdate(10.1));
+TEST_F(PoseNodeUpdaterTest, AddRemoveCanUpdate) {
+  EXPECT_FALSE(pose_node_updater_->CanUpdate(10.1));
   constexpr lc::Time time_0 = 1.1;
-  pose_0 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_0);
-  pose_node_updater_.AddMeasurement(pose_0);
-  EXPECT_TRUE(pose_node_updater_.CanUpdate(time_0));
-  EXPECT_FALSE(pose_node_updater_.CanUpdate(time_0 + 0.1));
-  EXPECT_FALSE(pose_node_updater_.CanUpdate(time_0 - 0.1));
+  const auto pose_0 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_0);
+  pose_node_updater_->AddMeasurement(pose_0);
+  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_0));
+  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 + 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 - 0.1));
   constexpr lc::Time time_1 = 2.2;
-  pose_1 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_1);
-  pose_node_updater_.AddMeasurement(pose_1);
-  EXPECT_TRUE(pose_node_updater_.CanUpdate(time_1));
-  EXPECT_TRUE(pose_node_updater_.CanUpdate((time_0 + time_1)/2.0));
-  EXPECT_FALSE(pose_node_updater_.CanUpdate(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_.CanUpdate(time_1 + 0.1));
+  const auto pose_1 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_1);
+  pose_node_updater_->AddMeasurement(pose_1);
+  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_1));
+  EXPECT_TRUE(pose_node_updater_->CanUpdate((time_0 + time_1)/2.0));
+  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 - 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_1 + 0.1));
 }
 
 // Run all the tests that were declared with TEST()

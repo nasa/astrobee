@@ -39,7 +39,8 @@ class TimestampedNodeUpdater
 
  public:
   // TODO(rsoussan): Construct nodes and node update model internally?
-  TimestampedNodeUpdater(std::shared_ptr<TimestampedNodesType> nodes,
+  TimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
+                         std::shared_ptr<TimestampedNodesType> nodes,
                          std::shared_ptr<NodeUpdateModelType> node_update_model);
   TimestampedNodeUpdater() = default;
   virtual ~TimestampedNodeUpdater() = default;
@@ -74,7 +75,7 @@ class TimestampedNodeUpdater
   // Returns boost::none if no nodes exist.
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
-  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
+  std::vector<gtsam::KeyVector> OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
   // TODO(rsoussan): Deprecate/Remove this
@@ -115,8 +116,9 @@ class TimestampedNodeUpdater
 // Implementation
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::TimestampedNodeUpdater(
-  std::shared_ptr<TimestampedNodesType> nodes, std::shared_ptr<NodeUpdateModelType> node_update_model)
-    : nodes_(nodes), node_update_model_(node_update_model) {}
+  const TimestampedNodeUpdaterParams<NodeType>& params, std::shared_ptr<TimestampedNodesType> nodes,
+  std::shared_ptr<NodeUpdateModelType> node_update_model)
+    : params_(params), nodes_(nodes), node_update_model_(node_update_model) {}
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialValuesAndPriors(
@@ -159,13 +161,13 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
       std::vector<gtsam::SharedNoiseModel> prior_noise_models;
       for (const auto& key : keys) {
         const auto prior_noise = graph_optimizer::Robust(
-          gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(*key)), huber_k);
+          gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
         prior_noise_models.emplace_back(prior_noise);
       }
-      node_update_model_->AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, factors);
+      node_update_model_->AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, *nodes_, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior noise
-      node_update_model_->AddPriors(*oldest_node, params_.start_noise_models, *oldest_timestamp, factors);
+      node_update_model_->AddPriors(*oldest_node, params_.start_noise_models, *oldest_timestamp, *nodes_, factors);
     }
   }
 
@@ -216,7 +218,7 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Sli
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-gtsam::KeyVector TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::OldKeys(
+std::vector<gtsam::KeyVector> TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::OldKeys(
   const localization_common::Time oldest_allowed_time, const gtsam::NonlinearFactorGraph& graph) const {
   return nodes_->OldKeys(oldest_allowed_time);
 }

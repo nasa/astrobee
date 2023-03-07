@@ -33,6 +33,7 @@ namespace localization_common {
 template <typename T>
 class TimestampedInterpolater : public TimestampedSet<T> {
  public:
+  TimestampedInterpolater() = default;
   TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects);
 
   boost::optional<T> Interpolate(const Time timestamp) const;

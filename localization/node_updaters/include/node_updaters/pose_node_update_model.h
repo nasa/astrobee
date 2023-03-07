@@ -29,9 +29,8 @@
 #include <utility>
 
 namespace node_updaters {
-class PoseNodeUpdateModel
-    : BetweenFactorMeasurementBasedTimestampedNodeUpdateModel<localization_measurements::TimestampedPoseWithCovariance,
-                                                              gtsam::Pose3> {
+class PoseNodeUpdateModel : public BetweenFactorMeasurementBasedTimestampedNodeUpdateModel<
+                              localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3> {
   using Base =
     BetweenFactorMeasurementBasedTimestampedNodeUpdateModel<localization_measurements::TimestampedPoseWithCovariance,
                                                             gtsam::Pose3>;
