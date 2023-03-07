@@ -75,7 +75,7 @@ class TimestampedNodeUpdater
   // Returns boost::none if no nodes exist.
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
-  std::vector<gtsam::KeyVector> OldKeys(const localization_common::Time oldest_allowed_time,
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
   // TODO(rsoussan): Deprecate/Remove this
@@ -218,7 +218,7 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Sli
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-std::vector<gtsam::KeyVector> TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::OldKeys(
+gtsam::KeyVector TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::OldKeys(
   const localization_common::Time oldest_allowed_time, const gtsam::NonlinearFactorGraph& graph) const {
   return nodes_->OldKeys(oldest_allowed_time);
 }

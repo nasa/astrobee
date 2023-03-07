@@ -1,5 +1,7 @@
 - test pose node updater! (AA)
-  - add timestamped node updater params to timestamped node updater constructor!
+  - fix oldkeys!
+    - return as keyvector, not std::vector<keyvector>?
+      - make separate fcns for each of these?
   - test add/remove measurements (AAA)
     - use oldest/latest timestamp as a test
     - use can update as a test

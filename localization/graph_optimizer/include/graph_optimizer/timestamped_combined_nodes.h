@@ -74,7 +74,7 @@ class TimestampedCombinedNodes {
 
   std::vector<NodeType> OldNodes(const localization_common::Time oldest_allowed_timestamp) const;
 
-  std::vector<gtsam::KeyVector> OldKeys(const localization_common::Time timestamp) const;
+  gtsam::KeyVector OldKeys(const localization_common::Time timestamp) const;
 
   int RemoveOldNodes(const localization_common::Time oldest_allowed_timestamp);
 
@@ -269,14 +269,15 @@ std::vector<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::OldNodes
 }
 
 template <typename NodeType, bool CombinedType>
-std::vector<gtsam::KeyVector> TimestampedCombinedNodes<NodeType, CombinedType>::OldKeys(
+gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::OldKeys(
   const localization_common::Time oldest_allowed_timestamp) const {
-  const auto old_values = timestamp_keys_map_.OldValues(oldest_allowed_timestamp);
-  std::vector<gtsam::KeyVector> old_keys;
-  for (const auto& old_value : old_values) {
-    old_keys.emplace_back(old_value.value);
+  const auto old_timestamp_key_sets = timestamp_keys_map_.OldValues(oldest_allowed_timestamp);
+  gtsam::KeyVector all_old_keys;
+  for (const auto& old_timestamp_key_set : old_timestamp_key_sets) {
+    const auto& old_keys = old_timestamp_key_set.value;
+    all_old_keys.insert(all_old_keys.end(), old_keys.begin(), old_keys.end());
   }
-  return old_keys;
+  return all_old_keys;
 }
 
 template <typename NodeType, bool CombinedType>

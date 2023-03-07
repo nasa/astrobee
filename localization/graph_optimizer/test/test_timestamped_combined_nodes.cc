@@ -479,23 +479,20 @@ TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(0.1);
-    EXPECT_EQ(old_keys.size(), 1);
-    EXPECT_EQ(old_keys[0].size(), 2);
-    EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[0][1], k1);
+    EXPECT_EQ(old_keys.size(), 2);
+    EXPECT_EQ(old_keys[0], k0);
+    EXPECT_EQ(old_keys[1], k1);
     const auto old_nodes = timestamped_nodes.OldNodes(0.1);
     ASSERT_EQ(old_nodes.size(), 1);
     EXPECT_EQ(old_nodes[0], node_0);
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(1.7);
-    EXPECT_EQ(old_keys.size(), 2);
-    EXPECT_EQ(old_keys[0].size(), 2);
-    EXPECT_EQ(old_keys[1].size(), 2);
-    EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[0][1], k1);
-    EXPECT_EQ(old_keys[1][0], k2);
-    EXPECT_EQ(old_keys[1][1], k3);
+    EXPECT_EQ(old_keys.size(), 4);
+    EXPECT_EQ(old_keys[0], k0);
+    EXPECT_EQ(old_keys[1], k1);
+    EXPECT_EQ(old_keys[2], k2);
+    EXPECT_EQ(old_keys[3], k3);
     const auto old_nodes = timestamped_nodes.OldNodes(1.7);
     ASSERT_EQ(old_nodes.size(), 2);
     EXPECT_EQ(old_nodes[0], node_0);
@@ -503,16 +500,13 @@ TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(2.333);
-    EXPECT_EQ(old_keys.size(), 3);
-    EXPECT_EQ(old_keys[0].size(), 2);
-    EXPECT_EQ(old_keys[1].size(), 2);
-    EXPECT_EQ(old_keys[2].size(), 2);
-    EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[0][1], k1);
-    EXPECT_EQ(old_keys[1][0], k2);
-    EXPECT_EQ(old_keys[1][1], k3);
-    EXPECT_EQ(old_keys[2][0], k4);
-    EXPECT_EQ(old_keys[2][1], k5);
+    EXPECT_EQ(old_keys.size(), 6);
+    EXPECT_EQ(old_keys[0], k0);
+    EXPECT_EQ(old_keys[1], k1);
+    EXPECT_EQ(old_keys[2], k2);
+    EXPECT_EQ(old_keys[3], k3);
+    EXPECT_EQ(old_keys[4], k4);
+    EXPECT_EQ(old_keys[5], k5);
     const auto old_nodes = timestamped_nodes.OldNodes(2.333);
     ASSERT_EQ(old_nodes.size(), 3);
     EXPECT_EQ(old_nodes[0], node_0);
@@ -521,19 +515,15 @@ TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
   }
   {
     const auto old_keys = timestamped_nodes.OldKeys(1999);
-    EXPECT_EQ(old_keys.size(), 4);
-    EXPECT_EQ(old_keys[0].size(), 2);
-    EXPECT_EQ(old_keys[1].size(), 2);
-    EXPECT_EQ(old_keys[2].size(), 2);
-    EXPECT_EQ(old_keys[3].size(), 2);
-    EXPECT_EQ(old_keys[0][0], k0);
-    EXPECT_EQ(old_keys[0][1], k1);
-    EXPECT_EQ(old_keys[1][0], k2);
-    EXPECT_EQ(old_keys[1][1], k3);
-    EXPECT_EQ(old_keys[2][0], k4);
-    EXPECT_EQ(old_keys[2][1], k5);
-    EXPECT_EQ(old_keys[3][0], k6);
-    EXPECT_EQ(old_keys[3][1], k7);
+    EXPECT_EQ(old_keys.size(), 8);
+    EXPECT_EQ(old_keys[0], k0);
+    EXPECT_EQ(old_keys[1], k1);
+    EXPECT_EQ(old_keys[2], k2);
+    EXPECT_EQ(old_keys[3], k3);
+    EXPECT_EQ(old_keys[4], k4);
+    EXPECT_EQ(old_keys[5], k5);
+    EXPECT_EQ(old_keys[6], k6);
+    EXPECT_EQ(old_keys[7], k7);
     const auto old_nodes = timestamped_nodes.OldNodes(1999);
     ASSERT_EQ(old_nodes.size(), 4);
     EXPECT_EQ(old_nodes[0], node_0);
