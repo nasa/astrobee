@@ -131,7 +131,7 @@ void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
   const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise,
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
-  node_update_model_->AddPriors(initial_node, initial_noise, timestamp, factors);
+  node_update_model_->AddPriors(initial_node, initial_noise, timestamp, *nodes_, factors);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
@@ -227,7 +227,8 @@ gtsam::KeyVector TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpda
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 boost::optional<gtsam::Key> TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::GetKey(
   graph_optimizer::KeyCreatorFunction key_creator_function, const localization_common::Time timestamp) const {
-  return nodes_->Key(timestamp);
+  // TODO(rsoussan): This is temp standin, this function should be removed altogether
+  return nodes_->Keys(timestamp)[0];
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
