@@ -485,17 +485,16 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
  protected:
   // Called to initialize this nodelet
   void Initialize(NodeHandle &nh) {
-
     clock_ = nh->get_clock();
 
     // Grab some configuration parameters for this node from the LUA config reader
-    cfg_.Initialize(nh); // TODO: Verify that GetPrivateHandle() is not required
+    cfg_.Initialize(nh);  // TODO(ana) Verify that GetPrivateHandle() is not required
     cfg_.AddFile("behaviors/arm.config");
     /*if (!cfg_.Listen(boost::bind(
       &ArmNodelet::ReconfigureCallback, this, _1)))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                          "Could not load config");
-*/ // TODO : Listen function is not in the ROS2 upgrade of config_server
+*/ // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
     // Read the confgiuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
@@ -1132,7 +1131,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
         rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
         if (return_code == rclcpp::FutureReturnCode::SUCCESS)
           success = res.get()->success;
-      }        
+      }    
       break;
       case GRIPPER_SERVO:     // Gripper
       {
@@ -1140,7 +1139,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
         rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
         if (return_code == rclcpp::FutureReturnCode::SUCCESS)
           success = res.get()->success;
-      }        
+      }
       break;
       case ALL_SERVOS:        // All
       {
@@ -1164,7 +1163,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
           rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
           if (return_code == rclcpp::FutureReturnCode::SUCCESS)
             success_grip = res.get()->success;
-        }        
+        }
 
         success = success_prox && success_dist && success_grip;
       }
@@ -1226,7 +1225,6 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   bool goal_stow_ = false;
   bool goal_set_ = false;
 };
-
 }  // namespace arm
 
 #include "rclcpp_components/register_node_macro.hpp"
