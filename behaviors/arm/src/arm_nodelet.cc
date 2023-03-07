@@ -97,6 +97,9 @@ typedef std::map<std::string, JointType> JointDictionary;
 using FSM = ff_util::FSM;
 using STATE = ff_msgs::ArmState;
 using RESPONSE = ff_msgs::Arm::Result;
+}
+
+namespace arm {
 
 class ArmNodelet : public ff_util::FreeFlyerComponent {
  public:
@@ -1225,7 +1228,6 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   bool goal_stow_ = false;
   bool goal_set_ = false;
 };
-
 
 }  // namespace arm
 
