@@ -23,7 +23,7 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 namespace sensor_msgs {
 typedef msg::JointState JointState;
-}
+}  // namespace sensor_msgs
 
 // FSW shared libraries
 #include <config_reader/config_reader.h>
@@ -50,13 +50,14 @@ typedef msg::JointSampleStamped JointSampleStamped;
 typedef msg::ArmJointState ArmJointState;
 typedef msg::ArmGripperState ArmGripperState;
 typedef srv::SetState SetState;
-}
+}  // namespace ff_msgs
+
 #include <ff_hw_msgs/srv/set_enabled.hpp>
 #include <ff_hw_msgs/srv/calibrate_gripper.hpp>
 namespace ff_hw_msgs {
 typedef srv::SetEnabled SetEnabled;
 typedef srv::CalibrateGripper CalibrateGripper;
-}
+}  // namespace ff_hw_msgs
 
 /**
  * \ingroup beh
@@ -97,9 +98,6 @@ typedef std::map<std::string, JointType> JointDictionary;
 using FSM = ff_util::FSM;
 using STATE = ff_msgs::ArmState;
 using RESPONSE = ff_msgs::Arm::Result;
-}
-
-namespace arm {
 
 class ArmNodelet : public ff_util::FreeFlyerComponent {
  public:
@@ -489,16 +487,17 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   // Called to initialize this nodelet
   void Initialize(NodeHandle &nh) {
     clock_ = nh->get_clock();
-
     // Grab some configuration parameters for this node from the LUA config reader
     cfg_.Initialize(nh);  // TODO(ana) Verify that GetPrivateHandle() is not required
     cfg_.AddFile("behaviors/arm.config");
+    // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
     /*if (!cfg_.Listen(boost::bind(
       &ArmNodelet::ReconfigureCallback, this, _1)))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                          "Could not load config");
-    */ // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
-    // Read the confgiuration for this specific node
+    */
+
+    // Read the configuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
     if (!cfg->GetTable(GetName().c_str(), &joints))
@@ -544,8 +543,8 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
     // Publishers for arm and joint state
     sub_joint_states_ = FF_CREATE_SUBSCRIBER(nh, sensor_msgs::JointState, TOPIC_JOINT_STATES, 1,
       std::bind(&ArmNodelet::JointStateCallback, this, std::placeholders::_1));
-    // TODO: This had a latch=true argument, but TOPIC_JOINT_GOALS is NOT in the LatchedTopic list  
-    pub_joint_goals_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, TOPIC_JOINT_GOALS, 1); 
+    // TODO(ana): This had a latch=true argument, but TOPIC_JOINT_GOALS is NOT in the LatchedTopic list
+    pub_joint_goals_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, TOPIC_JOINT_GOALS, 1);
 
     // Subscribe to Proximal Joint Servo Enabling service
     client_enable_prox_servo_ = nh->create_client<ff_hw_msgs::SetEnabled>(
@@ -564,7 +563,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
       SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE);
 
     // Internal state publisher
-    pub_state_ = FF_CREATE_PUBLISHER(nh, ff_msgs::ArmState, 
+    pub_state_ = FF_CREATE_PUBLISHER(nh, ff_msgs::ArmState,
       TOPIC_BEHAVIORS_ARM_STATE, 1);
 
     // Allow the state to be manually set
@@ -586,14 +585,14 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   }
 
   // Callback to handle reconfiguration requests
-  // TODO: dynamic_reconfigure
+  // TODO(ana): dynamic_reconfigure
   /*bool ReconfigureCallback(dynamic_reconfigure::Config & config) {
     bool success = false;
     switch (fsm_.GetState()) {
     case STATE::DEPLOYED:
     case STATE::STOWED:
     case STATE::UNKNOWN:
-      //success = cfg_.Reconfigure(config); // TODO: Reconfigure *not* in latest version of ConfigServer
+      //success = cfg_.Reconfigure(config); // TODO(ana): Reconfigure *not* in latest version of ConfigServer
       joints_[PAN].tol = cfg_.Get<double>("tol_pan");
       joints_[TILT].tol = cfg_.Get<double>("tol_tilt");
       joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");
