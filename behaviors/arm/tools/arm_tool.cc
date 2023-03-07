@@ -165,9 +165,9 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  // TODO: AnonymousName option has not yet been implemented in ROS2, but it is in the works
+  // TODO(ana): AnonymousName option has not yet been implemented in ROS2, but it is in the works
   // https://github.com/ros2/rcl/issues/1034
-  rclcpp::init(argc, argv); //, "control", ros::init_options::AnonymousName); 
+  rclcpp::init(argc, argv);  //, "control", ros::init_options::AnonymousName);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun arm arm_tool <opts>");
   google::SetVersionString("0.1.0");

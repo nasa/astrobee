@@ -69,12 +69,12 @@ namespace arm {
 enum JointType { PAN, TILT, GRIPPER };
 
 // Perching arm servos to enable / disable
-  enum ServoID {
-    PROXIMAL_SERVO,           // Proximal joint servo
-    DISTAL_SERVO,             // Distal joint servo
-    GRIPPER_SERVO,            // Gripper joint servo
-    ALL_SERVOS          // Proximal, Distal and Gripper servos
-  };
+enum ServoID {
+  PROXIMAL_SERVO,           // Proximal joint servo
+  DISTAL_SERVO,             // Distal joint servo
+  GRIPPER_SERVO,            // Gripper joint servo
+  ALL_SERVOS          // Proximal, Distal and Gripper servos
+};
 
 // Joint information, where HUMAN = SCALE * DRIVER + OFFSET
 struct JointInfo {
@@ -494,7 +494,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
       &ArmNodelet::ReconfigureCallback, this, _1)))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                          "Could not load config");
-*/ // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
+    */ // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
     // Read the confgiuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
@@ -1131,7 +1131,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
         rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
         if (return_code == rclcpp::FutureReturnCode::SUCCESS)
           success = res.get()->success;
-      }    
+      }
       break;
       case GRIPPER_SERVO:     // Gripper
       {
@@ -1225,6 +1225,8 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   bool goal_stow_ = false;
   bool goal_set_ = false;
 };
+
+
 }  // namespace arm
 
 #include "rclcpp_components/register_node_macro.hpp"
