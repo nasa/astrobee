@@ -23,7 +23,7 @@
 #include <ff_msgs/CompressedFileAck.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_msgs/CommandStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <boost/filesystem.hpp>
 

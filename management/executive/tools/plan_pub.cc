@@ -24,7 +24,7 @@
 #include <ff_msgs/CompressedFile.h>
 #include <ff_msgs/CompressedFileAck.h>
 #include <ff_msgs/PlanStatusStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <boost/filesystem.hpp>
 

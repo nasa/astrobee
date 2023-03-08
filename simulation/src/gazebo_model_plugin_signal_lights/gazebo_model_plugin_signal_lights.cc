@@ -23,7 +23,7 @@
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
 // FSW nodelet
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 // Services

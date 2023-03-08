@@ -29,7 +29,7 @@
 #include <ff_msgs/AckStatus.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_msgs/CommandStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <cstdint>
