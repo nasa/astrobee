@@ -143,12 +143,14 @@ bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFac
                                                                 gtsam::NonlinearFactorGraph& factors) const {
   const auto relative_node_and_noise = RelativeNodeAndNoise(timestamp_a, timestamp_b);
   if (!relative_node_and_noise) {
-    LogError("AddRelativeFactor: Failed to relative node and noise.");
+    LogError("AddRelativeFactor: Failed to add relative node and noise.");
+    return false;
   }
 
   typename gtsam::BetweenFactor<NodeType>::shared_ptr relative_factor(new gtsam::BetweenFactor<NodeType>(
     keys_a[0], keys_b[0], relative_node_and_noise->first, relative_node_and_noise->second));
   factors.push_back(relative_factor);
+  return true;
 }
 
 // Specialization helpers

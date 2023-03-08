@@ -1,8 +1,5 @@
 - test pose node updater! (AA)
   - rename nodeupdater to nodeadder???
-  - fix lower and upper bound call!
-      - update tests! (lc: timestamped set, others? go: timestamped combined nodes) (A)
-      - make sure lc and go tests pass! (B)
   - test timestamped node updater functions (A)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
         - test addnode, splitnode, add same node? add invalid node time? 
