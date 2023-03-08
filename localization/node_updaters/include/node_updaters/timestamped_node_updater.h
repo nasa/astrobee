@@ -26,6 +26,7 @@
 #include <node_updaters/timestamped_node_updater_params.h>
 
 #include <algorithm>
+#include <string>
 #include <vector>
 
 namespace node_updaters {
@@ -67,7 +68,7 @@ class TimestampedNodeUpdater
 
   // Returns the node updater type
   // This needs to be specialized
-  graph_optimizer::NodeUpdaterType type() const override;
+  std::string type() const override;
 
   // Returns the oldest node time that will remain after SlideWindow is called.
   // Returns boost::none if no nodes exist.
@@ -175,8 +176,7 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-graph_optimizer::NodeUpdaterType TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::type()
-  const {
+std::string TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::type() const {
   static_assert(sizeof(NodeType) == std::size_t(-1), "This needs to be specialized by template class.");
 }
 

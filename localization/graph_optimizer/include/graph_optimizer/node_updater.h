@@ -20,11 +20,12 @@
 #define GRAPH_OPTIMIZER_NODE_UPDATER_H_
 
 #include <graph_optimizer/key_info.h>
-#include <graph_optimizer/node_updater_type.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
+
+#include <string>
 
 namespace graph_optimizer {
 class NodeUpdater {
@@ -53,7 +54,7 @@ class NodeUpdater {
 
   virtual bool CanAddNode(const localization_common::Time timestamp) const = 0;
 
-  virtual NodeUpdaterType type() const = 0;
+  virtual std::string type() const = 0;
 };
 }  // namespace graph_optimizer
 

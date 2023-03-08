@@ -26,6 +26,8 @@
 
 #include <gtsam/geometry/Pose3.h>
 
+#include <string>
+
 namespace node_updaters {
 namespace go = graph_optimizer;
 
@@ -35,9 +37,9 @@ using PoseNodeUpdater =
                                          graph_optimizer::TimestampedNodes<gtsam::Pose3>, PoseNodeUpdateModel>;
 
 template <>
-graph_optimizer::NodeUpdaterType TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>,
-                                                        PoseNodeUpdateModel>::type() const {
-  return go::NodeUpdaterType::Pose;
+std::string TimestampedNodeUpdater<gtsam::Pose3, graph_optimizer::TimestampedNodes<gtsam::Pose3>,
+                                   PoseNodeUpdateModel>::type() const {
+  return "pose";
 }
 }  // namespace node_updaters
 

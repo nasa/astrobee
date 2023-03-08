@@ -1,13 +1,11 @@
 - test pose node updater! (AA)
-  - rename update to AddNode(D)
-    - rename canupdate to canaddnode
   - rename nodeupdater to nodeadder???
-  - test type (E)
-    - change this to be a string!!!!! (D)
+  - test type (B)
+    - change this to be a string!!!!! (A)
       - update graph optimizer!
       - avoids having to set struct in graph optimizer!
   - test timestamped node updater functions (AAC)
-      - Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
+      - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
           - use old keys as test
           - use oldest/latest/can update as test
           - slidewindownewoldesttime?

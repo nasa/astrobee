@@ -24,14 +24,16 @@
 #include <node_updaters/combined_nav_state_nodes.h>
 #include <node_updaters/measurement_based_timestamped_node_updater.h>
 
+#include <string>
+
 namespace node_updaters {
 using CombinedNavStateNodeUpdater =
   MeasurementBasedTimestampedNodeUpdater<localization_measurements::ImuMeasurement, CombinedNavStateNodes,
                                          CombinedNavStateNodeUpdateModel>;
 
 template <>
-graph_optimizer::NodeUpdaterType CombinedNavStateNodeUpdater::type() const final {
-  return go::NodeUpdaterType::CombinedNavState;
+std::string CombinedNavStateNodeUpdater::type() const final {
+  return "combined_nav_state";
 }
 }  // namespace node_updaters
 
