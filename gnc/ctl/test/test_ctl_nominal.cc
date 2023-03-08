@@ -28,7 +28,7 @@
 #include <ros/ros.h>
 #include <ros/console.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <actionlib/client/simple_action_client.h>
 #include <ff_msgs/ControlAction.h>
 #include <ff_msgs/EkfState.h>
