@@ -1,17 +1,14 @@
 - test pose node updater! (AA)
-  - rename addinitialvalues to addinitialnodes
-  - test type (AAB)
-    - change this to be a string!!!!!
+  - rename addinitialvalues to addinitialnodes (A)
+  - construct nodes by default for timestamped nodes! (B)
+    - update test
+  - construct timestamped nodes by default for timestamped node updater! (C)
+    - update test
+  - test type (E)
+    - change this to be a string!!!!! (D)
       - update graph optimizer!
       - avoids having to set struct in graph optimizer!
   - test timestamped node updater functions (AAC)
-      - AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
-          - check factors, make sure the right things are added
-          - does this use params??
-      - AddInitialValuesAndPriors(const NodeType& initial_node,
-                                 const std::vector<gtsam::SharedNoiseModel>& initial_noise,
-                                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
-          - check factors, make sure the right things are added
       - Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
           - use old keys as test
           - use oldest/latest/can update as test
