@@ -94,10 +94,8 @@ void FreeFlyerComponent::Setup(std::string plugin_name) {
                                          TOPIC_DIAGNOSTICS, 5);
 
   // Setup a heartbeat timer for this node if auto start was requested
-  if (autostart_hb_timer_) {
-      timer_heartbeat_.createTimer(1.0,
-          std::bind(&FreeFlyerComponent::HeartbeatCallback, this), node_, false, false);
-  }
+  timer_heartbeat_.createTimer(1.0,
+      std::bind(&FreeFlyerComponent::HeartbeatCallback, this), node_, false, false);
 
   // TODO(Katie or Marina) Is this needed for component registration
   // Defer the initialization of the node to prevent a race condition with
