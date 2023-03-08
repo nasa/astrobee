@@ -306,7 +306,7 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
     LogError("AddLatestNodeAndRelativeFactor: Failed to get latest timestamp.");
     return false;
   }
-  return node_update_model_->AddNodesAndRelativeFactors(*timestamp_a, timestamp, factors);
+  return node_update_model_->AddNodesAndRelativeFactors(*timestamp_a, timestamp, *nodes_, factors);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
@@ -333,11 +333,11 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
       "old factors.");
     return false;
   }
-  if (!node_update_model_->AddNodesAndRelativeFactors(lower_bound_time, timestamp, factors)) {
+  if (!node_update_model_->AddNodesAndRelativeFactors(lower_bound_time, timestamp, *nodes_, factors)) {
     LogError("SplitOldRelativeFactor: Failed to add first relative node and factor.");
     return false;
   }
-  if (!node_update_model_->AddRelativeFactors(timestamp, upper_bound_time, factors)) {
+  if (!node_update_model_->AddRelativeFactors(timestamp, upper_bound_time, *nodes_, factors)) {
     LogError("SplitOldRelativeFactor: Failed to add second relative factor.");
     return false;
   }
@@ -347,7 +347,7 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateM
 bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::RemoveFactors(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto keys = nodes_->Keys(timestamp);
-  if (!keys) {
+  if (keys.empty()) {
     LogError("RemoveFactors: Failed to get keys.");
     return false;
   }
@@ -355,7 +355,7 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
   bool removed_factor = false;
   for (const auto& key : keys) {
     for (auto factor_it = factors.begin(); factor_it != factors.end();) {
-      if ((*factor_it)->find(*key) != std::end((*factor_it)->keys())) {
+      if ((*factor_it)->find(key) != std::end((*factor_it)->keys())) {
         factors.erase(factor_it);
         removed_factor = true;
       } else {

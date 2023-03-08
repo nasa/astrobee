@@ -4,6 +4,9 @@
     - use can update as a test
     - slidewindownewoldesttime?
   - test type (AAB)
+    - change this to be a string!!!!!
+      - update graph optimizer!
+      - avoids having to set struct in graph optimizer!
   - test timestamped node updater functions (AAC)
       - AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
           - check factors, make sure the right things are added

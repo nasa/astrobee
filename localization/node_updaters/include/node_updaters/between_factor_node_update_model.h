@@ -40,6 +40,7 @@ class BetweenFactorNodeUpdateModel
  public:
   using NodesType = graph_optimizer::TimestampedNodes<NodeType>;
   using Base = NodeUpdateModelType;
+  virtual ~BetweenFactorNodeUpdateModel() = default;
   // Adds prior factors for a given node using provided noise models.
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,

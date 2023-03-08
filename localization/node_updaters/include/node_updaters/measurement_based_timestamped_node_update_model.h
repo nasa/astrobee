@@ -31,7 +31,7 @@ namespace node_updaters {
 template <typename MeasurementType, typename NodeType, typename NodesType>
 class MeasurementBasedTimestampedNodeUpdateModel : public TimestampedNodeUpdateModel<NodeType, NodesType> {
  public:
-  virtual ~MeasurementBasedTimestampedNodeUpdateModel() = 0;
+  virtual ~MeasurementBasedTimestampedNodeUpdateModel() = default;
   virtual void AddMeasurement(const MeasurementType& measurement) = 0;
   virtual void RemoveMeasurements(const localization_common::Time oldest_allowed_time) = 0;
 };
