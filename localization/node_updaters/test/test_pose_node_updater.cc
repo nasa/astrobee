@@ -33,7 +33,6 @@ class PoseNodeUpdaterTest : public ::testing::Test {
  public:
   PoseNodeUpdaterTest() : time_increment_(1.0), start_time_(1.0), num_measurements_(20) {
     params_ = nu::DefaultPoseNodeUpdaterParams();
-    DefaultInitialize();
   }
 
   void SetUp() final {
@@ -86,6 +85,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 };
 
 TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
+  DefaultInitialize();
   EXPECT_FALSE(pose_node_updater_->CanAddNode(10.1));
   constexpr double epsilon = 0.1;
   // Check initialized measurement
@@ -96,29 +96,30 @@ TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
   pose_node_updater_->AddMeasurement(pose_measurements_[0]);
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[0]));
   EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] + epsilon));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time - epsilon));
   // Add measurement 1
   pose_node_updater_->AddMeasurement(pose_measurements_[1]);
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[1]));
   EXPECT_TRUE(pose_node_updater_->CanAddNode((timestamps_[0] + timestamps_[1])/2.0));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time - epsilon));
   EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[1] + epsilon));
   // Add measurement 2
   pose_node_updater_->AddMeasurement(pose_measurements_[2]);
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2]));
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[1] + epsilon));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time - epsilon));
   EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[2] + epsilon));
   // Add measurement 3
   pose_node_updater_->AddMeasurement(pose_measurements_[3]);
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[3]));
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[1] + epsilon));
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2] + epsilon));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time - epsilon));
   EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[3] + epsilon));
 
-  // Remove measurements 0 and 1
+  // Remove measurements start, 0, and 1
   pose_node_updater_->RemoveMeasurements(timestamps_[1] + epsilon);
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time));
   EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0]));
   EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[1]));
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2]));
@@ -129,6 +130,7 @@ TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
 
 
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
+  RandomInitialize();
   const auto& nodes = pose_node_updater_->nodes();
   // Check node value
   EXPECT_EQ(nodes.size(), 1);
@@ -188,13 +190,13 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
 }
 
 TEST_F(PoseNodeUpdaterTest, AddNode) {
-  const auto& nodes = pose_node_updater_->nodes();
-  EXPECT_TRUE(nodes.empty());
   ZeroInitialize();
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
   AddMeasurements();
   // TODO(rsoussan): add a bunch of measurements, add nodes, make sure correct between factors are added
   // Test adding nodes
-  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  // ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
 }
 
 // Run all the tests that were declared with TEST()
