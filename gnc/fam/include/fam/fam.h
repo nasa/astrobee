@@ -26,7 +26,7 @@
 #include <ff_msgs/FamCommand.h>
 #include <ff_msgs/FlightMode.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/perf_timer.h>
 
 #include <Eigen/Dense>

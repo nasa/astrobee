@@ -24,7 +24,7 @@
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/VisualLandmarks.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_analysis/live_measurement_simulator_params.h>
 #include <localization_analysis/message_buffer.h>
 #include <lk_optical_flow/lk_optical_flow.h>
