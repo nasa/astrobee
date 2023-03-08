@@ -42,7 +42,7 @@ class PoseNodeUpdateModel : public BetweenFactorMeasurementBasedTimestampedNodeU
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;
   void AddMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement);
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
-  bool CanUpdate(const localization_common::Time timestamp) const final;
+  bool CanAddNode(const localization_common::Time timestamp) const final;
 
  private:
   // Serialization function

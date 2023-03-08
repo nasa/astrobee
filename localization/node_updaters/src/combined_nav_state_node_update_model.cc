@@ -134,7 +134,7 @@ void CombinedNavStateNodeUpdateModel::RemoveMeasurements(const lc::Time oldest_a
   imu_integrator_.RemoveOldValues(oldest_allowed_time);
 }
 
-bool CombinedNavStateNodeUpdateModel::CanUpdate(const localization_common::Time timestamp) const {
+bool CombinedNavStateNodeUpdateModel::CanAddNode(const localization_common::Time timestamp) const {
   return imu_integrator_.WithinBounds(timestamp);
 }
 }  // namespace node_updaters

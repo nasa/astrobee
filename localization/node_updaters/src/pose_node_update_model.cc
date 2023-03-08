@@ -56,7 +56,7 @@ void PoseNodeUpdateModel::RemoveMeasurements(const lc::Time oldest_allowed_time)
   pose_interpolater_.RemoveOldValues(oldest_allowed_time);
 }
 
-bool PoseNodeUpdateModel::CanUpdate(const localization_common::Time timestamp) const {
+bool PoseNodeUpdateModel::CanAddNode(const localization_common::Time timestamp) const {
   return pose_interpolater_.WithinBounds(timestamp);
 }
 }  // namespace node_updaters

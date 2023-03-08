@@ -46,49 +46,49 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   const int num_measurements_;
 };
 
-TEST_F(PoseNodeUpdaterTest, AddRemoveCanUpdate) {
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(10.1));
+TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(10.1));
   // Add measurement 0
   constexpr lc::Time time_0 = 1.1;
   const auto pose_0 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_0);
   pose_node_updater_->AddMeasurement(pose_0);
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_0));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 + 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 - 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_0));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 + 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
   // Add measurement 1
   constexpr lc::Time time_1 = 2.2;
   const auto pose_1 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_1);
   pose_node_updater_->AddMeasurement(pose_1);
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_1));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate((time_0 + time_1)/2.0));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_1 + 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode((time_0 + time_1)/2.0));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_1 + 0.1));
   // Add measurement 2
   constexpr lc::Time time_2 = 3.3;
   const auto pose_2 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_2);
   pose_node_updater_->AddMeasurement(pose_2);
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_2));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_1 + 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_2 + 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_1 + 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_2 + 0.1));
   // Add measurement 3
   constexpr lc::Time time_3 = 4.45;
   const auto pose_3 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_3);
   pose_node_updater_->AddMeasurement(pose_3);
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_3));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_1 + 0.1));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_2 + 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_3 + 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_3));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_1 + 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2 + 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_3 + 0.1));
 
   // Remove measurements 0 and 1
   pose_node_updater_->RemoveMeasurements(time_1 + 0.1);
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_0));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_1));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_2));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_2 + 0.1));
-  EXPECT_TRUE(pose_node_updater_->CanUpdate(time_3));
-  EXPECT_FALSE(pose_node_updater_->CanUpdate(time_3 + 0.1));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2 + 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_3));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_3 + 0.1));
 }
 
 

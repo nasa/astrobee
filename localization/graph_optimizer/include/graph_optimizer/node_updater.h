@@ -31,7 +31,7 @@ class NodeUpdater {
  public:
   virtual ~NodeUpdater() {}
 
-  virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) = 0;
+  virtual bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) = 0;
 
   virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                            const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
@@ -51,7 +51,7 @@ class NodeUpdater {
 
   virtual boost::optional<localization_common::Time> LatestTimestamp() const = 0;
 
-  virtual bool CanUpdate(const localization_common::Time timestamp) const = 0;
+  virtual bool CanAddNode(const localization_common::Time timestamp) const = 0;
 
   virtual NodeUpdaterType type() const = 0;
 };

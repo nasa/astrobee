@@ -208,7 +208,7 @@ int GraphOptimizer::AddBufferedFactors() {
       auto& factor_to_add = *factor_to_add_it;
       bool valid_factor = true;
       for (const auto& key_info : factor_to_add.key_infos) {
-        if (!UpdateNodes(key_info)) {
+        if (!AddNodes(key_info)) {
           LogError("AddBufferedFactors: Failed to update nodes.");
           valid_factor = false;
           break;
@@ -247,13 +247,13 @@ int GraphOptimizer::AddBufferedFactors() {
   return num_added_factors;
 }
 
-bool GraphOptimizer::UpdateNodes(const KeyInfo& key_info) {
+bool GraphOptimizer::AddNodes(const KeyInfo& key_info) {
   // Do nothing for static nodes
   if (key_info.is_static()) return true;
   for (auto& node_updater : node_updaters_) {
     if (node_updater->type() == key_info.node_updater_type()) return node_updater->Update(key_info.timestamp(), graph_);
   }
-  LogError("UpdateNodes: No node updater found for key info.");
+  LogError("AddNodes: No node updater found for key info.");
   return false;
 }
 

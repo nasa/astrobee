@@ -1,5 +1,7 @@
 - test pose node updater! (AA)
   - rename update to AddNode(D)
+    - rename canupdate to canaddnode
+  - rename nodeupdater to nodeadder???
   - test type (E)
     - change this to be a string!!!!! (D)
       - update graph optimizer!
@@ -16,8 +18,6 @@
           - use oldest/latest/can update as test
           - test slidewindownewoldesttime before and after call!
 
-  - add constructor?? is this needed?
-    - add to base class? template or something?
 - test combined nav state node updater! (AC)
   - popuate imu measurements!
   - test each timestamped node updater function?

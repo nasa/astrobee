@@ -55,7 +55,7 @@ class TimestampedNodeUpdater
 
   // Adds a node using the provided timestamp if possible.
   // TODO(rsousan): Rename this?
-  bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
+  bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // Slides the window, removes nodes older than oldest allowed time.
   // Adds priors to the oldest remaining nodes using their marginalized covariances.
@@ -85,7 +85,7 @@ class TimestampedNodeUpdater
   boost::optional<localization_common::Time> LatestTimestamp() const final;
 
   // Returns whether a node can be added at timestamp or not.
-  bool CanUpdate(const localization_common::Time timestamp) const final;
+  bool CanAddNode(const localization_common::Time timestamp) const final;
 
   const TimestampedNodesType& nodes() const { return *nodes_; }
 
@@ -244,9 +244,9 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Lat
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::CanUpdate(
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::CanAddNode(
   const localization_common::Time timestamp) const {
-  return node_update_model_->CanUpdate(timestamp);
+  return node_update_model_->CanAddNode(timestamp);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
@@ -274,7 +274,7 @@ void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Update(
+bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddNode(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   if (nodes_->Contains(timestamp)) {
     LogDebug(

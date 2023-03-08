@@ -50,7 +50,7 @@ class TimestampedNodeUpdateModel {
                                   gtsam::NonlinearFactorGraph& factors) const = 0;
 
   // Returns whether a node can be added at timestamp or not.
-  virtual bool CanUpdate(const localization_common::Time timestamp) const = 0;
+  virtual bool CanAddNode(const localization_common::Time timestamp) const = 0;
 
  protected:
   // TODO(rsoussan): Add constructor to set these, template on params?

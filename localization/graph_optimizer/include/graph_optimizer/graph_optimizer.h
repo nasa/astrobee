@@ -111,8 +111,8 @@ class GraphOptimizer {
   // Only adds factors that pass ReadyToAddFactors(timestamp) check
   int AddBufferedFactors();
 
-  // Calls Update for each registered NodeUpdater to create required nodes while inserting new factors
-  bool UpdateNodes(const KeyInfo& key_info);
+  // Calls AddNode for each registered NodeUpdater to create required nodes while inserting new factors
+  bool AddNodes(const KeyInfo& key_info);
 
   // Calls DoAction for each registered GraphActionCompleter after inserting new factors
   bool DoGraphAction(FactorsToAdd& factors_to_add);
