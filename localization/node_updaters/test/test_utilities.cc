@@ -27,9 +27,9 @@ PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams() {
   PoseNodeUpdaterParams params;
   params.starting_prior_translation_stddev = 0.1;
   params.starting_prior_quaternion_stddev = 0.1;
+  params.SetStartNoiseModels();
   // Base
   params.start_node = gtsam::Pose3::identity();
-  params.start_noise_models = {gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(0.1, 0.1, 0.1))};
   params.huber_k = 1.345;
   params.add_priors = true;
   params.starting_time = 0;

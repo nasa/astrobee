@@ -71,7 +71,7 @@ class TimestampedNodeUpdater
   // This needs to be specialized
   graph_optimizer::NodeUpdaterType type() const override;
 
-  // Returns the oldest node time after SlideWindow is called.
+  // Returns the oldest node time that will remain after SlideWindow is called.
   // Returns boost::none if no nodes exist.
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
@@ -88,6 +88,8 @@ class TimestampedNodeUpdater
 
   // Returns whether a node can be added at timestamp or not.
   bool CanUpdate(const localization_common::Time timestamp) const final;
+
+  const TimestampedNodesType& nodes() const { return *nodes_; }
 
  protected:
   std::shared_ptr<NodeUpdateModelType> node_update_model_;
@@ -123,7 +125,7 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Tim
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialValuesAndPriors(
   gtsam::NonlinearFactorGraph& factors) {
-  AddInitialValuesAndPriors(params_.start_node, params_.start_noise, params_.starting_time, factors);
+  AddInitialValuesAndPriors(params_.start_node, params_.start_noise_models, params_.starting_time, factors);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>

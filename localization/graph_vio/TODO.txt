@@ -1,8 +1,5 @@
 - test pose node updater! (AA)
-  - test add/remove measurements (AAA)
-    - use oldest/latest timestamp as a test
-    - use can update as a test
-    - slidewindownewoldesttime?
+  - rename addinitialvalues to addinitialnodes
   - test type (AAB)
     - change this to be a string!!!!!
       - update graph optimizer!
@@ -18,6 +15,7 @@
       - Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
           - use old keys as test
           - use oldest/latest/can update as test
+          - slidewindownewoldesttime?
       - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
