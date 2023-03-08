@@ -278,12 +278,14 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
   // 1 element equal
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(timestamp_1);
-    EXPECT_TRUE(lower_and_upper_bound_timestamps.first == boost::none);
+    ASSERT_TRUE(lower_and_upper_bound_timestamps.first != boost::none);
     ASSERT_TRUE(lower_and_upper_bound_timestamps.second != boost::none);
+    EXPECT_EQ(*(lower_and_upper_bound_timestamps.first), timestamp_1);
     EXPECT_EQ(*(lower_and_upper_bound_timestamps.second), timestamp_1);
     const auto lower_and_upper_bound_nodes = timestamped_nodes.LowerAndUpperBoundNodes(timestamp_1);
-    EXPECT_TRUE(lower_and_upper_bound_nodes.first == boost::none);
+    ASSERT_TRUE(lower_and_upper_bound_nodes.first != boost::none);
     ASSERT_TRUE(lower_and_upper_bound_nodes.second != boost::none);
+    EXPECT_EQ(*(lower_and_upper_bound_nodes.first), node_1);
     EXPECT_EQ(*(lower_and_upper_bound_nodes.second), node_1);
   }
 
@@ -316,24 +318,26 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
   // 2 elements equal lower
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(timestamp_2);
-    EXPECT_TRUE(lower_and_upper_bound_timestamps.first == boost::none);
+    ASSERT_TRUE(lower_and_upper_bound_timestamps.first != boost::none);
     ASSERT_TRUE(lower_and_upper_bound_timestamps.second != boost::none);
+    EXPECT_EQ(*(lower_and_upper_bound_timestamps.first), timestamp_2);
     EXPECT_EQ(*(lower_and_upper_bound_timestamps.second), timestamp_2);
     const auto lower_and_upper_bound_nodes = timestamped_nodes.LowerAndUpperBoundNodes(timestamp_2);
-    EXPECT_TRUE(lower_and_upper_bound_nodes.first == boost::none);
+    ASSERT_TRUE(lower_and_upper_bound_nodes.first != boost::none);
     ASSERT_TRUE(lower_and_upper_bound_nodes.second != boost::none);
+    EXPECT_EQ(*(lower_and_upper_bound_nodes.first), node_2);
     EXPECT_EQ(*(lower_and_upper_bound_nodes.second), node_2);
   }
   // 2 elements equal upper
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(timestamp_1);
     ASSERT_TRUE(lower_and_upper_bound_timestamps.first != boost::none);
-    EXPECT_EQ(*(lower_and_upper_bound_timestamps.first), timestamp_2);
+    EXPECT_EQ(*(lower_and_upper_bound_timestamps.first), timestamp_1);
     ASSERT_TRUE(lower_and_upper_bound_timestamps.second != boost::none);
     EXPECT_EQ(*(lower_and_upper_bound_timestamps.second), timestamp_1);
     const auto lower_and_upper_bound_nodes = timestamped_nodes.LowerAndUpperBoundNodes(timestamp_1);
     ASSERT_TRUE(lower_and_upper_bound_nodes.first != boost::none);
-    EXPECT_EQ(*(lower_and_upper_bound_nodes.first), node_2);
+    EXPECT_EQ(*(lower_and_upper_bound_nodes.first), node_1);
     ASSERT_TRUE(lower_and_upper_bound_nodes.second != boost::none);
     EXPECT_EQ(*(lower_and_upper_bound_nodes.second), node_1);
   }

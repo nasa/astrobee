@@ -251,7 +251,8 @@ bool GraphOptimizer::AddNodes(const KeyInfo& key_info) {
   // Do nothing for static nodes
   if (key_info.is_static()) return true;
   for (auto& node_updater : node_updaters_) {
-    if (node_updater->type() == key_info.node_updater_type()) return node_updater->Update(key_info.timestamp(), graph_);
+    if (node_updater->type() == key_info.node_updater_type())
+      return node_updater->AddNode(key_info.timestamp(), graph_);
   }
   LogError("AddNodes: No node updater found for key info.");
   return false;

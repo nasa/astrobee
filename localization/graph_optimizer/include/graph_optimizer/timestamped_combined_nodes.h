@@ -60,11 +60,11 @@ class TimestampedCombinedNodes {
 
   boost::optional<NodeType> LatestNode() const;
 
-  // Return lower and upper bounds.  Equal values are set as upper bound only.
+  // Return lower and upper bounds.  Equal values are set as lower and upper bound.
   std::pair<boost::optional<localization_common::Time>, boost::optional<localization_common::Time>>
   LowerAndUpperBoundTimestamps(const localization_common::Time timestamp) const;
 
-  // Return lower and upper bounds.  Equal values are set as upper bound only.
+  // Return lower and upper bounds.  Equal values are set as lower and upper bound.
   std::pair<boost::optional<NodeType>, boost::optional<NodeType>> LowerAndUpperBoundNodes(
     const localization_common::Time timestamp) const;
 

@@ -64,7 +64,7 @@ class TimestampedSet {
 
   bool WithinBounds(const Time timestamp) const;
 
-  // Return lower and upper bounds.  Equal values are set as upper bound only.
+  // Return lower and upper bounds.  Equal values are set as both lower and upper bound.
   std::pair<boost::optional<TimestampedValue<T>>, boost::optional<TimestampedValue<T>>> LowerAndUpperBound(
     const Time timestamp) const;
 
@@ -175,6 +175,10 @@ TimestampedSet<T>::LowerAndUpperBound(const Time timestamp) const {
   if (upper_bound_it == timestamp_value_map_.cend()) {
     LogDebug("LowerAndUpperBoundTimestamps: No upper bound timestamp exists.");
     return {boost::optional<TimestampedValue<T>>(*(timestamp_value_map_.crbegin())), boost::none};
+  } else if (upper_bound_it->first == timestamp) {
+    // Handle equality, set lower and upper bound to same elements
+    return {boost::optional<TimestampedValue<T>>(*upper_bound_it),
+            boost::optional<TimestampedValue<T>>(*upper_bound_it)};
   } else if (upper_bound_it == timestamp_value_map_.cbegin()) {
     LogDebug("LowerAndUpperBoundTimestamps: No lower bound timestamp exists.");
     return {boost::none, boost::optional<TimestampedValue<T>>(*upper_bound_it)};

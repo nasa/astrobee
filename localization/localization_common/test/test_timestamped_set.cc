@@ -238,8 +238,10 @@ TEST(TimestampedSetTester, LowerAndUpperBounds) {
   // 1 element equal
   {
     const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_1);
-    EXPECT_TRUE(lower_and_upper_bound_values.first == boost::none);
+    ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
     ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+    EXPECT_EQ(lower_and_upper_bound_values.first->value, value_1);
+    EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_1);
     EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
     EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
   }
@@ -267,8 +269,10 @@ TEST(TimestampedSetTester, LowerAndUpperBounds) {
   // 2 elements equal lower
   {
     const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_2);
-    EXPECT_TRUE(lower_and_upper_bound_values.first == boost::none);
+    ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
     ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+    EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
+    EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
     EXPECT_EQ(lower_and_upper_bound_values.second->value, value_2);
     EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_2);
   }
@@ -276,9 +280,9 @@ TEST(TimestampedSetTester, LowerAndUpperBounds) {
   {
     const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_1);
     ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-    EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
-    EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
     ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+    EXPECT_EQ(lower_and_upper_bound_values.first->value, value_1);
+    EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_1);
     EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
     EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
   }
