@@ -33,7 +33,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
  public:
   PoseNodeUpdaterTest() : time_increment_(1.0), start_time_(1.0), num_measurements_(20) {
     params_ = nu::DefaultPoseNodeUpdaterParams();
-    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+    DefaultInitialize();
   }
 
   void SetUp() final {
@@ -52,14 +52,25 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     }
   }
 
+  void RandomInitialize() {
+    params_.start_node = lc::RandomPose();
+    params_.starting_time = lc::RandomDouble();
+    params_.Initialize();
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+    pose_node_updater_->AddInitialNodesAndPriors(factors_);
+  }
+
   void DefaultInitialize() {
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
     pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
   void ZeroInitialize() {
-    const auto initial_pose = gtsam::Pose3::identity();
-    const lc::Time initial_time = 0.0;
-    pose_node_updater_->AddInitialNodesAndPriors(initial_pose, params_.start_noise_models, initial_time, factors_);
+    params_.start_node = gtsam::Pose3::identity();
+    params_.starting_time = 0.0;
+    params_.Initialize();
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+    pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
@@ -77,6 +88,10 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
   EXPECT_FALSE(pose_node_updater_->CanAddNode(10.1));
   constexpr double epsilon = 0.1;
+  // Check initialized measurement
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(params_.starting_time));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time + epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(params_.starting_time - epsilon));
   // Add measurement 0
   pose_node_updater_->AddMeasurement(pose_measurements_[0]);
   EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[0]));
@@ -115,8 +130,6 @@ TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
 
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
   const auto& nodes = pose_node_updater_->nodes();
-  EXPECT_TRUE(nodes.empty());
-  DefaultInitialize();
   // Check node value
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_TRUE(nodes.Contains(params_.starting_time));
@@ -144,11 +157,11 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
 }
 
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
-  const auto& nodes = pose_node_updater_->nodes();
-  EXPECT_TRUE(nodes.empty());
   const auto pose = lc::RandomPose();
   const auto time = lc::RandomDouble();
+  pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
   pose_node_updater_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors_);
+  const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_TRUE(nodes.Contains(time));
   const auto node = nodes.Node(time);

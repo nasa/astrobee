@@ -20,14 +20,31 @@
 
 #include <graph_optimizer/utilities.h>
 #include <localization_common/time.h>
-#include <node_updaters/timestamped_node_updater_params.h>
+#include <localization_common/utilities.h>
+#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <node_updaters/measurement_based_timestamped_node_updater_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 
 #include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-struct PoseNodeUpdaterParams : public TimestampedNodeUpdaterParams<gtsam::Pose3> {
+struct PoseNodeUpdaterParams
+    : public MeasurementBasedTimestampedNodeUpdaterParams<localization_measurements::TimestampedPoseWithCovariance,
+                                                          gtsam::Pose3> {
+  void Initialize() {
+    SetStartNoiseModels();
+    SetStartMeasurement();
+  }
+  void SetStartMeasurement() {
+    const localization_common::PoseCovariance starting_covariance =
+      dynamic_cast<gtsam::noiseModel::Gaussian*>(
+        dynamic_cast<gtsam::noiseModel::Robust*>(start_noise_models[0].get())->noise().get())
+        ->covariance();
+    start_measurement = localization_measurements::TimestampedPoseWithCovariance(
+      localization_common::PoseWithCovariance(localization_common::EigenPose(start_node), starting_covariance),
+      starting_time);
+  }
   void SetStartNoiseModels() {
     const gtsam::Vector6 pose_prior_noise_sigmas(
     (gtsam::Vector(6) << starting_prior_translation_stddev, starting_prior_translation_stddev,

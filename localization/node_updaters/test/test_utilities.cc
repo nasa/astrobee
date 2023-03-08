@@ -22,12 +22,12 @@
 
 namespace node_updaters {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 
 PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams() {
   PoseNodeUpdaterParams params;
   params.starting_prior_translation_stddev = 0.1;
   params.starting_prior_quaternion_stddev = 0.1;
-  params.SetStartNoiseModels();
   // Base
   params.start_node = gtsam::Pose3::identity();
   params.huber_k = 1.345;
@@ -37,6 +37,7 @@ PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams() {
   params.ideal_duration = 5;
   params.min_num_states = 5;
   params.max_num_states = 20;
+  params.Initialize();
   return params;
 }
 }  // namespace node_updaters

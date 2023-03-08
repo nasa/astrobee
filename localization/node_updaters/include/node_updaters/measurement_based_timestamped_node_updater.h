@@ -32,7 +32,7 @@ class MeasurementBasedTimestampedNodeUpdater
 
  public:
   MeasurementBasedTimestampedNodeUpdater(
-    const TimestampedNodeUpdaterParams<NodeType>& params,
+    const MeasurementBasedTimestampedNodeUpdaterParams<MeasurementType, NodeType>& params,
     std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>(),
     std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model =
       std::make_shared<MeasurementBasedNodeUpdateModelType>());
@@ -53,10 +53,13 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
           typename MeasurementBasedNodeUpdateModelType>
 MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,
                                        MeasurementBasedNodeUpdateModelType>::
-  MeasurementBasedTimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
-                                         std::shared_ptr<TimestampedNodesType> nodes,
-                                         std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model)
-    : Base(params, std::move(nodes), std::move(node_update_model)) {}
+  MeasurementBasedTimestampedNodeUpdater(
+    const MeasurementBasedTimestampedNodeUpdaterParams<MeasurementType, NodeType>& params,
+    std::shared_ptr<TimestampedNodesType> nodes, std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model)
+    : Base(params, std::move(nodes), std::move(node_update_model)) {
+  // Store start measurement so future relative estimates can be computed wrt this
+  AddMeasurement(params.start_measurement);
+}
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedNodeUpdateModelType>

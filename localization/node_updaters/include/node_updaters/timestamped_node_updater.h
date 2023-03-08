@@ -133,6 +133,7 @@ void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
   node_update_model_->AddPriors(initial_node, initial_noise, timestamp, *nodes_, factors);
+  // Store initial node as measurement so subsequent measurements can be computed relative to this
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>

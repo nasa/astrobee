@@ -1,5 +1,8 @@
 - test pose node updater! (AA)
   - rename nodeupdater to nodeadder???
+  - set start measurement!
+      - set in default function, set in test in initializations! set in other test!
+      - call this in test initializers! change expect_.. to use param vals! (C)
   - test timestamped node updater functions (A)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
         - test addnode, splitnode, add same node? add invalid node time? 
