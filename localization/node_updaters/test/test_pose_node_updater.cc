@@ -196,7 +196,7 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   AddMeasurements();
   // TODO(rsoussan): add a bunch of measurements, add nodes, make sure correct between factors are added
   // Test adding nodes
-  // ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
 }
 
 // Run all the tests that were declared with TEST()

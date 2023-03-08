@@ -55,7 +55,6 @@ class TimestampedNodeUpdater
                                  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // Adds a node using the provided timestamp if possible.
-  // TODO(rsousan): Rename this?
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // Slides the window, removes nodes older than oldest allowed time.
