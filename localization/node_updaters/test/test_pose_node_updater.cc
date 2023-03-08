@@ -142,7 +142,7 @@ TEST_F(PoseNodeUpdaterTest, AddInitialValuesAndPriors) {
   EXPECT_EQ(factors.size(), 1);
   const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors[0].get());
   ASSERT_TRUE(pose_prior_factor);
-  EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), params_.start_node, 1e-6);
+  EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), pose, 1e-6);
   // Check noise
   const auto robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(pose_prior_factor->noiseModel().get());
   ASSERT_TRUE(robust_noise_model);
