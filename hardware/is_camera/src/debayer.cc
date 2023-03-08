@@ -22,7 +22,7 @@
 #include <pluginlib/class_list_macros.h>
 
 // Shared libraries
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <image_transport/image_transport.h>

@@ -65,7 +65,7 @@
 
 #include "ff_msgs/SetRate.h"
 
-#include "ff_util/ff_names.h"
+#include "ff_common/ff_names.h"
 #include "ff_util/ff_nodelet.h"
 
 // SoraCore Includes

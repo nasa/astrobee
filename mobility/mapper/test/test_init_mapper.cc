@@ -28,7 +28,7 @@
 
 // Required for the test cases
 #include <ff_msgs/FaultState.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // Required for the test framework
 #include <gtest/gtest.h>

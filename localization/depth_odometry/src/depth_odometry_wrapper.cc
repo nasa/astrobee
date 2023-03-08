@@ -21,7 +21,7 @@
 #include <depth_odometry/parameter_reader.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry.h>
 #include <depth_odometry/utilities.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>

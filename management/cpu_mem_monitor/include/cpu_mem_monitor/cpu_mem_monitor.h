@@ -40,7 +40,7 @@
 #include <ff_msgs/CpuStateStamped.h>
 #include <ff_msgs/MemState.h>
 #include <ff_msgs/MemStateStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <cstdint>

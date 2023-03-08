@@ -24,7 +24,7 @@
 // FSW includes
 #include <ff_util/ff_nodelet.h>
 #include <ff_util/ff_flight.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/config_server.h>
 #include <ff_util/config_client.h>
 #include <msg_conversions/msg_conversions.h>

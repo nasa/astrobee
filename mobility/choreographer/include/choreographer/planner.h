@@ -25,7 +25,7 @@
 
 // FSW libraries
 #include <ff_util/ff_nodelet.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_service.h>
 #include <ff_util/ff_flight.h>

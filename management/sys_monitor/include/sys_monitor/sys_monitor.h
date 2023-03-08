@@ -35,8 +35,8 @@
 #include <ff_msgs/FaultState.h>
 #include <ff_msgs/TimeSyncStamped.h>
 #include <ff_msgs/UnloadLoadNodelet.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_faults.h>
-#include <ff_util/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <cmath>

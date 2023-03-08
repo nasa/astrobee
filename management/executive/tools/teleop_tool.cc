@@ -38,7 +38,7 @@
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PerchState.h>
 #include <ff_util/ff_flight.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // Gflags
 DEFINE_bool(dock, false, "Send dock command");
@@ -728,7 +728,7 @@ int main(int argc, char** argv) {
   tf2_ros::TransformListener tf_listener(tf_buffer);
 
   // Initialize publishers
-  cmd_pub = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
+  cmd_pub = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10);
 
   // Initialize subscribers
   ros::Subscriber ack_sub, agent_state_sub, fault_state_sub, dock_sub, move_sub;

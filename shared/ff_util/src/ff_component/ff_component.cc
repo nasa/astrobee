@@ -296,6 +296,10 @@ void FreeFlyerComponent::InitCallback() {
   // was
   if (heartbeat_.faults.size() > 0) {
     PublishHeartbeat();
+    // Start heartbeat timer to ensure the system monitor gets the
+    // initialization fault. Doesn't matter if the node doesn't want to publish
+    // a heartbeat as the system monitor will unload the nodelet.
+    timer_heartbeat_.start();
     return;
   }
 
