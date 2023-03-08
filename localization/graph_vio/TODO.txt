@@ -1,14 +1,12 @@
 - test pose node updater! (AA)
   - rename nodeupdater to nodeadder???
-  - test type (B)
-    - change this to be a string!!!!! (A)
-      - update graph optimizer!
-      - avoids having to set struct in graph optimizer!
-  - test timestamped node updater functions (AAC)
+  - test timestamped node updater functions (A)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
-          - use old keys as test
-          - use oldest/latest/can update as test
-          - slidewindownewoldesttime?
+        - test addnode, splitnode, add same node? add invalid node time? 
+          - add function to add set of measurements!! (AA)
+            - use motion model, move in world frame x,y,z while rotating?
+          - add function to cast factor to between factor! (AB)
+          - add function to get between factor with certain keys from factors vec?
       - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;

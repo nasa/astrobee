@@ -31,15 +31,43 @@ namespace nu = node_updaters;
 
 class PoseNodeUpdaterTest : public ::testing::Test {
  public:
-  PoseNodeUpdaterTest() : time_increment_(1.0 / 125.0), start_time_(time_increment_), num_measurements_(20) {
+  PoseNodeUpdaterTest() : time_increment_(1.0), start_time_(1.0), num_measurements_(20) {
     params_ = nu::DefaultPoseNodeUpdaterParams();
     pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
   }
 
-  void SetUp() final {}
+  void SetUp() final {
+    for (int i = 0; i < num_measurements_; ++i) {
+      const lc::Time time = start_time_ + time_increment_*i;
+      const lc::PoseWithCovariance pose_with_covariance(lc::RandomPoseWithCovariance());
+      const lm::TimestampedPoseWithCovariance pose_measurement(pose_with_covariance, time);
+      pose_measurements_.emplace_back(pose_measurement);
+      timestamps_.emplace_back(time);
+    }
+  }
+
+  void AddMeasurements() {
+    for (const auto& measurement : pose_measurements_) {
+      pose_node_updater_->AddMeasurement(measurement);
+    }
+  }
+
+  void DefaultInitialize() {
+    pose_node_updater_->AddInitialNodesAndPriors(factors_);
+  }
+
+  void ZeroInitialize() {
+    const auto initial_pose = gtsam::Pose3::identity();
+    const lc::Time initial_time = 0.0;
+    pose_node_updater_->AddInitialNodesAndPriors(initial_pose, params_.start_noise_models, initial_time, factors_);
+  }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
   nu::PoseNodeUpdaterParams params_;
+  std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
+  std::vector<lc::Time> timestamps_;
+  gtsam::NonlinearFactorGraph factors_;
+
  private:
   const double time_increment_;
   const lc::Time start_time_;
@@ -48,55 +76,47 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
 TEST_F(PoseNodeUpdaterTest, AddRemoveCanAddNode) {
   EXPECT_FALSE(pose_node_updater_->CanAddNode(10.1));
+  constexpr double epsilon = 0.1;
   // Add measurement 0
-  constexpr lc::Time time_0 = 1.1;
-  const auto pose_0 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_0);
-  pose_node_updater_->AddMeasurement(pose_0);
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_0));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 + 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
+  pose_node_updater_->AddMeasurement(pose_measurements_[0]);
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[0]));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] + epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
   // Add measurement 1
-  constexpr lc::Time time_1 = 2.2;
-  const auto pose_1 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_1);
-  pose_node_updater_->AddMeasurement(pose_1);
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_1));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode((time_0 + time_1)/2.0));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_1 + 0.1));
+  pose_node_updater_->AddMeasurement(pose_measurements_[1]);
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[1]));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode((timestamps_[0] + timestamps_[1])/2.0));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[1] + epsilon));
   // Add measurement 2
-  constexpr lc::Time time_2 = 3.3;
-  const auto pose_2 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_2);
-  pose_node_updater_->AddMeasurement(pose_2);
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_1 + 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_2 + 0.1));
+  pose_node_updater_->AddMeasurement(pose_measurements_[2]);
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2]));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[1] + epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[2] + epsilon));
   // Add measurement 3
-  constexpr lc::Time time_3 = 4.45;
-  const auto pose_3 = lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time_3);
-  pose_node_updater_->AddMeasurement(pose_3);
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_3));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_1 + 0.1));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2 + 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0 - 0.1));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_3 + 0.1));
+  pose_node_updater_->AddMeasurement(pose_measurements_[3]);
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[3]));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[1] + epsilon));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2] + epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - epsilon));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[3] + epsilon));
 
   // Remove measurements 0 and 1
-  pose_node_updater_->RemoveMeasurements(time_1 + 0.1);
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_0));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_1));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_2 + 0.1));
-  EXPECT_TRUE(pose_node_updater_->CanAddNode(time_3));
-  EXPECT_FALSE(pose_node_updater_->CanAddNode(time_3 + 0.1));
+  pose_node_updater_->RemoveMeasurements(timestamps_[1] + epsilon);
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0]));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[1]));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2]));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[2] + epsilon));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[3]));
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[3] + epsilon));
 }
 
 
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_TRUE(nodes.empty());
-  gtsam::NonlinearFactorGraph factors;
-  pose_node_updater_->AddInitialNodesAndPriors(factors);
+  DefaultInitialize();
   // Check node value
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_TRUE(nodes.Contains(params_.starting_time));
@@ -104,8 +124,8 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
   ASSERT_TRUE(node != boost::none);
   EXPECT_MATRIX_NEAR(node->matrix(), params_.start_node, 1e-6);
   // Check factor
-  EXPECT_EQ(factors.size(), 1);
-  const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors[0].get());
+  EXPECT_EQ(factors_.size(), 1);
+  const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get());
   ASSERT_TRUE(pose_prior_factor);
   EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), params_.start_node, 1e-6);
   // Check noise
@@ -126,18 +146,17 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_TRUE(nodes.empty());
-  gtsam::NonlinearFactorGraph factors;
   const auto pose = lc::RandomPose();
   const auto time = lc::RandomDouble();
-  pose_node_updater_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors);
+  pose_node_updater_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors_);
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_TRUE(nodes.Contains(time));
   const auto node = nodes.Node(time);
   ASSERT_TRUE(node != boost::none);
   EXPECT_MATRIX_NEAR(node->matrix(), pose, 1e-6);
   // Check factor
-  EXPECT_EQ(factors.size(), 1);
-  const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors[0].get());
+  EXPECT_EQ(factors_.size(), 1);
+  const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get());
   ASSERT_TRUE(pose_prior_factor);
   EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), pose, 1e-6);
   // Check noise
@@ -153,6 +172,16 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
     dynamic_cast<gtsam::noiseModel::Gaussian*>(expected_robust_noise_model->noise().get());
   ASSERT_TRUE(expected_noise_model);
   EXPECT_MATRIX_NEAR(noise_model->covariance(), expected_noise_model->covariance(), 1e-6);
+}
+
+TEST_F(PoseNodeUpdaterTest, AddNode) {
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_TRUE(nodes.empty());
+  ZeroInitialize();
+  AddMeasurements();
+  // TODO(rsoussan): add a bunch of measurements, add nodes, make sure correct between factors are added
+  // Test adding nodes
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
 }
 
 // Run all the tests that were declared with TEST()
