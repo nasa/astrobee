@@ -68,7 +68,7 @@ void GraphVIO::InitializeNodeUpdaters() {
   params_.combined_nav_state_node_updater.global_N_body_start = global_N_body_start;
   combined_nav_state_node_updater_.reset(new nu::CombinedNavStateNodeUpdater(params_.combined_nav_state_node_updater,
                                                                              latest_imu_integrator_, shared_values()));
-  combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());
+  combined_nav_state_node_updater_->AddInitialNodesAndPriors(graph_factors());
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphVIOStats*>(graph_stats())

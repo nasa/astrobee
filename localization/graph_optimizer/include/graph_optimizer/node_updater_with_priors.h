@@ -29,7 +29,7 @@ class NodeUpdaterWithPriors : public NodeUpdater {
  public:
   virtual ~NodeUpdaterWithPriors() {}
 
-  virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
+  virtual void AddInitialNodesAndPriors(const NodeType& node, const NoiseType& noise,
                                          const localization_common::Time timestamp,
                                          gtsam::NonlinearFactorGraph& graph) = 0;
 };

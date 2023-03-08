@@ -95,11 +95,11 @@ TEST_F(PoseNodeUpdaterTest, AddRemoveCanUpdate) {
 }
 
 
-TEST_F(PoseNodeUpdaterTest, AddInitialValuesAndPriorsUsingParams) {
+TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_TRUE(nodes.empty());
   gtsam::NonlinearFactorGraph factors;
-  pose_node_updater_->AddInitialValuesAndPriors(factors);
+  pose_node_updater_->AddInitialNodesAndPriors(factors);
   // Check node value
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_TRUE(nodes.Contains(params_.starting_time));
@@ -126,13 +126,13 @@ TEST_F(PoseNodeUpdaterTest, AddInitialValuesAndPriorsUsingParams) {
   EXPECT_MATRIX_NEAR(noise_model->covariance(), expected_noise_model->covariance(), 1e-6);
 }
 
-TEST_F(PoseNodeUpdaterTest, AddInitialValuesAndPriors) {
+TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_TRUE(nodes.empty());
   gtsam::NonlinearFactorGraph factors;
   const auto pose = lc::RandomPose();
   const auto time = lc::RandomDouble();
-  pose_node_updater_->AddInitialValuesAndPriors(pose, params_.start_noise_models, time, factors);
+  pose_node_updater_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors);
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_TRUE(nodes.Contains(time));
   const auto node = nodes.Node(time);

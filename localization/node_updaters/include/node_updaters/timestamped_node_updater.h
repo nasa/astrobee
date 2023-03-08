@@ -47,11 +47,11 @@ class TimestampedNodeUpdater
 
   // Adds initial nodes and priors using default values.
   // TODO(rsoussan): Rename this from Values to Nodes.
-  void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
+  void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
   // Adds initial nodes and priors using provided noise values and timestamp.
   // TODO(rsoussan): Rename this from Values to Nodes.
-  void AddInitialValuesAndPriors(const NodeType& initial_node,
+  void AddInitialNodesAndPriors(const NodeType& initial_node,
                                  const std::vector<gtsam::SharedNoiseModel>& initial_noise,
                                  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
@@ -123,13 +123,13 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Tim
     : params_(params), nodes_(nodes), node_update_model_(node_update_model) {}
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialValuesAndPriors(
+void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialNodesAndPriors(
   gtsam::NonlinearFactorGraph& factors) {
-  AddInitialValuesAndPriors(params_.start_node, params_.start_noise_models, params_.starting_time, factors);
+  AddInitialNodesAndPriors(params_.start_node, params_.start_noise_models, params_.starting_time, factors);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialValuesAndPriors(
+void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialNodesAndPriors(
   const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise,
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
