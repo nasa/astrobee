@@ -1,9 +1,5 @@
 - test pose node updater! (AA)
-  - rename addinitialvalues to addinitialnodes (A)
-  - construct nodes by default for timestamped nodes! (B)
-    - update test
-  - construct timestamped nodes by default for timestamped node updater! (C)
-    - update test
+  - rename update to AddNode(D)
   - test type (E)
     - change this to be a string!!!!! (D)
       - update graph optimizer!

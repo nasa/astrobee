@@ -38,19 +38,17 @@ class TimestampedNodeUpdater
   using Base = graph_optimizer::NodeUpdaterWithPriors<NodeType, gtsam::SharedNoiseModel>;
 
  public:
-  // TODO(rsoussan): Construct nodes and node update model internally?
-  TimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
-                         std::shared_ptr<TimestampedNodesType> nodes,
-                         std::shared_ptr<NodeUpdateModelType> node_update_model);
+  TimestampedNodeUpdater(
+    const TimestampedNodeUpdaterParams<NodeType>& params,
+    std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>(),
+    std::shared_ptr<NodeUpdateModelType> node_update_model = std::make_shared<NodeUpdateModelType>());
   TimestampedNodeUpdater() = default;
   virtual ~TimestampedNodeUpdater() = default;
 
   // Adds initial nodes and priors using default values.
-  // TODO(rsoussan): Rename this from Values to Nodes.
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
   // Adds initial nodes and priors using provided noise values and timestamp.
-  // TODO(rsoussan): Rename this from Values to Nodes.
   void AddInitialNodesAndPriors(const NodeType& initial_node,
                                  const std::vector<gtsam::SharedNoiseModel>& initial_noise,
                                  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;

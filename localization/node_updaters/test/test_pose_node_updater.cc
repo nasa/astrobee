@@ -33,10 +33,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
  public:
   PoseNodeUpdaterTest() : time_increment_(1.0 / 125.0), start_time_(time_increment_), num_measurements_(20) {
     params_ = nu::DefaultPoseNodeUpdaterParams();
-std::shared_ptr<go::Nodes> nodes(new go::Nodes());
-std::shared_ptr<go::TimestampedNodes<gtsam::Pose3>> timestamped_nodes(new go::TimestampedNodes<gtsam::Pose3>(nodes));
-    std::shared_ptr<nu::PoseNodeUpdateModel> node_update_model(new nu::PoseNodeUpdateModel());
-    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, timestamped_nodes, node_update_model));
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
   }
 
   void SetUp() final {}

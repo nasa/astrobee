@@ -31,9 +31,11 @@ class MeasurementBasedTimestampedNodeUpdater
   using Base = TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedNodeUpdateModelType>;
 
  public:
-  MeasurementBasedTimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
-                                         std::shared_ptr<TimestampedNodesType> nodes,
-                                         std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model);
+  MeasurementBasedTimestampedNodeUpdater(
+    const TimestampedNodeUpdaterParams<NodeType>& params,
+    std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>(),
+    std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model =
+      std::make_shared<MeasurementBasedNodeUpdateModelType>());
   void AddMeasurement(const MeasurementType& measurement);
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
 

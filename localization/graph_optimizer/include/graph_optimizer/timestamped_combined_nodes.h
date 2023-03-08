@@ -36,9 +36,7 @@ namespace graph_optimizer {
 template <typename NodeType, bool CombinedType = true>
 class TimestampedCombinedNodes {
  public:
-  explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes);
-  // For serialization only
-  TimestampedCombinedNodes() {}
+  explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes = std::make_shared<Nodes>());
 
   gtsam::KeyVector Add(const localization_common::Time timestamp, const NodeType& node);
 
