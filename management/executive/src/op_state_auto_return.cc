@@ -19,7 +19,8 @@
 #include "executive/op_state_auto_return.h"
 
 namespace executive {
-OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
+OpState* OpStateAutoReturn::HandleCmd(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
   // Check if command is accepted in every op state and if so, execute it
   OpState::HandleCmd(cmd, completed, successful);
@@ -62,7 +63,9 @@ OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   } else {
     std::string err_msg = "Command " + cmd->cmd_name +
                                       " not accepted in op state auto return.";
-    AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+    AckCmd(cmd->cmd_id,
+           ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
+           err_msg);
   }
   return this;
 }

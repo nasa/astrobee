@@ -44,7 +44,7 @@ namespace internal {
 // a function that takes plan command and generates a DDS-based command
 // if the conversion is successful, return true. otherwise... don't.
 using GenerateFn = bool (*)(const jsonloader::Command * plan_cmd,
-                            ff_msgs::CommandStamped * dds_cmd);
+                            ff_msgs::msg::CommandStamped * dds_cmd);
 
 struct CommandInfo {
   std::string name;

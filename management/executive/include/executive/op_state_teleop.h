@@ -28,7 +28,7 @@ class OpStateTeleop : public OpState {
  public:
   ~OpStateTeleop() {}
 
-  OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
+  OpState* HandleCmd(ff_msgs::CommandStamped::SharedPtr const cmd);
 
   OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
                         std::string const& result_response,
@@ -42,7 +42,7 @@ class OpStateTeleop : public OpState {
  private:
   // allow creation only by repo
   friend class OpStateRepo;
-  ff_msgs::CommandStampedPtr move_cmd_;
+  ff_msgs::msg::CommandStamped::SharedPtr move_cmd_;
 };
 }  // namespace executive
 #endif  // EXECUTIVE_OP_STATE_TELEOP_H_

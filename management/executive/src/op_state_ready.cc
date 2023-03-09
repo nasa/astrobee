@@ -21,7 +21,8 @@
 #include <ff_util/config_client.h>
 
 namespace executive {
-OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
+OpState* OpStateReady::HandleCmd(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   std::string err_msg;
   bool completed = false, successful = false;
 
@@ -122,16 +123,18 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
     // Make sure we are stopped, not docked or perched, before moving
-    if ((exec_->GetMobilityState().state == ff_msgs::MobilityState::STOPPING &&
+    if ((exec_->GetMobilityState().state ==
+                                      ff_msgs::msg::MobilityState::STOPPING &&
         exec_->GetMobilityState().sub_state == 0) ||
-        exec_->GetMobilityState().state == ff_msgs::MobilityState::DRIFTING) {
+        exec_->GetMobilityState().state ==
+                                      ff_msgs::msg::MobilityState::DRIFTING) {
       if (!exec_->FillMotionGoal(MOVE, cmd)) {
         return this;
       }
 
       if (!exec_->ConfigureMobility(false, err_msg)) {
         AckCmd(cmd->cmd_id,
-               ff_msgs::AckCompletedStatus::EXEC_FAILED,
+               ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                err_msg);
         return this;
       }
@@ -141,7 +144,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
     } else {
       AckCmd(cmd->cmd_id,
-             ff_msgs::AckCompletedStatus::EXEC_FAILED,
+             ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
              "Cannot move when in ready and not stopped.");
       return this;
     }
@@ -184,14 +187,16 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in operating state " +
         "ready.";
-    AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
-    ROS_WARN("Executive: %s", err_msg.c_str());
+    AckCmd(cmd->cmd_id,
+           ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
+           err_msg);
+    FF_WARN("Executive: %s", err_msg.c_str());
   }
   return this;
 }
 
 OpState* OpStateReady::HandleGuestScienceAck(
-                                      ff_msgs::AckStampedConstPtr const& ack) {
+                              ff_msgs::msg::AckStamped::SharedPtr const& ack) {
   // There is a small possibility that the ready state will have to handle a
   // guest science ack for a plan. This is possible if the plan state starts a
   // guest science command, a fault occurs so we transition to the fault state,
@@ -199,9 +204,10 @@ OpState* OpStateReady::HandleGuestScienceAck(
   // science command completes.
   // If the command is not part of a plan, it gets acked in the executive
   // If the command is not done, don't do anything.
-  if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
+  if (ack->completed_status.status == ff_msgs::msg::AckCompletedStatus::NOT) {
     return this;
-  } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
+  } else if (ack->completed_status.status !=
+                                        ff_msgs::msg::AckCompletedStatus::OK) {
     SetPlanStatus(false, ack->message);
   } else {
     SetPlanStatus(true);

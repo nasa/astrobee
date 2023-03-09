@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(executive)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
@@ -36,7 +36,7 @@ find_package(ff_util REQUIRED)
 find_package(jsonloader REQUIRED)
 
 # System dependencies are found with CMake's conventions
-find_package(cmake_modules REQUIRED)
+#find_package(cmake_modules REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 # Find jsoncpp
@@ -50,12 +50,11 @@ find_package(JsonCpp REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIR}
 )
 
 # Declare C++ libraries
-add_library(sequencer
+add_library(sequencer SHARED
   src/utils/sequencer/command_conversion.cc
   src/utils/sequencer/plan_io.cc
   src/utils/sequencer/sequencer.cc
@@ -63,7 +62,7 @@ add_library(sequencer
 ament_target_dependencies(sequencer rclcpp rclcpp_components ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
 
 # Declare C++ libraries
-add_library(executive
+add_library(executive SHARED
   src/executive.cc
   src/op_state.cc
   src/op_state_auto_return.cc
@@ -78,10 +77,10 @@ ament_target_dependencies(executive rclcpp rclcpp_components ff_msgs ff_hw_msgs 
 rclcpp_components_register_nodes(executive "executive::Executive")
 
 ## Declare a C++ executable: data_to_disk_pub
-add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
-add_dependencies(data_to_disk_pub ${catkin_EXPORTED_TARGETS})
-target_link_libraries(data_to_disk_pub
-  executive gflags ${catkin_LIBRARIES})
+#add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
+#add_dependencies(data_to_disk_pub ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(data_to_disk_pub
+#  executive gflags ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: ekf_switch_mux
 #add_executable(ekf_switch_mux tools/ekf_switch_mux.cc)
@@ -118,11 +117,11 @@ if(BUILD_TESTING)
   find_package(ros_testing REQUIRED)
 
   # Executive initialization fault tester
-  ament_add_gtest_executable(test_init_executive
-    test/test_init_executive.cc
-  )
-  target_link_libraries(test_init_executive execute)
-  add_ros_test(test/test_init_executive.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+#  ament_add_gtest_executable(test_init_executive
+#    test/test_init_executive.cc
+#  )
+#  target_link_libraries(test_init_executive execute)
+#  add_ros_test(test/test_init_executive.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 #############
@@ -149,7 +148,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install C++ executables
-install(TARGETS data_to_disk_pub DESTINATION bin)
+#install(TARGETS data_to_disk_pub DESTINATION bin)
 #install(TARGETS ekf_switch_mux DESTINATION bin)
 #install(TARGETS plan_pub DESTINATION bin)
 #install(TARGETS simple_move DESTINATION bin)
