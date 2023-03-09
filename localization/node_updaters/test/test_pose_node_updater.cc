@@ -33,6 +33,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
  public:
   PoseNodeUpdaterTest() : time_increment_(1.0), start_time_(1.0), num_measurements_(20) {
     params_ = nu::DefaultPoseNodeUpdaterParams();
+    node_update_model_params_.huber_k = 1.345;
   }
 
   void SetUp() final {
@@ -55,12 +56,12 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     params_.start_node = lc::RandomPose();
     params_.starting_time = lc::RandomDouble();
     params_.Initialize();
-    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
     pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
   void DefaultInitialize() {
-    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
     pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
@@ -68,12 +69,13 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     params_.start_node = gtsam::Pose3::identity();
     params_.starting_time = 0.0;
     params_.Initialize();
-    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+    pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
     pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
   nu::PoseNodeUpdaterParams params_;
+  nu::TimestampedNodeUpdateModelParams node_update_model_params_;
   std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
   std::vector<lc::Time> timestamps_;
   gtsam::NonlinearFactorGraph factors_;
@@ -161,7 +163,7 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
   const auto pose = lc::RandomPose();
   const auto time = lc::RandomDouble();
-  pose_node_updater_.reset(new nu::PoseNodeUpdater(params_));
+  pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
   pose_node_updater_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors_);
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);

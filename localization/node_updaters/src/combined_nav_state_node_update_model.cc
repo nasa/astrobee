@@ -28,7 +28,7 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 CombinedNavStateNodeUpdateModel::CombinedNavStateNodeUpdateModel(const CombinedNavStateNodeUpdateModelParams& params)
-    : imu_integrator_(params) {}
+    : Base(params), imu_integrator_(params.imu_integrator) {}
 
 void CombinedNavStateNodeUpdateModel::AddPriors(const lc::CombinedNavState& node,
                                                 const std::vector<gtsam::SharedNoiseModel>& noise_models,

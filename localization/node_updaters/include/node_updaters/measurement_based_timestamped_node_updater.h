@@ -25,17 +25,16 @@ namespace node_updaters {
 
 // Timestamped node updater that uses provided measurements to create nodes.
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
-          typename MeasurementBasedNodeUpdateModelType>
+          typename MeasurementBasedTimestampedNodeUpdateModelType>
 class MeasurementBasedTimestampedNodeUpdater
-    : public TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedNodeUpdateModelType> {
-  using Base = TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedNodeUpdateModelType>;
+    : public TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedTimestampedNodeUpdateModelType> {
+  using Base = TimestampedNodeUpdater<NodeType, TimestampedNodesType, MeasurementBasedTimestampedNodeUpdateModelType>;
 
  public:
   MeasurementBasedTimestampedNodeUpdater(
     const MeasurementBasedTimestampedNodeUpdaterParams<MeasurementType, NodeType>& params,
-    std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>(),
-    std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model =
-      std::make_shared<MeasurementBasedNodeUpdateModelType>());
+    const typename MeasurementBasedTimestampedNodeUpdateModelType::Params& node_update_model_params,
+    std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
   void AddMeasurement(const MeasurementType& measurement);
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
 
@@ -50,31 +49,32 @@ class MeasurementBasedTimestampedNodeUpdater
 
 // Implementation
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
-          typename MeasurementBasedNodeUpdateModelType>
+          typename MeasurementBasedTimestampedNodeUpdateModelType>
 MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,
-                                       MeasurementBasedNodeUpdateModelType>::
+                                       MeasurementBasedTimestampedNodeUpdateModelType>::
   MeasurementBasedTimestampedNodeUpdater(
     const MeasurementBasedTimestampedNodeUpdaterParams<MeasurementType, NodeType>& params,
-    std::shared_ptr<TimestampedNodesType> nodes, std::shared_ptr<MeasurementBasedNodeUpdateModelType> node_update_model)
-    : Base(params, std::move(nodes), std::move(node_update_model)) {
+    const typename MeasurementBasedTimestampedNodeUpdateModelType::Params& node_update_model_params,
+    std::shared_ptr<TimestampedNodesType> nodes)
+    : Base(params, node_update_model_params, std::move(nodes)) {
   // Store start measurement so future relative estimates can be computed wrt this
   AddMeasurement(params.start_measurement);
 }
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
-          typename MeasurementBasedNodeUpdateModelType>
-void MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,
-                                            MeasurementBasedNodeUpdateModelType>::AddMeasurement(const MeasurementType&
-                                                                                                   measurement) {
-  this->node_update_model_->AddMeasurement(measurement);
+          typename MeasurementBasedTimestampedNodeUpdateModelType>
+void MeasurementBasedTimestampedNodeUpdater<
+  MeasurementType, NodeType, TimestampedNodesType,
+  MeasurementBasedTimestampedNodeUpdateModelType>::AddMeasurement(const MeasurementType& measurement) {
+  this->node_update_model_.AddMeasurement(measurement);
 }
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
-          typename MeasurementBasedNodeUpdateModelType>
-void MeasurementBasedTimestampedNodeUpdater<
-  MeasurementType, NodeType, TimestampedNodesType,
-  MeasurementBasedNodeUpdateModelType>::RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
-  this->node_update_model_->RemoveMeasurements(oldest_allowed_time);
+          typename MeasurementBasedTimestampedNodeUpdateModelType>
+void MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, TimestampedNodesType,
+                                            MeasurementBasedTimestampedNodeUpdateModelType>::
+  RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
+  this->node_update_model_.RemoveMeasurements(oldest_allowed_time);
 }
 }  // namespace node_updaters
 

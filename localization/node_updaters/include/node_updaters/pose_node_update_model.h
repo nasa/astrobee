@@ -37,6 +37,10 @@ class PoseNodeUpdateModel : public BetweenFactorMeasurementBasedTimestampedNodeU
   using NodesType = graph_optimizer::TimestampedNodes<gtsam::Pose3>;
 
  public:
+  using Params = TimestampedNodeUpdateModelParams;
+
+  explicit PoseNodeUpdateModel(const Params& params) : Base(params) {}
+
   gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const final;
   boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;

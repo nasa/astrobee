@@ -40,8 +40,9 @@ class CombinedNavStateNodeUpdateModel
   using NodeType = localization_common::CombinedNavState;
   using NodesType = graph_optimizer::CombinedNavStateNodes;
   using MeasurementType = localization_measurements::ImuMeasurement;
+  using Params = CombinedNavStateNodeUpdateModelParams;
   using Base = MeasurementBasedTimestampedNodeUpdateModel<MeasurementType, NodeType, NodesType>;
-  explicit CombinedNavStateNodeUpdateModel(const CombinedNavStateNodeUpdateModelParams& params);
+  explicit CombinedNavStateNodeUpdateModel(const Params& params);
   void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
                  const localization_common::Time timestamp, const NodesType& nodes,
                  gtsam::NonlinearFactorGraph& factors) const final;

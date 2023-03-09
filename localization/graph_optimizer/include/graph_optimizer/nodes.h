@@ -27,6 +27,9 @@
 #include <boost/optional.hpp>
 
 namespace graph_optimizer {
+// Wrapper class around GTSAM values.
+// Use one instance of this per graph, and pass the same Nodes shared_pointer
+// to any other specialized Nodes classes used.
 class Nodes {
  public:
   explicit Nodes(std::shared_ptr<gtsam::Values> values = std::make_shared<gtsam::Values>());

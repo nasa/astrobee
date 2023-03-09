@@ -33,6 +33,7 @@ namespace node_updaters {
 template <typename NodeType, typename NodesType>
 class TimestampedNodeUpdateModel {
  public:
+  explicit TimestampedNodeUpdateModel(const TimestampedNodeUpdateModelParams& params) : params_(params) {}
   virtual ~TimestampedNodeUpdateModel() = default;
   // Adds prior factors for a given node using provided noise models.
   virtual void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,

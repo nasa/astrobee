@@ -34,6 +34,10 @@
 
 namespace graph_optimizer {
 template <typename NodeType, bool CombinedType = true>
+// Container for timestamped nodes with multiple types per node.
+// Enables adding multiple types together with a single Node in a NodeUpdater. For example,
+// an IMU-based node might contain both accelerometer and gyro biases, along with a pose and velocity.
+// For nodes with a single type, use TimestampedNodes, which is a specialization of TimestampedCombinedNodes.
 class TimestampedCombinedNodes {
  public:
   explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes = std::make_shared<Nodes>());

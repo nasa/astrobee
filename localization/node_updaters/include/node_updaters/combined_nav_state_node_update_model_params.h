@@ -18,18 +18,23 @@
 #ifndef NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATE_MODEL_PARAMS_H_
 #define NODE_UPDATERS_COMBINED_NAV_STATE_NODE_UPDATE_MODEL_PARAMS_H_
 
+#include <node_updaters/timestamped_node_update_model_params.h>
+
 #include <imu_integration/imu_integrator_params.h>
 
 #include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-struct CombinedNavStateNodeUpdateModelParams : public imu_integration::ImuIntegratorParams {
+struct CombinedNavStateNodeUpdateModelParams  : public TimestampedNodeUpdateModelParams {
+  imu_integration::ImuIntegratorParams imu_integrator;
+
  private:
   // Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(imu_integration::ImuIntegratorParams);
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(TimestampedNodeUpdateModelParams);
+    ar& BOOST_SERIALIZATION_NVP(imu_integrator);
   }
 };
 }  // namespace node_updaters

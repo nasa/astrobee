@@ -39,10 +39,9 @@ class TimestampedNodeUpdater
   using Base = graph_optimizer::NodeUpdaterWithPriors<NodeType, gtsam::SharedNoiseModel>;
 
  public:
-  TimestampedNodeUpdater(
-    const TimestampedNodeUpdaterParams<NodeType>& params,
-    std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>(),
-    std::shared_ptr<NodeUpdateModelType> node_update_model = std::make_shared<NodeUpdateModelType>());
+  TimestampedNodeUpdater(const TimestampedNodeUpdaterParams<NodeType>& params,
+                         const typename NodeUpdateModelType::Params& node_update_model_params,
+                         std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
   TimestampedNodeUpdater() = default;
   virtual ~TimestampedNodeUpdater() = default;
 
@@ -90,7 +89,7 @@ class TimestampedNodeUpdater
   const TimestampedNodesType& nodes() const { return *nodes_; }
 
  protected:
-  std::shared_ptr<NodeUpdateModelType> node_update_model_;
+  NodeUpdateModelType node_update_model_;
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
@@ -105,10 +104,10 @@ class TimestampedNodeUpdater
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
     ar& BOOST_SERIALIZATION_NVP(nodes_);
+    ar& BOOST_SERIALIZATION_NVP(node_update_model_);
     ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
-  // TODO(rsoussan): do these need to be shared ptrs?
   std::shared_ptr<TimestampedNodesType> nodes_;
   TimestampedNodeUpdaterParams<NodeType> params_;
 };
@@ -116,9 +115,9 @@ class TimestampedNodeUpdater
 // Implementation
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::TimestampedNodeUpdater(
-  const TimestampedNodeUpdaterParams<NodeType>& params, std::shared_ptr<TimestampedNodesType> nodes,
-  std::shared_ptr<NodeUpdateModelType> node_update_model)
-    : params_(params), nodes_(nodes), node_update_model_(node_update_model) {}
+  const TimestampedNodeUpdaterParams<NodeType>& params,
+  const typename NodeUpdateModelType::Params& node_update_model_params, std::shared_ptr<TimestampedNodesType> nodes)
+    : params_(params), nodes_(nodes), node_update_model_(node_update_model_params) {}
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::AddInitialNodesAndPriors(
@@ -131,7 +130,7 @@ void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
   const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise,
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   nodes_->Add(timestamp, initial_node);
-  node_update_model_->AddPriors(initial_node, initial_noise, timestamp, *nodes_, factors);
+  node_update_model_.AddPriors(initial_node, initial_noise, timestamp, *nodes_, factors);
   // Store initial node as measurement so subsequent measurements can be computed relative to this
 }
 
@@ -165,10 +164,10 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
           gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
         prior_noise_models.emplace_back(prior_noise);
       }
-      node_update_model_->AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, *nodes_, factors);
+      node_update_model_.AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, *nodes_, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior noise
-      node_update_model_->AddPriors(*oldest_node, params_.start_noise_models, *oldest_timestamp, *nodes_, factors);
+      node_update_model_.AddPriors(*oldest_node, params_.start_noise_models, *oldest_timestamp, *nodes_, factors);
     }
   }
 
@@ -246,7 +245,7 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Lat
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::CanAddNode(
   const localization_common::Time timestamp) const {
-  return node_update_model_->CanAddNode(timestamp);
+  return node_update_model_.CanAddNode(timestamp);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
@@ -306,7 +305,7 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
     LogError("AddLatestNodeAndRelativeFactor: Failed to get latest timestamp.");
     return false;
   }
-  return node_update_model_->AddNodesAndRelativeFactors(*timestamp_a, timestamp, *nodes_, factors);
+  return node_update_model_.AddNodesAndRelativeFactors(*timestamp_a, timestamp, *nodes_, factors);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
@@ -333,11 +332,11 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
       "old factors.");
     return false;
   }
-  if (!node_update_model_->AddNodesAndRelativeFactors(lower_bound_time, timestamp, *nodes_, factors)) {
+  if (!node_update_model_.AddNodesAndRelativeFactors(lower_bound_time, timestamp, *nodes_, factors)) {
     LogError("SplitOldRelativeFactor: Failed to add first relative node and factor.");
     return false;
   }
-  if (!node_update_model_->AddRelativeFactors(timestamp, upper_bound_time, *nodes_, factors)) {
+  if (!node_update_model_.AddRelativeFactors(timestamp, upper_bound_time, *nodes_, factors)) {
     LogError("SplitOldRelativeFactor: Failed to add second relative factor.");
     return false;
   }
