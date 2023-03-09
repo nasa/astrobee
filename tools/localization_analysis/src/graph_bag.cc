@@ -128,13 +128,14 @@ void GraphBag::Run() {
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
+      SaveMsg(*vl_msg, TOPIC_LOCALIZATION_ML_FEATURES,
+                results_bag_);
       if (gl::ValidVLMsg(*vl_msg, params_.sparse_mapping_min_num_landmarks)) {
         const gtsam::Pose3 sparse_mapping_global_T_body =
           lc::PoseFromMsgWithExtrinsics(vl_msg->pose, params_.body_T_nav_cam.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
         SaveMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE,
-                results_bag_);
-      }
+              }
     }
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
