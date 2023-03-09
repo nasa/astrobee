@@ -31,7 +31,7 @@ find_package(rclcpp REQUIRED)
 find_package(ff_common REQUIRED)
 
 ## System dependencies are found with CMake's conventions
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Luajit20 REQUIRED)
 
 ###########

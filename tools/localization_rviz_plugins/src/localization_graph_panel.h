@@ -21,7 +21,7 @@
 
 #ifndef Q_MOC_RUN
 #include <ff_msgs/LocalizationGraph.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <graph_localizer/graph_localizer.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <ros/ros.h>

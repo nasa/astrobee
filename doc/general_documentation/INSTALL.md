@@ -2,17 +2,9 @@
 
 # Usage instructions for non-NASA users
 
-Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04),
-[Ubuntu 18.04](http://releases.ubuntu.com/18.04) or [Ubuntu 20.04](http://releases.ubuntu.com/20.04)
-(preferred) on a host machine, and make sure that you can checkout and build code.
+Make sure your system is up-to-date and:
 
     sudo apt-get install build-essential git
-
-*Note: You will need 4 GBs of RAM to compile the software. If you don't have
-that much RAM available, please use swap space.*
-
-*Note: Please ensure you install the 64-bit version of Ubuntu. We do not
-support running Astrobee Robot Software on 32-bit systems.*
 
 ## Machine setup
 
@@ -136,8 +128,16 @@ rebuilt, and not the entire code base.
     catkin build
     popd
 
-If you configured your virtual machine with more than the baseline resources,
-you can adjust the number of threads (eg. -j4) to speed up the build.
+Note: In low-memory systems, it is common to run out of memory while trying to compile
+ARS, which triggers a compilation error mentioning "arm-linux-gnueabihf-g++: internal 
+compiler error: Killed (program cc1plus)". A contributing factor is that
+catkin build by default runs multiple jobs in parallel based on the number of cores
+available in your environment, and all of these jobs draw on the same memory resources.
+If you run into this compile error, try compiling again with the -j1 option to restrict
+catkin to running one job at a time.
+
+For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
+
 
 ## Cross Compiling
 

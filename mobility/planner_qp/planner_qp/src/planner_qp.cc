@@ -102,7 +102,7 @@ class Planner : public planner::PlannerImplementation {
     nh_ = nh;
 
     viz_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-        "/mob/planner_qp/safe_flight_cooridor", 5, true);
+        "/mob/planner_qp/safe_flight_cooridor", 5);
 
     // Setup a timer to animate
     timer_a_ =

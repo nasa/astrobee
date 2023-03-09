@@ -28,8 +28,9 @@ import os
 import shutil
 
 import numpy as np
-import pico_utils as pico
 import rosbag
+
+import pico_utils as pico
 
 
 class PrintEveryK:

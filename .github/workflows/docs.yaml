@@ -4,7 +4,7 @@ name: Build and Push Documentation to gh-pages Branch
 
 on:
   push:
-    branches: ['develop']
+    branches: ['develop', 'master', 'ros2']
   workflow_dispatch:
 
 jobs:
@@ -13,34 +13,84 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: repo/
-    - name: Checkout gh-pages
-      uses: actions/checkout@v2
-      with:
-        path: docs/
-        ref: gh-pages
+
     - name: Build docker image with dependencies + build docs
       run: docker build repo -f repo/scripts/docker/documentation.Dockerfile
                                  -t astrobee:documentation
 
-    - name: Replace old documentation with new
+    - name: Checkout gh-pages
+      uses: actions/checkout@v3
+      with:
+        path: gh-pages/
+        ref: gh-pages
+
+    - name: Create/replace documentation for the current branch
       run: |
-        (cd docs && git rm -r "*")
-        cp repo/doc/documentation.html docs/index.html
-        cp repo/doc/documentation.html docs/documentation.html
-        cp repo/doc/README.md docs/README.md
-        docker cp $(docker create --rm astrobee:documentation):/repo/doc/html docs/html
+        set -x
+        export BRANCH=$(cd repo && git branch --show-current)
+
+        # Make gh-pages checkout an orphan commit so we don't keep useless history.
+        (cd gh-pages && git checkout --orphan fresh)
+
+        # Install generated docs to a version folder based on branch name.
+        (cd gh-pages && git rm -rf --ignore-unmatch "v/$BRANCH")
+        mkdir -p gh-pages/v/
+        docker cp $(docker create --rm astrobee:documentation):/repo/doc/html "gh-pages/v/$BRANCH"
+        (cd gh-pages && git add --all "v/$BRANCH")
+
+        if [ "$BRANCH" == "develop" ]; then
+          # Update the few files at root level (mostly redirects)
+          (cd gh-pages && git rm -f --ignore-unmatch index.html documentation.html README.md 404.html .nojekyll)
+          cp repo/doc/documentation.html gh-pages/index.html
+          cp repo/doc/documentation.html gh-pages/documentation.html
+          cp repo/doc/README.md gh-pages/
+          cp repo/doc/404.html gh-pages/
+          touch gh-pages/.nojekyll
+          cp repo/doc/style/doc_version_select.js gh-pages/
+          (cd gh-pages && git add index.html documentation.html README.md 404.html .nojekyll doc_version_select.js)
+
+          # Set up HTML redirect to generated docs in the legacy path to
+          # avoid broken URL references
+          (cd gh-pages && git rm -rf --ignore-unmatch html)
+          python repo/doc/scripts/copy_html_link.py -v gh-pages/v/develop gh-pages/html
+          (cd gh-pages && git add --all html)
+        fi
+
+        # If the commit is tagged, copy generated docs to a version
+        # folder based on the tag. Copy rather than symlink so the tag
+        # folder will remain valid later when the branch folder is
+        # updated. Note: If you want to manually remove an obsolete docs
+        # version, use git to check out the gh-pages branch, remove the
+        # relevant folder, and push back to origin. Also, this action
+        # only triggers when the branch is pushed, and it detects only
+        # the tags that are present at that time. So you should either
+        # (1) push the branch and its tag in the same push call
+        # (easiest), or (2) manually trigger the CI workflow to run on
+        # the relevant branch again, after it has been tagged.
+        (cd repo && git fetch origin --tags)
+        for tag in $(cd repo && git tag --points-at HEAD | xargs echo); do
+          (cd gh-pages && git rm -rf --ignore-unmatch "v/$tag")
+          cp -r "gh-pages/v/$BRANCH" "gh-pages/v/$tag"
+          (cd gh-pages && git add --all "v/$tag")
+        done
+
+        # Auto-detect which docs versions are available. The script here
+        # has additional logic to ensure that develop, master, and ros2
+        # are at the beginning of the list if they are present.
+        all_versions=$(ls "gh-pages/v/" | sort | perl -e '@dirs = <STDIN>; chomp @dirs; %dirs_hash = map { $_ => 1 } @dirs; @head = grep { exists($dirs_hash{$_}) } ("develop", "master", "ros2"); %head_hash = map { $_ => 1 } @head; @tail = grep { !exists($head_hash{$_}) } @dirs; @versions = (@head, @tail); print "var allVersions = [\"", join("\", \"",@versions), "\"];\n";')
+        # Replace versions line specified in doc_version_select.js.
+        perl -i -ple "\$_ = '$all_versions' if /^var allVersions/;" gh-pages/doc_version_select.js
+        (cd gh-pages && git add doc_version_select.js)
 
     - name: Commit and Push
       run: |
-        cd docs
-        git add index.html documentation.html README.md
-        git add --all html/
-        EMAIL=`git show -s --format='%ae' HEAD`
-        NAME=`git show -s --format='%an' HEAD`
+        cd gh-pages
+        EMAIL=`git show -s --format='%ae' gh-pages`
+        NAME=`git show -s --format='%an' gh-pages`
         git config user.email "$EMAIL"
         git config user.name "$NAME"
         { git commit -m "Automatic update for $GITHUB_SHA." || true; }
-        git push origin gh-pages
+        git push -f origin HEAD:gh-pages

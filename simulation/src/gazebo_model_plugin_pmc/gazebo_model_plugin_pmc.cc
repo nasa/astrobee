@@ -198,9 +198,8 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // Telemetry publisher
     pub_telemetry_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::PmcTelemetry, TOPIC_HARDWARE_PMC_TELEMETRY, 1);
 
-    // State publisher as a latched topic
+    // State publisher
     pub_state_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::PmcState, TOPIC_HARDWARE_PMC_STATE, 1);
-    // TOPIC_HARDWARE_PMC_STATE, 1, true);  //TODO(@mgouveia): latched topic
 
     // Subscibe to PMC commands
     sub_command_ = FF_CREATE_SUBSCRIBER(nh, ff_hw_msgs::PmcCommand,
