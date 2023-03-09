@@ -30,24 +30,42 @@ ROS_VERSION=$(shell rosversion -d)
 
 # Find script executables
 ifeq (,${REWRITE_TYPES})
-  REWRITE_TYPES = $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
+  REWRITE_TYPES := $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error could not find path to rosbag_rewrite_types.py)
+  endif
 endif
 ifeq (,${ROSBAG_VERIFY})
-  ROSBAG_VERIFY = $(shell catkin_find --first-only bag_processing scripts/rosbag_verify.py)
+  ROSBAG_VERIFY := $(shell catkin_find --first-only bag_processing scripts/rosbag_verify.py)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error could not find path to rosbag_verify.py)
+  endif
 endif
 ifeq (,${ROSBAG_DEBAYER})
-  ROSBAG_DEBAYER = $(shell catkin_find --first-only bag_processing scripts/rosbag_debayer.py)
+  ROSBAG_DEBAYER := $(shell catkin_find --first-only bag_processing scripts/rosbag_debayer.py)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error could not find path to rosbag_debayer.py)
+  endif
 endif
 ifeq (,${ROSBAG_SPLIT_DEPTH})
-  ROSBAG_SPLIT_DEPTH = $(shell catkin_find --first-only pico_driver scripts/pico_split_extended.py)
+  ROSBAG_SPLIT_DEPTH := $(shell catkin_find --first-only pico_driver scripts/pico_split_extended.py)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error could not find path to pico_split_extended.py)
+  endif
 endif
 ifeq (,${ROSBAG_FILTER})
-  ROSBAG_FILTER = $(shell catkin_find --first-only bag_processing scripts/rosbag_topic_filter.py)
+  ROSBAG_FILTER := $(shell catkin_find --first-only bag_processing scripts/rosbag_topic_filter.py)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error could not find path to rosbag_topic_filter.py)
+  endif
 endif
 
 # Find rosbag migration definitions
 ifeq (,${FF_MSGS_BMR})
-  FF_MSGS_BMR = $(shell catkin_find --first-only ff_msgs bmr)
+  FF_MSGS_BMR := $(shell catkin_find --first-only ff_msgs bmr)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error could not find path to ff_msgs package bmr folder)
+  endif
 endif
 BMR = $(sort $(wildcard ${FF_MSGS_BMR}/*.bmr) $(wildcard ${FF_MSGS_BMR}/${ROS_VERSION}/*.bmr))
 REWRITE_TYPES_ARGS += -r ${FF_MSGS_BMR}/rosbag_rewrite_types_rules.json
