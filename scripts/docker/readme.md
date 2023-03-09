@@ -50,13 +50,15 @@ You can start by selecting `View->Terminal` in the VSCode graphical interface. T
 
 ## Enable x-forwarding from the Dev Container
 
-In a cmd line in your system run:
+In a cmd line in your host environment (not in the docker container) run:
 ```bash
 xhost local:docker
 ```
 this needs to be done everytime you restart vscode, and enables the screen forwarding such that you can open graphical guis like rviz.
 
 ## Building + testing the code
+
+This runs inside the Docker container:
 
 ```bash
 cd $ASTROBEE_WS
@@ -65,6 +67,13 @@ colcon build --symlink-install
 colcon test
 coldon test-result --verbose
 ```
+
+For testing, you can alternatively use the script to produces better debug output if there is a failed test:
+```bash
+./scripts/run_tests.sh
+```
+
+For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
 
 (Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
 

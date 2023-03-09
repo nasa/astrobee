@@ -18,7 +18,7 @@
 
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <depth_odometry/parameter_reader.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 

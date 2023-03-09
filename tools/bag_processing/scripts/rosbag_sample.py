@@ -33,8 +33,9 @@ import os
 
 import genpy
 import rosbag
-import rosbag_rewrite_types as rrt
 import roslib
+
+import rosbag_rewrite_types as rrt
 
 
 def sample_bags(inbag_paths, outbag_path, rules_files, verbose=False):

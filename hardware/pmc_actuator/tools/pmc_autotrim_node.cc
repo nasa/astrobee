@@ -31,7 +31,7 @@
 #include <ff_hw_msgs/PmcCommand.h>
 
 // Flight software names
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // STL includes
 #include <map>

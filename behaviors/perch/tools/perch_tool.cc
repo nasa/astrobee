@@ -24,7 +24,7 @@
 #include <ros/ros.h>
 
 // FSW includes
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_action.h>
 
 // Action

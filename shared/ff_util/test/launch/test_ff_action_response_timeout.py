@@ -25,6 +25,7 @@ import launch_testing.markers
 import pytest
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
+
 from utilities.utilities import *
 
 
@@ -63,7 +64,7 @@ def generate_test_description():
             launch.actions.DeclareLaunchArgument(
                 name="test_binary_dir",
                 description="Binary directory of package containing test executables",
-                default_value="/src/astrobee/build/ff_util"
+                default_value="/src/astrobee/build/ff_util",
             ),
             test_ff_action_response_timeout,
             # Tell launch when to start the test
@@ -76,7 +77,9 @@ def generate_test_description():
 
 class TestTerminatingProcessStops(unittest.TestCase):
     def test_proc_terminates(self, proc_info, test_ff_action_response_timeout):
-        proc_info.assertWaitForShutdown(process=test_ff_action_response_timeout, timeout=30)
+        proc_info.assertWaitForShutdown(
+            process=test_ff_action_response_timeout, timeout=30
+        )
 
 
 # These tests are run after the processes in generate_test_description() have shutdown.

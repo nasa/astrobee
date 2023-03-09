@@ -28,7 +28,7 @@
 
 #include <config_reader/config_reader.h>
 #include <ff_hw_msgs/SetFlashlight.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <flashlight/flashlight.h>

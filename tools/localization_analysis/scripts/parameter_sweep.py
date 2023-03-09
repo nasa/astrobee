@@ -32,10 +32,11 @@ import math
 import multiprocessing
 import os
 
+import numpy as np
+
 import average_results
 import config_creator
 import localization_common.utilities as lu
-import numpy as np
 import parameter_sweep_utilities
 import plot_parameter_sweep_results
 
