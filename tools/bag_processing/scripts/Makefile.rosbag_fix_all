@@ -30,40 +30,40 @@ ROS_VERSION=$(shell rosversion -d)
 
 # Find script executables
 ifeq (,${REWRITE_TYPES})
-  REWRITE_TYPES := $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py)
-  ifneq ($(.SHELLSTATUS),0)
+  REWRITE_TYPES := $(shell catkin_find --first-only bag_processing scripts/rosbag_rewrite_types.py || echo FAIL)
+  ifneq (,$(findstring FAIL,$(REWRITE_TYPES)))
     $(error could not find path to rosbag_rewrite_types.py)
   endif
 endif
 ifeq (,${ROSBAG_VERIFY})
-  ROSBAG_VERIFY := $(shell catkin_find --first-only bag_processing scripts/rosbag_verify.py)
-  ifneq ($(.SHELLSTATUS),0)
+  ROSBAG_VERIFY := $(shell catkin_find --first-only bag_processing scripts/rosbag_verify.py || echo FAIL)
+  ifneq (,$(findstring FAIL,$(ROSBAG_VERIFY)))
     $(error could not find path to rosbag_verify.py)
   endif
 endif
 ifeq (,${ROSBAG_DEBAYER})
-  ROSBAG_DEBAYER := $(shell catkin_find --first-only bag_processing scripts/rosbag_debayer.py)
-  ifneq ($(.SHELLSTATUS),0)
+  ROSBAG_DEBAYER := $(shell catkin_find --first-only bag_processing scripts/rosbag_debayer.py || echo FAIL)
+  ifneq (,$(findstring FAIL,$(ROSBAG_DEBAYER)))
     $(error could not find path to rosbag_debayer.py)
   endif
 endif
 ifeq (,${ROSBAG_SPLIT_DEPTH})
-  ROSBAG_SPLIT_DEPTH := $(shell catkin_find --first-only pico_driver scripts/pico_split_extended.py)
-  ifneq ($(.SHELLSTATUS),0)
+  ROSBAG_SPLIT_DEPTH := $(shell catkin_find --first-only pico_driver scripts/pico_split_extended.py || echo FAIL)
+  ifneq (,$(findstring FAIL,$(ROSBAG_SPLIT_DEPTH)))
     $(error could not find path to pico_split_extended.py)
   endif
 endif
 ifeq (,${ROSBAG_FILTER})
-  ROSBAG_FILTER := $(shell catkin_find --first-only bag_processing scripts/rosbag_topic_filter.py)
-  ifneq ($(.SHELLSTATUS),0)
+  ROSBAG_FILTER := $(shell catkin_find --first-only bag_processing scripts/rosbag_topic_filter.py || echo FAIL)
+  ifneq (,$(findstring FAIL,$(ROSBAG_FILTER)))
     $(error could not find path to rosbag_topic_filter.py)
   endif
 endif
 
 # Find rosbag migration definitions
 ifeq (,${FF_MSGS_BMR})
-  FF_MSGS_BMR := $(shell catkin_find --first-only ff_msgs bmr)
-  ifneq ($(.SHELLSTATUS),0)
+  FF_MSGS_BMR := $(shell catkin_find --first-only ff_msgs bmr || echo FAIL)
+  ifneq (,$(findstring FAIL,$(FF_MSGS_BMR)))
     $(error could not find path to ff_msgs package bmr folder)
   endif
 endif
