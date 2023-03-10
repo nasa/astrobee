@@ -202,8 +202,8 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   // TODO(rsoussan): add a bunch of measurements, add nodes, make sure correct between factors are added
   // Add 1st node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
   {
-    EXPECT_EQ(nodes.size(), 2);
     EXPECT_TRUE(nodes.Contains(timestamps_[0]));
     const auto node = nodes.Node(timestamps_[0]);
     ASSERT_TRUE(node != boost::none);
@@ -211,8 +211,8 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   }
   // Add 2nd node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
+  EXPECT_EQ(nodes.size(), 3);
   {
-    EXPECT_EQ(nodes.size(), 3);
     EXPECT_TRUE(nodes.Contains(timestamps_[0]));
     const auto node = nodes.Node(timestamps_[0]);
     ASSERT_TRUE(node != boost::none);
@@ -223,6 +223,95 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
     const auto node = nodes.Node(timestamps_[1]);
     ASSERT_TRUE(node != boost::none);
     EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[1].pose_with_covariance.pose, 1e-6);
+  }
+  // Add 3rd node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
+  EXPECT_EQ(nodes.size(), 4);
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[0]));
+    const auto node = nodes.Node(timestamps_[0]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[0].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[1]));
+    const auto node = nodes.Node(timestamps_[1]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[1].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[2]));
+    const auto node = nodes.Node(timestamps_[2]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[2].pose_with_covariance.pose, 1e-6);
+  }
+  // Add 4th node in between 3rd and 4th measurement
+  const lc::Time timestamp_2_3 = (timestamps_[2] + timestamps_[3])/2.0;
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_2_3, factors_));
+  EXPECT_EQ(nodes.size(), 5);
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[0]));
+    const auto node = nodes.Node(timestamps_[0]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[0].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[1]));
+    const auto node = nodes.Node(timestamps_[1]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[1].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[2]));
+    const auto node = nodes.Node(timestamps_[2]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[2].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamp_2_3));
+    const auto node = nodes.Node(timestamp_2_3);
+    ASSERT_TRUE(node != boost::none);
+    const auto expected_pose = lc::Interpolate(pose_measurements_[2].pose_with_covariance.pose,
+                                               pose_measurements_[3].pose_with_covariance.pose, 0.5);
+    EXPECT_MATRIX_NEAR(node->matrix(), expected_pose, 1e-6);
+  }
+  // Add 5th node in between 2nd and 3rd measurement
+  const lc::Time timestamp_1_2 = (timestamps_[1] + timestamps_[2])/2.0;
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_1_2, factors_));
+  EXPECT_EQ(nodes.size(), 6);
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[0]));
+    const auto node = nodes.Node(timestamps_[0]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[0].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[1]));
+    const auto node = nodes.Node(timestamps_[1]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[1].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamps_[2]));
+    const auto node = nodes.Node(timestamps_[2]);
+    ASSERT_TRUE(node != boost::none);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[2].pose_with_covariance.pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamp_2_3));
+    const auto node = nodes.Node(timestamp_2_3);
+    ASSERT_TRUE(node != boost::none);
+    const auto expected_pose = lc::Interpolate(pose_measurements_[2].pose_with_covariance.pose,
+                                               pose_measurements_[3].pose_with_covariance.pose, 0.5);
+    EXPECT_MATRIX_NEAR(node->matrix(), expected_pose, 1e-6);
+  }
+  {
+    EXPECT_TRUE(nodes.Contains(timestamp_1_2));
+    const auto node = nodes.Node(timestamp_1_2);
+    ASSERT_TRUE(node != boost::none);
+    const auto expected_pose = lc::Interpolate(pose_measurements_[1].pose_with_covariance.pose,
+                                               pose_measurements_[2].pose_with_covariance.pose, 0.5);
+    EXPECT_MATRIX_NEAR(node->matrix(), expected_pose, 1e-6);
   }
 }
 
