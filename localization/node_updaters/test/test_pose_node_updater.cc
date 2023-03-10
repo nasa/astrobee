@@ -77,6 +77,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
+  const Eigen::Isometry3d& pose(const int index) { return pose_measurements_[index].pose_with_covariance.pose; }
+
   void EXPECT_SAME_NODE(const lc::Time timestamp, const Eigen::Isometry3d& pose) {
     const auto& nodes = pose_node_updater_->nodes();
     EXPECT_TRUE(nodes.Contains(timestamp));
@@ -90,7 +92,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_NODE(const int index) {
-    EXPECT_SAME_NODE(timestamps_[index], pose_measurements_[index].pose_with_covariance.pose);
+    EXPECT_SAME_NODE(timestamps_[index], pose(index));
   }
 
   void EXPECT_SAME_NODE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
@@ -111,8 +113,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   void EXPECT_SAME_BETWEEN_FACTOR(const int index) {
     const auto& pose_a =
-      index > 0 ? pose_measurements_[index - 1].pose_with_covariance.pose : lc::EigenPose(params_.start_node);
-    const auto& pose_b = pose_measurements_[index].pose_with_covariance.pose;
+      index > 0 ? pose(index - 1): lc::EigenPose(params_.start_node);
+    const auto& pose_b = pose(index);
     const auto relative_pose = pose_a.inverse()*pose_b;
     EXPECT_SAME_BETWEEN_FACTOR(index, relative_pose);
   }
@@ -130,13 +132,15 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   Eigen::Isometry3d InterpolatedPose(const int index_a, const int index_b, const double alpha) {
     const lc::Time timestamp_a_b = timestamps_[index_a]*alpha + timestamps_[index_b]*(1.0 - alpha);
-    return lc::Interpolate(pose_measurements_[index_a].pose_with_covariance.pose,
-                                               pose_measurements_[index_b].pose_with_covariance.pose, alpha);
+    return lc::Interpolate(pose(index_a),
+                                               pose(index_b), alpha);
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
-    const auto expected_pose = InterpolatedPose(index_a, index_b, alpha);
-    EXPECT_SAME_BETWEEN_FACTOR(index_b, expected_pose);
+    const auto& pose_a = pose(index_a);
+    const auto pose_interpolated = InterpolatedPose(index_a, index_b, alpha);
+    const Eigen::Isometry3d relative_pose = pose_a.inverse()*pose_interpolated;
+    EXPECT_SAME_BETWEEN_FACTOR(index_b, relative_pose);
   }
 
   template <typename FactorPtrType>
