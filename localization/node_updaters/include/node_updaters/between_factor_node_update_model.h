@@ -157,6 +157,7 @@ bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFac
   return true;
 }
 
+// TODO(rsoussan): Make this a templated free function on Factor type?
 template <typename NodeType, typename NodeUpdateModelType>
 bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::RemoveRelativeFactors(
   const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
