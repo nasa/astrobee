@@ -22,6 +22,7 @@
 #include <graph_optimizer/timestamped_nodes.h>
 #include <node_updaters/timestamped_node_update_model.h>
 #include <node_updaters/measurement_based_timestamped_node_update_model.h>
+#include <node_updaters/utilities.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
@@ -157,41 +158,11 @@ bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFac
   return true;
 }
 
-// TODO(rsoussan): Make this a templated free function on Factor type?
 template <typename NodeType, typename NodeUpdateModelType>
 bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::RemoveRelativeFactors(
   const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
   gtsam::NonlinearFactorGraph& factors) const {
-  const auto keys_a = nodes.Keys(timestamp_a);
-  if (keys_a.empty()) {
-    LogError("RemoveRelativeFactors: Failed to get keys for timestamp_a.");
-    return false;
-  }
-
-  const auto keys_b = nodes.Keys(timestamp_b);
-  if (keys_b.empty()) {
-    LogError("RemoveRelativeFactors: Failed to get keys for timestamp_b.");
-    return false;
-  }
-
-  gtsam::KeyVector combined_keys = keys_a;
-  combined_keys.insert(combined_keys.cend(), keys_b.cbegin(), keys_b.cend());
-
-  // Between factors take one key per node, so look for these in the between factor
-    for (auto factor_it = factors.begin(); factor_it != factors.end(); ++factor_it) {
-      if (!dynamic_cast<gtsam::BetweenFactor<NodeType>*>(factor_it->get())) continue;
-      bool contains_both_keys = true;
-      for (const auto& key : combined_keys) {
-        if ((*factor_it)->find(key) == std::end((*factor_it)->keys())) {
-          contains_both_keys = false;
-        }
-      }
-      if (contains_both_keys) {
-        factors.erase(factor_it);
-        return true;
-      }
-    }
-  return false;
+  return  RemoveRelativeFactor<gtsam::BetweenFactor<NodeType>>(timestamp_a, timestamp_b, nodes, factors);;
 }
 
 // Specialization helpers

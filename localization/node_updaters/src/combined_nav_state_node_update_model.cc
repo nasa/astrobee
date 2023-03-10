@@ -18,6 +18,7 @@
 
 #include <imu_integration/utilities.h>
 #include <node_updaters/combined_nav_state_node_update_model.h>
+#include <node_updaters/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/BetweenFactor.h>
@@ -142,34 +143,6 @@ bool CombinedNavStateNodeUpdateModel::RemoveRelativeFactors(const localization_c
                                                             const localization_common::Time timestamp_b,
                                                             const NodesType& nodes,
                                                             gtsam::NonlinearFactorGraph& factors) const {
-  const auto keys_a = nodes.Keys(timestamp_a);
-  if (keys_a.empty()) {
-    LogError("RemoveRelativeFactors: Failed to get keys for timestamp_a.");
-    return false;
-  }
-
-  const auto keys_b = nodes.Keys(timestamp_b);
-  if (keys_b.empty()) {
-    LogError("RemoveRelativeFactors: Failed to get keys for timestamp_b.");
-    return false;
-  }
-
-  gtsam::KeyVector combined_keys = keys_a;
-  combined_keys.insert(combined_keys.cend(), keys_b.cbegin(), keys_b.cend());
-
-    for (auto factor_it = factors.begin(); factor_it != factors.end(); ++factor_it) {
-      if (!dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get())) continue;
-      bool contains_both_keys = true;
-      for (const auto& key : combined_keys) {
-        if ((*factor_it)->find(key) == std::end((*factor_it)->keys())) {
-          contains_both_keys = false;
-        }
-      }
-      if (contains_both_keys) {
-        factors.erase(factor_it);
-        return true;
-      }
-    }
-  return false;
+  return RemoveRelativeFactor<gtsam::CombinedImuFactor, NodesType>(timestamp_a, timestamp_b, nodes, factors);
 }
 }  // namespace node_updaters

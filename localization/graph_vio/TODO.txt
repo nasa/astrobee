@@ -1,17 +1,15 @@
 - test pose node updater! (AA)
   - rename nodeupdater to nodeadder???
   - test timestamped node updater functions (A)
-      - fix split node!
-        - pass two timestamps, find relative factor in between these timestamps!!!
-            - how??????
-              - add function in node_update_model -> removerelativefactors(timestamp_a, timestamp_b) (AAAAA)
-                      - implement for cominbed update model (AA)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
-        - test addnode, splitnode, add same node? add invalid node time? 
-          - add function to add set of measurements!! (AA)
-            - use motion model, move in world frame x,y,z while rotating?
-          - add function to cast factor to between factor! (AB)
-          - add function to get between factor with certain keys from factors vec?
+        - test add same node? add invalid node time? (AA) 
+          - add function to cast factor to between factor! (AC)
+          - add function to get between factor with certain keys from factors vec? (AB)
+            - use this also for remove relative factors?
+            - add tempalted version of removerelativefactors? (AAA)
+              - add removefactors! pass key vec! call this from removerel factors with combined key vec!
+                - add these in graph optimizer utilities??
+                    - template on node type and factor type!
       - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
