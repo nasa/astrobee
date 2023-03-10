@@ -102,7 +102,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   void EXPECT_SAME_NODE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     const auto expected_pose = InterpolatedPose(index_a, index_b, alpha);
-    const lc::Time timestamp_a_b = timestamps_[index_a]*alpha + timestamps_[index_b]*(1.0 - alpha);
+    const lc::Time timestamp_a = index_a == -1 ? params_.starting_time : timestamps_[index_a];
+    const lc::Time timestamp_a_b = timestamp_a*alpha + timestamps_[index_b]*(1.0 - alpha);
     EXPECT_SAME_NODE(timestamp_a_b, expected_pose);
   }
 
@@ -136,9 +137,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   Eigen::Isometry3d InterpolatedPose(const int index_a, const int index_b, const double alpha) {
-    const lc::Time timestamp_a = index_a == -1 ? params_.starting_time : timestamps_[index_a];
-    const lc::Time timestamp_a_b = timestamp_a*alpha + timestamps_[index_b]*(1.0 - alpha);
-    return lc::Interpolate(pose(index_a),
+    const auto& pose_a = index_a == -1 ? lc::EigenPose(params_.start_node) : pose(index_a);
+    return lc::Interpolate(pose_a,
                                                pose(index_b), alpha);
   }
 
@@ -151,21 +151,12 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   template <typename FactorPtrType>
   void EXPECT_SAME_NOISE(const FactorPtrType factor, const lc::PoseCovariance& covariance) {
-    const auto robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(factor->noiseModel().get());
-    ASSERT_TRUE(robust_noise_model);
-    const auto noise_model = dynamic_cast<gtsam::noiseModel::Gaussian*>(robust_noise_model->noise().get());
-    ASSERT_TRUE(noise_model);
-    EXPECT_MATRIX_NEAR(noise_model->covariance(), covariance, 1e-6);
+    EXPECT_MATRIX_NEAR(nu::Covariance(factor->noiseModel()), covariance, 1e-6);
   }
 
   template <typename FactorPtrType>
   void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::SharedNoiseModel noise) {
-    const auto expected_robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(noise.get());
-    ASSERT_TRUE(expected_robust_noise_model);
-    const auto expected_noise_model =
-      dynamic_cast<gtsam::noiseModel::Gaussian*>(expected_robust_noise_model->noise().get());
-    ASSERT_TRUE(expected_noise_model);
-    EXPECT_SAME_NOISE(factor, expected_noise_model->covariance());
+    EXPECT_SAME_NOISE(factor, nu::Covariance(noise));
   }
 
   void EXPECT_SAME_BETWEEN_NOISE(const int index, const lc::PoseCovariance& covariance) {
@@ -177,9 +168,9 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   void EXPECT_SAME_BETWEEN_NOISE(const int index) {
     // TODO(rsoussan): Change this when pose interpolation covariance is updated, use both covariances to compute
     // relative covariance
-    const lc::PoseCovariance pose_covariance =
-      index == -1 ? lc::PoseCovariance(nu::Covariance(params_.start_noise_models[0])) : covariance(index);
-    EXPECT_SAME_BETWEEN_NOISE(index, pose_covariance);
+    if (index == -1) EXPECT_SAME_PRIOR_NOISE(0, params_.start_noise_models[0]);
+    else
+      EXPECT_SAME_BETWEEN_NOISE(index, covariance(index));
   }
 
   void EXPECT_SAME_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
