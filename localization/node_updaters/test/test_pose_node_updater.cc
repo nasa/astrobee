@@ -100,6 +100,36 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     EXPECT_SAME_NODE(timestamp_a_b, expected_pose);
   }
 
+  void EXPECT_SAME_PRIOR_FACTOR(const int index, const Eigen::Isometry3d& pose) {
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[index].get());
+    ASSERT_TRUE(pose_prior_factor);
+    EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), pose, 1e-6);
+  }
+
+  void EXPECT_SAME_PRIOR_FACTOR(const int index, const gtsam::Pose3& pose) {
+    return EXPECT_SAME_PRIOR_FACTOR(index, lc::EigenPose(pose));
+  }
+
+  void EXPECT_SAME_PRIOR_NOISE(const int index, const gtsam::SharedNoiseModel& noise) {
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[index].get());
+    EXPECT_SAME_NOISE(pose_prior_factor, noise);
+  }
+
+  template <typename FactorPtrType>
+  void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::SharedNoiseModel noise) {
+    const auto robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(factor->noiseModel().get());
+    ASSERT_TRUE(robust_noise_model);
+    const auto noise_model = dynamic_cast<gtsam::noiseModel::Gaussian*>(robust_noise_model->noise().get());
+    ASSERT_TRUE(noise_model);
+
+    const auto expected_robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(noise.get());
+    ASSERT_TRUE(expected_robust_noise_model);
+    const auto expected_noise_model =
+      dynamic_cast<gtsam::noiseModel::Gaussian*>(expected_robust_noise_model->noise().get());
+    ASSERT_TRUE(expected_noise_model);
+    EXPECT_MATRIX_NEAR(noise_model->covariance(), expected_noise_model->covariance(), 1e-6);
+  }
+
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
   nu::PoseNodeUpdaterParams params_;
   nu::TimestampedNodeUpdateModelParams node_update_model_params_;
@@ -165,22 +195,9 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
   EXPECT_SAME_NODE(params_.starting_time, params_.start_node);
   // Check factor
   EXPECT_EQ(factors_.size(), 1);
-  const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get());
-  ASSERT_TRUE(pose_prior_factor);
-  EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), params_.start_node, 1e-6);
+  EXPECT_SAME_PRIOR_FACTOR(0, params_.start_node);
   // Check noise
-  const auto robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(pose_prior_factor->noiseModel().get());
-  ASSERT_TRUE(robust_noise_model);
-  const auto noise_model = dynamic_cast<gtsam::noiseModel::Gaussian*>(robust_noise_model->noise().get());
-  ASSERT_TRUE(noise_model);
-
-  const auto expected_robust_noise_model =
-    dynamic_cast<gtsam::noiseModel::Robust*>(params_.start_noise_models[0].get());
-  ASSERT_TRUE(expected_robust_noise_model);
-  const auto expected_noise_model =
-    dynamic_cast<gtsam::noiseModel::Gaussian*>(expected_robust_noise_model->noise().get());
-  ASSERT_TRUE(expected_noise_model);
-  EXPECT_MATRIX_NEAR(noise_model->covariance(), expected_noise_model->covariance(), 1e-6);
+  EXPECT_SAME_PRIOR_NOISE(0, params_.start_noise_models[0]);
 }
 
 TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
@@ -193,22 +210,9 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
   EXPECT_SAME_NODE(time, pose);
   // Check factor
   EXPECT_EQ(factors_.size(), 1);
-  const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get());
-  ASSERT_TRUE(pose_prior_factor);
-  EXPECT_MATRIX_NEAR(pose_prior_factor->prior(), pose, 1e-6);
+  EXPECT_SAME_PRIOR_FACTOR(0, pose);
   // Check noise
-  const auto robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(pose_prior_factor->noiseModel().get());
-  ASSERT_TRUE(robust_noise_model);
-  const auto noise_model = dynamic_cast<gtsam::noiseModel::Gaussian*>(robust_noise_model->noise().get());
-  ASSERT_TRUE(noise_model);
-
-  const auto expected_robust_noise_model =
-    dynamic_cast<gtsam::noiseModel::Robust*>(params_.start_noise_models[0].get());
-  ASSERT_TRUE(expected_robust_noise_model);
-  const auto expected_noise_model =
-    dynamic_cast<gtsam::noiseModel::Gaussian*>(expected_robust_noise_model->noise().get());
-  ASSERT_TRUE(expected_noise_model);
-  EXPECT_MATRIX_NEAR(noise_model->covariance(), expected_noise_model->covariance(), 1e-6);
+  EXPECT_SAME_PRIOR_NOISE(0, params_.start_noise_models[0]);
 }
 
 TEST_F(PoseNodeUpdaterTest, AddNode) {
