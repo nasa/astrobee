@@ -94,9 +94,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_NODE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
+    const auto expected_pose = InterpolatedPose(index_a, index_b, alpha);
     const lc::Time timestamp_a_b = timestamps_[index_a]*alpha + timestamps_[index_b]*(1.0 - alpha);
-    const auto expected_pose = lc::Interpolate(pose_measurements_[index_a].pose_with_covariance.pose,
-                                               pose_measurements_[index_b].pose_with_covariance.pose, alpha);
     EXPECT_SAME_NODE(timestamp_a_b, expected_pose);
   }
 
@@ -110,24 +109,80 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     return EXPECT_SAME_PRIOR_FACTOR(index, lc::EigenPose(pose));
   }
 
-  void EXPECT_SAME_PRIOR_NOISE(const int index, const gtsam::SharedNoiseModel& noise) {
-    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[index].get());
-    EXPECT_SAME_NOISE(pose_prior_factor, noise);
+  void EXPECT_SAME_BETWEEN_FACTOR(const int index) {
+    const auto& pose_a =
+      index > 0 ? pose_measurements_[index - 1].pose_with_covariance.pose : lc::EigenPose(params_.start_node);
+    const auto& pose_b = pose_measurements_[index].pose_with_covariance.pose;
+    const auto relative_pose = pose_a.inverse()*pose_b;
+    EXPECT_SAME_BETWEEN_FACTOR(index, relative_pose);
+  }
+
+  void EXPECT_SAME_BETWEEN_FACTOR(const int index, const Eigen::Isometry3d& pose) {
+    // Add one to index to account for first prior pose
+    const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index+1].get());
+    ASSERT_TRUE(pose_between_factor);
+    EXPECT_MATRIX_NEAR(pose_between_factor->measured(), pose, 1e-6);
+  }
+
+  void EXPECT_SAME_BETWEEN_FACTOR(const int index, const gtsam::Pose3& pose) {
+    EXPECT_SAME_BETWEEN_FACTOR(index, lc::EigenPose(pose));
+  }
+
+  Eigen::Isometry3d InterpolatedPose(const int index_a, const int index_b, const double alpha) {
+    const lc::Time timestamp_a_b = timestamps_[index_a]*alpha + timestamps_[index_b]*(1.0 - alpha);
+    return lc::Interpolate(pose_measurements_[index_a].pose_with_covariance.pose,
+                                               pose_measurements_[index_b].pose_with_covariance.pose, alpha);
+  }
+
+  void EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
+    const auto expected_pose = InterpolatedPose(index_a, index_b, alpha);
+    EXPECT_SAME_BETWEEN_FACTOR(index_b, expected_pose);
   }
 
   template <typename FactorPtrType>
-  void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::SharedNoiseModel noise) {
+  void EXPECT_SAME_NOISE(const FactorPtrType factor, const lc::PoseCovariance& covariance) {
     const auto robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(factor->noiseModel().get());
     ASSERT_TRUE(robust_noise_model);
     const auto noise_model = dynamic_cast<gtsam::noiseModel::Gaussian*>(robust_noise_model->noise().get());
     ASSERT_TRUE(noise_model);
+    EXPECT_MATRIX_NEAR(noise_model->covariance(), covariance, 1e-6);
+  }
 
+  template <typename FactorPtrType>
+  void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::SharedNoiseModel noise) {
     const auto expected_robust_noise_model = dynamic_cast<gtsam::noiseModel::Robust*>(noise.get());
     ASSERT_TRUE(expected_robust_noise_model);
     const auto expected_noise_model =
       dynamic_cast<gtsam::noiseModel::Gaussian*>(expected_robust_noise_model->noise().get());
     ASSERT_TRUE(expected_noise_model);
-    EXPECT_MATRIX_NEAR(noise_model->covariance(), expected_noise_model->covariance(), 1e-6);
+    EXPECT_SAME_NOISE(factor, expected_noise_model->covariance());
+  }
+
+  void EXPECT_SAME_BETWEEN_NOISE(const int index, const lc::PoseCovariance& covariance) {
+    // Add one to index to account for first prior pose
+    const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index+1].get());
+    EXPECT_SAME_NOISE(pose_between_factor, covariance);
+  }
+
+  void EXPECT_SAME_BETWEEN_NOISE(const int index) {
+    // TODO(rsoussan): Change this when pose interpolation covariance is updated, use both covariances to compute
+    // relative covariance
+    EXPECT_SAME_BETWEEN_NOISE(index, pose_measurements_[index].pose_with_covariance.covariance);
+  }
+
+  void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(const int index) {
+    EXPECT_SAME_BETWEEN_FACTOR(index);
+    EXPECT_SAME_BETWEEN_NOISE(index);
+  }
+
+  void EXPECT_SAME_PRIOR_NOISE(const int index, const gtsam::SharedNoiseModel& noise) {
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[index].get());
+    EXPECT_SAME_NOISE(pose_prior_factor, noise);
+  }
+
+  void EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(const int index) {
+    EXPECT_SAME_NODE(index);
+    EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(index);
   }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
@@ -224,26 +279,29 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   // Add 1st node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
   EXPECT_EQ(nodes.size(), 2);
-  EXPECT_SAME_NODE(0);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   // Add 2nd node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
   EXPECT_EQ(nodes.size(), 3);
-  EXPECT_SAME_NODE(0);
-  EXPECT_SAME_NODE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   // Add 3rd node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
   EXPECT_EQ(nodes.size(), 4);
-  EXPECT_SAME_NODE(0);
-  EXPECT_SAME_NODE(1);
-  EXPECT_SAME_NODE(2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
   // Add 4th node in between 3rd and 4th measurement
   const lc::Time timestamp_2_3 = (timestamps_[2] + timestamps_[3])/2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_2_3, factors_));
   EXPECT_EQ(nodes.size(), 5);
-  EXPECT_SAME_NODE(0);
-  EXPECT_SAME_NODE(1);
-  EXPECT_SAME_NODE(2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
   EXPECT_SAME_NODE_INTERPOLATED(2, 3, 0.5);
+  EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(2, 3, 0.5);
+  // EXPECT_SAME_NOISE_INTERPOLATED(2, 3, 0.5);
   // TODO(rsoussan): add node after measuremets end time, make sure this fails
   // TODO(rsoussan): add node before measurements start time, make sure this fails
   // TODO(rsoussan): add node between start time and first time, make sure this works!
