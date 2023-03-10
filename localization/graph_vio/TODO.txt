@@ -6,10 +6,6 @@
           - add function to cast factor to between factor! (AC)
           - add function to get between factor with certain keys from factors vec? (AB)
             - use this also for remove relative factors?
-            - add tempalted version of removerelativefactors? (AAA)
-              - add removefactors! pass key vec! call this from removerel factors with combined key vec!
-                - add these in graph optimizer utilities??
-                    - template on node type and factor type!
       - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
