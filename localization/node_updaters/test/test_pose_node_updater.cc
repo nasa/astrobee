@@ -174,9 +174,20 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     EXPECT_SAME_BETWEEN_NOISE(index, pose_measurements_[index].pose_with_covariance.covariance);
   }
 
+  void EXPECT_SAME_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
+    // TODO(rsoussan): Change this when interpolation/relative computation for cov is updated
+    EXPECT_SAME_BETWEEN_NOISE(index_a);
+  }
+
   void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(const int index) {
     EXPECT_SAME_BETWEEN_FACTOR(index);
     EXPECT_SAME_BETWEEN_NOISE(index);
+  }
+
+
+  void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
+    EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(index_a, index_b, alpha);
+    EXPECT_SAME_BETWEEN_NOISE_INTERPOLATED(index_a, index_b, alpha);
   }
 
   void EXPECT_SAME_PRIOR_NOISE(const int index, const gtsam::SharedNoiseModel& noise) {
@@ -187,6 +198,12 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   void EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(const int index) {
     EXPECT_SAME_NODE(index);
     EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(index);
+  }
+
+  void EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(const int index_a, const int index_b,
+                                                                  const double alpha) {
+    EXPECT_SAME_NODE_INTERPOLATED(index_a, index_b, alpha);
+    EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(index_a, index_b, alpha);
   }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
@@ -303,9 +320,7 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
-  EXPECT_SAME_NODE_INTERPOLATED(2, 3, 0.5);
-  EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(2, 3, 0.5);
-  // EXPECT_SAME_NOISE_INTERPOLATED(2, 3, 0.5);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(2, 3, 0.5);
   // TODO(rsoussan): add node after measuremets end time, make sure this fails
   // TODO(rsoussan): add node before measurements start time, make sure this fails
   // TODO(rsoussan): add node between start time and first time, make sure this works!
