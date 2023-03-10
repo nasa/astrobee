@@ -53,6 +53,11 @@ class TimestampedNodeUpdateModel {
   // Returns whether a node can be added at timestamp or not.
   virtual bool CanAddNode(const localization_common::Time timestamp) const = 0;
 
+  // Remove relative update model factors between nodes
+  virtual bool RemoveRelativeFactors(const localization_common::Time timestamp_a,
+                                     const localization_common::Time timestamp_b, const NodesType& nodes,
+                                     gtsam::NonlinearFactorGraph& factors) const = 0;
+
  protected:
   // TODO(rsoussan): Add constructor to set these, template on params?
   TimestampedNodeUpdateModelParams params_;

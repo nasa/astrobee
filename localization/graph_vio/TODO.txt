@@ -5,6 +5,8 @@
         - pass two timestamps, find relative factor in between these timestamps!!!
             - how??????
               - add function in node_update_model -> removerelativefactors(timestamp_a, timestamp_b) (AAAAA)
+                      - implement for between update model (AAA)
+                      - implement for cominbed update model (BBB)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
         - test addnode, splitnode, add same node? add invalid node time? 
           - add function to add set of measurements!! (AA)

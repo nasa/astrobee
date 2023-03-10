@@ -137,4 +137,28 @@ void CombinedNavStateNodeUpdateModel::RemoveMeasurements(const lc::Time oldest_a
 bool CombinedNavStateNodeUpdateModel::CanAddNode(const localization_common::Time timestamp) const {
   return imu_integrator_.WithinBounds(timestamp);
 }
+
+bool CombinedNavStateNodeUpdateModel::RemoveRelativeFactors(const localization_common::Time timestamp_a,
+                                                            const localization_common::Time timestamp_b,
+                                                            const NodesType& nodes,
+                                                            gtsam::NonlinearFactorGraph& factors) const {
+  /*const auto keys = nodes_->Keys(timestamp);
+  if (keys.empty()) {
+    LogError("RemoveFactors: Failed to get keys.");
+    return false;
+  }
+
+  bool removed_factor = false;
+  for (const auto& key : keys) {
+    for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+      if ((*factor_it)->find(key) != std::end((*factor_it)->keys())) {
+        factors.erase(factor_it);
+        removed_factor = true;
+      } else {
+        ++factor_it;
+      }
+    }
+  }
+  return removed_factor;*/
+}
 }  // namespace node_updaters

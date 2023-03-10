@@ -96,7 +96,6 @@ class TimestampedNodeUpdater
   bool AddLatestNodesAndRelativeFactors(const localization_common::Time timestamp,
                                         gtsam::NonlinearFactorGraph& factors);
   bool SplitOldRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
-  bool RemoveFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
 
   // Serialization function
   friend class boost::serialization::access;
@@ -325,7 +324,8 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
     return false;
   }
 
-  const bool removed_old_factors = RemoveFactors(timestamp, factors);
+  const bool removed_old_factors =
+    node_update_model_.RemoveRelativeFactors(lower_bound_time, upper_bound_time, *nodes_, factors);
   if (!removed_old_factors) {
     LogError(
       "SplitOldRelativeFactor: Failed to remove "
@@ -340,29 +340,6 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
     LogError("SplitOldRelativeFactor: Failed to add second relative factor.");
     return false;
   }
-}
-
-template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
-bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::RemoveFactors(
-  const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
-  const auto keys = nodes_->Keys(timestamp);
-  if (keys.empty()) {
-    LogError("RemoveFactors: Failed to get keys.");
-    return false;
-  }
-
-  bool removed_factor = false;
-  for (const auto& key : keys) {
-    for (auto factor_it = factors.begin(); factor_it != factors.end();) {
-      if ((*factor_it)->find(key) != std::end((*factor_it)->keys())) {
-        factors.erase(factor_it);
-        removed_factor = true;
-      } else {
-        ++factor_it;
-      }
-    }
-  }
-  return removed_factor;
 }
 }  // namespace node_updaters
 

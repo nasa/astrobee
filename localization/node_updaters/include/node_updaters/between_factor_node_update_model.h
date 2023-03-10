@@ -56,6 +56,9 @@ class BetweenFactorNodeUpdateModel
   bool AddRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
                           const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
 
+  bool RemoveRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+                             const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
+
  private:
   // Connects nodes at given keys with between factors.
   bool AddRelativeFactors(const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a,
@@ -152,6 +155,32 @@ bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFac
     keys_a[0], keys_b[0], relative_node_and_noise->first, relative_node_and_noise->second));
   factors.push_back(relative_factor);
   return true;
+}
+
+template <typename NodeType, typename NodeUpdateModelType>
+bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::RemoveRelativeFactors(
+  const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
+  gtsam::NonlinearFactorGraph& factors) const {
+  /*const auto keys = nodes_->Keys(timestamp);
+  if (keys.empty()) {
+    LogError("RemoveFactors: Failed to get keys.");
+    return false;
+  }
+
+  // TODO(rsoussan): dynamic cast factor to see if it's the right between factor, 
+  // then make sure it has keys from node a and node b (is there a better way to check keys??? since using between factor, assume one key each!)
+  bool removed_factor = false;
+  for (const auto& key : keys) {
+    for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+      if ((*factor_it)->find(key) != std::end((*factor_it)->keys())) {
+        factors.erase(factor_it);
+        removed_factor = true;
+      } else {
+        ++factor_it;
+      }
+    }
+  }
+  return removed_factor;*/
 }
 
 // Specialization helpers
