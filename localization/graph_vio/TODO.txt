@@ -3,6 +3,10 @@
   - test timestamped node updater functions (A)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
         - test add same node? add invalid node time? (AA) 
+          - add more expect member functions, clean up earlier tests
+            - allow passing timestamp and pose manually
+          - add function to check factor (AA)
+          - add function to check noise (AB)
           - add function to cast factor to between factor! (AC)
           - add function to get between factor with certain keys from factors vec? (AB)
             - use this also for remove relative factors?

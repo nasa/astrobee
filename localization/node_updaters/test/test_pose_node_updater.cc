@@ -77,23 +77,27 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     pose_node_updater_->AddInitialNodesAndPriors(factors_);
   }
 
-  void EXPECT_SAME_NODE(const int index) {
+  void EXPECT_SAME_NODE(const lc::Time timestamp, const Eigen::Isometry3d& pose) {
     const auto& nodes = pose_node_updater_->nodes();
-    EXPECT_TRUE(nodes.Contains(timestamps_[index]));
-    const auto node = nodes.Node(timestamps_[index]);
+    EXPECT_TRUE(nodes.Contains(timestamp));
+    const auto node = nodes.Node(timestamp);
     ASSERT_TRUE(node != boost::none);
-    EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[index].pose_with_covariance.pose, 1e-6);
+    EXPECT_MATRIX_NEAR(node->matrix(), pose, 1e-6);
+  }
+
+  void EXPECT_SAME_NODE(const lc::Time timestamp, const gtsam::Pose3& pose) {
+    EXPECT_SAME_NODE(timestamp, lc::EigenPose(pose));
+  }
+
+  void EXPECT_SAME_NODE(const int index) {
+    EXPECT_SAME_NODE(timestamps_[index], pose_measurements_[index].pose_with_covariance.pose);
   }
 
   void EXPECT_SAME_NODE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
-    const auto& nodes = pose_node_updater_->nodes();
     const lc::Time timestamp_a_b = timestamps_[index_a]*alpha + timestamps_[index_b]*(1.0 - alpha);
-    EXPECT_TRUE(nodes.Contains(timestamp_a_b));
-    const auto node = nodes.Node(timestamp_a_b);
-    ASSERT_TRUE(node != boost::none);
     const auto expected_pose = lc::Interpolate(pose_measurements_[index_a].pose_with_covariance.pose,
                                                pose_measurements_[index_b].pose_with_covariance.pose, alpha);
-    EXPECT_MATRIX_NEAR(node->matrix(), expected_pose, 1e-6);
+    EXPECT_SAME_NODE(timestamp_a_b, expected_pose);
   }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
@@ -158,10 +162,7 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriorsUsingParams) {
   const auto& nodes = pose_node_updater_->nodes();
   // Check node value
   EXPECT_EQ(nodes.size(), 1);
-  EXPECT_TRUE(nodes.Contains(params_.starting_time));
-  const auto node = nodes.Node(params_.starting_time);
-  ASSERT_TRUE(node != boost::none);
-  EXPECT_MATRIX_NEAR(node->matrix(), params_.start_node, 1e-6);
+  EXPECT_SAME_NODE(params_.starting_time, params_.start_node);
   // Check factor
   EXPECT_EQ(factors_.size(), 1);
   const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get());
@@ -189,10 +190,7 @@ TEST_F(PoseNodeUpdaterTest, AddInitialNodesAndPriors) {
   pose_node_updater_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors_);
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
-  EXPECT_TRUE(nodes.Contains(time));
-  const auto node = nodes.Node(time);
-  ASSERT_TRUE(node != boost::none);
-  EXPECT_MATRIX_NEAR(node->matrix(), pose, 1e-6);
+  EXPECT_SAME_NODE(time, pose);
   // Check factor
   EXPECT_EQ(factors_.size(), 1);
   const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get());
