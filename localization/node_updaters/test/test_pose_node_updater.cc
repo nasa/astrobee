@@ -37,9 +37,13 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   void SetUp() final {
+    const Eigen::Vector3d translation_increment(1.0, 2.0, 3.0);
+    Eigen::Vector3d translation(Eigen::Vector3d::Zero());
     for (int i = 0; i < num_measurements_; ++i) {
+      translation += translation_increment;
       const lc::Time time = start_time_ + time_increment_*i;
-      const lc::PoseWithCovariance pose_with_covariance(lc::RandomPoseWithCovariance());
+      const auto pose = lc::Isometry3d(translation, Eigen::Matrix3d::Identity());
+      const lc::PoseWithCovariance pose_with_covariance(pose, lc::RandomPoseCovariance());
       const lm::TimestampedPoseWithCovariance pose_measurement(pose_with_covariance, time);
       pose_measurements_.emplace_back(pose_measurement);
       timestamps_.emplace_back(time);
@@ -197,8 +201,30 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   EXPECT_EQ(nodes.size(), 1);
   AddMeasurements();
   // TODO(rsoussan): add a bunch of measurements, add nodes, make sure correct between factors are added
-  // Test adding nodes
+  // Add 1st node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  {
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_TRUE(nodes.Contains(timestamps_[0]));
+  const auto node = nodes.Node(timestamps_[0]);
+  ASSERT_TRUE(node != boost::none);
+  EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[0].pose_with_covariance.pose, 1e-6);
+  }
+  // Add 2nd node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
+  {
+  EXPECT_EQ(nodes.size(), 3);
+  EXPECT_TRUE(nodes.Contains(timestamps_[0]));
+  const auto node = nodes.Node(timestamps_[0]);
+  ASSERT_TRUE(node != boost::none);
+  EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[0].pose_with_covariance.pose, 1e-6);
+  }
+  {
+  EXPECT_TRUE(nodes.Contains(timestamps_[1]));
+  const auto node = nodes.Node(timestamps_[1]);
+  ASSERT_TRUE(node != boost::none);
+  EXPECT_MATRIX_NEAR(node->matrix(), pose_measurements_[1].pose_with_covariance.pose, 1e-6);
+  }
 }
 
 // Run all the tests that were declared with TEST()
