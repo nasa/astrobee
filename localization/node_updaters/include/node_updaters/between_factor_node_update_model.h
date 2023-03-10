@@ -161,26 +161,36 @@ template <typename NodeType, typename NodeUpdateModelType>
 bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::RemoveRelativeFactors(
   const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
   gtsam::NonlinearFactorGraph& factors) const {
-  /*const auto keys = nodes_->Keys(timestamp);
-  if (keys.empty()) {
-    LogError("RemoveFactors: Failed to get keys.");
+  const auto keys_a = nodes.Keys(timestamp_a);
+  if (keys_a.empty()) {
+    LogError("RemoveRelativeFactors: Failed to get keys for timestamp_a.");
     return false;
   }
 
-  // TODO(rsoussan): dynamic cast factor to see if it's the right between factor, 
-  // then make sure it has keys from node a and node b (is there a better way to check keys??? since using between factor, assume one key each!)
-  bool removed_factor = false;
-  for (const auto& key : keys) {
-    for (auto factor_it = factors.begin(); factor_it != factors.end();) {
-      if ((*factor_it)->find(key) != std::end((*factor_it)->keys())) {
+  const auto keys_b = nodes.Keys(timestamp_b);
+  if (keys_b.empty()) {
+    LogError("RemoveRelativeFactors: Failed to get keys for timestamp_b.");
+    return false;
+  }
+
+  gtsam::KeyVector combined_keys = keys_a;
+  combined_keys.insert(combined_keys.cend(), keys_b.cbegin(), keys_b.cend());
+
+  // Between factors take one key per node, so look for these in the between factor
+    for (auto factor_it = factors.begin(); factor_it != factors.end(); ++factor_it) {
+      if (!dynamic_cast<gtsam::BetweenFactor<NodeType>*>(factor_it->get())) continue;
+      bool contains_both_keys = true;
+      for (const auto& key : combined_keys) {
+        if ((*factor_it)->find(key) == std::end((*factor_it)->keys())) {
+          contains_both_keys = false;
+        }
+      }
+      if (contains_both_keys) {
         factors.erase(factor_it);
-        removed_factor = true;
-      } else {
-        ++factor_it;
+        return true;
       }
     }
-  }
-  return removed_factor;*/
+  return false;
 }
 
 // Specialization helpers
