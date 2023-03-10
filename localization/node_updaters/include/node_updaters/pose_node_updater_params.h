@@ -23,6 +23,7 @@
 #include <localization_common/utilities.h>
 #include <localization_measurements/timestamped_pose_with_covariance.h>
 #include <node_updaters/measurement_based_timestamped_node_updater_params.h>
+#include <node_updaters/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
 
@@ -37,10 +38,7 @@ struct PoseNodeUpdaterParams
     SetStartMeasurement();
   }
   void SetStartMeasurement() {
-    const localization_common::PoseCovariance starting_covariance =
-      dynamic_cast<gtsam::noiseModel::Gaussian*>(
-        dynamic_cast<gtsam::noiseModel::Robust*>(start_noise_models[0].get())->noise().get())
-        ->covariance();
+    const localization_common::PoseCovariance starting_covariance = Covariance(start_noise_models[0]);
     start_measurement = localization_measurements::TimestampedPoseWithCovariance(
       localization_common::PoseWithCovariance(localization_common::EigenPose(start_node), starting_covariance),
       starting_time);

@@ -21,6 +21,7 @@
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <node_updaters/pose_node_updater.h>
+#include <node_updaters/utilities.h>
 
 #include <gtest/gtest.h>
 
@@ -79,6 +80,10 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   const Eigen::Isometry3d& pose(const int index) { return pose_measurements_[index].pose_with_covariance.pose; }
 
+  const lc::PoseCovariance& covariance(const int index) {
+    return pose_measurements_[index].pose_with_covariance.covariance;
+  }
+
   void EXPECT_SAME_NODE(const lc::Time timestamp, const Eigen::Isometry3d& pose) {
     const auto& nodes = pose_node_updater_->nodes();
     EXPECT_TRUE(nodes.Contains(timestamp));
@@ -131,13 +136,14 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   Eigen::Isometry3d InterpolatedPose(const int index_a, const int index_b, const double alpha) {
-    const lc::Time timestamp_a_b = timestamps_[index_a]*alpha + timestamps_[index_b]*(1.0 - alpha);
+    const lc::Time timestamp_a = index_a == -1 ? params_.starting_time : timestamps_[index_a];
+    const lc::Time timestamp_a_b = timestamp_a*alpha + timestamps_[index_b]*(1.0 - alpha);
     return lc::Interpolate(pose(index_a),
                                                pose(index_b), alpha);
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
-    const auto& pose_a = pose(index_a);
+    const auto& pose_a = index_a == -1 ? lc::EigenPose(params_.start_node) : pose(index_a);
     const auto pose_interpolated = InterpolatedPose(index_a, index_b, alpha);
     const Eigen::Isometry3d relative_pose = pose_a.inverse()*pose_interpolated;
     EXPECT_SAME_BETWEEN_FACTOR(index_b, relative_pose);
@@ -171,7 +177,9 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   void EXPECT_SAME_BETWEEN_NOISE(const int index) {
     // TODO(rsoussan): Change this when pose interpolation covariance is updated, use both covariances to compute
     // relative covariance
-    EXPECT_SAME_BETWEEN_NOISE(index, pose_measurements_[index].pose_with_covariance.covariance);
+    const lc::PoseCovariance pose_covariance =
+      index == -1 ? lc::PoseCovariance(nu::Covariance(params_.start_noise_models[0])) : covariance(index);
+    EXPECT_SAME_BETWEEN_NOISE(index, pose_covariance);
   }
 
   void EXPECT_SAME_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
@@ -296,7 +304,6 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
   AddMeasurements();
-  // TODO(rsoussan): add a bunch of measurements, add nodes, make sure correct between factors are added
   // Add 1st node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
   EXPECT_EQ(nodes.size(), 2);
@@ -321,9 +328,46 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(2, 3, 0.5);
-  // TODO(rsoussan): add node after measuremets end time, make sure this fails
-  // TODO(rsoussan): add node before measurements start time, make sure this fails
-  // TODO(rsoussan): add node between start time and first time, make sure this works!
+}
+
+TEST_F(PoseNodeUpdaterTest, AddNodeTooSoon) {
+  ZeroInitialize();
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
+  AddMeasurements();
+  // Add 1st node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // Add too soon node
+  ASSERT_FALSE(pose_node_updater_->AddNode(params_.starting_time - 1.0, factors_));
+}
+
+TEST_F(PoseNodeUpdaterTest, AddNodeTooLate) {
+  ZeroInitialize();
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
+  AddMeasurements();
+  // Add 1st node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // Add too late node
+  ASSERT_FALSE(pose_node_updater_->AddNode(timestamps_.back() + 1.0, factors_));
+}
+
+TEST_F(PoseNodeUpdaterTest, AddNodeBetweenStartAndFirstMeasurement) {
+  ZeroInitialize();
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
+  AddMeasurements();
+  // Add 1st node in between start pose and 1st measurement
+  const lc::Time timestamp_s_0 = (params_.starting_time + timestamps_[0])/2.0;
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_s_0, factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(-1, 0, 0.5);
 }
 
 TEST_F(PoseNodeUpdaterTest, SplitNode) {

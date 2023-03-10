@@ -18,6 +18,12 @@
 #ifndef NODE_UPDATERS_UTILITIES_H_
 #define NODE_UPDATERS_UTILITIES_H_
 
+#include <localization_common/logger.h>
+#include <localization_common/time.h>
+
+#include <gtsam/inference/Key.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+
 namespace node_updaters {
 // Removes the FactorType factor in factors containing each of the provided keys if it exists
 template <typename FactorType>
@@ -28,6 +34,9 @@ template <typename FactorType, typename NodesType>
 bool RemoveRelativeFactor(
   const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
   gtsam::NonlinearFactorGraph& factors);
+
+// Returns the covariance from a robust, gaussian shared noise model.
+gtsam::Matrix Covariance(const gtsam::SharedNoiseModel& robust_gaussian_noise);
 
 // Implementation
 template <typename FactorType>
