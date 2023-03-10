@@ -165,9 +165,13 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_BETWEEN_NOISE(const int index, const lc::PoseCovariance& covariance) {
-    // Add one to index to account for first prior pose
-    const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index+1].get());
-    EXPECT_SAME_NOISE(pose_between_factor, covariance);
+    // Handle special case where need prior noise (remove this once covariance computation is fixed)
+    if (index == -1) {EXPECT_SAME_NOISE(dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get()), covariance);
+    } else {
+      // Add one to index to account for first prior pose
+      const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index + 1].get());
+      EXPECT_SAME_NOISE(pose_between_factor, covariance);
+    }
   }
 
   void EXPECT_SAME_BETWEEN_NOISE(const int index) {
