@@ -2,8 +2,9 @@
   - rename nodeupdater to nodeadder???
   - test timestamped node updater functions (A)
       - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
-        - test add same node? add invalid node time? (AA) 
-      - add more tests to split factor test, make sure both between factors are correct!
+        - test add invalid node time? (AA) 
+        - other tests?
+      - add more tests to split factor test, make sure both between factors are correct! (AA)
       - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;

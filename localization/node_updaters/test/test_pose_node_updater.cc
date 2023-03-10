@@ -368,6 +368,25 @@ TEST_F(PoseNodeUpdaterTest, AddNodeBetweenStartAndFirstMeasurement) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(-1, 0, 0.5);
 }
 
+TEST_F(PoseNodeUpdaterTest, AddSameNode) {
+  ZeroInitialize();
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
+  AddMeasurements();
+  // Add 1st node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // Add same node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+}
+
+
+
 TEST_F(PoseNodeUpdaterTest, SplitNode) {
   ZeroInitialize();
   const auto& nodes = pose_node_updater_->nodes();
