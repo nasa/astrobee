@@ -340,6 +340,10 @@ TEST_F(PoseNodeUpdaterTest, AddNodeTooSoon) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   // Add too soon node
   ASSERT_FALSE(pose_node_updater_->AddNode(params_.starting_time - 1.0, factors_));
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
 }
 
 TEST_F(PoseNodeUpdaterTest, AddNodeTooLate) {
@@ -354,6 +358,9 @@ TEST_F(PoseNodeUpdaterTest, AddNodeTooLate) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   // Add too late node
   ASSERT_FALSE(pose_node_updater_->AddNode(timestamps_.back() + 1.0, factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
 }
 
 TEST_F(PoseNodeUpdaterTest, AddNodeBetweenStartAndFirstMeasurement) {
@@ -385,8 +392,6 @@ TEST_F(PoseNodeUpdaterTest, AddSameNode) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
 }
 
-
-
 TEST_F(PoseNodeUpdaterTest, SplitNode) {
   ZeroInitialize();
   const auto& nodes = pose_node_updater_->nodes();
@@ -395,19 +400,23 @@ TEST_F(PoseNodeUpdaterTest, SplitNode) {
   // Add 1st node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
   EXPECT_EQ(nodes.size(), 2);
-  EXPECT_SAME_NODE(0);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   // Add 2nd node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
   EXPECT_EQ(nodes.size(), 3);
-  EXPECT_SAME_NODE(0);
-  EXPECT_SAME_NODE(1);
+  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   // Add 3rd node in between 1st and 2nd measurement
   const lc::Time timestamp_0_1 = (timestamps_[0] + timestamps_[1])/2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_0_1, factors_));
   EXPECT_EQ(nodes.size(), 4);
-  EXPECT_SAME_NODE(0);
-  EXPECT_SAME_NODE(1);
-  EXPECT_SAME_NODE_INTERPOLATED(0, 1, 0.5);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(0, 1, 0.5);
+  // TODO(rsoussan): add fucntion to check second factor after split!
+  // EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(x, 1, 0.5);
 }
 
 // Run all the tests that were declared with TEST()
