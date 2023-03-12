@@ -10,6 +10,7 @@
           - use oldest/latest/can update as test
           - test slidewindownewoldesttime before and after call!
 
+- template test on type? template specializations for combined imu test??
 - test combined nav state node updater! (AC)
   - popuate imu measurements!
   - test each timestamped node updater function?

@@ -41,7 +41,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     const Eigen::Vector3d translation_increment(1.0, 2.0, 3.0);
     Eigen::Vector3d translation(Eigen::Vector3d::Zero());
     for (int i = 0; i < num_measurements_; ++i) {
-      translation += translation_increment;
+      // Increase increment over time so each relative pose is different
+      translation += translation_increment*i;
       const lc::Time time = start_time_ + time_increment_ * i;
       const auto pose = lc::Isometry3d(translation, Eigen::Matrix3d::Identity());
       const lc::PoseWithCovariance pose_with_covariance(pose, lc::RandomPoseCovariance());
