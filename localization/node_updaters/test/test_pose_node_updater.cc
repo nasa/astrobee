@@ -484,6 +484,29 @@ TEST_F(PoseNodeUpdaterTest, OldKeys) {
   }
 }
 
+TEST_F(PoseNodeUpdaterTest, NewOldestTimeMaxStates) {
+  params_.min_num_states = 2;
+  params_.max_num_states = 4;
+  params_.ideal_duration = 10;
+  params_.Initialize();
+  pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
+  pose_node_updater_->AddInitialNodesAndPriors(factors_);
+  ZeroInitialize();
+  AddMeasurements();
+  // Empty nodes should yield invalid oldest time
+  EXPECT_TRUE(pose_node_updater_->SlideWindowNewOldestTime() == boost::none);
+  // Add 1st node
+  // Min/Max states not applicable, less than ideal duration, so
+  // should return 0
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, 0.0);
+  }
+}
+
+
 /*TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   ZeroInitialize();
   const auto& nodes = pose_node_updater_->nodes();

@@ -70,8 +70,14 @@ class TimestampedNodeUpdater
   // This needs to be specialized
   std::string type() const override;
 
-  // Returns the oldest node time that will remain after SlideWindow is called.
-  // Returns boost::none if no nodes exist.
+  // Returns the oldest node time that should remain after SlideWindow is called.
+  // Calculated using params to ensure the set min/max node limits are enforced
+  // and the ideal duration is enforced otherwise.
+  // Returns boost::none if no nodes exist or too few nodes exist.
+  // If the min/max limits are enforced and the total duration of nodes is still less than
+  // the ideal duration, the new oldest time is set to 0.
+  // Used by the graph optimizer to compute the new oldest time for all node updaters
+  // in the graph.
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
   // Returns old node keys older than oldest_allowed_time.

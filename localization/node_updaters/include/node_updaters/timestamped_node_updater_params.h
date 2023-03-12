@@ -37,6 +37,7 @@ struct TimestampedNodeUpdaterParams {
   localization_common::Time starting_time;
   // Only kept if there are at least min_num_states and not more than max_num_states
   double ideal_duration;
+  // TODO(rsoussan): Rename states to nodes?
   int min_num_states;
   int max_num_states;
 
