@@ -320,6 +320,7 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   ZeroInitialize();
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
+  EXPECT_EQ(factors_.size(), 1);
   AddMeasurements();
   // Add 1st node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
@@ -329,11 +330,13 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   // Add 2nd node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
   EXPECT_EQ(nodes.size(), 3);
+  EXPECT_EQ(factors_.size(), 3);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   // Add 3rd node
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
   EXPECT_EQ(nodes.size(), 4);
+  EXPECT_EQ(factors_.size(), 4);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
@@ -341,6 +344,7 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   const lc::Time timestamp_2_3 = (timestamps_[2] + timestamps_[3])/2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_2_3, factors_));
   EXPECT_EQ(nodes.size(), 5);
+  EXPECT_EQ(factors_.size(), 5);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
@@ -386,11 +390,13 @@ TEST_F(PoseNodeUpdaterTest, AddNodeBetweenStartAndFirstMeasurement) {
   ZeroInitialize();
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
+  EXPECT_EQ(factors_.size(), 1);
   AddMeasurements();
   // Add 1st node in between start pose and 1st measurement
   const lc::Time timestamp_s_0 = (params_.starting_time + timestamps_[0])/2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_s_0, factors_));
   EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(-1, 0, 0.5);
 }
 
