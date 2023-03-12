@@ -57,9 +57,11 @@ class TimestampedNodeUpdater
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // Slides the window, removes nodes older than oldest allowed time.
-  // Adds priors to the oldest remaining nodes using their marginalized covariances.
-  // Also removes any nodes containing any keys in old_keys.
-  // Removes any factors in factors containing a removed node.
+  // Adds priors to the oldest remaining nodes using their marginalized covariances
+  // and removes old priors containing any key in old keys if param use_priors is true.
+  // Note: Old factor removal (other than starting priors) is handled in the graph optimizer.
+  // The oldest allowed timestamp is also determing by the graph optimizer based on
+  // the ideal oldest allowed timestamps of each node updater used in the graph.
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
@@ -182,7 +184,6 @@ std::string TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateMod
 template <typename NodeType, typename TimestampedNodesType, typename NodeUpdateModelType>
 boost::optional<localization_common::Time>
 TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::SlideWindowNewOldestTime() const {
-  // TODO(rsoussan): Generalize this with CombinedNavStateGraphValues
   if (nodes_->empty()) {
     LogDebug("SlideWindowOldestTime: No states in map.");
     return boost::none;

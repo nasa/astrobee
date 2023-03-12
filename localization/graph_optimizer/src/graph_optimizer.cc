@@ -116,6 +116,7 @@ gtsam::KeyVector GraphOptimizer::OldKeys(const localization_common::Time oldest_
   return all_old_keys;
 }
 
+// TODO(rsoussan): Remove old factors elsewhere!!
 std::pair<gtsam::KeyVector, gtsam::NonlinearFactorGraph> GraphOptimizer::OldKeysAndFactors(
   const lc::Time oldest_allowed_time) {
   const auto old_keys = OldKeys(oldest_allowed_time);

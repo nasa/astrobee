@@ -443,6 +443,47 @@ TEST_F(PoseNodeUpdaterTest, SplitNode) {
   EXPECT_SAME_SECOND_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(0, 1, 0.5);
 }
 
+
+TEST_F(PoseNodeUpdaterTest, SlideWindow) {
+  ZeroInitialize();
+  const auto& nodes = pose_node_updater_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  AddMeasurements();
+  // Add 1st node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // Add 2nd node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
+  EXPECT_EQ(nodes.size(), 3);
+  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  // Add 3rd node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
+  EXPECT_EQ(nodes.size(), 4);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
+  // Slide window
+  const gtsam::KeyVector empty_keys;
+  // TODO(rsoussan): how to create fake marginals? check gtsam?
+  const boost::optional<gtsam::Marginals> marginals(boost::none);
+  ASSERT_TRUE(pose_node_updater_->SlideWindow(timestamps_[0], marginals, empty_keys, params_.huber_k, factors_));
+  EXPECT_EQ(nodes.size(), 3);
+  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
+  // This should fail!!
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // TODO(rsoussan): need to change factor indices? add function to get certain factors? how to order them?
+  // TODO(rsoussan): need to check different noise for prior! use starting param noise for prior!
+  // TODO(rsoussan): make sure only one prior factor exists!
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

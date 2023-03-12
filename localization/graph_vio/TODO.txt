@@ -1,14 +1,25 @@
 - test pose node updater! (AA)
   - rename nodeupdater to nodeadder???
   - test timestamped node updater functions (A)
-      - AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
-        - other tests? (AC)
-      - SlideWindow(const localization_common::Time oldest_allowed_timestamp,
+      - SlideWindow(const localization_common::Time oldest_allowed_timestamp, (AAA)
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
-          - use old keys as test
-          - use oldest/latest/can update as test
-          - test slidewindownewoldesttime before and after call!
+          - fix bug! not removing other factors!
+               - why isn't old prior being removed? (AA)
+                    - need to pass old keys!!!!
+                        - test old keys function! (AAAA)
+                        - test slidwdinwosoldesttime! (AAABBBB)
+                          - add separate tests for this! make sure bounding works!
+                        - test slide window! (AACCC)
+                            - get old keys from within node updater!
+                            - get oldest allowed time from within node updater!
+                        - test oldest/latest timestamp! (AADDD)
+- need to remove old measurements in node update models?? (AC)
+  - add overriden call to slidewindow in measurement_based_...updater 
+    - calls timestamped updater slide window
+    - calls removeoldmeasurements (specialize this!)
+- test adding covariance priors using marginals?
+- test adding marginal factors? (maybe add todo for this...)
 
 - template test on type? template specializations for combined imu test??
 - test combined nav state node updater! (AC)
