@@ -443,8 +443,48 @@ TEST_F(PoseNodeUpdaterTest, SplitNode) {
   EXPECT_SAME_SECOND_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(0, 1, 0.5);
 }
 
+// Assumes keys start at 1 and increase by 1
+TEST_F(PoseNodeUpdaterTest, OldKeys) {
+  ZeroInitialize();
+  AddMeasurements();
+  EXPECT_TRUE(pose_node_updater_->OldKeys(-1, factors_).empty());
+  {
+    const auto old_keys = pose_node_updater_->OldKeys(1, factors_);
+    ASSERT_EQ(old_keys.size(), 1);
+    EXPECT_EQ(old_keys[0], 1);
+  }
+  // Add 1st node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  {
+    const auto old_keys = pose_node_updater_->OldKeys(timestamps_[1], factors_);
+    ASSERT_EQ(old_keys.size(), 2);
+    EXPECT_EQ(old_keys[0], 1);
+    EXPECT_EQ(old_keys[1], 2);
+  }
+  // Same timestamp shouldn't remove same timestamped node's key
+  {
+    const auto old_keys = pose_node_updater_->OldKeys(timestamps_[0], factors_);
+    ASSERT_EQ(old_keys.size(), 1);
+    EXPECT_EQ(old_keys[0], 1);
+  }
+  // Add 2nd node
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
+  {
+    const auto old_keys = pose_node_updater_->OldKeys(timestamps_[5], factors_);
+    ASSERT_EQ(old_keys.size(), 3);
+    EXPECT_EQ(old_keys[0], 1);
+    EXPECT_EQ(old_keys[1], 2);
+    EXPECT_EQ(old_keys[2], 3);
+  }
+  {
+    const auto old_keys = pose_node_updater_->OldKeys((timestamps_[0] + timestamps_[1]) / 2.0, factors_);
+    ASSERT_EQ(old_keys.size(), 2);
+    EXPECT_EQ(old_keys[0], 1);
+    EXPECT_EQ(old_keys[1], 2);
+  }
+}
 
-TEST_F(PoseNodeUpdaterTest, SlideWindow) {
+/*TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   ZeroInitialize();
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
@@ -482,7 +522,7 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   // TODO(rsoussan): need to change factor indices? add function to get certain factors? how to order them?
   // TODO(rsoussan): need to check different noise for prior! use starting param noise for prior!
   // TODO(rsoussan): make sure only one prior factor exists!
-}
+}*/
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

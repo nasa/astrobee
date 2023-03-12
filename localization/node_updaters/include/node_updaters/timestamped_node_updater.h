@@ -74,6 +74,7 @@ class TimestampedNodeUpdater
   // Returns boost::none if no nodes exist.
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
+  // Returns old node keys older than oldest_allowed_time.
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 

@@ -42,6 +42,7 @@ class NodeUpdater {
   virtual boost::optional<localization_common::Time> SlideWindowNewOldestTime() const = 0;
 
   // TODO(rsoussan): consolidate these with graph values base?
+  // TODO(rsoussan): Remove graph? why is this passed?
   virtual gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                                    const gtsam::NonlinearFactorGraph& graph) const = 0;
 

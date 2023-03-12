@@ -5,15 +5,14 @@
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
           - fix bug! not removing other factors!
-               - why isn't old prior being removed? (AA)
+               - why isn't old prior being removed? 
                     - need to pass old keys!!!!
-                        - test old keys function! (AAAA)
-                        - test slidwdinwosoldesttime! (AAABBBB)
+                        - test slidwdinwosoldesttime! (AA)
                           - add separate tests for this! make sure bounding works!
-                        - test slide window! (AACCC)
+                        - test slide window! (AB)
                             - get old keys from within node updater!
                             - get oldest allowed time from within node updater!
-                        - test oldest/latest timestamp! (AADDD)
+                        - test oldest/latest timestamp! (AC)
 - need to remove old measurements in node update models?? (AC)
   - add overriden call to slidewindow in measurement_based_...updater 
     - calls timestamped updater slide window
