@@ -194,7 +194,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   void EXPECT_SAME_SECOND_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     // TODO(rsoussan): Change this when interpolation/relative computation for cov is updated
-    EXPECT_SAME_BETWEEN_NOISE(index_b);
+    EXPECT_SAME_BETWEEN_NOISE(index_b+1, covariance(index_b));
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(const int index) {
