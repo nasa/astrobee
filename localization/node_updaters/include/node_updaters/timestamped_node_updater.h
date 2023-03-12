@@ -267,6 +267,8 @@ void TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
       if (!erase_factor) {
         ++factor_it;
       }
+    } else {
+      ++factor_it;
     }
   }
   LogDebug("RemovePriors: Erase " << removed_factors << " factors.");
