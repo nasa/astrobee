@@ -93,6 +93,7 @@ class TimestampedNodeUpdater
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
+  // TODO(rsoussan): Rename this to AddNew?
   bool AddLatestNodesAndRelativeFactors(const localization_common::Time timestamp,
                                         gtsam::NonlinearFactorGraph& factors);
   bool SplitOldRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);

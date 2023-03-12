@@ -154,6 +154,13 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     EXPECT_SAME_BETWEEN_FACTOR(index_b, relative_pose);
   }
 
+  // Check the second between factor after an interpolated node
+  void EXPECT_SAME_SECOND_BETWEEN_FACTOR_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
+    const auto pose_interpolated = InterpolatedPose(index_a, index_b, alpha);
+    const Eigen::Isometry3d relative_pose = pose_interpolated.inverse()*pose(index_b);
+    EXPECT_SAME_BETWEEN_FACTOR(index_b+1, relative_pose);
+  }
+
   template <typename FactorPtrType>
   void EXPECT_SAME_NOISE(const FactorPtrType factor, const lc::PoseCovariance& covariance) {
     EXPECT_MATRIX_NEAR(nu::Covariance(factor->noiseModel()), covariance, 1e-6);
@@ -185,11 +192,15 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     EXPECT_SAME_BETWEEN_NOISE(index_a);
   }
 
+  void EXPECT_SAME_SECOND_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
+    // TODO(rsoussan): Change this when interpolation/relative computation for cov is updated
+    EXPECT_SAME_BETWEEN_NOISE(index_b);
+  }
+
   void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(const int index) {
     EXPECT_SAME_BETWEEN_FACTOR(index);
     EXPECT_SAME_BETWEEN_NOISE(index);
   }
-
 
   void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(index_a, index_b, alpha);
@@ -210,6 +221,13 @@ class PoseNodeUpdaterTest : public ::testing::Test {
                                                                   const double alpha) {
     EXPECT_SAME_NODE_INTERPOLATED(index_a, index_b, alpha);
     EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(index_a, index_b, alpha);
+  }
+
+  void EXPECT_SAME_SECOND_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(const int index_a, const int index_b,
+                                                                  const double alpha) {
+    EXPECT_SAME_NODE(index_b);
+    EXPECT_SAME_SECOND_BETWEEN_NOISE_INTERPOLATED(index_a, index_b, alpha);
+    EXPECT_SAME_SECOND_BETWEEN_FACTOR_INTERPOLATED(index_a, index_b, alpha);
   }
 
   std::unique_ptr<nu::PoseNodeUpdater> pose_node_updater_;
@@ -415,8 +433,7 @@ TEST_F(PoseNodeUpdaterTest, SplitNode) {
   EXPECT_EQ(factors_.size(), 4);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(0, 1, 0.5);
-  // TODO(rsoussan): add fucntion to check second factor after split!
-  // EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(x, 1, 0.5);
+  EXPECT_SAME_SECOND_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(0, 1, 0.5);
 }
 
 // Run all the tests that were declared with TEST()
