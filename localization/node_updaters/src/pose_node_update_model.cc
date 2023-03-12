@@ -30,6 +30,7 @@ gtsam::KeyVector PoseNodeUpdateModel::AddNode(const lc::Time timestamp, NodesTyp
   const auto pose = pose_interpolater_.Interpolate(timestamp);
   if (!pose) {
     LogError("AddNode: Failed to get value.");
+    return gtsam::KeyVector();
   }
   return nodes.Add(timestamp, lc::GtPose(pose->pose));
 }
