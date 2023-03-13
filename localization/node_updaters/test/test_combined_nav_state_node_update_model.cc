@@ -269,6 +269,55 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactorsInBetweenTimes) {
 }
 
 
+TEST_F(CombinedNavStateNodeUpdateModelTest, RemoveRelativeFactors) {
+  AddMeasurements();
+  const auto timestamp_a = timestamps_[3];
+  const auto timestamp_b = timestamps_[7];
+  const auto timestamp_c = timestamps_[8];
+  // Add first nodes and relative factor
+  const lc::CombinedNavState node_a(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const lc::CombinedNavState node_b(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
+
+  const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
+  ASSERT_FALSE(keys_a.empty());
+  const auto keys_b = nodes_.Add(node_b.timestamp(), node_b);
+  ASSERT_FALSE(keys_b.empty());
+  ASSERT_TRUE(model_.AddRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  // Add second nodes and relative factor
+  const lc::CombinedNavState node_c(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_c));
+  const auto keys_c = nodes_.Add(node_c.timestamp(), node_c);
+  ASSERT_FALSE(keys_c.empty());
+  ASSERT_TRUE(model_.AddRelativeFactors(timestamp_b, timestamp_c, nodes_, factors_));
+
+  ASSERT_EQ(factors_.size(), 2);
+  ASSERT_FALSE(model_.RemoveRelativeFactors(timestamp_a - 1.0, timestamp_b, nodes_, factors_));
+  ASSERT_FALSE(model_.RemoveRelativeFactors(timestamp_a, timestamp_c, nodes_, factors_));
+  ASSERT_TRUE(model_.RemoveRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  // Check the remaining factor is the second relative factor
+  const auto imu_factors = go::Factors<gtsam::CombinedImuFactor>(factors_);
+  ASSERT_EQ(imu_factors.size(), 1);
+  // Check keys
+  // pose_b
+  EXPECT_EQ(imu_factors[0]->key1(), keys_b[0]);
+  // vel_b
+  EXPECT_EQ(imu_factors[0]->key2(), keys_b[1]);
+  // pose_c
+  EXPECT_EQ(imu_factors[0]->key3(), keys_c[0]);
+  // vel_c
+  EXPECT_EQ(imu_factors[0]->key4(), keys_c[1]);
+  // bias_b
+  EXPECT_EQ(imu_factors[0]->key5(), keys_b[2]);
+  // bias_c
+  EXPECT_EQ(imu_factors[0]->key6(), keys_c[2]);
+  // Remove last factor
+  ASSERT_FALSE(model_.RemoveRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  ASSERT_TRUE(model_.RemoveRelativeFactors(timestamp_b, timestamp_c, nodes_, factors_));
+  ASSERT_TRUE(factors_.empty());
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
