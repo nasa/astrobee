@@ -3,9 +3,6 @@
   - popuate imu measurements!
     -explicit CombinedNavStateNodeUpdateModel(const Params& params);
       - test add priors (A)
-        - need to add nodes first!!! (AA)
-        - add function to get prior factors from factors! 
-          - (see other code, should exist somewhere...)
         - make sure noise matches!
           - move noise check function from other test to test utilities??
 

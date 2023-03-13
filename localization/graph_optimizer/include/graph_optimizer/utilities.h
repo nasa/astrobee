@@ -24,6 +24,8 @@
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <vector>
+
 namespace graph_optimizer {
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 
@@ -54,6 +56,17 @@ int NumFactors(const gtsam::NonlinearFactorGraph& graph) {
   return num_factors;
 }
 
+template <typename FactorType>
+std::vector<const FactorType*> Factors(const gtsam::NonlinearFactorGraph& graph) {
+  std::vector<const FactorType*> factors;
+  for (const auto& factor : graph) {
+    const FactorType* casted_factor = dynamic_cast<const FactorType*>(factor.get());
+    if (casted_factor) {
+      factors.emplace_back(casted_factor);
+    }
+  }
+  return factors;
+}
 }  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_UTILITIES_H_
