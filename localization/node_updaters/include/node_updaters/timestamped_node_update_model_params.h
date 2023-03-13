@@ -29,7 +29,8 @@ struct TimestampedNodeUpdateModelParams {
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(huber_k);
+    // TODO(rsoussan): Why does this lead to a compile error in test?
+    // ar& BOOST_SERIALIZATION_NVP(huber_k);
   }
 };
 }  // namespace node_updaters

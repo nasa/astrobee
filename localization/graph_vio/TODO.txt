@@ -1,9 +1,27 @@
 - template test on type? template specializations for combined imu test??
 - test combined nav state node updater! (AC)
-  - add default params!
-    - default construct imu params
-    - default construct timestamped update model params
   - popuate imu measurements!
+    -explicit CombinedNavStateNodeUpdateModel(const Params& params);
+    - void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
+                 const localization_common::Time timestamp, const NodesType& nodes,
+                 gtsam::NonlinearFactorGraph& factors) const final;
+     - bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
+                                  const localization_common::Time timestamp_b, NodesType& nodes,
+                                  gtsam::NonlinearFactorGraph& factors) const final;
+    bool AddRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+                            const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
+
+    void AddMeasurement(const localization_measurements::ImuMeasurement& measurement) final;
+    void RemoveMeasurements(const localization_common::Time oldest_allowed_time) final;
+
+    bool CanAddNode(const localization_common::Time timestamp) const final;
+
+    bool RemoveRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+                               const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
+
+    - test measurement interpolation????
+      - go over imu integrator test!!!! how thorough was this???
+
 
   - how to add a second measurement to updater?????
     - add to imu measurement???
