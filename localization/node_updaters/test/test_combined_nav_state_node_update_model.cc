@@ -226,6 +226,49 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactors) {
   EXPECT_TRUE(pim->equals(imu_factors[0]->preintegratedMeasurements()));
 }
 
+TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactorsInBetweenTimes) {
+  const auto timestamp_a = timestamps_[2];
+  const lc::CombinedNavState node_a(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const auto timestamp_b = (timestamps_[5] + timestamps_[6])/2.0;
+  const lc::CombinedNavState node_b(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
+
+  const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
+  ASSERT_FALSE(keys_a.empty());
+  const auto keys_b = nodes_.Add(node_b.timestamp(), node_b);
+  ASSERT_FALSE(keys_b.empty());
+
+  AddMeasurements();
+
+  // Add relative factor
+  ASSERT_FALSE(model_.AddRelativeFactors(timestamps_[0], timestamp_b, nodes_, factors_));
+  ASSERT_FALSE(model_.AddRelativeFactors(timestamp_a, timestamps_[3], nodes_, factors_));
+  ASSERT_TRUE(model_.AddRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  ASSERT_EQ(factors_.size(), 1);
+  const auto imu_factors = go::Factors<gtsam::CombinedImuFactor>(factors_);
+  ASSERT_EQ(imu_factors.size(), 1);
+  // Check keys
+  // pose_a
+  EXPECT_EQ(imu_factors[0]->key1(), keys_a[0]);
+  // vel_a
+  EXPECT_EQ(imu_factors[0]->key2(), keys_a[1]);
+  // pose_b
+  EXPECT_EQ(imu_factors[0]->key3(), keys_b[0]);
+  // vel_b
+  EXPECT_EQ(imu_factors[0]->key4(), keys_b[1]);
+  // bias_a
+  EXPECT_EQ(imu_factors[0]->key5(), keys_a[2]);
+  // bias_b
+  EXPECT_EQ(imu_factors[0]->key6(), keys_b[2]);
+
+  // Check PIM
+  const auto pim = imu_integrator_.IntegratedPim(node_a.bias(), timestamp_a, timestamp_b);
+  ASSERT_TRUE(pim != boost::none);
+  EXPECT_TRUE(pim->equals(imu_factors[0]->preintegratedMeasurements()));
+}
+
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

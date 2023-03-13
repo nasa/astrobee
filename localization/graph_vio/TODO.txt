@@ -2,21 +2,12 @@
 - test combined nav state node updater! (AC)
   - popuate imu measurements!
     -explicit CombinedNavStateNodeUpdateModel(const Params& params);
-      - test add relative factors
-            - check for pim equality?? (AA)
-              - add function to create pim using imu measurements! (AAAA)
-                - given measurement start and stop indices!
-              - compare this to factor pim! 
-          - test adding relative factor that doesn't start on exact timestamp! (AB)
-            - make sure pim measurements are interpolated correctly!!
-                - check this in imu integrator test!!
-                - just check for pim equality with imu_integrator pim here!
-        - remove pose/velocity code/containers? don't need?
       - test remove relative factors (AC)
       - test add nodes and relative factors (AD)
         - how to make sure nodes are added???
         - add function to check if two relative factors are equal!!!
           - use code from add relative factors test!
+      - remove pose/velocity code/containers? don't need?
 
   - how to add a second measurement to updater????? (AE)
     - why is this needed???
