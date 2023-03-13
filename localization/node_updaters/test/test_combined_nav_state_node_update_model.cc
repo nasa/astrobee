@@ -159,15 +159,18 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddPriors) {
   const auto pose_priors = go::Factors<gtsam::PriorFactor<gtsam::Pose3>>(factors_);
   EXPECT_EQ(pose_priors.size(), 1);
   EXPECT_MATRIX_NEAR(pose_priors[0]->prior(), node.pose(), 1e-6);
+  EXPECT_MATRIX_NEAR(nu::Covariance(pose_priors[0]->noiseModel()), nu::Covariance(noise[0]), 1e-6);
   // Check velocity prior
   const auto velocity_priors = go::Factors<gtsam::PriorFactor<gtsam::Velocity3>>(factors_);
   EXPECT_EQ(velocity_priors.size(), 1);
   EXPECT_MATRIX_NEAR(velocity_priors[0]->prior(), node.velocity(), 1e-6);
+  EXPECT_MATRIX_NEAR(nu::Covariance(velocity_priors[0]->noiseModel()), nu::Covariance(noise[1]), 1e-6);
   // Check Bias prior
   const auto bias_priors = go::Factors<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>(factors_);
   EXPECT_EQ(bias_priors.size(), 1);
   EXPECT_MATRIX_NEAR(bias_priors[0]->prior().accelerometer(), node.bias().accelerometer(), 1e-6);
   EXPECT_MATRIX_NEAR(bias_priors[0]->prior().gyroscope(), node.bias().gyroscope(), 1e-6);
+  EXPECT_MATRIX_NEAR(nu::Covariance(bias_priors[0]->noiseModel()), nu::Covariance(noise[2]), 1e-6);
 }
 
 // Run all the tests that were declared with TEST()
