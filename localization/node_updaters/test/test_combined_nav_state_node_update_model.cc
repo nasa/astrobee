@@ -44,20 +44,24 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
   const Eigen::Vector3d bias_corrected_angular_velocity = angular_velocity - angular_velocity_bias;
 //  params.graph_initializer.initial_imu_bias = gtsam::imuBias::ConstantBias(acceleration_bias, angular_velocity_bias);
   // Use depth odometry factor adder since it can add relative pose factors
-  constexpr int kNumIterations = 100;
-  constexpr double kTimeDiff = 0.1;
+  constexpr int kNumIterations = 10;
+  constexpr double kTimeDiff = 1;
   lc::Time time = 0.0;
   Eigen::Isometry3d current_pose(Eigen::Isometry3d::Identity());
   Eigen::Vector3d velocity(Eigen::Vector3d::Zero());
   // Add initial zero imu value so the imu integrator has more than one measurement when the subsequent
   // measurement is added
   // TODO(rsoussan): is this needed?
-  const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
-  measurements_.emplace_back(zero_imu_measurement);
-  for (int i = 0; i < kNumIterations; ++i) {
-    time += kTimeDiff;
+  // const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
+  // measurements_.emplace_back(zero_imu_measurement);
+  for (int i = 0; i < kNumIterations ; ++i) {
     const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
     measurements_.emplace_back(imu_measurement);
+    timestamps_.emplace_back(time);
+    poses_.emplace_back(current_pose);
+    velocities_.emplace_back(velocity);
+    // Update values for next iteration
+    time += kTimeDiff;
     const Eigen::Matrix3d relative_orientation =
       (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
     const Eigen::Vector3d relative_translation =
@@ -67,8 +71,6 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
     velocity = relative_orientation.transpose() * velocity;
     const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
     current_pose = current_pose * relative_pose;
-    const lc::Time source_time = time - kTimeDiff;
-    const lc::Time target_time = time;
   }
 }
 
