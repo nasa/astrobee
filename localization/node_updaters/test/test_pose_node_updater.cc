@@ -632,7 +632,13 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   const boost::optional<gtsam::Marginals> marginals(boost::none);
   ASSERT_TRUE(pose_node_updater_->SlideWindow(*new_oldest_time, marginals, old_keys, params_.huber_k, factors_));
   EXPECT_EQ(nodes.size(), 3);
-  EXPECT_EQ(factors_.size(), 3);
+  // 3 nodes should be the 3 poses added after the start node
+  EXPECT_SAME_NODE(timestamps_[0], pose(0));
+  EXPECT_SAME_NODE(timestamps_[1], pose(1));
+  EXPECT_SAME_NODE(timestamps_[2], pose(2));
+  // Between factors aren't removed yet, so all between factors should remain,
+  // only prior should be removed/added (removed from start node, added to 1st node)
+  EXPECT_EQ(factors_.size(), 4);
   // Indices changed, so factor 0 -> between factor 1 and so on
   EXPECT_SAME_BETWEEN_FACTOR(0, 0);
   EXPECT_SAME_BETWEEN_FACTOR(1, 1);
