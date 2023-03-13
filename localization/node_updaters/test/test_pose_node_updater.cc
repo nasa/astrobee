@@ -126,6 +126,15 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     return EXPECT_SAME_PRIOR_FACTOR(index, lc::EigenPose(pose));
   }
 
+  void EXPECT_SAME_BETWEEN_FACTOR(const int factor_index, const int pose_index) {
+    const auto& pose_a = pose(pose_index-1);
+    const auto& pose_b = pose(pose_index);
+    const auto relative_pose = pose_a.inverse()*pose_b;
+    // Subtract 1 here to avoid assumption that factor 0 is a prior factor,
+    // since this call eventually adds 1 and makes this assumption
+    EXPECT_SAME_BETWEEN_FACTOR(factor_index - 1, relative_pose);
+  }
+
   void EXPECT_SAME_BETWEEN_FACTOR(const int index) {
     const auto& pose_a = pose(index-1);
     const auto& pose_b = pose(index);
@@ -624,13 +633,12 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   ASSERT_TRUE(pose_node_updater_->SlideWindow(*new_oldest_time, marginals, old_keys, params_.huber_k, factors_));
   EXPECT_EQ(nodes.size(), 3);
   EXPECT_EQ(factors_.size(), 3);
-  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
-  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
-  // TODO(rsoussan): make sure only one prior factor exists!
-  // This should fail!!
-  // EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
-  // TODO(rsoussan): need to change factor indices? add function to get certain factors? how to order them?
-  // TODO(rsoussan): need to check different noise for prior! use starting param noise for prior!
+  // Indices changed, so factor 0 -> between factor 1 and so on
+  EXPECT_SAME_BETWEEN_FACTOR(0, 0);
+  EXPECT_SAME_BETWEEN_FACTOR(1, 1);
+  EXPECT_SAME_BETWEEN_FACTOR(2, 2);
+  // Prior factor added last
+  EXPECT_SAME_PRIOR_FACTOR(3, pose(0));
 }
 
 // Run all the tests that were declared with TEST()
