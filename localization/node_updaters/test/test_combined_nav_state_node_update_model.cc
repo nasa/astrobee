@@ -88,11 +88,32 @@ gtsam::NonlinearFactorGraph factors_;
 };
 
 TEST_F(CombinedNavStateNodeUpdateModelTest, AddRemoveCanAddNode) {
-  EXPECT_FALSE(model_.CanAddNode(0));
-  model_.AddMeasurement(measurement(0));
-  EXPECT_TRUE(model_.CanAddNode(0));
+  EXPECT_FALSE(model_.CanAddNode(time(0)));
+  // Add 1st measurement
+  model_.AddMeasurement(measurement(time(0)));
+  EXPECT_TRUE(model_.CanAddNode(time(0)));
+  EXPECT_FALSE(model_.CanAddNode(time(0) - 0.1));
+  EXPECT_FALSE(model_.CanAddNode(time(1)));
+  EXPECT_FALSE(model_.CanAddNode(time(5)));
+  // Add 2nd measurement
   model_.AddMeasurement(measurement(1));
-  EXPECT_TRUE(model_.CanAddNode(0.5));
+  EXPECT_TRUE(model_.CanAddNode(time(0)));
+  EXPECT_FALSE(model_.CanAddNode(time(0) - 0.1));
+  EXPECT_TRUE(model_.CanAddNode((time(0) + time(1))/2.0));
+  EXPECT_TRUE(model_.CanAddNode(time(1)));
+  EXPECT_FALSE(model_.CanAddNode(time(2)));
+  // Add 3rd measurement
+  model_.AddMeasurement(measurement(2));
+  EXPECT_TRUE(model_.CanAddNode(time(0)));
+  EXPECT_FALSE(model_.CanAddNode(time(0) - 0.1));
+  EXPECT_TRUE(model_.CanAddNode((time(0) + time(1))/2.0));
+  EXPECT_TRUE(model_.CanAddNode(time(2)));
+  // Remove up to 2nd measurement
+  model_.RemoveMeasurements(time(1));
+  EXPECT_FALSE(model_.CanAddNode(time(0)));
+  EXPECT_FALSE(model_.CanAddNode((time(0) + time(1))/2.0));
+  EXPECT_TRUE(model_.CanAddNode(time(1)));
+  EXPECT_TRUE(model_.CanAddNode(time(2)));
 }
 
 // Run all the tests that were declared with TEST()
