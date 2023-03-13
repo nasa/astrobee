@@ -602,6 +602,8 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_EQ(factors_.size(), 1);
+  EXPECT_EQ(*pose_node_updater_->OldestTimestamp(), params_.starting_time);
+  EXPECT_EQ(*pose_node_updater_->LatestTimestamp(), params_.starting_time);
   AddMeasurements();
   // Add 1st node, nodes: 2, duration: 1
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
@@ -646,6 +648,8 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   EXPECT_SAME_PRIOR_FACTOR(3, pose(0));
   // Since no marginals available, noise should default to start noise
   EXPECT_SAME_PRIOR_NOISE(3, params_.start_noise_models[0]);
+  EXPECT_EQ(*pose_node_updater_->OldestTimestamp(), timestamps_[0]);
+  EXPECT_EQ(*pose_node_updater_->LatestTimestamp(), timestamps_[2]);
 }
 // TODO(rsoussan): Test slide window with valid marginals to create valid prior covariances
 
