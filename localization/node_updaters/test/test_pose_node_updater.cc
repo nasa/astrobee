@@ -628,7 +628,6 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   EXPECT_EQ(*new_oldest_time, timestamps_[0]);
   const auto old_keys = pose_node_updater_->OldKeys(*new_oldest_time, factors_);
   EXPECT_EQ(old_keys.size(), 1);
-  // TODO(rsoussan): how to create fake marginals? check gtsam?
   const boost::optional<gtsam::Marginals> marginals(boost::none);
   ASSERT_TRUE(pose_node_updater_->SlideWindow(*new_oldest_time, marginals, old_keys, params_.huber_k, factors_));
   EXPECT_EQ(nodes.size(), 3);
@@ -645,7 +644,10 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   EXPECT_SAME_BETWEEN_FACTOR(2, 2);
   // Prior factor added last
   EXPECT_SAME_PRIOR_FACTOR(3, pose(0));
+  // Since no marginals available, noise should default to start noise
+  EXPECT_SAME_PRIOR_NOISE(3, params_.start_noise_models[0]);
 }
+// TODO(rsoussan): Test slide window with valid marginals to create valid prior covariances
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
