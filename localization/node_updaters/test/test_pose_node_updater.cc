@@ -580,24 +580,32 @@ TEST_F(PoseNodeUpdaterTest, NewOldestTimeMinMaxStatesViolation) {
   }
 }
 
-/*TEST_F(PoseNodeUpdaterTest, SlideWindow) {
-  ZeroInitialize();
+TEST_F(PoseNodeUpdaterTest, SlideWindow) {
+  params_.start_node = gtsam::Pose3::identity();
+  params_.starting_time = 0.0;
+  params_.min_num_states = 2;
+  params_.max_num_states = 5;
+  params_.ideal_duration = 2.5;
+  params_.Initialize();
+  pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
+  pose_node_updater_->AddInitialNodesAndPriors(factors_);
+
   const auto& nodes = pose_node_updater_->nodes();
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_EQ(factors_.size(), 1);
   AddMeasurements();
-  // Add 1st node
+  // Add 1st node, nodes: 2, duration: 1
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
   EXPECT_EQ(nodes.size(), 2);
   EXPECT_EQ(factors_.size(), 2);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
-  // Add 2nd node
+  // Add 2nd node, nodes: 3, duration 2
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
   EXPECT_EQ(nodes.size(), 3);
   EXPECT_EQ(factors_.size(), 3);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
-  // Add 3rd node
+  // Add 3rd node, nodes: 4, duration 3
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
   EXPECT_EQ(nodes.size(), 4);
   EXPECT_EQ(factors_.size(), 4);
@@ -605,20 +613,25 @@ TEST_F(PoseNodeUpdaterTest, NewOldestTimeMinMaxStatesViolation) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
   // Slide window
-  const gtsam::KeyVector empty_keys;
+  // Expect to remove first node, so duration is 2
+  const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+  ASSERT_TRUE(new_oldest_time != boost::none);
+  EXPECT_EQ(*new_oldest_time, timestamps_[0]);
+  const auto old_keys = pose_node_updater_->OldKeys(*new_oldest_time, factors_);
+  EXPECT_EQ(old_keys.size(), 1);
   // TODO(rsoussan): how to create fake marginals? check gtsam?
   const boost::optional<gtsam::Marginals> marginals(boost::none);
-  ASSERT_TRUE(pose_node_updater_->SlideWindow(timestamps_[0], marginals, empty_keys, params_.huber_k, factors_));
+  ASSERT_TRUE(pose_node_updater_->SlideWindow(*new_oldest_time, marginals, old_keys, params_.huber_k, factors_));
   EXPECT_EQ(nodes.size(), 3);
   EXPECT_EQ(factors_.size(), 3);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
+  // TODO(rsoussan): make sure only one prior factor exists!
   // This should fail!!
-  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   // TODO(rsoussan): need to change factor indices? add function to get certain factors? how to order them?
   // TODO(rsoussan): need to check different noise for prior! use starting param noise for prior!
-  // TODO(rsoussan): make sure only one prior factor exists!
-}*/
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
