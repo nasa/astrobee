@@ -36,8 +36,7 @@ namespace node_updaters {
 // Node update model that adds GTSAM between factors as relative factors and GTSAM prior factors as priors
 // for a given node type.
 template <typename NodeType, typename NodeUpdateModelType>
-class BetweenFactorNodeUpdateModel
-    : public NodeUpdateModelType {
+class BetweenFactorNodeUpdateModel : public NodeUpdateModelType {
  public:
   using NodesType = graph_optimizer::TimestampedNodes<NodeType>;
   using Base = NodeUpdateModelType;
@@ -85,11 +84,9 @@ class BetweenFactorNodeUpdateModel
 
 // Implementation
 template <typename NodeType, typename NodeUpdateModelType>
-void BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddPriors(const NodeType& node,
-                                                       const std::vector<gtsam::SharedNoiseModel>& noise_models,
-                                                       const localization_common::Time timestamp,
-                                                       const NodesType& nodes,
-                                                       gtsam::NonlinearFactorGraph& factors) const {
+void BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddPriors(
+  const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
+  const localization_common::Time timestamp, const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const {
   const auto keys = nodes.Keys(timestamp);
   if (keys.empty()) {
     LogError("AddPriors: Failed to get keys.");
@@ -141,11 +138,9 @@ bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFac
 }
 
 template <typename NodeType, typename NodeUpdateModelType>
-bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFactors(const gtsam::KeyVector& keys_a,
-                                                                const localization_common::Time timestamp_a,
-                                                                const gtsam::KeyVector& keys_b,
-                                                                const localization_common::Time timestamp_b,
-                                                                gtsam::NonlinearFactorGraph& factors) const {
+bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::AddRelativeFactors(
+  const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a, const gtsam::KeyVector& keys_b,
+  const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors) const {
   const auto relative_node_and_noise = RelativeNodeAndNoise(timestamp_a, timestamp_b);
   if (!relative_node_and_noise) {
     LogError("AddRelativeFactor: Failed to add relative node and noise.");
@@ -162,7 +157,7 @@ template <typename NodeType, typename NodeUpdateModelType>
 bool BetweenFactorNodeUpdateModel<NodeType, NodeUpdateModelType>::RemoveRelativeFactors(
   const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
   gtsam::NonlinearFactorGraph& factors) const {
-  return  RemoveRelativeFactor<gtsam::BetweenFactor<NodeType>>(timestamp_a, timestamp_b, nodes, factors);;
+  return RemoveRelativeFactor<gtsam::BetweenFactor<NodeType>>(timestamp_a, timestamp_b, nodes, factors);
 }
 
 // Specialization helpers

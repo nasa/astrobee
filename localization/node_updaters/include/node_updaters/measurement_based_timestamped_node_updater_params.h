@@ -24,7 +24,7 @@
 
 namespace node_updaters {
 template <typename MeasurementType, typename NodeType>
-struct MeasurementBasedTimestampedNodeUpdaterParams : public TimestampedNodeUpdaterParams<NodeType>{
+struct MeasurementBasedTimestampedNodeUpdaterParams : public TimestampedNodeUpdaterParams<NodeType> {
   // Should be the same value as the start node/noise/time
   MeasurementType start_measurement;
 

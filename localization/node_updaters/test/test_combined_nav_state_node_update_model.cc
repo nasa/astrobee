@@ -36,43 +36,44 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
   CombinedNavStateNodeUpdateModelTest()
       : params_(nu::DefaultCombinedNavStateNodeUpdateModelParams()), model_(params_) {}
   void SetUp() final {
-  const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
-  const Eigen::Vector3d angular_velocity(0.04, 0.05, 0.06);
-  const Eigen::Vector3d acceleration_bias = 0.5 * acceleration;
-  const Eigen::Vector3d angular_velocity_bias = 0.5 * angular_velocity;
-  const Eigen::Vector3d bias_corrected_acceleration = acceleration - acceleration_bias;
-  const Eigen::Vector3d bias_corrected_angular_velocity = angular_velocity - angular_velocity_bias;
-//  params.graph_initializer.initial_imu_bias = gtsam::imuBias::ConstantBias(acceleration_bias, angular_velocity_bias);
-  // Use depth odometry factor adder since it can add relative pose factors
-  constexpr int kNumIterations = 10;
-  constexpr double kTimeDiff = 1;
-  lc::Time time = 0.0;
-  Eigen::Isometry3d current_pose(Eigen::Isometry3d::Identity());
-  Eigen::Vector3d velocity(Eigen::Vector3d::Zero());
-  // Add initial zero imu value so the imu integrator has more than one measurement when the subsequent
-  // measurement is added
-  // TODO(rsoussan): is this needed?
-  // const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
-  // measurements_.emplace_back(zero_imu_measurement);
-  for (int i = 0; i < kNumIterations ; ++i) {
-    const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
-    measurements_.emplace_back(imu_measurement);
-    timestamps_.emplace_back(time);
-    poses_.emplace_back(current_pose);
-    velocities_.emplace_back(velocity);
-    // Update values for next iteration
-    time += kTimeDiff;
-    const Eigen::Matrix3d relative_orientation =
-      (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
-    const Eigen::Vector3d relative_translation =
-      velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
-    velocity += bias_corrected_acceleration * kTimeDiff;
-    // Put velocity in new body frame after integrating accelerations
-    velocity = relative_orientation.transpose() * velocity;
-    const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
-    current_pose = current_pose * relative_pose;
+    const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
+    const Eigen::Vector3d angular_velocity(0.04, 0.05, 0.06);
+    const Eigen::Vector3d acceleration_bias = 0.5 * acceleration;
+    const Eigen::Vector3d angular_velocity_bias = 0.5 * angular_velocity;
+    const Eigen::Vector3d bias_corrected_acceleration = acceleration - acceleration_bias;
+    const Eigen::Vector3d bias_corrected_angular_velocity = angular_velocity - angular_velocity_bias;
+    //  params.graph_initializer.initial_imu_bias = gtsam::imuBias::ConstantBias(acceleration_bias,
+    //  angular_velocity_bias);
+    // Use depth odometry factor adder since it can add relative pose factors
+    constexpr int kNumIterations = 10;
+    constexpr double kTimeDiff = 1;
+    lc::Time time = 0.0;
+    Eigen::Isometry3d current_pose(Eigen::Isometry3d::Identity());
+    Eigen::Vector3d velocity(Eigen::Vector3d::Zero());
+    // Add initial zero imu value so the imu integrator has more than one measurement when the subsequent
+    // measurement is added
+    // TODO(rsoussan): is this needed?
+    // const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
+    // measurements_.emplace_back(zero_imu_measurement);
+    for (int i = 0; i < kNumIterations; ++i) {
+      const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
+      measurements_.emplace_back(imu_measurement);
+      timestamps_.emplace_back(time);
+      poses_.emplace_back(current_pose);
+      velocities_.emplace_back(velocity);
+      // Update values for next iteration
+      time += kTimeDiff;
+      const Eigen::Matrix3d relative_orientation =
+        (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
+      const Eigen::Vector3d relative_translation =
+        velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
+      velocity += bias_corrected_acceleration * kTimeDiff;
+      // Put velocity in new body frame after integrating accelerations
+      velocity = relative_orientation.transpose() * velocity;
+      const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
+      current_pose = current_pose * relative_pose;
+    }
   }
-}
 
   std::vector<gtsam::SharedNoiseModel> Noise() {
     constexpr double kTranslationStddev = 0.1;
@@ -102,19 +103,19 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
     noise.emplace_back(bias_noise);
   }
 
-const lm::ImuMeasurement& measurement(const int index) { return measurements_[index]; }
-lc::Time time(const int index) { return timestamps_[index]; }
-const Eigen::Isometry3d& pose(const int index) { return poses_[index]; }
-const Eigen::Vector3d& velocity(const int index) { return velocities_[index]; }
+  const lm::ImuMeasurement& measurement(const int index) { return measurements_[index]; }
+  lc::Time time(const int index) { return timestamps_[index]; }
+  const Eigen::Isometry3d& pose(const int index) { return poses_[index]; }
+  const Eigen::Vector3d& velocity(const int index) { return velocities_[index]; }
 
-std::vector<lm::ImuMeasurement> measurements_;
-std::vector<lc::Time> timestamps_;
-std::vector<Eigen::Isometry3d> poses_;
-std::vector<Eigen::Vector3d> velocities_;
-nu::CombinedNavStateNodeUpdateModel model_;
-nu::CombinedNavStateNodeUpdateModelParams params_;
-go::CombinedNavStateNodes nodes_;
-gtsam::NonlinearFactorGraph factors_;
+  std::vector<lm::ImuMeasurement> measurements_;
+  std::vector<lc::Time> timestamps_;
+  std::vector<Eigen::Isometry3d> poses_;
+  std::vector<Eigen::Vector3d> velocities_;
+  nu::CombinedNavStateNodeUpdateModel model_;
+  nu::CombinedNavStateNodeUpdateModelParams params_;
+  go::CombinedNavStateNodes nodes_;
+  gtsam::NonlinearFactorGraph factors_;
 };
 
 TEST_F(CombinedNavStateNodeUpdateModelTest, AddRemoveCanAddNode) {
@@ -129,23 +130,22 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRemoveCanAddNode) {
   model_.AddMeasurement(measurement(1));
   EXPECT_TRUE(model_.CanAddNode(time(0)));
   EXPECT_FALSE(model_.CanAddNode(time(0) - 0.1));
-  EXPECT_TRUE(model_.CanAddNode((time(0) + time(1))/2.0));
+  EXPECT_TRUE(model_.CanAddNode((time(0) + time(1)) / 2.0));
   EXPECT_TRUE(model_.CanAddNode(time(1)));
   EXPECT_FALSE(model_.CanAddNode(time(2)));
   // Add 3rd measurement
   model_.AddMeasurement(measurement(2));
   EXPECT_TRUE(model_.CanAddNode(time(0)));
   EXPECT_FALSE(model_.CanAddNode(time(0) - 0.1));
-  EXPECT_TRUE(model_.CanAddNode((time(0) + time(1))/2.0));
+  EXPECT_TRUE(model_.CanAddNode((time(0) + time(1)) / 2.0));
   EXPECT_TRUE(model_.CanAddNode(time(2)));
   // Remove up to 2nd measurement
   model_.RemoveMeasurements(time(1));
   EXPECT_FALSE(model_.CanAddNode(time(0)));
-  EXPECT_FALSE(model_.CanAddNode((time(0) + time(1))/2.0));
+  EXPECT_FALSE(model_.CanAddNode((time(0) + time(1)) / 2.0));
   EXPECT_TRUE(model_.CanAddNode(time(1)));
   EXPECT_TRUE(model_.CanAddNode(time(2)));
 }
-
 
 TEST_F(CombinedNavStateNodeUpdateModelTest, AddPriors) {
   const auto node = lc::RandomCombinedNavState();

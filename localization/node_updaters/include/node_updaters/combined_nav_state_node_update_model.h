@@ -34,8 +34,8 @@
 namespace node_updaters {
 class CombinedNavStateNodeUpdateModel
     : public MeasurementBasedTimestampedNodeUpdateModel<localization_measurements::ImuMeasurement,
-                                             localization_common::CombinedNavState,
-                                             graph_optimizer::CombinedNavStateNodes> {
+                                                        localization_common::CombinedNavState,
+                                                        graph_optimizer::CombinedNavStateNodes> {
  public:
   using NodeType = localization_common::CombinedNavState;
   using NodesType = graph_optimizer::CombinedNavStateNodes;

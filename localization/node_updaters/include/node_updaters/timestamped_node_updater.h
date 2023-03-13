@@ -49,9 +49,8 @@ class TimestampedNodeUpdater
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
   // Adds initial nodes and priors using provided noise values and timestamp.
-  void AddInitialNodesAndPriors(const NodeType& initial_node,
-                                 const std::vector<gtsam::SharedNoiseModel>& initial_noise,
-                                 const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
+  void AddInitialNodesAndPriors(const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise,
+                                const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // Adds a node using the provided timestamp if possible.
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
@@ -169,8 +168,8 @@ bool TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>
 
       std::vector<gtsam::SharedNoiseModel> prior_noise_models;
       for (const auto& key : keys) {
-        const auto prior_noise = graph_optimizer::Robust(
-          gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
+        const auto prior_noise =
+          graph_optimizer::Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
         prior_noise_models.emplace_back(prior_noise);
       }
       node_update_model_.AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, *nodes_, factors);

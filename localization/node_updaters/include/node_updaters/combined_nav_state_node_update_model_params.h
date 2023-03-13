@@ -25,7 +25,7 @@
 #include <boost/serialization/serialization.hpp>
 
 namespace node_updaters {
-struct CombinedNavStateNodeUpdateModelParams  : public TimestampedNodeUpdateModelParams {
+struct CombinedNavStateNodeUpdateModelParams : public TimestampedNodeUpdateModelParams {
   imu_integration::ImuIntegratorParams imu_integrator;
 
  private:

@@ -42,7 +42,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     Eigen::Vector3d translation(Eigen::Vector3d::Zero());
     for (int i = 0; i < num_measurements_; ++i) {
       // Increase increment over time so each relative pose is different
-      translation += translation_increment*i;
+      translation += translation_increment * i;
       const lc::Time time = start_time_ + time_increment_ * i;
       const auto pose = lc::Isometry3d(translation, Eigen::Matrix3d::Identity());
       const lc::PoseWithCovariance pose_with_covariance(pose, lc::RandomPoseCovariance());
@@ -106,13 +106,11 @@ class PoseNodeUpdaterTest : public ::testing::Test {
     EXPECT_SAME_NODE(timestamp, lc::EigenPose(pose));
   }
 
-  void EXPECT_SAME_NODE(const int index) {
-    EXPECT_SAME_NODE(timestamp(index), pose(index));
-  }
+  void EXPECT_SAME_NODE(const int index) { EXPECT_SAME_NODE(timestamp(index), pose(index)); }
 
   void EXPECT_SAME_NODE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     const auto expected_pose = InterpolatedPose(index_a, index_b, alpha);
-    const lc::Time timestamp_a_b = timestamp(index_a)*alpha + timestamp(index_b)*(1.0 - alpha);
+    const lc::Time timestamp_a_b = timestamp(index_a) * alpha + timestamp(index_b) * (1.0 - alpha);
     EXPECT_SAME_NODE(timestamp_a_b, expected_pose);
   }
 
@@ -127,24 +125,24 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR(const int factor_index, const int pose_index) {
-    const auto& pose_a = pose(pose_index-1);
+    const auto& pose_a = pose(pose_index - 1);
     const auto& pose_b = pose(pose_index);
-    const auto relative_pose = pose_a.inverse()*pose_b;
+    const auto relative_pose = pose_a.inverse() * pose_b;
     // Subtract 1 here to avoid assumption that factor 0 is a prior factor,
     // since this call eventually adds 1 and makes this assumption
     EXPECT_SAME_BETWEEN_FACTOR(factor_index - 1, relative_pose);
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR(const int index) {
-    const auto& pose_a = pose(index-1);
+    const auto& pose_a = pose(index - 1);
     const auto& pose_b = pose(index);
-    const auto relative_pose = pose_a.inverse()*pose_b;
+    const auto relative_pose = pose_a.inverse() * pose_b;
     EXPECT_SAME_BETWEEN_FACTOR(index, relative_pose);
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR(const int index, const Eigen::Isometry3d& pose) {
     // Add one to index to account for first prior pose
-    const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index+1].get());
+    const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index + 1].get());
     ASSERT_TRUE(pose_between_factor);
     EXPECT_MATRIX_NEAR(pose_between_factor->measured(), pose, 1e-6);
   }
@@ -154,21 +152,20 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   Eigen::Isometry3d InterpolatedPose(const int index_a, const int index_b, const double alpha) {
-    return lc::Interpolate(pose(index_a),
-                                               pose(index_b), alpha);
+    return lc::Interpolate(pose(index_a), pose(index_b), alpha);
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     const auto pose_interpolated = InterpolatedPose(index_a, index_b, alpha);
-    const Eigen::Isometry3d relative_pose = pose(index_a).inverse()*pose_interpolated;
+    const Eigen::Isometry3d relative_pose = pose(index_a).inverse() * pose_interpolated;
     EXPECT_SAME_BETWEEN_FACTOR(index_b, relative_pose);
   }
 
   // Check the second between factor after an interpolated node
   void EXPECT_SAME_SECOND_BETWEEN_FACTOR_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     const auto pose_interpolated = InterpolatedPose(index_a, index_b, alpha);
-    const Eigen::Isometry3d relative_pose = pose_interpolated.inverse()*pose(index_b);
-    EXPECT_SAME_BETWEEN_FACTOR(index_b+1, relative_pose);
+    const Eigen::Isometry3d relative_pose = pose_interpolated.inverse() * pose(index_b);
+    EXPECT_SAME_BETWEEN_FACTOR(index_b + 1, relative_pose);
   }
 
   template <typename FactorPtrType>
@@ -183,7 +180,8 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   void EXPECT_SAME_BETWEEN_NOISE(const int index, const lc::PoseCovariance& covariance) {
     // Handle special case where need prior noise (remove this once covariance computation is fixed)
-    if (index == -1) {EXPECT_SAME_NOISE(dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get()), covariance);
+    if (index == -1) {
+      EXPECT_SAME_NOISE(dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factors_[0].get()), covariance);
     } else {
       // Add one to index to account for first prior pose
       const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[index + 1].get());
@@ -194,7 +192,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   void EXPECT_SAME_BETWEEN_NOISE(const int index) {
     // TODO(rsoussan): Change this when pose interpolation covariance is updated, use both covariances to compute
     // relative covariance
-      EXPECT_SAME_BETWEEN_NOISE(index, covariance(index));
+    EXPECT_SAME_BETWEEN_NOISE(index, covariance(index));
   }
 
   void EXPECT_SAME_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
@@ -204,7 +202,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
 
   void EXPECT_SAME_SECOND_BETWEEN_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
     // TODO(rsoussan): Change this when interpolation/relative computation for cov is updated
-    EXPECT_SAME_BETWEEN_NOISE(index_b+1, covariance(index_b));
+    EXPECT_SAME_BETWEEN_NOISE(index_b + 1, covariance(index_b));
   }
 
   void EXPECT_SAME_BETWEEN_FACTOR_AND_NOISE(const int index) {
@@ -234,7 +232,7 @@ class PoseNodeUpdaterTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_SECOND_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(const int index_a, const int index_b,
-                                                                  const double alpha) {
+                                                                         const double alpha) {
     EXPECT_SAME_NODE(index_b);
     EXPECT_SAME_SECOND_BETWEEN_NOISE_INTERPOLATED(index_a, index_b, alpha);
     EXPECT_SAME_SECOND_BETWEEN_FACTOR_INTERPOLATED(index_a, index_b, alpha);
@@ -350,7 +348,7 @@ TEST_F(PoseNodeUpdaterTest, AddNode) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
   // Add 4th node in between 3rd and 4th measurement
-  const lc::Time timestamp_2_3 = (timestamps_[2] + timestamps_[3])/2.0;
+  const lc::Time timestamp_2_3 = (timestamps_[2] + timestamps_[3]) / 2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_2_3, factors_));
   EXPECT_EQ(nodes.size(), 5);
   EXPECT_EQ(factors_.size(), 5);
@@ -402,7 +400,7 @@ TEST_F(PoseNodeUpdaterTest, AddNodeBetweenStartAndFirstMeasurement) {
   EXPECT_EQ(factors_.size(), 1);
   AddMeasurements();
   // Add 1st node in between start pose and 1st measurement
-  const lc::Time timestamp_s_0 = (params_.starting_time + timestamps_[0])/2.0;
+  const lc::Time timestamp_s_0 = (params_.starting_time + timestamps_[0]) / 2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_s_0, factors_));
   EXPECT_EQ(nodes.size(), 2);
   EXPECT_EQ(factors_.size(), 2);
@@ -443,7 +441,7 @@ TEST_F(PoseNodeUpdaterTest, SplitNode) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   // Add 3rd node in between 1st and 2nd measurement
-  const lc::Time timestamp_0_1 = (timestamps_[0] + timestamps_[1])/2.0;
+  const lc::Time timestamp_0_1 = (timestamps_[0] + timestamps_[1]) / 2.0;
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamp_0_1, factors_));
   EXPECT_EQ(nodes.size(), 4);
   EXPECT_EQ(factors_.size(), 4);

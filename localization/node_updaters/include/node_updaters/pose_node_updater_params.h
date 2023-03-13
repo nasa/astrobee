@@ -44,13 +44,13 @@ struct PoseNodeUpdaterParams
       starting_time);
   }
   void SetStartNoiseModels() {
-    const gtsam::Vector6 pose_prior_noise_sigmas(
-    (gtsam::Vector(6) << starting_prior_translation_stddev, starting_prior_translation_stddev,
-     starting_prior_translation_stddev, starting_prior_quaternion_stddev,
-     starting_prior_quaternion_stddev, starting_prior_quaternion_stddev)
-      .finished());
-  const gtsam::SharedNoiseModel pose_noise_model = graph_optimizer::Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), huber_k);
+    const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << starting_prior_translation_stddev,
+                                                  starting_prior_translation_stddev, starting_prior_translation_stddev,
+                                                  starting_prior_quaternion_stddev, starting_prior_quaternion_stddev,
+                                                  starting_prior_quaternion_stddev)
+                                                   .finished());
+    const gtsam::SharedNoiseModel pose_noise_model = graph_optimizer::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), huber_k);
     start_noise_models.emplace_back(pose_noise_model);
   }
 

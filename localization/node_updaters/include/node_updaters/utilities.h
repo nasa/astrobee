@@ -31,9 +31,8 @@ bool RemoveFactor(const gtsam::KeyVector& keys, gtsam::NonlinearFactorGraph& fac
 
 // Removes the FactorType factor in factors containing each of the keys for nodes at timestamp a and b if it exists.
 template <typename FactorType, typename NodesType>
-bool RemoveRelativeFactor(
-  const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
-  gtsam::NonlinearFactorGraph& factors);
+bool RemoveRelativeFactor(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+                          const NodesType& nodes, gtsam::NonlinearFactorGraph& factors);
 
 // Returns the covariance from a robust, gaussian shared noise model.
 gtsam::Matrix Covariance(const gtsam::SharedNoiseModel& robust_gaussian_noise);
@@ -41,27 +40,26 @@ gtsam::Matrix Covariance(const gtsam::SharedNoiseModel& robust_gaussian_noise);
 // Implementation
 template <typename FactorType>
 bool RemoveFactor(const gtsam::KeyVector& keys, gtsam::NonlinearFactorGraph& factors) {
-    for (auto factor_it = factors.begin(); factor_it != factors.end(); ++factor_it) {
-      if (!dynamic_cast<FactorType*>(factor_it->get())) continue;
-      bool contains_keys = true;
-      for (const auto& key : keys) {
-        if ((*factor_it)->find(key) == std::end((*factor_it)->keys())) {
-          contains_keys = false;
-          continue;
-        }
-      }
-      if (contains_keys) {
-        factors.erase(factor_it);
-        return true;
+  for (auto factor_it = factors.begin(); factor_it != factors.end(); ++factor_it) {
+    if (!dynamic_cast<FactorType*>(factor_it->get())) continue;
+    bool contains_keys = true;
+    for (const auto& key : keys) {
+      if ((*factor_it)->find(key) == std::end((*factor_it)->keys())) {
+        contains_keys = false;
+        continue;
       }
     }
+    if (contains_keys) {
+      factors.erase(factor_it);
+      return true;
+    }
+  }
   return false;
 }
 
 template <typename FactorType, typename NodesType>
-bool RemoveRelativeFactor(
-  const localization_common::Time timestamp_a, const localization_common::Time timestamp_b, const NodesType& nodes,
-  gtsam::NonlinearFactorGraph& factors) {
+bool RemoveRelativeFactor(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+                          const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) {
   const auto keys_a = nodes.Keys(timestamp_a);
   if (keys_a.empty()) {
     LogError("RemoveRelativeFactor: Failed to get keys for timestamp_a.");
