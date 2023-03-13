@@ -19,7 +19,9 @@
 #ifndef LOCALIZATION_COMMON_TEST_UTILITIES_H_
 #define LOCALIZATION_COMMON_TEST_UTILITIES_H_
 
+#include <localization_common/combined_nav_state.h>
 #include <localization_common/pose_with_covariance.h>
+#include <localization_common/time.h>
 
 #include <Eigen/Geometry>
 #include <gtsam/geometry/Pose3.h>
@@ -52,6 +54,8 @@ double RandomGaussianDouble(const double mean, const double stddev);
 
 bool RandomBool();
 
+Time RandomTime();
+
 // Returns white noise with set stddev
 double Noise(const double stddev);
 
@@ -62,6 +66,8 @@ Eigen::Matrix<double, Dim, 1> RandomVector();
 Eigen::Vector3d RandomVector3d();
 
 Eigen::Vector3d RandomPoint3d();
+
+Eigen::Vector3d RandomVelocity();
 
 Eigen::Vector2d RandomVector2d();
 
@@ -81,6 +87,8 @@ PoseWithCovariance RandomPoseWithCovariance();
 Eigen::Isometry3d RandomIsometry3d();
 
 Eigen::Affine3d RandomAffine3d();
+
+CombinedNavState RandomCombinedNavState();
 
 // Focal lengths and principal points selected from [0.1, 1000]
 Eigen::Matrix3d RandomIntrinsics();

@@ -48,9 +48,13 @@ bool RandomBool() { return RandomDouble(0, 1) < 0.5; }
 
 double Noise(const double stddev) { return RandomGaussianDouble(0.0, stddev); }
 
+Time RandomTime() { return RandomPositiveDouble(); }
+
 Eigen::Vector3d RandomVector3d() { return RandomVector<3>(); }
 
-Eigen::Vector3d RandomPoint3d() { return RandomVector<3>(); }
+Eigen::Vector3d RandomPoint3d() { return RandomVector3d(); }
+
+Eigen::Vector3d RandomVelocity() { return RandomVector3d(); }
 
 Eigen::Vector2d RandomVector2d() { return RandomVector<2>(); }
 
@@ -80,6 +84,11 @@ Eigen::Affine3d RandomAffine3d() {
   random_affine3d.translation() = random_pose.translation();
   random_affine3d.linear() = scale * random_pose.linear();
   return random_affine3d;
+}
+
+CombinedNavState RandomCombinedNavState() {
+  return CombinedNavState(RandomPose(), RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(RandomVector3d(), RandomVector3d()), RandomTime());
 }
 
 Eigen::Matrix3d RandomIntrinsics() {

@@ -34,7 +34,7 @@ namespace nu = node_updaters;
 class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
  public:
   CombinedNavStateNodeUpdateModelTest()
-      : model_(nu::DefaultCombinedNavStateNodeUpdateModelParams()) {}
+      : params_(nu::DefaultCombinedNavStateNodeUpdateModelParams()), model_(params_) {}
   void SetUp() final {
   const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
   const Eigen::Vector3d angular_velocity(0.04, 0.05, 0.06);
@@ -74,6 +74,34 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
   }
 }
 
+  std::vector<gtsam::SharedNoiseModel> Noise() {
+    constexpr double kTranslationStddev = 0.1;
+    constexpr double kQuaternionStddev = 0.2;
+    const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << kTranslationStddev, kTranslationStddev,
+                                                  kTranslationStddev, kQuaternionStddev, kQuaternionStddev,
+                                                  kQuaternionStddev)
+                                                   .finished());
+    constexpr double kVelocityStddev = 0.3;
+    const gtsam::Vector3 velocity_prior_noise_sigmas(
+      (gtsam::Vector(3) << kVelocityStddev, kVelocityStddev, kVelocityStddev).finished());
+    constexpr double kAccelBiasStddev = 0.4;
+    constexpr double kGyroBiasStddev = 0.5;
+    const gtsam::Vector6 bias_prior_noise_sigmas((gtsam::Vector(6) << kAccelBiasStddev, kAccelBiasStddev,
+                                                  kAccelBiasStddev, kGyroBiasStddev, kGyroBiasStddev, kGyroBiasStddev)
+                                                   .finished());
+    const auto pose_noise = go::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
+    const auto velocity_noise =
+      go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+                 params_.huber_k);
+    const auto bias_noise = go::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
+    std::vector<gtsam::SharedNoiseModel> noise;
+    noise.emplace_back(pose_noise);
+    noise.emplace_back(velocity_noise);
+    noise.emplace_back(bias_noise);
+  }
+
 const lm::ImuMeasurement& measurement(const int index) { return measurements_[index]; }
 lc::Time time(const int index) { return timestamps_[index]; }
 const Eigen::Isometry3d& pose(const int index) { return poses_[index]; }
@@ -84,6 +112,8 @@ std::vector<lc::Time> timestamps_;
 std::vector<Eigen::Isometry3d> poses_;
 std::vector<Eigen::Vector3d> velocities_;
 nu::CombinedNavStateNodeUpdateModel model_;
+nu::CombinedNavStateNodeUpdateModelParams params_;
+go::CombinedNavStateNodes nodes_;
 gtsam::NonlinearFactorGraph factors_;
 };
 
@@ -114,6 +144,15 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRemoveCanAddNode) {
   EXPECT_FALSE(model_.CanAddNode((time(0) + time(1))/2.0));
   EXPECT_TRUE(model_.CanAddNode(time(1)));
   EXPECT_TRUE(model_.CanAddNode(time(2)));
+}
+
+
+TEST_F(CombinedNavStateNodeUpdateModelTest, AddPriors) {
+  const auto node = lc::RandomCombinedNavState();
+  const auto keys = nodes_.Add(node.timestamp(), node);
+  ASSERT_FALSE(keys.empty());
+  const auto noise = Noise();
+  model_.AddPriors(node, noise, node.timestamp(), nodes_, factors_);
 }
 
 // Run all the tests that were declared with TEST()

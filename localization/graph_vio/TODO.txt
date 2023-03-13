@@ -2,28 +2,21 @@
 - test combined nav state node updater! (AC)
   - popuate imu measurements!
     -explicit CombinedNavStateNodeUpdateModel(const Params& params);
-    - void AddPriors(const NodeType& node, const std::vector<gtsam::SharedNoiseModel>& noise_models,
-                 const localization_common::Time timestamp, const NodesType& nodes,
-                 gtsam::NonlinearFactorGraph& factors) const final;
-     - bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
-                                  const localization_common::Time timestamp_b, NodesType& nodes,
-                                  gtsam::NonlinearFactorGraph& factors) const final;
-    bool AddRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
-                            const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
+      - test add priors (A)
+        - need to add nodes first!!! (AA)
+        - add function to get prior factors from factors! 
+          - (see other code, should exist somewhere...)
+        - make sure noise matches!
+          - move noise check function from other test to test utilities??
 
-    void AddMeasurement(const localization_measurements::ImuMeasurement& measurement) final;
-    void RemoveMeasurements(const localization_common::Time oldest_allowed_time) final;
-
-    bool CanAddNode(const localization_common::Time timestamp) const final;
-
-    bool RemoveRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
-                               const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
-
-    - test measurement interpolation????
-      - go over imu integrator test!!!! how thorough was this???
-
+      - test add relative factors
+      - test remove relative factors
+      - test add nodes and relative factors (AAAA)
+        - how to make sure nodes are added???
 
   - how to add a second measurement to updater?????
+    - why is this needed???
+      - fan rate!!!!!!
     - add to imu measurement???
 
 - update factor adders with changes described below
