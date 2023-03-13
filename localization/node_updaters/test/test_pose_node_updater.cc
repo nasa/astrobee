@@ -623,6 +623,7 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[0] - 0.1));
   // Slide window
   // Expect to remove first node, so duration is 2
   const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
@@ -650,6 +651,10 @@ TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   EXPECT_SAME_PRIOR_NOISE(3, params_.start_noise_models[0]);
   EXPECT_EQ(*pose_node_updater_->OldestTimestamp(), timestamps_[0]);
   EXPECT_EQ(*pose_node_updater_->LatestTimestamp(), timestamps_[2]);
+  // Old measurements removed when slide window, so can no longer add measurements older
+  // than timestamps_[0]
+  EXPECT_FALSE(pose_node_updater_->CanAddNode(timestamps_[0] - 0.1));
+  EXPECT_TRUE(pose_node_updater_->CanAddNode(timestamps_[0]));
 }
 // TODO(rsoussan): Test slide window with valid marginals to create valid prior covariances
 

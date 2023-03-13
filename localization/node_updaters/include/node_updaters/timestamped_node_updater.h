@@ -64,7 +64,7 @@ class TimestampedNodeUpdater
   // the ideal oldest allowed timestamps of each node updater used in the graph.
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
-                   const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
+                   const double huber_k, gtsam::NonlinearFactorGraph& factors) override;
 
   // Returns the node updater type
   // This needs to be specialized

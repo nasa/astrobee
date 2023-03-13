@@ -37,6 +37,10 @@ class MeasurementBasedTimestampedNodeUpdater
     std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
   void AddMeasurement(const MeasurementType& measurement);
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
+  // Slides window and removes old measurements
+  bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
+                   const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                   const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
 
  private:
   // Serialization function
@@ -75,6 +79,22 @@ void MeasurementBasedTimestampedNodeUpdater<MeasurementType, NodeType, Timestamp
                                             MeasurementBasedTimestampedNodeUpdateModelType>::
   RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
   this->node_update_model_.RemoveMeasurements(oldest_allowed_time);
+}
+
+template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
+          typename MeasurementBasedTimestampedNodeUpdateModelType>
+bool MeasurementBasedTimestampedNodeUpdater<
+  MeasurementType, NodeType, TimestampedNodesType,
+  MeasurementBasedTimestampedNodeUpdateModelType>::SlideWindow(const localization_common::Time oldest_allowed_timestamp,
+                                                               const boost::optional<gtsam::Marginals>& marginals,
+                                                               const gtsam::KeyVector& old_keys, const double huber_k,
+                                                               gtsam::NonlinearFactorGraph& factors) {
+  if (!Base::SlideWindow(oldest_allowed_timestamp, marginals, old_keys, huber_k, factors)) {
+    LogError("Failed to slide window.");
+    return false;
+  }
+  RemoveMeasurements(oldest_allowed_timestamp);
+  return true;
 }
 }  // namespace node_updaters
 

@@ -1,12 +1,3 @@
-- test pose node updater! (AA)
-  - rename nodeupdater to nodeadder???
-  - test timestamped node updater functions (A)
-              - test oldest/latest timestamp! (AA)
-- need to remove old measurements in node update models?? (AB)
-  - add overriden call to slidewindow in measurement_based_...updater 
-    - calls timestamped updater slide window
-    - calls removeoldmeasurements (specialize this!)
-
 - template test on type? template specializations for combined imu test??
 - test combined nav state node updater! (AC)
   - popuate imu measurements!
@@ -17,6 +8,7 @@
     - add to imu measurement???
 
 - update factor adders with changes described below
+- rename nodeupdater to nodeadder???
 - compile graph vio!
 - test graph vio!!! (AD)
 - compiple graph loc! (AB)
