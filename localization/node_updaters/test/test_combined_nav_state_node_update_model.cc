@@ -221,6 +221,9 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactors) {
   EXPECT_EQ(imu_factors[0]->key6(), keys_b[2]);
 
   // Check PIM
+  const auto pim = imu_integrator_.IntegratedPim(node_a.bias(), timestamp_a, timestamp_b);
+  ASSERT_TRUE(pim != boost::none);
+  EXPECT_TRUE(pim->equals(imu_factors[0]->preintegratedMeasurements()));
 }
 
 // Run all the tests that were declared with TEST()
