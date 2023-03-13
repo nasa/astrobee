@@ -8,7 +8,7 @@
                - why isn't old prior being removed? 
                     - need to pass old keys!!!!
                         - test slidwdinwosoldesttime! (AA)
-                          - add separate tests for this! make sure bounding works!
+                          - add test with large duration so that max states is what's violated!!! (AAAA)
                         - test slide window! (AB)
                             - get old keys from within node updater!
                             - get oldest allowed time from within node updater!

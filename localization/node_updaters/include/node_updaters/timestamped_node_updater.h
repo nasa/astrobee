@@ -196,7 +196,7 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Sli
     return boost::none;
   }
 
-  const size_t size = nodes_->size();
+  const int size = nodes_->size();
   if (size <= params_.min_num_states) {
     LogDebug("SlideWindowOldestTime: Not enough states to remove.");
     return boost::none;
@@ -213,7 +213,7 @@ TimestampedNodeUpdater<NodeType, TimestampedNodesType, NodeUpdateModelType>::Sli
   // and >= min_num_states.
   // Assumes min_num_states < max_num_states.
   for (const auto& timestamp : nodes_->Timestamps()) {
-    ++num_states_to_be_removed;
+    if (timestamp > ideal_oldest_allowed_state) ++num_states_to_be_removed;
     const int new_num_states = size - num_states_to_be_removed;
     if (new_num_states > params_.max_num_states) continue;
     if (new_num_states <= params_.min_num_states) return timestamp;

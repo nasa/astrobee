@@ -484,19 +484,27 @@ TEST_F(PoseNodeUpdaterTest, OldKeys) {
   }
 }
 
-TEST_F(PoseNodeUpdaterTest, NewOldestTimeMaxStates) {
-  params_.min_num_states = 2;
-  params_.max_num_states = 4;
-  params_.ideal_duration = 10;
+TEST_F(PoseNodeUpdaterTest, NewOldestTimeDurationViolation) {
+  params_.min_num_states = 0;
+  params_.max_num_states = 10;
+  params_.starting_time = 0.0;
+  params_.ideal_duration = 1.5;
   params_.Initialize();
   pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
-  pose_node_updater_->AddInitialNodesAndPriors(factors_);
-  ZeroInitialize();
   AddMeasurements();
-  // Empty nodes should yield invalid oldest time
+  // Empty nodes, so expect invalid oldest time
   EXPECT_TRUE(pose_node_updater_->SlideWindowNewOldestTime() == boost::none);
-  // Add 1st node
-  // Min/Max states not applicable, less than ideal duration, so
+  pose_node_updater_->AddInitialNodesAndPriors(factors_);
+  // Duration: 0. States: 1
+  // Min/Max states not applicable, less than ideal duration (0 < 1.5), so
+  // should return 0
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, 0.0);
+  }
+  // Add node. Duration: 1. States: 2
+  // Min/Max states not applicable, less than ideal duration (1 < 1.5), so
   // should return 0
   ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
   {
@@ -504,8 +512,73 @@ TEST_F(PoseNodeUpdaterTest, NewOldestTimeMaxStates) {
     ASSERT_TRUE(new_oldest_time != boost::none);
     EXPECT_EQ(*new_oldest_time, 0.0);
   }
+  // Add node. Duration: 2, states: 3
+  // Duration > ideal duration, should remove start node and return 1st nodes' time
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, timestamps_[0]);
+  }
+  // Add node. Duration: 3, states: 3
+  // Duration > ideal duration, should remove start and 1st node and return 2nd nodes' time
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, timestamps_[1]);
+  }
 }
 
+TEST_F(PoseNodeUpdaterTest, NewOldestTimeMinMaxStatesViolation) {
+  params_.min_num_states = 1;
+  params_.max_num_states = 3;
+  params_.starting_time = 0.0;
+  params_.ideal_duration = 100;
+  params_.Initialize();
+  pose_node_updater_.reset(new nu::PoseNodeUpdater(params_, node_update_model_params_));
+  const auto& nodes = pose_node_updater_->nodes();
+  AddMeasurements();
+  // Empty nodes, so expect invalid oldest time
+  EXPECT_TRUE(pose_node_updater_->SlideWindowNewOldestTime() == boost::none);
+  EXPECT_EQ(nodes.size(), 0);
+  pose_node_updater_->AddInitialNodesAndPriors(factors_);
+  // 1 node <= min_states (1), so expect invalid oldest time
+  EXPECT_TRUE(pose_node_updater_->SlideWindowNewOldestTime() == boost::none);
+  EXPECT_EQ(nodes.size(), 1);
+  // Add node. States: 2, less than ideal duration so should return 0.
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, 0.0);
+  }
+  // Add node. States: 3, less than ideal duration so should return 0.
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[1], factors_));
+  EXPECT_EQ(nodes.size(), 3);
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, 0.0);
+  }
+  // Add node. States: 4, > max num states, should remove 1st state.
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[2], factors_));
+  EXPECT_EQ(nodes.size(), 4);
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, timestamps_[0]);
+  }
+  // Add node. States: 5, > max num states, should remove 1st and 2nd state.
+  ASSERT_TRUE(pose_node_updater_->AddNode(timestamps_[3], factors_));
+  EXPECT_EQ(nodes.size(), 5);
+  {
+    const auto new_oldest_time = pose_node_updater_->SlideWindowNewOldestTime();
+    ASSERT_TRUE(new_oldest_time != boost::none);
+    EXPECT_EQ(*new_oldest_time, timestamps_[1]);
+  }
+}
 
 /*TEST_F(PoseNodeUpdaterTest, SlideWindow) {
   ZeroInitialize();
