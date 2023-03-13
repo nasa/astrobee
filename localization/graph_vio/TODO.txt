@@ -2,11 +2,9 @@
 - test combined nav state node updater! (AC)
   - popuate imu measurements!
     -explicit CombinedNavStateNodeUpdateModel(const Params& params);
-      - test add priors (A)
-        - make sure noise matches!
-          - move noise check function from other test to test utilities??
-
       - test add relative factors
+        - make sure pim is correct!
+          - TODO: how????
       - test remove relative factors
       - test add nodes and relative factors (AAAA)
         - how to make sure nodes are added???

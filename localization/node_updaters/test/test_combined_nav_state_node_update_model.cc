@@ -75,6 +75,12 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
     }
   }
 
+  void AddMeasurements() {
+    for (const auto& measurement : measurements_) {
+      model_.AddMeasurement(measurement);
+    }
+  }
+
   std::vector<gtsam::SharedNoiseModel> Noise() {
     constexpr double kTranslationStddev = 0.1;
     constexpr double kQuaternionStddev = 0.2;
@@ -171,6 +177,45 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddPriors) {
   EXPECT_MATRIX_NEAR(bias_priors[0]->prior().accelerometer(), node.bias().accelerometer(), 1e-6);
   EXPECT_MATRIX_NEAR(bias_priors[0]->prior().gyroscope(), node.bias().gyroscope(), 1e-6);
   EXPECT_MATRIX_NEAR(nu::Covariance(bias_priors[0]->noiseModel()), nu::Covariance(noise[2]), 1e-6);
+}
+
+TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactors) {
+  const auto timestamp_a = timestamps_[2];
+  const lc::CombinedNavState node_a(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const auto timestamp_b = timestamps_[5];
+  const lc::CombinedNavState node_b(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
+
+  const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
+  ASSERT_FALSE(keys_a.empty());
+  const auto keys_b = nodes_.Add(node_b.timestamp(), node_b);
+  ASSERT_FALSE(keys_b.empty());
+
+  AddMeasurements();
+
+  // Add relative factor
+  ASSERT_FALSE(model_.AddRelativeFactors(timestamps_[0], timestamp_b, nodes_, factors_));
+  ASSERT_FALSE(model_.AddRelativeFactors(timestamp_a, timestamps_[3], nodes_, factors_));
+  ASSERT_TRUE(model_.AddRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  ASSERT_EQ(factors_.size(), 1);
+  const auto imu_factors = go::Factors<gtsam::CombinedImuFactor>(factors_);
+  ASSERT_EQ(imu_factors.size(), 1);
+  // Check keys
+  // pose_a
+  EXPECT_EQ(imu_factors[0]->key1(), keys_a[0]);
+  // vel_a
+  EXPECT_EQ(imu_factors[0]->key2(), keys_a[1]);
+  // pose_b
+  EXPECT_EQ(imu_factors[0]->key3(), keys_b[0]);
+  // vel_b
+  EXPECT_EQ(imu_factors[0]->key4(), keys_b[1]);
+  // bias_a
+  EXPECT_EQ(imu_factors[0]->key5(), keys_a[2]);
+  // bias_b
+  EXPECT_EQ(imu_factors[0]->key6(), keys_b[2]);
+
+  // Check PIM
 }
 
 // Run all the tests that were declared with TEST()
