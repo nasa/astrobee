@@ -17,36 +17,34 @@
  */
 
 #include "test_utilities.h"  // NOLINT
-#include <imu_integration/test_utilities.h>
 #include <localization_common/logger.h>
+#include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <node_updaters/combined_nav_state_node_update_model.h>
+#include <node_updaters/utilities.h>
 
-namespace node_updaters {
-namespace ii = imu_integration;
+#include <gtest/gtest.h>
+
+namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace nu = node_updaters;
 
-PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams() {
-  PoseNodeUpdaterParams params;
-  params.starting_prior_translation_stddev = 0.1;
-  params.starting_prior_quaternion_stddev = 0.1;
-  // Base
-  params.start_node = gtsam::Pose3::identity();
-  params.huber_k = 1.345;
-  params.add_priors = true;
-  params.starting_time = 0;
-  // Only kept if there are at least min_num_states and not more than max_num_states
-  params.ideal_duration = 5;
-  params.min_num_states = 5;
-  params.max_num_states = 20;
-  params.Initialize();
-  return params;
+class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
+ public:
+  CombinedNavStateNodeUpdateModelTest()
+      : combined_nav_state_node_update_model_(nu::DefaultCombinedNavStateNodeUpdateModelParams()) {}
+  void SetUp() final {}
+
+  nu::CombinedNavStateNodeUpdateModel combined_nav_state_node_update_model_;
+  gtsam::NonlinearFactorGraph factors_;
+};
+
+TEST_F(CombinedNavStateNodeUpdateModelTest, AddRemoveCanAddNode) {
 }
 
-CombinedNavStateNodeUpdateModelParams DefaultCombinedNavStateNodeUpdateModelParams() {
-  CombinedNavStateNodeUpdateModelParams params;
-  params.imu_integrator = ii::DefaultImuIntegratorParams();
-  params.huber_k = 1.345;
-  return params;
+// Run all the tests that were declared with TEST()
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
-}  // namespace node_updaters

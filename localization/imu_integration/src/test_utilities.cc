@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
+#include <imu_integration/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>

@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef IMU_INTEGRATOR_TEST_UTILITIES_H_  // NOLINT
-#define IMU_INTEGRATOR_TEST_UTILITIES_H_  // NOLINT
+#ifndef IMU_INTEGRATION_TEST_UTILITIES_H_
+#define IMU_INTEGRATION_TEST_UTILITIES_H_
 
 #include <imu_integration/imu_integrator.h>
 #include <imu_integration/imu_integrator_params.h>
@@ -42,4 +42,4 @@ gtsam::Rot3 IntegrateAngularVelocities(const std::vector<localization_measuremen
 sensor_msgs::Imu ImuMsg(const localization_measurements::ImuMeasurement& imu_measurement);
 }  // namespace imu_integration
 
-#endif  // IMU_INTEGRATOR_TEST_UTILITIES_H_ // NOLINT
+#endif  // IMU_INTEGRATION_TEST_UTILITIES_H_

@@ -19,10 +19,12 @@
 #ifndef NODE_UPDATERS_TEST_UTILITIES_H_  // NOLINT
 #define NODE_UPDATERS_TEST_UTILITIES_H_  // NOLINT
 
+#include <node_updaters/combined_nav_state_node_update_model_params.h>
 #include <node_updaters/pose_node_updater_params.h>
 
 namespace node_updaters {
 PoseNodeUpdaterParams DefaultPoseNodeUpdaterParams();
+CombinedNavStateNodeUpdateModelParams DefaultCombinedNavStateNodeUpdateModelParams();
 }  // namespace node_updaters
 
 #endif  // NODE_UPDATERS_TEST_UTILITIES_H_ // NOLINT

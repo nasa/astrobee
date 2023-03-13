@@ -76,13 +76,14 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_pose_node_updater
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
-  #add_rostest_gtest(test_combined_nav_state_node_updater
-  #  test/test_combined_nav_state_node_updater.test
-  #  test/test_combined_nav_state_node_updater.cc
-  #)
-  #target_link_libraries(test_combined_nav_state_node_updater
-  #  ${PROJECT_NAME} ${catkin_LIBRARIES} 
-  #)
+  add_rostest_gtest(test_combined_nav_state_node_update_model
+    test/test_combined_nav_state_node_update_model.test
+    test/test_combined_nav_state_node_update_model.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_combined_nav_state_node_update_model
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
 endif()
 
 #############

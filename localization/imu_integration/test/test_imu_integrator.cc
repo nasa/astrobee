@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include "test_utilities.h"  // NOLINT
 #include <imu_integration/imu_integrator.h>
+#include <imu_integration/test_utilities.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>

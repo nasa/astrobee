@@ -1,8 +1,9 @@
 - template test on type? template specializations for combined imu test??
 - test combined nav state node updater! (AC)
+  - add default params!
+    - default construct imu params
+    - default construct timestamped update model params
   - popuate imu measurements!
-  - test each timestamped node updater function?
-      - or just ones unique to combined nav state?
 
   - how to add a second measurement to updater?????
     - add to imu measurement???

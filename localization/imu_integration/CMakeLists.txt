@@ -56,6 +56,7 @@ add_library(${PROJECT_NAME}
   src/imu_filter.cc
   src/imu_integrator.cc
   src/parameter_reader.cc
+  src/test_utilities.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
@@ -66,7 +67,6 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(test_imu_integrator
     test/test_imu_integrator.test
     test/test_imu_integrator.cc
-    test/test_utilities.cc
   )
   target_link_libraries(test_imu_integrator
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
