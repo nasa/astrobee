@@ -125,6 +125,7 @@ bool CombinedNavStateNodeUpdateModel::AddRelativeFactors(const lc::Time timestam
   const gtsam::CombinedImuFactor::shared_ptr combined_imu_factor(
     new gtsam::CombinedImuFactor(pose_key_a, velocity_key_a, pose_key_b, velocity_key_b, bias_key_a, bias_key_b, *pim));
   factors.push_back(combined_imu_factor);
+  return true;
 }
 
 void CombinedNavStateNodeUpdateModel::AddMeasurement(const lm::ImuMeasurement& measurement) {
