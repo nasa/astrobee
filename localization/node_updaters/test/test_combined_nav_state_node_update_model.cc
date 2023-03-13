@@ -27,6 +27,7 @@
 #include <gtest/gtest.h>
 
 namespace go = graph_optimizer;
+namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace nu = node_updaters;
@@ -34,7 +35,9 @@ namespace nu = node_updaters;
 class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
  public:
   CombinedNavStateNodeUpdateModelTest()
-      : params_(nu::DefaultCombinedNavStateNodeUpdateModelParams()), model_(params_) {}
+      : params_(nu::DefaultCombinedNavStateNodeUpdateModelParams()),
+        model_(params_),
+        imu_integrator_(params_.imu_integrator) {}
   void SetUp() final {
     const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);
     const Eigen::Vector3d angular_velocity(0.04, 0.05, 0.06);
@@ -78,6 +81,7 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
   void AddMeasurements() {
     for (const auto& measurement : measurements_) {
       model_.AddMeasurement(measurement);
+      imu_integrator_.AddImuMeasurement(measurement);
     }
   }
 
@@ -119,10 +123,11 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
   std::vector<lc::Time> timestamps_;
   std::vector<Eigen::Isometry3d> poses_;
   std::vector<Eigen::Vector3d> velocities_;
-  nu::CombinedNavStateNodeUpdateModel model_;
   nu::CombinedNavStateNodeUpdateModelParams params_;
+  nu::CombinedNavStateNodeUpdateModel model_;
   go::CombinedNavStateNodes nodes_;
   gtsam::NonlinearFactorGraph factors_;
+  ii::ImuIntegrator imu_integrator_;
 };
 
 TEST_F(CombinedNavStateNodeUpdateModelTest, AddRemoveCanAddNode) {
