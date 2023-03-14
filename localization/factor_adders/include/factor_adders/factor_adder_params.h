@@ -16,24 +16,14 @@
  * under the License.
  */
 
-#ifndef FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
-#define FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_optimizer/factor_adder_params.h>
-
-#include <gtsam/geometry/Pose3.h>
-
-namespace factor_adders {
-struct DepthOdometryFactorAdderParams : public graph_optimizer::FactorAdderParams {
-  double noise_scale;
-  bool use_points_between_factor;
-  double position_covariance_threshold;
-  double orientation_covariance_threshold;
-  double point_to_point_error_threshold;
-  double pose_translation_norm_threshold;
-  int max_num_points_between_factors;
-  gtsam::Pose3 body_T_sensor;
+namespace factor_adder {
+struct FactorAdderParams {
+  bool enabled;
+  double huber_k;
 };
-}  // namespace factor_adders
+}  // namespace factor_adder
 
-#endif  // FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_FACTOR_ADDER_PARAMS_H_

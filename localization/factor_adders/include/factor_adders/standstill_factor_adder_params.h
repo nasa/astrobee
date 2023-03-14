@@ -19,10 +19,10 @@
 #ifndef FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_PARAMS_H_
 #define FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_optimizer/factor_adder_params.h>
+#include <factor_adder/factor_adder_params.h>
 
 namespace factor_adders {
-struct StandstillFactorAdderParams : public graph_optimizer::FactorAdderParams {
+struct StandstillFactorAdderParams : public FactorAdderParams {
   bool add_velocity_prior;
   bool add_pose_between_factor;
   double prior_velocity_stddev;

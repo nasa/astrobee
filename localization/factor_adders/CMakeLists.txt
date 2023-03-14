@@ -24,9 +24,8 @@ add_compile_options(-std=c++14)
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
   graph_factors
-  graph_optimizer
-  graph_values
 	localization_common
+  localization_measurements
   vision_common
 )
 
@@ -40,7 +39,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS graph_factors graph_optimizer graph_values localization_common vision_common 
+  CATKIN_DEPENDS graph_factors localization_common localization_measurements vision_common 
 )
 
 ###########
@@ -74,13 +73,6 @@ if(CATKIN_ENABLE_TESTING)
 #  )
 #  target_link_libraries(test_depth_odometry_factor_adder
 #    factor_adders ${catkin_LIBRARIES} 
-#  )
-#  add_rostest_gtest(test_rotation_factor_adder
-#    test/test_rotation_factor_adder.test
-#    test/test_rotation_factor_adder.cc
-#  )
-#  target_link_libraries(test_rotation_factor_adder
-#    factor_adders ${catkin_LIBRARIES}
 #  )
 endif()
 

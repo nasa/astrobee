@@ -1,6 +1,21 @@
-  - update node updaters! (AA)
-    - compile and run tests!
-- move facter adder and node updater base classes to respective packages! (AC)
+- move facter adder base classes to respective packages! (AC)
+  - implement standstill factor adder!
+    - get keys!
+      - add this to node adder!! (AAA)
+    - move graph action completer here if needed! (AB)
+    - add comments! (AC)
+    - add measurement buffering!
+    - add remove old measurements to base class!
+      - add non-templated based class???
+          - factoradderbase?
+          - add measurementbasedfactor adder class?
+    - add node updaters as dep
+  - implement loc factor adder!
+    - move graph action completer here if needed!
+  - implement vo factor adder!
+    - move graph action completer here if needed!
+  - TODO: implement others!
+
 - make graph optimizer class depend on facter adder and node updater packages??
   - where to put utilities??
 - make sliding window graph optimizer package!

@@ -17,7 +17,6 @@
  */
 
 #include <factor_adders/standstill_factor_adder.h>
-#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
@@ -26,16 +25,14 @@
 #include <gtsam/slam/BetweenFactor.h>
 
 namespace factor_adders {
-namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& params,
                                              std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
     : StandstillFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
-std::vector<go::FactorsToAdd> StandstillFactorAdder::AddFactors(
+int StandstillFactorAdder::AddFactors(
   const lm::FeaturePointsMeasurement& feature_points_measurement) {
-  std::vector<go::FactorsToAdd> factors_to_add;
   if (params().add_velocity_prior) {
     go::FactorsToAdd standstill_prior_factors_to_add;
     const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params().prior_velocity_stddev,

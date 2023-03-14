@@ -84,6 +84,8 @@ class TimestampedNodeAdder
 
   bool CanAddNode(const localization_common::Time timestamp) const final;
 
+  gtsam::KeyVector Keys(const localization_common::Time timestamp) const final;
+
   const TimestampedNodesType& nodes() const { return *nodes_; }
 
  protected:
@@ -234,6 +236,12 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeAdderMo
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::CanAddNode(
   const localization_common::Time timestamp) const {
   return node_adder_model_.CanAddNode(timestamp);
+}
+
+template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
+gtsam::KeyVector TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::Keys(
+  const localization_common::Time timestamp) const {
+  return nodes_->Keys(timestamp);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>

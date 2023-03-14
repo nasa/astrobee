@@ -16,14 +16,29 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
+#ifndef FACTOR_ADDERS_FACTOR_ADDER_H_
+#define FACTOR_ADDERS_FACTOR_ADDER_H_
 
-namespace graph_optimizer {
-struct FactorAdderParams {
-  bool enabled;
-  double huber_k;
+#include <factor_adders/factor_adder_params.h>
+
+#include <vector>
+
+namespace factor_adder {
+template <typename MEASUREMENT>
+// Adds factors for a specific measurement type.
+class FactorAdder {
+ public:
+  explicit FactorAdder(const FactorAdderParams& params) : params_(params) {}
+
+  virtual ~FactorAdder() {}
+
+  // Add factors using measurement to existing factor graph.
+  // Returns number of added factors.
+  virtual int AddFactors(const MEASUREMENT& measurement, gtsam::NonlinearFactorGraph& factors) = 0;
+
+ private:
+  FactorAdderParams params_;
 };
-}  // namespace graph_optimizer
+}  // namespace factor_adder
 
-#endif  // GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
+#endif  // FACTOR_ADDERS_FACTOR_ADDER_H_

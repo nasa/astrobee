@@ -43,6 +43,9 @@ class NodeAdder {
   // Returns whether a node can be added at timestamp or not.
   virtual bool CanAddNode(const localization_common::Time timestamp) const = 0;
 
+  // Returns keys for a node at the timestamp.
+  virtual gtsam::KeyVector Keys(const localization_common::Time timestamp) const = 0;
+
   // Returns the node adder type name.
   virtual std::string type() const = 0;
 };
