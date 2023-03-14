@@ -1,19 +1,16 @@
 - move facter adder base classes to respective packages! (AC)
   - implement standstill factor adder!
-    - get keys!
-    - move graph action completer here if needed! (AB)
-    - add comments! (AC)
-    - add measurement buffering!
-    - add remove old measurements to base class!
+      - don't use feature tracker in standstill factor adder!
+      - update/add comments!
+    - add measurement buffering! (AC)
+      - add to base class somehow? (ACA)
       - add non-templated based class???
           - factoradderbase?
           - add measurementbasedfactor adder class?
-    - add node updaters as dep
-    - make standstill_measurement!
-      - pass previous and current time!
-      - don't use feature tracker in standstill factor adder!
-      - update comments!
-    - test this!
+    - add remove old measurements to base class! (AD)
+    - test this! (AE)
+  - update graph optimizer and sliding graph optimizer with new factor adder class!
+
   - implement loc factor adder!
     - move graph action completer here if needed!
   - implement vo factor adder!

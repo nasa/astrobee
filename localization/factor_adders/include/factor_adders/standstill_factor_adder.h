@@ -21,26 +21,23 @@
 
 #include <factor_adders/factor_adder.h>
 #include <factor_adders/standstill_factor_adder_params.h>
-#include <localization_measurements/feature_points_measurement.h>
-#include <vision_common/feature_tracker.h>
+#include <localization_measurements/standstill_measurement.h>
 
 #include <vector>
 
 namespace factor_adders {
-// Adds standstill factors (zero velocity prior and zero relative pose between factors) when standstill is detected
-// using feature point measurements. Use params to set which factors are added and how strict standstill detection is.
+// Adds standstill factors (zero velocity prior and zero relative pose between factors) based on provided params.
 template <typename PoseVelocityNodeAdderT>
 class StandstillFactorAdder
-    : public FactorAdder<localization_measurements::FeaturePointsMeasurement, StandstillFactorAdderParams> {
-  using Base = FactorAdder<localization_measurements::FeaturePointsMeasurement, StandstillFactorAdderParams>;
+    : public FactorAdder<localization_measurements::StandstillMeasurement, StandstillFactorAdderParams> {
+  using Base = FactorAdder<localization_measurements::StandstillMeasurement, StandstillFactorAdderParams>;
 
  public:
   StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                        const std::shared_ptr<PoseVelocityNodeAdderT> node_adder,
-                        std::shared_ptr<const vision_common::FeatureTracker> feature_tracker);
+                        const std::shared_ptr<PoseVelocityNodeAdderT> node_adder);
 
-  // Adds zero velocity and/or zero relative pose factors depending on set params.
-  int AddFactors(const localization_measurements::FeaturePointsMeasurement& feature_points_measurement,
+  // Adds zero velocity and/or zero relative pose factors depending on params.
+  int AddFactors(const localization_measurements::StandstillMeasurement& standstill_measurement,
                  gtsam::NonlinearFactorGraph& factors) final;
 
  private:
@@ -51,7 +48,7 @@ class StandstillFactorAdder
                                  const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors);
 
   std::shared_ptr<PoseVelocityNodeAdderT> node_adder_;
-  std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
+  StandstillFactorAdderParams params_;
   gtsam::SharedNoiseModel zero_velocity_noise_;
   gtsam::SharedNoiseModel zero_relative_pose_noise_;
 };
@@ -59,9 +56,8 @@ class StandstillFactorAdder
 // Implementation
 template <typename PoseVelocityNodeAdderT>
 StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                                             const std::shared_ptr<PoseVelocityNodeAdderT> node_adder,
-                                             std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
-    : params_(params), node_adder_(node_adder), feature_tracker_(feature_tracker) {
+                                             const std::shared_ptr<PoseVelocityNodeAdderT> node_adder)
+    : params_(params), node_adder_(node_adder) {
   // Create zero velocity noise
   const gtsam::Vector3 velocity_prior_noise_sigmas(
     (gtsam::Vector(3) << params().prior_velocity_stddev, params().prior_velocity_stddev, params().prior_velocity_stddev)
@@ -82,16 +78,16 @@ StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& 
 }
 
 template <typename PoseVelocityNodeAdderT>
-int StandstillFactorAdder::AddFactors(
-  const localization_measurements::FeaturePointsMeasurement& feature_points_measurement,
-  gtsam::NonlinearFactorGraph& factors) {
+int StandstillFactorAdder::AddFactors(const localization_measurements::StandstillMeasurement& standstill_measurement,
+                                      gtsam::NonlinearFactorGraph& factors) {
+  int num_factors_added = 0;
   if (params().add_velocity_prior) {
-    AddZeroVelocityPrior(feature_points_measurement.timestamp(), factors);
+    if (AddZeroVelocityPrior(standstill_measurement.timestamp(), factors)) ++num_factors_added;
   }
   if (params().add_pose_between_factor) {
-    const auto previous_timestamp = feature_tracker_->PreviousTimestamp();
-    if (previous_timestamp)
-      AddZeroRelativePoseFactor(*previous_timestamp, feature_points_measurement.timestamp(), factors);
+    if (AddZeroRelativePoseFactor(standstill_measurement.previous_timestamp, standstill_measurement.timestamp(),
+                                  factors))
+      ++num_factors_added;
   }
 }
 

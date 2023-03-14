@@ -26,6 +26,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   graph_factors
 	localization_common
   localization_measurements
+  node_adders
   vision_common
 )
 
@@ -39,7 +40,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS graph_factors localization_common localization_measurements vision_common 
+  CATKIN_DEPENDS graph_factors localization_common localization_measurements node_adders vision_common 
 )
 
 ###########
