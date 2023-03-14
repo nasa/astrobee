@@ -79,7 +79,8 @@ gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common:
   return all_old_keys;
 }
 
-bool SlidingWindowGraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals, const lc::Time last_end_time) {
+bool SlidingWindowGraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
+                                              const lc::Time last_end_time) {
   const auto ideal_new_start_time = SlideWindowNewOldestTime();
   if (!ideal_new_start_time) {
     LogDebug("SlideWindow: No states removed. ");
@@ -94,8 +95,7 @@ bool SlidingWindowGraphOptimizer::SlideWindow(const boost::optional<gtsam::Margi
   const auto old_keys = OldKeys(new_start_time);
   const auto old_factors = RemoveOldFactors(old_keys, graph_);
   if (params_.add_marginal_factors) {
-    const auto marginal_factors =
-      MarginalFactors(old_keys, old_factors, gtsam::EliminateQR);
+    const auto marginal_factors = MarginalFactors(old_keys, old_factors, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
       graph_.push_back(marginal_factor);
     }
@@ -145,29 +145,29 @@ const SlidingWindowGraphOptimizerParams& SlidingWindowGraphOptimizer::params() c
 const boost::optional<gtsam::Marginals>& SlidingWindowGraphOptimizer::marginals() const { return marginals_; }
 
 void SlidingWindowGraphOptimizer::CalculateMarginals() {
-    try {
-      marginals_ = gtsam::Marginals(graph_, *values_, marginals_factorization_);
-    } catch (gtsam::IndeterminantLinearSystemException) {
-      log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
-      marginals_ = boost::none;
-    } catch (const std::exception& exception) {
-      log(params_.fatal_failures, "Update: Computing marginals failed. " + std::string(exception.what()));
-      marginals_ = boost::none;
-    } catch (...) {
-      log(params_.fatal_failures, "Update: Computing marginals failed.");
-      marginals_ = boost::none;
-    }
+  try {
+    marginals_ = gtsam::Marginals(graph_, *values_, marginals_factorization_);
+  } catch (gtsam::IndeterminantLinearSystemException) {
+    log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
+    marginals_ = boost::none;
+  } catch (const std::exception& exception) {
+    log(params_.fatal_failures, "Update: Computing marginals failed. " + std::string(exception.what()));
+    marginals_ = boost::none;
+  } catch (...) {
+    log(params_.fatal_failures, "Update: Computing marginals failed.");
+    marginals_ = boost::none;
+  }
 }
 
 void SlidingWindowGraphOptimizer::SetOrdering() {
-    const auto new_start_time = SlideWindowNewOldestTime();
-    if (new_start_time) {
-      const auto old_keys = OldKeys(*new_start_time);
-      const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
-      levenberg_marquardt_params_.setOrdering(ordering);
-    } else {
-      levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
-    }
+  const auto new_start_time = SlideWindowNewOldestTime();
+  if (new_start_time) {
+    const auto old_keys = OldKeys(*new_start_time);
+    const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
+    levenberg_marquardt_params_.setOrdering(ordering);
+  } else {
+    levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
+  }
 }
 
 bool SlidingWindowGraphOptimizer::Update() {
@@ -187,8 +187,8 @@ bool SlidingWindowGraphOptimizer::Update() {
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
   // TODO(rsoussan): Remove this now that marginalization occurs before optimization?
   if (params_.add_marginal_factors) {
-    SetOrdering();    
- }
+    SetOrdering();
+  }
 
   GraphOptimizer::Update();
 

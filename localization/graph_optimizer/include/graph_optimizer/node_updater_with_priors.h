@@ -30,8 +30,8 @@ class NodeUpdaterWithPriors : public NodeUpdater {
   virtual ~NodeUpdaterWithPriors() {}
 
   virtual void AddInitialNodesAndPriors(const NodeType& node, const NoiseType& noise,
-                                         const localization_common::Time timestamp,
-                                         gtsam::NonlinearFactorGraph& graph) = 0;
+                                        const localization_common::Time timestamp,
+                                        gtsam::NonlinearFactorGraph& graph) = 0;
 };
 }  // namespace graph_optimizer
 

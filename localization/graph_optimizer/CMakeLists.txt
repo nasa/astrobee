@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME}
   src/graph_values.cc
   src/nodes.cc
   src/parameter_reader.cc
+  src/sliding_window_graph_optimizer.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
