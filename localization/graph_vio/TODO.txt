@@ -1,4 +1,6 @@
 - move nodes to own package! (AA)
+  - update node updaters!
+    - move nodes in there to nodes package!
 - remove graph values package! (AB)
 - move facter adder and node updater base classes to respective packages! (AC)
 - make graph optimizer class depend on facter adder and node updater packages??
