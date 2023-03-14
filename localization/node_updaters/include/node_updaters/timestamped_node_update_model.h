@@ -40,7 +40,7 @@ class TimestampedNodeUpdateModel {
                          const localization_common::Time timestamp, const NodesType& nodes,
                          gtsam::NonlinearFactorGraph& factors) const = 0;
 
-  // Adds nodes for provided timestamps and connects them with relative factors.
+  // Adds nodes for timestamp_b and connect it to the node at timestamp_a with relative factors.
   virtual bool AddNodesAndRelativeFactors(const localization_common::Time timestamp_a,
                                           const localization_common::Time timestamp_b, NodesType& nodes,
                                           gtsam::NonlinearFactorGraph& factors) const = 0;

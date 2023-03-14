@@ -45,36 +45,14 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
     const Eigen::Vector3d angular_velocity_bias = 0.5 * angular_velocity;
     const Eigen::Vector3d bias_corrected_acceleration = acceleration - acceleration_bias;
     const Eigen::Vector3d bias_corrected_angular_velocity = angular_velocity - angular_velocity_bias;
-    //  params.graph_initializer.initial_imu_bias = gtsam::imuBias::ConstantBias(acceleration_bias,
-    //  angular_velocity_bias);
-    // Use depth odometry factor adder since it can add relative pose factors
     constexpr int kNumIterations = 10;
     constexpr double kTimeDiff = 1;
     lc::Time time = 0.0;
-    Eigen::Isometry3d current_pose(Eigen::Isometry3d::Identity());
-    Eigen::Vector3d velocity(Eigen::Vector3d::Zero());
-    // Add initial zero imu value so the imu integrator has more than one measurement when the subsequent
-    // measurement is added
-    // TODO(rsoussan): is this needed?
-    // const lm::ImuMeasurement zero_imu_measurement(acceleration_bias, angular_velocity_bias, time);
-    // measurements_.emplace_back(zero_imu_measurement);
     for (int i = 0; i < kNumIterations; ++i) {
       const lm::ImuMeasurement imu_measurement(acceleration, angular_velocity, time);
       measurements_.emplace_back(imu_measurement);
       timestamps_.emplace_back(time);
-      poses_.emplace_back(current_pose);
-      velocities_.emplace_back(velocity);
-      // Update values for next iteration
       time += kTimeDiff;
-      const Eigen::Matrix3d relative_orientation =
-        (gtsam::Rot3::Expmap(bias_corrected_angular_velocity * kTimeDiff)).matrix();
-      const Eigen::Vector3d relative_translation =
-        velocity * kTimeDiff + 0.5 * bias_corrected_acceleration * kTimeDiff * kTimeDiff;
-      velocity += bias_corrected_acceleration * kTimeDiff;
-      // Put velocity in new body frame after integrating accelerations
-      velocity = relative_orientation.transpose() * velocity;
-      const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
-      current_pose = current_pose * relative_pose;
     }
   }
 
@@ -116,13 +94,9 @@ class CombinedNavStateNodeUpdateModelTest : public ::testing::Test {
 
   const lm::ImuMeasurement& measurement(const int index) { return measurements_[index]; }
   lc::Time time(const int index) { return timestamps_[index]; }
-  const Eigen::Isometry3d& pose(const int index) { return poses_[index]; }
-  const Eigen::Vector3d& velocity(const int index) { return velocities_[index]; }
 
   std::vector<lm::ImuMeasurement> measurements_;
   std::vector<lc::Time> timestamps_;
-  std::vector<Eigen::Isometry3d> poses_;
-  std::vector<Eigen::Vector3d> velocities_;
   nu::CombinedNavStateNodeUpdateModelParams params_;
   nu::CombinedNavStateNodeUpdateModel model_;
   go::CombinedNavStateNodes nodes_;
@@ -186,11 +160,13 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddPriors) {
 
 TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactors) {
   const auto timestamp_a = timestamps_[2];
-  const lc::CombinedNavState node_a(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const lc::CombinedNavState node_a(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
   const auto timestamp_b = timestamps_[5];
-  const lc::CombinedNavState node_b(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
+  const lc::CombinedNavState node_b(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
 
   const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
   ASSERT_FALSE(keys_a.empty());
@@ -228,11 +204,13 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactors) {
 
 TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactorsInBetweenTimes) {
   const auto timestamp_a = timestamps_[2];
-  const lc::CombinedNavState node_a(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
-  const auto timestamp_b = (timestamps_[5] + timestamps_[6])/2.0;
-  const lc::CombinedNavState node_b(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
+  const lc::CombinedNavState node_a(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const auto timestamp_b = (timestamps_[5] + timestamps_[6]) / 2.0;
+  const lc::CombinedNavState node_b(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
 
   const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
   ASSERT_FALSE(keys_a.empty());
@@ -268,17 +246,18 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, AddRelativeFactorsInBetweenTimes) {
   EXPECT_TRUE(pim->equals(imu_factors[0]->preintegratedMeasurements()));
 }
 
-
 TEST_F(CombinedNavStateNodeUpdateModelTest, RemoveRelativeFactors) {
   AddMeasurements();
   const auto timestamp_a = timestamps_[3];
   const auto timestamp_b = timestamps_[7];
   const auto timestamp_c = timestamps_[8];
   // Add first nodes and relative factor
-  const lc::CombinedNavState node_a(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
-  const lc::CombinedNavState node_b(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
+  const lc::CombinedNavState node_a(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const lc::CombinedNavState node_b(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_b));
 
   const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
   ASSERT_FALSE(keys_a.empty());
@@ -286,8 +265,9 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, RemoveRelativeFactors) {
   ASSERT_FALSE(keys_b.empty());
   ASSERT_TRUE(model_.AddRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
   // Add second nodes and relative factor
-  const lc::CombinedNavState node_c(lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
-                          gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_c));
+  const lc::CombinedNavState node_c(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_c));
   const auto keys_c = nodes_.Add(node_c.timestamp(), node_c);
   ASSERT_FALSE(keys_c.empty());
   ASSERT_TRUE(model_.AddRelativeFactors(timestamp_b, timestamp_c, nodes_, factors_));
@@ -316,6 +296,40 @@ TEST_F(CombinedNavStateNodeUpdateModelTest, RemoveRelativeFactors) {
   ASSERT_FALSE(model_.RemoveRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
   ASSERT_TRUE(model_.RemoveRelativeFactors(timestamp_b, timestamp_c, nodes_, factors_));
   ASSERT_TRUE(factors_.empty());
+}
+
+TEST_F(CombinedNavStateNodeUpdateModelTest, AddNodeAndRelativeFactors) {
+  AddMeasurements();
+  const auto timestamp_a = timestamps_[1];
+  const auto timestamp_b = timestamps_[4];
+  // Should fail since no node at timestamp_a exists yet
+  EXPECT_FALSE(model_.AddNodesAndRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  const lc::CombinedNavState node_a(
+    lc::CombinedNavState(lc::RandomPose(), lc::RandomVelocity(),
+                         gtsam::imuBias::ConstantBias(lc::RandomVector3d(), lc::RandomVector3d()), timestamp_a));
+  const auto keys_a = nodes_.Add(node_a.timestamp(), node_a);
+  ASSERT_FALSE(keys_a.empty());
+  EXPECT_TRUE(model_.AddNodesAndRelativeFactors(timestamp_a, timestamp_b, nodes_, factors_));
+  EXPECT_EQ(factors_.size(), 1);
+  EXPECT_TRUE(nodes_.Contains(timestamp_a));
+  EXPECT_TRUE(nodes_.Contains(timestamp_b));
+  const auto imu_factors = go::Factors<gtsam::CombinedImuFactor>(factors_);
+  ASSERT_EQ(imu_factors.size(), 1);
+  // Check keys
+  const auto keys_b = nodes_.Keys(timestamp_b);
+  ASSERT_FALSE(keys_b.empty());
+  // pose_a
+  EXPECT_EQ(imu_factors[0]->key1(), keys_a[0]);
+  // vel_a
+  EXPECT_EQ(imu_factors[0]->key2(), keys_a[1]);
+  // pose_b
+  EXPECT_EQ(imu_factors[0]->key3(), keys_b[0]);
+  // vel_b
+  EXPECT_EQ(imu_factors[0]->key4(), keys_b[1]);
+  // bias_a
+  EXPECT_EQ(imu_factors[0]->key5(), keys_a[2]);
+  // bias_b
+  EXPECT_EQ(imu_factors[0]->key6(), keys_b[2]);
 }
 
 // Run all the tests that were declared with TEST()
