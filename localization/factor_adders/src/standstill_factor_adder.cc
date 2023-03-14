@@ -31,8 +31,7 @@ StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& 
                                              std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
     : StandstillFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
-int StandstillFactorAdder::AddFactors(
-  const lm::FeaturePointsMeasurement& feature_points_measurement) {
+int StandstillFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& feature_points_measurement) {
   if (params().add_velocity_prior) {
     go::FactorsToAdd standstill_prior_factors_to_add;
     const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params().prior_velocity_stddev,
@@ -40,7 +39,7 @@ int StandstillFactorAdder::AddFactors(
                                                        .finished());
     const auto velocity_noise =
       go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-             params().huber_k);
+                 params().huber_k);
 
     const go::KeyInfo velocity_key_info(&sym::V, go::NodeUpdaterType::CombinedNavState,
                                         feature_points_measurement.timestamp);
@@ -62,7 +61,7 @@ int StandstillFactorAdder::AddFactors(
           .finished());
       const auto pose_between_noise =
         go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)),
-               params().huber_k);
+                   params().huber_k);
       const go::KeyInfo previous_between_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, *previous_timestamp);
       const go::KeyInfo current_between_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
                                                  feature_points_measurement.timestamp);

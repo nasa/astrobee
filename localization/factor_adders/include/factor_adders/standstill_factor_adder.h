@@ -30,10 +30,9 @@ namespace factor_adders {
 // Adds standstill factors (zero velocity prior and zero relative pose between factors) when standstill is detected
 // using feature point measurements. Use params to set which factors are added and how strict standstill detection is.
 template <typename PoseVelocityNodeAdderT>
-class StandstillFactorAdder : public FactorAdder<localization_measurements::FeaturePointsMeasurement,
-                                                                  StandstillFactorAdderParams> {
-  using Base =
-    FactorAdder<localization_measurements::FeaturePointsMeasurement, StandstillFactorAdderParams>;
+class StandstillFactorAdder
+    : public FactorAdder<localization_measurements::FeaturePointsMeasurement, StandstillFactorAdderParams> {
+  using Base = FactorAdder<localization_measurements::FeaturePointsMeasurement, StandstillFactorAdderParams>;
 
  public:
   StandstillFactorAdder(const StandstillFactorAdderParams& params,
@@ -41,7 +40,6 @@ class StandstillFactorAdder : public FactorAdder<localization_measurements::Feat
                         std::shared_ptr<const vision_common::FeatureTracker> feature_tracker);
 
   // Adds zero velocity and/or zero relative pose factors depending on set params.
-  // TODO(rsoussan): check for standstill here!!!
   int AddFactors(const localization_measurements::FeaturePointsMeasurement& feature_points_measurement,
                  gtsam::NonlinearFactorGraph& factors) final;
 
@@ -54,6 +52,8 @@ class StandstillFactorAdder : public FactorAdder<localization_measurements::Feat
 
   std::shared_ptr<PoseVelocityNodeAdderT> node_adder_;
   std::shared_ptr<const vision_common::FeatureTracker> feature_tracker_;
+  gtsam::SharedNoiseModel zero_velocity_noise_;
+  gtsam::SharedNoiseModel zero_relative_pose_noise_;
 };
 
 // Implementation
@@ -61,7 +61,25 @@ template <typename PoseVelocityNodeAdderT>
 StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& params,
                                              const std::shared_ptr<PoseVelocityNodeAdderT> node_adder,
                                              std::shared_ptr<const vision_common::FeatureTracker> feature_tracker)
-    : params_(params), node_adder_(node_adder), feature_tracker_(feature_tracker) {}
+    : params_(params), node_adder_(node_adder), feature_tracker_(feature_tracker) {
+  // Create zero velocity noise
+  const gtsam::Vector3 velocity_prior_noise_sigmas(
+    (gtsam::Vector(3) << params().prior_velocity_stddev, params().prior_velocity_stddev, params().prior_velocity_stddev)
+      .finished());
+  zero_velocity_noise_ =
+    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+               params().huber_k);
+
+  // Create zero relative pose noise
+  const gtsam::Vector6 pose_between_noise_sigmas(
+    (gtsam::Vector(6) << params().pose_between_factor_rotation_stddev, params().pose_between_factor_rotation_stddev,
+     params().pose_between_factor_rotation_stddev, params().pose_between_factor_translation_stddev,
+     params().pose_between_factor_translation_stddev, params().pose_between_factor_translation_stddev)
+      .finished());
+  zero_relative_pose_noise =
+    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)),
+               params().huber_k);
+}
 
 template <typename PoseVelocityNodeAdderT>
 int StandstillFactorAdder::AddFactors(
@@ -73,28 +91,25 @@ int StandstillFactorAdder::AddFactors(
   if (params().add_pose_between_factor) {
     const auto previous_timestamp = feature_tracker_->PreviousTimestamp();
     if (previous_timestamp)
-    AddZeroRelativePoseFactor(*previous_timestamp, feature_points_measurement.timestamp(), factors);
+      AddZeroRelativePoseFactor(*previous_timestamp, feature_points_measurement.timestamp(), factors);
   }
 }
 
 template <typename PoseVelocityNodeAdderT>
 bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time timestamp,
                                                  gtsam::NonlinearFactorGraph& factors) {
-  // TODO(rsoussan): get keys!!!! return false if none available!
-  // TODO(rsoussan): get keys!!! add comment about key order assumption!!
+  const auto keys = node_adder_->Keys(timestamp);
+  if (keys.empty()) {
+    LogError("AddZeroVelocityPrior: Failed to get keys for timestamp.");
+    return false;
+  }
+  // Assumes second key is velocity
+  const auto& velocity_key = keys[1];
 
-  // Create noise
-  const gtsam::Vector3 velocity_prior_noise_sigmas(
-    (gtsam::Vector(3) << params().prior_velocity_stddev, params().prior_velocity_stddev, params().prior_velocity_stddev)
-      .finished());
-  const auto velocity_noise =
-    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-               params().huber_k);
   // Create factor
-  // TODO(rsoussan): get keys!!! add comment about key order assumption!!
-  gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
-    velocity_key_info.UninitializedKey(), gtsam::Velocity3::Zero(), velocity_noise));
-  standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
+  gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(
+    new gtsam::PriorFactor<gtsam::Velocity3>(velocity_key, gtsam::Velocity3::Zero(), zero_velocity_noise_));
+  factors.push_back(velocity_prior_factor);
   LogDebug("AddFactors: Added standstill velocity prior factor.");
   return true;
 }
@@ -102,7 +117,26 @@ bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time
 template <typename PoseVelocityNodeAdderT>
 bool StandstillFactorAdder::AddZeroRelativePoseFactor(const localization_common::Time timestamp_a,
                                                       const localization_common::Time timestamp_b,
-                                                      gtsam::NonlinearFactorGraph& factors) {}
+                                                      gtsam::NonlinearFactorGraph& factors) {
+  const auto keys_a = node_adder_->Keys(timestamp_a);
+  if (keys_a.empty()) {
+    LogError("AddZeroVelocityPrior: Failed to get keys for timestamp_a.");
+    return false;
+  }
+  const auto keys_b = node_adder_->Keys(timestamp_b);
+  if (keys_b.empty()) {
+    LogError("AddZeroVelocityPrior: Failed to get keys for timestamp_b.");
+    return false;
+  }
+  // Assumes first key is pose
+  const auto& pose_key_a = keys_a[0];
+  const auto& pose_key_b = keys_b[0];
+
+  gtsam::BetweenFactor<gtsam::Pose3>::shared_ptr pose_between_factor(new gtsam::BetweenFactor<gtsam::Pose3>(
+    pose_key_a, pose_key_b, gtsam::Pose3::identity(), zero_relative_pose_noise_));
+  factors.push_back(pose_between_factor);
+  LogDebug("AddFactors: Added standstill pose between factor.");
+}
 }  // namespace factor_adders
 
 #endif  // FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
