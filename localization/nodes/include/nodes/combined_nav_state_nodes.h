@@ -15,13 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef NODE_UPDATERS_COMBINED_NAV_STATE_NODES_H_
-#define NODE_UPDATERS_COMBINED_NAV_STATE_NODES_H_
+#ifndef NODES_COMBINED_NAV_STATE_NODES_H_
+#define NODES_COMBINED_NAV_STATE_NODES_H_
 
-#include <graph_optimizer/timestamped_combined_nodes.h>
 #include <localization_common/combined_nav_state.h>
+#include <nodes/timestamped_combined_nodes.h>
 
-namespace graph_optimizer {
+namespace nodes {
 using CombinedNavStateNodes = TimestampedCombinedNodes<localization_common::CombinedNavState>;
 
 // Specializations required for combined node
@@ -42,6 +42,6 @@ boost::optional<localization_common::CombinedNavState> CombinedNavStateNodes::No
   if (!pose || !velocity || !bias) return boost::none;
   return localization_common::CombinedNavState(*pose, *velocity, *bias, timestamp);
 }
-}  // namespace graph_optimizer
+}  // namespace nodes
 
-#endif  // NODE_UPDATERS_COMBINED_NAV_STATE_NODES_H_
+#endif  // NODES_COMBINED_NAV_STATE_NODES_H_
