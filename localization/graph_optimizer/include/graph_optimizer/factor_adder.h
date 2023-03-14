@@ -19,24 +19,24 @@
 #ifndef GRAPH_OPTIMIZER_FACTOR_ADDER_H_
 #define GRAPH_OPTIMIZER_FACTOR_ADDER_H_
 
-#include <graph_optimizer/factor_to_add.h>
+#include <graph_optimizer/factor_adder_params.h>
 
 #include <vector>
 
 namespace graph_optimizer {
-template <typename MEASUREMENT, typename PARAMS>
+template <typename MEASUREMENT>
 class FactorAdder {
  public:
-  explicit FactorAdder(const PARAMS& params) : params_(params) {}
+  explicit FactorAdder(const FactorAdderParams& params) : params_(params) {}
 
   virtual ~FactorAdder() {}
 
-  virtual std::vector<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) = 0;
-
-  const PARAMS& params() const { return params_; }
+  // Add factors using measurement to existing factor graph.
+  // Returns number of added factors.
+  virtual int AddFactors(const MEASUREMENT& measurement, gtsam::NonlinearFactorGraph& factors) = 0;
 
  private:
-  PARAMS params_;
+  FactorAdderParams params_;
 };
 }  // namespace graph_optimizer
 

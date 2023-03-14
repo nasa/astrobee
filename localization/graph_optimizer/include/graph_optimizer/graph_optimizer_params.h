@@ -18,8 +18,6 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#include <string>
-
 namespace graph_optimizer {
 struct GraphOptimizerParams {
   bool verbose;
@@ -28,8 +26,6 @@ struct GraphOptimizerParams {
   bool print_factor_info;
   bool use_ceres_params;
   int max_iterations;
-  std::string marginals_factorization;
-  bool add_marginal_factors;
   double huber_k;
   int log_rate;
 };

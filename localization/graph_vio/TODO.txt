@@ -1,15 +1,30 @@
-- template test on type? template specializations for combined imu test??
-- test combined nav state node updater! (AC)
-  - popuate imu measurements!
-    -explicit CombinedNavStateNodeUpdateModel(const Params& params);
+  - update graph optimizer!  (AA)  
+    - make graph optimizer and sliding window graph optimizer??
+      - make cc files for these! (AA)
+    - add single nodes to graph optimizer!!!
+      - construct in consctructor
+      - pass these around to each node updater!
+    - update factor adder interface
+    - make sure this all compiles
+  - rename newoldesttime to newstarttime (node updaters, optimizer, etc)
 
-  - how to add a second measurement to updater????? (AE)
-    - why is this needed???
-      - fan rate!!!!!!
-    - add to imu measurement???
-
-- update factor adders with changes described below
+- update factor adders with changes described below (A)
+  - smart factor adder (AB)
+    - remove factors to add, key info, etc (AAA)
+      - use VIO node updater! (AAA)
+    - add graph action completer code here! (AAB)
+      - move from graph_vio
+    - how to remove old measurements in factor adder?
+    - test??
+  - standstill factor adder (AC)
+    - use VIO node updater!
+  - map-based pose adder (AD)
+    - use pose node updater!
+- move post graph add actions to factor adders!
+- update graph_optimizer??? test??
 - rename nodeupdater to nodeadder???
+- remove graph_values package
+  - rename refs to values to nodes!
 - compile graph vio!
 - test graph vio!!! (AD)
 - compiple graph loc! (AB)
@@ -20,6 +35,11 @@
   - use graph bag???? 
     - copy graph bag and run for VIO only?? Or modify current graph bag tool??
       - (probably modify current tool?)
+- how to add a second measurement to combined nav node update model????? (AE)
+  - why is this needed???
+    - fan rate!!!!!!
+  - add to imu measurement???
+- make work with isam and gtsam!
 - move param loading and serialization from graph_vio/loc to respective packages!
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?

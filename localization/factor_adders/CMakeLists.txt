@@ -68,20 +68,20 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_depth_odometry_factor_adder
-    test/test_depth_odometry_factor_adder.test
-    test/test_depth_odometry_factor_adder.cc
-  )
-  target_link_libraries(test_depth_odometry_factor_adder
-    factor_adders ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_rotation_factor_adder
-    test/test_rotation_factor_adder.test
-    test/test_rotation_factor_adder.cc
-  )
-  target_link_libraries(test_rotation_factor_adder
-    factor_adders ${catkin_LIBRARIES}
-  )
+#  add_rostest_gtest(test_depth_odometry_factor_adder
+#    test/test_depth_odometry_factor_adder.test
+#    test/test_depth_odometry_factor_adder.cc
+#  )
+#  target_link_libraries(test_depth_odometry_factor_adder
+#    factor_adders ${catkin_LIBRARIES} 
+#  )
+#  add_rostest_gtest(test_rotation_factor_adder
+#    test/test_rotation_factor_adder.test
+#    test/test_rotation_factor_adder.cc
+#  )
+#  target_link_libraries(test_rotation_factor_adder
+#    factor_adders ${catkin_LIBRARIES}
+#  )
 endif()
 
 #############
