@@ -30,8 +30,9 @@
 
 namespace node_adders {
 
-// Creates a node adder with timestamp-indexed nodes.
-// Enables node adder use with a time-based sliding window graph.
+// Sliding window node adder using timestamp-indexed nodes.
+// Generates functions that adds nodes, relative factors, splits old factors, and so on.
+// Uses the provided node adder model to accomplish these.
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 class TimestampedNodeAdder
     : public SlidingWindowNodeAdder {
@@ -90,8 +91,7 @@ class TimestampedNodeAdder
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
-  // TODO(rsoussan): Rename this to AddNew?
-  bool AddLatestNodesAndRelativeFactors(const localization_common::Time timestamp,
+  bool AddNewNodesAndRelativeFactors(const localization_common::Time timestamp,
                                         gtsam::NonlinearFactorGraph& factors);
   bool SplitOldRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
 
@@ -279,8 +279,8 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
   }
 
   if (timestamp > *latest_timestamp) {
-    LogDebug("Adder: Adding latest node and relative factor.");
-    return AddLatestNodesAndRelativeFactors(timestamp, factors);
+    LogDebug("Adder: Adding new nodes and relative factors.");
+    return AddNewNodesAndRelativeFactors(timestamp, factors);
   } else {
     LogDebug("Adder: Splitting old relative factor.");
     return SplitOldRelativeFactor(timestamp, factors);
@@ -288,11 +288,11 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
-bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::AddLatestNodesAndRelativeFactors(
+bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::AddNewNodesAndRelativeFactors(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto timestamp_a = nodes_->LatestTimestamp();
   if (!timestamp_a) {
-    LogError("AddLatestNodeAndRelativeFactor: Failed to get latest timestamp.");
+    LogError("AddNewNodesAndRelativeFactor: Failed to get latest timestamp.");
     return false;
   }
   return node_adder_model_.AddNodesAndRelativeFactors(*timestamp_a, timestamp, *nodes_, factors);
