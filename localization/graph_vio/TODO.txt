@@ -1,12 +1,21 @@
-  - update graph optimizer!  (AA)  
-    - make graph optimizer and sliding window graph optimizer??
-      - make cc files for these! (AA)
-    - add single nodes to graph optimizer!!!
+- move nodes to own package! (AA)
+- remove graph values package! (AB)
+- move facter adder and node updater base classes to respective packages! (AC)
+- make graph optimizer class depend on facter adder and node updater packages??
+  - where to put utilities??
+- make sliding window graph optimizer package!
+
+  - update graph optimizer!  (A)  
+    - add single nodes to graph optimizer!!! (AAA)
       - construct in consctructor
       - pass these around to each node updater!
-    - update factor adder interface
+    - update factor adder interface (AAC)
+      - start with standstill factor adder!!
+      - map-based pose adder!
     - make sure this all compiles
-  - rename newoldesttime to newstarttime (node updaters, optimizer, etc)
+  - rename newoldesttime to newstarttime (node updaters, optimizer, etc) (AAB)
+  - add test with graph optimizer, simple factor adder, and simple node updater!!
+  - " " with sliding window graph optimizer!
 
 - update factor adders with changes described below (A)
   - smart factor adder (AB)
