@@ -245,4 +245,8 @@ PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const
     alpha > 0.5 ? upper_bound_pose.covariance : lower_bound_pose.covariance;
   return PoseWithCovariance(interpolated_pose, interpolated_covariance);
 }
+
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
+  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
+}
 }  // namespace localization_common

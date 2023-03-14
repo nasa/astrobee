@@ -1,7 +1,8 @@
-- move nodes to own package! (AA)
-  - update node updaters!
-    - move nodes in there to nodes package!
-- remove graph values package! (AB)
+  - update node updaters! (AA)
+    - compile and run tests!
+    - rename node_adder to sliding_window_node_adder!
+      - make node_adder base class that just adds nodes!
+        - merge with node_adder_with_priors???
 - move facter adder and node updater base classes to respective packages! (AC)
 - make graph optimizer class depend on facter adder and node updater packages??
   - where to put utilities??
@@ -12,6 +13,7 @@
       - construct in consctructor
       - pass these around to each node updater!
     - update factor adder interface (AAC)
+      - add measurement buffering!
       - start with standstill factor adder!!
       - map-based pose adder!
     - make sure this all compiles
@@ -33,7 +35,6 @@
     - use pose node updater!
 - move post graph add actions to factor adders!
 - update graph_optimizer??? test??
-- rename nodeupdater to nodeadder???
 - remove graph_values package
   - rename refs to values to nodes!
 - compile graph vio!

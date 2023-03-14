@@ -30,6 +30,8 @@
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/linear/NoiseModel.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <Eigen/Core>
 
@@ -157,6 +159,20 @@ Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const E
 PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const PoseWithCovariance& upper_bound_pose,
                               const double alpha);
 
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
+
+// TODO(rsoussan): Rename this RemoveFactors, pass keys instead of old_keys
+gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& graph);
+
+template <typename FactorType>
+void DeleteFactors(gtsam::NonlinearFactorGraph& graph);
+
+template <typename FactorType>
+int NumFactors(const gtsam::NonlinearFactorGraph& graph);
+
+template <typename FactorType>
+std::vector<const FactorType*> Factors(const gtsam::NonlinearFactorGraph& graph);
+
 // Implementations
 template <class LocMsgType>
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
@@ -232,6 +248,42 @@ std::vector<T> Rotate(const std::vector<T>& a_F_a_T_elements, const Eigen::Matri
     b_F_a_T_elements.emplace_back(b_R_a * a_F_a_T_element);
   }
   return b_F_a_T_elements;
+}
+
+template <typename FactorType>
+void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
+  int num_removed_factors = 0;
+  for (auto factor_it = graph.begin(); factor_it != graph.end();) {
+    if (dynamic_cast<FactorType*>(factor_it->get())) {
+      factor_it = graph.erase(factor_it);
+      ++num_removed_factors;
+      continue;
+    }
+    ++factor_it;
+  }
+}
+
+template <typename FactorType>
+int NumFactors(const gtsam::NonlinearFactorGraph& graph) {
+  int num_factors = 0;
+  for (const auto& factor : graph) {
+    if (dynamic_cast<const FactorType*>(factor.get())) {
+      ++num_factors;
+    }
+  }
+  return num_factors;
+}
+
+template <typename FactorType>
+std::vector<const FactorType*> Factors(const gtsam::NonlinearFactorGraph& graph) {
+  std::vector<const FactorType*> factors;
+  for (const auto& factor : graph) {
+    const FactorType* casted_factor = dynamic_cast<const FactorType*>(factor.get());
+    if (casted_factor) {
+      factors.emplace_back(casted_factor);
+    }
+  }
+  return factors;
 }
 }  // namespace localization_common
 

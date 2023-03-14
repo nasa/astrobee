@@ -16,18 +16,20 @@
 #under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(graph_optimizer)
+project(node_adders)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-	config_reader
+  imu_integration
 	localization_common
-	localization_measurements
-	msg_conversions 
+  nodes
 )
+
+# Find GTSAM
+find_package(GTSAM REQUIRED)
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
@@ -36,7 +38,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS config_reader localization_common localization_measurements msg_conversions
+  CATKIN_DEPENDS imu_integration localization_common nodes 
 )
 
 ###########
@@ -51,19 +53,36 @@ include_directories(
   ${GLOG_INCLUDE_DIRS}
 )
 
+file(GLOB cc_files
+     "src/*.cc"
+)
+
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/graph_optimizer.cc
-  src/graph_stats.cc
-  src/parameter_reader.cc
-  src/sliding_window_graph_optimizer.cc
+  ${cc_files}
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-endif() 
+  add_rostest_gtest(test_pose_node_adder
+    test/test_pose_node_adder.test
+    test/test_pose_node_adder.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_pose_node_adder
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+  add_rostest_gtest(test_combined_nav_state_node_adder_model
+    test/test_combined_nav_state_node_adder_model.test
+    test/test_combined_nav_state_node_adder_model.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_combined_nav_state_node_adder_model
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+endif()
 
 #############
 ## Install ##
