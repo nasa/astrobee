@@ -22,35 +22,28 @@
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/Marginals.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <string>
 
 namespace node_adders {
+// Base class for adding nodes to a graph. A different node adder should be used
+// for each node type added to the graph. Nodes can consist of multiple types that are added in unison,
+// for example a pose and velocity. See the nodes package for more details.
+// Assumes nodes require an initial values and prior factors.
 class NodeAdder {
  public:
   virtual ~NodeAdder() {}
 
+  // Adds initial nodes and priors to constrain them during optimization.
+  virtual void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) = 0;
+
+  // Adds a node using the provided timestamp if possible.
   virtual bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) = 0;
 
-  virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                           const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
-                           const double huber_k, gtsam::NonlinearFactorGraph& factors) = 0;
-
-  // Returns the oldest time that will be in graph values once the window is slid using params
-  virtual boost::optional<localization_common::Time> SlideWindowNewStartTime() const = 0;
-
-  // TODO(rsoussan): consolidate these with graph values base?
-  // TODO(rsoussan): Remove graph? why is this passed?
-  virtual gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
-                                   const gtsam::NonlinearFactorGraph& graph) const = 0;
-
-  virtual boost::optional<localization_common::Time> OldestTimestamp() const = 0;
-
-  virtual boost::optional<localization_common::Time> LatestTimestamp() const = 0;
-
+  // Returns whether a node can be added at timestamp or not.
   virtual bool CanAddNode(const localization_common::Time timestamp) const = 0;
 
+  // Returns the node adder type name.
   virtual std::string type() const = 0;
 };
 }  // namespace node_adders

@@ -1,8 +1,12 @@
   - update node updaters! (AA)
-    - compile and run tests!
     - rename node_adder to sliding_window_node_adder!
-      - make node_adder base class that just adds nodes!
-        - merge with node_adder_with_priors???
+        - template timestamped_node_adder on type string!
+          - add using ... = "pose_node_adder" in pose_node_adder header, pass this as template
+        - rename timestamped_node_adder!
+          - timestamped_sliding_window_node_adder
+        - rename measurement_based... to add sliding window!
+    - rename addlatestnodes to addnewnodesandfactors
+    - compile and run tests!
 - move facter adder and node updater base classes to respective packages! (AC)
 - make graph optimizer class depend on facter adder and node updater packages??
   - where to put utilities??

@@ -19,7 +19,7 @@
 #ifndef NODE_ADDERS_TIMESTAMPED_NODE_ADDER_H_
 #define NODE_ADDERS_TIMESTAMPED_NODE_ADDER_H_
 
-#include <node_adders/node_adder_with_priors.h>
+#include <node_adders/sliding_window_node_adder.h>
 #include <node_adders/timestamped_node_adder_model.h>
 #include <node_adders/timestamped_node_adder_params.h>
 #include <nodes/timestamped_nodes.h>
@@ -34,8 +34,8 @@ namespace node_adders {
 // Enables node adder use with a time-based sliding window graph.
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 class TimestampedNodeAdder
-    : public node_adders::NodeAdderWithPriors<NodeType, std::vector<gtsam::SharedNoiseModel>> {
-  using Base = node_adders::NodeAdderWithPriors<NodeType, gtsam::SharedNoiseModel>;
+    : public SlidingWindowNodeAdder {
+  using Base = SlidingWindowNodeAdder;
 
  public:
   TimestampedNodeAdder(const TimestampedNodeAdderParams<NodeType>& params,
@@ -44,14 +44,12 @@ class TimestampedNodeAdder
   TimestampedNodeAdder() = default;
   virtual ~TimestampedNodeAdder() = default;
 
-  // Adds initial nodes and priors using default values.
-  void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors);
+  void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors) final;
 
   // Adds initial nodes and priors using provided noise values and timestamp.
   void AddInitialNodesAndPriors(const NodeType& initial_node, const std::vector<gtsam::SharedNoiseModel>& initial_noise,
-                                const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
+                                const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
 
-  // Adds a node using the provided timestamp if possible.
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   // Slides the window, removes nodes older than oldest allowed time.
@@ -64,8 +62,6 @@ class TimestampedNodeAdder
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) override;
 
-  // Returns the node adder type
-  // This needs to be specialized
   std::string type() const override;
 
   // Returns the oldest node time that should remain after SlideWindow is called.
@@ -78,7 +74,6 @@ class TimestampedNodeAdder
   // in the graph.
   boost::optional<localization_common::Time> SlideWindowNewStartTime() const final;
 
-  // Returns old node keys older than oldest_allowed_time.
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
@@ -86,7 +81,6 @@ class TimestampedNodeAdder
 
   boost::optional<localization_common::Time> LatestTimestamp() const final;
 
-  // Returns whether a node can be added at timestamp or not.
   bool CanAddNode(const localization_common::Time timestamp) const final;
 
   const TimestampedNodesType& nodes() const { return *nodes_; }
