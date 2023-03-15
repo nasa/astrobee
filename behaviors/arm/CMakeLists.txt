@@ -58,7 +58,7 @@ add_library(arm SHARED
 )
 target_compile_definitions(arm PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(arm ${dependencies})
-rclcpp_components_register_nodes(arm "arm::ArmNodelet")
+rclcpp_components_register_nodes(arm "arm::ArmComponent")
 
 ## Declare a C++ executable: arm_tool
 add_executable(arm_tool tools/arm_tool.cc)

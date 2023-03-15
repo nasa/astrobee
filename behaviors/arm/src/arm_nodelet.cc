@@ -31,6 +31,7 @@ typedef msg::JointState JointState;
 #include <ff_util/ff_component.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_fsm.h>
+#include <ff_util/ff_service.h>
 
 // FSW actions, services, messages
 #include <ff_msgs/action/arm.hpp>
@@ -99,7 +100,7 @@ using FSM = ff_util::FSM;
 using STATE = ff_msgs::ArmState;
 using RESPONSE = ff_msgs::Arm::Result;
 
-class ArmNodelet : public ff_util::FreeFlyerComponent {
+class ArmComponent : public ff_util::FreeFlyerComponent {
  public:
   // Possible events
   enum : FSM::Event {
@@ -120,8 +121,8 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   };
 
   // Constructor
-  explicit ArmNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, NODE_ARM, true),
-    fsm_(STATE::INITIALIZING, std::bind(&ArmNodelet::UpdateCallback,
+  explicit ArmComponent(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, NODE_ARM, true),
+    fsm_(STATE::INITIALIZING, std::bind(&ArmComponent::UpdateCallback,
       this, std::placeholders::_1, std::placeholders::_2)) {
     // INITIALIZING -> UNKNOWN
     //   [label="[0]\nREADY", color=blue];
@@ -481,18 +482,20 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   }
 
   // Destructor
-  ~ArmNodelet() {}
+  ~ArmComponent() {}
 
  protected:
   // Called to initialize this nodelet
   void Initialize(NodeHandle &nh) {
-    clock_ = nh->get_clock();
     // Grab some configuration parameters for this node from the LUA config reader
-    cfg_.Initialize(nh);  // TODO(ana) Verify that GetPrivateHandle() is not required
     cfg_.AddFile("behaviors/arm.config");
+    if (!cfg_.Initialize(nh))
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                  "Could not start config server");
+
     // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
     /*if (!cfg_.Listen(boost::bind(
-      &ArmNodelet::ReconfigureCallback, this, _1)))
+      &ArmComponent::ReconfigureCallback, this, _1)))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                          "Could not load config");
     */
@@ -533,34 +536,30 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
     dictionary_[name] = GRIPPER;
 
     // Timer for checking goal is reached
-    timer_watchdog_.createTimer(rclcpp::Duration::from_seconds(cfg_.Get<double>("timeout_watchdog")),
-        std::bind(&ArmNodelet::WatchdogCallback, this), nh, true, false);
+    timer_watchdog_.createTimer(cfg_.Get<double>("timeout_watchdog"),
+        std::bind(&ArmComponent::WatchdogCallback, this), nh, true, false);
 
     // Timer for checking goal is reached
-    timer_goal_.createTimer(rclcpp::Duration::from_seconds(cfg_.Get<double>("timeout_goal")),
-        std::bind(&ArmNodelet::TimeoutCallback, this), nh, true, false);
+    timer_goal_.createTimer(cfg_.Get<double>("timeout_goal"),
+        std::bind(&ArmComponent::TimeoutCallback, this), nh, true, false);
 
     // Publishers for arm and joint state
     sub_joint_states_ = FF_CREATE_SUBSCRIBER(nh, sensor_msgs::JointState, TOPIC_JOINT_STATES, 1,
-      std::bind(&ArmNodelet::JointStateCallback, this, std::placeholders::_1));
+      std::bind(&ArmComponent::JointStateCallback, this, std::placeholders::_1));
     // TODO(ana): This had a latch=true argument, but TOPIC_JOINT_GOALS is NOT in the LatchedTopic list
     pub_joint_goals_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, TOPIC_JOINT_GOALS, 1);
 
     // Subscribe to Proximal Joint Servo Enabling service
-    client_enable_prox_servo_ = nh->create_client<ff_hw_msgs::SetEnabled>(
-      SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO);
+    client_enable_prox_servo_.Create(nh, SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO);
 
     // Subscribe to Distal Joint Servo Enabling service
-    client_enable_dist_servo_ = nh->create_client<ff_hw_msgs::SetEnabled>(
-      SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO);
+    client_enable_dist_servo_.Create(nh, SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO);
 
     // Subscribe to Gripper Joint Servo Enabling service
-    client_enable_grip_servo_ = nh->create_client<ff_hw_msgs::SetEnabled>(
-      SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO);
+    client_enable_grip_servo_.Create(nh, SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO);
 
     // Subscribe to Proximal Joint Servo Enabling service
-    client_calibrate_gripper_ = nh->create_client<ff_hw_msgs::CalibrateGripper>(
-      SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE);
+    client_calibrate_gripper_.Create(nh, SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE);
 
     // Internal state publisher
     pub_state_ = FF_CREATE_PUBLISHER(nh, ff_msgs::ArmState,
@@ -568,7 +567,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
 
     // Allow the state to be manually set
     srv_set_state_ = nh->create_service<ff_msgs::SetState>(SERVICE_BEHAVIORS_ARM_SET_STATE,
-      std::bind(&ArmNodelet::SetStateCallback, this, std::placeholders::_1, std::placeholders::_2));
+      std::bind(&ArmComponent::SetStateCallback, this, std::placeholders::_1, std::placeholders::_2));
 
     // Executive state publishers
     pub_arm_state_ = FF_CREATE_PUBLISHER(nh, ff_msgs::ArmStateStamped, TOPIC_BEHAVIORS_ARM_ARM_STATE, 1);
@@ -576,11 +575,11 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
 
     // Setup the ARM  action
     server_.SetGoalCallback(std::bind(
-      &ArmNodelet::GoalCallback, this, std::placeholders::_1));
+      &ArmComponent::GoalCallback, this, std::placeholders::_1));
     server_.SetPreemptCallback(std::bind(
-      &ArmNodelet::PreemptCallback, this));
+      &ArmComponent::PreemptCallback, this));
     server_.SetCancelCallback(std::bind(
-      &ArmNodelet::CancelCallback, this));
+      &ArmComponent::CancelCallback, this));
     server_.Create(nh, ACTION_BEHAVIORS_ARM);
   }
 
@@ -608,7 +607,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
     // Debug events
     ff_msgs::ArmState msg;
     msg.header.frame_id = GetPlatform();
-    msg.header.stamp = clock_->now();
+    msg.header.stamp = GetTimeNow();
     msg.state = state;
     switch (event) {
     case READY:                    msg.fsm_event = "READY";               break;
@@ -765,7 +764,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
     }
     // Package up the joint state goal
     static sensor_msgs::JointState goal;
-    goal.header.stamp = clock_->now();
+    goal.header.stamp = GetTimeNow();
     goal.header.frame_id = GetPlatform();
     goal.name.resize(1);
     goal.position.resize(1);
@@ -792,7 +791,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
     // Send the joint sample //
     ///////////////////////////
     ff_msgs::JointSampleStamped jss;
-    jss.header.stamp = clock_->now();
+    jss.header.stamp = GetTimeNow();
     jss.header.frame_id = GetPlatform();
     jss.samples.clear();
     // Iterate over data
@@ -818,8 +817,7 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
       return;
     // Reset the watchdog timer
     timer_watchdog_.stop();
-    timer_watchdog_.setPeriod(
-      rclcpp::Duration::from_seconds(cfg_.Get<double>("timeout_watchdog")));
+    timer_watchdog_.setPeriod(cfg_.Get<double>("timeout_watchdog"));
     timer_watchdog_.start();
     // Update the state machine
     switch (fsm_.GetState()) {
@@ -879,13 +877,13 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
       return;
     }
     // Publish the updated joint samples
-      pub_joint_sample_->publish(jss);
+    pub_joint_sample_->publish(jss);
     /////////////////////////
     // Send the full state //
     /////////////////////////
     ff_msgs::ArmStateStamped state_msg;
     state_msg.header.frame_id = GetPlatform();
-    state_msg.header.stamp = clock_->now();
+    state_msg.header.stamp = GetTimeNow();
     // Convert our internal state to an ArmGripperState
     if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < joints_[GRIPPER].tol)
       state_msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
@@ -1098,16 +1096,15 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   bool CalibrateGripper(void) {
     bool success = false;
     // CalibrateGripper callback doesn't have a request field
-    auto enable_req = std::make_shared<ff_hw_msgs::CalibrateGripper::Request>();
+    ff_hw_msgs::CalibrateGripper::Request enable_req;
+    auto response = std::make_shared<ff_hw_msgs::CalibrateGripper::Response>();
 
     timer_goal_.setPeriod(
     rclcpp::Duration::from_seconds(cfg_.Get<double>("timeout_goal")));
     timer_goal_.start();
-
-    auto res = client_calibrate_gripper_->async_send_request(enable_req);
-    rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-    if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-      success = res.get()->success;
+    if (client_calibrate_gripper_.call(enable_req, response)) {
+      success = response->success;
+    }
     if (success)
       calibrated_ = true;
     return success;
@@ -1116,66 +1113,45 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   // Enable / Disable the perching arm servos
   bool EnableServo(ServoID servo_number, bool servo_enable) {
     bool success = false;
-    auto enable_req = std::shared_ptr<ff_hw_msgs::SetEnabled::Request>();
-    enable_req->enabled = servo_enable;
-    switch (servo_number) {
+    ff_hw_msgs::SetEnabled::Request enable_req;
+    auto response = std::make_shared<ff_hw_msgs::SetEnabled::Response>();
+    enable_req.enabled = servo_enable;
+      switch (servo_number) {
       case PROXIMAL_SERVO:    // Proximal
-      {
-        auto res = client_enable_prox_servo_->async_send_request(enable_req);
-        rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-        if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-          success = res.get()->success;
-      }
-      break;
+        client_enable_prox_servo_.waitForExistence(5.0);
+        if (client_enable_prox_servo_.isValid() && client_enable_prox_servo_.call(enable_req, response))
+          success = response->success;
+        break;
       case DISTAL_SERVO:      // Distal
-      {
-        auto res = client_enable_dist_servo_->async_send_request(enable_req);
-        rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-        if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-          success = res.get()->success;
-      }
-      break;
+        client_enable_dist_servo_.waitForExistence(5.0);
+        if (client_enable_dist_servo_.isValid() && client_enable_dist_servo_.call(enable_req, response))
+          success = response->success;
+        break;
       case GRIPPER_SERVO:     // Gripper
-      {
-        auto res = client_enable_grip_servo_->async_send_request(enable_req);
-        rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-        if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-          success = res.get()->success;
-      }
-      break;
+        client_enable_grip_servo_.waitForExistence(5.0);
+        if (client_enable_grip_servo_.isValid() && client_enable_grip_servo_.call(enable_req, response))
+          success = response->success;
+        break;
       case ALL_SERVOS:        // All
-      {
-        bool success_prox, success_dist, success_grip;
-        {
-          auto res = client_enable_prox_servo_->async_send_request(enable_req);
-          rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-          if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-            success_prox = res.get()->success;
-        }
-
-        {
-          auto res = client_enable_dist_servo_->async_send_request(enable_req);
-          rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-          if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-            success_dist = res.get()->success;
-        }
-
-        {
-          auto res = client_enable_grip_servo_->async_send_request(enable_req);
-          rclcpp::FutureReturnCode return_code = rclcpp::spin_until_future_complete(get_node_base_interface(), res);
-          if (return_code == rclcpp::FutureReturnCode::SUCCESS)
-            success_grip = res.get()->success;
-        }
-
-        success = success_prox && success_dist && success_grip;
-      }
-      break;
+        client_enable_prox_servo_.waitForExistence(5.0);
+        if (client_enable_prox_servo_.isValid() && client_enable_prox_servo_.call(enable_req, response))
+          success = response->success;
+        client_enable_dist_servo_.waitForExistence(5.0);
+        if (client_enable_dist_servo_.isValid() && client_enable_dist_servo_.call(enable_req, response))
+          success = success && response->success;
+        client_enable_grip_servo_.waitForExistence(5.0);
+        if (client_enable_grip_servo_.isValid() && client_enable_grip_servo_.call(enable_req, response))
+          success = success && response->success;
+        break;
       default:
         FF_WARN("Unknown servo number");
         break;
     }
      return success;
   }
+
+
+
 
  protected:
   // Finite state machine
@@ -1196,12 +1172,10 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
   rclcpp::Publisher<sensor_msgs::JointState>::SharedPtr pub_joint_goals_;     // Joint goal publisher
   rclcpp::Publisher<ff_msgs::ArmStateStamped>::SharedPtr pub_arm_state_;       // Executive arm state publisher
   rclcpp::Publisher<ff_msgs::JointSampleStamped>::SharedPtr pub_joint_sample_;    // Executive joint state publisher
-  rclcpp::Client<ff_hw_msgs::SetEnabled>::SharedPtr client_enable_prox_servo_;
-  rclcpp::Client<ff_hw_msgs::SetEnabled>::SharedPtr client_enable_dist_servo_;
-  rclcpp::Client<ff_hw_msgs::SetEnabled>::SharedPtr client_enable_grip_servo_;
-  rclcpp::Client<ff_hw_msgs::CalibrateGripper>::SharedPtr client_calibrate_gripper_;
-
-  rclcpp::Clock::SharedPtr clock_;
+  ff_util::FreeFlyerServiceClient<ff_hw_msgs::SetEnabled> client_enable_prox_servo_;
+  ff_util::FreeFlyerServiceClient<ff_hw_msgs::SetEnabled> client_enable_dist_servo_;
+  ff_util::FreeFlyerServiceClient<ff_hw_msgs::SetEnabled> client_enable_grip_servo_;
+  ff_util::FreeFlyerServiceClient<ff_hw_msgs::CalibrateGripper> client_calibrate_gripper_;
 
   // Constant vales
   static constexpr double K_PAN_OFFSET      =    0.0;
@@ -1235,4 +1209,4 @@ class ArmNodelet : public ff_util::FreeFlyerComponent {
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(arm::ArmNodelet)
+RCLCPP_COMPONENTS_REGISTER_NODE(arm::ArmComponent)

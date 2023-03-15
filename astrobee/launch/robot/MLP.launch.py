@@ -283,7 +283,7 @@ def generate_launch_description():
         name='mlp_mobility',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
             ComposableNode(
                 package='choreographer',
@@ -307,13 +307,12 @@ def generate_launch_description():
         name='mlp_arm',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='arm',
-            #     plugin='arm::ArmNodelet',
-            #     name='arm',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='arm',
+                plugin='arm::ArmComponent',
+                name='arm'),
             ]
         ),
         ComposableNodeContainer(
