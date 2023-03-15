@@ -50,7 +50,8 @@ class SimpleAdder : public fa::SingleMeasurementBasedFactorAdder<lm::PoseMeasure
   }
 
  private:
-  int AddFactorsForMeasurement(const lm::PoseMeasurement& measurement, gtsam::NonlinearFactorGraph& factors) final {
+  int AddFactorsForSingleMeasurement(const lm::PoseMeasurement& measurement,
+                                     gtsam::NonlinearFactorGraph& factors) final {
     gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
       new gtsam::PriorFactor<gtsam::Pose3>(gtsam::Key(key_value_++), measurement.pose, pose_noise_));
     factors.push_back(pose_prior_factor);
@@ -100,9 +101,40 @@ class SingleMeasurementBasedFactorAdderTest : public ::testing::Test {
 };
 
 TEST_F(SingleMeasurementBasedFactorAdderTest, AddMeasurements) {
-  // EXPECT_EQ(factor_adder_.AddFactors(-100, -10, factors_), 0);
+  EXPECT_EQ(factor_adder_.AddFactors(-100, -10, factors_), 0);
+  EXPECT_EQ(factors_.size(), 0);
+  // Add factor 0
   EXPECT_EQ(factor_adder_.AddFactors(-100.1, time(0), factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
   EXPECT_SAME_PRIOR_FACTOR(0);
+  // Add factors 1, 2, 3
+  EXPECT_EQ(factor_adder_.AddFactors(time(1) - 0.1, time(3) + 0.1, factors_), 3);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
+  // Add factors 4, 5
+  EXPECT_EQ(factor_adder_.AddFactors(time(4) - 0.1, time(5), factors_), 2);
+  EXPECT_EQ(factors_.size(), 6);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
+  EXPECT_SAME_PRIOR_FACTOR(4);
+  EXPECT_SAME_PRIOR_FACTOR(5);
+  // Old measurements should be removed up to measurement 3, expect adding factors 0,1,2 to fail
+  EXPECT_EQ(factor_adder_.AddFactors(time(0) - 0.1, time(2), factors_), 0);
+  EXPECT_EQ(factors_.size(), 6);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
+  EXPECT_SAME_PRIOR_FACTOR(4);
+  EXPECT_SAME_PRIOR_FACTOR(5);
+  // Can't add factors newer than measurements
+  EXPECT_EQ(factor_adder_.AddFactors(time(9) + 0.1, time(9) + 1000.1, factors_), 0);
+  EXPECT_EQ(factors_.size(), 6);
 }
 
 // Run all the tests that were declared with TEST()

@@ -39,7 +39,8 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
                                  gtsam::NonlinearFactorGraph& factors) final;
 
   // Add factors given a single measurement.
-  virtual int AddFactorsForMeasurement(const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) = 0;
+  virtual int AddFactorsForSingleMeasurement(const MeasurementType& measurement,
+                                             gtsam::NonlinearFactorGraph& factors) = 0;
 };
 
 // Implementation
@@ -54,7 +55,7 @@ int SingleMeasurementBasedFactorAdder<MeasurementType>::AddMeasurementBasedFacto
   int num_added_factors = 0;
   const auto lower_and_upper_bound_its = this->measurements_.InRangeValues(oldest_allowed_time, newest_allowed_time);
   for (auto it = lower_and_upper_bound_its.first; it != lower_and_upper_bound_its.second; ++it) {
-    num_added_factors += AddFactorsForMeasurement(it->second, factors);
+    num_added_factors += AddFactorsForSingleMeasurement(it->second, factors);
   }
 
   return num_added_factors;

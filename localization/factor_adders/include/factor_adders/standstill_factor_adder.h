@@ -39,8 +39,8 @@ class StandstillFactorAdder
 
  private:
   // Adds zero velocity and/or zero relative pose factors depending on params.
-  int AddFactorsForMeasurement(const localization_measurements::StandstillMeasurement& standstill_measurement,
-                               gtsam::NonlinearFactorGraph& factors) final;
+  int AddFactorsForSingleMeasurement(const localization_measurements::StandstillMeasurement& standstill_measurement,
+                                     gtsam::NonlinearFactorGraph& factors) final;
 
   // Adds a velocity prior at the provided timestamp with zero velocity.
   bool AddZeroVelocityPrior(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
@@ -79,7 +79,7 @@ StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& 
 }
 
 template <typename PoseVelocityNodeAdderType>
-int StandstillFactorAdder::AddFactorsForMeasurement(
+int StandstillFactorAdder::AddFactorsForSingleMeasurement(
   const localization_measurements::StandstillMeasurement& standstill_measurement,
   gtsam::NonlinearFactorGraph& factors) {
   int num_factors_added = 0;
@@ -111,7 +111,7 @@ bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time
   gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(
     new gtsam::PriorFactor<gtsam::Velocity3>(velocity_key, gtsam::Velocity3::Zero(), zero_velocity_noise_));
   factors.push_back(velocity_prior_factor);
-  LogDebug("AddFactorsForMeasurement: Added standstill velocity prior factor.");
+  LogDebug("AddFactorsForSingleMeasurement: Added standstill velocity prior factor.");
   return true;
 }
 
@@ -140,7 +140,7 @@ bool StandstillFactorAdder::AddZeroRelativePoseFactor(const localization_common:
   gtsam::BetweenFactor<gtsam::Pose3>::shared_ptr pose_between_factor(new gtsam::BetweenFactor<gtsam::Pose3>(
     pose_key_a, pose_key_b, gtsam::Pose3::identity(), zero_relative_pose_noise_));
   factors.push_back(pose_between_factor);
-  LogDebug("AddFactorsForMeasurement: Added standstill pose between factor.");
+  LogDebug("AddFactorsForSingleMeasurement: Added standstill pose between factor.");
 }
 }  // namespace factor_adders
 
