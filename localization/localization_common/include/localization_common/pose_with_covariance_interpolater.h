@@ -27,7 +27,7 @@ using PoseWithCovarianceInterpolater = TimestampedInterpolater<PoseWithCovarianc
 
 template <>
 PoseWithCovariance PoseWithCovarianceInterpolater::Interpolate(const PoseWithCovariance& a, const PoseWithCovariance& b,
-                                                const double alpha) const;
+                                                               const double alpha) const;
 
 template <>
 PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovariance& a,

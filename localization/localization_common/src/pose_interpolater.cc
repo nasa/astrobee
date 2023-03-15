@@ -28,6 +28,6 @@ Eigen::Isometry3d PoseInterpolater::Interpolate(const Eigen::Isometry3d& a, cons
 
 template <>
 Eigen::Isometry3d PoseInterpolater::Relative(const Eigen::Isometry3d& a, const Eigen::Isometry3d& b) const {
-  return a.inverse()*b;
+  return a.inverse() * b;
 }
 }  // namespace localization_common

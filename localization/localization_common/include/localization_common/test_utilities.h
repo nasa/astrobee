@@ -134,7 +134,7 @@ template <int D>
 Eigen::Matrix<double, D, D> RandomCovariance() {
   const Eigen::Matrix<double, D, D> random_matrix = Eigen::Matrix<double, D, D>::Random();
   // Random covariance is a random symmetric matrix
-  return random_matrix.transpose()*random_matrix;
+  return random_matrix.transpose() * random_matrix;
 }
 
 template <int N>

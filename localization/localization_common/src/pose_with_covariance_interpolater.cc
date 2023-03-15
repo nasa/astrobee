@@ -22,14 +22,14 @@
 namespace localization_common {
 template <>
 PoseWithCovariance PoseWithCovarianceInterpolater::Interpolate(const PoseWithCovariance& a, const PoseWithCovariance& b,
-                                                const double alpha) const {
+                                                               const double alpha) const {
   return localization_common::Interpolate(a, b, alpha);
 }
 
 template <>
 PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovariance& a,
                                                             const PoseWithCovariance& b) const {
-  const Eigen::Isometry3d relative_pose = a.pose.inverse()*b.pose;
+  const Eigen::Isometry3d relative_pose = a.pose.inverse() * b.pose;
   // TODO(rsoussan): Implement this! (use viper code?)
   const PoseCovariance relative_covariance = b.covariance;
   return PoseWithCovariance(relative_pose, relative_covariance);

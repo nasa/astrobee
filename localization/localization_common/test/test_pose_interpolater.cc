@@ -90,7 +90,7 @@ TEST(PoseInterpolaterTester, Relative) {
   {
     const auto relative_pose = interpolater.Relative(7, 8);
     ASSERT_TRUE(relative_pose != boost::none);
-    EXPECT_MATRIX_NEAR((*relative_pose), poses[7].inverse()*poses[8], 1e-6);
+    EXPECT_MATRIX_NEAR((*relative_pose), poses[7].inverse() * poses[8], 1e-6);
   }
 }
 

@@ -157,7 +157,7 @@ Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const E
                               const double alpha);
 
 PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const PoseWithCovariance& upper_bound_pose,
-                              const double alpha);
+                               const double alpha);
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 

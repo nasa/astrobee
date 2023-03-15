@@ -36,7 +36,7 @@ struct TimestampedValue {
   TimestampedValue(const Time timestamp, const T& value) : timestamp(timestamp), value(value) {}
   explicit TimestampedValue(const std::pair<const Time, T>& pair) : timestamp(pair.first), value(pair.second) {}
   Time timestamp;
-  T value;
+  const T& value;
 };
 
 template <typename T>
@@ -83,6 +83,8 @@ class TimestampedSet {
   int RemoveOldValues(const Time oldest_allowed_timestamp);
 
   const std::map<Time, T>& set() const;
+
+  typename std::map<Time, T>::const_iterator cend() const;
 
   // Returns iterators to values in range of oldest and latest allowed timestamps.
   std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator> InRangeValues(
@@ -278,13 +280,21 @@ int TimestampedSet<T>::RemoveOldValues(const Time oldest_allowed_timestamp) {
 }
 
 template <typename T>
-const std::map<Time, T>& TimestampedSet<T>::set() const { return timestamp_value_map_; }
+const std::map<Time, T>& TimestampedSet<T>::set() const {
+  return timestamp_value_map_;
+}
 
 template <typename T>
-std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator> InRangeValues(
-  const Time oldest_allowed_timestamp, const Time latest_allowed_timestamp) {
-  return std::make_pair(timestamp_value_map_.lower_bound(oldest_allowed_timestamp),
-                        std::prev(timestamp_value_map_.upper_bound(latest_allowed_timestamp)));
+typename std::map<Time, T>::const_iterator TimestampedSet<T>::cend() const {
+  return timestamp_value_map_.cend();
+}
+
+template <typename T>
+std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator>
+TimestampedSet<T>::InRangeValues(const Time oldest_allowed_timestamp, const Time latest_allowed_timestamp) {
+  auto upper_bound = timestamp_value_map_.upper_bound(latest_allowed_timestamp);
+  if (upper_bound != timestamp_value_map_.cend()) upper_bound = std::prev(upper_bound);
+  return std::make_pair(timestamp_value_map_.lower_bound(oldest_allowed_timestamp), upper_bound);
 }
 
 template <typename T>

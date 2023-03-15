@@ -69,8 +69,7 @@ boost::optional<T> TimestampedInterpolater<T>::Interpolate(const Time timestamp)
   const Time lower_bound_time = lower_and_upper_bound.first->timestamp;
   const Time upper_bound_time = lower_and_upper_bound.second->timestamp;
   const double alpha = (timestamp - lower_bound_time) / (upper_bound_time - lower_bound_time);
-  return Interpolate(lower_and_upper_bound.first->value, lower_and_upper_bound.second->value,
-                                          alpha);
+  return Interpolate(lower_and_upper_bound.first->value, lower_and_upper_bound.second->value, alpha);
 }
 
 template <typename T>
@@ -93,8 +92,8 @@ boost::optional<T> TimestampedInterpolater<T>::Relative(const Time timestamp_a, 
 
 template <typename T>
 T TimestampedInterpolater<T>::Relative(const T& a, const T& b) const {
-    static_assert(sizeof(T) == std::size_t(-1), "This needs to be specialized by template class.");
-  }
+  static_assert(sizeof(T) == std::size_t(-1), "This needs to be specialized by template class.");
+}
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_TIMESTAMPED_INTERPOLATER_H_
