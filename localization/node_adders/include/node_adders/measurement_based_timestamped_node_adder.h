@@ -55,7 +55,7 @@ class MeasurementBasedTimestampedNodeAdder
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedTimestampedNodeAdderModelType>
 MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
-                                       MeasurementBasedTimestampedNodeAdderModelType>::
+                                     MeasurementBasedTimestampedNodeAdderModelType>::
   MeasurementBasedTimestampedNodeAdder(
     const MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>& params,
     const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
@@ -76,7 +76,7 @@ void MeasurementBasedTimestampedNodeAdder<
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedTimestampedNodeAdderModelType>
 void MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
-                                            MeasurementBasedTimestampedNodeAdderModelType>::
+                                          MeasurementBasedTimestampedNodeAdderModelType>::
   RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
   this->node_adder_model_.RemoveMeasurements(oldest_allowed_time);
 }
@@ -86,9 +86,9 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 bool MeasurementBasedTimestampedNodeAdder<
   MeasurementType, NodeType, TimestampedNodesType,
   MeasurementBasedTimestampedNodeAdderModelType>::SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                                                               const boost::optional<gtsam::Marginals>& marginals,
-                                                               const gtsam::KeyVector& old_keys, const double huber_k,
-                                                               gtsam::NonlinearFactorGraph& factors) {
+                                                              const boost::optional<gtsam::Marginals>& marginals,
+                                                              const gtsam::KeyVector& old_keys, const double huber_k,
+                                                              gtsam::NonlinearFactorGraph& factors) {
   if (!Base::SlideWindow(oldest_allowed_timestamp, marginals, old_keys, huber_k, factors)) {
     LogError("Failed to slide window.");
     return false;

@@ -32,11 +32,11 @@ namespace node_adders {
 // Timestamp-based node adder using timestamped poses with covariances.
 using PoseNodeAdder =
   MeasurementBasedTimestampedNodeAdder<localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3,
-                                         nodes::TimestampedNodes<gtsam::Pose3>, PoseNodeAdderModel>;
+                                       nodes::TimestampedNodes<gtsam::Pose3>, PoseNodeAdderModel>;
 
 template <>
-std::string TimestampedNodeAdder<gtsam::Pose3, nodes::TimestampedNodes<gtsam::Pose3>,
-                                   PoseNodeAdderModel>::type() const {
+std::string TimestampedNodeAdder<gtsam::Pose3, nodes::TimestampedNodes<gtsam::Pose3>, PoseNodeAdderModel>::type()
+  const {
   return "pose";
 }
 }  // namespace node_adders

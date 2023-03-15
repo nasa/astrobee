@@ -31,10 +31,10 @@
 
 namespace node_adders {
 class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
-                              localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3> {
+                             localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3> {
   using Base =
     BetweenFactorMeasurementBasedTimestampedNodeAdderModel<localization_measurements::TimestampedPoseWithCovariance,
-                                                            gtsam::Pose3>;
+                                                           gtsam::Pose3>;
   using NodesType = nodes::TimestampedNodes<gtsam::Pose3>;
 
  public:

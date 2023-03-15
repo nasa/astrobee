@@ -32,9 +32,9 @@ CombinedNavStateNodeAdderModel::CombinedNavStateNodeAdderModel(const CombinedNav
     : Base(params), imu_integrator_(params.imu_integrator) {}
 
 void CombinedNavStateNodeAdderModel::AddPriors(const lc::CombinedNavState& node,
-                                                const std::vector<gtsam::SharedNoiseModel>& noise_models,
-                                                const lc::Time timestamp, const no::CombinedNavStateNodes& nodes,
-                                                gtsam::NonlinearFactorGraph& factors) const {
+                                               const std::vector<gtsam::SharedNoiseModel>& noise_models,
+                                               const lc::Time timestamp, const no::CombinedNavStateNodes& nodes,
+                                               gtsam::NonlinearFactorGraph& factors) const {
   const auto keys = nodes.Keys(timestamp);
   if (keys.empty()) {
     LogError("AddPriors: Failed to get keys.");
@@ -58,8 +58,8 @@ void CombinedNavStateNodeAdderModel::AddPriors(const lc::CombinedNavState& node,
 }
 
 bool CombinedNavStateNodeAdderModel::AddNodesAndRelativeFactors(const lc::Time timestamp_a, const lc::Time timestamp_b,
-                                                                 no::CombinedNavStateNodes& nodes,
-                                                                 gtsam::NonlinearFactorGraph& factors) const {
+                                                                no::CombinedNavStateNodes& nodes,
+                                                                gtsam::NonlinearFactorGraph& factors) const {
   if (!nodes.Contains(timestamp_b)) {
     const auto node_a = nodes.Node(timestamp_a);
     if (!node_a) {
@@ -88,8 +88,8 @@ bool CombinedNavStateNodeAdderModel::AddNodesAndRelativeFactors(const lc::Time t
 }
 
 bool CombinedNavStateNodeAdderModel::AddRelativeFactors(const lc::Time timestamp_a, const lc::Time timestamp_b,
-                                                         const no::CombinedNavStateNodes& nodes,
-                                                         gtsam::NonlinearFactorGraph& factors) const {
+                                                        const no::CombinedNavStateNodes& nodes,
+                                                        gtsam::NonlinearFactorGraph& factors) const {
   const auto keys_a = nodes.Keys(timestamp_a);
   if (keys_a.empty()) {
     LogError("AddRelativeFactors: Failed to get keys a.");
@@ -133,6 +133,8 @@ void CombinedNavStateNodeAdderModel::AddMeasurement(const lm::ImuMeasurement& me
 }
 
 void CombinedNavStateNodeAdderModel::RemoveMeasurements(const lc::Time oldest_allowed_time) {
+  // Don't need lower bound since imu integration doesn't use measurements
+  // at same timestamp as start time for integration
   imu_integrator_.RemoveOldValues(oldest_allowed_time);
 }
 
@@ -141,9 +143,9 @@ bool CombinedNavStateNodeAdderModel::CanAddNode(const localization_common::Time 
 }
 
 bool CombinedNavStateNodeAdderModel::RemoveRelativeFactors(const localization_common::Time timestamp_a,
-                                                            const localization_common::Time timestamp_b,
-                                                            const NodesType& nodes,
-                                                            gtsam::NonlinearFactorGraph& factors) const {
+                                                           const localization_common::Time timestamp_b,
+                                                           const NodesType& nodes,
+                                                           gtsam::NonlinearFactorGraph& factors) const {
   return RemoveRelativeFactor<gtsam::CombinedImuFactor, NodesType>(timestamp_a, timestamp_b, nodes, factors);
 }
 }  // namespace node_adders

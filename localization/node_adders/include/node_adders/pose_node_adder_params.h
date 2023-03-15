@@ -31,7 +31,7 @@
 namespace node_adders {
 struct PoseNodeAdderParams
     : public MeasurementBasedTimestampedNodeAdderParams<localization_measurements::TimestampedPoseWithCovariance,
-                                                          gtsam::Pose3> {
+                                                        gtsam::Pose3> {
   void Initialize() {
     SetStartNoiseModels();
     SetStartMeasurement();

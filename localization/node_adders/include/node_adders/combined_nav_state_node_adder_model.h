@@ -34,8 +34,8 @@
 namespace node_adders {
 class CombinedNavStateNodeAdderModel
     : public MeasurementBasedTimestampedNodeAdderModel<localization_measurements::ImuMeasurement,
-                                                        localization_common::CombinedNavState,
-                                                        nodes::CombinedNavStateNodes> {
+                                                       localization_common::CombinedNavState,
+                                                       nodes::CombinedNavStateNodes> {
  public:
   using NodeType = localization_common::CombinedNavState;
   using NodesType = nodes::CombinedNavStateNodes;

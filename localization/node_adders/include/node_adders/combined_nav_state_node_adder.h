@@ -29,7 +29,7 @@
 namespace node_adders {
 using CombinedNavStateNodeAdder =
   MeasurementBasedTimestampedNodeAdder<localization_measurements::ImuMeasurement, CombinedNavStateNodes,
-                                         CombinedNavStateNodeAdderModel>;
+                                       CombinedNavStateNodeAdderModel>;
 
 template <>
 std::string CombinedNavStateNodeAdder::type() const final {

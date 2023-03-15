@@ -52,7 +52,8 @@ void PoseNodeAdderModel::AddMeasurement(const lm::TimestampedPoseWithCovariance&
 }
 
 void PoseNodeAdderModel::RemoveMeasurements(const lc::Time oldest_allowed_time) {
-  pose_interpolater_.RemoveOldValues(oldest_allowed_time);
+  // Keep lower bound so future measurements can be interpolated using it.
+  pose_interpolater_.RemoveBelowLowerBoundValues(oldest_allowed_time);
 }
 
 bool PoseNodeAdderModel::CanAddNode(const localization_common::Time timestamp) const {

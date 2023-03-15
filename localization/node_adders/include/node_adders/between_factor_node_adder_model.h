@@ -162,14 +162,12 @@ bool BetweenFactorNodeAdderModel<NodeType, NodeAdderModelType>::RemoveRelativeFa
 
 // Specialization helpers
 template <typename MeasurementType, typename NodeType>
-using BetweenFactorMeasurementBasedTimestampedNodeAdderModel =
-  BetweenFactorNodeAdderModel<NodeType, MeasurementBasedTimestampedNodeAdderModel<
-                                           MeasurementType, NodeType, nodes::TimestampedNodes<NodeType>>>;
+using BetweenFactorMeasurementBasedTimestampedNodeAdderModel = BetweenFactorNodeAdderModel<
+  NodeType, MeasurementBasedTimestampedNodeAdderModel<MeasurementType, NodeType, nodes::TimestampedNodes<NodeType>>>;
 
 template <typename NodeType>
 using BetweenFactorTimestampedNodeAdderModel =
-  BetweenFactorNodeAdderModel<NodeType,
-                               TimestampedNodeAdderModel<NodeType, nodes::TimestampedNodes<NodeType>>>;
+  BetweenFactorNodeAdderModel<NodeType, TimestampedNodeAdderModel<NodeType, nodes::TimestampedNodes<NodeType>>>;
 }  // namespace node_adders
 
 #endif  // NODE_ADDERS_BETWEEN_FACTOR_NODE_ADDER_MODEL_H_

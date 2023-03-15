@@ -34,14 +34,13 @@ namespace node_adders {
 // Generates functions that adds nodes, relative factors, splits old factors, and so on.
 // Uses the provided node adder model to accomplish these.
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
-class TimestampedNodeAdder
-    : public SlidingWindowNodeAdder {
+class TimestampedNodeAdder : public SlidingWindowNodeAdder {
   using Base = SlidingWindowNodeAdder;
 
  public:
   TimestampedNodeAdder(const TimestampedNodeAdderParams<NodeType>& params,
-                         const typename NodeAdderModelType::Params& node_adder_model_params,
-                         std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
+                       const typename NodeAdderModelType::Params& node_adder_model_params,
+                       std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
   TimestampedNodeAdder() = default;
   virtual ~TimestampedNodeAdder() = default;
 
@@ -93,8 +92,7 @@ class TimestampedNodeAdder
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
-  bool AddNewNodesAndRelativeFactors(const localization_common::Time timestamp,
-                                        gtsam::NonlinearFactorGraph& factors);
+  bool AddNewNodesAndRelativeFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
   bool SplitOldRelativeFactor(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
 
   // Serialization function
