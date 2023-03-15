@@ -52,8 +52,8 @@ virtual int AddFactors(const localization_common::Time oldest_allowed_time,
   int num_added_factors = 0;
   const auto lower_and_upper_bound_its =
     measurements_.InRangeValues(oldest_allowed_timestamp, latest_allowed_timestamp);
-  for (auto it = lower_and_upper_bound_its.first; i != lower_and_upper_bound_its.second; ++it) {
-    num_added_factors += AddFactors(it->value);
+  for (auto it = lower_and_upper_bound_its.first; it != lower_and_upper_bound_its.second; ++it) {
+    num_added_factors += AddFactors(it->second);
   }
 
   return num_added_factors;
