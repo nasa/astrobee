@@ -547,6 +547,117 @@ TEST(TimestampedSetTester, RemoveOldValues) {
   }
 }
 
+TEST(TimestampedSetTester, RemoveBelowLowerBoundValues) {
+  {
+    lc::TimestampedSet<double> timestamped_set;
+    const double t0 = 0;
+    const double v0 = lc::RandomDouble();
+    const double t1 = 1.001;
+    const double v1 = lc::RandomDouble();
+    const double t2 = 2.100;
+    const double v2 = lc::RandomDouble();
+    const double t3 = 3.0222;
+    const double v3 = lc::RandomDouble();
+    ASSERT_TRUE(timestamped_set.Add(t0, v0));
+    ASSERT_TRUE(timestamped_set.Add(t1, v1));
+    ASSERT_TRUE(timestamped_set.Add(t2, v2));
+    ASSERT_TRUE(timestamped_set.Add(t3, v3));
+    {
+      const int num_values_removed = timestamped_set.RemoveBelowLowerBoundValues(0);
+      EXPECT_EQ(num_values_removed, 0);
+      EXPECT_EQ(timestamped_set.size(), 4);
+    }
+    {
+      const int num_values_removed = timestamped_set.RemoveBelowLowerBoundValues(-1.1);
+      EXPECT_EQ(num_values_removed, 0);
+      EXPECT_EQ(timestamped_set.size(), 4);
+    }
+  }
+  {
+    lc::TimestampedSet<double> timestamped_set;
+    const double t0 = 0;
+    const double v0 = lc::RandomDouble();
+    const double t1 = 1.001;
+    const double v1 = lc::RandomDouble();
+    const double t2 = 2.100;
+    const double v2 = lc::RandomDouble();
+    const double t3 = 3.0222;
+    const double v3 = lc::RandomDouble();
+    ASSERT_TRUE(timestamped_set.Add(t0, v0));
+    ASSERT_TRUE(timestamped_set.Add(t1, v1));
+    ASSERT_TRUE(timestamped_set.Add(t2, v2));
+    ASSERT_TRUE(timestamped_set.Add(t3, v3));
+    const int num_values_removed = timestamped_set.RemoveBelowLowerBoundValues(0.1);
+    EXPECT_EQ(num_values_removed, 0);
+    EXPECT_EQ(timestamped_set.size(), 4);
+  }
+  {
+    lc::TimestampedSet<double> timestamped_set;
+    const double t0 = 0;
+    const double v0 = lc::RandomDouble();
+    const double t1 = 1.001;
+    const double v1 = lc::RandomDouble();
+    const double t2 = 2.100;
+    const double v2 = lc::RandomDouble();
+    const double t3 = 3.0222;
+    const double v3 = lc::RandomDouble();
+    ASSERT_TRUE(timestamped_set.Add(t0, v0));
+    ASSERT_TRUE(timestamped_set.Add(t1, v1));
+    ASSERT_TRUE(timestamped_set.Add(t2, v2));
+    ASSERT_TRUE(timestamped_set.Add(t3, v3));
+    const int num_values_removed = timestamped_set.RemoveBelowLowerBoundValues(1.334);
+    EXPECT_EQ(num_values_removed, 1);
+    EXPECT_EQ(timestamped_set.size(), 3);
+    const auto timestamps = timestamped_set.Timestamps();
+    EXPECT_EQ(timestamps[0], t1);
+    EXPECT_EQ(timestamps[1], t2);
+    EXPECT_EQ(timestamps[2], t3);
+  }
+
+  {
+    lc::TimestampedSet<double> timestamped_set;
+    const double t0 = 0;
+    const double v0 = lc::RandomDouble();
+    const double t1 = 1.001;
+    const double v1 = lc::RandomDouble();
+    const double t2 = 2.100;
+    const double v2 = lc::RandomDouble();
+    const double t3 = 3.0222;
+    const double v3 = lc::RandomDouble();
+    ASSERT_TRUE(timestamped_set.Add(t0, v0));
+    ASSERT_TRUE(timestamped_set.Add(t1, v1));
+    ASSERT_TRUE(timestamped_set.Add(t2, v2));
+    ASSERT_TRUE(timestamped_set.Add(t3, v3));
+    const int num_values_removed = timestamped_set.RemoveBelowLowerBoundValues(2.78);
+    EXPECT_EQ(num_values_removed, 2);
+    EXPECT_EQ(timestamped_set.size(), 2);
+    const auto timestamps = timestamped_set.Timestamps();
+    EXPECT_EQ(timestamps[0], t2);
+    EXPECT_EQ(timestamps[1], t3);
+  }
+
+  {
+    lc::TimestampedSet<double> timestamped_set;
+    const double t0 = 0;
+    const double v0 = lc::RandomDouble();
+    const double t1 = 1.001;
+    const double v1 = lc::RandomDouble();
+    const double t2 = 2.100;
+    const double v2 = lc::RandomDouble();
+    const double t3 = 3.0222;
+    const double v3 = lc::RandomDouble();
+    ASSERT_TRUE(timestamped_set.Add(t0, v0));
+    ASSERT_TRUE(timestamped_set.Add(t1, v1));
+    ASSERT_TRUE(timestamped_set.Add(t2, v2));
+    ASSERT_TRUE(timestamped_set.Add(t3, v3));
+    const int num_values_removed = timestamped_set.RemoveBelowLowerBoundValues(1923.78);
+    EXPECT_EQ(num_values_removed, 3);
+    EXPECT_EQ(timestamped_set.size(), 1);
+    const auto timestamps = timestamped_set.Timestamps();
+    EXPECT_EQ(timestamps[0], t3);
+  }
+}
+
 TEST(TimestampedSetTester, Duration) {
   lc::TimestampedSet<double> timestamped_set;
   EXPECT_EQ(timestamped_set.Duration(), 0);

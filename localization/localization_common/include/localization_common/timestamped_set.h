@@ -45,7 +45,7 @@ class TimestampedSet {
   TimestampedSet();
   ~TimestampedSet() = default;
 
-  // Assumes values indices have corresponding timestamps in timestamps vectors and each timestamp is unique.
+  // Assumes values have corresponding timestamps at the same index and each timestamp is unique.
   TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values);
 
   bool Add(const Time timestamp, const T& value);
@@ -81,6 +81,11 @@ class TimestampedSet {
   std::vector<TimestampedValue<T>> OldValues(const Time oldest_allowed_timestamp) const;
 
   int RemoveOldValues(const Time oldest_allowed_timestamp);
+
+  // Finds the lower bound element for timestamp and removes all values below this.
+  // Keeps the lower bound, unlike RemoveOldValues which only keeps a lower bound
+  // equal to the provided timestamp.
+  int RemoveBelowLowerBoundValues(const Time timestamp);
 
   const std::map<Time, T>& set() const;
 
@@ -271,14 +276,19 @@ std::vector<TimestampedValue<T>> TimestampedSet<T>::OldValues(const Time oldest_
 
 template <typename T>
 int TimestampedSet<T>::RemoveOldValues(const Time oldest_allowed_timestamp) {
-  int num_removed_values = 0;
-  for (auto it = timestamp_value_map_.begin(); it != timestamp_value_map_.end();) {
-    if (it->first >= oldest_allowed_timestamp) break;
-    it = timestamp_value_map_.erase(it);
-    ++num_removed_values;
-  }
+  const int initial_num_values = size();
+  timestamp_value_map_.erase(timestamp_value_map_.begin(), timestamp_value_map_.lower_bound(oldest_allowed_timestamp));
+  return initial_num_values - size();
+}
 
-  return num_removed_values;
+template <typename T>
+int TimestampedSet<T>::RemoveBelowLowerBoundValues(const Time timestamp) {
+  const int initial_num_values = size();
+  const auto upper_bound = timestamp_value_map_.lower_bound(timestamp);
+  const auto lower_bound =
+    upper_bound != timestamp_value_map_.cbegin() ? std::prev(upper_bound) : timestamp_value_map_.cbegin();
+  timestamp_value_map_.erase(timestamp_value_map_.begin(), lower_bound);
+  return initial_num_values - size();
 }
 
 template <typename T>
