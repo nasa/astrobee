@@ -1,5 +1,5 @@
 diff --git a/include/DBoW2/TemplatedDatabase.h b/include/DBoW2/TemplatedDatabase.h
-index 96cbe8e..444863b 100644
+index 96cbe8e..f9eac9a 100644
 --- a/include/DBoW2/TemplatedDatabase.h
 +++ b/include/DBoW2/TemplatedDatabase.h
 @@ -16,6 +16,7 @@
@@ -19,7 +19,7 @@ index 96cbe8e..444863b 100644
  protected:
    
    /// Query with L1 scoring
-@@ -1345,6 +1348,65 @@ std::ostream& operator<<(std::ostream &os,
+@@ -1345,6 +1348,59 @@ std::ostream& operator<<(std::ostream &os,
  
  // --------------------------------------------------------------------------
  
@@ -34,42 +34,36 @@ index 96cbe8e..444863b 100644
 +  size_t num_rows = m_ifile.size();
 +  FF_REPORT(num_rows);
 +
-+  size_t num_ifpairs = std::accumulate(m_ifile.begin(), m_ifile.end(), 0,
-+                                     [](size_t accum, const std::list<IFPair>& r) {
-+                                       return accum + r.size();
-+                                     });
++  size_t num_ifpairs = 0;
++  for (typename InvertedFile::const_iterator it = m_ifile.begin(); it != m_ifile.end(); it++) {
++    num_ifpairs += it->size();
++  }
 +  FF_REPORT(num_ifpairs);
 +
 +  std::cout << std::endl;
 +
 +  // typedef std::list<IFPair> IFRow;
 +  // typedef std::vector<IFRow> InvertedFile;
-+  size_t m_ifile_bytes =
-+    m_ifile.size() * sizeof(std::list<IFPair>)
-+    + std::accumulate(m_ifile.begin(), m_ifile.end(), 0,
-+                      [](size_t accum, const std::list<IFPair>& r) {
-+                        constexpr size_t list_bytes_per_node = 2 * sizeof(void *);
-+                        return accum + r.size() * (list_bytes_per_node + sizeof(IFPair));
-+                      });
++  const size_t list_bytes_per_node = 2 * sizeof(void *);
++  size_t m_ifile_bytes = m_ifile.size() * sizeof(std::list<IFPair>);
++  for (typename InvertedFile::const_iterator it = m_ifile.begin(); it != m_ifile.end(); it++) {
++    m_ifile_bytes += it->size() * (list_bytes_per_node + sizeof(IFPair));
++  }
 +  FF_REPORT(m_ifile_bytes);
 +
 +
 +  // class FeatureVector: public std::map<NodeId, std::vector<unsigned int> >
 +  // typedef std::vector<FeatureVector> DirectFile;
 +  // some of this is platform- and data-dependent, just rough approximation
-+  const int map_node_bytes = sizeof(int) + 3 * sizeof(void *); // red/black tree node ~overhead
-+  size_t m_dfile_bytes =
-+    m_dfile.size() * sizeof(FeatureVector)
-+    + std::accumulate(m_dfile.begin(), m_dfile.end(), 0,
-+                      [](size_t accum, const FeatureVector& v) {
-+                        size_t v_bytes =
-+                          v.size() * (map_node_bytes + sizeof(NodeId) + sizeof(std::vector<unsigned int>))
-+                          + std::accumulate(v.begin(), v.end(), 0,
-+                                            [](size_t acc, const std::pair<NodeId, std::vector<unsigned int> >& x) {
-+                                              return acc + x.second.size() * sizeof(unsigned int);
-+                                            });
-+                        return accum + v_bytes;
-+                      });
++  const size_t map_node_bytes = sizeof(int) + 3 * sizeof(void *); // red/black tree node ~overhead
++  size_t m_dfile_bytes = m_dfile.size() * sizeof(FeatureVector);
++  for (typename DirectFile::const_iterator it = m_dfile.begin(); it != m_dfile.end(); it++) {
++    m_dfile_bytes += it->size()
++      * (map_node_bytes + sizeof(NodeId) + sizeof(std::vector<unsigned int>));
++    for (typename FeatureVector::const_iterator jt = it->begin(); jt != it->end(); jt++) {
++      m_dfile_bytes += jt->second.size() * sizeof(unsigned int);
++    }
++  }
 +  FF_REPORT(m_dfile_bytes);
 +
 +  std::cout << std::endl;
@@ -86,7 +80,7 @@ index 96cbe8e..444863b 100644
  
  #endif
 diff --git a/include/DBoW2/TemplatedVocabulary.h b/include/DBoW2/TemplatedVocabulary.h
-index 53a0e30..028745e 100644
+index 53a0e30..d8f98a5 100644
 --- a/include/DBoW2/TemplatedVocabulary.h
 +++ b/include/DBoW2/TemplatedVocabulary.h
 @@ -17,6 +17,7 @@
@@ -106,7 +100,7 @@ index 53a0e30..028745e 100644
  protected:
  
    /// Pointer to descriptor
-@@ -1524,6 +1527,40 @@ std::ostream& operator<<(std::ostream &os,
+@@ -1524,6 +1527,39 @@ std::ostream& operator<<(std::ostream &os,
    return os;
  }
  
@@ -128,11 +122,10 @@ index 53a0e30..028745e 100644
 +
 +  std::cout << std::endl;
 +
-+  size_t m_nodes_bytes = m_nodes.size() * sizeof(Node)
-+    + std::accumulate(m_nodes.begin(), m_nodes.end(), 0,
-+                      [](size_t accum, const Node& n) {
-+                        return accum + n.children.size() * sizeof(NodeId);
-+                      });
++  size_t m_nodes_bytes = m_nodes.size() * sizeof(Node);
++  for (typename std::vector<Node>::const_iterator it = m_nodes.begin(); it != m_nodes.end(); it++) {
++    m_nodes_bytes += it->children.size() * sizeof(NodeId);
++  }
 +  FF_REPORT(m_nodes_bytes);
 +
 +  size_t m_words_bytes = m_words.size() * sizeof(Node*);
