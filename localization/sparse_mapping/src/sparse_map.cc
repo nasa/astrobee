@@ -1021,11 +1021,10 @@ void SparseMap::ReportMemoryUsage() {
   size_t num_pid = pid_to_xyz_.size();
   SM_REPORT(num_pid);
 
-  size_t num_features =
-    std::accumulate(cid_to_descriptor_map_.begin(), cid_to_descriptor_map_.end(), 0,
-                    [](size_t accum, const cv::Mat& M) {
-                      return accum + M.rows;
-                    });
+  size_t num_features = 0;
+  for (auto it = cid_to_descriptor_map_.begin(); it != cid_to_descriptor_map_.end(); it++) {
+    num_features += it->rows;
+  }
   SM_REPORT(num_features);
 
   std::cout << std::endl;
@@ -1033,30 +1032,24 @@ void SparseMap::ReportMemoryUsage() {
   size_t sparse_map_bytes = sizeof(SparseMap);
   SM_REPORT(sparse_map_bytes);
 
-  size_t cid_to_filename_bytes =
-    cid_to_filename_.size() * sizeof(std::string)
-    + std::accumulate(cid_to_filename_.begin(), cid_to_filename_.end(), 0,
-                      [](size_t accum, const std::string& s) {
-                        return accum + s.size();
-                      });
+  size_t cid_to_filename_bytes = cid_to_filename_.size() * sizeof(std::string);
+  for (auto it = cid_to_filename_.begin(); it != cid_to_filename_.end(); it++) {
+    cid_to_filename_bytes += it->size();
+  }
   SM_REPORT(cid_to_filename_bytes);
 
-  size_t cid_to_keypoint_map_bytes =
-    cid_to_keypoint_map_.size() * sizeof(Eigen::Matrix2Xd)
-    + std::accumulate(cid_to_keypoint_map_.begin(), cid_to_keypoint_map_.end(), 0,
-                      [](size_t accum, const Eigen::Matrix2Xd& M) {
-                        return accum + 2 * M.cols() * sizeof(double);
-                      });
+  size_t cid_to_keypoint_map_bytes = cid_to_keypoint_map_.size() * sizeof(Eigen::Matrix2Xd);
+  for (auto it = cid_to_keypoint_map_.begin(); it != cid_to_keypoint_map_.end(); it++) {
+    cid_to_keypoint_map_bytes += 2 * it->cols() * sizeof(double);
+  }
   SM_REPORT(cid_to_keypoint_map_bytes);
 
   // some of this is platform- and data-dependent, just rough approximation
   const int map_node_bytes = sizeof(int) + 3 * sizeof(void*);  // red/black tree node ~overhead
-  size_t pid_to_cid_fid_bytes =
-    pid_to_cid_fid_.size() * sizeof(std::map<int, int>)
-    + std::accumulate(pid_to_cid_fid_.begin(), pid_to_cid_fid_.end(), 0,
-                      [](size_t accum, const std::map<int, int>& m) {
-                        return accum + m.size() * (map_node_bytes + 2 * sizeof(int));
-                      });
+  size_t pid_to_cid_fid_bytes = pid_to_cid_fid_.size() * sizeof(std::map<int, int>);
+  for (auto it = pid_to_cid_fid_.begin(); it != pid_to_cid_fid_.end(); it++) {
+    pid_to_cid_fid_bytes += it->size() * (map_node_bytes + 2 * sizeof(int));
+  }
   SM_REPORT(pid_to_cid_fid_bytes);
 
   size_t pid_to_xyz_bytes = pid_to_xyz_.size() * sizeof(Eigen::Vector3d);
@@ -1066,20 +1059,16 @@ void SparseMap::ReportMemoryUsage() {
     cid_to_cam_t_global_.size() * sizeof(Eigen::Affine3d);
   SM_REPORT(cid_to_cam_t_global_bytes);
 
-  size_t cid_to_descriptor_map_bytes =
-    cid_to_descriptor_map_.size() * sizeof(cv::Mat)
-    + std::accumulate(cid_to_descriptor_map_.begin(), cid_to_descriptor_map_.end(), 0,
-                      [](size_t accum, const cv::Mat& M) {
-                        return accum + M.rows * M.cols * M.elemSize();
-                      });
+  size_t cid_to_descriptor_map_bytes = cid_to_descriptor_map_.size() * sizeof(cv::Mat);
+  for (auto it = cid_to_descriptor_map_.begin(); it != cid_to_descriptor_map_.end(); it++) {
+    cid_to_descriptor_map_bytes += it->rows * it->cols * it->elemSize();
+  }
   SM_REPORT(cid_to_descriptor_map_bytes);
 
-  size_t cid_fid_to_pid_bytes =
-    cid_fid_to_pid_.size() * sizeof(std::map<int, int>)
-    + std::accumulate(cid_fid_to_pid_.begin(), cid_fid_to_pid_.end(), 0,
-                      [](size_t accum, const std::map<int, int>& m) {
-                        return accum + m.size() * (map_node_bytes + 2 * sizeof(int));
-                      });
+  size_t cid_fid_to_pid_bytes = cid_fid_to_pid_.size() * sizeof(std::map<int, int>);
+  for (auto it = cid_fid_to_pid_.begin(); it != cid_fid_to_pid_.end(); it++) {
+    cid_fid_to_pid_bytes += it->size() * (map_node_bytes + 2 * sizeof(int));
+  }
   SM_REPORT(cid_fid_to_pid_bytes);
 
   std::cout << std::endl;
