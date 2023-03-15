@@ -1,6 +1,6 @@
-- move facter adder base classes to respective packages! (AC)
-   - test timestamped_set in range values!!! (AB)
-    - add another function to timestamped_set, removesublowerboundvalues? call this!
+   - test timestamped_set in range values!!! (AA)
+      - finish this test!!! 
+    - add another function to timestamped_set, removesublowerboundvalues? call this! (AB)
       - call in pose_node_adder, all node adders (for measurements)!
       - test this!
     - test measurement based factor adder! (AC)
