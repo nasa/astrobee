@@ -20,10 +20,13 @@
 #define FACTOR_ADDERS_FACTOR_ADDER_H_
 
 #include <factor_adders/factor_adder_params.h>
+#include <localization_common/time.h>
+
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <vector>
 
-namespace factor_adder {
+namespace factor_adders {
 // Adds factors to a graph. Base class for measurement-based factor adder.
 class FactorAdder {
  public:
@@ -33,11 +36,11 @@ class FactorAdder {
   // Add factors in valid time range to existing factor graph.
   // Returns number of added factors.
   virtual int AddFactors(const localization_common::Time oldest_allowed_time,
-                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) = 0;
+                         const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) = 0;
 
  private:
   FactorAdderParams params_;
 };
-}  // namespace factor_adder
+}  // namespace factor_adders
 
 #endif  // FACTOR_ADDERS_FACTOR_ADDER_H_

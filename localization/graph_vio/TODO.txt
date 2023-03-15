@@ -2,6 +2,8 @@
       - make simple example factor adder!
         - start test, make sure things compile! (AAA)
         - add priors for each timestamp! (AB)
+        - add enabled logic? 
+          - add to base classes!!
 
   - implement loc factor adder!
     - move graph action completer here if needed!

@@ -21,7 +21,7 @@
 
 #include <factor_adders/measurement_based_factor_adder.h>
 
-namespace factor_adder {
+namespace factor_adders {
 template <typename MeasurementType>
 // MeasurementBasedFactorAdder that adds factors using single measurements at a time
 // for measurements in a provided time range.
@@ -34,7 +34,8 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
   // Calls AddFactors(measurement) for each measurement in range.
   // Returns number of added factors.
   int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
-                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final;
+                                 const localization_common::Time newest_allowed_time,
+                                 gtsam::NonlinearFactorGraph& factors) final;
 
  protected:
   // Add factors given a single measurement.
@@ -43,21 +44,21 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
 
 // Implementation
 template <typename MeasurementType>
-SingleMeasurementBasedFactorAdder::SingleMeasurementBasedFactorAdder(const FactorAdderParams& params)
+SingleMeasurementBasedFactorAdder<MeasurementType>::SingleMeasurementBasedFactorAdder(const FactorAdderParams& params)
     : MeasurementBasedFactorAdder<MeasurementType>(params) {}
 
 template <typename MeasurementType>
-virtual int AddFactors(const localization_common::Time oldest_allowed_time,
-                       const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) {
+int SingleMeasurementBasedFactorAdder<MeasurementType>::AddMeasurementBasedFactors(
+  const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
+  gtsam::NonlinearFactorGraph& factors) {
   int num_added_factors = 0;
-  const auto lower_and_upper_bound_its =
-    measurements_.InRangeValues(oldest_allowed_timestamp, latest_allowed_timestamp);
+  const auto lower_and_upper_bound_its = this->measurements_.InRangeValues(oldest_allowed_time, newest_allowed_time);
   for (auto it = lower_and_upper_bound_its.first; it != lower_and_upper_bound_its.second; ++it) {
-    num_added_factors += AddFactors(it->second);
+    num_added_factors += AddFactors(it->second, factors);
   }
 
   return num_added_factors;
 }
-}  // namespace factor_adder
+}  // namespace factor_adders
 
 #endif  // FACTOR_ADDERS_SINGLE_MEASUREMENT_BASED_FACTOR_ADDER_H_

@@ -22,8 +22,8 @@
 #include <factor_adders/factor_adder.h>
 #include <localization_common/timestamped_set.h>
 
-namespace factor_adder {
-template <typename MeasurementType, bool SingleMeasurementPerFactor = true>
+namespace factor_adders {
+template <typename MeasurementType>
 // FactorAdder that stores measurements in a measurement buffer
 // and uses these to create factors given a time range.
 class MeasurementBasedFactorAdder : public FactorAdder {
@@ -38,7 +38,8 @@ class MeasurementBasedFactorAdder : public FactorAdder {
 
   // Adds factors based on measurements.
   virtual int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
-                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) = 0;
+                                         const localization_common::Time newest_allowed_time,
+                                         gtsam::NonlinearFactorGraph& factors) = 0;
 
   // Add measurement to measurement buffer.
   void AddMeasurement(const MeasurementType& measurement);
@@ -46,30 +47,36 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   // Remove old measurements from measurement buffer.
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_time);
 
+ protected:
+  localization_common::TimestampedSet<MeasurementType> measurements_;
+
  private:
   FactorAdderParams params_;
-  TimestampedSet<MeasurementType> measurements_;
 };
 
 // Implementation
-template <typename MeasurementType, bool SingleMeasurementPerFactor>
-MeasurementBasedFactorAdder::MeasurementBasedFactorAdder(const FactorAdderParams& params) : FactorAdder(params) {}
+template <typename MeasurementType>
+MeasurementBasedFactorAdder<MeasurementType>::MeasurementBasedFactorAdder(const FactorAdderParams& params)
+    : FactorAdder(params) {}
 
-template <typename MeasurementType, bool SingleMeasurementPerFactor>
-int MeasurementBasedFactorAdder::AddFactors(gtsam::NonlinearFactorGraph& factors) final {
-  AddMeasurementBasedFactors(factors);
-  RemoveOldMeasurements(
+template <typename MeasurementType>
+int MeasurementBasedFactorAdder<MeasurementType>::AddFactors(const localization_common::Time oldest_allowed_time,
+                                                             const localization_common::Time newest_allowed_time,
+                                                             gtsam::NonlinearFactorGraph& factors) {
+  AddMeasurementBasedFactors(oldest_allowed_time, newest_allowed_time, factors);
+  RemoveOldMeasurements(oldest_allowed_time);
 }
 
-template <typename MeasurementType, bool SingleMeasurementPerFactor>
-void MeasurementBasedFactorAdder::AddMeasurement(const MeasurementType& measurement) {
+template <typename MeasurementType>
+void MeasurementBasedFactorAdder<MeasurementType>::AddMeasurement(const MeasurementType& measurement) {
   measurements_.Add(measurement);
 }
 
-template <typename MeasurementType, bool SingleMeasurementPerFactor>
-void MeasurementBasedFactorAdder::RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp) {
+template <typename MeasurementType>
+void MeasurementBasedFactorAdder<MeasurementType>::RemoveOldMeasurements(
+  const localization_common::Time oldest_allowed_timestamp) {
   measurements_.RemoveOldValues(oldest_allowed_timestamp);
 }
-}  // namespace factor_adder
+}  // namespace factor_adders
 
 #endif  // FACTOR_ADDERS_MEASUREMENT_BASED_FACTOR_ADDER_H_

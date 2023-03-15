@@ -19,11 +19,11 @@
 #ifndef FACTOR_ADDERS_FACTOR_ADDER_PARAMS_H_
 #define FACTOR_ADDERS_FACTOR_ADDER_PARAMS_H_
 
-namespace factor_adder {
+namespace factor_adders {
 struct FactorAdderParams {
   bool enabled;
   double huber_k;
 };
-}  // namespace factor_adder
+}  // namespace factor_adders
 
 #endif  // FACTOR_ADDERS_FACTOR_ADDER_PARAMS_H_
