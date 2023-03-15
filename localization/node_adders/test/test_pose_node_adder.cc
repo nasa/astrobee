@@ -27,12 +27,12 @@
 
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-namespace nu = node_adders;
+namespace na = node_adders;
 
 class PoseNodeAdderTest : public ::testing::Test {
  public:
   PoseNodeAdderTest() : time_increment_(1.0), start_time_(1.0), num_measurements_(20) {
-    params_ = nu::DefaultPoseNodeAdderParams();
+    params_ = na::DefaultPoseNodeAdderParams();
     node_adder_model_params_.huber_k = 1.345;
   }
 
@@ -61,12 +61,12 @@ class PoseNodeAdderTest : public ::testing::Test {
     params_.start_node = lc::RandomPose();
     params_.starting_time = lc::RandomDouble();
     params_.Initialize();
-    pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+    pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
     pose_node_adder_->AddInitialNodesAndPriors(factors_);
   }
 
   void DefaultInitialize() {
-    pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+    pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
     pose_node_adder_->AddInitialNodesAndPriors(factors_);
   }
 
@@ -74,7 +74,7 @@ class PoseNodeAdderTest : public ::testing::Test {
     params_.start_node = gtsam::Pose3::identity();
     params_.starting_time = 0.0;
     params_.Initialize();
-    pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+    pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
     pose_node_adder_->AddInitialNodesAndPriors(factors_);
   }
 
@@ -84,7 +84,7 @@ class PoseNodeAdderTest : public ::testing::Test {
   }
 
   lc::PoseCovariance covariance(const int index) {
-    if (index == -1) return nu::Covariance(params_.start_noise_models[0]);
+    if (index == -1) return na::Covariance(params_.start_noise_models[0]);
     return pose_measurements_[index].pose_with_covariance.covariance;
   }
 
@@ -169,12 +169,12 @@ class PoseNodeAdderTest : public ::testing::Test {
 
   template <typename FactorPtrType>
   void EXPECT_SAME_NOISE(const FactorPtrType factor, const lc::PoseCovariance& covariance) {
-    EXPECT_MATRIX_NEAR(nu::Covariance(factor->noiseModel()), covariance, 1e-6);
+    EXPECT_MATRIX_NEAR(na::Covariance(factor->noiseModel()), covariance, 1e-6);
   }
 
   template <typename FactorPtrType>
   void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::SharedNoiseModel noise) {
-    EXPECT_SAME_NOISE(factor, nu::Covariance(noise));
+    EXPECT_SAME_NOISE(factor, na::Covariance(noise));
   }
 
   void EXPECT_SAME_BETWEEN_NOISE(const int index, const lc::PoseCovariance& covariance) {
@@ -237,9 +237,9 @@ class PoseNodeAdderTest : public ::testing::Test {
     EXPECT_SAME_SECOND_BETWEEN_FACTOR_INTERPOLATED(index_a, index_b, alpha);
   }
 
-  std::unique_ptr<nu::PoseNodeAdder> pose_node_adder_;
-  nu::PoseNodeAdderParams params_;
-  nu::TimestampedNodeAdderModelParams node_adder_model_params_;
+  std::unique_ptr<na::PoseNodeAdder> pose_node_adder_;
+  na::PoseNodeAdderParams params_;
+  na::TimestampedNodeAdderModelParams node_adder_model_params_;
   std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
   std::vector<lc::Time> timestamps_;
   gtsam::NonlinearFactorGraph factors_;
@@ -311,7 +311,7 @@ TEST_F(PoseNodeAdderTest, AddInitialNodesAndPriorsUsingParams) {
 TEST_F(PoseNodeAdderTest, AddInitialNodesAndPriors) {
   const auto pose = lc::RandomPose();
   const auto time = lc::RandomDouble();
-  pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+  pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
   pose_node_adder_->AddInitialNodesAndPriors(pose, params_.start_noise_models, time, factors_);
   const auto& nodes = pose_node_adder_->nodes();
   EXPECT_EQ(nodes.size(), 1);
@@ -497,7 +497,7 @@ TEST_F(PoseNodeAdderTest, NewStartTimeDurationViolation) {
   params_.starting_time = 0.0;
   params_.ideal_duration = 1.5;
   params_.Initialize();
-  pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+  pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
   AddMeasurements();
   // Empty nodes, so expect invalid oldest time
   EXPECT_TRUE(pose_node_adder_->SlideWindowNewStartTime() == boost::none);
@@ -543,7 +543,7 @@ TEST_F(PoseNodeAdderTest, NewStartTimeMinMaxStatesViolation) {
   params_.starting_time = 0.0;
   params_.ideal_duration = 100;
   params_.Initialize();
-  pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+  pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
   const auto& nodes = pose_node_adder_->nodes();
   AddMeasurements();
   // Empty nodes, so expect invalid oldest time
@@ -594,7 +594,7 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   params_.max_num_states = 5;
   params_.ideal_duration = 1.5;
   params_.Initialize();
-  pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
+  pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_));
   pose_node_adder_->AddInitialNodesAndPriors(factors_);
 
   const auto& nodes = pose_node_adder_->nodes();

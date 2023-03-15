@@ -30,12 +30,12 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace no = nodes;
-namespace nu = node_adders;
+namespace na = node_adders;
 
 class CombinedNavStateNodeAdderModelTest : public ::testing::Test {
  public:
   CombinedNavStateNodeAdderModelTest()
-      : params_(nu::DefaultCombinedNavStateNodeAdderModelParams()),
+      : params_(na::DefaultCombinedNavStateNodeAdderModelParams()),
         model_(params_),
         imu_integrator_(params_.imu_integrator) {}
   void SetUp() final {
@@ -97,8 +97,8 @@ class CombinedNavStateNodeAdderModelTest : public ::testing::Test {
 
   std::vector<lm::ImuMeasurement> measurements_;
   std::vector<lc::Time> timestamps_;
-  nu::CombinedNavStateNodeAdderModelParams params_;
-  nu::CombinedNavStateNodeAdderModel model_;
+  na::CombinedNavStateNodeAdderModelParams params_;
+  na::CombinedNavStateNodeAdderModel model_;
   no::CombinedNavStateNodes nodes_;
   gtsam::NonlinearFactorGraph factors_;
   ii::ImuIntegrator imu_integrator_;
@@ -144,18 +144,18 @@ TEST_F(CombinedNavStateNodeAdderModelTest, AddPriors) {
   const auto pose_priors = lc::Factors<gtsam::PriorFactor<gtsam::Pose3>>(factors_);
   EXPECT_EQ(pose_priors.size(), 1);
   EXPECT_MATRIX_NEAR(pose_priors[0]->prior(), node.pose(), 1e-6);
-  EXPECT_MATRIX_NEAR(nu::Covariance(pose_priors[0]->noiseModel()), nu::Covariance(noise[0]), 1e-6);
+  EXPECT_MATRIX_NEAR(na::Covariance(pose_priors[0]->noiseModel()), na::Covariance(noise[0]), 1e-6);
   // Check velocity prior
   const auto velocity_priors = lc::Factors<gtsam::PriorFactor<gtsam::Velocity3>>(factors_);
   EXPECT_EQ(velocity_priors.size(), 1);
   EXPECT_MATRIX_NEAR(velocity_priors[0]->prior(), node.velocity(), 1e-6);
-  EXPECT_MATRIX_NEAR(nu::Covariance(velocity_priors[0]->noiseModel()), nu::Covariance(noise[1]), 1e-6);
+  EXPECT_MATRIX_NEAR(na::Covariance(velocity_priors[0]->noiseModel()), na::Covariance(noise[1]), 1e-6);
   // Check Bias prior
   const auto bias_priors = lc::Factors<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>(factors_);
   EXPECT_EQ(bias_priors.size(), 1);
   EXPECT_MATRIX_NEAR(bias_priors[0]->prior().accelerometer(), node.bias().accelerometer(), 1e-6);
   EXPECT_MATRIX_NEAR(bias_priors[0]->prior().gyroscope(), node.bias().gyroscope(), 1e-6);
-  EXPECT_MATRIX_NEAR(nu::Covariance(bias_priors[0]->noiseModel()), nu::Covariance(noise[2]), 1e-6);
+  EXPECT_MATRIX_NEAR(na::Covariance(bias_priors[0]->noiseModel()), na::Covariance(noise[2]), 1e-6);
 }
 
 TEST_F(CombinedNavStateNodeAdderModelTest, AddRelativeFactors) {

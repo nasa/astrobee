@@ -1,10 +1,7 @@
-   - test timestamped_set in range values!!! (AA)
-    - add another function to timestamped_set, removesublowerboundvalues? call this! (AB)
-      - call in pose_node_adder, all node adders (for measurements)!
-      - test this!
-    - test measurement based factor adder! (AC)
+    - test measurement based factor adder! (AA)
       - make simple example factor adder!
-        - add priors for each timestamp!
+        - start test, make sure things compile! (AAA)
+        - add priors for each timestamp! (AB)
 
   - implement loc factor adder!
     - move graph action completer here if needed!
@@ -14,17 +11,7 @@
   - test stnadstill factor adder???
   - TODO: implement others!
 
-- might not want to remove all old measurements in node adders??? what if that prevents interpolation?????
-          - check node updaters! how do they handle this???
-            - how did you handle this in imu node updater??
-              - keep one below the oldest???
-                - for imu integrator and pose interpolater???
-                  - ok for imu integrator!! 
-                  - pose interpolator??
-                    - add another function to timestamped_set, removesublowerboundvalues? call this!
-
 - make graph optimizer class depend on facter adder and node updater packages??
-  - where to put utilities??
 
   - update graph optimizer!  (A)  
     - add single nodes to graph optimizer!!! (AAA)
