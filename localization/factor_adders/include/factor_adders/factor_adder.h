@@ -30,9 +30,10 @@ class FactorAdder {
   explicit FactorAdder(const FactorAdderParams& params) : params_(params) {}
   virtual ~FactorAdder() = default;
 
-  // Add factors to existing factor graph.
+  // Add factors in valid time range to existing factor graph.
   // Returns number of added factors.
-  virtual int AddFactors(gtsam::NonlinearFactorGraph& factors) = 0;
+  virtual int AddFactors(const localization_common::Time oldest_allowed_time,
+                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) = 0;
 
  private:
   FactorAdderParams params_;

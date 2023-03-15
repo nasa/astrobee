@@ -31,14 +31,14 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
   virtual ~SingleMeasurementBasedFactorAdder() = default;
 
   // Add factors for all measurements in valid time range to existing factor graph.
-  // Returns number of added factors.
   // Calls AddFactors(measurement) for each measurement in range.
-  int AddFactors(const localization_common::Time oldest_allowed_time,
+  // Returns number of added factors.
+  int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                  const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final;
 
  protected:
   // Add factors given a single measurement.
-  virtual int AddFactors(const MeasurementType& measurement) = 0;
+  virtual int AddFactors(const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) = 0;
 };
 
 // Implementation

@@ -1,7 +1,9 @@
 - move facter adder base classes to respective packages! (AC)
-    - update graph optimizer and sliding graph optimizer with new factor adder class! (AA)
-    - test timestamped_set in range values!!!
-    - test measurement based factor adder! (AE)
+   - test timestamped_set in range values!!! (AB)
+    - add another function to timestamped_set, removesublowerboundvalues? call this!
+      - call in pose_node_adder, all node adders (for measurements)!
+      - test this!
+    - test measurement based factor adder! (AC)
       - make simple example factor adder!
         - add priors for each timestamp!
 
@@ -9,11 +11,21 @@
     - move graph action completer here if needed!
   - implement vo factor adder!
     - move graph action completer here if needed!
+  - test loc and vo factor adders?
+  - test stnadstill factor adder???
   - TODO: implement others!
+
+- might not want to remove all old measurements in node adders??? what if that prevents interpolation?????
+          - check node updaters! how do they handle this???
+            - how did you handle this in imu node updater??
+              - keep one below the oldest???
+                - for imu integrator and pose interpolater???
+                  - ok for imu integrator!! 
+                  - pose interpolator??
+                    - add another function to timestamped_set, removesublowerboundvalues? call this!
 
 - make graph optimizer class depend on facter adder and node updater packages??
   - where to put utilities??
-- make sliding window graph optimizer package!
 
   - update graph optimizer!  (A)  
     - add single nodes to graph optimizer!!! (AAA)

@@ -37,11 +37,11 @@ class StandstillFactorAdder
   StandstillFactorAdder(const StandstillFactorAdderParams& params,
                         const std::shared_ptr<PoseVelocityNodeAdderType> node_adder);
 
+ private:
   // Adds zero velocity and/or zero relative pose factors depending on params.
   int AddFactors(const localization_measurements::StandstillMeasurement& standstill_measurement,
                  gtsam::NonlinearFactorGraph& factors) final;
 
- private:
   // Adds a velocity prior at the provided timestamp with zero velocity.
   bool AddZeroVelocityPrior(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
   // Adds a relative pose between factor with zero relative movement between nodes at timestamp a and b.

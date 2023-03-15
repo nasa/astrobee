@@ -31,6 +31,15 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   explicit MeasurementBasedFactorAdder(const FactorAdderParams& params);
   virtual ~MeasurementBasedFactorAdder() = default;
 
+  // Adds factors then removes old measurements.
+  // Requires implementation of AddMeasurementBasedFactors.
+  int AddFactors(const localization_common::Time oldest_allowed_time,
+                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final;
+
+  // Adds factors based on measurements.
+  virtual int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
+                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) = 0;
+
   // Add measurement to measurement buffer.
   void AddMeasurement(const MeasurementType& measurement);
 
@@ -45,6 +54,12 @@ class MeasurementBasedFactorAdder : public FactorAdder {
 // Implementation
 template <typename MeasurementType, bool SingleMeasurementPerFactor>
 MeasurementBasedFactorAdder::MeasurementBasedFactorAdder(const FactorAdderParams& params) : FactorAdder(params) {}
+
+template <typename MeasurementType, bool SingleMeasurementPerFactor>
+int MeasurementBasedFactorAdder::AddFactors(gtsam::NonlinearFactorGraph& factors) final {
+  AddMeasurementBasedFactors(factors);
+  RemoveOldMeasurements(
+}
 
 template <typename MeasurementType, bool SingleMeasurementPerFactor>
 void MeasurementBasedFactorAdder::AddMeasurement(const MeasurementType& measurement) {
