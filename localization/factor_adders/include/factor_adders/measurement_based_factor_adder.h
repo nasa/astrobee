@@ -24,11 +24,8 @@
 
 namespace factor_adder {
 template <typename MeasurementType, bool SingleMeasurementPerFactor = true>
-// Adds factors for a specific measurement type. Stores measurements in a measurement buffer.
-// Optionally adds factors for a single measurement at a time
-// if the SingleMeasurementPerFactor template param is enabled (in which case
-// AddFactors(measurement) needs to be specialized),
-// otherwise AddFactors(oldest_allowed_timestamp, newest_allowed_timestamp, factors) needs to be specialized.
+// FactorAdder that stores measurements in a measurement buffer
+// and uses these to create factors given a time range.
 class MeasurementBasedFactorAdder : public FactorAdder {
  public:
   explicit MeasurementBasedFactorAdder(const FactorAdderParams& params);
@@ -37,20 +34,8 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   // Add measurement to measurement buffer.
   void AddMeasurement(const MeasurementType& measurement);
 
-  // Add factors for all measurements in valid time range to existing factor graph.
-  // Returns number of added factors.
-  // Specialize AddFactors(measurement) function if SingleMeasurementPerFactor is true
-  // to call AddFactors(measurement) for each measurement in range, otherwise
-  // specialize this.
-  int AddFactors(const localization_common::Time oldest_allowed_time,
-                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final;
-
   // Remove old measurements from measurement buffer.
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_time);
-
- protected:
-  // Specialize this if SingleMeasurementPerFactor is true.
-  virtual int AddFactors(const MeasurementType& measurement);
 
  private:
   FactorAdderParams params_;
@@ -62,21 +47,6 @@ template <typename MeasurementType, bool SingleMeasurementPerFactor>
 MeasurementBasedFactorAdder::MeasurementBasedFactorAdder(const FactorAdderParams& params) : FactorAdder(params) {}
 
 template <typename MeasurementType, bool SingleMeasurementPerFactor>
-virtual int AddFactors(const localization_common::Time oldest_allowed_time,
-                       const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) {
-  static_assert(SingleMeasurementPerFactor,
-                "This needs to be specialized if not using a single measurement per factor.");
-  int num_added_factors = 0;
-  const auto lower_and_upper_bound_its =
-    measurements_.InRangeValues(oldest_allowed_timestamp, latest_allowed_timestamp);
-  for (auto it = lower_and_upper_bound_its.first; i != lower_and_upper_bound_its.second; ++it) {
-    num_added_factors += AddFactors(it->value);
-  }
-
-  return num_added_factors;
-}
-
-template <typename MeasurementType, bool SingleMeasurementPerFactor>
 void MeasurementBasedFactorAdder::AddMeasurement(const MeasurementType& measurement) {
   measurements_.Add(measurement);
 }
@@ -84,11 +54,6 @@ void MeasurementBasedFactorAdder::AddMeasurement(const MeasurementType& measurem
 template <typename MeasurementType, bool SingleMeasurementPerFactor>
 void MeasurementBasedFactorAdder::RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp) {
   measurements_.RemoveOldValues(oldest_allowed_timestamp);
-}
-
-template <typename MeasurementType, bool SingleMeasurementPerFactor>
-int MeasurementBasedFactorAdder::AddFactors(const MeasurementType& measurement) {
-  static_assert(!SingleMeasurementPerFactor, "This needs to be specialized if using a single measurement per factor.");
 }
 }  // namespace factor_adder
 

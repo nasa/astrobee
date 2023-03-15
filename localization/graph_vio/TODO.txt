@@ -1,6 +1,9 @@
 - move facter adder base classes to respective packages! (AC)
-  - implement standstill factor adder!
+  - implement standstill factor adder! (AA)
       - update standstill factor adder with this!
+        - create cc file!
+        - add specialization for addfactors separately in cc file!
+          - change to normal assert! avoid template specializations!! (AA)
     - test timestamped_set in range values!!!
     - update graph optimizer and sliding graph optimizer with new factor adder class!
     - test measurement based factor adder! (AE)

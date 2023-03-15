@@ -19,21 +19,23 @@
 #ifndef FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 #define FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 
-#include <factor_adders/measurement_based_factor_adder.h>
+#include <factor_adders/single_measurement_based_factor_adder.h>
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <localization_measurements/standstill_measurement.h>
 
 #include <vector>
 
 namespace factor_adders {
-// Adds standstill factors (zero velocity prior and zero relative pose between factors) based on provided params.
-template <typename PoseVelocityNodeAdderT>
-class StandstillFactorAdder : public MeasurementBasedFactorAdder<localization_measurements::StandstillMeasurement> {
-  using Base = MeasurementBasedFactorAdder<localization_measurements::StandstillMeasurement>;
+// SingleMeasurementBasedFactorAdder that generates standstill factors (zero velocity prior and zero relative pose
+// between factors) based on provided params.
+template <typename PoseVelocityNodeAdderType>
+class StandstillFactorAdder
+    : public SingleMeasurementBasedFactorAdder<localization_measurements::StandstillMeasurement> {
+  using Base = SingleMeasurementBasedFactorAdder<localization_measurements::StandstillMeasurement>;
 
  public:
   StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                        const std::shared_ptr<PoseVelocityNodeAdderT> node_adder);
+                        const std::shared_ptr<PoseVelocityNodeAdderType> node_adder);
 
   // Adds zero velocity and/or zero relative pose factors depending on params.
   int AddFactors(const localization_measurements::StandstillMeasurement& standstill_measurement,
@@ -46,17 +48,17 @@ class StandstillFactorAdder : public MeasurementBasedFactorAdder<localization_me
   bool AddZeroRelativePoseFactor(const localization_common::Time timestamp_a,
                                  const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors);
 
-  std::shared_ptr<PoseVelocityNodeAdderT> node_adder_;
+  std::shared_ptr<PoseVelocityNodeAdderType> node_adder_;
   StandstillFactorAdderParams params_;
   gtsam::SharedNoiseModel zero_velocity_noise_;
   gtsam::SharedNoiseModel zero_relative_pose_noise_;
 };
 
 // Implementation
-template <typename PoseVelocityNodeAdderT>
+template <typename PoseVelocityNodeAdderType>
 StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                                             const std::shared_ptr<PoseVelocityNodeAdderT> node_adder)
-    : params_(params), node_adder_(node_adder) {
+                                             const std::shared_ptr<PoseVelocityNodeAdderType> node_adder)
+    : Base(params), params_(params), node_adder_(node_adder) {
   // Create zero velocity noise
   const gtsam::Vector3 velocity_prior_noise_sigmas(
     (gtsam::Vector(3) << params().prior_velocity_stddev, params().prior_velocity_stddev, params().prior_velocity_stddev)
@@ -76,7 +78,7 @@ StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& 
                params().huber_k);
 }
 
-template <typename PoseVelocityNodeAdderT>
+template <typename PoseVelocityNodeAdderType>
 int StandstillFactorAdder::AddFactors(const localization_measurements::StandstillMeasurement& standstill_measurement,
                                       gtsam::NonlinearFactorGraph& factors) {
   int num_factors_added = 0;
@@ -90,9 +92,12 @@ int StandstillFactorAdder::AddFactors(const localization_measurements::Standstil
   }
 }
 
-template <typename PoseVelocityNodeAdderT>
+template <typename PoseVelocityNodeAdderType>
 bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time timestamp,
                                                  gtsam::NonlinearFactorGraph& factors) {
+  if (!node_adder_->AddNode(timestamp, factors)) {
+    return false;
+  }
   const auto keys = node_adder_->Keys(timestamp);
   if (keys.empty()) {
     LogError("AddZeroVelocityPrior: Failed to get keys for timestamp.");
@@ -109,10 +114,14 @@ bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time
   return true;
 }
 
-template <typename PoseVelocityNodeAdderT>
+template <typename PoseVelocityNodeAdderType>
 bool StandstillFactorAdder::AddZeroRelativePoseFactor(const localization_common::Time timestamp_a,
                                                       const localization_common::Time timestamp_b,
                                                       gtsam::NonlinearFactorGraph& factors) {
+  if (!(node_adder_->AddNode(timestamp_a, factors) && node_adder_->AddNode(timestamp_b, factors))) {
+    return false;
+  }
+
   const auto keys_a = node_adder_->Keys(timestamp_a);
   if (keys_a.empty()) {
     LogError("AddZeroVelocityPrior: Failed to get keys for timestamp_a.");
