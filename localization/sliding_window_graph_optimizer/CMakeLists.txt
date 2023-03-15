@@ -16,16 +16,15 @@
 #under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(graph_optimizer)
+project(sliding_window_graph_optimizer)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-	config_reader
+  graph_optimizer
 	localization_common
-	msg_conversions 
 )
 
 # Find GTSAM
@@ -38,7 +37,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS config_reader localization_common msg_conversions
+  CATKIN_DEPENDS graph_optimizer localization_common 
 )
 
 ###########
@@ -55,9 +54,7 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/graph_optimizer.cc
-  src/graph_stats.cc
-  src/parameter_reader.cc
+  src/sliding_window_graph_optimizer.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

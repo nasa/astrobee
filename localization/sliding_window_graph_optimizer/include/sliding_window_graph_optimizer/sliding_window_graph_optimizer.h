@@ -16,18 +16,18 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_
-#define GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_
+#ifndef SLIDING_WINDOW_GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_
+#define SLIDING_WINDOW_GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_
 
 #include <graph_optimizer/graph_optimizer.h>
-#include <graph_optimizer/sliding_window_graph_optimizer_params.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/Marginals.h>
 
 #include <boost/serialization/serialization.hpp>
 
-namespace graph_optimizer {
+namespace sliding_window_graph_optimizer {
 class SlidingWindowGraphOptimizer : public GraphOptimizer {
  public:
   explicit SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params);
@@ -90,6 +90,6 @@ class SlidingWindowGraphOptimizer : public GraphOptimizer {
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<localization_common::Time> last_end_time_;
 };
-}  // namespace graph_optimizer
+}  // namespace sliding_window_graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_
+#endif  // SLIDING_WINDOW_GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_

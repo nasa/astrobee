@@ -15,18 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_PARAMS_H_
-#define GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_PARAMS_H_
+#ifndef SLIDING_WINDOW_GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_PARAMS_H_
+#define SLIDING_WINDOW_GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_PARAMS_H_
 
 #include <graph_optimizer/graph_optimizer_params.h>
 
 #include <string>
 
-namespace graph_optimizer {
+namespace sliding_window_graph_optimizer {
 struct SlidingWindowGraphOptimizerParams : public GraphOptimizerParams {
   std::string marginals_factorization;
   bool add_marginal_factors;
 };
-}  // namespace graph_optimizer
+}  // namespace sliding_window_graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_PARAMS_H_
+#endif  // SLIDING_WINDOW_GRAPH_OPTIMIZER_SLIDING_WINDOW_GRAPH_OPTIMIZER_PARAMS_H_
