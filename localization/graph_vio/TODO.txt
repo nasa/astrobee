@@ -1,15 +1,11 @@
 - move facter adder base classes to respective packages! (AC)
   - implement standstill factor adder!
-      - don't use feature tracker in standstill factor adder!
-      - update/add comments!
-    - add measurement buffering! (AC)
-      - add to base class somehow? (ACA)
-      - add non-templated based class???
-          - factoradderbase?
-          - add measurementbasedfactor adder class?
-    - add remove old measurements to base class! (AD)
-    - test this! (AE)
-  - update graph optimizer and sliding graph optimizer with new factor adder class!
+      - update standstill factor adder with this!
+    - test timestamped_set in range values!!!
+    - update graph optimizer and sliding graph optimizer with new factor adder class!
+    - test measurement based factor adder! (AE)
+      - make simple example factor adder!
+        - add priors for each timestamp!
 
   - implement loc factor adder!
     - move graph action completer here if needed!

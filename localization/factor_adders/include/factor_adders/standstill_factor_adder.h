@@ -19,7 +19,7 @@
 #ifndef FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 #define FACTOR_ADDERS_STANDSTILL_FACTOR_ADDER_H_
 
-#include <factor_adders/factor_adder.h>
+#include <factor_adders/measurement_based_factor_adder.h>
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <localization_measurements/standstill_measurement.h>
 
@@ -28,9 +28,8 @@
 namespace factor_adders {
 // Adds standstill factors (zero velocity prior and zero relative pose between factors) based on provided params.
 template <typename PoseVelocityNodeAdderT>
-class StandstillFactorAdder
-    : public FactorAdder<localization_measurements::StandstillMeasurement, StandstillFactorAdderParams> {
-  using Base = FactorAdder<localization_measurements::StandstillMeasurement, StandstillFactorAdderParams>;
+class StandstillFactorAdder : public MeasurementBasedFactorAdder<localization_measurements::StandstillMeasurement> {
+  using Base = MeasurementBasedFactorAdder<localization_measurements::StandstillMeasurement>;
 
  public:
   StandstillFactorAdder(const StandstillFactorAdderParams& params,

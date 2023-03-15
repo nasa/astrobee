@@ -24,17 +24,15 @@
 #include <vector>
 
 namespace factor_adder {
-template <typename MEASUREMENT>
-// Adds factors for a specific measurement type.
+// Adds factors to a graph. Base class for measurement-based factor adder.
 class FactorAdder {
  public:
   explicit FactorAdder(const FactorAdderParams& params) : params_(params) {}
+  virtual ~FactorAdder() = default;
 
-  virtual ~FactorAdder() {}
-
-  // Add factors using measurement to existing factor graph.
+  // Add factors to existing factor graph.
   // Returns number of added factors.
-  virtual int AddFactors(const MEASUREMENT& measurement, gtsam::NonlinearFactorGraph& factors) = 0;
+  virtual int AddFactors(gtsam::NonlinearFactorGraph& factors) = 0;
 
  private:
   FactorAdderParams params_;

@@ -84,6 +84,10 @@ class TimestampedSet {
 
   const std::map<Time, T>& set() const;
 
+  // Returns iterators to values in range of oldest and latest allowed timestamps.
+  std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator> InRangeValues(
+    const Time oldest_allowed_timestamp, const Time latest_allowed_timestamp);
+
  private:
   friend class boost::serialization::access;
   template <class ARCHIVE>
@@ -275,6 +279,13 @@ int TimestampedSet<T>::RemoveOldValues(const Time oldest_allowed_timestamp) {
 
 template <typename T>
 const std::map<Time, T>& TimestampedSet<T>::set() const { return timestamp_value_map_; }
+
+template <typename T>
+std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator> InRangeValues(
+  const Time oldest_allowed_timestamp, const Time latest_allowed_timestamp) {
+  return std::make_pair(timestamp_value_map_.lower_bound(oldest_allowed_timestamp),
+                        std::prev(timestamp_value_map_.upper_bound(latest_allowed_timestamp)));
+}
 
 template <typename T>
 template <class ARCHIVE>
