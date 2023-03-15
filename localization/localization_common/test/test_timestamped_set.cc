@@ -589,117 +589,117 @@ TEST(TimestampedSetTester, InRangeValues) {
     EXPECT_TRUE(range.first == timestamped_set.cend());
     EXPECT_TRUE(range.second == timestamped_set.cend());
   }
-    // 1 element
-    const double value_1 = -77.0;
-    const localization_common::Time timestamp_1 = 37.0;
-    ASSERT_TRUE(timestamped_set.Add(timestamp_1, value_1));
-    // 1 element too low
-    {
-      const auto range = timestamped_set.InRangeValues(timestamp_1 - 2.0, timestamp_1 - 1.0);
+  // 1 element
+  const double value_1 = -77.0;
+  const localization_common::Time timestamp_1 = 37.0;
+  ASSERT_TRUE(timestamped_set.Add(timestamp_1, value_1));
+  // 1 element too low
+  {
+    const auto range = timestamped_set.InRangeValues(timestamp_1 - 2.0, timestamp_1 - 1.0);
     EXPECT_TRUE(range.first == timestamped_set.cend());
     EXPECT_TRUE(range.second == timestamped_set.cend());
-    }
-    // 1 element too high
-    {
-      const auto range = timestamped_set.InRangeValues(timestamp_1 + 1.0, timestamp_1 + 2.0);
+  }
+  // 1 element too high
+  {
+    const auto range = timestamped_set.InRangeValues(timestamp_1 + 1.0, timestamp_1 + 2.0);
     EXPECT_TRUE(range.first == timestamped_set.cend());
     EXPECT_TRUE(range.second == timestamped_set.cend());
-    }
-    // 1 element in range
-    {
-      const auto range = timestamped_set.InRangeValues(timestamp_1 - 1.0, timestamp_1 + 2.0);
-      EXPECT_TRUE(range.first->first == timestamp_1);
-      EXPECT_TRUE(range.second->first == timestamp_1);
-    }
-/*
-    // 1 element in range equal low 
-    {
-   const auto range = timestamped_set.InRangeValues(timestamp_1, timestamp_1 + 2.0);
-    EXPECT_TRUE(range.first->time == timestamp_1);
-    EXPECT_TRUE(range.second->time == timestamp_1);
-    }
-    // 1 element in range equal high 
-    {
-   const auto range = timestamped_set.InRangeValues(timestamp_1 - 1.0, timestamp_1);
-    EXPECT_TRUE(range.first->time == timestamp_1);
-    EXPECT_TRUE(range.second->time == timestamp_1);
-    }
+  }
+  // 1 element in range
+  {
+    const auto range = timestamped_set.InRangeValues(timestamp_1 - 1.0, timestamp_1 + 2.0);
+    EXPECT_TRUE(range.first->first == timestamp_1);
+    EXPECT_TRUE(range.second == timestamped_set.cend());
+  }
+  /*
+      // 1 element in range equal low
+      {
+     const auto range = timestamped_set.InRangeValues(timestamp_1, timestamp_1 + 2.0);
+      EXPECT_TRUE(range.first->time == timestamp_1);
+      EXPECT_TRUE(range.second->time == timestamp_1);
+      }
+      // 1 element in range equal high
+      {
+     const auto range = timestamped_set.InRangeValues(timestamp_1 - 1.0, timestamp_1);
+      EXPECT_TRUE(range.first->time == timestamp_1);
+      EXPECT_TRUE(range.second->time == timestamp_1);
+      }
 
-    // 2 elements
-    const double value_2 = 512.0;
-    const localization_common::Time timestamp_2 = 2.33;
-    ASSERT_TRUE(timestamped_set.Add(timestamp_2, value_2));
-    // 2 elements below
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(1.1);
-      EXPECT_TRUE(lower_and_upper_bound_values.first == boost::none);
-      ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.second->value, value_2);
-      EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_2);
-    }
-    // 2 elements above
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(111.3);
-      ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.first->value, value_1);
-      EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_1);
-      EXPECT_TRUE(lower_and_upper_bound_values.second == boost::none);
-    }
-    // 2 elements equal lower
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_2);
-      ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-      ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
-      EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
-      EXPECT_EQ(lower_and_upper_bound_values.second->value, value_2);
-      EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_2);
-    }
-    // 2 elements equal upper
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_1);
-      ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-      ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.first->value, value_1);
-      EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_1);
-      EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
-      EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
-    }
-    // 2 elements between
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(15.1);
-      ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
-      EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
-      ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
-      EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
-    }
+      // 2 elements
+      const double value_2 = 512.0;
+      const localization_common::Time timestamp_2 = 2.33;
+      ASSERT_TRUE(timestamped_set.Add(timestamp_2, value_2));
+      // 2 elements below
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(1.1);
+        EXPECT_TRUE(lower_and_upper_bound_values.first == boost::none);
+        ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.second->value, value_2);
+        EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_2);
+      }
+      // 2 elements above
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(111.3);
+        ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.first->value, value_1);
+        EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_1);
+        EXPECT_TRUE(lower_and_upper_bound_values.second == boost::none);
+      }
+      // 2 elements equal lower
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_2);
+        ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
+        ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
+        EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
+        EXPECT_EQ(lower_and_upper_bound_values.second->value, value_2);
+        EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_2);
+      }
+      // 2 elements equal upper
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(timestamp_1);
+        ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
+        ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.first->value, value_1);
+        EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_1);
+        EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
+        EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
+      }
+      // 2 elements between
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(15.1);
+        ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
+        EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
+        ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
+        EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
+      }
 
-    // 3 elements
-    const double value_3 = 291.1;
-    const localization_common::Time timestamp_3 = 14.1;
-    ASSERT_TRUE(timestamped_set.Add(timestamp_3, value_3));
-    // 3 elements lower between
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(7.11);
-      ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
-      EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
-      ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.second->value, value_3);
-      EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_3);
-    }
-    // 3 elements upper between
-    {
-      const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(22.22);
-      ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.first->value, value_3);
-      EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_3);
-      ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
-      EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
-      EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
-    }*/
+      // 3 elements
+      const double value_3 = 291.1;
+      const localization_common::Time timestamp_3 = 14.1;
+      ASSERT_TRUE(timestamped_set.Add(timestamp_3, value_3));
+      // 3 elements lower between
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(7.11);
+        ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.first->value, value_2);
+        EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_2);
+        ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.second->value, value_3);
+        EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_3);
+      }
+      // 3 elements upper between
+      {
+        const auto lower_and_upper_bound_values = timestamped_set.LowerAndUpperBound(22.22);
+        ASSERT_TRUE(lower_and_upper_bound_values.first != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.first->value, value_3);
+        EXPECT_EQ(lower_and_upper_bound_values.first->timestamp, timestamp_3);
+        ASSERT_TRUE(lower_and_upper_bound_values.second != boost::none);
+        EXPECT_EQ(lower_and_upper_bound_values.second->value, value_1);
+        EXPECT_EQ(lower_and_upper_bound_values.second->timestamp, timestamp_1);
+      }*/
 }
 
 TEST(TimestampedSetTester, Serialization) {

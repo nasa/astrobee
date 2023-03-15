@@ -87,6 +87,8 @@ class TimestampedSet {
   typename std::map<Time, T>::const_iterator cend() const;
 
   // Returns iterators to values in range of oldest and latest allowed timestamps.
+  // The second iterator is one-past the latest allowed element to allow for iterating
+  // using: for(auto it = pair.first; it != pair.second; ++it)
   std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator> InRangeValues(
     const Time oldest_allowed_timestamp, const Time latest_allowed_timestamp);
 
@@ -293,7 +295,9 @@ template <typename T>
 std::pair<typename std::map<Time, T>::const_iterator, typename std::map<Time, T>::const_iterator>
 TimestampedSet<T>::InRangeValues(const Time oldest_allowed_timestamp, const Time latest_allowed_timestamp) {
   auto upper_bound = timestamp_value_map_.upper_bound(latest_allowed_timestamp);
-  if (upper_bound != timestamp_value_map_.cend()) upper_bound = std::prev(upper_bound);
+  auto lower_bound = timestamp_value_map_.lower_bound(oldest_allowed_timestamp);
+  // No values less than latest allowed time
+  if (upper_bound == timestamp_value_map_.cbegin()) return {cend(), cend()};
   return std::make_pair(timestamp_value_map_.lower_bound(oldest_allowed_timestamp), upper_bound);
 }
 
