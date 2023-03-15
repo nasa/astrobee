@@ -26,6 +26,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/unordered_map.hpp>
 
+#include <algorithm>
 #include <map>
 #include <utility>
 #include <vector>
@@ -36,7 +37,8 @@ struct TimestampedValue {
   TimestampedValue(const Time timestamp, const T& value) : timestamp(timestamp), value(value) {}
   explicit TimestampedValue(const std::pair<const Time, T>& pair) : timestamp(pair.first), value(pair.second) {}
   Time timestamp;
-  const T& value;
+  // TODO(rsoussan): Store this as const ref? Make it optional to be ref or not?
+  T value;
 };
 
 template <typename T>
@@ -266,11 +268,9 @@ bool TimestampedSet<T>::Contains(const Time timestamp) const {
 template <typename T>
 std::vector<TimestampedValue<T>> TimestampedSet<T>::OldValues(const Time oldest_allowed_timestamp) const {
   std::vector<TimestampedValue<T>> old_values;
-  for (const auto& timestamped_value : timestamp_value_map_) {
-    if (timestamped_value.first >= oldest_allowed_timestamp) break;
-    old_values.emplace_back(timestamped_value);
-  }
-
+  std::transform(timestamp_value_map_.begin(), timestamp_value_map_.lower_bound(oldest_allowed_timestamp),
+                 std::back_inserter(old_values),
+                 [](const std::pair<Time, T>& value) { return TimestampedValue<T>(value); });
   return old_values;
 }
 
