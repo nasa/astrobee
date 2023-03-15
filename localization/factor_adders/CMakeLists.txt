@@ -68,11 +68,20 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  # Single measurement based factor adder test
   add_rostest_gtest(test_single_measurement_based_factor_adder
     test/test_single_measurement_based_factor_adder.test
     test/test_single_measurement_based_factor_adder.cc
   )
   target_link_libraries(test_single_measurement_based_factor_adder
+    factor_adders ${catkin_LIBRARIES} 
+  )
+  # Standstill factor adder test
+  add_rostest_gtest(test_standstill_factor_adder
+    test/test_standstill_factor_adder.test
+    test/test_standstill_factor_adder.cc
+  )
+  target_link_libraries(test_standstill_factor_adder
     factor_adders ${catkin_LIBRARIES} 
   )
 endif()

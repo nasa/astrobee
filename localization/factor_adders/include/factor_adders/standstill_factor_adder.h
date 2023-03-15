@@ -21,7 +21,10 @@
 
 #include <factor_adders/single_measurement_based_factor_adder.h>
 #include <factor_adders/standstill_factor_adder_params.h>
+#include <localization_common/utilities.h>
 #include <localization_measurements/standstill_measurement.h>
+
+#include <gtsam/slam/BetweenFactor.h>
 
 #include <vector>
 
@@ -56,46 +59,44 @@ class StandstillFactorAdder
 
 // Implementation
 template <typename PoseVelocityNodeAdderType>
-StandstillFactorAdder::StandstillFactorAdder(const StandstillFactorAdderParams& params,
-                                             const std::shared_ptr<PoseVelocityNodeAdderType> node_adder)
+StandstillFactorAdder<PoseVelocityNodeAdderType>::StandstillFactorAdder(
+  const StandstillFactorAdderParams& params, const std::shared_ptr<PoseVelocityNodeAdderType> node_adder)
     : Base(params), params_(params), node_adder_(node_adder) {
   // Create zero velocity noise
   const gtsam::Vector3 velocity_prior_noise_sigmas(
-    (gtsam::Vector(3) << params().prior_velocity_stddev, params().prior_velocity_stddev, params().prior_velocity_stddev)
+    (gtsam::Vector(3) << params_.prior_velocity_stddev, params_.prior_velocity_stddev, params_.prior_velocity_stddev)
       .finished());
-  zero_velocity_noise_ =
-    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-               params().huber_k);
+  zero_velocity_noise_ = localization_common::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+    params_.huber_k);
 
   // Create zero relative pose noise
   const gtsam::Vector6 pose_between_noise_sigmas(
-    (gtsam::Vector(6) << params().pose_between_factor_rotation_stddev, params().pose_between_factor_rotation_stddev,
-     params().pose_between_factor_rotation_stddev, params().pose_between_factor_translation_stddev,
-     params().pose_between_factor_translation_stddev, params().pose_between_factor_translation_stddev)
+    (gtsam::Vector(6) << params_.pose_between_factor_rotation_stddev, params_.pose_between_factor_rotation_stddev,
+     params_.pose_between_factor_rotation_stddev, params_.pose_between_factor_translation_stddev,
+     params_.pose_between_factor_translation_stddev, params_.pose_between_factor_translation_stddev)
       .finished());
-  zero_relative_pose_noise =
-    go::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)),
-               params().huber_k);
+  zero_relative_pose_noise_ = localization_common::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)), params_.huber_k);
 }
 
 template <typename PoseVelocityNodeAdderType>
-int StandstillFactorAdder::AddFactorsForSingleMeasurement(
+int StandstillFactorAdder<PoseVelocityNodeAdderType>::AddFactorsForSingleMeasurement(
   const localization_measurements::StandstillMeasurement& standstill_measurement,
   gtsam::NonlinearFactorGraph& factors) {
   int num_factors_added = 0;
-  if (params().add_velocity_prior) {
-    if (AddZeroVelocityPrior(standstill_measurement.timestamp(), factors)) ++num_factors_added;
+  if (params_.add_velocity_prior) {
+    if (AddZeroVelocityPrior(standstill_measurement.timestamp, factors)) ++num_factors_added;
   }
-  if (params().add_pose_between_factor) {
-    if (AddZeroRelativePoseFactor(standstill_measurement.previous_timestamp, standstill_measurement.timestamp(),
-                                  factors))
+  if (params_.add_pose_between_factor) {
+    if (AddZeroRelativePoseFactor(standstill_measurement.previous_timestamp, standstill_measurement.timestamp, factors))
       ++num_factors_added;
   }
 }
 
 template <typename PoseVelocityNodeAdderType>
-bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time timestamp,
-                                                 gtsam::NonlinearFactorGraph& factors) {
+bool StandstillFactorAdder<PoseVelocityNodeAdderType>::AddZeroVelocityPrior(const localization_common::Time timestamp,
+                                                                            gtsam::NonlinearFactorGraph& factors) {
   if (!node_adder_->AddNode(timestamp, factors)) {
     return false;
   }
@@ -116,9 +117,9 @@ bool StandstillFactorAdder::AddZeroVelocityPrior(const localization_common::Time
 }
 
 template <typename PoseVelocityNodeAdderType>
-bool StandstillFactorAdder::AddZeroRelativePoseFactor(const localization_common::Time timestamp_a,
-                                                      const localization_common::Time timestamp_b,
-                                                      gtsam::NonlinearFactorGraph& factors) {
+bool StandstillFactorAdder<PoseVelocityNodeAdderType>::AddZeroRelativePoseFactor(
+  const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
+  gtsam::NonlinearFactorGraph& factors) {
   if (!(node_adder_->AddNode(timestamp_a, factors) && node_adder_->AddNode(timestamp_b, factors))) {
     return false;
   }

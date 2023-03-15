@@ -1,13 +1,14 @@
-    - test measurement based factor adder! (AA)
-      - make simple example factor adder!
-        - add priors for each timestamp! (AB)
+  - test stnadstill factor adder???
+    - create simple measurements, add these
+    - add separate constructor to enable/disable pose or vel factors!
+    - make sure pose and vel priors added!
+      - make sure only pose and ony vel or neither added as desired!
 
   - implement loc factor adder!
     - move graph action completer here if needed!
   - implement vo factor adder!
     - move graph action completer here if needed!
   - test loc and vo factor adders?
-  - test stnadstill factor adder???
   - TODO: implement others!
 
 - make graph optimizer class depend on facter adder and node updater packages??
