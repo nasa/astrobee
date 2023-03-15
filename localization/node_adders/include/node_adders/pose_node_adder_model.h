@@ -46,6 +46,7 @@ class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAd
   boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;
   void AddMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement);
+  // Keeps lower_bound measurement <= oldest_allowed_time to use for interpolation if needed.
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
   bool CanAddNode(const localization_common::Time timestamp) const final;
 

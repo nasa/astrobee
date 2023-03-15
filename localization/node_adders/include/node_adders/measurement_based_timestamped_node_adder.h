@@ -36,7 +36,12 @@ class MeasurementBasedTimestampedNodeAdder
     const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
   void AddMeasurement(const MeasurementType& measurement);
+
+  // Removes measurements using oldest_allowed_time. Depending on the measurement type,
+  // the lower bound <= oldest_allowed_time may be kept so it can be used to create
+  // relative factors in the future.
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
+
   // Slides window and removes old measurements
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,

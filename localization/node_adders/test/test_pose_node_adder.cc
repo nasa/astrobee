@@ -283,11 +283,12 @@ TEST_F(PoseNodeAdderTest, AddRemoveCanAddNode) {
   EXPECT_FALSE(pose_node_adder_->CanAddNode(params_.starting_time - epsilon));
   EXPECT_FALSE(pose_node_adder_->CanAddNode(timestamps_[3] + epsilon));
 
-  // Remove measurements start, 0, and 1
+  // Remove measurements start, 0, but keep 1 since it's the lower bound and
+  // may be used for interpolation
   pose_node_adder_->RemoveMeasurements(timestamps_[1] + epsilon);
   EXPECT_FALSE(pose_node_adder_->CanAddNode(params_.starting_time));
   EXPECT_FALSE(pose_node_adder_->CanAddNode(timestamps_[0]));
-  EXPECT_FALSE(pose_node_adder_->CanAddNode(timestamps_[1]));
+  EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[1]));
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[2]));
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[2] + epsilon));
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[3]));
@@ -591,7 +592,7 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   params_.starting_time = 0.0;
   params_.min_num_states = 2;
   params_.max_num_states = 5;
-  params_.ideal_duration = 2.5;
+  params_.ideal_duration = 1.5;
   params_.Initialize();
   pose_node_adder_.reset(new nu::PoseNodeAdder(params_, node_adder_model_params_));
   pose_node_adder_->AddInitialNodesAndPriors(factors_);
@@ -622,17 +623,16 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[0] - 0.1));
   // Slide window
-  // Expect to remove first node, so duration is 2
+  // Expect to remove first two nodes, so duration is 1
   const auto new_oldest_time = pose_node_adder_->SlideWindowNewStartTime();
   ASSERT_TRUE(new_oldest_time != boost::none);
-  EXPECT_EQ(*new_oldest_time, timestamps_[0]);
+  EXPECT_EQ(*new_oldest_time, timestamps_[1]);
   const auto old_keys = pose_node_adder_->OldKeys(*new_oldest_time, factors_);
-  EXPECT_EQ(old_keys.size(), 1);
+  EXPECT_EQ(old_keys.size(), 2);
   const boost::optional<gtsam::Marginals> marginals(boost::none);
   ASSERT_TRUE(pose_node_adder_->SlideWindow(*new_oldest_time, marginals, old_keys, params_.huber_k, factors_));
-  EXPECT_EQ(nodes.size(), 3);
+  EXPECT_EQ(nodes.size(), 2);
   // 3 nodes should be the 3 poses added after the start node
-  EXPECT_SAME_NODE(timestamps_[0], pose(0));
   EXPECT_SAME_NODE(timestamps_[1], pose(1));
   EXPECT_SAME_NODE(timestamps_[2], pose(2));
   // Between factors aren't removed yet, so all between factors should remain,
@@ -643,15 +643,15 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   EXPECT_SAME_BETWEEN_FACTOR(1, 1);
   EXPECT_SAME_BETWEEN_FACTOR(2, 2);
   // Prior factor added last
-  EXPECT_SAME_PRIOR_FACTOR(3, pose(0));
+  EXPECT_SAME_PRIOR_FACTOR(3, pose(1));
   // Since no marginals available, noise should default to start noise
   EXPECT_SAME_PRIOR_NOISE(3, params_.start_noise_models[0]);
-  EXPECT_EQ(*pose_node_adder_->OldestTimestamp(), timestamps_[0]);
+  EXPECT_EQ(*pose_node_adder_->OldestTimestamp(), timestamps_[1]);
   EXPECT_EQ(*pose_node_adder_->LatestTimestamp(), timestamps_[2]);
-  // Old measurements removed when slide window, so can no longer add measurements older
-  // than timestamps_[0]
-  EXPECT_FALSE(pose_node_adder_->CanAddNode(timestamps_[0] - 0.1));
+  // Old measurements removed when slide window but lower bound kept in case needed for interpolation
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[0]));
+  EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[1]));
+  EXPECT_FALSE(pose_node_adder_->CanAddNode(params_.starting_time));
 }
 // TODO(rsoussan): Test slide window with valid marginals to create valid prior covariances
 
