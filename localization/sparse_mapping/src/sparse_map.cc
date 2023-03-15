@@ -45,6 +45,7 @@
 #include <set>
 #include <thread>
 #include <limits>
+#include <iomanip>
 
 DEFINE_int32(num_similar, 20,
              "Use in localization this many images which "
@@ -422,6 +423,10 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   delete input;
   close(input_fd);
+
+  if (NULL != std::getenv("ASTROBEE_REPORT_MEMORY_USAGE")) {
+    ReportMemoryUsage();
+  }
 }
 
 void SparseMap::SetDetectorParams(int min_features, int max_features, int retries,
@@ -1002,6 +1007,124 @@ bool SparseMap::Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2X
                                   early_break_landmarks_,
                                   histogram_equalization_,
                                   cid_list);
+}
+
+void SparseMap::ReportMemoryUsage() {
+  std::cout << "SparseMap::ReportMemoryUsage:" << std::endl;
+
+#define SM_REPORT(field) \
+  std::cout << "  " << std::setw(12) << field << " " << #field << std::endl;
+
+  size_t num_cid = cid_to_filename_.size();
+  SM_REPORT(num_cid);
+
+  size_t num_pid = pid_to_xyz_.size();
+  SM_REPORT(num_pid);
+
+  size_t num_features =
+    std::accumulate(cid_to_descriptor_map_.begin(), cid_to_descriptor_map_.end(), 0,
+                    [](size_t accum, const cv::Mat& M) {
+                      return accum + M.rows;
+                    });
+  SM_REPORT(num_features);
+
+  std::cout << std::endl;
+
+  size_t sparse_map_bytes = sizeof(SparseMap);
+  SM_REPORT(sparse_map_bytes);
+
+  size_t cid_to_filename_bytes =
+    cid_to_filename_.size() * sizeof(std::string)
+    + std::accumulate(cid_to_filename_.begin(), cid_to_filename_.end(), 0,
+                      [](size_t accum, const std::string& s) {
+                        return accum + s.size();
+                      });
+  SM_REPORT(cid_to_filename_bytes);
+
+  size_t cid_to_keypoint_map_bytes =
+    cid_to_keypoint_map_.size() * sizeof(Eigen::Matrix2Xd)
+    + std::accumulate(cid_to_keypoint_map_.begin(), cid_to_keypoint_map_.end(), 0,
+                      [](size_t accum, const Eigen::Matrix2Xd& M) {
+                        return accum + 2 * M.cols() * sizeof(double);
+                      });
+  SM_REPORT(cid_to_keypoint_map_bytes);
+
+  // some of this is platform- and data-dependent, just rough approximation
+  const int map_node_bytes = sizeof(int) + 3 * sizeof(void*);  // red/black tree node ~overhead
+  size_t pid_to_cid_fid_bytes =
+    pid_to_cid_fid_.size() * sizeof(std::map<int, int>)
+    + std::accumulate(pid_to_cid_fid_.begin(), pid_to_cid_fid_.end(), 0,
+                      [](size_t accum, const std::map<int, int>& m) {
+                        return accum + m.size() * (map_node_bytes + 2 * sizeof(int));
+                      });
+  SM_REPORT(pid_to_cid_fid_bytes);
+
+  size_t pid_to_xyz_bytes = pid_to_xyz_.size() * sizeof(Eigen::Vector3d);
+  SM_REPORT(pid_to_xyz_bytes);
+
+  size_t cid_to_cam_t_global_bytes =
+    cid_to_cam_t_global_.size() * sizeof(Eigen::Affine3d);
+  SM_REPORT(cid_to_cam_t_global_bytes);
+
+  size_t cid_to_descriptor_map_bytes =
+    cid_to_descriptor_map_.size() * sizeof(cv::Mat)
+    + std::accumulate(cid_to_descriptor_map_.begin(), cid_to_descriptor_map_.end(), 0,
+                      [](size_t accum, const cv::Mat& M) {
+                        return accum + M.rows * M.cols * M.elemSize();
+                      });
+  SM_REPORT(cid_to_descriptor_map_bytes);
+
+  size_t cid_fid_to_pid_bytes =
+    cid_fid_to_pid_.size() * sizeof(std::map<int, int>)
+    + std::accumulate(cid_fid_to_pid_.begin(), cid_fid_to_pid_.end(), 0,
+                      [](size_t accum, const std::map<int, int>& m) {
+                        return accum + m.size() * (map_node_bytes + 2 * sizeof(int));
+                      });
+  SM_REPORT(cid_fid_to_pid_bytes);
+
+  std::cout << std::endl;
+  size_t vocab_db_bytes = vocab_db_.ReportMemoryUsage();
+  std::cout << std::endl;
+  SM_REPORT(vocab_db_bytes);
+
+  size_t db_to_cid_map_bytes =
+    db_to_cid_map_.size() * (map_node_bytes + 2 * sizeof(int));
+  SM_REPORT(db_to_cid_map_bytes);
+
+  size_t total_bytes =
+    sparse_map_bytes
+    + cid_to_filename_bytes
+    + cid_to_keypoint_map_bytes
+    + pid_to_cid_fid_bytes
+    + pid_to_xyz_bytes
+    + cid_to_cam_t_global_bytes
+    + cid_to_descriptor_map_bytes
+    + cid_fid_to_pid_bytes
+    + vocab_db_bytes
+    + db_to_cid_map_bytes;
+  SM_REPORT(total_bytes);
+
+  std::cout << std::endl;
+
+  // if these sizes are zero for onboard localizer, no need to calculate
+  // bytes
+
+  size_t num_cid_to_cid = cid_to_cid_.size();
+  SM_REPORT(num_cid_to_cid);
+
+  size_t num_user_cid = user_cid_to_keypoint_map_.size();
+  SM_REPORT(num_user_cid);
+
+  size_t num_user_pid = user_pid_to_cid_fid_.size();
+  SM_REPORT(num_user_pid);
+
+  std::cout << std::endl;
+
+  const cv::Mat* A = &(*cid_to_descriptor_map_.begin());
+  std::cout << "  num_entries_per_descriptor: " << A->cols << std::endl;
+  std::cout << "  descriptor_entry_bytes: " << A->elemSize() << std::endl;
+
+#undef SM_REPORT
 }
 
 }  // namespace sparse_mapping
