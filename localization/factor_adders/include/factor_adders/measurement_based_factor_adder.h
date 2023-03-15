@@ -63,8 +63,9 @@ template <typename MeasurementType>
 int MeasurementBasedFactorAdder<MeasurementType>::AddFactors(const localization_common::Time oldest_allowed_time,
                                                              const localization_common::Time newest_allowed_time,
                                                              gtsam::NonlinearFactorGraph& factors) {
-  AddMeasurementBasedFactors(oldest_allowed_time, newest_allowed_time, factors);
+  const int num_added_factors = AddMeasurementBasedFactors(oldest_allowed_time, newest_allowed_time, factors);
   RemoveOldMeasurements(oldest_allowed_time);
+  return num_added_factors;
 }
 
 template <typename MeasurementType>
