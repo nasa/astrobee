@@ -7,6 +7,9 @@
 
 - make graph optimizer class depend on facter adder and node updater packages??
 
+- add parameter reader package!!!!
+  - how to unit test these??
+
   - update graph optimizer!  (A)  
      - remove graph stats! just log optimization time (for grpah optimizer) and Update time (for sliding window optimizer)
       - inherit from this for graph optimizer, call graph_stats_logger!

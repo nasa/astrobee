@@ -21,8 +21,8 @@
 
 #include <factor_adders/factor_adder.h>
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_optimizer/graph_stats.h>
 #include <node_adders/node_adder.h>
+#include <localization_common/stats_logger.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
@@ -32,7 +32,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace graph_optimizer {
@@ -52,9 +51,10 @@ class GraphOptimizer {
  public:
   explicit GraphOptimizer(const GraphOptimizerParams& params);
 
-  // Default constructor/destructor for serialization only
+  // Default constructor for serialization only
   GraphOptimizer() {}
-  ~GraphOptimizer();
+
+  virtual ~GraphOptimizer() = default;
 
   // Adds node adder used for graph optimization.
   void AddNodeAdder(std::shared_ptr<node_adders::NodeAdder> node_adder);
@@ -92,41 +92,51 @@ class GraphOptimizer {
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
 
-  // Prints logging statistics when graph optimizer is destructed, useful
-  // for debugging.
-  void LogOnDestruction(const bool log_on_destruction);
-
  private:
   // Optional validity check for graph before optimizing.
   // If this fails, no optimization is performed.
   // Default behavior always returns true.
   virtual bool ValidGraph() const;
 
-  // Prints information for factors in the graph after adding factors and optimizing.
-  // Default behavior does nothing.
-  // TODO(rsoussan): Change default behavior to perform print() for each factor?
-  virtual void PrintFactorDebugInfo() const;
+  // Prints factor graph information and logs stats.
+  virtual void Print() const;
+
+  // Set optimization params based on provided GraphOptimizerParams
+  void SetParams();
+
+  // Add averagers and timers for logging
+  void AddAveragersAndTimers();
+
+  // Sum of factor errors for each factor in the graph
+  double TotalGraphError() const;
 
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_NVP(graph_stats_);
-    ar& BOOST_SERIALIZATION_NVP(levenberg_marquardt_params_);
     ar& BOOST_SERIALIZATION_NVP(params_);
-    ar& BOOST_SERIALIZATION_NVP(graph_);
-    ar& BOOST_SERIALIZATION_NVP(log_on_destruction_);
-    ar& BOOST_SERIALIZATION_NVP(node_adders_);
+    ar& BOOST_SERIALIZATION_NVP(levenberg_marquardt_params_);
+    ar& BOOST_SERIALIZATION_NVP(factors_);
     ar& BOOST_SERIALIZATION_NVP(factor_adders_);
+    ar& BOOST_SERIALIZATION_NVP(node_adders_);
+    ar& BOOST_SERIALIZATION_NVP(stats_logger_);
+    ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
+    ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
+    ar& BOOST_SERIALIZATION_NVP(iterations_averager_);
+    ar& BOOST_SERIALIZATION_NVP(total_error_averager_);
   }
 
   GraphOptimizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
-  gtsam::NonlinearFactorGraph graph_;
+  gtsam::NonlinearFactorGraph factors_;
   std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;
   std::vector<std::shared_ptr<node_adders::NodeAdder>> node_adders_;
-  GraphStats graph_stats_;
-  bool log_on_destruction_;
+  localization_common::StatsLogger stats_logger_;
+
+  // Logging
+  localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
+  localization_common::Averager iterations_averager_ = localization_common::Averager("Optimization Iterations");
+  localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
 };
 }  // namespace graph_optimizer
 

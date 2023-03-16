@@ -20,14 +20,18 @@
 
 namespace graph_optimizer {
 struct GraphOptimizerParams {
-  bool verbose;
-  bool fatal_failures;
-  bool log_on_destruction;
-  bool print_factor_info;
-  bool use_ceres_params;
+  // Maximum optimization iterations to perform
   int max_iterations;
+  // Huber k used for all factors
   double huber_k;
-  int log_rate;
+  // Verbose printing for Levenberg-Marquardt optimization
+  bool verbose;
+  // Log statistics after destruction
+  bool log_stats_on_destruction;
+  // Log factor graph info and stats after optimization
+  bool print_after_optimization;
+  // Use ceres-style params for nonlinear optimization
+  bool use_ceres_params;
 };
 }  // namespace graph_optimizer
 
