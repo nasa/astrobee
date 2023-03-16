@@ -15,48 +15,39 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_GRAPH_STATS_H_
-#define GRAPH_OPTIMIZER_GRAPH_STATS_H_
+#ifndef LOCALIZATION_COMMON_STATS_LOGGER_H_
+#define LOCALIZATION_COMMON_STATS_LOGGER_H_
 
 #include <localization_common/averager.h>
 #include <localization_common/timer.h>
 
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-
 #include <vector>
 
-namespace graph_optimizer {
-// Helper object that logs various statistics and runtimes to a desired output (command line, CSV file, text file).
-// Uses averager and timer objects that generate min/max/mean/stddev values and runtimes respectively for each of these.
-//
-// Default logs optimization runtime, number of optimization iterations, and total factor error.
-// More statistics and runtimes can be used for logging by calling the AddStatsAverager and AddTimer methods.
-// More detailed statistics can be logged for a factor graph by overriding the UpdateStats method.
-class GraphStats {
+namespace localization_common {
+// Logs various statistics and runtimes to a desired output (command line, CSV file, text file) using averager and timer
+// objects. Uses references to provided averagers and timers to log min/max/mean/stddev values and runtimes
+// respectively.
+class StatsLogger {
  public:
-  explicit GraphStats(const bool log_on_destruction = true);
-  // Add averager
-  void AddAverager(localization_common::Averager& stats_averager);
-  void AddTimer(localization_common::Timer& timer);
-  virtual void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors);
+  explicit StatsLogger(const bool log_on_destruction = true);
 
-  // Write statistics and runtimes to command line.
+  // Add averager for logging
+  void AddAverager(localization_common::Averager& averager);
+
+  // Add timer for logging
+  void AddTimer(localization_common::Timer& timer);
+
+  // Log averages and times to command line.
   void Log() const;
 
-  // Write statistics and runtimes to a text file.
+  // Log averages and times to a text file.
   void LogToFile(std::ofstream& ofstream) const;
 
-  // Write statistics and runtimes to a CSV file.
+  // Log averages and times to a CSV file.
   void LogToCsv(std::ofstream& ofstream) const;
 
   std::vector<std::reference_wrapper<localization_common::Timer>> timers_;
-  std::vector<std::reference_wrapper<localization_common::Averager>> stats_averagers_;
-
-  // Timers
-  localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
-  // Averagers
-  localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
-  localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
+  std::vector<std::reference_wrapper<localization_common::Averager>> averagers_;
 
  private:
   template <typename Logger>
@@ -74,6 +65,6 @@ class GraphStats {
     for (const auto& logger : loggers) logger.get().Log();
   }
 };
-}  // namespace graph_optimizer
+}  // namespace localization_common
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_STATS_H_
+#endif  // LOCALIZATION_COMMON_STATS_LOGGER_H_

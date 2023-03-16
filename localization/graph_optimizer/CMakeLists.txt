@@ -23,9 +23,9 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-	config_reader
+  factor_adders
 	localization_common
-	msg_conversions 
+  node_adders
 )
 
 # Find GTSAM
@@ -38,7 +38,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS config_reader localization_common msg_conversions
+  CATKIN_DEPENDS factor_adders localization_common node_adders 
 )
 
 ###########
@@ -57,7 +57,6 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/graph_optimizer.cc
   src/graph_stats.cc
-  src/parameter_reader.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

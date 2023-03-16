@@ -38,13 +38,7 @@ void GraphStats::AddStatsAverager(localization_common::Averager& stats_averager)
   stats_averagers_.emplace_back(stats_averager);
 }
 
-void GraphStats::AddErrorAverager(localization_common::Averager& error_averager) {
-  error_averagers_.emplace_back(error_averager);
-}
-
-void GraphStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) {}
-
-void GraphStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) {}
+void GraphStats::UpdateStats(const gtsam::NonlinearFactorGraph& factors) {}
 
 void GraphStats::Log() const {
   Log(timers_);

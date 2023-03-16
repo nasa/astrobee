@@ -69,6 +69,7 @@ add_library(${PROJECT_NAME}
   src/pose_with_covariance_interpolater.cc
   src/rate_timer.cc
   src/ros_timer.cc
+  src/stats_logger.cc
   src/time.cc
   src/timer.cc
   src/test_utilities.cc

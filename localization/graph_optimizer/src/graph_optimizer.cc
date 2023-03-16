@@ -41,7 +41,9 @@ void log(const bool fatal_failure, const std::string& description) {
 }  // namespace
 
 namespace graph_optimizer {
+namespace fa = factor_adders;
 namespace lc = localization_common;
+namespace na = node_adders;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params) : params_(params) {
   // Initialize lm params
@@ -56,12 +58,12 @@ GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params) : params_(par
   levenberg_marquardt_params_.maxIterations = params_.max_iterations;
 }
 
-GraphOptimizer::~GraphOptimizer() {
-  if (params_.log_on_destruction) graph_stats_->Log();
+void GraphOptimizer::AddNodeAdder(std::shared_ptr<na::NodeAdder> node_adder) {
+  node_adders_.emplace_back(std::move(node_adder));
 }
 
-void GraphOptimizer::AddNodeUpdater(std::shared_ptr<NodeUpdater> node_updater) {
-  node_updaters_.emplace_back(std::move(node_updater));
+void GraphOptimizer::AddFactorAdder(std::shared_ptr<fa::FactorAdder> factor_adder) {
+  factor_adders_.emplace_back(std::move(factor_adder));
 }
 
 bool GraphOptimizer::ValidGraph() const { return true; }
@@ -70,70 +72,74 @@ void GraphOptimizer::PrintFactorDebugInfo() const {}
 
 const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
-const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return graph_; }
+const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors; }
 
-gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return graph_; }
+gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors; }
 
-const int GraphOptimizer::num_factors() const { return graph_.size(); }
+const int GraphOptimizer::num_factors() const { return factors.size(); }
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
   // TODO(rsoussan): get this from nodes
-  graph_.saveGraph(of, *values_);
+  factors.saveGraph(of, *values_);
 }
 
 const GraphStats& const GraphOptimizer::graph_stats() const { return graph_stats_; }
 
 GraphStats& GraphOptimizer::graph_stats() { return graph_stats_; }
 
-void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) {
-  params_.log_on_destruction = log_on_destruction;
-}
-
-bool GraphOptimizer::Update() {
-  LogDebug("Update: Updating.");
+bool GraphOptimizer::Optimize() {
+  LogDebug("Optimize: Optimizing.");
   graph_stats_->update_timer_.Start();
 
   if (!ValidGraph()) {
-    LogError("Update: Invalid graph, not optimizing.");
+    LogError("Optimize: Invalid graph, not optimizing.");
     return false;
   }
 
   // Optimize
-  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, *values_, levenberg_marquardt_params_);
+  gtsam::LevenbergMarquardtOptimizer optimizer(factors, *values_, levenberg_marquardt_params_);
   bool successful_optimization = true;
   graph_stats_->optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg
   try {
     *values_ = optimizer.optimize();
   } catch (gtsam::IndeterminantLinearSystemException) {
-    log(params_.fatal_failures, "Update: Graph optimization failed, indeterminant linear system.");
+    log(params_.fatal_failures, "Optimize: Graph optimization failed, indeterminant linear system.");
     successful_optimization = false;
   } catch (gtsam::InvalidNoiseModel) {
-    log(params_.fatal_failures, "Update: Graph optimization failed, invalid noise model.");
+    log(params_.fatal_failures, "Optimize: Graph optimization failed, invalid noise model.");
     successful_optimization = false;
   } catch (gtsam::InvalidMatrixBlock) {
-    log(params_.fatal_failures, "Update: Graph optimization failed, invalid matrix block.");
+    log(params_.fatal_failures, "Optimize: Graph optimization failed, invalid matrix block.");
     successful_optimization = false;
   } catch (gtsam::InvalidDenseElimination) {
-    log(params_.fatal_failures, "Update: Graph optimization failed, invalid dense elimination.");
+    log(params_.fatal_failures, "Optimize: Graph optimization failed, invalid dense elimination.");
     successful_optimization = false;
   } catch (...) {
-    log(params_.fatal_failures, "Update: Graph optimization failed.");
+    log(params_.fatal_failures, "Optimize: Graph optimization failed.");
     successful_optimization = false;
   }
   graph_stats_->optimization_timer_.Stop();
 
   graph_stats_->log_stats_timer_.Start();
   graph_stats_->iterations_averager_.Update(optimizer.iterations());
-  graph_stats_->UpdateStats(graph_);
+  graph_stats_->UpdateStats(factors);
   graph_stats_->log_stats_timer_.Stop();
   graph_stats_->log_error_timer_.Start();
-  graph_stats_->UpdateErrors(graph_);
+  graph_stats_->UpdateErrors(factors);
   graph_stats_->log_error_timer_.Stop();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
   graph_stats_->update_timer_.Stop();
   return successful_optimization;
+}
+
+int GraphOptimizer::AddFactors(const localization_common::Time start_time, const localization_common end_time) {
+  int num_added_factors = 0;
+  for (const auto& factor_adder : factor_adders_) {
+    num_added_factors += factor_adder->AddFactors(start_time, end_time, factors_);
+  }
+  return num_added_factors;
 }
 }  // namespace graph_optimizer

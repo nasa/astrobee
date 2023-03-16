@@ -1,7 +1,4 @@
-  - test stnadstill factor adder???
-    - test vel only! (AB)
-
-  - implement loc factor adder!
+  - implement loc factor adder! (A)
     - move graph action completer here if needed!
   - implement vo factor adder!
     - move graph action completer here if needed!
@@ -11,13 +8,14 @@
 - make graph optimizer class depend on facter adder and node updater packages??
 
   - update graph optimizer!  (A)  
+     - remove graph stats! just log optimization time (for grpah optimizer) and Update time (for sliding window optimizer)
+      - inherit from this for graph optimizer, call graph_stats_logger!
+        - add opt time, factor erroraverager!
+      - inherit from graph optimizer for sliding window optimizer, 
+        - add total update time!
     - add single nodes to graph optimizer!!! (AAA)
       - construct in consctructor
       - pass these around to each node updater!
-    - update factor adder interface (AAC)
-      - add measurement buffering!
-      - start with standstill factor adder!!
-      - map-based pose adder!
     - make sure this all compiles
   - rename newoldesttime to newstarttime (node updaters, optimizer, etc) (AAB)
   - add test with graph optimizer, simple factor adder, and simple node updater!!
