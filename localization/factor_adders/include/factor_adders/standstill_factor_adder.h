@@ -143,6 +143,7 @@ bool StandstillFactorAdder<PoseVelocityNodeAdderType>::AddZeroRelativePoseFactor
     pose_key_a, pose_key_b, gtsam::Pose3::identity(), zero_relative_pose_noise_));
   factors.push_back(pose_between_factor);
   LogDebug("AddFactorsForSingleMeasurement: Added standstill pose between factor.");
+  return true;
 }
 }  // namespace factor_adders
 
