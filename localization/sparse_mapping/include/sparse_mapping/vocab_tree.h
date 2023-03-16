@@ -60,6 +60,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <utility>
 
 namespace cv {
   class Mat;
@@ -82,7 +83,7 @@ namespace sparse_mapping {
     ~VocabDB();
     void SaveProtobuf(google::protobuf::io::ZeroCopyOutputStream* output) const;
     void LoadProtobuf(google::protobuf::io::ZeroCopyInputStream* input, int db_type);
-    size_t ReportMemoryUsage();
+    size_t ReportMemoryUsage(std::vector<std::pair<std::string, size_t> >& partsOutput);
   };
 
   void DBSanityChecks(std::string const& db_type,

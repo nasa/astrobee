@@ -1072,7 +1072,20 @@ void SparseMap::ReportMemoryUsage() {
   SM_REPORT(cid_fid_to_pid_bytes);
 
   std::cout << std::endl;
-  size_t vocab_db_bytes = vocab_db_.ReportMemoryUsage();
+
+  std::vector<std::pair<std::string, size_t> > partsOutput;
+  size_t vocab_db_bytes = vocab_db_.ReportMemoryUsage(partsOutput);
+  for (auto it = partsOutput.begin(); it != partsOutput.end(); it++) {
+    const std::string& label = it->first;
+    size_t value = it->second;
+    if (label.rfind("*", 0) == 0) {
+      // if the label starts with * just print the comment
+      std::cout << label.substr(1) << std::endl;
+    } else {
+      // print label and value in standard format
+      std::cout << "  " << std::setw(12) << value << "   " << label << std::endl;
+    }
+  }
   std::cout << std::endl;
   SM_REPORT(vocab_db_bytes);
 
