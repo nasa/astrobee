@@ -43,6 +43,7 @@ class SimplePoseVelocityNodeAdder : public na::NodeAdder {
   bool CanAddNode(const localization_common::Time timestamp) const final { return true; }
 
   // Assumes integer timestamps that perfectly cast to ints.
+  // First key is pose key, second is velocity key
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const final {
     gtsam::KeyVector keys;
     keys.emplace_back(gtsam::Key(static_cast<int>(timestamp) * 2));
@@ -102,7 +103,7 @@ class StandstillFactorAdderTest : public ::testing::Test {
     ASSERT_TRUE(pose_between_factor);
     EXPECT_MATRIX_NEAR(pose_between_factor->measured(), Eigen::Isometry3d::Identity(), 1e-6);
     EXPECT_EQ(pose_between_factor->key1(), gtsam::Key(key_index));
-    EXPECT_EQ(pose_between_factor->key2(), gtsam::Key(key_index + 1));
+    EXPECT_EQ(pose_between_factor->key2(), gtsam::Key((key_index + 1) * 2));
   }
 
   lc::Time time(int index) { return measurements_[index].timestamp; }
@@ -121,8 +122,12 @@ TEST_F(StandstillFactorAdderTest, PoseAndVelocityFactors) {
   AddMeasurements();
   // Add first factors
   EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
-  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(0, 0);
-  // EXPECT_SAME_POSE_BETWEEN_FACTOR(1, 0);
+  // Keys and their indices:
+  // pose_0: 0, velocity_0: 1
+  // Factors and their indices:
+  // pose_between: 0, velocity_prior: 1
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 1);
 }
 
 // Run all the tests that were declared with TEST()

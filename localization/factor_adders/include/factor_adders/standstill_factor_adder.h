@@ -85,12 +85,12 @@ int StandstillFactorAdder<PoseVelocityNodeAdderType>::AddFactorsForSingleMeasure
   const localization_measurements::StandstillMeasurement& standstill_measurement,
   gtsam::NonlinearFactorGraph& factors) {
   int num_factors_added = 0;
-  if (params_.add_velocity_prior) {
-    if (AddZeroVelocityPrior(standstill_measurement.timestamp, factors)) ++num_factors_added;
-  }
   if (params_.add_pose_between_factor) {
     if (AddZeroRelativePoseFactor(standstill_measurement.previous_timestamp, standstill_measurement.timestamp, factors))
       ++num_factors_added;
+  }
+  if (params_.add_velocity_prior) {
+    if (AddZeroVelocityPrior(standstill_measurement.timestamp, factors)) ++num_factors_added;
   }
   return num_factors_added;
 }

@@ -1,7 +1,7 @@
   - test stnadstill factor adder???
-    - add separate constructor to enable/disable pose or vel factors! (A)
-    - make sure pose and vel priors added!
-      - make sure only pose and ony vel or neither added as desired!
+    - test noise values! (AA)
+    - test vel only! (AB)
+    - test pose only! (AC)
 
   - implement loc factor adder!
     - move graph action completer here if needed!
