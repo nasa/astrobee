@@ -45,8 +45,11 @@ namespace graph_optimizer {
 // generates visual-odometry factors using image measurements. A VIO graph will solve for Pose/Velocity/IMU Bias (PVB)
 // values at different timestamps, so it will also contain a PVB NodeAdder that creates timestamped PVB nodes for the
 // visual-odometry factors and links these nodes using IMU measurements. See the FactorAdder and NodeAdder packages for
-// more information and different types of FactorAdders and NodeAdders. Acts as a base class for the
-// SlidingWindowGraphOptimizer.
+// more information and different types of FactorAdders and NodeAdders.
+// Maintains a set of nodes used for optimization.
+// All NodeAdders added to the GraphOptimizer should be constructed using
+// the GraphOptimizer's nodes (accessable with the nodes() member function).
+// Acts as a base class for the SlidingWindowGraphOptimizer.
 class GraphOptimizer {
  public:
   explicit GraphOptimizer(const GraphOptimizerParams& params);
@@ -92,6 +95,11 @@ class GraphOptimizer {
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
 
+  // Returns a shared pointer to the nodes used by the graph optimizer.
+  // All node adders added to the graph optimizer should be constructed
+  // with these nodes.
+  std::shared_ptr Nodes() nodes();
+
  private:
   // Optional validity check for graph before optimizing.
   // If this fails, no optimization is performed.
@@ -129,6 +137,7 @@ class GraphOptimizer {
   GraphOptimizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
   gtsam::NonlinearFactorGraph factors_;
+  std::shared_ptr<nodes::Nodes> nodes_;
   std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;
   std::vector<std::shared_ptr<node_adders::NodeAdder>> node_adders_;
   localization_common::StatsLogger stats_logger_;

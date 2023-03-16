@@ -75,8 +75,7 @@ const int GraphOptimizer::num_factors() const { return factors_.size(); }
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
-  // TODO(rsoussan): get this from nodes
-  factors.saveGraph(of, *values_);
+  factors.saveGraph(of, nodes_->values());
 }
 
 bool GraphOptimizer::Optimize() {
@@ -88,12 +87,12 @@ bool GraphOptimizer::Optimize() {
   }
 
   // Optimize
-  gtsam::LevenbergMarquardtOptimizer optimizer(factors, *values_, levenberg_marquardt_params_);
+  gtsam::LevenbergMarquardtOptimizer optimizer(factors, nodes_->values(), levenberg_marquardt_params_);
   bool successful_optimization = true;
   optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg
   try {
-    *values_ = optimizer.optimize();
+    nodes_->values() = optimizer.optimize();
   } catch (gtsam::IndeterminantLinearSystemException) {
     LogError("Optimize: Graph optimization failed, indeterminant linear system.");
     successful_optimization = false;
@@ -127,12 +126,10 @@ int GraphOptimizer::AddFactors(const localization_common::Time start_time, const
   return num_added_factors;
 }
 
-
 double TotalGraphError() const {
   double total_error = 0;
   for (const auto& factor : factors_) {
-    // TODO(rsoussan): get values from somewhere else!!
-    const double error = factor->error(values_);
+    const double error = factor->error(nodes_->values());
     total_error += error;
   }
   return total_error;
