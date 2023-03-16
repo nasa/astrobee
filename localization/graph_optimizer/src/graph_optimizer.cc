@@ -31,25 +31,6 @@ GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
   AddAveragersAndTimers();
 }
 
-void GraphOptimizer::SetOptimizationParams() {
-  // Initialize lm params
-  if (params_.verbose) {
-    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
-    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
-  }
-  if (params_.use_ceres_params) {
-    gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
-  }
-
-  levenberg_marquardt_params_.maxIterations = params_.max_iterations;
-}
-
-void GraphOptimizer::AddAveragersAndTimers() {
-  stats_averager_.AddTimer(optimization_timer_);
-  stats_averager_.AddAverager(iterations_averager_);
-  stats_averager_.AddAverager(total_error_averager_);
-}
-
 void GraphOptimizer::AddNodeAdder(std::shared_ptr<na::NodeAdder> node_adder) {
   node_adders_.emplace_back(std::move(node_adder));
 }
@@ -58,24 +39,12 @@ void GraphOptimizer::AddFactorAdder(std::shared_ptr<fa::FactorAdder> factor_adde
   factor_adders_.emplace_back(std::move(factor_adder));
 }
 
-bool GraphOptimizer::ValidGraph() const { return true; }
-
-void GraphOptimizer::Print() const {
-  factors_.print();
-  stats_logger.Log();
-}
-
-const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
-
-const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors_; }
-
-gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors_; }
-
-const int GraphOptimizer::num_factors() const { return factors_.size(); }
-
-void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
-  std::ofstream of(output_path.c_str());
-  factors.saveGraph(of, nodes_->values());
+int GraphOptimizer::AddFactors(const localization_common::Time start_time, const localization_common::Time end_time) {
+  int num_added_factors = 0;
+  for (const auto& factor_adder : factor_adders_) {
+    num_added_factors += factor_adder->AddFactors(start_time, end_time, factors_);
+  }
+  return num_added_factors;
 }
 
 bool GraphOptimizer::Optimize() {
@@ -87,7 +56,7 @@ bool GraphOptimizer::Optimize() {
   }
 
   // Optimize
-  gtsam::LevenbergMarquardtOptimizer optimizer(factors, nodes_->values(), levenberg_marquardt_params_);
+  gtsam::LevenbergMarquardtOptimizer optimizer(factors_, nodes_->values(), levenberg_marquardt_params_);
   bool successful_optimization = true;
   optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg
@@ -118,20 +87,51 @@ bool GraphOptimizer::Optimize() {
   return successful_optimization;
 }
 
-int GraphOptimizer::AddFactors(const localization_common::Time start_time, const localization_common end_time) {
-  int num_added_factors = 0;
-  for (const auto& factor_adder : factor_adders_) {
-    num_added_factors += factor_adder->AddFactors(start_time, end_time, factors_);
-  }
-  return num_added_factors;
-}
+const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors_; }
 
-double TotalGraphError() const {
+gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors_; }
+
+const int GraphOptimizer::num_factors() const { return factors_.size(); }
+
+const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
+
+double GraphOptimizer::TotalGraphError() const {
   double total_error = 0;
   for (const auto& factor : factors_) {
     const double error = factor->error(nodes_->values());
     total_error += error;
   }
   return total_error;
+}
+
+bool GraphOptimizer::ValidGraph() const { return true; }
+
+void GraphOptimizer::Print() const {
+  factors_.print();
+  stats_logger_.Log();
+}
+
+void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
+  std::ofstream of(output_path.c_str());
+  factors_.saveGraph(of, nodes_->values());
+}
+
+void GraphOptimizer::SetOptimizationParams() {
+  // Initialize lm params
+  if (params_.verbose) {
+    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
+    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
+  }
+  if (params_.use_ceres_params) {
+    gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
+  }
+
+  levenberg_marquardt_params_.maxIterations = params_.max_iterations;
+}
+
+void GraphOptimizer::AddAveragersAndTimers() {
+  stats_logger_.AddTimer(optimization_timer_);
+  stats_logger_.AddAverager(iterations_averager_);
+  stats_logger_.AddAverager(total_error_averager_);
 }
 }  // namespace graph_optimizer

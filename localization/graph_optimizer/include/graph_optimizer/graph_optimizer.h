@@ -22,6 +22,7 @@
 #include <factor_adders/factor_adder.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <node_adders/node_adder.h>
+#include <nodes/nodes.h>
 #include <localization_common/stats_logger.h>
 #include <localization_common/time.h>
 
@@ -71,13 +72,10 @@ class GraphOptimizer {
   // Return the number of factors added by the factor adders, not including the relative factors added by the node
   // adders.
   // TODO(rsoussan): Return both?
-  int AddFactors(const localization_common::Time start_time, const localization_common end_time);
+  int AddFactors(const localization_common::Time start_time, const localization_common::Time end_time);
 
   // Performs Levenberg-Marquardt nonlinear optimization using GTSAM on the factor graph.
   bool Optimize();
-
-  // Adds factors and nodes to the graph within the provided time range and optimizes the graph.
-  virtual bool AddFactorsAndOptimize(const localization_common::Time start_time, const localization_common end_time);
 
   // Returns set of factors currently in the graph.
   const gtsam::NonlinearFactorGraph& factors() const;
@@ -88,19 +86,17 @@ class GraphOptimizer {
   // Returns number of factors currently in the graph.
   const int num_factors() const;
 
-  // Saves the graph to a dot file, can be used to generate visual representation
-  // of the graph.
-  void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
-
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
 
   // Returns a shared pointer to the nodes used by the graph optimizer.
   // All node adders added to the graph optimizer should be constructed
   // with these nodes.
-  std::shared_ptr Nodes() nodes();
+  std::shared_ptr<nodes::Nodes> Nodes();
 
- private:
+  // Sum of factor errors for each factor in the graph
+  double TotalGraphError() const;
+
   // Optional validity check for graph before optimizing.
   // If this fails, no optimization is performed.
   // Default behavior always returns true.
@@ -109,14 +105,16 @@ class GraphOptimizer {
   // Prints factor graph information and logs stats.
   virtual void Print() const;
 
+  // Saves the graph to a dot file, can be used to generate visual representation
+  // of the graph.
+  void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
+
+ private:
   // Set optimization params based on provided GraphOptimizerParams
-  void SetParams();
+  void SetOptimizationParams();
 
   // Add averagers and timers for logging
   void AddAveragersAndTimers();
-
-  // Sum of factor errors for each factor in the graph
-  double TotalGraphError() const;
 
   // Serialization function
   friend class boost::serialization::access;
@@ -125,6 +123,7 @@ class GraphOptimizer {
     ar& BOOST_SERIALIZATION_NVP(params_);
     ar& BOOST_SERIALIZATION_NVP(levenberg_marquardt_params_);
     ar& BOOST_SERIALIZATION_NVP(factors_);
+    ar& BOOST_SERIALIZATION_NVP(nodes_);
     ar& BOOST_SERIALIZATION_NVP(factor_adders_);
     ar& BOOST_SERIALIZATION_NVP(node_adders_);
     ar& BOOST_SERIALIZATION_NVP(stats_logger_);
