@@ -60,7 +60,7 @@ class SimplePoseVelocityNodeAdder : public na::NodeAdder {
 
 class StandstillFactorAdderTest : public ::testing::Test {
  public:
-  StandstillFactorAdderTest() {}
+  StandstillFactorAdderTest() { node_adder_.reset(new SimplePoseVelocityNodeAdder()); }
 
   void SetUp() final {}
 
@@ -73,11 +73,36 @@ class StandstillFactorAdderTest : public ::testing::Test {
     }
   }
 
-  void EXPECT_SAME_VELOCITY_PRIOR_FACTOR(const int index) {
-    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factors_[index].get());
+  void Initialize(const fa::StandstillFactorAdderParams& params) {
+    factor_adder_.reset(new fa::StandstillFactorAdder<SimplePoseVelocityNodeAdder>(params, node_adder_));
+  }
+
+  fa::StandstillFactorAdderParams DefaultParams() {
+    fa::StandstillFactorAdderParams params;
+    params.enabled = true;
+    params.huber_k = 1.345;
+    params.add_velocity_prior = true;
+    params.add_pose_between_factor = true;
+    params.prior_velocity_stddev = 0.1;
+    params.pose_between_factor_translation_stddev = 0.2;
+    params.pose_between_factor_rotation_stddev = 0.3;
+    return params;
+  }
+
+  void EXPECT_SAME_VELOCITY_PRIOR_FACTOR(const int factor_index, const int key_index) {
+    const auto velocity_prior_factor =
+      dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factors_[factor_index].get());
     ASSERT_TRUE(velocity_prior_factor);
     EXPECT_MATRIX_NEAR(velocity_prior_factor->prior(), Eigen::Vector3d::Zero(), 1e-6);
-    EXPECT_EQ(velocity_prior_factor->key(), velocity_key(index));
+    EXPECT_EQ(velocity_prior_factor->key(), velocity_key(key_index));
+  }
+
+  void EXPECT_SAME_POSE_BETWEEN_FACTOR(const int factor_index, const int key_index) {
+    const auto pose_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factors_[factor_index].get());
+    ASSERT_TRUE(pose_between_factor);
+    EXPECT_MATRIX_NEAR(pose_between_factor->measured(), Eigen::Isometry3d::Identity(), 1e-6);
+    EXPECT_EQ(pose_between_factor->key1(), pose_key(key_index));
+    EXPECT_EQ(pose_between_factor->key2(), pose_key(key_index + 1));
   }
 
   lc::Time time(int index) { return measurements_[index].timestamp; }
@@ -88,13 +113,20 @@ class StandstillFactorAdderTest : public ::testing::Test {
   gtsam::Key pose_key(int index) { return gtsam::Key(index * 2); }
 
   std::unique_ptr<fa::StandstillFactorAdder<SimplePoseVelocityNodeAdder>> factor_adder_;
+  std::shared_ptr<SimplePoseVelocityNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
 
  private:
   std::vector<lm::StandstillMeasurement> measurements_;
 };
 
-TEST_F(StandstillFactorAdderTest, AddMeasurements) {}
+TEST_F(StandstillFactorAdderTest, PoseAndVelocityFactors) {
+  auto params = DefaultParams();
+  Initialize(params);
+  AddMeasurements();
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

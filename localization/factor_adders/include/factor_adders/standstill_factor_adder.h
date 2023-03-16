@@ -92,6 +92,7 @@ int StandstillFactorAdder<PoseVelocityNodeAdderType>::AddFactorsForSingleMeasure
     if (AddZeroRelativePoseFactor(standstill_measurement.previous_timestamp, standstill_measurement.timestamp, factors))
       ++num_factors_added;
   }
+  return num_factors_added;
 }
 
 template <typename PoseVelocityNodeAdderType>
