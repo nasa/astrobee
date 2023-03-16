@@ -22,6 +22,7 @@
 #include <localization_common/utilities.h>
 #include <localization_measurements/standstill_measurement.h>
 #include <node_adders/node_adder.h>
+#include <node_adders/utilities.h>
 
 #include <gtest/gtest.h>
 
@@ -76,6 +77,23 @@ class StandstillFactorAdderTest : public ::testing::Test {
 
   void Initialize(const fa::StandstillFactorAdderParams& params) {
     factor_adder_.reset(new fa::StandstillFactorAdder<SimplePoseVelocityNodeAdder>(params, node_adder_));
+    // Create zero velocity noise
+    const gtsam::Vector3 velocity_prior_noise_sigmas(
+      (gtsam::Vector(3) << params.prior_velocity_stddev, params.prior_velocity_stddev, params.prior_velocity_stddev)
+        .finished());
+    zero_velocity_noise_ = localization_common::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+      params.huber_k);
+
+    // Create zero relative pose noise
+    const gtsam::Vector6 pose_between_noise_sigmas(
+      (gtsam::Vector(6) << params.pose_between_factor_rotation_stddev, params.pose_between_factor_rotation_stddev,
+       params.pose_between_factor_rotation_stddev, params.pose_between_factor_translation_stddev,
+       params.pose_between_factor_translation_stddev, params.pose_between_factor_translation_stddev)
+        .finished());
+    zero_relative_pose_noise_ = localization_common::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_between_noise_sigmas)),
+      params.huber_k);
   }
 
   fa::StandstillFactorAdderParams DefaultParams() {
@@ -90,12 +108,24 @@ class StandstillFactorAdderTest : public ::testing::Test {
     return params;
   }
 
+  // TODO(rsoussan): Get from common location, share with pose_node_adder test
+  template <typename FactorPtrType>
+  void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::Matrix& covariance) {
+    EXPECT_MATRIX_NEAR(na::Covariance(factor->noiseModel()), covariance, 1e-6);
+  }
+
+  template <typename FactorPtrType>
+  void EXPECT_SAME_NOISE(const FactorPtrType factor, const gtsam::SharedNoiseModel noise) {
+    EXPECT_SAME_NOISE(factor, na::Covariance(noise));
+  }
+
   void EXPECT_SAME_VELOCITY_PRIOR_FACTOR(const int factor_index, const int key_index) {
     const auto velocity_prior_factor =
       dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factors_[factor_index].get());
     ASSERT_TRUE(velocity_prior_factor);
     EXPECT_MATRIX_NEAR(velocity_prior_factor->prior(), Eigen::Vector3d::Zero(), 1e-6);
     EXPECT_EQ(velocity_prior_factor->key(), gtsam::Key(key_index));
+    EXPECT_SAME_NOISE(velocity_prior_factor, zero_velocity_noise_);
   }
 
   void EXPECT_SAME_POSE_BETWEEN_FACTOR(const int factor_index, const int key_index) {
@@ -104,6 +134,7 @@ class StandstillFactorAdderTest : public ::testing::Test {
     EXPECT_MATRIX_NEAR(pose_between_factor->measured(), Eigen::Isometry3d::Identity(), 1e-6);
     EXPECT_EQ(pose_between_factor->key1(), gtsam::Key(key_index));
     EXPECT_EQ(pose_between_factor->key2(), gtsam::Key((key_index + 2)));
+    EXPECT_SAME_NOISE(pose_between_factor, zero_relative_pose_noise_);
   }
 
   lc::Time time(int index) { return measurements_[index].timestamp; }
@@ -111,6 +142,8 @@ class StandstillFactorAdderTest : public ::testing::Test {
   std::unique_ptr<fa::StandstillFactorAdder<SimplePoseVelocityNodeAdder>> factor_adder_;
   std::shared_ptr<SimplePoseVelocityNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
+  gtsam::SharedNoiseModel zero_velocity_noise_;
+  gtsam::SharedNoiseModel zero_relative_pose_noise_;
 
  private:
   std::vector<lm::StandstillMeasurement> measurements_;
@@ -122,13 +155,98 @@ TEST_F(StandstillFactorAdderTest, PoseAndVelocityFactors) {
   AddMeasurements();
   // Add first factors
   EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
+  EXPECT_EQ(factors_.size(), 2);
   // Keys and their indices:
   // pose_0: 0, velocity_0: 1
   // pose_1: 2, velocity_1: 3
   // Factors and their indices:
   // pose_between: 0, velocity_prior: 1
   EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
+  // Use velocity_1 key since velocity prior is added to most recent timestamp
+  // in standstill measurement
   EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 3);
+  // Add 2nd and 3rd factors
+  EXPECT_EQ(factor_adder_->AddFactors((time(0) + time(1)) / 2.0, (time(2) + time(3)) / 2.0, factors_), 4);
+  EXPECT_EQ(factors_.size(), 6);
+  // Keys and their indices:
+  // pose_0: 0, velocity_0: 1
+  // pose_1: 2, velocity_1: 3
+  // pose_2: 4, velocity_1: 5
+  // pose_3: 6, velocity_1: 7
+  // Factors and their indices:
+  // pose_between: 0, velocity_prior: 1
+  // pose_between: 2, velocity_prior: 3
+  // pose_between: 4, velocity_prior: 5
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 3);
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(2, 2);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(3, 5);
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(4, 4);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(5, 7);
+}
+
+TEST_F(StandstillFactorAdderTest, PoseOnlyFactors) {
+  auto params = DefaultParams();
+  params.add_velocity_prior = false;
+  Initialize(params);
+  AddMeasurements();
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  // Keys and their indices:
+  // pose_0: 0, velocity_0: 1
+  // pose_1: 2, velocity_1: 3
+  // Factors and their indices:
+  // pose_between: 0
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
+  // Add 2nd and 3rd factors
+  EXPECT_EQ(factor_adder_->AddFactors((time(0) + time(1)) / 2.0, (time(2) + time(3)) / 2.0, factors_), 2);
+  EXPECT_EQ(factors_.size(), 3);
+  // Keys and their indices:
+  // pose_0: 0, velocity_0: 1
+  // pose_1: 2, velocity_1: 3
+  // pose_2: 4, velocity_1: 5
+  // pose_3: 6, velocity_1: 7
+  // Factors and their indices:
+  // pose_between: 0
+  // pose_between: 1
+  // pose_between: 2
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(1, 2);
+  EXPECT_SAME_POSE_BETWEEN_FACTOR(2, 4);
+}
+
+TEST_F(StandstillFactorAdderTest, VelocityOnlyFactors) {
+  auto params = DefaultParams();
+  params.add_pose_between_factor = false;
+  Initialize(params);
+  AddMeasurements();
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  // Keys and their indices:
+  // pose_0: 0, velocity_0: 1
+  // pose_1: 2, velocity_1: 3
+  // Factors and their indices:
+  // velocity_prior: 0
+  // Use velocity_1 key since velocity prior is added to most recent timestamp
+  // in standstill measurement
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(0, 3);
+  // Add 2nd and 3rd factors
+  EXPECT_EQ(factor_adder_->AddFactors((time(0) + time(1)) / 2.0, (time(2) + time(3)) / 2.0, factors_), 2);
+  EXPECT_EQ(factors_.size(), 3);
+  // Keys and their indices:
+  // pose_0: 0, velocity_0: 1
+  // pose_1: 2, velocity_1: 3
+  // pose_2: 4, velocity_1: 5
+  // pose_3: 6, velocity_1: 7
+  // Factors and their indices:
+  // velocity_prior: 0
+  // velocity_prior: 1
+  // velocity_prior: 2
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(0, 3);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 5);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(2, 7);
 }
 
 // Run all the tests that were declared with TEST()

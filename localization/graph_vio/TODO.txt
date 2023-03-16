@@ -1,7 +1,5 @@
   - test stnadstill factor adder???
-    - test noise values! (AA)
     - test vel only! (AB)
-    - test pose only! (AC)
 
   - implement loc factor adder!
     - move graph action completer here if needed!
