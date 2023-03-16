@@ -49,7 +49,7 @@ Depends: ${misc:Depends}
   ${ros-python},
   astrobee-config (>= ${binary:Version}),
   astrobee-comms (>= ${binary:Version}),
-  libalvar2 (>=2.0), libdbow21 (>=0.1), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
+  libalvar2 (>=2.0), libdbow21 (>=0.1-6), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
   libceres1 (>=1.0), rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
   libdecomputil0 (>=0.1), libjps3d0 (>=0.1),
   libluajit-5.1-2,
