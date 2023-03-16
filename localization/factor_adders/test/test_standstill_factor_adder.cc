@@ -68,7 +68,7 @@ class StandstillFactorAdderTest : public ::testing::Test {
   void AddMeasurements() {
     constexpr int kNumMeasurements = 10;
     for (int i = 0; i < kNumMeasurements; ++i) {
-      const lm::StandstillMeasurement measurement(i, i - 1);
+      const lm::StandstillMeasurement measurement(i + 1, i);
       measurements_.emplace_back(measurement);
       factor_adder_->AddMeasurement(measurement);
     }
@@ -103,7 +103,7 @@ class StandstillFactorAdderTest : public ::testing::Test {
     ASSERT_TRUE(pose_between_factor);
     EXPECT_MATRIX_NEAR(pose_between_factor->measured(), Eigen::Isometry3d::Identity(), 1e-6);
     EXPECT_EQ(pose_between_factor->key1(), gtsam::Key(key_index));
-    EXPECT_EQ(pose_between_factor->key2(), gtsam::Key((key_index + 1) * 2));
+    EXPECT_EQ(pose_between_factor->key2(), gtsam::Key((key_index + 2)));
   }
 
   lc::Time time(int index) { return measurements_[index].timestamp; }
@@ -124,10 +124,11 @@ TEST_F(StandstillFactorAdderTest, PoseAndVelocityFactors) {
   EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
   // Keys and their indices:
   // pose_0: 0, velocity_0: 1
+  // pose_1: 2, velocity_1: 3
   // Factors and their indices:
   // pose_between: 0, velocity_prior: 1
   EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
-  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 1);
+  EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 3);
 }
 
 // Run all the tests that were declared with TEST()
