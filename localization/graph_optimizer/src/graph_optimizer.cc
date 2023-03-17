@@ -126,11 +126,14 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   factors_.saveGraph(of, nodes_->values());
 }
 
-boost::optional<const gtsam::Marginals&> marginals() const { return marginals_; }
+boost::optional<const gtsam::Marginals&> GraphOptimizer::marginals() const {
+  if (!marginals_) return boost::none;
+  return *marginals_;
+}
 
 void GraphOptimizer::CalculateMarginals() {
   try {
-    marginals_ = gtsam::Marginals(graph_, nodes_->values(), marginals_factorization_);
+    marginals_ = gtsam::Marginals(factors_, nodes_->values(), marginals_factorization_);
   } catch (gtsam::IndeterminantLinearSystemException) {
     LogError("Update: Indeterminant linear system error during computation of marginals.");
     marginals_ = boost::none;

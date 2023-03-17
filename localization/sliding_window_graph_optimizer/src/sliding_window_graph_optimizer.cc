@@ -44,12 +44,6 @@ bool SlidingWindowGraphOptimizer::Update() {
     }
   }
 
-  // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
-  // TODO(rsoussan): Remove this now that marginalization occurs before optimization?
-  if (params_.add_marginal_factors) {
-    SetOrdering();
-  }
-
   GraphOptimizer::Optimize();
   end_time_ = EndTime();
   update_timer_.Stop();
