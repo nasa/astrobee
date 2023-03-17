@@ -21,6 +21,7 @@
 
 #include <graph_optimizer/graph_optimizer.h>
 #include <localization_common/time.h>
+#include <node_adders/sliding_window_node_adder.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
 
 #include <boost/serialization/serialization.hpp>
@@ -49,7 +50,7 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // for the node adder when sliding the window for the graph.
   // If this function is used, the node adder does not need to be added with
   // the GraphOptimizer::AddNodeAdder() function.
-  void AddSlidingWindowNodeAdder(std::shared_ptr<na::NodeAdder> sliding_window_node_adder);
+  void AddSlidingWindowNodeAdder(std::shared_ptr<node_adders::SlidingWindowNodeAdder> sliding_window_node_adder);
 
   // Slides the window and optimizes the graph.
   // See SlideWindow() function comments for more details on sliding the window.
@@ -93,7 +94,7 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(params_);
-    ar& BOOST_SERIALIZATION_NVP(sliding_window_node_adder_);
+    ar& BOOST_SERIALIZATION_NVP(sliding_window_node_adders_);
     ar& BOOST_SERIALIZATION_NVP(end_time_);
     ar& BOOST_SERIALIZATION_NVP(update_timer_);
   }

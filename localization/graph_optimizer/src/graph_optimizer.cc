@@ -105,6 +105,12 @@ const int GraphOptimizer::num_factors() const { return factors_.size(); }
 
 const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
+std::shared_ptr<nodes::Nodes> GraphOptimizer::nodes() { return nodes_; }
+
+const gtsam::Values& GraphOptimizer::values() const { return nodes_->values(); }
+
+localization_common::StatsLogger& GraphOptimizer::stats_logger() { return stats_logger_; }
+
 double GraphOptimizer::TotalGraphError() const {
   double total_error = 0;
   for (const auto& factor : factors_) {

@@ -94,10 +94,19 @@ class GraphOptimizer {
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
 
+  // LevenbergMarquardt params used for nonlinear optimization.
+  gtsam::LevenbergMarquardtParams& levenberg_marquardt_params();
+
   // Returns a shared pointer to the nodes used by the graph optimizer.
   // All node adders added to the graph optimizer should be constructed
   // with these nodes.
-  std::shared_ptr<nodes::Nodes> Nodes();
+  std::shared_ptr<nodes::Nodes> nodes();
+
+  // Returns a const reference to the gtsam Values used within the Nodes object.
+  const gtsam::Values& values() const;
+
+  // Returns a reference to the stats logger
+  localization_common::StatsLogger& stats_logger();
 
   // Sum of factor errors for each factor in the graph
   double TotalGraphError() const;
@@ -114,7 +123,6 @@ class GraphOptimizer {
   // of the graph.
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
 
- protected:
   // Returns marginals if they have been calculated.
   boost::optional<const gtsam::Marginals&> marginals() const;
 

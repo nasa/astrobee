@@ -16,19 +16,23 @@
  * under the License.
  */
 
-#include <graph_optimizer/sliding_window_graph_optimizer.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
 
-namespace graph_optimizer {
+#include <gtsam/nonlinear/LinearContainerFactor.h>
+
+namespace sliding_window_graph_optimizer {
 namespace lc = localization_common;
+namespace na = node_adders;
 
 SlidingWindowGraphOptimizer::SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params)
     : params_(params), GraphOptimizer(params) {
   AddAveragersAndTimers();
 }
 
-void SlidingWindowGraphOptimizer::AddSlidingWindowNodeAdder(std::shared_ptr<na::NodeAdder> sliding_window_node_adder) {
+void SlidingWindowGraphOptimizer::AddSlidingWindowNodeAdder(
+  std::shared_ptr<na::SlidingWindowNodeAdder> sliding_window_node_adder) {
   sliding_window_node_adders_.emplace_back(sliding_window_node_adder);
   AddNodeAdder(sliding_window_node_adder);
 }
@@ -62,16 +66,16 @@ bool SlidingWindowGraphOptimizer::SlideWindow(const gtsam::Marginals& marginals,
   const auto new_start_time = std::min(end_time, *ideal_new_start_time);
 
   const auto old_keys = OldKeys(new_start_time);
-  const auto old_factors = RemoveOldFactors(old_keys, graph_);
+  const auto old_factors = lc::RemoveOldFactors(old_keys, factors());
   if (params_.add_marginal_factors) {
-    const auto marginal_factors = MarginalFactors(old_keys, old_factors, gtsam::EliminateQR);
+    const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
-      graph_.push_back(marginal_factor);
+      factors().push_back(marginal_factor);
     }
   }
 
   for (auto& sliding_window_node_adder : sliding_window_node_adders_)
-    sliding_window_node_adder->SlideWindow(new_start_time, marginals, old_keys, params_.huber_k, graph_);
+    sliding_window_node_adder->SlideWindow(new_start_time, marginals, old_keys, params_.huber_k, factors());
   return true;
 }
 
@@ -86,10 +90,10 @@ gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::MarginalFactors(
   }
 
   // Linearize Graph
-  const auto linearized_graph = old_factors.linearize(*values_);
+  const auto linearized_graph = old_factors.linearize(values());
   const auto linear_marginal_factors =
     *(linearized_graph->eliminatePartialMultifrontal(old_keys, eliminate_function).second);
-  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, *values_);
+  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, values());
 }
 
 boost::optional<lc::Time> SlidingWindowGraphOptimizer::SlideWindowNewStartTime() const {
@@ -107,7 +111,7 @@ boost::optional<lc::Time> SlidingWindowGraphOptimizer::SlideWindowNewStartTime()
 gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common::Time oldest_allowed_time) const {
   gtsam::KeyVector all_old_keys;
   for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
-    const auto old_keys = sliding_window_node_adder->OldKeys(oldest_allowed_time, graph_);
+    const auto old_keys = sliding_window_node_adder->OldKeys(oldest_allowed_time, factors());
     all_old_keys.insert(all_old_keys.end(), old_keys.begin(), old_keys.end());
   }
   return all_old_keys;
@@ -128,12 +132,12 @@ void SlidingWindowGraphOptimizer::SetOrdering() {
   const auto new_start_time = SlideWindowNewStartTime();
   if (new_start_time) {
     const auto old_keys = OldKeys(*new_start_time);
-    const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
-    levenberg_marquardt_params_.setOrdering(ordering);
+    const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(factors(), old_keys);
+    levenberg_marquardt_params().setOrdering(ordering);
   } else {
-    levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
+    levenberg_marquardt_params().orderingType = gtsam::Ordering::COLAMD;
   }
 }
 
-roid SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger_.AddTimer(update_timer_); }
-}  // namespace graph_optimizer
+void SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger().AddTimer(update_timer_); }
+}  // namespace sliding_window_graph_optimizer
