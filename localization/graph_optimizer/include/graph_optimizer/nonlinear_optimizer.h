@@ -33,7 +33,7 @@ class NonlinearOptimizer : public Optimizer {
   explicit NonlinearOptimizer(const NonlinearOptimizerParams& params);
 
   // Default constructor for serialization only
-  NonlinearOptimizer() {}
+  NonlinearOptimizer() = default;
 
   virtual ~NonlinearOptimizer() = default;
 

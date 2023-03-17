@@ -43,11 +43,12 @@ class Optimizer {
   // By default uses the calculated marginals to compute the covariances.
   virtual boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const;
 
-  // Calculates marginals.
-  void CalculateMarginals(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values);
-
   // Returns marginals if they have been calculated.
   boost::optional<const gtsam::Marginals&> marginals() const;
+
+ protected:
+  // Calculates marginals.
+  void CalculateMarginals(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values);
 
  private:
   // Set solver used for calculating marginals.

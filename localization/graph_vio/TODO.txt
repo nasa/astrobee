@@ -10,12 +10,8 @@
   - test sliding window optimizer!
 
   - add optimizer base class! (A)
-        - calculate marginals after optimization for nonlinear optmizer
-          - also for sliding grah optimizer?
-        - update graph optimizer to call optimizer/remove uneeded things! (AB)
-            - TODO: how to access opt iterations????
-            - pass optmiizer on construction!!!
-              - add accesor to optmizer!
+          - TODO: how to access opt iterations????
+         - construct optimizer internally based on params!!! (AAA)
         - update sliding window graph optimizer to call optimizer/remove uneeded things! (AC)
         - make optimizer package!!
             - move optimizer, nonlinearoptimizer, and isam2 optimizer here!

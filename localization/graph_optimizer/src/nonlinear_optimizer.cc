@@ -23,7 +23,7 @@
 namespace graph_optimizer {
 namespace lc = localization_common;
 
-NonlinearOptimizer::NonlinearOptimizer(const NonlinearOptimizerParams& params) : params_(params) {
+NonlinearOptimizer::NonlinearOptimizer(const NonlinearOptimizerParams& params) : Optimizer(params), params_(params) {
   SetOptimizationParams();
 }
 
@@ -38,7 +38,7 @@ bool NonlinearOptimizer::Optimize(const gtsam::NonlinearFactorGraph& factors, gt
     values = optimizer.optimize();
     // Calculate marginals after optimizing so covariances and marginal factors
     // can be generated if desired.
-    CalculateMarginals();
+    CalculateMarginals(factors, values);
   } catch (gtsam::IndeterminantLinearSystemException) {
     LogError("Optimize: Graph optimization failed, indeterminant linear system.");
     return false;

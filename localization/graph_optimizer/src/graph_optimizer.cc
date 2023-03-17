@@ -17,7 +17,8 @@
  */
 
 #include <graph_optimizer/graph_optimizer.h>
-#include <graph_optimizer/optimizer.h>
+// #include <graph_optimizer/isam2_optimizer.h>
+#include <graph_optimizer/nonlinear_optimizer.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
@@ -26,8 +27,9 @@ namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace na = node_adders;
 
-GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<Optimizer> optimizer)
-    : params_(params), optimizer_(std::move(optimizer)), stats_logger_(params_.log_stats_on_destruction) {
+GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
+    : params_(params), stats_logger_(params_.log_stats_on_destruction) {
+  SetOptimizer();
   AddAveragersAndTimers();
 }
 
@@ -48,21 +50,16 @@ int GraphOptimizer::AddFactors(const localization_common::Time start_time, const
 }
 
 bool GraphOptimizer::Optimize() {
-  LogDebug("Optimize: Optimizing.");
-
   if (!ValidGraph()) {
     LogError("Optimize: Invalid graph, not optimizing.");
     return false;
   }
 
   // Optimize
+  LogDebug("Optimize: Optimizing.");
   optimization_timer_.Start();
   const bool successful_optimization = optimizer_->Optimize(factors_, nodes_->values());
   optimization_timer_.Stop();
-
-  // Calculate marginals after optimizing so covariances and marginal factors
-  // can be generated if desired.
-  if (successful_optimization) optimizer_->CalculateMarginals(factors_, nodes_->values());
 
   // iterations_averager_.Update(optimizer.iterations());
   total_error_averager_.Update(TotalGraphError());
@@ -108,6 +105,16 @@ void GraphOptimizer::Print() const {
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
   factors_.saveGraph(of, nodes_->values());
+}
+
+void GraphOptimizer::SetOptimizer() {
+  if (params_.optimizer == "nonlinear") {
+    optimizer_.reset(new NonlinearOptimizer(params_.nonlinear_optimizer));
+  } else if (params_.optimizer == "isam2") {
+    // optimizer_.reset(new ISAM2Optimizer(params_.isam2_optimizer));
+  } else {  // Default to nonlinear optimizer
+    optimizer_.reset(new NonlinearOptimizer(params_.nonlinear_optimizer));
+  }
 }
 
 void GraphOptimizer::AddAveragersAndTimers() {

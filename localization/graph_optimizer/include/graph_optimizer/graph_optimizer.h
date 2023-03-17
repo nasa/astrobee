@@ -49,7 +49,7 @@ namespace graph_optimizer {
 // Acts as a base class for the SlidingWindowGraphOptimizer.
 class GraphOptimizer {
  public:
-  explicit GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<Optimizer> optimizer);
+  explicit GraphOptimizer(const GraphOptimizerParams& params);
 
   // Default constructor for serialization only
   GraphOptimizer() {}
@@ -119,6 +119,9 @@ class GraphOptimizer {
   boost::optional<const gtsam::Marginals&> marginals() const;
 
  private:
+  // Sets optimizer to use based on params
+  void SetOptimizer();
+
   // Add averagers and timers for logging.
   void AddAveragersAndTimers();
 

@@ -56,6 +56,7 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/graph_optimizer.cc
+  src/nonlinear_optimizer.cc
   src/optimizer.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
