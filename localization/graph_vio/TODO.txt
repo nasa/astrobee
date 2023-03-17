@@ -1,25 +1,28 @@
-  - implement loc factor adder! (A)
+  - implement loc factor adder! (B)
     - move graph action completer here if needed!
-  - implement vo factor adder!
+    - test!
+  - implement vo factor adder! (C)
     - move graph action completer here if needed!
-  - test loc and vo factor adders?
+    - test!
   - TODO: implement others!
 
-- add parameter reader package!!!!
-  - how to unit test these??
+  - update sliding window optimizer! (AA)
+    - rename latesttimestamp to endtime (AA)
+        - rename for nodeadders? factoradders?
+    - clean up functions!
+    - clean up function comments
+    - compile!
+    - test!
 
-  - update graph optimizer!  (A)  
-   - add single nodes to graph optimizer!!! (AAA)
-      - construct in consctructor
-      - pass these around to each node updater!
-    - make sure this all compiles
-    - move serialization.cc back to graph optimizer?
+  - move calculate marginals to graph optimizer
+    - add interface for accessing covariances for a node!
+
+- move serialization.cc back to graph optimizer?
       - make graph optimizer depend on graph_Factors?
   - add test with graph optimizer, simple factor adder, and simple node updater!!
-  - inherit from graph optimizer for sliding window optimizer, 
-        - add total update time!
-  - " " with sliding window graph optimizer!
-  - rename newoldesttime to newstarttime in sliding window optimizer (AAB)
+- add parameter reader package!!!!
+  - how to unit test these??
+- add option to use isam in graph optimizer????
 
 - update factor adders with changes described below (A)
   - smart factor adder (AB)

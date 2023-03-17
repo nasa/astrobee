@@ -23,8 +23,11 @@
 #include <string>
 
 namespace sliding_window_graph_optimizer {
-struct SlidingWindowGraphOptimizerParams : public GraphOptimizerParams {
+struct SlidingWindowGraphOptimizerParams : public graph_optimizer::GraphOptimizerParams {
+  // Type of factorization used to calculate marginals. Either "qr" or "cholesky".
   std::string marginals_factorization;
+  // Add marginal factors to the graph after sliding the window.
+  // Marginal factors consist of linearized errors for factors removed after sliding the window.
   bool add_marginal_factors;
 };
 }  // namespace sliding_window_graph_optimizer
