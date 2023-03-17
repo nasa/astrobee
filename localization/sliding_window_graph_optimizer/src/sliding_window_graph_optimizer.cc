@@ -128,16 +128,5 @@ boost::optional<lc::Time> SlidingWindowGraphOptimizer::EndTime() const {
   return end_time;
 }
 
-void SlidingWindowGraphOptimizer::SetOrdering() {
-  const auto new_start_time = SlideWindowNewStartTime();
-  if (new_start_time) {
-    const auto old_keys = OldKeys(*new_start_time);
-    const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(factors(), old_keys);
-    levenberg_marquardt_params().setOrdering(ordering);
-  } else {
-    levenberg_marquardt_params().orderingType = gtsam::Ordering::COLAMD;
-  }
-}
-
 void SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger().AddTimer(update_timer_); }
 }  // namespace sliding_window_graph_optimizer

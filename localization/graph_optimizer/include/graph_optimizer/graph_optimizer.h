@@ -21,13 +21,12 @@
 
 #include <factor_adders/factor_adder.h>
 #include <graph_optimizer/graph_optimizer_params.h>
+#include <graph_optimizer/optimizer.h>
 #include <node_adders/node_adder.h>
 #include <nodes/nodes.h>
 #include <localization_common/stats_logger.h>
 #include <localization_common/time.h>
 
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <boost/serialization/serialization.hpp>
@@ -37,24 +36,20 @@
 #include <vector>
 
 namespace graph_optimizer {
-// Time-based factor graph optimizer that performs optimization using
-// Levenberg-Marquardt nonlinear least squares via GTSAM.
-// Uses FactorAdders to generate and add factors for a given time range to the graph
-// and NodeAdders to provide corresponding nodes for these factors at required timestamps.
-// Generally FactorAdders are measurement-based and generate factors for a certain type of measurement at given
-// timestamps. NodeAdders are also typically measurement-based and create linked nodes using relative factors that span
-// the graph. As an example, a Visual-Inertial Odometry (VIO) graph may contain an image-based FactorAdder that
-// generates visual-odometry factors using image measurements. A VIO graph will solve for Pose/Velocity/IMU Bias (PVB)
-// values at different timestamps, so it will also contain a PVB NodeAdder that creates timestamped PVB nodes for the
-// visual-odometry factors and links these nodes using IMU measurements. See the FactorAdder and NodeAdder packages for
-// more information and different types of FactorAdders and NodeAdders.
-// Maintains a set of nodes used for optimization.
-// All NodeAdders added to the GraphOptimizer should be constructed using
-// the GraphOptimizer's nodes (accessable with the nodes() member function).
+// Time-based factor graph optimizer that uses FactorAdders to generate and add factors for a given time range to the
+// graph and NodeAdders to provide corresponding nodes for these factors at required timestamps. Generally FactorAdders
+// are measurement-based and generate factors for a certain type of measurement at given timestamps. NodeAdders are also
+// typically measurement-based and create linked nodes using relative factors that span the graph. As an example, a
+// Visual-Inertial Odometry (VIO) graph may contain an image-based FactorAdder that generates visual-odometry factors
+// using image measurements. A VIO graph will solve for Pose/Velocity/IMU Bias (PVB) values at different timestamps, so
+// it will also contain a PVB NodeAdder that creates timestamped PVB nodes for the visual-odometry factors and links
+// these nodes using IMU measurements. See the FactorAdder and NodeAdder packages for more information and different
+// types of FactorAdders and NodeAdders. Maintains a set of nodes used for optimization. All NodeAdders added to the
+// GraphOptimizer should be constructed using the GraphOptimizer's nodes (accessable with the nodes() member function).
 // Acts as a base class for the SlidingWindowGraphOptimizer.
 class GraphOptimizer {
  public:
-  explicit GraphOptimizer(const GraphOptimizerParams& params);
+  explicit GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<Optimizer> optimizer);
 
   // Default constructor for serialization only
   GraphOptimizer() {}
@@ -75,7 +70,7 @@ class GraphOptimizer {
   // TODO(rsoussan): Return both?
   int AddFactors(const localization_common::Time start_time, const localization_common::Time end_time);
 
-  // Performs Levenberg-Marquardt nonlinear optimization using GTSAM on the factor graph.
+  // Performs optimization on the factor graph.
   bool Optimize();
 
   // Calculates the covariance matrix for the provided node's key.
@@ -93,9 +88,6 @@ class GraphOptimizer {
 
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
-
-  // LevenbergMarquardt params used for nonlinear optimization.
-  gtsam::LevenbergMarquardtParams& levenberg_marquardt_params();
 
   // Returns a shared pointer to the nodes used by the graph optimizer.
   // All node adders added to the graph optimizer should be constructed
@@ -127,16 +119,6 @@ class GraphOptimizer {
   boost::optional<const gtsam::Marginals&> marginals() const;
 
  private:
-  // Solve for marginals, required for calculating covariances.
-  // Can only be called after optimization has been performed.
-  void CalculateMarginals();
-
-  // Set optimization params based on provided GraphOptimizerParams.
-  void SetOptimizationParams();
-
-  // Set solver used for calculating marginals.
-  void SetMarginalsFactorization();
-
   // Add averagers and timers for logging.
   void AddAveragersAndTimers();
 
@@ -145,13 +127,10 @@ class GraphOptimizer {
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_NVP(params_);
-    ar& BOOST_SERIALIZATION_NVP(levenberg_marquardt_params_);
     ar& BOOST_SERIALIZATION_NVP(factors_);
     ar& BOOST_SERIALIZATION_NVP(nodes_);
     ar& BOOST_SERIALIZATION_NVP(factor_adders_);
     ar& BOOST_SERIALIZATION_NVP(node_adders_);
-    ar& BOOST_SERIALIZATION_NVP(marginals_);
-    ar& BOOST_SERIALIZATION_NVP(marginals_factorization_);
     ar& BOOST_SERIALIZATION_NVP(stats_logger_);
     ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
     ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
@@ -160,13 +139,11 @@ class GraphOptimizer {
   }
 
   GraphOptimizerParams params_;
-  gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
+  std::unique_ptr<Optimizer> optimizer_;
   gtsam::NonlinearFactorGraph factors_;
   std::shared_ptr<nodes::Nodes> nodes_;
   std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;
   std::vector<std::shared_ptr<node_adders::NodeAdder>> node_adders_;
-  boost::optional<gtsam::Marginals> marginals_;
-  gtsam::Marginals::Factorization marginals_factorization_;
   localization_common::StatsLogger stats_logger_;
 
   // Logging

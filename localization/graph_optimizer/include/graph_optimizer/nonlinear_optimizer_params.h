@@ -15,20 +15,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
-#define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#ifndef GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_PARAMS_H_
+#define GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_PARAMS_H_
 
-#include <graph_optimizer/nonlinear_optimizer_params.h>
+#include <graph_optimizer/optimizer_params.h>
 
 namespace graph_optimizer {
-struct GraphOptimizerParams : public NonlinearOptimizerParams {
-  // Huber k used for all factors
-  double huber_k;
-  // Log statistics after destruction
-  bool log_stats_on_destruction;
-  // Log factor graph info and stats after optimization
-  bool print_after_optimization;
+struct NonlinearOptimizerParams : public OptimizerParams {
+  // Maximum optimization iterations to perform
+  int max_iterations;
+  // Verbose printing for Levenberg-Marquardt optimization
+  bool verbose;
+  // Use ceres-style params for nonlinear optimization
+  bool use_ceres_params;
 };
 }  // namespace graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#endif  // GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_PARAMS_H_

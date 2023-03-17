@@ -6,11 +6,27 @@
     - test!
   - TODO: implement others!
 
-  - update sliding window optimizer! (AA)
-    - clean up functions!
-    - clean up function comments
-    - compile!
-    - test!
+  - test graph optimizer!
+  - test sliding window optimizer!
+
+  - add optimizer base class! (A)
+        - calculate marginals after optimization for nonlinear optmizer
+          - also for sliding grah optimizer?
+        - update graph optimizer to call optimizer/remove uneeded things! (AB)
+            - TODO: how to access opt iterations????
+            - pass optmiizer on construction!!!
+              - add accesor to optmizer!
+        - update sliding window graph optimizer to call optimizer/remove uneeded things! (AC)
+        - make optimizer package!!
+            - move optimizer, nonlinearoptimizer, and isam2 optimizer here!
+        - add isam2 optimizer! (AD)
+          - keep a copy of values, use values filter function to get newly added values (copy values before adding factors/nodes, filter out any values that were in the copy to get latest values to use for isam2)
+        - do the same thing for factors!
+          - copy factors before, only use factors in indices later than last copied factor!
+          - copy updated values to passed values!
+            - use getlinearizationpoint call!
+
+
 
 - move serialization.cc back to graph optimizer?
       - make graph optimizer depend on graph_Factors?
@@ -32,9 +48,6 @@
   - map-based pose adder (AD)
     - use pose node updater!
 - move post graph add actions to factor adders!
-- update graph_optimizer??? test??
-- remove graph_values package
-  - rename refs to values to nodes!
 - compile graph vio!
 - test graph vio!!! (AD)
 - compiple graph loc! (AB)

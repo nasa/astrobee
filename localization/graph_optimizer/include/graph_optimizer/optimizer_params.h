@@ -15,20 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
-#define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#ifndef GRAPH_OPTIMIZER_OPTIMIZER_PARAMS_H_
+#define GRAPH_OPTIMIZER_OPTIMIZER_PARAMS_H_
 
-#include <graph_optimizer/nonlinear_optimizer_params.h>
+#include <string>
 
 namespace graph_optimizer {
-struct GraphOptimizerParams : public NonlinearOptimizerParams {
-  // Huber k used for all factors
-  double huber_k;
-  // Log statistics after destruction
-  bool log_stats_on_destruction;
-  // Log factor graph info and stats after optimization
-  bool print_after_optimization;
+struct OptimizerParams {
+  // Type of factorization used to calculate marginals. Either "qr" or "cholesky".
+  std::string marginals_factorization;
 };
 }  // namespace graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#endif  // GRAPH_OPTIMIZER_OPTIMIZER_PARAMS_H_

@@ -17,6 +17,7 @@
  */
 
 #include <graph_optimizer/graph_optimizer.h>
+#include <graph_optimizer/optimizer.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
@@ -25,10 +26,8 @@ namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace na = node_adders;
 
-GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
-    : params_(params), stats_logger_(params_.log_stats_on_destruction) {
-  SetOptimizationParams();
-  SetMarginalsFactorization();
+GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<Optimizer> optimizer)
+    : params_(params), optimizer_(std::move(optimizer)), stats_logger_(params_.log_stats_on_destruction) {
   AddAveragersAndTimers();
 }
 
@@ -57,35 +56,15 @@ bool GraphOptimizer::Optimize() {
   }
 
   // Optimize
-  gtsam::LevenbergMarquardtOptimizer optimizer(factors_, nodes_->values(), levenberg_marquardt_params_);
-  bool successful_optimization = true;
   optimization_timer_.Start();
-  // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg
-  try {
-    nodes_->values() = optimizer.optimize();
-  } catch (gtsam::IndeterminantLinearSystemException) {
-    LogError("Optimize: Graph optimization failed, indeterminant linear system.");
-    successful_optimization = false;
-  } catch (gtsam::InvalidNoiseModel) {
-    LogError("Optimize: Graph optimization failed, invalid noise model.");
-    successful_optimization = false;
-  } catch (gtsam::InvalidMatrixBlock) {
-    LogError("Optimize: Graph optimization failed, invalid matrix block.");
-    successful_optimization = false;
-  } catch (gtsam::InvalidDenseElimination) {
-    LogError("Optimize: Graph optimization failed, invalid dense elimination.");
-    successful_optimization = false;
-  } catch (...) {
-    LogError("Optimize: Graph optimization failed.");
-    successful_optimization = false;
-  }
+  const bool successful_optimization = optimizer_->Optimize(factors_, nodes_->values());
   optimization_timer_.Stop();
 
   // Calculate marginals after optimizing so covariances and marginal factors
   // can be generated if desired.
-  if (successful_optimization) CalculateMarginals();
+  if (successful_optimization) optimizer_->CalculateMarginals(factors_, nodes_->values());
 
-  iterations_averager_.Update(optimizer.iterations());
+  // iterations_averager_.Update(optimizer.iterations());
   total_error_averager_.Update(TotalGraphError());
 
   if (params_.print_after_optimization) Print();
@@ -93,8 +72,7 @@ bool GraphOptimizer::Optimize() {
 }
 
 boost::optional<gtsam::Matrix> GraphOptimizer::Covariance(const gtsam::Key& key) const {
-  if (!marginals_) return boost::none;
-  return marginals_->marginalCovariance(key);
+  return optimizer_->Covariance(key);
 }
 
 const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors_; }
@@ -130,50 +108,6 @@ void GraphOptimizer::Print() const {
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
   factors_.saveGraph(of, nodes_->values());
-}
-
-boost::optional<const gtsam::Marginals&> GraphOptimizer::marginals() const {
-  if (!marginals_) return boost::none;
-  return *marginals_;
-}
-
-void GraphOptimizer::CalculateMarginals() {
-  try {
-    marginals_ = gtsam::Marginals(factors_, nodes_->values(), marginals_factorization_);
-  } catch (gtsam::IndeterminantLinearSystemException) {
-    LogError("Update: Indeterminant linear system error during computation of marginals.");
-    marginals_ = boost::none;
-  } catch (const std::exception& exception) {
-    LogError("Update: Computing marginals failed. " + std::string(exception.what()));
-    marginals_ = boost::none;
-  } catch (...) {
-    LogError("Update: Computing marginals failed.");
-    marginals_ = boost::none;
-  }
-}
-
-void GraphOptimizer::SetOptimizationParams() {
-  // Initialize lm params
-  if (params_.verbose) {
-    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
-    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
-  }
-  if (params_.use_ceres_params) {
-    gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
-  }
-
-  levenberg_marquardt_params_.maxIterations = params_.max_iterations;
-}
-
-void GraphOptimizer::SetMarginalsFactorization() {
-  if (params_.marginals_factorization == "qr") {
-    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
-  } else if (params_.marginals_factorization == "cholesky") {
-    marginals_factorization_ = gtsam::Marginals::Factorization::CHOLESKY;
-  } else {
-    LogError("GraphOptimizer: No marginals factorization entered, defaulting to qr.");
-    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
-  }
 }
 
 void GraphOptimizer::AddAveragersAndTimers() {

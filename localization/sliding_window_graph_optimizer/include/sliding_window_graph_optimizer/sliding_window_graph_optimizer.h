@@ -81,10 +81,6 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // of the sliding window node adders.
   boost::optional<localization_common::Time> EndTime() const;
 
-  // Order nodes in the graph for keys that will be marginalized.
-  // Allows for more efficient optimization.
-  void SetOrdering();
-
   // Add averagers and timers for logging
   void AddAveragersAndTimers();
 
