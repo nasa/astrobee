@@ -7,10 +7,6 @@
   - TODO: implement others!
 
   - update sliding window optimizer! (AA)
-      - is ordering required? (AA)
-        - where is this used in gtsam?
-    - rename latesttimestamp to endtime (AA)
-        - rename for nodeadders? factoradders?
     - clean up functions!
     - clean up function comments
     - compile!

@@ -48,9 +48,11 @@ class SlidingWindowNodeAdder : public NodeAdder {
   virtual gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                                    const gtsam::NonlinearFactorGraph& graph) const = 0;
 
-  virtual boost::optional<localization_common::Time> OldestTimestamp() const = 0;
+  // Starting (oldest) timestamp of nodes in the node adder
+  virtual boost::optional<localization_common::Time> StartTime() const = 0;
 
-  virtual boost::optional<localization_common::Time> LatestTimestamp() const = 0;
+  // End (latest) timestamp of nodes in the node adder
+  virtual boost::optional<localization_common::Time> EndTime() const = 0;
 };
 }  // namespace node_adders
 

@@ -77,9 +77,9 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
-  boost::optional<localization_common::Time> OldestTimestamp() const final;
+  boost::optional<localization_common::Time> StartTime() const final;
 
-  boost::optional<localization_common::Time> LatestTimestamp() const final;
+  boost::optional<localization_common::Time> EndTime() const final;
 
   bool CanAddNode(const localization_common::Time timestamp) const final;
 
@@ -140,8 +140,8 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
     // Add prior to oldest pose using covariances from last round of
     // optimization
     const auto oldest_node = nodes_->OldestNode();
-    const auto oldest_timestamp = nodes_->OldestTimestamp();
-    if (!oldest_node || !oldest_timestamp) {
+    const auto start_time = StartTime();
+    if (!oldest_node || !start_time) {
       LogError("SlideWindow: Failed to get oldest node and timestamp.");
       return false;
     }
@@ -149,7 +149,7 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
     // Make sure priors are removed before adding new ones
     RemovePriors(old_keys, factors);
     if (marginals) {
-      const auto keys = nodes_->Keys(*oldest_timestamp);
+      const auto keys = nodes_->Keys(*start_time);
       if (keys.empty()) {
         LogError("SlideWindow: Failed to get oldest keys.");
         return false;
@@ -161,10 +161,10 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
           gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
         prior_noise_models.emplace_back(prior_noise);
       }
-      node_adder_model_.AddPriors(*oldest_node, prior_noise_models, *oldest_timestamp, *nodes_, factors);
+      node_adder_model_.AddPriors(*oldest_node, prior_noise_models, *start_time, *nodes_, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior noise
-      node_adder_model_.AddPriors(*oldest_node, params_.start_noise_models, *oldest_timestamp, *nodes_, factors);
+      node_adder_model_.AddPriors(*oldest_node, params_.start_noise_models, *start_time, *nodes_, factors);
     }
   }
 
@@ -193,8 +193,7 @@ TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::SlideW
   const double total_duration = nodes_->Duration();
   LogDebug("SlideWindowNewStartTime: Starting total num states: " << nodes_->size());
   LogDebug("SlideWindowNewStartTime: Starting total duration is " << total_duration);
-  const localization_common::Time ideal_oldest_allowed_state =
-    std::max(0.0, *(nodes_->LatestTimestamp()) - params_.ideal_duration);
+  const localization_common::Time ideal_oldest_allowed_state = std::max(0.0, *(EndTime()) - params_.ideal_duration);
 
   int num_states_to_be_removed = 0;
   // Ensures that new oldest time is consistent with a number of states <= max_num_states
@@ -220,13 +219,13 @@ gtsam::KeyVector TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderM
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 boost::optional<localization_common::Time>
-TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::OldestTimestamp() const {
+TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::StartTime() const {
   return nodes_->OldestTimestamp();
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 boost::optional<localization_common::Time>
-TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::LatestTimestamp() const {
+TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::EndTime() const {
   return nodes_->LatestTimestamp();
 }
 
@@ -278,13 +277,13 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
     return true;
   }
 
-  const auto latest_timestamp = nodes_->LatestTimestamp();
-  if (!latest_timestamp) {
-    LogError("Adder: Failed to get latest timestamp.");
+  const auto end_time = EndTime();
+  if (!end_time) {
+    LogError("Adder: Failed to get end timestamp.");
     return false;
   }
 
-  if (timestamp > *latest_timestamp) {
+  if (timestamp > *end_time) {
     LogDebug("Adder: Adding new nodes and relative factors.");
     return AddNewNodesAndRelativeFactors(timestamp, factors);
   } else {
@@ -296,9 +295,9 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::AddNewNodesAndRelativeFactors(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
-  const auto timestamp_a = nodes_->LatestTimestamp();
+  const auto timestamp_a = EndTime();
   if (!timestamp_a) {
-    LogError("AddNewNodesAndRelativeFactor: Failed to get latest timestamp.");
+    LogError("AddNewNodesAndRelativeFactor: Failed to get end timestamp.");
     return false;
   }
   return node_adder_model_.AddNodesAndRelativeFactors(*timestamp_a, timestamp, *nodes_, factors);

@@ -600,8 +600,8 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   const auto& nodes = pose_node_adder_->nodes();
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_EQ(factors_.size(), 1);
-  EXPECT_EQ(*pose_node_adder_->OldestTimestamp(), params_.starting_time);
-  EXPECT_EQ(*pose_node_adder_->LatestTimestamp(), params_.starting_time);
+  EXPECT_EQ(*pose_node_adder_->StartTime(), params_.starting_time);
+  EXPECT_EQ(*pose_node_adder_->EndTime(), params_.starting_time);
   AddMeasurements();
   // Add 1st node, nodes: 2, duration: 1
   ASSERT_TRUE(pose_node_adder_->AddNode(timestamps_[0], factors_));
@@ -646,8 +646,8 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   EXPECT_SAME_PRIOR_FACTOR(3, pose(1));
   // Since no marginals available, noise should default to start noise
   EXPECT_SAME_PRIOR_NOISE(3, params_.start_noise_models[0]);
-  EXPECT_EQ(*pose_node_adder_->OldestTimestamp(), timestamps_[1]);
-  EXPECT_EQ(*pose_node_adder_->LatestTimestamp(), timestamps_[2]);
+  EXPECT_EQ(*pose_node_adder_->StartTime(), timestamps_[1]);
+  EXPECT_EQ(*pose_node_adder_->EndTime(), timestamps_[2]);
   // Old measurements removed when slide window but lower bound kept in case needed for interpolation
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[0]));
   EXPECT_TRUE(pose_node_adder_->CanAddNode(timestamps_[1]));
