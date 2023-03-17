@@ -566,7 +566,7 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
       TOPIC_BEHAVIORS_ARM_STATE, 1);
 
     // Allow the state to be manually set
-    srv_set_state_ = nh->create_service<ff_msgs::SetState>(SERVICE_BEHAVIORS_ARM_SET_STATE,
+    srv_set_state_ = FF_CREATE_SERVICE(nh, ff_msgs::SetState, SERVICE_BEHAVIORS_ARM_SET_STATE,
       std::bind(&ArmComponent::SetStateCallback, this, std::placeholders::_1, std::placeholders::_2));
 
     // Executive state publishers
