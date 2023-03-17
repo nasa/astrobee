@@ -21,7 +21,7 @@
 
 #include <factor_adders/factor_adder.h>
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_optimizer/optimizer.h>
+#include <optimizers/optimizer.h>
 #include <node_adders/node_adder.h>
 #include <nodes/nodes.h>
 #include <localization_common/stats_logger.h>
@@ -142,7 +142,7 @@ class GraphOptimizer {
   }
 
   GraphOptimizerParams params_;
-  std::unique_ptr<Optimizer> optimizer_;
+  std::unique_ptr<optimizers::Optimizer> optimizer_;
   gtsam::NonlinearFactorGraph factors_;
   std::shared_ptr<nodes::Nodes> nodes_;
   std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;

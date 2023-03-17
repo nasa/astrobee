@@ -9,10 +9,6 @@
   - test graph optimizer!
   - test sliding window optimizer!
 
-  - add optimizer base class! (A)
-          - TODO: how to access opt iterations????
-         - construct optimizer internally based on params!!! (AAA)
-        - update sliding window graph optimizer to call optimizer/remove uneeded things! (AC)
         - make optimizer package!!
             - move optimizer, nonlinearoptimizer, and isam2 optimizer here!
         - add isam2 optimizer! (AD)
@@ -24,6 +20,7 @@
 
 
 
+- TODO: how to access opt iterations????
 - move serialization.cc back to graph optimizer?
       - make graph optimizer depend on graph_Factors?
   - add test with graph optimizer, simple factor adder, and simple node updater!!

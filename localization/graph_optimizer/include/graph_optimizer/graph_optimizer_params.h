@@ -18,7 +18,8 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#include <graph_optimizer/nonlinear_optimizer_params.h>
+// #include <optimizers/isam2_optimizer_params.h>
+#include <optimizers/nonlinear_optimizer_params.h>
 
 #include <string>
 
@@ -33,9 +34,9 @@ struct GraphOptimizerParams {
   // Log factor graph info and stats after optimization.
   bool print_after_optimization;
   // Params for nonlinear optimizer if used.
-  NonlinearOptimizerParams nonlinear_optimizer;
+  optimizers::NonlinearOptimizerParams nonlinear_optimizer;
   // Params for isam2 optimizer if used.
-  // ISAM2OptimizerParams isam2_optimizer;
+  // optimizers::ISAM2OptimizerParams isam2_optimizer;
 };
 }  // namespace graph_optimizer
 

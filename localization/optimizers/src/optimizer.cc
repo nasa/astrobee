@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#include <graph_optimizer/optimizer.h>
+#include <optimizers/optimizer.h>
 #include <localization_common/logger.h>
 
-namespace graph_optimizer {
+namespace optimizers {
 
 Optimizer::Optimizer(const OptimizerParams& params) : params_(params) { SetMarginalsFactorization(); }
 
@@ -58,4 +58,4 @@ void Optimizer::SetMarginalsFactorization() {
     marginals_factorization_ = gtsam::Marginals::Factorization::QR;
   }
 }
-}  // namespace graph_optimizer
+}  // namespace optimizers

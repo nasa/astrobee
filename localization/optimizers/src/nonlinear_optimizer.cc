@@ -16,11 +16,11 @@
  * under the License.
  */
 
-#include <graph_optimizer/nonlinear_optimizer.h>
+#include <optimizers/nonlinear_optimizer.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
-namespace graph_optimizer {
+namespace optimizers {
 namespace lc = localization_common;
 
 NonlinearOptimizer::NonlinearOptimizer(const NonlinearOptimizerParams& params) : Optimizer(params), params_(params) {
@@ -77,4 +77,4 @@ void NonlinearOptimizer::SetOrdering(const gtsam::NonlinearFactorGraph& factors,
   const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(factors, old_keys);
   levenberg_marquardt_params_.setOrdering(ordering);
 }
-}  // namespace graph_optimizer
+}  // namespace optimizers

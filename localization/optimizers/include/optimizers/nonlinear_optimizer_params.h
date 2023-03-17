@@ -15,12 +15,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_PARAMS_H_
-#define GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_PARAMS_H_
+#ifndef OPTIMIZERS_NONLINEAR_OPTIMIZER_PARAMS_H_
+#define OPTIMIZERS_NONLINEAR_OPTIMIZER_PARAMS_H_
 
-#include <graph_optimizer/optimizer_params.h>
+#include <optimizers/optimizer_params.h>
 
-namespace graph_optimizer {
+namespace optimizers {
 struct NonlinearOptimizerParams : public OptimizerParams {
   // Maximum optimization iterations to perform
   int max_iterations;
@@ -29,6 +29,6 @@ struct NonlinearOptimizerParams : public OptimizerParams {
   // Use ceres-style params for nonlinear optimization
   bool use_ceres_params;
 };
-}  // namespace graph_optimizer
+}  // namespace optimizers
 
-#endif  // GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_PARAMS_H_
+#endif  // OPTIMIZERS_NONLINEAR_OPTIMIZER_PARAMS_H_

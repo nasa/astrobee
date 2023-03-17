@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_OPTIMIZER_H_
-#define GRAPH_OPTIMIZER_OPTIMIZER_H_
+#ifndef OPTIMIZERS_OPTIMIZER_H_
+#define OPTIMIZERS_OPTIMIZER_H_
 
-#include <graph_optimizer/optimizer_params.h>
+#include <optimizers/optimizer_params.h>
 
 #include <gtsam/base/Matrix.h>
 #include <gtsam/inference/Key.h>
@@ -28,7 +28,7 @@
 
 #include <boost/optional.hpp>
 
-namespace graph_optimizer {
+namespace optimizers {
 // Base class optimizer.
 class Optimizer {
  public:
@@ -67,6 +67,6 @@ class Optimizer {
   boost::optional<gtsam::Marginals> marginals_;
   gtsam::Marginals::Factorization marginals_factorization_;
 };
-}  // namespace graph_optimizer
+}  // namespace optimizers
 
-#endif  // GRAPH_OPTIMIZER_OPTIMIZER_H_
+#endif  // OPTIMIZERS_OPTIMIZER_H_

@@ -17,8 +17,8 @@
  */
 
 #include <graph_optimizer/graph_optimizer.h>
-// #include <graph_optimizer/isam2_optimizer.h>
-#include <graph_optimizer/nonlinear_optimizer.h>
+// #include <optimizers/isam2_optimizer.h>
+#include <optimizers/nonlinear_optimizer.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
@@ -26,6 +26,7 @@ namespace graph_optimizer {
 namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace na = node_adders;
+namespace op = optimizers;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
     : params_(params), stats_logger_(params_.log_stats_on_destruction) {
@@ -109,11 +110,11 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
 
 void GraphOptimizer::SetOptimizer() {
   if (params_.optimizer == "nonlinear") {
-    optimizer_.reset(new NonlinearOptimizer(params_.nonlinear_optimizer));
+    optimizer_.reset(new op::NonlinearOptimizer(params_.nonlinear_optimizer));
   } else if (params_.optimizer == "isam2") {
-    // optimizer_.reset(new ISAM2Optimizer(params_.isam2_optimizer));
+    // optimizer_.reset(new op::ISAM2Optimizer(params_.isam2_optimizer));
   } else {  // Default to nonlinear optimizer
-    optimizer_.reset(new NonlinearOptimizer(params_.nonlinear_optimizer));
+    optimizer_.reset(new op::NonlinearOptimizer(params_.nonlinear_optimizer));
   }
 }
 

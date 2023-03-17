@@ -16,18 +16,18 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_H_
-#define GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_H_
+#ifndef OPTIMIZERS_NONLINEAR_OPTIMIZER_H_
+#define OPTIMIZERS_NONLINEAR_OPTIMIZER_H_
 
-#include <graph_optimizer/nonlinear_optimizer_params.h>
-#include <graph_optimizer/optimizer.h>
+#include <optimizers/nonlinear_optimizer_params.h>
+#include <optimizers/optimizer.h>
 
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <boost/serialization/serialization.hpp>
 
-namespace graph_optimizer {
+namespace optimizers {
 class NonlinearOptimizer : public Optimizer {
  public:
   explicit NonlinearOptimizer(const NonlinearOptimizerParams& params);
@@ -59,6 +59,6 @@ class NonlinearOptimizer : public Optimizer {
   NonlinearOptimizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
 };
-}  // namespace graph_optimizer
+}  // namespace optimizers
 
-#endif  // GRAPH_OPTIMIZER_NONLINEAR_OPTIMIZER_H_
+#endif  // OPTIMIZERS_NONLINEAR_OPTIMIZER_H_
