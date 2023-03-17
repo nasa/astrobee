@@ -25,20 +25,20 @@ namespace lc = localization_common;
 
 SlidingWindowGraphOptimizer::SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params)
     : params_(params), GraphOptimizer(params) {
-  SetMarginalsFactorization();
   AddAveragersAndTimers();
+}
+
+void SlidingWindowGraphOptimizer::AddSlidingWindowNodeAdder(std::shared_ptr<na::NodeAdder> sliding_window_node_adder) {
+  sliding_window_node_adders_.emplace_back(sliding_window_node_adder);
+  AddNodeAdder(sliding_window_node_adder);
 }
 
 bool SlidingWindowGraphOptimizer::Update() {
   LogDebug("Update: Updating.");
 
   update_timer_.Start();
-  // Only get marginals and slide window if optimization has already occured,
-  // otherwise marginals won't be available and prior factor or marignal factors
-  // can't be calculated as required by SlideWindow().
-  if (UpdateOccured()) {
-    CalculateMarginals();
-    if (!SlideWindow(marginals_, *end_time_)) {
+  if (marginals()) {
+    if (!SlideWindow(*(marginals()), *end_time_)) {
       LogError("Update: Failed to slide window.");
       return false;
     }
@@ -50,31 +50,21 @@ bool SlidingWindowGraphOptimizer::Update() {
     SetOrdering();
   }
 
-  GraphOptimizer::Update();
-
-  // Calculate marginals after the first optimization iteration so covariances
-  // can be accessed for nodes
-  // TODO(rsoussan): Move this to graph_optimizer, optimize????
-  if (!UpdateOccured()) {
-    CalculateMarginals();
-  }
-
+  GraphOptimizer::Optimize();
   end_time_ = EndTime();
   update_timer_.Stop();
   return true;
 }
 
-bool SlidingWindowGraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
-                                              const lc::Time end_time) {
+bool SlidingWindowGraphOptimizer::SlideWindow(const gtsam::Marginals& marginals, const lc::Time end_time) {
   const auto ideal_new_start_time = SlideWindowNewStartTime();
   if (!ideal_new_start_time) {
     LogDebug("SlideWindow: No states removed. ");
     return true;
   }
-  // Ensure that new oldest time isn't more recent than last latest time
-  // since then priors couldn't be added for the new oldest state
-  if (end_time < *ideal_new_start_time)
-    LogError("SlideWindow: Ideal oldest time is more recent than last latest time.");
+  // Ensure that new start time isn't more recent than current end time
+  // since then priors couldn't be added for the new start nodes.
+  if (end_time < *ideal_new_start_time) LogError("SlideWindow: Ideal start time is more recent than current end time.");
   const auto new_start_time = std::min(end_time, *ideal_new_start_time);
 
   const auto old_keys = OldKeys(new_start_time);
@@ -86,8 +76,8 @@ bool SlidingWindowGraphOptimizer::SlideWindow(const boost::optional<gtsam::Margi
     }
   }
 
-  for (auto& node_updater : node_updaters_)
-    node_updater->SlideWindow(new_start_time, marginals, old_keys, params_.huber_k, graph_);
+  for (auto& sliding_window_node_adder : sliding_window_node_adders_)
+    sliding_window_node_adder->SlideWindow(new_start_time, marginals, old_keys, params_.huber_k, graph_);
   return true;
 }
 
@@ -110,8 +100,8 @@ gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::MarginalFactors(
 
 boost::optional<lc::Time> SlidingWindowGraphOptimizer::SlideWindowNewStartTime() const {
   boost::optional<lc::Time> new_start_time;
-  for (const auto& node_updater : node_updaters_) {
-    const auto node_new_start_time = node_updater->SlideWindowNewStartTime();
+  for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
+    const auto node_new_start_time = sliding_window_node_adder->SlideWindowNewStartTime();
     if (node_new_start_time) {
       new_start_time = new_start_time ? std::min(*node_new_start_time, *new_start_time) : *node_new_start_time;
     }
@@ -122,8 +112,8 @@ boost::optional<lc::Time> SlidingWindowGraphOptimizer::SlideWindowNewStartTime()
 
 gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common::Time oldest_allowed_time) const {
   gtsam::KeyVector all_old_keys;
-  for (const auto& node_updater : node_updaters_) {
-    const auto old_keys = node_updater->OldKeys(oldest_allowed_time, graph_);
+  for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
+    const auto old_keys = sliding_window_node_adder->OldKeys(oldest_allowed_time, graph_);
     all_old_keys.insert(all_old_keys.end(), old_keys.begin(), old_keys.end());
   }
   return all_old_keys;
@@ -131,28 +121,13 @@ gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common:
 
 boost::optional<lc::Time> SlidingWindowGraphOptimizer::EndTime() const {
   boost::optional<lc::Time> end_time;
-  for (const auto& node_updater : node_updaters_) {
-    const auto node_end_time = node_updater->EndTime();
+  for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
+    const auto node_end_time = sliding_window_node_adder->EndTime();
     if (node_end_time) {
       end_time = end_time ? std::max(*end_time, *node_end_time) : *node_end_time;
     }
   }
   return end_time;
-}
-
-void SlidingWindowGraphOptimizer::CalculateMarginals() {
-  try {
-    marginals_ = gtsam::Marginals(graph_, *values_, marginals_factorization_);
-  } catch (gtsam::IndeterminantLinearSystemException) {
-    log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
-    marginals_ = boost::none;
-  } catch (const std::exception& exception) {
-    log(params_.fatal_failures, "Update: Computing marginals failed. " + std::string(exception.what()));
-    marginals_ = boost::none;
-  } catch (...) {
-    log(params_.fatal_failures, "Update: Computing marginals failed.");
-    marginals_ = boost::none;
-  }
 }
 
 void SlidingWindowGraphOptimizer::SetOrdering() {
@@ -166,22 +141,5 @@ void SlidingWindowGraphOptimizer::SetOrdering() {
   }
 }
 
-void SlidingWindowGraphOptimizer:: : SetMarginalsFactorization() {
-  if (params_.marginals_factorization == "qr") {
-    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
-  } else if (params_.marginals_factorization == "cholesky") {
-    marginals_factorization_ = gtsam::Marginals::Factorization::CHOLESKY;
-  } else {
-    LogError("SlidingWindowGraphOptimizer: No marginals factorization entered, defaulting to qr.");
-    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
-  }
-}
-
-void SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger_.AddTimer(update_timer_); }
-
-bool SlidingWindowGraphOptimizer::UpdateOccured() const {
-  // Update has occured if an end time has been calculated
-  return (end_time_ != boost::none);
-}
-
+roid SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger_.AddTimer(update_timer_); }
 }  // namespace graph_optimizer

@@ -27,6 +27,7 @@
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <boost/serialization/serialization.hpp>
@@ -77,6 +78,10 @@ class GraphOptimizer {
   // Performs Levenberg-Marquardt nonlinear optimization using GTSAM on the factor graph.
   bool Optimize();
 
+  // Calculates the covariance matrix for the provided node's key.
+  // Requires a successful round of optimization to have been performed.
+  boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const;
+
   // Returns set of factors currently in the graph.
   const gtsam::NonlinearFactorGraph& factors() const;
 
@@ -109,11 +114,22 @@ class GraphOptimizer {
   // of the graph.
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
 
+ protected:
+  // Returns marginals if they have been calculated.
+  boost::optional<const gtsam::Marginals&> marginals() const;
+
  private:
-  // Set optimization params based on provided GraphOptimizerParams
+  // Solve for marginals, required for calculating covariances.
+  // Can only be called after optimization has been performed.
+  void CalculateMarginals();
+
+  // Set optimization params based on provided GraphOptimizerParams.
   void SetOptimizationParams();
 
-  // Add averagers and timers for logging
+  // Set solver used for calculating marginals.
+  void SetMarginalsFactorization();
+
+  // Add averagers and timers for logging.
   void AddAveragersAndTimers();
 
   // Serialization function
@@ -126,6 +142,8 @@ class GraphOptimizer {
     ar& BOOST_SERIALIZATION_NVP(nodes_);
     ar& BOOST_SERIALIZATION_NVP(factor_adders_);
     ar& BOOST_SERIALIZATION_NVP(node_adders_);
+    ar& BOOST_SERIALIZATION_NVP(marginals_);
+    ar& BOOST_SERIALIZATION_NVP(marginals_factorization_);
     ar& BOOST_SERIALIZATION_NVP(stats_logger_);
     ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
     ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
@@ -139,6 +157,8 @@ class GraphOptimizer {
   std::shared_ptr<nodes::Nodes> nodes_;
   std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;
   std::vector<std::shared_ptr<node_adders::NodeAdder>> node_adders_;
+  boost::optional<gtsam::Marginals> marginals_;
+  gtsam::Marginals::Factorization marginals_factorization_;
   localization_common::StatsLogger stats_logger_;
 
   // Logging

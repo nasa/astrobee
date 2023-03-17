@@ -7,15 +7,14 @@
   - TODO: implement others!
 
   - update sliding window optimizer! (AA)
+      - is ordering required? (AA)
+        - where is this used in gtsam?
     - rename latesttimestamp to endtime (AA)
         - rename for nodeadders? factoradders?
     - clean up functions!
     - clean up function comments
     - compile!
     - test!
-
-  - move calculate marginals to graph optimizer
-    - add interface for accessing covariances for a node!
 
 - move serialization.cc back to graph optimizer?
       - make graph optimizer depend on graph_Factors?

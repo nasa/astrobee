@@ -23,19 +23,19 @@
 #include <localization_common/time.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
 
-#include <gtsam/nonlinear/Marginals.h>
-
 #include <boost/serialization/serialization.hpp>
+
+#include <vector>
 
 namespace sliding_window_graph_optimizer {
 // GraphOptimizer that performs sliding window optimization.
-// Calculates the desired window size in duration and number of nodes for each node adder
-// using NodeAdders in the graph.
+// Calculates the desired window size in duration and number of nodes for each sliding window node adder
+// using the SlidingWindowNodeAdders in the graph.
 // Removes old nodes outside of window size along with the factors that depend on them after optimization.
 // Adds either prior factors using marginalized covariances for new start nodes or adds
 // marginal factors consisting of linearized errors for each factor removed (set desired behavior using params).
-// Add sliding window node adder using AddSlidingWindowNodeAdder() function (instead of AddNodeAdder() function) to
-// ensure SlideWindow() is called for the node adder.
+// Add sliding window node adders using the AddSlidingWindowNodeAdder() function (instead of AddNodeAdder() function) to
+// ensure SlideWindow() is called for the sliding window node adder.
 class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
  public:
   explicit SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params);
@@ -49,46 +49,43 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // for the node adder when sliding the window for the graph.
   // If this function is used, the node adder does not need to be added with
   // the GraphOptimizer::AddNodeAdder() function.
-  void AddSlidingWindowNodeAdder();
+  void AddSlidingWindowNodeAdder(std::shared_ptr<na::NodeAdder> sliding_window_node_adder);
 
-  // Performs graph optimization and slides the window for each SlidingWindowNodeAdder.
-  // Adds either marignal factors or prior factor using covariances to new start nodes.
+  // Slides the window and optimizes the graph.
+  // See SlideWindow() function comments for more details on sliding the window.
   bool Update();
 
  private:
-  // Removes nodes and factors outside of sliding window using
-  // provided params.
-  // Removes any factors depending on removed nodes.
-  // Optionally adds marginalized factors encapsulating linearized error of removed factors.
-  // Optionally adds priors using marginalized covariances for new start nodes.
-  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals, const localization_common::Time end_time);
+  // Calculates new start time for the graph using sliding window node adders and
+  // removes nodes older than this start time.
+  // Removes any factors depending on a removed node and optionally adds marginalized
+  // factors containing linearized errors for each removed factors.
+  // Optionally adds prior factors using marginalized covariances to new start nodes.
+  bool SlideWindow(const gtsam::Marginals& marginals, const localization_common::Time end_time);
 
   // Creates marginal factors using linearized errors of removed factors.
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
                                               const gtsam::KeyVector& old_keys,
                                               const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
 
+  // New start time that will constrain the graph to the desired window size.
+  // Calculated using the oldest of the desired start times for each sliding window node adder.
+  // TODO(rsoussan): Use latest of the desired start times?
   boost::optional<localization_common::Time> SlideWindowNewStartTime() const;
 
+  // Old keys for nodes. Calculated and accumulated for each sliding window node adder.
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const;
 
+  // Current end time of the sliding window. Calcualted using the latest end time
+  // of the sliding window node adders.
   boost::optional<localization_common::Time> EndTime() const;
-
-  // Solve for marginals, required for calculating covariances
-  void CalculateMarginals();
 
   // Order nodes in the graph for keys that will be marginalized.
   // Allows for more efficient optimization.
   void SetOrdering();
 
-  // Set solver used for calculating marginals
-  void SetMaringalsFactorization();
-
   // Add averagers and timers for logging
   void AddAveragersAndTimers();
-
-  // Returns if an Update() call has been performed.
-  bool UpdateOccured() const;
 
   // Serialization function
   friend class boost::serialization::access;
@@ -96,14 +93,13 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(params_);
-    ar& BOOST_SERIALIZATION_NVP(marginals_);
-    ar& BOOST_SERIALIZATION_NVP(marginals_factorization_);
+    ar& BOOST_SERIALIZATION_NVP(sliding_window_node_adder_);
     ar& BOOST_SERIALIZATION_NVP(end_time_);
+    ar& BOOST_SERIALIZATION_NVP(update_timer_);
   }
 
   SlidingWindowGraphOptimizerParams params_;
-  boost::optional<gtsam::Marginals> marginals_;
-  gtsam::Marginals::Factorization marginals_factorization_;
+  std::vector<std::shared_ptr<node_adders::SlidingWindowNodeAdder>> sliding_window_node_adders_;
   boost::optional<localization_common::Time> end_time_;
 
   // Logging

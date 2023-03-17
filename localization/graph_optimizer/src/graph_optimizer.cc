@@ -28,6 +28,7 @@ namespace na = node_adders;
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
     : params_(params), stats_logger_(params_.log_stats_on_destruction) {
   SetOptimizationParams();
+  SetMarginalsFactorization();
   AddAveragersAndTimers();
 }
 
@@ -80,11 +81,20 @@ bool GraphOptimizer::Optimize() {
   }
   optimization_timer_.Stop();
 
+  // Calculate marginals after optimizing so covariances and marginal factors
+  // can be generated if desired.
+  if (successful_optimization) CalculateMarginals();
+
   iterations_averager_.Update(optimizer.iterations());
   total_error_averager_.Update(TotalGraphError());
 
   if (params_.print_after_optimization) Print();
   return successful_optimization;
+}
+
+boost::optional<gtsam::Matrix> GraphOptimizer::Covariance(const gtsam::Key& key) const {
+  if (!marginals_) return boost::none;
+  return marginals_->marginalCovariance(key);
 }
 
 const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors_; }
@@ -116,6 +126,23 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   factors_.saveGraph(of, nodes_->values());
 }
 
+boost::optional<const gtsam::Marginals&> marginals() const { return marginals_; }
+
+void GraphOptimizer::CalculateMarginals() {
+  try {
+    marginals_ = gtsam::Marginals(graph_, nodes_->values(), marginals_factorization_);
+  } catch (gtsam::IndeterminantLinearSystemException) {
+    LogError("Update: Indeterminant linear system error during computation of marginals.");
+    marginals_ = boost::none;
+  } catch (const std::exception& exception) {
+    LogError("Update: Computing marginals failed. " + std::string(exception.what()));
+    marginals_ = boost::none;
+  } catch (...) {
+    LogError("Update: Computing marginals failed.");
+    marginals_ = boost::none;
+  }
+}
+
 void GraphOptimizer::SetOptimizationParams() {
   // Initialize lm params
   if (params_.verbose) {
@@ -127,6 +154,17 @@ void GraphOptimizer::SetOptimizationParams() {
   }
 
   levenberg_marquardt_params_.maxIterations = params_.max_iterations;
+}
+
+void GraphOptimizer::SetMarginalsFactorization() {
+  if (params_.marginals_factorization == "qr") {
+    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
+  } else if (params_.marginals_factorization == "cholesky") {
+    marginals_factorization_ = gtsam::Marginals::Factorization::CHOLESKY;
+  } else {
+    LogError("GraphOptimizer: No marginals factorization entered, defaulting to qr.");
+    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
+  }
 }
 
 void GraphOptimizer::AddAveragersAndTimers() {

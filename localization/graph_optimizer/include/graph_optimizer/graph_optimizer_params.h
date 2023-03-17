@@ -18,12 +18,16 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
+#include <string>
+
 namespace graph_optimizer {
 struct GraphOptimizerParams {
   // Maximum optimization iterations to perform
   int max_iterations;
   // Huber k used for all factors
   double huber_k;
+  // Type of factorization used to calculate marginals. Either "qr" or "cholesky".
+  std::string marginals_factorization;
   // Verbose printing for Levenberg-Marquardt optimization
   bool verbose;
   // Log statistics after destruction
