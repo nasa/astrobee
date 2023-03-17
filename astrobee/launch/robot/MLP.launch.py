@@ -360,11 +360,11 @@ def generate_launch_description():
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='states',
-            #     plugin='states::StatesNodelet',
-            #     name='states',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='states',
+                plugin='states::StatesNodelet',
+                name='states',
+                extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
     ])
