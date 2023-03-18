@@ -9,14 +9,10 @@
   - test graph optimizer!
   - test sliding window optimizer!
 
-        - make optimizer package!!
-            - move optimizer, nonlinearoptimizer, and isam2 optimizer here!
         - add isam2 optimizer! (AD)
           - keep a copy of values, use values filter function to get newly added values (copy values before adding factors/nodes, filter out any values that were in the copy to get latest values to use for isam2)
-        - do the same thing for factors!
-          - copy factors before, only use factors in indices later than last copied factor!
-          - copy updated values to passed values!
-            - use getlinearizationpoint call!
+          - update graph optimizer set optimizer call!
+          - update grah optimizer params!
 
 
 

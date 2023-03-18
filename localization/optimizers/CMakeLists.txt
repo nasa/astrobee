@@ -53,6 +53,7 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
+  src/isam2_optimizer.cc
   src/nonlinear_optimizer.cc
   src/optimizer.cc
 )
