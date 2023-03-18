@@ -17,7 +17,7 @@
  */
 
 #include <graph_optimizer/graph_optimizer.h>
-// #include <optimizers/isam2_optimizer.h>
+#include <optimizers/isam2_optimizer.h>
 #include <optimizers/nonlinear_optimizer.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -112,7 +112,7 @@ void GraphOptimizer::SetOptimizer() {
   if (params_.optimizer == "nonlinear") {
     optimizer_.reset(new op::NonlinearOptimizer(params_.nonlinear_optimizer));
   } else if (params_.optimizer == "isam2") {
-    // optimizer_.reset(new op::ISAM2Optimizer(params_.isam2_optimizer));
+    optimizer_.reset(new op::ISAM2Optimizer(params_.isam2_optimizer));
   } else {  // Default to nonlinear optimizer
     optimizer_.reset(new op::NonlinearOptimizer(params_.nonlinear_optimizer));
   }

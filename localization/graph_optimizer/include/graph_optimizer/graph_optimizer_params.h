@@ -18,7 +18,7 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-// #include <optimizers/isam2_optimizer_params.h>
+#include <optimizers/isam2_optimizer_params.h>
 #include <optimizers/nonlinear_optimizer_params.h>
 
 #include <string>
@@ -36,7 +36,7 @@ struct GraphOptimizerParams {
   // Params for nonlinear optimizer if used.
   optimizers::NonlinearOptimizerParams nonlinear_optimizer;
   // Params for isam2 optimizer if used.
-  // optimizers::ISAM2OptimizerParams isam2_optimizer;
+  optimizers::ISAM2OptimizerParams isam2_optimizer;
 };
 }  // namespace graph_optimizer
 

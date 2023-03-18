@@ -9,8 +9,6 @@
   - test graph optimizer!
   - test sliding window optimizer!
 
-        - add isam2 optimizer! (AD)
-          - keep a copy of values, use values filter function to get newly added values (copy values before adding factors/nodes, filter out any values that were in the copy to get latest values to use for isam2)
           - update graph optimizer set optimizer call!
           - update grah optimizer params!
 
