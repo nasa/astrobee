@@ -1,18 +1,16 @@
-  - implement loc factor adder! (B)
+  - implement loc factor adder! (A)
+    - finsh this!!! (AAA)
     - move graph action completer here if needed!
+    - add serialization!
+      - also add to standstill factor adder! base class factor adders!
     - test!
-  - implement vo factor adder! (C)
+  - implement vo factor adder! (B)
     - move graph action completer here if needed!
     - test!
   - TODO: implement others!
 
-  - test graph optimizer!
-  - test sliding window optimizer!
-
-          - update graph optimizer set optimizer call!
-          - update grah optimizer params!
-
-
+  - test graph optimizer! (C)
+  - test sliding window optimizer! (D)
 
 - TODO: how to access opt iterations????
 - move serialization.cc back to graph optimizer?
