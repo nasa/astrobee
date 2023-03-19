@@ -1,6 +1,7 @@
   - implement loc factor adder! (A)
     - finsh this!!! (AAA)
     - move graph action completer here if needed!
+    - remove worldtcam from factor!
     - add serialization!
       - also add to standstill factor adder! base class factor adders!
     - test!

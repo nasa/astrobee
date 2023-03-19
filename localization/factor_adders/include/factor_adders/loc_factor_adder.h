@@ -96,8 +96,14 @@ int LocFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   num_loc_pose_factors = 0;
   if (params_.add_projections) {
     num_loc_projection_factors = AddLocProjectionFactor(matched_projections_measurement, factors);
+    // Add loc pose factors as a fallback if all projection factors failed and fallback
+    // enabled
+    if (num_loc_projection_factors == 0 && params_.add_prior_if_projections_fail) {
+      num_loc_pose_factors = AddLocPoseFactor(matched_projections_measurement, factors);
+    }
   }
-  if (params_.add_pose_priors) {
+  // Add loc pose factors if enabled and fallback hasn't already been triggered
+  if (params_.add_pose_priors && num_loc_pose_factors == 0) {
     num_loc_pose_factors = AddLocPoseFactor(matched_projections_measurement, factors);
   }
   return num_loc_pose_factors + num_loc_projection_factors;
@@ -116,17 +122,37 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
     LogError("AddLocProjectionFactors: Failed to get pose key".);
     return 0;
   }
+  const auto world_T_body = node_adder_->Node<gtsam::Pose3>(*pose_key);
+  if (!world_T_body) {
+    LogError("AddLocProjectionFactors: Failed to get world_T_body at timestamp "
+             << matched_projections_measurement.timestamp << ".");
+    return 0;
+  }
 
   int num_loc_projection_factors = 0;
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
-    // TODO(rsoussan): Pass sigma insted of already constructed isotropic noise
-    const gtsam::SharedIsotropic scaled_noise(
+    gtsam::SharedNoiseModel noise;
+    // Use the landmark distance from the camera to inversly scale the noise if desired.
+    if (params_.weight_projections_with_distance) {
+      const Eigen::Vector3d& world_t_landmark = matched_projection.map_point;
+      const Eigen::Isometry3d nav_cam_T_world = (world_T_body * params_.body_T_cam).inverse();
+      const gtsam::Point3 nav_cam_t_landmark = nav_cam_T_world * world_t_landmark;
+      // Don't use robust cost here to more effectively correct a drift occurance
+      noise = gtsam::SharedIsotropic(
+        gtsam::noiseModel::Isotropic::Sigma(2, params_.projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
+    } else {
+    noise = lc::Robust(gtsam::SharedIsotropic(
       gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params_.cam_noise->sigma()));
+    }
     gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-      matched_projection.image_point, matched_projection.map_point, go::Robust(scaled_noise, params_.huber_k), pose_key,
+      matched_projection.image_point, matched_projection.map_point, noise, params_.huber_k), pose_key,
       params_.cam_intrinsics, params_.body_T_cam));
-    // Set world_T_cam estimate in case need to use it as a fallback
-    loc_projection_factor->setWorldTCam(matched_projections_measurement.global_T_cam);
+    // Check for errors, discard factor if too large of projection error occurs
+    // or a cheirality error occurs
+    const auto error = (loc_projection_factor->evaluateError(*world_T_body)).norm();
+    if (error > params_.max_inlier_weighted_projection_norm) continue;
+    const auto cheirality_error = loc_projection_factor->cheiralityError(*world_T_body);
+    if (cheirality_error) continue;
     factors.push_back(loc_projection_factor);
     ++num_loc_projection_factors;
     if (num_loc_projection_factors >= params_.max_num_factors) break;

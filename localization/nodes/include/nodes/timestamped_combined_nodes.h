@@ -34,10 +34,13 @@
 
 namespace nodes {
 template <typename NodeType, bool CombinedType = true>
-// Container for timestamped nodes with multiple types per node.
-// Enables adding multiple types together with a single Node in a NodeUpdater. For example,
-// an IMU-based node might contain both accelerometer and gyro biases, along with a pose and velocity.
-// For nodes with a single type, use TimestampedNodes, which is a specialization of TimestampedCombinedNodes.
+// Container for timestamped nodes with multiple values per node.
+// Enables a NodeAdder to couple multiple values at the same timestamp that are always added and updated together into a
+// single combined node. For example, a visual-intertial NodeAdder may always add and update pose, velocity, and
+// IMU-biases together and never individually, so these should be grouped into a combined node rather than treated
+// separately. The Add and Node functions must be specialized for the desired combined node. For nodes with a single
+// value, such as just a pose or position, use TimestampedNodes, which is a specialization of TimestampedCombinedNodes
+// with CombinedType = false.
 class TimestampedCombinedNodes {
  public:
   explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes = std::make_shared<Nodes>());
@@ -47,6 +50,9 @@ class TimestampedCombinedNodes {
   boost::optional<NodeType> Node(const localization_common::Time timestamp) const;
 
   boost::optional<NodeType> Node(const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const;
+
+  template <typename T>
+  boost::optional<T> Node(const gtsam::Key& key) const;
 
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const;
 
@@ -161,6 +167,12 @@ template <typename NodeType, bool CombinedType>
 boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
   const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const {
   return Node(timestamped_keys.value, timestamped_keys.timestamp);
+}
+
+template <typename NodeType, bool CombinedType>
+template <typename T>
+boost::optional<T> TimestampedCombinedNodes<NodeType, CombinedType>::Node(const gtsam::Key& key) const {
+  return nodes_->Node<T>(key);
 }
 
 template <typename NodeType, bool CombinedType>
