@@ -16,66 +16,63 @@
  * under the License.
  */
 
-#ifndef VISION_COMMON_FEATURE_TRACKER_H_
-#define VISION_COMMON_FEATURE_TRACKER_H_
+#ifndef VISION_COMMON_SPACED_FEATURE_TRACKER_H_
+#define VISION_COMMON_SPACED_FEATURE_TRACKER_H_
 
 #include <localization_common/time.h>
 #include <vision_common/feature_point.h>
 #include <vision_common/feature_track.h>
 #include <vision_common/feature_tracker_params.h>
 
+#include <gtsam/geometry/Point2.h>
+
+#include <deque>
 #include <map>
+#include <set>
 
 namespace vision_common {
 using FeatureTrackIdMap = std::map<FeatureId, std::shared_ptr<FeatureTrack>>;
+using FeatureTrackLengthMap = std::multimap<int, std::shared_ptr<FeatureTrack>>;
 class FeatureTracker {
  public:
   explicit FeatureTracker(const FeatureTrackerParams& params = FeatureTrackerParams());
-  // Add new feature points to existing or new tracks.  Optionally removes
-  // any existing tracks that weren't detected in passed feature_points.
+  // Update existing tracks and add new tracks.  Remove tracks without
+  // detections.
   void UpdateFeatureTracks(const FeaturePoints& feature_points);
-
-  // Returns a reference to the feature tracks.
   const FeatureTrackIdMap& feature_tracks() const;
-
-  // Remove any points older than oldest_allowed_time from each feature track.
-  void RemoveOldPoints(const localization_common::Time oldest_allowed_time);
-
-  // Returns the number of feature tracks.
+  const std::set<localization_common::Time>& smart_factor_timestamp_allow_list() const;
+  const FeatureTrackLengthMap& feature_tracks_length_ordered() const;
+  int NumTracksWithAtLeastNPoints(int n) const;
+  void RemoveUndetectedFeatures(const localization_common::Time& feature_point);
+  void RemoveOldFeaturePointsAndSlideWindow(
+    boost::optional<localization_common::Time> oldest_allowed_time = boost::none);
+  void AddOrUpdateTrack(const FeaturePoint& feature_point);
+  void UpdateLengthMap();
+  void UpdateAllowList(const localization_common::Time& timestamp);
+  void SlideAllowList(const localization_common::Time& oldest_allowed_time);
+  boost::optional<const FeatureTrack&> LongestFeatureTrack() const;
   size_t size() const;
-
-  // Returns if no feature tracks exist.
   bool empty() const;
-
-  // Deletes all feature tracks.
   void Clear();
-
-  // Returns the oldest feature point timestamp of all the feature tracks
-  // if available.
   boost::optional<localization_common::Time> OldestTimestamp() const;
-
-  // Returns the latest feature point timestamp of all the feature tracks
-  // if available.
   boost::optional<localization_common::Time> LatestTimestamp() const;
+  boost::optional<localization_common::Time> PreviousTimestamp() const;
 
  private:
-  // Add new feature point to an existing track with the same track id
-  // create a new track if this doesn't exist.
-  void AddOrUpdateTrack(const FeaturePoint& feature_point);
-
-  // Remove any feature tracks without detections at the provided timestamp
-  void RemoveUndetectedFeatureTracks(const localization_common::Time& time);
-
   // Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(feature_track_id_map_);
+    ar& BOOST_SERIALIZATION_NVP(feature_track_length_map_);
   }
 
   FeatureTrackIdMap feature_track_id_map_;
+  FeatureTrackLengthMap feature_track_length_map_;
   FeatureTrackerParams params_;
+  // TODO(rsoussan): Move ths somewhere else?
+  std::set<localization_common::Time> smart_factor_timestamp_allow_list_;
 };
 }  // namespace vision_common
 
-#endif  // VISION_COMMON_FEATURE_TRACKER_H_
+#endif  // VISION_COMMON_SPACED_FEATURE_TRACKER_H_

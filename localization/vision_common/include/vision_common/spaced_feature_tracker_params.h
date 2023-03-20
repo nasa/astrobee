@@ -15,13 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef VISION_COMMON_FEATURE_TRACKER_PARAMS_H_
-#define VISION_COMMON_FEATURE_TRACKER_PARAMS_H_
+#ifndef VISION_COMMON_SPACED_FEATURE_TRACKER_PARAMS_H_
+#define VISION_COMMON_SPACED_FEATURE_TRACKER_PARAMS_H_
+
+#include <vision_common/feature_tracker_params.h>
 
 namespace vision_common {
-struct FeatureTrackerParams {
-  bool remove_undetected_feature_tracks;
+struct SpacedFeatureTrackerParams : public FeatureTrackerParams {
+  // Max duration, feature tracker trims measurements outside of this window or outside of graph window
+  double sliding_window_duration;
+  int smart_projection_adder_measurement_spacing;
+  bool use_allowed_timestamps;
 };
 }  // namespace vision_common
 
-#endif  // VISION_COMMON_FEATURE_TRACKER_PARAMS_H_
+#endif  // VISION_COMMON_SPACED_FEATURE_TRACKER_PARAMS_H_
