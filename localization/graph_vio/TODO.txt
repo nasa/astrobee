@@ -1,17 +1,36 @@
-  - implement loc factor adder! (A)
-    - finsh this!!! (AAA)
-    - move graph action completer here if needed!
-    - remove worldtcam from factor!
+  - implement vo factor adder! (AAA)
+    - slide window after optimization??? (AD)
+          - enables ordering to be used!
+    - move graph action completer here! (AE)
+      - move helper functions for fixing smart factors here
+    - test!
+  - implement loc factor adder! (AB)
     - add serialization!
-      - also add to standstill factor adder! base class factor adders!
+      - also add to standstill factor adder! base class factor adders! others!
     - test!
-  - implement vo factor adder! (B)
-    - move graph action completer here if needed!
-    - test!
+
+  isam2 optimizer issues!
+    - need to account for values removed when sliding window!
+      - since these have keys, just check for removed keys!
+    - need to account for factors removed when sliding window!
+      (i.e. smart factors!)
+        - since these are pts, just make sets of ptr values and check for new and removed ones!!!
+
+
   - TODO: implement others!
+  - cleanup feature tracker!
+    - should use timestamped set!
+    - explain functions better!
 
   - test graph optimizer! (C)
+
   - test sliding window optimizer! (D)
+  - add grah_vio! (E)
+    - publish odometry message!
+      - add new message type?
+  - add graph_localizer! (F)
+    - use pose node updater with odometry message! 
+    - add loc factor adder!
 
 - TODO: how to access opt iterations????
 - move serialization.cc back to graph optimizer?
