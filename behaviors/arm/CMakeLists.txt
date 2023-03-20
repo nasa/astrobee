@@ -54,7 +54,7 @@ include_directories(
 
 # Declare C++ libraries
 add_library(arm SHARED
-  src/arm_nodelet.cc
+  src/arm_component.cc
 )
 target_compile_definitions(arm PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(arm ${dependencies})

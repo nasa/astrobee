@@ -546,7 +546,6 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
     // Publishers for arm and joint state
     sub_joint_states_ = FF_CREATE_SUBSCRIBER(nh, sensor_msgs::JointState, TOPIC_JOINT_STATES, 1,
       std::bind(&ArmComponent::JointStateCallback, this, std::placeholders::_1));
-    // TODO(ana): This had a latch=true argument, but TOPIC_JOINT_GOALS is NOT in the LatchedTopic list
     pub_joint_goals_ = FF_CREATE_PUBLISHER(nh, sensor_msgs::JointState, TOPIC_JOINT_GOALS, 1);
 
     // Subscribe to Proximal Joint Servo Enabling service
