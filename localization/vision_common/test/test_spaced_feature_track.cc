@@ -53,24 +53,69 @@ class SpacedFeatureTrackTest : public ::testing::Test {
   std::vector<vc::FeaturePoint> points_;
 };
 
-TEST_F(SpacedFeatureTrackTest, SecondLatestTimestamp) {
+TEST_F(SpacedFeatureTrackTest, MaxSpacing) {
+  vc::SpacedFeatureTrack track(1);
   // Test empty track
   {
-    vc::SpacedFeatureTrack track(1);
+    EXPECT_EQ(track.MaxSpacing(10), 0);
+    EXPECT_EQ(track.MaxSpacing(0), 0);
+  }
+  // Test single point track
+  {
+    track.Add(points_[0].timestamp, points_[0]);
+    EXPECT_EQ(track.MaxSpacing(1), 0);
+    EXPECT_EQ(track.MaxSpacing(0), 0);
+  }
+  // Test two point track
+  {
+    track.Add(points_[1].timestamp, points_[1]);
+    EXPECT_EQ(track.MaxSpacing(0), 0);
+    EXPECT_EQ(track.MaxSpacing(1), 0);
+    EXPECT_EQ(track.MaxSpacing(2), 0);
+    EXPECT_EQ(track.MaxSpacing(10), 0);
+  }
+
+  // Test multi point track
+  EXPECT_EQ(track_.MaxSpacing(0), 0);
+  EXPECT_EQ(track_.MaxSpacing(1), 0);
+  // Should result in p0, p9. Spacing is 8.
+  EXPECT_EQ(track_.MaxSpacing(2), 8);
+  // For 10 points with max 3 points, max spacing of 3 results in:
+  // p0, p4, p8
+  // A spacing of 4 would result in:
+  // p0, p5, p10
+  // but p10 doesn't exist, so this is invalid.
+  EXPECT_EQ(track_.MaxSpacing(3), 3);
+  // For 10 points with max 4 points, max spacing of 2 results in:
+  // p0, p3, p6, p9
+  EXPECT_EQ(track_.MaxSpacing(4), 2);
+  // For 10 points with max 5 points, max spacing of 1 results in:
+  // p0, p2, p4, p6, p8
+  EXPECT_EQ(track_.MaxSpacing(5), 1);
+  // For 10 points with max 6 points, max spacing of 0 results in:
+  // p0, p1, p2, p3, p4, p5, p6
+  EXPECT_EQ(track_.MaxSpacing(6), 0);
+  EXPECT_EQ(track_.MaxSpacing(7), 0);
+  EXPECT_EQ(track_.MaxSpacing(8), 0);
+  EXPECT_EQ(track_.MaxSpacing(9), 0);
+  EXPECT_EQ(track_.MaxSpacing(10000), 0);
+}
+
+TEST_F(SpacedFeatureTrackTest, SecondLatestTimestamp) {
+  vc::SpacedFeatureTrack track(1);
+  // Test empty track
+  {
     const auto t = track.SecondLatestTimestamp();
     EXPECT_TRUE(t == boost::none);
   }
   // Test single point track
   {
-    vc::SpacedFeatureTrack track(1);
     track.Add(points_[0].timestamp, points_[0]);
     const auto t = track.SecondLatestTimestamp();
     EXPECT_TRUE(t == boost::none);
   }
   // Test two point track
   {
-    vc::SpacedFeatureTrack track(1);
-    track.Add(points_[0].timestamp, points_[0]);
     track.Add(points_[1].timestamp, points_[1]);
     const auto t = track.SecondLatestTimestamp();
     ASSERT_TRUE(t != boost::none);
