@@ -58,6 +58,8 @@ class VoSmartProjectionFactorAdder
     std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points) const;
 
   // Helper function to add a smart factor given a set of feature track points.
+  // Assumes points are ordered from oldest to latest, so oldest points are
+  // added first and prioritized over later points given a max number of points to add.
   void AddSmartFactor(const std::vector<vision_common::FeaturePoint>& feature_track_points,
                       gtsam::NonlinearFactorGraph& factors) const;
 
@@ -163,14 +165,14 @@ int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingSetS
     const auto& feature_track = *(feature_track_it->second);
     const auto points = feature_track.LatestPoints(spacing);
     // Skip already added tracks
-    if (added_points.count(points.front().feature_id) > 0) continue;
+    if (added_points.count(points.front().feature_track_id) > 0) continue;
     const double average_distance_from_mean = vc::AverageDistanceFromMean(points);
     if (vc::ValidPointSet(points.size(), average_distance_from_mean, params_.min_avg_distance_from_mean,
                           params_.min_num_points) &&
         !TooClose(added_points, points.front(), feature_track_min_separation)) {
       AddSmartFactor(points, factors);
       // Use latest point
-      added_points.emplace(points.front().feature_id, points.front());
+      added_points.emplace(points.front().feature_track_id, points.front());
     }
   }
 }

@@ -25,23 +25,41 @@
 #include <vector>
 
 namespace vision_common {
-// Feature track with additional methods to return spaced feature tracks.
-// Useful for appliciation that need to downsample the feature track in different ways.
-// Allows for maximally spaced tracks or downsampled tracks given a set spacing.
+// Feature track with additional methods to return downsampled or
+// set duration feature tracks.
+// Allows for maximally spaced tracks, downsampled tracks given a set spacing,
+// and downsampled tracks using only allowabled timestamps.
 class SpacedFeatureTrack : public FeatureTrack {
  public:
   // Default constructor for serialization only.
   SpacedFeatureTrack() = default;
+
   virtual ~SpacedFeatureTrack() = default;
+
+  // Returns downsamped feature track consisting of points only at allowed timestamps.
+  // Ordered from oldest to latest points.
   std::vector<FeaturePoint> AllowedPoints(const std::set<localization_common::Time>& allowed_timestamps) const;
+
+  // Returns the latest set of points within the provided duration.
+  // Ordered from oldest to latest points.
   std::vector<FeaturePoint> LatestPointsInWindow(const double duration) const;
+
+  // Returns the latest set of points spaced by the provided spacing.
+  // Ordered from oldest to latest points.
   std::vector<FeaturePoint> LatestPoints(const int spacing = 0) const;
-  bool SpacingFits(const int spacing, const int max_num_points) const;
+
+  // Returns the max spacing usable for a feature track
+  // such that the total number of points in the feature
+  // track does not exceed max_num_points.
   int MaxSpacing(const int max_num_points) const;
-  int ClosestSpacing(const int ideal_spacing, const int ideal_max_num_points) const;
-  boost::optional<localization_common::Time> PreviousTimestamp() const;
+
+  // Returns the second latest point's timestamp in the feature track.
+  boost::optional<localization_common::Time> SecondLatestTimestamp() const;
 
  private:
+  bool SpacingFits(const int spacing, const int max_num_points) const;
+  int ClosestSpacing(const int ideal_spacing, const int ideal_max_num_points) const;
+
   // Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>

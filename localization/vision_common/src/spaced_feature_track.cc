@@ -33,10 +33,10 @@ std::vector<FeaturePoint> SpacedFeatureTrack::AllowedPoints(const std::set<lc::T
 
 std::vector<FeaturePoint> SpacedFeatureTrack::LatestPointsInWindow(const double duration) const {
   std::vector<FeaturePoint> latest_points;
-  const auto latest_timestamp = LatestTimestamp();
-  if (!latest_timestamp) return {};
-  const lc::Time oldest_allowed_time = *latest_timestamp - duration;
-  // Start with latest points
+  const auto latest = Latest();
+  if (!latest) return {};
+  const lc::Time oldest_allowed_time = latest->timestamp - duration;
+  // Start with oldest points
   for (auto point_it = set().rbegin(); point_it != set().rend(); ++point_it) {
     if (point_it->first < oldest_allowed_time) break;
     latest_points.push_back(point_it->second);
@@ -85,7 +85,7 @@ int SpacedFeatureTrack::ClosestSpacing(const int ideal_spacing, const int ideal_
   return 0;
 }
 
-boost::optional<lc::Time> SpacedFeatureTrack::PreviousTimestamp() const {
+boost::optional<lc::Time> SpacedFeatureTrack::SecondLatestTimestamp() const {
   if (size() < 2) return boost::none;
   return std::next(set().crbegin())->first;
 }

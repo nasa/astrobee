@@ -28,15 +28,17 @@
 namespace vision_common {
 using FeatureId = int;
 using ImageId = int;
-
+// Point belonging to an image space feature track.
+// Contains an image_id corresponding to the image it belongs to and a feature_track_id
+// corresponding to the feature track it belongs to.
 struct FeaturePoint {
-  FeaturePoint(const double u, const double v, const ImageId image_id, const FeatureId feature_id,
+  FeaturePoint(const double u, const double v, const ImageId image_id, const FeatureId feature_track_id,
                const localization_common::Time timestamp)
-      : image_point(u, v), image_id(image_id), feature_id(feature_id), timestamp(timestamp) {}
+      : image_point(u, v), image_id(image_id), feature_track_id(feature_track_id), timestamp(timestamp) {}
   FeaturePoint() {}
   gtsam::Point2 image_point;
   ImageId image_id;
-  FeatureId feature_id;
+  FeatureId feature_track_id;
   localization_common::Time timestamp;
 
  private:
@@ -46,7 +48,7 @@ struct FeaturePoint {
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(image_point);
     ar& BOOST_SERIALIZATION_NVP(image_id);
-    ar& BOOST_SERIALIZATION_NVP(feature_id);
+    ar& BOOST_SERIALIZATION_NVP(feature_track_id);
     ar& BOOST_SERIALIZATION_NVP(timestamp);
   }
 };

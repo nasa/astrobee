@@ -397,6 +397,62 @@ TEST(TimestampedSetTester, Closest) {
   EXPECT_EQ(equal_value->timestamp, timestamp_2);
 }
 
+TEST(TimestampedSetTester, LatestValues) {
+  lc::TimestampedSet<double> timestamped_set;
+  const double t0 = 0;
+  const double v0 = lc::RandomDouble();
+  const double t1 = 1.001;
+  const double v1 = lc::RandomDouble();
+  const double t2 = 2.100;
+  const double v2 = lc::RandomDouble();
+  const double t3 = 3.0222;
+  const double v3 = lc::RandomDouble();
+  ASSERT_TRUE(timestamped_set.Add(t0, v0));
+  ASSERT_TRUE(timestamped_set.Add(t1, v1));
+  ASSERT_TRUE(timestamped_set.Add(t2, v2));
+  ASSERT_TRUE(timestamped_set.Add(t3, v3));
+  {
+    const auto latest_values = timestamped_set.LatestValues(2134);
+    EXPECT_EQ(latest_values.size(), 0);
+  }
+  {
+    const auto latest_values = timestamped_set.LatestValues((t2 + t3) / 2.0);
+    ASSERT_EQ(latest_values.size(), 1);
+    EXPECT_EQ(latest_values[0].value, v3);
+    EXPECT_EQ(latest_values[0].timestamp, t3);
+  }
+  {
+    const auto latest_values = timestamped_set.LatestValues(t2);
+    ASSERT_EQ(latest_values.size(), 2);
+    EXPECT_EQ(latest_values[0].value, v2);
+    EXPECT_EQ(latest_values[0].timestamp, t2);
+    EXPECT_EQ(latest_values[1].value, v3);
+    EXPECT_EQ(latest_values[1].timestamp, t3);
+  }
+  {
+    const auto latest_values = timestamped_set.LatestValues(0.1);
+    ASSERT_EQ(latest_values.size(), 3);
+    EXPECT_EQ(latest_values[0].value, v1);
+    EXPECT_EQ(latest_values[0].timestamp, t1);
+    EXPECT_EQ(latest_values[1].value, v2);
+    EXPECT_EQ(latest_values[1].timestamp, t2);
+    EXPECT_EQ(latest_values[2].value, v3);
+    EXPECT_EQ(latest_values[2].timestamp, t3);
+  }
+  {
+    const auto latest_values = timestamped_set.LatestValues(0);
+    ASSERT_EQ(latest_values.size(), 4);
+    EXPECT_EQ(latest_values[0].value, v0);
+    EXPECT_EQ(latest_values[0].timestamp, t0);
+    EXPECT_EQ(latest_values[1].value, v1);
+    EXPECT_EQ(latest_values[1].timestamp, t1);
+    EXPECT_EQ(latest_values[2].value, v2);
+    EXPECT_EQ(latest_values[2].timestamp, t2);
+    EXPECT_EQ(latest_values[3].value, v3);
+    EXPECT_EQ(latest_values[3].timestamp, t3);
+  }
+}
+
 TEST(TimestampedSetTester, OldValues) {
   lc::TimestampedSet<double> timestamped_set;
   const double t0 = 0;
@@ -440,6 +496,52 @@ TEST(TimestampedSetTester, OldValues) {
     EXPECT_EQ(old_values[2].timestamp, t2);
     EXPECT_EQ(old_values[3].value, v3);
     EXPECT_EQ(old_values[3].timestamp, t3);
+  }
+}
+
+TEST(TimestampedSetTester, DownsampledValues) {
+  lc::TimestampedSet<double> timestamped_set;
+  const double t0 = 0;
+  const double v0 = lc::RandomDouble();
+  const double t1 = 1.001;
+  const double v1 = lc::RandomDouble();
+  const double t2 = 2.100;
+  const double v2 = lc::RandomDouble();
+  const double t3 = 3.0222;
+  const double v3 = lc::RandomDouble();
+  ASSERT_TRUE(timestamped_set.Add(t0, v0));
+  ASSERT_TRUE(timestamped_set.Add(t1, v1));
+  ASSERT_TRUE(timestamped_set.Add(t2, v2));
+  ASSERT_TRUE(timestamped_set.Add(t3, v3));
+  {
+    std::set<lc::Time> allowed_timestamps;
+    const auto downsampled_values = timestamped_set.DownsampledValues(allowed_timestamps);
+    EXPECT_EQ(downsampled_values.size(), 0);
+  }
+  {
+    std::set<lc::Time> allowed_timestamps;
+    allowed_timestamps.emplace((t1 + t2) / 2.0);
+    const auto downsampled_values = timestamped_set.DownsampledValues(allowed_timestamps);
+    EXPECT_EQ(downsampled_values.size(), 0);
+  }
+  {
+    std::set<lc::Time> allowed_timestamps;
+    allowed_timestamps.emplace(t1);
+    const auto downsampled_values = timestamped_set.DownsampledValues(allowed_timestamps);
+    EXPECT_EQ(downsampled_values.size(), 1);
+    EXPECT_EQ(downsampled_values[0].timestamp, t1);
+    EXPECT_EQ(downsampled_values[0].value, v1);
+  }
+  {
+    std::set<lc::Time> allowed_timestamps;
+    allowed_timestamps.emplace(t0);
+    allowed_timestamps.emplace(t3);
+    const auto downsampled_values = timestamped_set.DownsampledValues(allowed_timestamps);
+    EXPECT_EQ(downsampled_values.size(), 2);
+    EXPECT_EQ(downsampled_values[0].timestamp, t0);
+    EXPECT_EQ(downsampled_values[0].value, v0);
+    EXPECT_EQ(downsampled_values[1].timestamp, t3);
+    EXPECT_EQ(downsampled_values[1].value, v3);
   }
 }
 

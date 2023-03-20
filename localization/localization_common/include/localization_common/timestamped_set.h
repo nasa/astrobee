@@ -80,7 +80,16 @@ class TimestampedSet {
 
   bool Contains(const Time timestamp) const;
 
+  // Returns the latest values not older than the provided oldest allowed timestamp.
+  // Orders values from older to later values.
+  std::vector<TimestampedValue<T>> LatestValues(const Time oldest_allowed_timestamp) const;
+
   std::vector<TimestampedValue<T>> OldValues(const Time oldest_allowed_timestamp) const;
+
+  // Returns values occuring at the provided timestamps.
+  // Orders values from older to later values.
+  template <typename TimestampSetType>
+  std::vector<TimestampedValue<T>> DownsampledValues(const TimestampSetType& allowed_timestamps) const;
 
   int RemoveOldValues(const Time oldest_allowed_timestamp);
 
@@ -266,12 +275,34 @@ bool TimestampedSet<T>::Contains(const Time timestamp) const {
 }
 
 template <typename T>
+std::vector<TimestampedValue<T>> TimestampedSet<T>::LatestValues(const Time oldest_allowed_timestamp) const {
+  std::vector<TimestampedValue<T>> latest_values;
+  std::transform(timestamp_value_map_.lower_bound(oldest_allowed_timestamp), timestamp_value_map_.end(),
+                 std::back_inserter(latest_values),
+                 [](const std::pair<Time, T>& value) { return TimestampedValue<T>(value); });
+  return latest_values;
+}
+
+template <typename T>
 std::vector<TimestampedValue<T>> TimestampedSet<T>::OldValues(const Time oldest_allowed_timestamp) const {
   std::vector<TimestampedValue<T>> old_values;
   std::transform(timestamp_value_map_.begin(), timestamp_value_map_.lower_bound(oldest_allowed_timestamp),
                  std::back_inserter(old_values),
                  [](const std::pair<Time, T>& value) { return TimestampedValue<T>(value); });
   return old_values;
+}
+
+template <typename T>
+template <typename TimestampSetType>
+std::vector<TimestampedValue<T>> TimestampedSet<T>::DownsampledValues(
+  const TimestampSetType& allowed_timestamps) const {
+  std::vector<TimestampedValue<T>> downsampled_values;
+  for (const auto& pair : timestamp_value_map_) {
+    if (allowed_timestamps.count(pair.first) > 0) {
+      downsampled_values.emplace_back(TimestampedValue<T>(pair));
+    }
+  }
+  return downsampled_values;
 }
 
 template <typename T>
