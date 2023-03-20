@@ -31,22 +31,15 @@ namespace vision_common {
 // and downsampled tracks using only allowabled timestamps.
 class SpacedFeatureTrack : public FeatureTrack {
  public:
+  explicit SpacedFeatureTrack(const FeatureId id);
   // Default constructor for serialization only.
   SpacedFeatureTrack() = default;
 
   virtual ~SpacedFeatureTrack() = default;
 
-  // Returns downsamped feature track consisting of points only at allowed timestamps.
-  // Ordered from oldest to latest points.
-  std::vector<FeaturePoint> AllowedPoints(const std::set<localization_common::Time>& allowed_timestamps) const;
-
-  // Returns the latest set of points within the provided duration.
-  // Ordered from oldest to latest points.
-  std::vector<FeaturePoint> LatestPointsInWindow(const double duration) const;
-
   // Returns the latest set of points spaced by the provided spacing.
   // Ordered from oldest to latest points.
-  std::vector<FeaturePoint> LatestPoints(const int spacing = 0) const;
+  std::vector<FeaturePoint> LatestSpacedPoints(const int spacing = 0) const;
 
   // Returns the max spacing usable for a feature track
   // such that the total number of points in the feature

@@ -2,9 +2,6 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
     - test vo factor adder! (AA)
-                - test spaced feature track! (AAAA)
-                  - add downsampled values function to timestamped set! (AB)
-                    - pass allowed list!  
                   - update spaced feature track with these! (AC)
         - spit up feature tracker into feature tracker and spaced feature tracker (AB)
                 - test featuretracker! (AC)

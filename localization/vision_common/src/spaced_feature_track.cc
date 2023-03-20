@@ -21,30 +21,9 @@
 
 namespace vision_common {
 namespace lc = localization_common;
-std::vector<FeaturePoint> SpacedFeatureTrack::AllowedPoints(const std::set<lc::Time>& allowed_timestamps) const {
-  std::vector<FeaturePoint> allowed_points;
-  // Start with oldest points
-  for (auto point_it = set().begin(); point_it != set().end(); ++point_it) {
-    if (allowed_timestamps.count(point_it->first) <= 0) continue;
-    allowed_points.emplace_back(point_it->second);
-  }
-  return allowed_points;
-}
+SpacedFeatureTrack::SpacedFeatureTrack(const FeatureId id) : FeatureTrack(id) {}
 
-std::vector<FeaturePoint> SpacedFeatureTrack::LatestPointsInWindow(const double duration) const {
-  std::vector<FeaturePoint> latest_points;
-  const auto latest = Latest();
-  if (!latest) return {};
-  const lc::Time oldest_allowed_time = latest->timestamp - duration;
-  // Start with oldest points
-  for (auto point_it = set().rbegin(); point_it != set().rend(); ++point_it) {
-    if (point_it->first < oldest_allowed_time) break;
-    latest_points.push_back(point_it->second);
-  }
-  return latest_points;
-}
-
-std::vector<FeaturePoint> SpacedFeatureTrack::LatestPoints(const int spacing) const {
+std::vector<FeaturePoint> SpacedFeatureTrack::LatestSpacedPoints(const int spacing) const {
   std::vector<FeaturePoint> latest_points;
   int i = 0;
   // Start with latest points
@@ -52,6 +31,8 @@ std::vector<FeaturePoint> SpacedFeatureTrack::LatestPoints(const int spacing) co
     if (i++ % (spacing + 1) != 0) continue;
     latest_points.push_back(point_it->second);
   }
+  // Flip so oldest points are first
+  std::reverse(latest_points.begin(), latest_points.end());
   return latest_points;
 }
 

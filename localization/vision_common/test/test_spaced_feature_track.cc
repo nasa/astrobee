@@ -18,7 +18,7 @@
 
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
-#include <vision_common/feature_tracker.h>
+#include <vision_common/spaced_feature_track.h>
 #include <vision_common/test_utilities.h>
 
 #include <gtest/gtest.h>
@@ -28,26 +28,35 @@ namespace vc = vision_common;
 
 class SpacedFeatureTrackTest : public ::testing::Test {
  public:
-  SpacedFeatureTrackTest() {}
+  SpacedFeatureTrackTest() : track_(feature_track_id_) {}
 
-  void SetUp() final {}
-
-  fa::SpacedFeatureTrackParams DefaultParams() {
-    fa::SpacedFeatureTrackParams params;
-    params.enabled = true;
-    params.huber_k = 1.345;
-    params.add_velocity_prior = true;
-    params.add_pose_between_factor = true;
-    params.prior_velocity_stddev = 0.1;
-    params.pose_between_factor_translation_stddev = 0.2;
-    params.pose_between_factor_rotation_stddev = 0.3;
-    return params;
+  void SetUp() final {
+    for (int i = 0; i < num_points_; ++i) {
+      const lc::Time time = i;
+      const vc::FeaturePoint p(i, i + 1, i + 2, feature_track_id_, time);
+      track_.Add(time, p);
+      points_.emplace_back(p);
+    }
   }
 
-  std::unique_ptr<vc::SpacedFeatureTrack> feature_tracker_;
+  void EXPECT_SAME_POINT(const vc::FeaturePoint& p_a, const vc::FeaturePoint& p_b) {
+    EXPECT_EQ(p_a.image_id, p_b.image_id);
+    EXPECT_EQ(p_a.feature_track_id, p_b.feature_track_id);
+    EXPECT_MATRIX_NEAR(p_a.image_point, p_b.image_point, 1e-6);
+    EXPECT_NEAR(p_a.timestamp, p_b.timestamp, 1e-6);
+  }
+
+  void EXPECT_SAME_POINT(const vc::FeaturePoint& p_a, const int index) { EXPECT_SAME_POINT(p_a, points_[index]); }
+  const vc::FeatureId feature_track_id_ = 4;
+  const int num_points_ = 10;
+  vc::SpacedFeatureTrack track_;
+  std::vector<vc::FeaturePoint> points_;
 };
 
-TEST(SpacedFeatureTrackTest, RansacPnP) {
+TEST_F(SpacedFeatureTrackTest, SecondLatestTimestamp) {
+  const auto t = track_.SecondLatestTimestamp();
+  ASSERT_TRUE(t != boost::none);
+  EXPECT_NEAR(*t, points_[num_points_ - 2].timestamp, 1e-6);
 }
 
 // Run all the tests that were declared with TEST()
