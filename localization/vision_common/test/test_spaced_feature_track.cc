@@ -54,6 +54,30 @@ class SpacedFeatureTrackTest : public ::testing::Test {
 };
 
 TEST_F(SpacedFeatureTrackTest, SecondLatestTimestamp) {
+  // Test empty track
+  {
+    vc::SpacedFeatureTrack track(1);
+    const auto t = track.SecondLatestTimestamp();
+    EXPECT_TRUE(t == boost::none);
+  }
+  // Test single point track
+  {
+    vc::SpacedFeatureTrack track(1);
+    track.Add(points_[0].timestamp, points_[0]);
+    const auto t = track.SecondLatestTimestamp();
+    EXPECT_TRUE(t == boost::none);
+  }
+  // Test two point track
+  {
+    vc::SpacedFeatureTrack track(1);
+    track.Add(points_[0].timestamp, points_[0]);
+    track.Add(points_[1].timestamp, points_[1]);
+    const auto t = track.SecondLatestTimestamp();
+    ASSERT_TRUE(t != boost::none);
+    EXPECT_NEAR(*t, points_[0].timestamp, 1e-6);
+  }
+
+  // Test multi point track
   const auto t = track_.SecondLatestTimestamp();
   ASSERT_TRUE(t != boost::none);
   EXPECT_NEAR(*t, points_[num_points_ - 2].timestamp, 1e-6);
