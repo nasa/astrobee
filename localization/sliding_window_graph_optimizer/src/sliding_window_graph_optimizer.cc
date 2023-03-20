@@ -39,16 +39,14 @@ void SlidingWindowGraphOptimizer::AddSlidingWindowNodeAdder(
 
 bool SlidingWindowGraphOptimizer::Update() {
   LogDebug("Update: Updating.");
-
   update_timer_.Start();
+  GraphOptimizer::Optimize();
   if (marginals()) {
     if (!SlideWindow(*(marginals()), *end_time_)) {
       LogError("Update: Failed to slide window.");
       return false;
     }
   }
-
-  GraphOptimizer::Optimize();
   end_time_ = EndTime();
   update_timer_.Stop();
   return true;

@@ -52,7 +52,7 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // the GraphOptimizer::AddNodeAdder() function.
   void AddSlidingWindowNodeAdder(std::shared_ptr<node_adders::SlidingWindowNodeAdder> sliding_window_node_adder);
 
-  // Slides the window and optimizes the graph.
+  // Optimizes the graph and slides the window.
   // See SlideWindow() function comments for more details on sliding the window.
   bool Update();
 

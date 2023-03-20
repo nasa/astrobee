@@ -1,6 +1,4 @@
   - implement vo factor adder! (AAA)
-    - slide window after optimization??? (AD)
-          - enables ordering to be used!
     - move graph action completer here! (AE)
       - move helper functions for fixing smart factors here
     - test!
@@ -15,6 +13,8 @@
     - need to account for factors removed when sliding window!
       (i.e. smart factors!)
         - since these are pts, just make sets of ptr values and check for new and removed ones!!!
+
+  - add ordering back to sliding window optimizer now that window is slid after optimization!
 
 
   - TODO: implement others!
