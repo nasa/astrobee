@@ -38,7 +38,8 @@ class SpacedFeatureTrack : public FeatureTrack {
   virtual ~SpacedFeatureTrack() = default;
 
   // Returns the latest set of points spaced by the provided spacing.
-  // Ordered from oldest to latest points.
+  // Starts sampling with the latest point.
+  // Return vector is ordered from oldest to latest points.
   std::vector<FeaturePoint> LatestSpacedPoints(const int spacing = 0) const;
 
   // Returns the max spacing usable for a feature track

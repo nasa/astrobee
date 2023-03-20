@@ -53,6 +53,78 @@ class SpacedFeatureTrackTest : public ::testing::Test {
   std::vector<vc::FeaturePoint> points_;
 };
 
+TEST_F(SpacedFeatureTrackTest, LatestSpacedPoints) {
+  vc::SpacedFeatureTrack track(1);
+  // Test empty track
+  {
+    const auto points = track.LatestSpacedPoints(0);
+    EXPECT_EQ(points.size(), 0);
+  }
+  {
+    const auto points = track.LatestSpacedPoints(10);
+    EXPECT_EQ(points.size(), 0);
+  }
+
+  // Test single point track
+  track.Add(points_[0].timestamp, points_[0]);
+  {
+    const auto points = track.LatestSpacedPoints(0);
+    ASSERT_EQ(points.size(), 1);
+    EXPECT_SAME_POINT(points[0], points_[0]);
+  }
+  {
+    const auto points = track.LatestSpacedPoints(5);
+    ASSERT_EQ(points.size(), 1);
+    EXPECT_SAME_POINT(points[0], points_[0]);
+  }
+
+  // Test two point track
+  track.Add(points_[1].timestamp, points_[1]);
+  {
+    const auto points = track.LatestSpacedPoints(0);
+    ASSERT_EQ(points.size(), 2);
+    EXPECT_SAME_POINT(points[0], points_[0]);
+    EXPECT_SAME_POINT(points[1], points_[1]);
+  }
+  {
+    const auto points = track.LatestSpacedPoints(1);
+    ASSERT_EQ(points.size(), 1);
+    EXPECT_SAME_POINT(points[0], points_[1]);
+  }
+  {
+    const auto points = track.LatestSpacedPoints(4);
+    ASSERT_EQ(points.size(), 1);
+    EXPECT_SAME_POINT(points[0], points_[1]);
+  }
+
+  // Test multi point track
+  {
+    const auto points = track_.LatestSpacedPoints(0);
+    ASSERT_EQ(points.size(), 10);
+    for (int i = 0; i < num_points_; ++i) EXPECT_SAME_POINT(points[i], points_[i]);
+  }
+  {
+    const auto points = track_.LatestSpacedPoints(1);
+    ASSERT_EQ(points.size(), 5);
+    // Expect p1, p3, p5, p7, p9
+    for (int i = 0; i < 5; ++i) EXPECT_SAME_POINT(points[i], points_[2 * i + 1]);
+  }
+  {
+    const auto points = track_.LatestSpacedPoints(2);
+    ASSERT_EQ(points.size(), 4);
+    // Expect p0, p3, p6, p9
+    for (int i = 0; i < 4; ++i) EXPECT_SAME_POINT(points[i], points_[3 * i]);
+  }
+  {
+    const auto points = track_.LatestSpacedPoints(3);
+    ASSERT_EQ(points.size(), 3);
+    // Expect p1, p5, p9
+    EXPECT_SAME_POINT(points[0], points_[1]);
+    EXPECT_SAME_POINT(points[1], points_[5]);
+    EXPECT_SAME_POINT(points[2], points_[9]);
+  }
+}
+
 TEST_F(SpacedFeatureTrackTest, MaxSpacing) {
   vc::SpacedFeatureTrack track(1);
   // Test empty track
