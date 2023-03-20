@@ -1,9 +1,23 @@
-  - implement vo factor adder! (AAA)
-    - test!
   - implement loc factor adder! (AB)
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
-    - test!
+    - test vo factor adder! (AA)
+      - update feature tracker to use timestamped set! test this!
+        - make base class with basic features, child class with features for smart factor!
+          - call these smart_factor_feature_tracks, smart_factor_feature_tracker, move to factor adder??
+              - test spaced feature track! (AAA)
+              - spit up feature tracker into feature tracker and spaced feature tracker
+                - test featuretracker!
+                - test spaced feature tracker!
+          - test each of these!
+        - add comments to functions!
+      - clean up smart factor fixing code! test this!
+        - add better comments to functions!
+      - test other smart factor functions!
+    - test loc factor adder!
+  - test graph optimizer! (C)
+  - test sliding window optimizer! (D)
+
 
   isam2 optimizer issues!
     - need to account for values removed when sliding window!
@@ -19,9 +33,6 @@
     - should use timestamped set!
     - explain functions better!
 
-  - test graph optimizer! (C)
-
-  - test sliding window optimizer! (D)
   - add grah_vio! (E)
     - publish odometry message!
       - add new message type?

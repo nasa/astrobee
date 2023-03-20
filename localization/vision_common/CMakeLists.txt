@@ -56,6 +56,7 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/brisk_feature_detector_and_matcher.cc
+  src/spaced_feature_track.cc
   src/good_features_to_track_detector.cc
   src/lk_optical_flow_feature_detector_and_matcher.cc
   src/parameter_reader.cc
@@ -69,6 +70,21 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} gtsam ${OpenCV_LIBRARI
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  add_rostest_gtest(test_spaced_feature_track
+    test/test_spaced_feature_track.test
+    test/test_spaced_feature_track.cc
+  )
+  target_link_libraries(test_spaced_feature_track
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
+ 
+ # add_rostest_gtest(test_feature_tracker
+ #   test/test_feature_tracker.test
+ #   test/test_feature_tracker.cc
+ # )
+ # target_link_libraries(test_feature_tracker
+ #   ${PROJECT_NAME} ${catkin_LIBRARIES}  
+ # )
   add_rostest_gtest(test_inverse_depth_measurement
     test/test_inverse_depth_measurement.test
     test/test_inverse_depth_measurement.cc
