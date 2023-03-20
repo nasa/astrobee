@@ -54,8 +54,14 @@ class FeatureTracker {
   size_t size() const;
   bool empty() const;
   void Clear();
+  // Returns the oldest feature point timestamp of all the feature tracks
+  // if available.
   boost::optional<localization_common::Time> OldestTimestamp() const;
+
+  // Returns the latest feature point timestamp of all the feature tracks
+  // if available.
   boost::optional<localization_common::Time> LatestTimestamp() const;
+
   boost::optional<localization_common::Time> PreviousTimestamp() const;
 
  private:

@@ -30,16 +30,22 @@ namespace vision_common {
 using FeatureTrackIdMap = std::map<FeatureId, std::shared_ptr<FeatureTrack>>;
 class FeatureTracker {
  public:
-  explicit FeatureTracker(const FeatureTrackerParams& params = FeatureTrackerParams());
+  explicit FeatureTracker(const FeatureTrackerParams& params);
+
+  // Default constructor only for serialization
+  FeatureTracker() = default;
+
+  ~FeatureTracker() = default;
+
   // Add new feature points to existing or new tracks.  Optionally removes
   // any existing tracks that weren't detected in passed feature_points.
   void UpdateFeatureTracks(const FeaturePoints& feature_points);
 
-  // Returns a reference to the feature tracks.
-  const FeatureTrackIdMap& feature_tracks() const;
-
   // Remove any points older than oldest_allowed_time from each feature track.
   void RemoveOldPoints(const localization_common::Time oldest_allowed_time);
+
+  // Returns a reference to the feature tracks.
+  const FeatureTrackIdMap& feature_tracks() const;
 
   // Returns the number of feature tracks.
   size_t size() const;
@@ -49,14 +55,6 @@ class FeatureTracker {
 
   // Deletes all feature tracks.
   void Clear();
-
-  // Returns the oldest feature point timestamp of all the feature tracks
-  // if available.
-  boost::optional<localization_common::Time> OldestTimestamp() const;
-
-  // Returns the latest feature point timestamp of all the feature tracks
-  // if available.
-  boost::optional<localization_common::Time> LatestTimestamp() const;
 
  private:
   // Add new feature point to an existing track with the same track id
@@ -71,6 +69,7 @@ class FeatureTracker {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(feature_track_id_map_);
+    ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
   FeatureTrackIdMap feature_track_id_map_;
