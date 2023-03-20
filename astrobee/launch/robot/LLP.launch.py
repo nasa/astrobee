@@ -59,12 +59,14 @@ def generate_launch_description():
                 package='ctl',
                 plugin='ctl::CtlComponent',
                 name='ctl',
-                extra_arguments=[{'use_intra_process_comms': True}]),
+                extra_arguments=[{'use_intra_process_comms': True}]
+                ),
             ComposableNode(
                 package='fam',
                 plugin='fam::FamComponent',
                 name='fam',
-                extra_arguments=[{'use_intra_process_comms': True}])
+                extra_arguments=[{'use_intra_process_comms': True}]
+                )
             ]
         ),
         ComposableNodeContainer(
@@ -72,6 +74,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("gtloc")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='imu_augmentor',
@@ -86,6 +89,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='cpu_mem_monitor',
@@ -104,6 +108,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='eps_driver',
@@ -132,6 +137,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='speed_cam',
@@ -145,6 +151,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='pmc_actuator',
@@ -158,6 +165,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='epson_imu',
@@ -176,7 +184,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
-        condition=Condition(LaunchConfiguration("drivers")),
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='signal_lights',

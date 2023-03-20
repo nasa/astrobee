@@ -53,6 +53,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("gtloc")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='localization_manager',
@@ -63,8 +64,28 @@ def generate_launch_description():
                 package='ground_truth_localizer',
                 plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
                 name='ground_truth_localizer',
-                # condition=IfCondition(LaunchConfiguration("gtloc"))
                 ),
+            # ComposableNode(
+            #     package='image_sampler',
+            #     plugin='image_sampler::ImageSampler',
+            #     name='image_sampler',
+            #     remappings=[('/image', '/burgerimage')],
+            #     parameters=[{'history': 'keep_last'}],
+            #     extra_arguments=[{'use_intra_process_comms': True}])
+            ]
+        ),
+        ComposableNodeContainer(
+        name='mlp_localization',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=UnlessCondition(LaunchConfiguration("gtloc")),
+        composable_node_descriptions=[
+            # ComposableNode(
+            #     package='localization_manager',
+            #     plugin='localization_manager::LocalizationManagerNodelet',
+            #     name='localization_manager',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
             # ComposableNode(
             #     package='image_sampler',
             #     plugin='image_sampler::ImageSampler',
@@ -79,6 +100,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=UnlessCondition(LaunchConfiguration("gtloc")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='graph_loc',
@@ -92,6 +114,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='depth_odometry_nodelet',
@@ -149,7 +172,27 @@ def generate_launch_description():
         name='mlp_depth_cam',
         namespace='',
         package='rclcpp_components',
+        condition=UnlessCondition(LaunchConfiguration("drivers")),
         executable='component_container',
+        composable_node_descriptions=[
+            # ComposableNode(
+            #     package='handrail_detect',
+            #     plugin='handrail_detect::HandrailDetect',
+            #     name='handrail_detect',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            # ComposableNode(
+            #     package='planner_qp',
+            #     plugin='planner_qp::Planner',
+            #     name='planner_qp',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='mlp_depth_cam',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='handrail_detect',
@@ -222,6 +265,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='sys_monitor',
@@ -237,6 +281,20 @@ def generate_launch_description():
             #     package='disk_monitor',
             #     plugin='disk_monitor::DiskMonitor',
             #     name='mlp_disk_monitor',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='mlp_monitors',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=UnlessCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
+            # ComposableNode(
+            #     package='sys_monitor',
+            #     plugin='sys_monitor::SysMonitor',
+            #     name='sys_monitor',
             #     extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
@@ -271,6 +329,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='perching_arm',
@@ -346,6 +405,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='vive',
