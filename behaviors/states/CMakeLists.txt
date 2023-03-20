@@ -51,11 +51,11 @@ include_directories(
 
 # Declare C++ libraries
 add_library(states SHARED
-  src/states_nodelet/states_nodelet.cc
+  src/states_component/states_component.cc
 )
 target_compile_definitions(states PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(states rclcpp rclcpp_components ${dependencies})
-rclcpp_components_register_nodes(states "states::StateNodelet")
+rclcpp_components_register_nodes(states "states::StatesComponent")
 
 #############
 ## Install ##

@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
-#define GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
+#ifndef GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_COMPONENT_H_
+#define GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_COMPONENT_H_
 
 #include <ff_util/ff_component.h>
 #include <ground_truth_localizer/twist.h>
@@ -57,9 +57,9 @@ typedef srv::Empty Empty;
 #include <string>
 
 namespace ground_truth_localizer {
-class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerComponent {
+class GroundTruthLocalizerComponent : public ff_util::FreeFlyerComponent {
  public:
-  explicit GroundTruthLocalizerNodelet(const rclcpp::NodeOptions& options);
+  explicit GroundTruthLocalizerComponent(const rclcpp::NodeOptions& options);
 
  private:
   void Initialize(NodeHandle &nh);
@@ -100,4 +100,4 @@ class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerComponent {
 };
 }  // namespace ground_truth_localizer
 
-#endif  // GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
+#endif  // GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_COMPONENT_H_

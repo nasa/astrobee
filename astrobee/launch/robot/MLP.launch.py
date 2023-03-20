@@ -61,7 +61,7 @@ def generate_launch_description():
             #     extra_arguments=[{'use_intra_process_comms': True}]),
             ComposableNode(
                 package='ground_truth_localizer',
-                plugin='ground_truth_localizer::GroundTruthLocalizerNodelet',
+                plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
                 name='ground_truth_localizer',
                 # condition=IfCondition(LaunchConfiguration("gtloc"))
                 ),
@@ -362,7 +362,7 @@ def generate_launch_description():
         composable_node_descriptions=[
             ComposableNode(
                 package='states',
-                plugin='states::StatesNodelet',
+                plugin='states::StatesComponent',
                 name='states',
                 extra_arguments=[{'use_intra_process_comms': True}]),
             ]

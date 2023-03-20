@@ -36,6 +36,19 @@ def generate_launch_description():
 
         SetEnvironmentVariable(name="ROS_HOSTNAME", condition=LaunchConfigurationNotEquals("llp", "local"),
                                value=LaunchConfiguration("llp")),
+
+
+        DeclareLaunchArgument("drivers",),                    # Start platform drivers
+        DeclareLaunchArgument("spurn", default_value=""),     # Prevent a specific node
+        DeclareLaunchArgument("nodes", default_value=""),     # Launch specific nodes
+        DeclareLaunchArgument("extra", default_value=""),     # Inject an additional node
+        DeclareLaunchArgument("debug", default_value=""),     # Debug node group
+
+        DeclareLaunchArgument("output",  default_value="log"),    # Output to screen or log
+        DeclareLaunchArgument("gtloc",   default_value="false"),  # Use Ground Truth Localizer
+
+
+
         ComposableNodeContainer(
         name='llp_gnc',
         namespace='',
@@ -163,6 +176,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=Condition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
         #     ComposableNode(
         #         package='signal_lights',
@@ -171,7 +185,7 @@ def generate_launch_description():
         #         extra_arguments=[{'use_intra_process_comms': True}]),
             ComposableNode(
                 package='light_flow',
-                plugin='light_flow::LightFlowNodelet',
+                plugin='light_flow::LightFlowComponent',
                 name='light_flow',
                 extra_arguments=[{'use_intra_process_comms': True}]),
             ]

@@ -57,13 +57,13 @@ ament_target_dependencies(light_flow rclcpp ff_hw_msgs ff_util ff_common)
 target_link_libraries(light_flow jsoncpp)
 
 # Declare C++ libraries
-add_library(light_flow_nodelet SHARED
-  src/light_flow_nodelet/light_flow_nodelet.cc
+add_library(light_flow_component SHARED
+  src/light_flow_component/light_flow_component.cc
 )
-target_compile_definitions(light_flow_nodelet PRIVATE "COMPOSITION_BUILDING_DLL")
-target_link_libraries(light_flow_nodelet light_flow jsoncpp)
-ament_target_dependencies(light_flow_nodelet ${dependencies})
-rclcpp_components_register_nodes(light_flow_nodelet "light_flow_nodelet::LightFlowNodelet")
+target_compile_definitions(light_flow_component PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(light_flow_component light_flow jsoncpp)
+ament_target_dependencies(light_flow_component ${dependencies})
+rclcpp_components_register_nodes(light_flow_component "light_flow::LightFlowComponent")
 
 ## Declare a C++ executable: inspection_tool
 add_executable(light_flow_tool tools/light_flow_tool.cc)
@@ -77,7 +77,7 @@ target_link_libraries(light_flow_tool
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ${PROJECT_NAME}_nodelet
+  ${PROJECT_NAME}_component
   light_flow_tool
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
