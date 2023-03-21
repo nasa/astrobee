@@ -77,14 +77,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_spaced_feature_track
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
- 
- # add_rostest_gtest(test_feature_tracker
- #   test/test_feature_tracker.test
- #   test/test_feature_tracker.cc
- # )
- # target_link_libraries(test_feature_tracker
- #   ${PROJECT_NAME} ${catkin_LIBRARIES}  
- # )
+  add_rostest_gtest(test_feature_tracker
+    test/test_feature_tracker.test
+    test/test_feature_tracker.cc
+  )
+  target_link_libraries(test_feature_tracker
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
   add_rostest_gtest(test_inverse_depth_measurement
     test/test_inverse_depth_measurement.test
     test/test_inverse_depth_measurement.cc

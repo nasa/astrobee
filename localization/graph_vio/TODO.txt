@@ -2,10 +2,10 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
     - test vo factor adder! (AA)
-        - TODO: don't remove feature tracks w/o detections????
         - spit up feature tracker into feature tracker and spaced feature tracker (AB)
-                - test featuretracker! (AC)
-                - test spaced feature tracker! (AD)
+                - test featuretracker! (AA)
+                - test spaced feature tracker! (AB)
+                  - are all these functions still needed??
 
           - test each of these!
         - add comments to functions!
