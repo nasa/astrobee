@@ -6,6 +6,7 @@
                 - test featuretracker! (AA)
                   - test with removal!
                   - test remove old points!
+                  - test track sizes!!!
                 - test spaced feature tracker! (AB)
                   - are all these functions still needed??
 
