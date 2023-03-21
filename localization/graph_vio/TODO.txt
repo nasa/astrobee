@@ -4,6 +4,8 @@
     - test vo factor adder! (AA)
         - spit up feature tracker into feature tracker and spaced feature tracker (AB)
                 - test featuretracker! (AA)
+                  - test with removal!
+                  - test remove old points!
                 - test spaced feature tracker! (AB)
                   - are all these functions still needed??
 
