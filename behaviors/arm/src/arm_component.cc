@@ -493,13 +493,6 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                   "Could not start config server");
 
-    // TODO(ana): Listen function is not in the ROS2 upgrade of config_server
-    /*if (!cfg_.Listen(boost::bind(
-      &ArmComponent::ReconfigureCallback, this, _1)))
-      return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Could not load config");
-    */
-
     // Read the configuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
@@ -581,24 +574,6 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
       &ArmComponent::CancelCallback, this));
     server_.Create(nh, ACTION_BEHAVIORS_ARM);
   }
-
-  // Callback to handle reconfiguration requests
-  // TODO(ana): dynamic_reconfigure
-  /*bool ReconfigureCallback(dynamic_reconfigure::Config & config) {
-    bool success = false;
-    switch (fsm_.GetState()) {
-    case STATE::DEPLOYED:
-    case STATE::STOWED:
-    case STATE::UNKNOWN:
-      //success = cfg_.Reconfigure(config); // TODO(ana): Reconfigure *not* in latest version of ConfigServer
-      joints_[PAN].tol = cfg_.Get<double>("tol_pan");
-      joints_[TILT].tol = cfg_.Get<double>("tol_tilt");
-      joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");
-    default:
-      break;
-    }
-    return success;
-  }*/
 
   // When the FSM state changes we get a callback here, so that we
   // can choose to do various things.
@@ -733,9 +708,28 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
     return true;
   }
 
+  // Get tolerance value
+  double GetTolerance(JointType t) {
+    switch (fsm_.GetState()) {
+    case STATE::DEPLOYED:
+    case STATE::STOWED:
+    case STATE::UNKNOWN:
+      if (t == PAN)
+        joints_[PAN].tol = cfg_.Get<double>("tol_pan");
+      else if (t == TILT)
+        joints_[TILT].tol = cfg_.Get<double>("tol_tilt");
+      else if (t == GRIPPER)
+        joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");
+      return joints_[t].tol;
+    default:
+      break;
+    }
+    return joints_[PAN].tol;
+  }
+
   // Check if the two angle are sufficiently close, respecting modular math
   bool Equal(JointType t, double v) {
-    return ((180. - fabs(fabs(joints_[t].val - v) - 180.)) < joints_[t].tol);
+    return ((180. - fabs(fabs(joints_[t].val - v) - 180.)) < GetTolerance(t));
   }
 
   // Look at the pan and tilt angles to determine if stowed
@@ -884,7 +878,7 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
     state_msg.header.frame_id = GetPlatform();
     state_msg.header.stamp = GetTimeNow();
     // Convert our internal state to an ArmGripperState
-    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < joints_[GRIPPER].tol)
+    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < GetTolerance(GRIPPER))
       state_msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
     else
       state_msg.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
@@ -1015,7 +1009,7 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
         // Check current and goal tilt, and if close to stowed, make
         // sure the pan value is zero within tolerance
         if ((joints_[TILT].goal > K_TILT_SAFE || new_t > K_TILT_SAFE)
-          && fabs(new_p - K_PAN_STOW) > joints_[PAN].tol) {
+          && fabs(new_p - K_PAN_STOW) > GetTolerance(PAN)) {
           Result(RESPONSE::COLLISION_AVOIDED, true);
           return;
         }
