@@ -38,9 +38,9 @@ void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
   const int post_add_num_feature_tracks = size();
   LogDebug("UpdateFeatureTracks: Added feature tracks: " << post_add_num_feature_tracks - starting_num_feature_tracks);
 
-  if (params_.remove_undetected_features) {
+  if (params_.remove_undetected_feature_tracks) {
     const auto feature_points_timestamp = feature_points.front().timestamp;
-    RemoveUndetectedFeatures(feature_points_timestamp);
+    RemoveUndetectedFeatureTracks(feature_points_timestamp);
   }
   const int removed_num_feature_tracks = post_add_num_feature_tracks - size();
   LogDebug("UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks);
@@ -49,11 +49,11 @@ void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
 
 void FeatureTracker::RemoveOldPoints(const lc::Time oldest_allowed_time) {
   for (auto feature_track : feature_track_id_map_) {
-    feature_track.second->RemoveOldValues(*oldest_allowed_time);
+    feature_track.second->RemoveOldValues(oldest_allowed_time);
   }
 }
 
-void FeatureTracker::RemoveUndetectedFeatures(const lc::Time& feature_point_timestamp) {
+void FeatureTracker::RemoveUndetectedFeatureTracks(const lc::Time& feature_point_timestamp) {
   for (auto feature_it = feature_track_id_map_.cbegin(); feature_it != feature_track_id_map_.cend();) {
     if (!feature_it->second->Contains(feature_point_timestamp)) {
       feature_it = feature_track_id_map_.erase(feature_it);
@@ -64,10 +64,11 @@ void FeatureTracker::RemoveUndetectedFeatures(const lc::Time& feature_point_time
 }
 
 void FeatureTracker::AddOrUpdateTrack(const FeaturePoint& feature_point) {
-  if (feature_track_id_map_.count(feature_point.feature_id) == 0) {
-    feature_track_id_map_[feature_point.feature_id] = std::make_shared<FeatureTrack>(feature_point.feature_id);
+  if (feature_track_id_map_.count(feature_point.feature_track_id) == 0) {
+    feature_track_id_map_[feature_point.feature_track_id] =
+      std::make_shared<FeatureTrack>(feature_point.feature_track_id);
   }
-  feature_track_id_map_[feature_point.feature_id]->Add(feature_point.timestamp, feature_point);
+  feature_track_id_map_[feature_point.feature_track_id]->Add(feature_point.timestamp, feature_point);
 }
 
 const FeatureTrackIdMap& FeatureTracker::feature_tracks() const { return feature_track_id_map_; }

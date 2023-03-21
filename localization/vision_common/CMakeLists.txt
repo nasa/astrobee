@@ -56,11 +56,12 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/brisk_feature_detector_and_matcher.cc
-  src/spaced_feature_track.cc
+  src/feature_tracker.cc
   src/good_features_to_track_detector.cc
   src/lk_optical_flow_feature_detector_and_matcher.cc
   src/parameter_reader.cc
   src/pose_estimation.cc
+  src/spaced_feature_track.cc
   src/surf_feature_detector_and_matcher.cc
   src/test_utilities.cc
   src/utilities.cc

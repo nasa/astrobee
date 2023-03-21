@@ -31,11 +31,11 @@ class FeatureTrackerTest : public ::testing::Test {
   FeatureTrackerTest() {}
 
   void SetUp() final {
-    for (int time = 0; time < num_timestamps; ++time) {
+    for (int time = 0; time < num_timestamps_; ++time) {
       // Add fewer older measurements to tracks to help test removing old measurements.
       for (int id = 0; id <= time; ++id) {
         // Make image points different for different measurements
-        const vc::FeaturePoint p(i * 10 + j, i * 10 + j + 1, j + 1, id, time);
+        const vc::FeaturePoint p(id * 10 + time, id * 10 + time + 1, time + 1, id, time);
         points_.emplace_back(p);
       }
     }
@@ -44,13 +44,13 @@ class FeatureTrackerTest : public ::testing::Test {
   void InitializeWithRemoval() {
     vc::FeatureTrackerParams params;
     params.remove_undetected_feature_tracks = true;
-    feature_tracker_->reset(new vc::FeatureTracker(params));
+    feature_tracker_.reset(new vc::FeatureTracker(params));
   }
 
   void InitializeWithoutRemoval() {
     vc::FeatureTrackerParams params;
     params.remove_undetected_feature_tracks = false;
-    feature_tracker_->reset(new vc::FeatureTracker(params));
+    feature_tracker_.reset(new vc::FeatureTracker(params));
   }
 
   const int num_tracks_ = 5;
@@ -59,7 +59,7 @@ class FeatureTrackerTest : public ::testing::Test {
   std::unique_ptr<vc::FeatureTracker> feature_tracker_;
 };
 
-TEST(FeatureTrackerTest, SizeEmptyClear) {
+TEST_F(FeatureTrackerTest, SizeEmptyClear) {
   InitializeWithRemoval();
   EXPECT_EQ(feature_tracker_->size(), 0);
   EXPECT_TRUE(feature_tracker_->empty());
