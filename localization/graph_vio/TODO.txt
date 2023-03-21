@@ -2,6 +2,7 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
     - test vo factor adder! (AA)
+          - add length ordering to normal feature tracker! (AA)
           - template feature tracker on feature track type! (AB)
               - default to normal, use spaced in vofactoradder!
 
