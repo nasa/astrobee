@@ -48,7 +48,7 @@ void FeatureTracker::Update(const FeaturePoints& feature_points) {
 }
 
 void FeatureTracker::RemoveOldPoints(const lc::Time oldest_allowed_time) {
-  for (auto feature_track : id_feature_track_map_) {
+  for (auto& feature_track : id_feature_track_map_) {
     feature_track.second.RemoveOldValues(oldest_allowed_time);
   }
 }

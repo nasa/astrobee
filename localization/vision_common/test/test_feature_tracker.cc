@@ -282,7 +282,7 @@ TEST_F(FeatureTrackerTest, RemoveOldPoints) {
   // Remove first measurement occuring at t = 0
   {
     const lc::Time oldest_allowed_time = 1;
-    feature_tracker_ > RemoveOldPoints(oldest_allowed_time);
+    feature_tracker_->RemoveOldPoints(oldest_allowed_time);
     EXPECT_EQ(feature_tracker_->size(), 3);
     // Check first track which should have 2 points
     EXPECT_SAME_POINT(1, 0);
