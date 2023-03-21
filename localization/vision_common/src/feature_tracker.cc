@@ -51,6 +51,22 @@ void FeatureTracker::RemoveOldPoints(const lc::Time oldest_allowed_time) {
   for (auto& feature_track : id_feature_track_map_) {
     feature_track.second.RemoveOldValues(oldest_allowed_time);
   }
+  RemoveEmptyFeatureTracks();
+}
+
+const IdFeatureTrackMap& FeatureTracker::feature_tracks() const { return id_feature_track_map_; }
+
+size_t FeatureTracker::size() const { return id_feature_track_map_.size(); }
+
+bool FeatureTracker::empty() const { return id_feature_track_map_.empty(); }
+
+void FeatureTracker::Clear() { id_feature_track_map_.clear(); }
+
+void FeatureTracker::AddOrUpdateTrack(const FeaturePoint& feature_point) {
+  if (id_feature_track_map_.count(feature_point.feature_track_id) == 0) {
+    id_feature_track_map_[feature_point.feature_track_id] = FeatureTrack(feature_point.feature_track_id);
+  }
+  id_feature_track_map_[feature_point.feature_track_id].Add(feature_point.timestamp, feature_point);
 }
 
 void FeatureTracker::RemoveUndetectedFeatureTracks(const lc::Time& feature_point_timestamp) {
@@ -63,18 +79,13 @@ void FeatureTracker::RemoveUndetectedFeatureTracks(const lc::Time& feature_point
   }
 }
 
-void FeatureTracker::AddOrUpdateTrack(const FeaturePoint& feature_point) {
-  if (id_feature_track_map_.count(feature_point.feature_track_id) == 0) {
-    id_feature_track_map_[feature_point.feature_track_id] = FeatureTrack(feature_point.feature_track_id);
+void FeatureTracker::RemoveEmptyFeatureTracks() {
+  for (auto feature_it = id_feature_track_map_.cbegin(); feature_it != id_feature_track_map_.cend();) {
+    if (feature_it->second.empty()) {
+      feature_it = id_feature_track_map_.erase(feature_it);
+    } else {
+      ++feature_it;
+    }
   }
-  id_feature_track_map_[feature_point.feature_track_id].Add(feature_point.timestamp, feature_point);
 }
-
-const IdFeatureTrackMap& FeatureTracker::feature_tracks() const { return id_feature_track_map_; }
-
-size_t FeatureTracker::size() const { return id_feature_track_map_.size(); }
-
-bool FeatureTracker::empty() const { return id_feature_track_map_.empty(); }
-
-void FeatureTracker::Clear() { id_feature_track_map_.clear(); }
 }  // namespace vision_common

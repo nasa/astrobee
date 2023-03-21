@@ -42,6 +42,7 @@ class FeatureTracker {
   void Update(const FeaturePoints& feature_points);
 
   // Remove any points older than oldest_allowed_time from each feature track.
+  // Removes any feature tracks that subsequently have no more detections.
   void RemoveOldPoints(const localization_common::Time oldest_allowed_time);
 
   // Returns a reference to the feature tracks.
@@ -63,6 +64,9 @@ class FeatureTracker {
 
   // Remove any feature tracks without detections at the provided timestamp
   void RemoveUndetectedFeatureTracks(const localization_common::Time& time);
+
+  // Remove any feature tracks with no detections.
+  void RemoveEmptyFeatureTracks();
 
   // Serialization function
   friend class boost::serialization::access;
