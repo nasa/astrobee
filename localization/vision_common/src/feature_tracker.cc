@@ -24,7 +24,7 @@ namespace lc = localization_common;
 FeatureTracker::FeatureTracker(const FeatureTrackerParams& params) : params_(params) {}
 
 void FeatureTracker::Update(const FeaturePoints& feature_points) {
-  if (feature_points.empty()) {
+  if (feature_points.empty() && params_.remove_undetected_feature_tracks) {
     Clear();
     LogDebug("UpdateFeatureTracks: Removed all feature tracks.");
     return;
@@ -55,6 +55,20 @@ void FeatureTracker::RemoveOldPoints(const lc::Time oldest_allowed_time) {
 }
 
 const IdFeatureTrackMap& FeatureTracker::feature_tracks() const { return id_feature_track_map_; }
+
+std::vector<std::reference_wrapper<const FeatureTrack>> FeatureTracker::FeatureTracksLengthOrdered() const {
+  std::map<int, int> length_id_map;
+  for (const auto& feature_track : feature_tracks()) {
+    length_id_map.insert({feature_track.second.size(), feature_track.first});
+  }
+  std::vector<std::reference_wrapper<const FeatureTrack>> feature_tracks_length_ordered;
+  // Add tracks in order from longest to shortest
+  for (auto it = length_id_map.crbegin(); it != length_id_map.crend(); ++it) {
+    feature_tracks_length_ordered.emplace_back((this->feature_tracks().at(it->second)));
+  }
+
+  return feature_tracks_length_ordered;
+}
 
 size_t FeatureTracker::size() const { return id_feature_track_map_.size(); }
 

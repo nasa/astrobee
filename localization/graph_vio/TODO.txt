@@ -2,14 +2,12 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
     - test vo factor adder! (AA)
-        - spit up feature tracker into feature tracker and spaced feature tracker (AB)
-                - test featuretracker! (AA)
-                  - test with removal!
-                  - test remove old points!
-                  - test track sizes!!!
-                - test spaced feature tracker! (AB)
-                  - are all these functions still needed??
+          - add length ordering to normal feature tracker! (AA)
+          - template feature tracker on feature track type! (AB)
+              - default to normal, use spaced in vofactoradder!
 
+          - move allow list to vo factor adder! (AB)
+            - make sure to slide it!
           - test each of these!
         - add comments to functions!
       - add option to relinearize in smart factor more frequently! test this!

@@ -24,10 +24,11 @@
 #include <vision_common/feature_track.h>
 #include <vision_common/feature_tracker_params.h>
 
-#include <map>
+#include <unordered_map>
+#include <vector>
 
 namespace vision_common {
-using IdFeatureTrackMap = std::map<FeatureId, FeatureTrack>;
+using IdFeatureTrackMap = std::unordered_map<FeatureId, FeatureTrack>;
 class FeatureTracker {
  public:
   explicit FeatureTracker(const FeatureTrackerParams& params);
@@ -39,14 +40,17 @@ class FeatureTracker {
 
   // Add new feature points to existing or new tracks.  Optionally removes
   // any existing tracks that weren't detected in passed feature_points.
-  void Update(const FeaturePoints& feature_points);
+  virtual void Update(const FeaturePoints& feature_points);
 
   // Remove any points older than oldest_allowed_time from each feature track.
   // Removes any feature tracks that subsequently have no more detections.
-  void RemoveOldPoints(const localization_common::Time oldest_allowed_time);
+  virtual void RemoveOldPoints(const localization_common::Time oldest_allowed_time);
 
   // Returns a reference to the feature tracks.
   const IdFeatureTrackMap& feature_tracks() const;
+
+  // Returns feature track references ordered from longest to shortest
+  std::vector<std::reference_wrapper<const FeatureTrack>> FeatureTracksLengthOrdered() const;
 
   // Returns the number of feature tracks.
   size_t size() const;
@@ -55,7 +59,7 @@ class FeatureTracker {
   bool empty() const;
 
   // Deletes all feature tracks.
-  void Clear();
+  virtual void Clear();
 
  private:
   // Add new feature point to an existing track with the same track id

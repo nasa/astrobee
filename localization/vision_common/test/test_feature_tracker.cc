@@ -203,6 +203,27 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
     EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
   }
+  // Add empty measurement
+  // Tracks should be unaffected
+  feature_tracker_->Update(vc::FeaturePoints());
+  EXPECT_EQ(feature_tracker_->size(), 3);
+  {
+    // Check first track which should have 5 points
+    EXPECT_TRACK_SIZE_EQ(0, 5);
+    EXPECT_SAME_POINT(0, 0);
+    EXPECT_SAME_POINT(1, 0);
+    EXPECT_SAME_POINT(2, 0);
+    EXPECT_SAME_POINT(3, 0);
+    EXPECT_SAME_POINT(4, 0);
+    // Check second track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(1, 3);
+    EXPECT_SAME_POINT(1, 1);
+    EXPECT_SAME_POINT(2, 1);
+    EXPECT_SAME_POINT(3, 1);
+    // Check third track which should have 1 points
+    EXPECT_TRACK_SIZE_EQ(2, 1);
+    EXPECT_SAME_POINT(2, 2);
+  }
 }
 
 // With removal tracks without detections should gradually be
@@ -281,6 +302,11 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithRemoval) {
     EXPECT_SAME_POINT(3, 0);
     EXPECT_SAME_POINT(4, 0);
   }
+
+  // Add empty measurement
+  // Should remove all tracks
+  feature_tracker_->Update(vc::FeaturePoints());
+  EXPECT_TRUE(feature_tracker_->empty());
 }
 
 TEST_F(FeatureTrackerTest, RemoveOldPoints) {
@@ -348,6 +374,43 @@ TEST_F(FeatureTrackerTest, RemoveOldPoints) {
   }
 }
 
+TEST_F(FeatureTrackerTest, LengthOrdered) {
+  InitializeWithoutRemoval();
+  EXPECT_EQ(feature_tracker_->size(), 0);
+  EXPECT_TRUE(feature_tracker_->empty());
+
+  // Create points with increasingly more points for increasing id
+  std::vector<vc::FeaturePoints> timestamped_points(3);
+  for (int id = 0; id < 3; ++id) {
+    std::vector<vc::FeaturePoint> points;
+    for (int time = 0; time <= id; ++time) {
+      // Make image points different for different measurements
+      const vc::FeaturePoint p(id * 10 + time, id * 10 + time + 1, time + 1, id, time);
+      timestamped_points[time].emplace_back(p);
+    }
+  }
+  EXPECT_EQ(timestamped_points[0].size(), 3);
+  EXPECT_EQ(timestamped_points[1].size(), 2);
+  EXPECT_EQ(timestamped_points[2].size(), 1);
+  feature_tracker_->Update(timestamped_points[0]);
+  feature_tracker_->Update(timestamped_points[1]);
+  feature_tracker_->Update(timestamped_points[2]);
+
+  EXPECT_EQ(feature_tracker_->size(), 3);
+
+  // Check track lengths
+  EXPECT_TRACK_SIZE_EQ(0, 1);
+  EXPECT_TRACK_SIZE_EQ(1, 2);
+  EXPECT_TRACK_SIZE_EQ(2, 3);
+
+  const auto length_ordered_tracks = feature_tracker_->FeatureTracksLengthOrdered();
+  EXPECT_EQ(length_ordered_tracks[0].get().size(), 3);
+  EXPECT_EQ(length_ordered_tracks[0].get().id(), 2);
+  EXPECT_EQ(length_ordered_tracks[1].get().size(), 2);
+  EXPECT_EQ(length_ordered_tracks[1].get().id(), 1);
+  EXPECT_EQ(length_ordered_tracks[2].get().size(), 1);
+  EXPECT_EQ(length_ordered_tracks[2].get().id(), 0);
+}
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
