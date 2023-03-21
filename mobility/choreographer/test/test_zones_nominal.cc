@@ -29,7 +29,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 // FSW includes
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/config_client.h>
 

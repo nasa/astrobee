@@ -1,3 +1,10 @@
+astrobee (0.17.0) testing; urgency=medium
+
+  * Full compatibility and debians built for Ubuntu 20
+  * Deleted all simulink autocode for ctl and fam
+
+ -- Marina Moreira <mgouveia@ubuntu>  Thu, 16 Feb 2023 09:43:41 -0800
+
 astrobee (0.16.7) testing; urgency=medium
 
   * Remove simulink auto-generated code

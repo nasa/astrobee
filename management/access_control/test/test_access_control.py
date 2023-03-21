@@ -24,6 +24,7 @@ import launch_testing.actions
 import launch_testing.markers
 import pytest
 from launch_ros.actions import Node
+
 from utilities.utilities import *
 
 
@@ -63,23 +64,24 @@ def generate_test_description():
                     "ROSCONSOLE_CONFIG_FILE", get_path("resources/logging.config")
                 ),
             ),
-            DeclareLaunchArgument("output", default_value="screen"),            
+            DeclareLaunchArgument("output", default_value="screen"),
             launch.actions.DeclareLaunchArgument(
                 name="test_binary_dir",
                 description="Binary directory of package containing test executables",
                 default_value="/src/astrobee/build/access_control",
             ),
             ComposableNodeContainer(
-                name='mlp_management',
-                namespace='',
-                package='rclcpp_components',
-                executable='component_container',
+                name="mlp_management",
+                namespace="",
+                package="rclcpp_components",
+                executable="component_container",
                 composable_node_descriptions=[
                     ComposableNode(
-                        package='access_control',
-                        plugin='access_control::AccessControl',
-                        name='access_control'),
-                ]
+                        package="access_control",
+                        plugin="access_control::AccessControl",
+                        name="access_control",
+                    ),
+                ],
             ),
             test_access_control,
             # Tell launch when to start the test

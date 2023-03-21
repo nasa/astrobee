@@ -561,7 +561,7 @@ void Recorder::doCheckMaster(ros::TimerEvent const& e, ros::NodeHandle& node_han
 }
 
 void Recorder::doTrigger() {
-    ros::Publisher pub = node_handle_.advertise<std_msgs::Empty>("snapshot_trigger", 1, true);
+    ros::Publisher pub = node_handle_.advertise<std_msgs::Empty>("snapshot_trigger", 1);
     pub.publish(std_msgs::Empty());
 
     ros::Timer terminate_timer = node_handle_.createTimer(ros::Duration(1.0), boost::bind(&ros::shutdown));
