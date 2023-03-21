@@ -80,6 +80,10 @@ class FeatureTrackerTest : public ::testing::Test {
     EXPECT_SAME_POINT(added_point, track_point->value);
   }
 
+  void EXPECT_TRACK_SIZE_EQ(const int track_index, const int size) {
+    EXPECT_EQ(feature_tracker_->feature_tracks().at(track_index).size(), size);
+  }
+
   void InitializeWithRemoval() {
     vc::FeatureTrackerParams params;
     params.remove_undetected_feature_tracks = true;
@@ -128,6 +132,7 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 1);
   {
     // Only one point exists in first measurement
+    EXPECT_TRACK_SIZE_EQ(0, 1);
     EXPECT_SAME_POINT(0, 0);
   }
   // Add second set of timestamped measurements
@@ -135,9 +140,11 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 2);
   {
     // Check first track which should have two points
+    EXPECT_TRACK_SIZE_EQ(0, 2);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     // Check second track which should have one point at second timestamp
+    EXPECT_TRACK_SIZE_EQ(1, 1);
     EXPECT_SAME_POINT(1, 1);
   }
   // Add 3rd set of timestamped measurements
@@ -145,13 +152,16 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 3);
   {
     // Check first track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(0, 3);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     // Check second track which should have 2 points
+    EXPECT_TRACK_SIZE_EQ(1, 2);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     // Check third track which should have one point
+    EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
   }
   // Add 4th set of timestamped measurements
@@ -159,15 +169,18 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 3);
   {
     // Check first track which should have 4 points
+    EXPECT_TRACK_SIZE_EQ(0, 4);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     EXPECT_SAME_POINT(3, 0);
     // Check second track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(1, 3);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     EXPECT_SAME_POINT(3, 1);
     // Check third track which should have 1 point
+    EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
   }
   // Add 5th set of timestamped measurements
@@ -175,16 +188,19 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 3);
   {
     // Check first track which should have 5 points
+    EXPECT_TRACK_SIZE_EQ(0, 5);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     EXPECT_SAME_POINT(3, 0);
     EXPECT_SAME_POINT(4, 0);
     // Check second track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(1, 3);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     EXPECT_SAME_POINT(3, 1);
     // Check third track which should have 1 points
+    EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
   }
 }
@@ -201,6 +217,7 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 1);
   {
     // Only one point exists in first measurement
+    EXPECT_TRACK_SIZE_EQ(0, 1);
     EXPECT_SAME_POINT(0, 0);
   }
   // Add second set of timestamped measurements
@@ -208,9 +225,11 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 2);
   {
     // Check first track which should have two points
+    EXPECT_TRACK_SIZE_EQ(0, 2);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     // Check second track which should have one point at second timestamp
+    EXPECT_TRACK_SIZE_EQ(1, 1);
     EXPECT_SAME_POINT(1, 1);
   }
   // Add 3rd set of timestamped measurements
@@ -218,13 +237,16 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 3);
   {
     // Check first track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(0, 3);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     // Check second track which should have 2 points
+    EXPECT_TRACK_SIZE_EQ(1, 2);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     // Check third track which should have one point
+    EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
   }
 
@@ -235,11 +257,13 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 2);
   {
     // Check first track which should have 4 points
+    EXPECT_TRACK_SIZE_EQ(0, 4);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     EXPECT_SAME_POINT(3, 0);
     // Check second track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(1, 3);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     EXPECT_SAME_POINT(3, 1);
@@ -250,6 +274,7 @@ TEST_F(FeatureTrackerTest, AddMeasurentsWithRemoval) {
   EXPECT_EQ(feature_tracker_->size(), 1);
   {
     // Check first track which should have 5 points
+    EXPECT_TRACK_SIZE_EQ(0, 5);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
@@ -270,13 +295,16 @@ TEST_F(FeatureTrackerTest, RemoveOldPoints) {
   EXPECT_EQ(feature_tracker_->size(), 3);
   {
     // Check first track which should have 3 points
+    EXPECT_TRACK_SIZE_EQ(0, 3);
     EXPECT_SAME_POINT(0, 0);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     // Check second track which should have 2 points
+    EXPECT_TRACK_SIZE_EQ(1, 2);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     // Check third track which should have one point
+    EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
   }
   // Remove first measurement occuring at t = 0
@@ -285,13 +313,38 @@ TEST_F(FeatureTrackerTest, RemoveOldPoints) {
     feature_tracker_->RemoveOldPoints(oldest_allowed_time);
     EXPECT_EQ(feature_tracker_->size(), 3);
     // Check first track which should have 2 points
+    EXPECT_TRACK_SIZE_EQ(0, 2);
     EXPECT_SAME_POINT(1, 0);
     EXPECT_SAME_POINT(2, 0);
     // Check second track which should have 2 points
+    EXPECT_TRACK_SIZE_EQ(1, 2);
     EXPECT_SAME_POINT(1, 1);
     EXPECT_SAME_POINT(2, 1);
     // Check third track which should have one point
+    EXPECT_TRACK_SIZE_EQ(2, 1);
     EXPECT_SAME_POINT(2, 2);
+  }
+  // Remove second measurement occuring at t = 1
+  {
+    const lc::Time oldest_allowed_time = 1.5;
+    feature_tracker_->RemoveOldPoints(oldest_allowed_time);
+    EXPECT_EQ(feature_tracker_->size(), 3);
+    // Check first track which should have 1 point
+    EXPECT_TRACK_SIZE_EQ(0, 1);
+    EXPECT_SAME_POINT(2, 0);
+    // Check second track which should have 1 point
+    EXPECT_TRACK_SIZE_EQ(1, 1);
+    EXPECT_SAME_POINT(2, 1);
+    // Check third track which should have one point
+    EXPECT_TRACK_SIZE_EQ(2, 1);
+    EXPECT_SAME_POINT(2, 2);
+  }
+  // Remove third measurement occuring at t = 2
+  {
+    const lc::Time oldest_allowed_time = 2.1;
+    feature_tracker_->RemoveOldPoints(oldest_allowed_time);
+    EXPECT_EQ(feature_tracker_->size(), 0);
+    EXPECT_TRUE(feature_tracker_->empty());
   }
 }
 
