@@ -56,14 +56,14 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME} SHARED
-  src/ground_truth_localizer_nodelet.cc
+  src/ground_truth_localizer_component.cc
   src/utilities.cc
 )
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_util localization_common std_srvs)
-rclcpp_components_register_nodes(${PROJECT_NAME} "ground_truth_localizer::GroundTruthLocalizerNodelet")
+rclcpp_components_register_nodes(${PROJECT_NAME} "ground_truth_localizer::GroundTruthLocalizerComponent")
 
 
 #############

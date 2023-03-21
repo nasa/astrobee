@@ -49,22 +49,21 @@ namespace light_flow {
 
 FF_DEFINE_LOGGER("light_flow");
 
-class LightFlowNodelet : public ff_util::FreeFlyerComponent {
+class LightFlowComponent : public ff_util::FreeFlyerComponent {
  public:
-  explicit LightFlowNodelet(const rclcpp::NodeOptions& options) :
+  explicit LightFlowComponent(const rclcpp::NodeOptions& options) :
   ff_util::FreeFlyerComponent(options, "light_flow", true) {}
 
-  virtual ~LightFlowNodelet() {}
+  virtual ~LightFlowComponent() {}
 
  protected:
   virtual void Initialize(NodeHandle &nh) {
     // this service is a special case for when we need to light
     // two AMBER leds on each side only when we are streaming
     // live video
-    streaming_service_ =
-        nh->create_service<ff_msgs::SetStreamingLights>(SERVICE_STREAMING_LIGHTS,
-                             std::bind(&LightFlowNodelet::StreamingLightsCallback,
-                             this, std::placeholders::_1, std::placeholders::_2));
+    streaming_service_ = FF_CREATE_SERVICE(nh, ff_msgs::SetStreamingLights, SERVICE_STREAMING_LIGHTS,
+        std::bind(&LightFlowComponent::StreamingLightsCallback, this, std::placeholders::_1, std::placeholders::_2));
+
     currentStreamingLightsState = false;
 
     pub_ = FF_CREATE_PUBLISHER(nh, ff_hw_msgs::ConfigureLEDGroup,
@@ -119,7 +118,7 @@ class LightFlowNodelet : public ff_util::FreeFlyerComponent {
     }
 
     sub_ = FF_CREATE_SUBSCRIBER(nh, ff_msgs::SignalState, TOPIC_SIGNALS, 5,
-                              std::bind(&LightFlowNodelet::ConfigureCallback, this, std::placeholders::_1));
+                              std::bind(&LightFlowComponent::ConfigureCallback, this, std::placeholders::_1));
   }
 
   void ConfigureCallback(const std::shared_ptr<ff_msgs::SignalState> msg) {
@@ -221,4 +220,4 @@ class LightFlowNodelet : public ff_util::FreeFlyerComponent {
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(light_flow::LightFlowNodelet)
+RCLCPP_COMPONENTS_REGISTER_NODE(light_flow::LightFlowComponent)

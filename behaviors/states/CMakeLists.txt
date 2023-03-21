@@ -37,7 +37,7 @@ ff_common
 find_package(ament_cmake REQUIRED)
 
 foreach(dep ${dependencies})
-  find_package(${dep})
+  find_package(${dep} REQUIRED)
 endforeach()
 
 ###########
@@ -51,11 +51,11 @@ include_directories(
 
 # Declare C++ libraries
 add_library(states SHARED
-  src/states_nodelet/states_nodelet.cc
+  src/states_component/states_component.cc
 )
 target_compile_definitions(states PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(states rclcpp rclcpp_components ${dependencies})
-rclcpp_components_register_nodes(states "states::StateNodelet")
+rclcpp_components_register_nodes(states "states::StatesComponent")
 
 #############
 ## Install ##
@@ -65,7 +65,7 @@ rclcpp_components_register_nodes(states "states::StateNodelet")
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 # Mark nodelet_plugin for installation

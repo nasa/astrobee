@@ -44,10 +44,9 @@ class GazeboModelPluginSignalLights : public FreeFlyerModelPlugin {
     // this service is a special case for when we need to light
     // two AMBER leds on each side only when we are streaming
     // live video
-    streaming_service_ =
-        nh->create_service<ff_msgs::srv::SetStreamingLights>(SERVICE_STREAMING_LIGHTS,
-        std::bind(&GazeboModelPluginSignalLights::StreamingLightsCallback, this,
-        std::placeholders::_1, std::placeholders::_2));
+    streaming_service_ = FF_CREATE_SERVICE(nh, ff_msgs::srv::SetStreamingLights, SERVICE_STREAMING_LIGHTS,
+                            std::bind(&GazeboModelPluginSignalLights::StreamingLightsCallback, this,
+                            std::placeholders::_1, std::placeholders::_2));
   }
 
   // Manage the extrinsics based on the sensor type
@@ -57,7 +56,7 @@ class GazeboModelPluginSignalLights : public FreeFlyerModelPlugin {
 
   bool StreamingLightsCallback(
       const std::shared_ptr<ff_msgs::srv::SetStreamingLights::Request> request,
-      const std::shared_ptr<ff_msgs::srv::SetStreamingLights::Response> response) {
+      std::shared_ptr<ff_msgs::srv::SetStreamingLights::Response> response) {
     // Send successful response
     response->success = true;
     return true;
