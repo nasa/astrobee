@@ -1,15 +1,14 @@
   - implement loc factor adder! (AB)
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
+    - add spaced feature tracker!
+      - don't template feature tracker!
+      - add allowed timestamps to spaced feature tracker!
+      - add function to get spaced feature tracks using allowed timestamps!
+      - test these!
+        
     - test vo factor adder! (AA)
-          - add length ordering to normal feature tracker! (AA)
-          - template feature tracker on feature track type! (AB)
-              - default to normal, use spaced in vofactoradder!
-
-          - move allow list to vo factor adder! (AB)
-            - make sure to slide it!
-          - test each of these!
-        - add comments to functions!
+      - add comments to functions!
       - add option to relinearize in smart factor more frequently! test this!
       - clean up smart factor fixing code! test this!
         - add better comments to functions!
@@ -29,9 +28,6 @@
   - add ordering back to sliding window optimizer now that window is slid after optimization!
 
   - TODO: implement others!
-  - cleanup feature tracker!
-    - should use timestamped set!
-    - explain functions better!
 
   - add grah_vio! (E)
     - publish odometry message!
@@ -46,21 +42,9 @@
   - add test with graph optimizer, simple factor adder, and simple node updater!!
 - add parameter reader package!!!!
   - how to unit test these??
-- add option to use isam in graph optimizer????
 
-- update factor adders with changes described below (A)
   - smart factor adder (AB)
-    - remove factors to add, key info, etc (AAA)
-      - use VIO node updater! (AAA)
-    - add graph action completer code here! (AAB)
-      - move from graph_vio
     - how to remove old measurements in factor adder?
-    - test??
-  - standstill factor adder (AC)
-    - use VIO node updater!
-  - map-based pose adder (AD)
-    - use pose node updater!
-- move post graph add actions to factor adders!
 - compile graph vio!
 - test graph vio!!! (AD)
 - compiple graph loc! (AB)
@@ -75,7 +59,6 @@
   - why is this needed???
     - fan rate!!!!!!
   - add to imu measurement???
-- make work with isam and gtsam!
 - move param loading and serialization from graph_vio/loc to respective packages!
 - initialize graph with identity pose, set fixed!!!
   - TODO: need to always have fixed identity pose as origin! how to do this?
@@ -84,29 +67,3 @@
   - tools: loc rvz plugins, imu bias tester
 - update imu_augmentor, make sure it compiles!
   - add tests?
-
-// Nice to have:
-- change factor adders to store data until it is ready to create factors
- - avoids having to add factors with uninitialized keys!!
- - avoids having to use graph action completers!
- - Do this for graph localizer first???
-    - add graphoptimizer2 that does this??
-- add option to use isam2!
-
-- change timestamped nodes to use timestamped set!
- - rename graph values to nodes!!
-    - package, graph loc first
-      - graph vio later
-  - avoid using graph values!
-- add other parts from inv depth branch?
-  - make sliding window graph optimizer? seperate from graph?
-  - add abilitiy to compute covariances?
-  - avoid having to use graph action completers?
-  - add option to use isam instead of levenberg marq!!!
-
-- move graph action completers to new package?
-  - or remove altogether....
-    - see inv depth branch? does this do that?
-move combinednavstate accesors to combinednavstate node updater????
-  - update graph vio with this!!
-
