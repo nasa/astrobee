@@ -87,13 +87,13 @@ class FeatureTrackerTest : public ::testing::Test {
   void InitializeWithRemoval() {
     vc::FeatureTrackerParams params;
     params.remove_undetected_feature_tracks = true;
-    feature_tracker_.reset(new vc::FeatureTracker(params));
+    feature_tracker_.reset(new vc::FeatureTracker<>(params));
   }
 
   void InitializeWithoutRemoval() {
     vc::FeatureTrackerParams params;
     params.remove_undetected_feature_tracks = false;
-    feature_tracker_.reset(new vc::FeatureTracker(params));
+    feature_tracker_.reset(new vc::FeatureTracker<>(params));
   }
 
   const int num_tracks_ = 3;
@@ -101,7 +101,7 @@ class FeatureTrackerTest : public ::testing::Test {
   const int num_timestamps_with_decreasing_measurements_ = 3;
   vc::FeaturePoints points_;
   std::vector<vc::FeaturePoints> timestamped_points_;
-  std::unique_ptr<vc::FeatureTracker> feature_tracker_;
+  std::unique_ptr<vc::FeatureTracker<>> feature_tracker_;
 };
 
 TEST_F(FeatureTrackerTest, SizeEmptyClear) {
