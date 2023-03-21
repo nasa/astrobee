@@ -9,6 +9,7 @@
 
           - test each of these!
         - add comments to functions!
+      - add option to relinearize in smart factor more frequently! test this!
       - clean up smart factor fixing code! test this!
         - add better comments to functions!
       - test other smart factor functions!

@@ -23,7 +23,7 @@ namespace vision_common {
 namespace lc = localization_common;
 FeatureTracker::FeatureTracker(const FeatureTrackerParams& params) : params_(params) {}
 
-void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
+void FeatureTracker::Update(const FeaturePoints& feature_points) {
   if (feature_points.empty()) {
     Clear();
     LogDebug("UpdateFeatureTracks: Removed all feature tracks.");
@@ -48,15 +48,15 @@ void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
 }
 
 void FeatureTracker::RemoveOldPoints(const lc::Time oldest_allowed_time) {
-  for (auto feature_track : feature_track_id_map_) {
-    feature_track.second->RemoveOldValues(oldest_allowed_time);
+  for (auto feature_track : id_feature_track_map_) {
+    feature_track.second.RemoveOldValues(oldest_allowed_time);
   }
 }
 
 void FeatureTracker::RemoveUndetectedFeatureTracks(const lc::Time& feature_point_timestamp) {
-  for (auto feature_it = feature_track_id_map_.cbegin(); feature_it != feature_track_id_map_.cend();) {
-    if (!feature_it->second->Contains(feature_point_timestamp)) {
-      feature_it = feature_track_id_map_.erase(feature_it);
+  for (auto feature_it = id_feature_track_map_.cbegin(); feature_it != id_feature_track_map_.cend();) {
+    if (!feature_it->second.Contains(feature_point_timestamp)) {
+      feature_it = id_feature_track_map_.erase(feature_it);
     } else {
       ++feature_it;
     }
@@ -64,18 +64,17 @@ void FeatureTracker::RemoveUndetectedFeatureTracks(const lc::Time& feature_point
 }
 
 void FeatureTracker::AddOrUpdateTrack(const FeaturePoint& feature_point) {
-  if (feature_track_id_map_.count(feature_point.feature_track_id) == 0) {
-    feature_track_id_map_[feature_point.feature_track_id] =
-      std::make_shared<FeatureTrack>(feature_point.feature_track_id);
+  if (id_feature_track_map_.count(feature_point.feature_track_id) == 0) {
+    id_feature_track_map_[feature_point.feature_track_id] = FeatureTrack(feature_point.feature_track_id);
   }
-  feature_track_id_map_[feature_point.feature_track_id]->Add(feature_point.timestamp, feature_point);
+  id_feature_track_map_[feature_point.feature_track_id].Add(feature_point.timestamp, feature_point);
 }
 
-const FeatureTrackIdMap& FeatureTracker::feature_tracks() const { return feature_track_id_map_; }
+const IdFeatureTrackMap& FeatureTracker::feature_tracks() const { return id_feature_track_map_; }
 
-size_t FeatureTracker::size() const { return feature_track_id_map_.size(); }
+size_t FeatureTracker::size() const { return id_feature_track_map_.size(); }
 
-bool FeatureTracker::empty() const { return feature_track_id_map_.empty(); }
+bool FeatureTracker::empty() const { return id_feature_track_map_.empty(); }
 
-void FeatureTracker::Clear() { feature_track_id_map_.clear(); }
+void FeatureTracker::Clear() { id_feature_track_map_.clear(); }
 }  // namespace vision_common

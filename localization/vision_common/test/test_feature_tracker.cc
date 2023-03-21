@@ -32,13 +32,23 @@ class FeatureTrackerTest : public ::testing::Test {
 
   void SetUp() final {
     for (int time = 0; time < num_timestamps_; ++time) {
+      std::vector<vc::FeaturePoint> points;
       // Add fewer older measurements to tracks to help test removing old measurements.
       for (int id = 0; id <= time; ++id) {
         // Make image points different for different measurements
         const vc::FeaturePoint p(id * 10 + time, id * 10 + time + 1, time + 1, id, time);
         points_.emplace_back(p);
+        points.emplace_back(p);
       }
+      timestamped_points_.emplace_back(points);
     }
+  }
+
+  void EXPECT_SAME_POINT(const vc::FeaturePoint& p_a, const vc::FeaturePoint& p_b) {
+    EXPECT_EQ(p_a.image_id, p_b.image_id);
+    EXPECT_EQ(p_a.feature_track_id, p_b.feature_track_id);
+    EXPECT_MATRIX_NEAR(p_a.image_point, p_b.image_point, 1e-6);
+    EXPECT_NEAR(p_a.timestamp, p_b.timestamp, 1e-6);
   }
 
   void InitializeWithRemoval() {
@@ -56,13 +66,44 @@ class FeatureTrackerTest : public ::testing::Test {
   const int num_tracks_ = 5;
   const int num_timestamps_ = 5;
   vc::FeaturePoints points_;
+  std::vector<vc::FeaturePoints> timestamped_points_;
   std::unique_ptr<vc::FeatureTracker> feature_tracker_;
 };
 
 TEST_F(FeatureTrackerTest, SizeEmptyClear) {
-  InitializeWithRemoval();
+  InitializeWithoutRemoval();
   EXPECT_EQ(feature_tracker_->size(), 0);
   EXPECT_TRUE(feature_tracker_->empty());
+
+  // Add measurements
+  feature_tracker_->Update(points_);
+  EXPECT_EQ(feature_tracker_->size(), num_tracks_);
+  EXPECT_FALSE(feature_tracker_->empty());
+
+  // Remove measurements
+  feature_tracker_->Clear();
+  EXPECT_EQ(feature_tracker_->size(), 0);
+  EXPECT_TRUE(feature_tracker_->empty());
+}
+
+TEST_F(FeatureTrackerTest, AddMeasurentsWithoutRemoval) {
+  InitializeWithoutRemoval();
+  EXPECT_EQ(feature_tracker_->size(), 0);
+  EXPECT_TRUE(feature_tracker_->empty());
+
+  // Add first set of timestamped measurements
+  feature_tracker_->Update(timestamped_points_[0]);
+  EXPECT_EQ(feature_tracker_->size(), 1);
+  {
+    // Only one point exists in first measurement
+    const auto& added_point = timestamped_points_[0][0];
+    const auto id = added_point.feature_track_id;
+    const auto time = added_point.timestamp;
+    const auto& track = feature_tracker_->feature_tracks().at(id);
+    const auto& track_point = track.Get(time);
+    ASSERT_TRUE(track_point != boost::none);
+    EXPECT_SAME_POINT(added_point, track_point->value);
+  }
 }
 
 // Run all the tests that were declared with TEST()

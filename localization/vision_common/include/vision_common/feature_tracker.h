@@ -27,7 +27,7 @@
 #include <map>
 
 namespace vision_common {
-using FeatureTrackIdMap = std::map<FeatureId, std::shared_ptr<FeatureTrack>>;
+using IdFeatureTrackMap = std::map<FeatureId, FeatureTrack>;
 class FeatureTracker {
  public:
   explicit FeatureTracker(const FeatureTrackerParams& params);
@@ -39,13 +39,13 @@ class FeatureTracker {
 
   // Add new feature points to existing or new tracks.  Optionally removes
   // any existing tracks that weren't detected in passed feature_points.
-  void UpdateFeatureTracks(const FeaturePoints& feature_points);
+  void Update(const FeaturePoints& feature_points);
 
   // Remove any points older than oldest_allowed_time from each feature track.
   void RemoveOldPoints(const localization_common::Time oldest_allowed_time);
 
   // Returns a reference to the feature tracks.
-  const FeatureTrackIdMap& feature_tracks() const;
+  const IdFeatureTrackMap& feature_tracks() const;
 
   // Returns the number of feature tracks.
   size_t size() const;
@@ -68,11 +68,11 @@ class FeatureTracker {
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(feature_track_id_map_);
+    ar& BOOST_SERIALIZATION_NVP(id_feature_track_map_);
     ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
-  FeatureTrackIdMap feature_track_id_map_;
+  IdFeatureTrackMap id_feature_track_map_;
   FeatureTrackerParams params_;
 };
 }  // namespace vision_common
