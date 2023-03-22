@@ -20,11 +20,13 @@
 #define VISION_COMMON_SPACED_FEATURE_TRACKER_H_
 
 #include <localization_common/time.h>
+#include <localization_common/timestamped_set.h>
 #include <vision_common/feature_tracker.h>
 #include <vision_common/spaced_feature_track.h>
 #include <vision_common/spaced_feature_tracker_params.h>
 
 #include <set>
+#include <vector>
 
 namespace vision_common {
 class SpacedFeatureTracker : public FeatureTracker<SpacedFeatureTrack> {
@@ -44,6 +46,9 @@ class SpacedFeatureTracker : public FeatureTracker<SpacedFeatureTrack> {
 
   // Clears FeatureTracker and allowed timestamps.
   void Clear() final;
+
+  // Returns feature tracks spaced using allowed timestamps.
+  std::vector<std::vector<localization_common::TimestampedValue<FeaturePoint>>> SpacedFeatureTracks() const;
 
  private:
   // Serialization function

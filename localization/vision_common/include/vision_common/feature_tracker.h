@@ -25,14 +25,13 @@
 #include <vision_common/feature_tracker_params.h>
 
 #include <map>
-#include <unordered_map>
 #include <vector>
 
 namespace vision_common {
 template <typename FeatureTrackType = FeatureTrack>
 class FeatureTracker {
  public:
-  using IdFeatureTrackMap = std::unordered_map<FeatureId, FeatureTrackType>;
+  using IdFeatureTrackMap = std::map<FeatureId, FeatureTrackType>;
   explicit FeatureTracker(const FeatureTrackerParams& params);
 
   // Default constructor only for serialization

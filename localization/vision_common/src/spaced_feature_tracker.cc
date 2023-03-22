@@ -41,4 +41,13 @@ void SpacedFeatureTracker::Clear() {
   Base::Clear();
   allowed_timestamps_.clear();
 }
+
+std::vector<std::vector<lc::TimestampedValue<FeaturePoint>>> SpacedFeatureTracker::SpacedFeatureTracks() const {
+  std::vector<std::vector<lc::TimestampedValue<FeaturePoint>>> spaced_feature_tracks;
+  for (const auto& feature_track : feature_tracks()) {
+    spaced_feature_tracks.emplace_back(feature_track.second.DownsampledValues(allowed_timestamps_));
+  }
+
+  return spaced_feature_tracks;
+}
 }  // namespace vision_common
