@@ -71,13 +71,6 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} gtsam ${OpenCV_LIBRARI
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_spaced_feature_track
-    test/test_spaced_feature_track.test
-    test/test_spaced_feature_track.cc
-  )
-  target_link_libraries(test_spaced_feature_track
-    ${PROJECT_NAME} ${catkin_LIBRARIES}  
-  )
   add_rostest_gtest(test_feature_tracker
     test/test_feature_tracker.test
     test/test_feature_tracker.cc
@@ -125,6 +118,20 @@ if(CATKIN_ENABLE_TESTING)
     test/test_pose_estimation.cc
   )
   target_link_libraries(test_pose_estimation
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
+  add_rostest_gtest(test_spaced_feature_track
+    test/test_spaced_feature_track.test
+    test/test_spaced_feature_track.cc
+  )
+  target_link_libraries(test_spaced_feature_track
+    ${PROJECT_NAME} ${catkin_LIBRARIES}  
+  )
+  add_rostest_gtest(test_spaced_feature_tracker
+    test/test_spaced_feature_tracker.test
+    test/test_spaced_feature_tracker.cc
+  )
+  target_link_libraries(test_spaced_feature_tracker
     ${PROJECT_NAME} ${catkin_LIBRARIES}  
   )
   add_rostest_gtest(test_utilities

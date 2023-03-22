@@ -135,7 +135,7 @@ FeatureTracker<FeatureTrackType>::FeatureTracksLengthOrdered() const {
   for (const auto& feature_track : feature_tracks()) {
     length_id_map.insert({feature_track.second.size(), feature_track.first});
   }
-  std::vector<std::reference_wrapper<const FeatureTrack>> feature_tracks_length_ordered;
+  std::vector<std::reference_wrapper<const FeatureTrackType>> feature_tracks_length_ordered;
   // Add tracks in order from longest to shortest
   for (auto it = length_id_map.crbegin(); it != length_id_map.crend(); ++it) {
     feature_tracks_length_ordered.emplace_back((this->feature_tracks().at(it->second)));

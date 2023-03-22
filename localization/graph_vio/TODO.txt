@@ -2,8 +2,7 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
     - add spaced feature tracker!
-      - add function to get spaced feature tracks using allowed timestamps! (AA)
-      - test these! (AB)
+      - test these functions! (Aa)
         
     - test vo factor adder! (AA)
       - add comments to functions!
