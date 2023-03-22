@@ -23,12 +23,21 @@
 #include <factor_adders/vo_smart_projection_factor_adder_params.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/feature_points_measurement.h.h>
-#include <vision_common/feature_tracker.h>
+#include <vision_common/spaced_feature_tracker.h>
 
 #include <vector>
 
 namespace factor_adders {
 template <typename PoseVelocityNodeAdderType>
+// Adds visual-odometry (VO) smart factors for feature tracks using GTSAM smart factor.
+// Smart factors avoid bundle-adjustment by marginalizing out triangulated feature track
+// landmark points before adding for optimization, making them much more efficient at the expense
+// of accuracy. Since the landmark position for the point is not included during optimization,
+// GTSAM performs retriangulation of the landmark during optimization if poses in the smart
+// factor have changed by more than a set threshold. Retriangulation also triggers relinearization of the smart factor.
+// Measurements are downsampled in the feature tracker, avoiding issues of downsampling
+// from the latest measurement which may introduce many new timestamped pose nodes to the graph in addition to the
+// latest measurement's timestamp.
 class VoSmartProjectionFactorAdder
     : public MeasurementBasedFactorAdder<localization_measurements::FeaturePointsMeasurement> {
   using Base = MeasurementBasedFactorAdder<localization_measurements::FeaturePointsMeasurement>;
@@ -78,7 +87,7 @@ class VoSmartProjectionFactorAdder
 
   std::shared_ptr<PoseVelocityNodeAdderType> node_adder_;
   VoSmartProjectionFactorAdderParams params_;
-  vision_common::FeatureTracker feature_tracker_;
+  std::shared_ptr<vision_common::SpacedFeatureTracker> feature_tracker_;
 };
 
 // Implementation
