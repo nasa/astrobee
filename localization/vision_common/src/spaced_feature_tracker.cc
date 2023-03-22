@@ -45,6 +45,8 @@ void SpacedFeatureTracker::Clear() {
 std::vector<std::vector<lc::TimestampedValue<FeaturePoint>>> SpacedFeatureTracker::SpacedFeatureTracks() const {
   std::vector<std::vector<lc::TimestampedValue<FeaturePoint>>> spaced_feature_tracks;
   for (const auto& feature_track : feature_tracks()) {
+    const auto downsampled_track = feature_track.second.DownsampledValues(allowed_timestamps_);
+    if (downsampled_track.empty()) continue;
     spaced_feature_tracks.emplace_back(feature_track.second.DownsampledValues(allowed_timestamps_));
   }
 

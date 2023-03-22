@@ -413,6 +413,84 @@ TEST_F(SpacedFeatureTrackerTest, LengthOrdered) {
   EXPECT_EQ(length_ordered_tracks[2].get().size(), 1);
   EXPECT_EQ(length_ordered_tracks[2].get().id(), 0);
 }
+
+TEST_F(SpacedFeatureTrackerTest, SpacedTracksSpacing2) {
+  const int measurement_spacing = 2;
+  InitializeWithoutRemoval(measurement_spacing);
+  EXPECT_EQ(feature_tracker_->size(), 0);
+  EXPECT_TRUE(feature_tracker_->empty());
+
+  // Add first set of timestamped measurements
+  feature_tracker_->Update(timestamped_points_[0]);
+  EXPECT_EQ(feature_tracker_->size(), 1);
+  {
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    EXPECT_EQ(tracks.size(), 1);
+    const auto& track_0 = tracks[0];
+    EXPECT_EQ(track_0.size(), 1);
+    EXPECT_SAME_POINT(track_0[0].value, timestamped_points_[0][0]);
+  }
+  // Add second set of timestamped measurements
+  feature_tracker_->Update(timestamped_points_[1]);
+  EXPECT_EQ(feature_tracker_->size(), 2);
+  {
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    // Second track should be empty and skipped
+    EXPECT_EQ(tracks.size(), 1);
+    // First track should still only have one point
+    const auto& track_0 = tracks[0];
+    EXPECT_EQ(track_0.size(), 1);
+    EXPECT_SAME_POINT(track_0[0].value, timestamped_points_[0][0]);
+  }
+
+  // Add 3rd set of timestamped measurements
+  feature_tracker_->Update(timestamped_points_[2]);
+  EXPECT_EQ(feature_tracker_->size(), 3);
+  {
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    // Second and third track should be empty and skipped
+    EXPECT_EQ(tracks.size(), 1);
+    // First track should still only have one point
+    const auto& track_0 = tracks[0];
+    EXPECT_EQ(track_0.size(), 1);
+    EXPECT_SAME_POINT(track_0[0].value, timestamped_points_[0][0]);
+  }
+
+  // Add 4th set of timestamped measurements
+  feature_tracker_->Update(timestamped_points_[3]);
+  EXPECT_EQ(feature_tracker_->size(), 3);
+  {
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    // Second track should now have allowed measurements
+    EXPECT_EQ(tracks.size(), 2);
+    // First track should have two points
+    const auto& track_0 = tracks[0];
+    EXPECT_EQ(track_0.size(), 2);
+    EXPECT_SAME_POINT(track_0[0].value, timestamped_points_[0][0]);
+    EXPECT_SAME_POINT(track_0[1].value, timestamped_points_[3][0]);
+    // Second track should have one point
+    const auto& track_1 = tracks[1];
+    EXPECT_EQ(track_1.size(), 1);
+    EXPECT_SAME_POINT(track_1[0].value, timestamped_points_[3][1]);
+  }
+  // Add 5th set of timestamped measurements
+  feature_tracker_->Update(timestamped_points_[4]);
+  EXPECT_EQ(feature_tracker_->size(), 3);
+  {
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    EXPECT_EQ(tracks.size(), 2);
+    // First track should still have two points
+    const auto& track_0 = tracks[0];
+    EXPECT_EQ(track_0.size(), 2);
+    EXPECT_SAME_POINT(track_0[0].value, timestamped_points_[0][0]);
+    EXPECT_SAME_POINT(track_0[1].value, timestamped_points_[3][0]);
+    // Second track should still have one point
+    const auto& track_1 = tracks[1];
+    EXPECT_EQ(track_1.size(), 1);
+    EXPECT_SAME_POINT(track_1[0].value, timestamped_points_[3][1]);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

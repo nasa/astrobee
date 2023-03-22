@@ -48,6 +48,7 @@ class SpacedFeatureTracker : public FeatureTracker<SpacedFeatureTrack> {
   void Clear() final;
 
   // Returns feature tracks spaced using allowed timestamps.
+  // Skips feature tracks with no allowed timestamps.
   std::vector<std::vector<localization_common::TimestampedValue<FeaturePoint>>> SpacedFeatureTracks() const;
 
  private:
