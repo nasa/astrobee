@@ -20,6 +20,7 @@
 #define FACTOR_ADDERS_VO_SMART_PROJECTION_FACTOR_ADDER_PARAMS_H_
 
 #include <factor_adders/factor_adder_params.h>
+#include <vision_common/spaced_feature_tracker_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Cal3_S2.h>
@@ -29,14 +30,7 @@
 
 namespace factor_adders {
 struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
-  // Space measurements in smart factors using set measurement_spacing.
-  // Essentially downsamples measurements by ignoring a measurement_spacing
-  // number of measurements in between used measurements.
-  // If this is not enabled, the max spacing is used as dictated by the
-  // max_num_points_per_factor.
-  /*bool use_set_measurement_spacing;*/
-  // Measurement spacing if use_allowed_timestamps is enabled.
-  int measurement_spacing;
+  SpacedFeatureTrackerParams spaced_feature_tracker;
   // Maximum number of smart factors to include in a graph at a time.
   int max_num_factors;
   // Minimum number of points for a feature track to be used for a smart factor.
@@ -70,20 +64,15 @@ struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   // Camera noise.
   gtsam::SharedIsotropic cam_noise;
-  // GTSAM Smart factor params, see GTSAM documentation for more details.
-  // Refine triangulation using Levenberg-Marquardt Optimization.
-  bool enable_EPI;
-  // TODO(rsoussan): Add rank tolerance param?
-  bool verbose_cheirality;
-  // Maximum valid distance for a triangulated point.
-  double landmark_distance_threshold;
-  // Maximum valid reprojection error for a valid triangulated point.
-  double dynamic_outlier_rejection_threshold;
-  // Equality threshold for poses in a smart factor to trigger retriangulation
-  // of a landmark point.
-  // If any of the poses vary by more than this threshold compared to their previous value,  // retriangulation is
-  // triggered.
-  double retriangulation_threshold;
+  // GTSAM Smart factor params, see GTSAM documentation and below for more details.
+  // enableEPI: Refine triangulation using Levenberg-Marquardt Optimization.
+  // verboseCheirality: Print error on cheirality errors
+  // landmarkDistanceThreshold: Maximum valid distance for a triangulated point.
+  // dynamicOutlierRejectionThreshold: Maximum valid reprojection error for a valid triangulated point.
+  // retriangulationThreshold: Equality threshold for poses in a smart factor to trigger retriangulation
+  // of a landmark point. If any of the poses vary by more than this threshold
+  // compared to their previous value, retriangulation is triggered.
+  gtsam::SmartProjectionParams smart_factor;
 };
 }  // namespace factor_adders
 
