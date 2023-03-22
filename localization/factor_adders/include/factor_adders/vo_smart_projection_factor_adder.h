@@ -69,7 +69,7 @@ class VoSmartProjectionFactorAdder
                       gtsam::NonlinearFactorGraph& factors) const;
 
   // Checks the average distance from the mean and the number of points in the track.
-  bool ValidTrack(const vision_common::FeaturePoints& feature_track);
+  bool ValidTrack(const vision_common::FeaturePoints& feature_track) const;
 
   // Functions to split and fix smart factors
   void SplitSmartFactorsIfNeeded(const gtsam::Values& values, gtsam::NonlinearFactorGraph& factors) const;
@@ -162,7 +162,8 @@ bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
 }
 
 template <typename PoseNodeAdderType>
-bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::ValidTrack(const vision_common::FeaturePoints& feature_track) {
+bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::ValidTrack(
+  const vision_common::FeaturePoints& feature_track) const {
   const double average_distance_from_mean = vision_common::AverageDistanceFromMean(feature_track);
   if (static_cast<int>(feature_track.size()) < params_.min_num_points_per_factor) return false;
   return (average_distance_from_mean >= params_.min_avg_distance_from_mean);
