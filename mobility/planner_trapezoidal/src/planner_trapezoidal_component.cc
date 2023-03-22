@@ -36,6 +36,11 @@
 #include <ff_msgs/action/motion.hpp>
 #include <ff_msgs/action/control.hpp>
 #include <ff_msgs/action/plan.hpp>
+namespace ff_msgs {
+typedef action::Motion Motion;
+typedef action::Control Control;
+typedef action::Plan Plan;
+}  // namespace ff_msgs
 
 // For the trapezoidal planner implementation
 #include <planner_trapezoidal/planner_trapezoidal.h>
@@ -45,41 +50,33 @@
 #include <algorithm>
 #include <cmath>
 
-
-// ROS2 CONVERSION
-// TODO(joris997):  - check if DiagnosticsCallback can be performed without an argument
-//                    (it does align with the rclcpp::create_timer)
-
 /**
  * \ingroup planner
  */
 namespace planner_trapezoidal {
 
-using RESPONSE = ff_msgs::action::Plan::Result;
+FF_DEFINE_LOGGER("planner_trapezoidal");
+
+using RESPONSE = ff_msgs::Plan::Result;
 
 class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
  public:
-  PlannerTrapezoidalComponent() :
-    planner::PlannerImplementation("trapezoidal", "Trapezoidal path planner") {}
+  explicit PlannerTrapezoidalComponent(const rclcpp::NodeOptions & options) :
+    planner::PlannerImplementation(options, "trapezoidal", "Trapezoidal path planner") {}
   ~PlannerTrapezoidalComponent() {}
 
  protected:
-  bool InitializePlanner(NodeHandle *nh) {
+  bool InitializePlanner(NodeHandle &nh) {
     // Grab some configuration parameters for this component
-    cfg_.Initialize(GetPrivateHandle(), "mobility/planner_trapezoidal.config");
-    cfg_.Listen(boost::bind(
-      &PlannerTrapezoidalComponent::ReconfigureCallback, this, _1));
+    cfg_.AddFile("mobility/planner_trapezoidal.config");
+    if (!cfg_.Initialize(nh)) {
+      return false;
+    }
 
     // Setup a timer to forward diagnostics
-    createTimer(
-      rclcpp::Duration(rclcpp::Rate(DEFAULT_DIAGNOSTICS_RATE)), timer_d_,
-      &PlannerTrapezoidalComponent::DiagnosticsCallback, this, false, true);
-    // timer_d_ = nh->createTimer(
-    //   ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-    //     &PlannerTrapezoidalComponent::DiagnosticsCallback, this, false, true);
+    timer_d_.createTimer(1 / DEFAULT_DIAGNOSTICS_RATE,
+                         std::bind(&PlannerTrapezoidalComponent::DiagnosticsCallback, this), nh, false, true);
 
-    // Save the epsilon value
-    epsilon_ = cfg_.Get<double>("epsilon");
     // Notify initialization complete
     FF_DEBUG_STREAM("Initialization complete");
     // Success
@@ -87,26 +84,23 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   }
 
   void DiagnosticsCallback() {
-    SendDiagnostics(cfg_.Dump());
+  //   // SendDiagnostics(cfg_.Dump());
   }
 
-  bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
-    if (!cfg_.Reconfigure(config))
-      return false;
-    epsilon_ = cfg_.Get<double>("epsilon");
-    return true;
+  double GetEpsilon() {
+    return cfg_.Get<double>("epsilon");
   }
 
-  void PlanCallback(ff_msgs::action::Plan::Goal const& goal) {
+  void PlanCallback(ff_msgs::Plan::Goal const& goal) {
     // Do some basic error checks
-    ff_msgs::action::Plan::Result plan_result;
-    plan_result.response = RESPONSE::SUCCESS;
+    ff_msgs::Plan::Result::SharedPtr plan_result;
+    plan_result->response = RESPONSE::SUCCESS;
     if (goal.states.size() < 2)
-      plan_result.response = RESPONSE::NOT_ENOUGH_STATES;
+      plan_result->response = RESPONSE::NOT_ENOUGH_STATES;
     if (goal.check_obstacles)
-      plan_result.response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
-    if (plan_result.response < 0)
-      return Result(plan_result);
+      plan_result->response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
+    if (plan_result->response < 0)
+      return PlanResult(plan_result);
     // Save the information
     desired_vel_   = goal.desired_vel;
     desired_omega_ = goal.desired_omega;
@@ -114,13 +108,12 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
     desired_alpha_ = goal.desired_alpha;
     min_control_period_ = 1.0 / goal.desired_rate;
     // Setup header and keep track of time as we generate trapezoidal ramps
-    plan_result.segment.clear();
+    plan_result->segment.clear();
     // Generate the trapezoidal ramp
     rclcpp::Time offset = goal.states.front().header.stamp;
     for (size_t i = 1; i < goal.states.size(); i++) {
       // Get the requested duration and offset
-      double dt =
-        (goal.states[i].header.stamp - goal.states[i-1].header.stamp).toSec();
+      double dt = (rclcpp::Time(goal.states[i].header.stamp) - rclcpp::Time(goal.states[i - 1].header.stamp)).seconds();
       // Extract affine transformations for the two poses
       Eigen::Affine3d tf_1 =
         msg_conversions::ros_pose_to_eigen_transform(goal.states[i-1].pose);
@@ -137,7 +130,7 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
         // Check that the direction of motion is not along the Z axis. In this
         // case the approach of taking the cross product with the world Z will
         // fail and we need to choose a different axis
-        if (fabs(vdown.dot(vfwd)) < 1.0 - epsilon_) {
+        if (fabs(vdown.dot(vfwd)) < 1.0 - GetEpsilon()) {
           vright = vdown.cross(vfwd);
           vdown = vfwd.cross(vright);
           if (vdown.z() < 0) {
@@ -171,25 +164,25 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
         tf_3.linear() = q.toRotationMatrix();
         // Initial rotation into direction orientation
         // Default speeds are set by the planner configuration
-        InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_2,
+        InsertTrapezoid(plan_result->segment, offset, dt, tf_1, tf_2,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
-                        min_control_period_, epsilon_);
-        InsertTrapezoid(plan_result.segment, offset, dt, tf_2, tf_3,
+                        min_control_period_, GetEpsilon());
+        InsertTrapezoid(plan_result->segment, offset, dt, tf_2, tf_3,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
-                        min_control_period_, epsilon_);
-        InsertTrapezoid(plan_result.segment, offset, dt, tf_3, tf_4,
+                        min_control_period_, GetEpsilon());
+        InsertTrapezoid(plan_result->segment, offset, dt, tf_3, tf_4,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
-                        min_control_period_, epsilon_);
+                        min_control_period_, GetEpsilon());
       } else {
         // Fully-holonomic smear of delta across all axes
-        InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_4,
+        InsertTrapezoid(plan_result->segment, offset, dt, tf_1, tf_4,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
-                        min_control_period_, epsilon_);
+                        min_control_period_, GetEpsilon());
       }
     }
     // Special case: we might already be there
-    if (plan_result.segment.size() < 2)
-      plan_result.response = RESPONSE::ALREADY_THERE;
+    if (plan_result->segment.size() < 2)
+      plan_result->response = RESPONSE::ALREADY_THERE;
     // Callback with the result
     return PlanResult(plan_result);
   }
@@ -205,7 +198,6 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   double desired_accel_;
   double desired_alpha_;
   double min_control_period_;
-  double epsilon_;
 };
 }  // namespace planner_trapezoidal
 

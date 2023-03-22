@@ -65,12 +65,12 @@
 #include <map>
 #include <utility>
 
-FF_DEFINE_LOGGER("choreographer");
-
 /**
  * \ingroup mobility
  */
 namespace choreographer {
+
+FF_DEFINE_LOGGER("choreographer");
 
 // Convenience declarations
 using STATE = ff_msgs::msg::MotionState;
@@ -115,7 +115,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
 
   // Constructor
   explicit ChoreographerComponent(const rclcpp::NodeOptions & options) :
-    ff_util::FreeFlyerComponent(options, NODE_CHOREOGRAPHER),
+    ff_util::FreeFlyerComponent(options, NODE_CHOREOGRAPHER, true),
     fsm_(STATE::INITIALIZING, std::bind(&ChoreographerComponent::UpdateCallback,
       this, std::placeholders::_1, std::placeholders::_2)), tolerance_max_time_(0, 0) {
     feedback_ = std::make_shared<ff_msgs::action::Motion::Feedback>();

@@ -121,6 +121,7 @@ ament_export_dependencies(
   msg_conversions
   ff_common
   ff_util
+  jsonloader
 )
 
 ament_export_include_directories(include)
