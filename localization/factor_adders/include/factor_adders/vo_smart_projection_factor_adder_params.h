@@ -25,12 +25,13 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/linear/NoiseModel.h>
+#include <gtsam/slam/SmartFactorParams.h>
 
 #include <string>
 
 namespace factor_adders {
 struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
-  SpacedFeatureTrackerParams spaced_feature_tracker;
+  vision_common::SpacedFeatureTrackerParams spaced_feature_tracker;
   // Maximum number of smart factors to include in a graph at a time.
   int max_num_factors;
   // Minimum number of points for a feature track to be used for a smart factor.

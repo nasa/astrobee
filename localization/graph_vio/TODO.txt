@@ -4,8 +4,9 @@
         
     - test vo factor adder! (AA)
       - start test!
-        - pass measurement spacing to feature tracker in smart factor! (AA)
-          - construct feature tracker params in constructor! initialize feature tracker!
+        - update spacedfeaturetracks() functino to return vec ofpoints,not timestampedpoints! (AAA)
+        - add functino to set default params!
+        - add function to create fake measurements!
         - compile factor adders!
         - add method to add feature point measurements!
           - only use 3 tracks!

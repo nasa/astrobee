@@ -53,11 +53,6 @@ class SimplePoseVelocityNodeAdder : public na::NodeAdder {
   }
 
   std::string type() const final { return "simple_pose_velocity_node_adder"; }
-
- private:
-  gtsam::KeyVector pose_keys_;
-  gtsam::KeyVector velocity_keys_;
-  int key_index_ = 0;
 };
 
 class StandstillFactorAdderTest : public ::testing::Test {

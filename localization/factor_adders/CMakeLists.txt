@@ -84,6 +84,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_standstill_factor_adder
     factor_adders ${catkin_LIBRARIES} 
   )
+  add_rostest_gtest(test_vo_smart_projection_factor_adder
+    test/test_vo_smart_projection_factor_adder.test
+    test/test_vo_smart_projection_factor_adder.cc
+  )
+  target_link_libraries(test_vo_smart_projection_factor_adder
+    factor_adders ${catkin_LIBRARIES} 
+  )
 endif()
 
 #############
