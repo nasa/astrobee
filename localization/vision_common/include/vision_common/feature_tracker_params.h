@@ -20,6 +20,7 @@
 
 namespace vision_common {
 struct FeatureTrackerParams {
+  // Remove a feature track if not detected in the most recently provided set of feature points.
   bool remove_undetected_feature_tracks;
 };
 }  // namespace vision_common

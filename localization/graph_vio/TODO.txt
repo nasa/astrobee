@@ -8,13 +8,7 @@
       - test these!
         
     - test vo factor adder! (AA)
-          - template feature tracker on feature track type! (AB)
-              - default to normal, use spaced in vofactoradder!
-
-          - move allow list to vo factor adder! (AB)
-            - make sure to slide it!
-          - test each of these!
-        - add comments to functions!
+      - add comments to functions!
       - add option to relinearize in smart factor more frequently! test this!
       - clean up smart factor fixing code! test this!
         - add better comments to functions!

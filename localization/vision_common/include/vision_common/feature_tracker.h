@@ -38,7 +38,7 @@ class FeatureTracker {
   // Default constructor only for serialization
   FeatureTracker() = default;
 
-  ~FeatureTracker() = default;
+  virtual ~FeatureTracker() = default;
 
   // Add new feature points to existing or new tracks.  Optionally removes
   // any existing tracks that weren't detected in passed feature_points.
@@ -163,7 +163,7 @@ void FeatureTracker<FeatureTrackType>::Clear() {
 template <typename FeatureTrackType>
 void FeatureTracker<FeatureTrackType>::AddOrUpdateTrack(const FeaturePoint& feature_point) {
   if (id_feature_track_map_.count(feature_point.feature_track_id) == 0) {
-    id_feature_track_map_[feature_point.feature_track_id] = FeatureTrack(feature_point.feature_track_id);
+    id_feature_track_map_[feature_point.feature_track_id] = FeatureTrackType(feature_point.feature_track_id);
   }
   id_feature_track_map_[feature_point.feature_track_id].Add(feature_point.timestamp, feature_point);
 }

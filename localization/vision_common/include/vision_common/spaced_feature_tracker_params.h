@@ -21,11 +21,9 @@
 #include <vision_common/feature_tracker_params.h>
 
 namespace vision_common {
-struct SpacedFeatureTrackerParams : public FeatureTrackerParams {
-  // Max duration, feature tracker trims measurements outside of this window or outside of graph window
-  double sliding_window_duration;
-  int smart_projection_adder_measurement_spacing;
-  bool use_allowed_timestamps;
+struct SpacedFeatureTrackerParams : FeatureTrackerParams {
+  // Spacing between measurements used for allowed timestamps.
+  int measurement_spacing;
 };
 }  // namespace vision_common
 

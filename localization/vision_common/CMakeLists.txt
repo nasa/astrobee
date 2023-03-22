@@ -61,6 +61,7 @@ add_library(${PROJECT_NAME}
   src/parameter_reader.cc
   src/pose_estimation.cc
   src/spaced_feature_track.cc
+  src/spaced_feature_tracker.cc
   src/surf_feature_detector_and_matcher.cc
   src/test_utilities.cc
   src/utilities.cc
