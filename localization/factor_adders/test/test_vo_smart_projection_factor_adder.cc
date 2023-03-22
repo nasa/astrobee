@@ -23,6 +23,7 @@
 #include <localization_measurements/feature_points_measurement.h>
 #include <node_adders/node_adder.h>
 #include <node_adders/utilities.h>
+#include <nodes/nodes.h>
 
 #include <gtest/gtest.h>
 
@@ -30,6 +31,7 @@ namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace na = node_adders;
+namespace no = nodes;
 
 // Test node adder that just returns keys that should be used.
 // Key values are calculated using the integer timestamps passed.
@@ -49,7 +51,12 @@ class SimplePoseNodeAdder : public na::NodeAdder {
     return keys;
   }
 
+  const no::Nodes& nodes() { return nodes_; }
+
   std::string type() const final { return "simple_pose_node_adder"; }
+
+ private:
+  no::Nodes nodes_;
 };
 
 class VoSmartProjectionFactorAdderTest : public ::testing::Test {
