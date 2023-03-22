@@ -72,15 +72,15 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   }
 
   fa::VoSmartProjectionFactorAdderParams DefaultParams() {
-    /*fa::VoSmartProjectionFactorAdderParams params;
-    params.enabled = true;
+    fa::VoSmartProjectionFactorAdderParams params;
+    /*params.enabled = true;
     params.huber_k = 1.345;
     params.add_velocity_prior = true;
     params.add_pose_between_factor = true;
     params.prior_velocity_stddev = 0.1;
     params.pose_between_factor_translation_stddev = 0.2;
-    params.pose_between_factor_rotation_stddev = 0.3;
-    return params;*/
+    params.pose_between_factor_rotation_stddev = 0.3;*/
+    return params;
   }
 
   std::unique_ptr<fa::VoSmartProjectionFactorAdder<SimplePoseNodeAdder>> factor_adder_;

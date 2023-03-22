@@ -65,7 +65,7 @@ class VoSmartProjectionFactorAdder
   // Helper function to add a smart factor given a set of feature track points.
   // Assumes points are ordered from oldest to latest, so oldest points are
   // added first and prioritized over later points given a max number of points to add.
-  void AddSmartFactor(const std::vector<vision_common::FeaturePoint>& feature_track_points,
+  bool AddSmartFactor(const std::vector<vision_common::FeaturePoint>& feature_track_points,
                       gtsam::NonlinearFactorGraph& factors) const;
 
   // Functions to split and fix smart factors
@@ -119,8 +119,7 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledM
     if (vision_common::ValidPointSet(points.size(), average_distance_from_mean, params_.min_avg_distance_from_mean,
                                      params_.min_num_points) &&
         num_added_factors < params_.max_num_factors) {
-      AddSmartFactor(points, factors);
-      ++num_added_factors;
+      if (AddSmartFactor(points, factors)) ++num_added_factors;
     }
   }
 
@@ -128,7 +127,7 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledM
 }
 
 template <typename PoseNodeAdderType>
-void VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
+bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
   const std::vector<vision_common::FeaturePoint>& feature_track_points, gtsam::NonlinearFactorGraph& factors) const {
   SharedRobustSmartFactor smart_factor;
   const int num_feature_track_points = feature_track_points.size();
@@ -148,18 +147,19 @@ void VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
     const auto& timestamp = feature_point.timestamp;
     if (!node_adder_->AddNode(timestamp, factors)) {
       LogError("AddSmartFactor: Failed to add node for timestamp " << timestamp << ".");
-      return boost::none;
+      return false;
     }
     const auto keys = node_adder_->Keys(timestamp);
     if (keys.empty()) {
       LogError("AddSmartFactor: Failed to get keys for timestamp " << timestamp << ".");
-      return boost::none;
+      return false;
     }
     // Assumes first key is pose
     const auto& pose_key = keys[0];
     smart_factor->add(SmartFactorCamera::Measurement(feature_point.image_point), pose_key);
-    factors.push_back(smart_factor);
   }
+  factors.push_back(smart_factor);
+  return true;
 }
 
 template <typename PoseNodeAdderType>
@@ -174,8 +174,7 @@ void VoSmartProjectionFactorAdder<PoseNodeAdderType>::SplitSmartFactorsIfNeeded(
     if (point.valid()) continue;
     // Invalid factor, first attempt to fix by removing individiual measurements.
     {
-      const auto fixed_smart_factor =
-        FixSmartFactorByRemovingIndividualMeasurements(params_, *smart_factor, params_.smart_factor, values);
+      const auto fixed_smart_factor = FixSmartFactorByRemovingIndividualMeasurements(values, *smart_factor);
       if (fixed_smart_factor) {
         factor = *fixed_smart_factor;
         continue;
@@ -184,8 +183,7 @@ void VoSmartProjectionFactorAdder<PoseNodeAdderType>::SplitSmartFactorsIfNeeded(
     // If removing individiual measurements fails, attempt to fix by removing measurement
     // sequences.
     {
-      const auto fixed_smart_factor =
-        FixSmartFactorByRemovingMeasurementSequence(params_, *smart_factor, params_.smart_factor, values);
+      const auto fixed_smart_factor = FixSmartFactorByRemovingMeasurementSequence(values, *smart_factor);
       if (fixed_smart_factor) {
         factor = *fixed_smart_factor;
         continue;
@@ -199,7 +197,7 @@ void VoSmartProjectionFactorAdder<PoseNodeAdderType>::SplitSmartFactorsIfNeeded(
 template <typename PoseNodeAdderType>
 boost::optional<SharedRobustSmartFactor>
 VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingIndividualMeasurements(
-  const RobustSmartFactor& smart_factor) const {
+  const gtsam::Values& values, const RobustSmartFactor& smart_factor) const {
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
   const auto original_keys = smart_factor.keys();
@@ -215,8 +213,8 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingIndivid
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
-      params.rotation_only_fallback, params.robust, params.huber_k);
+      params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor,
+      params_.rotation_only_fallback, params_.robust, params_.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
     if (new_point.valid()) {
@@ -232,7 +230,7 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingIndivid
 template <typename PoseNodeAdderType>
 boost::optional<SharedRobustSmartFactor>
 VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasurementSequence(
-  const RobustSmartFactor& smart_factor) const {
+  const gtsam::Values& values, const RobustSmartFactor& smart_factor) const {
   constexpr int min_num_measurements = 2;
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
@@ -247,8 +245,8 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
-      params.rotation_only_fallback, params.robust, params.huber_k);
+      params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor,
+      params_.rotation_only_fallback, params_.robust, params_.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
     if (new_point.valid()) {
@@ -274,8 +272,8 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
         keys_to_add.emplace_back(original_keys[i]);
       }
       auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-        params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
-        params.rotation_only_fallback, params.robust, params.huber_k);
+        params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor,
+        params_.rotation_only_fallback, params_.robust, params_.huber_k);
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
       if (new_point.valid()) {
