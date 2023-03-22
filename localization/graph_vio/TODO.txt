@@ -4,8 +4,9 @@
         
     - test vo factor adder! (AA)
       - add simple test to make sure all factors are added!
-      - add function to check noiseequality!
       - add function to check factor equality!
+        - check that contains each point from start to end index!
+      - add function to check noiseequality!
       - test most params! make sure they work!
   - test loc factor adder!
   - test graph optimizer! (C)

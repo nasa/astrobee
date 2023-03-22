@@ -35,7 +35,7 @@ struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
   // Maximum number of smart factors to include in a graph at a time.
   int max_num_factors;
   // Minimum number of points for a feature track to be used for a smart factor.
-  int min_num_points;
+  int min_num_points_per_factor;
   // Maximum number of points in a feature track to include in a smart factor.
   int max_num_points_per_factor;
   // Minimum average deviation for points in a feature track to be used.

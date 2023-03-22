@@ -117,7 +117,7 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledM
   for (const auto& feature_track : feature_tracker_->SpacedFeatureTracks()) {
     const double average_distance_from_mean = vision_common::AverageDistanceFromMean(feature_track);
     if (vision_common::ValidPointSet(feature_track.size(), average_distance_from_mean,
-                                     params_.min_avg_distance_from_mean, params_.min_num_points) &&
+                                     params_.min_avg_distance_from_mean, params_.min_num_points_per_factor) &&
         num_added_factors < params_.max_num_factors) {
       if (AddSmartFactor(feature_track, factors)) ++num_added_factors;
     }

@@ -65,10 +65,10 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
  public:
   VoSmartProjectionFactorAdderTest() { node_adder_.reset(new SimplePoseNodeAdder()); }
 
-  void SetUp() final {}
+  void SetUp() final { CreateMeasurements(); }
 
   // Add measurements for each track at multiple timestamps
-  void AddMeasurements() {
+  void CreateMeasurements() {
     for (int time = 0; time < num_measurements_; ++time) {
       lm::FeaturePointsMeasurement measurement;
       measurement.timestamp = time;
@@ -81,6 +81,8 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
     }
   }
 
+  lc::Time timestamp(const int measurement_index) { return measurements_[measurement_index].timestamp; }
+
   void Initialize(const fa::VoSmartProjectionFactorAdderParams& params) {
     factor_adder_.reset(new fa::VoSmartProjectionFactorAdder<SimplePoseNodeAdder>(params, node_adder_));
   }
@@ -90,9 +92,9 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
     // Feature Tracker Params
     params.spaced_feature_tracker.measurement_spacing = 2;
     params.spaced_feature_tracker.remove_undetected_feature_tracks = true;
-    params.max_num_factors = 3;
-    params.min_num_points = 2;
-    params.max_num_points_per_factor = 5;
+    params.max_num_factors = 2;
+    params.min_num_points_per_factor = 2;
+    params.max_num_points_per_factor = 3;
     params.min_avg_distance_from_mean = 1e-9;
     params.robust = true;
     params.rotation_only_fallback = false;
@@ -126,16 +128,20 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
 TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   auto params = DefaultParams();
   Initialize(params);
-  AddMeasurements();
-  // Add first factors
-  // None should be added since there are too few measurements for each factor
-  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
+  // Add first measurement
+  // No factors should be added since there are too few measurements for each factor
+  factor_adder_->AddMeasurement(measurements_[0]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 0);
   EXPECT_EQ(factors_.size(), 0);
-  // Keys and their indices:
-  // pose_0: 0, velocity_0: 1
-  // pose_1: 2, velocity_1: 3
-  // Factors and their indices:
-  // pose_between: 0, velocity_prior: 1
+  // Add second measurement
+  factor_adder_->AddMeasurement(measurements_[1]);
+  // No factors added if don't include second measurement timestamp
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), (timestamp(0) + timestamp(1)) / 2.0, factors_), 0);
+  EXPECT_EQ(factors_.size(), 0);
+  // All factors added if include second measurement timestamp
+  const int max_factors = std::min(params.max_num_factors, num_tracks_);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(1), factors_), max_factors);
+  EXPECT_EQ(factors_.size(), max_factors);
 }
 
 // Run all the tests that were declared with TEST()
