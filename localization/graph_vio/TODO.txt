@@ -4,9 +4,8 @@
         
     - test vo factor adder! (AA)
       - start test!
-        - update spacedfeaturetracks() functino to return vec ofpoints,not timestampedpoints! (AAA)
-        - add functino to set default params!
-        - add function to create fake measurements!
+        - add functino to set default params! (AA)
+        - add function to create fake measurements! (AB)
         - compile factor adders!
         - add method to add feature point measurements!
           - only use 3 tracks!

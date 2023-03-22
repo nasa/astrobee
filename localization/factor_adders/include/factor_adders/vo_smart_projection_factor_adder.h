@@ -65,7 +65,7 @@ class VoSmartProjectionFactorAdder
   // Helper function to add a smart factor given a set of feature track points.
   // Assumes points are ordered from oldest to latest, so oldest points are
   // added first and prioritized over later points given a max number of points to add.
-  bool AddSmartFactor(const std::vector<vision_common::FeaturePoint>& feature_track_points,
+  bool AddSmartFactor(const vision_common::FeaturePoints& feature_track_points,
                       gtsam::NonlinearFactorGraph& factors) const;
 
   // Functions to split and fix smart factors
@@ -115,11 +115,11 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledM
   gtsam::NonlinearFactorGraph& factors) const {
   int num_added_factors = 0;
   for (const auto& feature_track : feature_tracker_->SpacedFeatureTracks()) {
-    const double average_distance_from_mean = vision_common::AverageDistanceFromMean(points);
-    if (vision_common::ValidPointSet(points.size(), average_distance_from_mean, params_.min_avg_distance_from_mean,
-                                     params_.min_num_points) &&
+    const double average_distance_from_mean = vision_common::AverageDistanceFromMean(feature_track);
+    if (vision_common::ValidPointSet(feature_track.size(), average_distance_from_mean,
+                                     params_.min_avg_distance_from_mean, params_.min_num_points) &&
         num_added_factors < params_.max_num_factors) {
-      if (AddSmartFactor(points, factors)) ++num_added_factors;
+      if (AddSmartFactor(feature_track, factors)) ++num_added_factors;
     }
   }
 
@@ -128,7 +128,7 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledM
 
 template <typename PoseNodeAdderType>
 bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
-  const std::vector<vision_common::FeaturePoint>& feature_track_points, gtsam::NonlinearFactorGraph& factors) const {
+  const vision_common::FeaturePoints& feature_track_points, gtsam::NonlinearFactorGraph& factors) const {
   SharedRobustSmartFactor smart_factor;
   const int num_feature_track_points = feature_track_points.size();
   // Optionally scale the noise with the number of points, as a longer track the relies on    a
