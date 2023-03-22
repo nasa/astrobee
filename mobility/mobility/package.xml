@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="3">
   <name>mobility</name>
   <version>0.0.0</version>
   <description>
@@ -14,19 +14,24 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>ament_cmake</build_depend>
+  <build_depend>rclcpp</build_depend>
   <build_depend>ff_msgs</build_depend>
   <build_depend>ff_util</build_depend>
   <build_depend>choreographer</build_depend>
-  <build_depend>mapper</build_depend>
+  <!-- <build_depend>mapper</build_depend> -->
   <build_depend>planner_trapezoidal</build_depend>
   <build_depend>planner_qp</build_depend>
   <build_depend>jsonloader</build_depend>
-  <run_depend>ff_msgs</run_depend>
-  <run_depend>ff_util</run_depend>
-  <run_depend>choreographer</run_depend>
-  <run_depend>mapper</run_depend>
-  <run_depend>planner_trapezoidal</run_depend>
-  <run_depend>planner_qp</run_depend>
-  <run_depend>jsonloader</run_depend>
+
+  <exec_depend>ff_msgs</exec_depend>
+  <exec_depend>ff_util</exec_depend>
+  <exec_depend>choreographer</exec_depend>
+  <!-- <exec_depend>mapper</exec_depend> -->
+  <exec_depend>planner_trapezoidal</exec_depend>
+  <exec_depend>planner_qp</exec_depend>
+  <exec_depend>jsonloader</exec_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

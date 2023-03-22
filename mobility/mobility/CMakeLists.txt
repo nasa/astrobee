@@ -15,33 +15,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(mobility)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  choreographer
-  mapper
-  planner_trapezoidal
-  planner_qp
-  ff_msgs
-  ff_util
-  jsonloader
-)
-catkin_package(
-  CATKIN_DEPENDS
-    choreographer
-    mapper
-    planner_trapezoidal
-    planner_qp
-    ff_msgs
-    ff_util
-    jsonloader
-)
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+
+find_package(ff_common REQUIRED)
+# find_package(mapper REQUIRED)
+find_package(planner_trapezoidal REQUIRED)
+# find_package(planner_qp REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(jsonloader REQUIRED)
+
 
 ###########
 ## Build ##
@@ -54,24 +48,33 @@ include_directories(
 )
 
 ## Declare a C++ executable: plangen
-add_executable(plangen tools/plangen.cc)
-add_dependencies(plangen ${catkin_EXPORTED_TARGETS})
-target_link_libraries(plangen
-  gflags glog ${catkin_LIBRARIES})
+# add_executable(plangen tools/plangen.cc)
+# add_dependencies(plangen ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(plangen
+#   gflags glog ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: teleop
 add_executable(teleop tools/teleop.cc)
-add_dependencies(teleop ${catkin_EXPORTED_TARGETS})
+ament_target_dependencies(teleop rclcpp ff_common ff_util ff_msgs)
 target_link_libraries(teleop
-  gflags glog ${catkin_LIBRARIES})
+  gflags glog)
 
 #############
 ## Install ##
 #############
 
 # Install C++ executables
-install(TARGETS plangen DESTINATION bin)
-install(TARGETS teleop DESTINATION bin)
+# install(TARGETS plangen DESTINATION bin)
+install(TARGETS teleop
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+# install(TARGETS ${PROJECT_NAME} teleop
+#   ARCHIVE DESTINATION lib
+#   LIBRARY DESTINATION lib
+#   RUNTIME DESTINATION lib/${PROJECT_NAME}
+# )
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/plangen share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/teleop share/${PROJECT_NAME}

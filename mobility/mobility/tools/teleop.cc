@@ -21,9 +21,10 @@
 #include <gflags/gflags_completions.h>
 
 // Include RPOS
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // Listen for transforms
+#include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
 // FSW includes
@@ -35,8 +36,16 @@
 #include <ff_util/config_client.h>
 
 // Primitive actions
-#include <ff_msgs/LocalizationAction.h>
-#include <ff_msgs/MotionAction.h>
+#include <ff_msgs/action/localization.hpp>
+#include <ff_msgs/action/motion.hpp>
+namespace ff_msgs {
+typedef action::Localization Localization;
+typedef action::Motion Motion;
+}  // namespace ff_msgs
+#include <geometry_msgs/msg/pose_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::PoseStamped PoseStamped;
+}  // namespace geometry_msgs
 
 // Eigen C++ includes
 #include <Eigen/Dense>
@@ -72,6 +81,7 @@ DEFINE_bool(nocollision, false, "Don't check for collisions during action");
 DEFINE_bool(nobootstrap, false, "Don't move to the starting station on execute");
 DEFINE_bool(noimmediate, false, "Don't execute immediately");
 DEFINE_bool(replan, false, "Enable replanning");
+DEFINE_bool(timesync, false, "Enable time synchronization");
 DEFINE_string(rec, "", "Plan and record to this file.");
 DEFINE_string(exec, "", "Execute a given segment");
 DEFINE_string(pos, "", "Desired position in cartesian format 'X Y Z' (meters)");
@@ -87,7 +97,7 @@ bool sent_ = false;
 
 // Generic completion function
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-  ff_msgs::MotionResultConstPtr const& result) {
+  std::shared_ptr<const ff_msgs::Motion::Result> result) {
   switch (result_code) {
   // Result will be a null pointer
   case ff_util::FreeFlyerActionState::Enum::TIMEOUT_ON_CONNECT:
@@ -105,8 +115,8 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   // Result expected
   case ff_util::FreeFlyerActionState::Enum::SUCCESS:
     if (!FLAGS_rec.empty()) {
-      ff_msgs::MotionGoal msg;
-      msg.command = ff_msgs::MotionGoal::EXEC;
+      ff_msgs::Motion::Goal msg;
+      msg.command = ff_msgs::Motion::Goal::EXEC;
       msg.flight_mode = FLAGS_mode;
       msg.segment = result->segment;
       if (!ff_util::Serialization::WriteFile(FLAGS_rec, msg))
@@ -126,7 +136,7 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
 }
 
 // Mobility feedback
-void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {
+void MFeedbackCallback(const std::shared_ptr<const ff_msgs::Motion::Feedback> feedback) {
   std::cout << '\r' << std::flush;
   std::cout << std::fixed << std::setprecision(2)
     << "POS: " << 1000.00 * feedback->progress.error_position << " mm "
@@ -137,31 +147,31 @@ void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {
 }
 
 // Switch feedback
-void SFeedbackCallback(ff_msgs::LocalizationFeedbackConstPtr const& feedback) {}
+void SFeedbackCallback(const std::shared_ptr<const ff_msgs::Localization::Feedback> feedback) {}
 
 // Switch result
 void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-  ff_msgs::LocalizationResultConstPtr const& result,
+  std::shared_ptr<const ff_msgs::Localization::Result> result,
   tf2_ros::Buffer * tf_buffer_,
-  ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> * action) {
+  ff_util::FreeFlyerActionClient<ff_msgs::Motion> * action) {
   // Setup a new mobility goal
-  ff_msgs::MotionGoal goal;
+  ff_msgs::Motion::Goal goal;
   goal.flight_mode = FLAGS_mode;
   // Rest of the goal depends on result
   switch (result_code) {
   case ff_util::FreeFlyerActionState::SUCCESS: {
     // Idle command
     if (FLAGS_idle) {
-      goal.command = ff_msgs::MotionGoal::IDLE;
+      goal.command = ff_msgs::Motion::Goal::IDLE;
     // Stop command
     } else if (FLAGS_stop) {
-      goal.command = ff_msgs::MotionGoal::STOP;
+      goal.command = ff_msgs::Motion::Goal::STOP;
     // Stop command
     } else if (FLAGS_prep) {
-      goal.command = ff_msgs::MotionGoal::PREP;
+      goal.command = ff_msgs::Motion::Goal::PREP;
     // Obtain the current state
     } else if (FLAGS_move) {
-      goal.command = ff_msgs::MotionGoal::MOVE;
+      goal.command = ff_msgs::Motion::Goal::MOVE;
       geometry_msgs::PoseStamped state;
       try {
         std::string ns = FLAGS_ns;
@@ -177,7 +187,8 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
         ros::shutdown();
       }
       // Manipulate timestamp to cause deferral
-      state.header.stamp += ros::Duration(FLAGS_wait);
+      state.header.stamp =
+        rclcpp::Time(state.header.stamp) + rclcpp::Duration((std::chrono::duration<double>)FLAGS_wait);
       // Parse and modify the position
       std::string str_p = FLAGS_pos;
       if (!str_p.empty()) {
@@ -277,8 +288,8 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
 
 // Ensure all clients are connected
 void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
-  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> * client_s_,
-  ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> * client_t_) {
+  ff_util::FreeFlyerActionClient<ff_msgs::Localization> * client_s_,
+  ff_util::FreeFlyerActionClient<ff_msgs::Motion> * client_t_) {
   // Check to see if connected
   if (!client_s_->IsConnected()) return;  // Switch
   if (!client_t_->IsConnected()) return;  // Mobility
@@ -287,15 +298,15 @@ void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
     sent_ = true;
   // Package up and send the move goal
   if (!FLAGS_loc.empty() || FLAGS_bias || FLAGS_reset) {
-    ff_msgs::LocalizationGoal goal;
+    ff_msgs::Localization::Goal goal;
     if (!FLAGS_loc.empty()) {
-      goal.command = ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE;
+      goal.command = ff_msgs::Localization::Goal::COMMAND_SWITCH_PIPELINE;
       goal.pipeline = FLAGS_loc;
     }
     if (FLAGS_reset)
-      goal.command = ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER;
+      goal.command = ff_msgs::Localization::Goal::COMMAND_RESET_FILTER;
     if (FLAGS_bias)
-      goal.command = ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS;
+      goal.command = ff_msgs::Localization::Goal::COMMAND_ESTIMATE_BIAS;
     if (!client_s_->SendGoal(goal))
       std::cout << "Localization client did not accept goal" << std::endl;
     return;
@@ -308,7 +319,8 @@ void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "teleop", ros::init_options::AnonymousName);
+  // @TODO(mgouveia): "teleop", ros::init_options::AnonymousName
+  rclcpp::init(argc, argv);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun mobility teleop <opts>");
   google::SetVersionString("1.0.0");
@@ -361,12 +373,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // Action clients
-  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
-  ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
+  ff_util::FreeFlyerActionClient<ff_msgs::Localization> client_s_;
+  ff_util::FreeFlyerActionClient<ff_msgs::Motion> client_t_;
   // Create a node handle
-  ros::NodeHandle nh(std::string("/") + FLAGS_ns);
+  auto nh = rclcpp::Node::make_shared(std::string("/") + FLAGS_ns);
   // TF2 Subscriber
-  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::Buffer tf_buffer_(nh->get_clock());
   tf2_ros::TransformListener tfListener(tf_buffer_);
   // Setup SWITCH action
   client_s_.SetConnectedTimeout(FLAGS_connect);
@@ -381,7 +393,7 @@ int main(int argc, char *argv[]) {
     &tf_buffer_, &client_t_));
   client_s_.SetConnectedCallback(std::bind(ConnectedCallback,
     &tf_buffer_, &client_s_, &client_t_));
-  client_s_.Create(&nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
+  client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
   // Setup MOBILITY action
   client_t_.SetConnectedTimeout(FLAGS_connect);
   client_t_.SetActiveTimeout(FLAGS_active);
@@ -394,15 +406,15 @@ int main(int argc, char *argv[]) {
     MResultCallback, std::placeholders::_1, std::placeholders::_2));
   client_t_.SetConnectedCallback(std::bind(ConnectedCallback,
     &tf_buffer_, &client_s_, &client_t_));
-  client_t_.Create(&nh, ACTION_MOBILITY_MOTION);
+  client_t_.Create(nh, ACTION_MOBILITY_MOTION);
   // For moves and executes check that we are configured correctly
   if (FLAGS_move || !FLAGS_exec.empty()) {
-    ff_util::ConfigClient cfg(&nh, NODE_CHOREOGRAPHER);
-    if (FLAGS_vel   > 0) cfg.Set<double>("desired_vel", FLAGS_vel);
-    if (FLAGS_accel > 0) cfg.Set<double>("desired_accel", FLAGS_accel);
-    if (FLAGS_omega > 0) cfg.Set<double>("desired_omega", FLAGS_omega);
-    if (FLAGS_alpha > 0) cfg.Set<double>("desired_alpha", FLAGS_alpha);
-    if (FLAGS_rate  > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
+    ff_util::ConfigClient cfg(nh, NODE_CHOREOGRAPHER);
+    // if (FLAGS_vel   > 0) cfg.Set<double>("desired_vel", FLAGS_vel);
+    // if (FLAGS_accel > 0) cfg.Set<double>("desired_accel", FLAGS_accel);
+    // if (FLAGS_omega > 0) cfg.Set<double>("desired_omega", FLAGS_omega);
+    // if (FLAGS_alpha > 0) cfg.Set<double>("desired_alpha", FLAGS_alpha);
+    // if (FLAGS_rate  > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
     if (FLAGS_tolerance_pos > 0) cfg.Set<double>("tolerance_pos", FLAGS_tolerance_pos);
     cfg.Set<bool>("enable_collision_checking", !FLAGS_nocollision);
     cfg.Set<bool>("enable_validation", !FLAGS_novalidate);
@@ -415,11 +427,11 @@ int main(int argc, char *argv[]) {
       cfg.Set<std::string>("planner", FLAGS_planner);
     if (!cfg.Reconfigure()) {
       std::cout << "Could not reconfigure the choreographer node " << std::endl;
-      ros::shutdown();
+      rclcpp::shutdown();
     }
   }
   // Synchronous mode
-  ros::spin();
+  rclcpp::spin(nh);
   // Finish commandline flags
   google::ShutDownCommandLineFlags();
   // Make for great success
