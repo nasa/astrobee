@@ -124,12 +124,13 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
 };
 
 TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
-  //  auto params = DefaultParams();
-  // Initialize(params);
-  // AddMeasurements();
+  auto params = DefaultParams();
+  Initialize(params);
+  AddMeasurements();
   // Add first factors
-  // EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
-  // EXPECT_EQ(factors_.size(), 2);
+  // None should be added since there are too few measurements for each factor
+  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
+  EXPECT_EQ(factors_.size(), 0);
   // Keys and their indices:
   // pose_0: 0, velocity_0: 1
   // pose_1: 2, velocity_1: 3

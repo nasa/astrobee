@@ -3,11 +3,10 @@
       - also add to standstill factor adder! base class factor adders! others!
         
     - test vo factor adder! (AA)
-      - start test!
       - add simple test to make sure all factors are added!
-        - add function to check noiseequality!
-        - add function to check factor equality!
-        - test most params! make sure they work!
+      - add function to check noiseequality!
+      - add function to check factor equality!
+      - test most params! make sure they work!
   - test loc factor adder!
   - test graph optimizer! (C)
   - test sliding window optimizer! (D)
