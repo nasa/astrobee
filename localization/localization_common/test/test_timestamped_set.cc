@@ -207,6 +207,27 @@ TEST(TimestampedSetTester, OldestLatestWithinBounds) {
   }
 }
 
+TEST(TimestampedSetTester, Clear) {
+  lc::TimestampedSet<double> timestamped_set;
+  EXPECT_EQ(timestamped_set.size(), 0);
+  EXPECT_TRUE(timestamped_set.empty());
+  // Add element 1
+  const double value_1 = 100.3;
+  const localization_common::Time timestamp_1 = 1.0;
+  EXPECT_TRUE(timestamped_set.Add(timestamp_1, value_1));
+  EXPECT_EQ(timestamped_set.size(), 1);
+  EXPECT_FALSE(timestamped_set.empty());
+  // Add element 2
+  const double value_2 = 100.3;
+  const localization_common::Time timestamp_2 = 3.3;
+  EXPECT_TRUE(timestamped_set.Add(timestamp_2, value_2));
+  EXPECT_EQ(timestamped_set.size(), 2);
+  // Clear
+  timestamped_set.Clear();
+  EXPECT_EQ(timestamped_set.size(), 0);
+  EXPECT_TRUE(timestamped_set.empty());
+}
+
 TEST(TimestampedSetTester, LowerAndUpperBounds) {
   lc::TimestampedSet<double> timestamped_set;
   // No elements

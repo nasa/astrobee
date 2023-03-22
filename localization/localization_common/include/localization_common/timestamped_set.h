@@ -60,6 +60,8 @@ class TimestampedSet {
 
   bool empty() const;
 
+  void Clear();
+
   boost::optional<TimestampedValue<T>> Oldest() const;
 
   boost::optional<TimestampedValue<T>> Latest() const;
@@ -155,6 +157,11 @@ size_t TimestampedSet<T>::size() const {
 template <typename T>
 bool TimestampedSet<T>::empty() const {
   return timestamp_value_map_.empty();
+}
+
+template <typename T>
+void TimestampedSet<T>::Clear() {
+  timestamp_value_map_.clear();
 }
 
 template <typename T>

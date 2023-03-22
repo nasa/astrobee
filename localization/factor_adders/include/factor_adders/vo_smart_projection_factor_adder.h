@@ -95,10 +95,13 @@ template <typename PoseNodeAdderType>
 int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddMeasurementBasedFactors(
   const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
   gtsam::NonlinearFactorGraph& factors) {
-  // Update feature tracker with new measurements
+  // Update feature tracker with new measurements.
+  // Clear measurements after adding them to feature tracker to avoid adding them again
+  // in future add factors calls.
   for (const auto& measurement : measurements_.set()) {
     feature_tracker_->Update(measurement.second.feature_points);
   }
+  measurements_.Clear();
 
   // Remove old smart factors before adding new ones, since otherwise there would be repeat factors
   // for already existing feature tracks
