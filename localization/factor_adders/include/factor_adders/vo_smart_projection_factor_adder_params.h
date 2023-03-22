@@ -29,26 +29,61 @@
 
 namespace factor_adders {
 struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
-  double min_avg_distance_from_mean;
-  bool enable_EPI;
-  double landmark_distance_threshold;
-  double dynamic_outlier_rejection_threshold;
-  double retriangulation_threshold;
-  bool verbose_cheirality;
-  bool robust;
-  int max_num_factors;
-  int min_num_points;
-  int max_num_points_per_factor;
+  // Space measurements in smart factors using set measurement_spacing.
+  // Essentially downsamples measurements by ignoring a measurement_spacing
+  // number of measurements in between used measurements.
+  // If this is not enabled, the max spacing is used as dictated by the
+  // max_num_points_per_factor.
+  /*bool use_set_measurement_spacing;*/
+  // Measurement spacing if use_allowed_timestamps is enabled.
   int measurement_spacing;
-  double feature_track_min_separation;
+  // Maximum number of smart factors to include in a graph at a time.
+  int max_num_factors;
+  // Minimum number of points for a feature track to be used for a smart factor.
+  int min_num_points;
+  // Maximum number of points in a feature track to include in a smart factor.
+  int max_num_points_per_factor;
+  // Minimum average deviation for points in a feature track to be used.
+  // A higher deviation provides a larger baseline between points and is less likely
+  // to yield numerical errors during triangulation and optimization.
+  double min_avg_distance_from_mean;
+  // Use a robust loss for the factor.
+  bool robust;
+  // Minimum distance in image space between the latest measurement in a feature track
+  // and already included latest measurements in other feature tracks for the feature track
+  // to be used as a smart factor.
+  /* double feature_track_min_separation;*/
+  // If triangulation fails, use a rotation-only version of the smart factor.
+  // Otherwise, the smart factor is disabled.
   bool rotation_only_fallback;
+  // Attempt to fix smart factors that are degenerate using the various splitting methods
+  // to try and remove faulty measurements.
   bool splitting;
+  // Scale the noise with the number of points, as a longer track the relies on a
+  // longer history of poses tends to have higher error
   bool scale_noise_with_num_points;
+  // Relative noise scale for all smart factors.
   double noise_scale;
-  bool use_allowed_timestamps;
+  // Camera extrinsics.
   gtsam::Pose3 body_T_cam;
+  // Camera intrinsics.
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
+  // Camera noise.
   gtsam::SharedIsotropic cam_noise;
+  // GTSAM Smart factor params, see GTSAM documentation for more details.
+  // Refine triangulation using Levenberg-Marquardt Optimization.
+  bool enable_EPI;
+  // TODO(rsoussan): Add rank tolerance param?
+  bool verbose_cheirality;
+  // Maximum valid distance for a triangulated point.
+  double landmark_distance_threshold;
+  // Maximum valid reprojection error for a valid triangulated point.
+  double dynamic_outlier_rejection_threshold;
+  // Equality threshold for poses in a smart factor to trigger retriangulation
+  // of a landmark point.
+  // If any of the poses vary by more than this threshold compared to their previous value,  // retriangulation is
+  // triggered.
+  double retriangulation_threshold;
 };
 }  // namespace factor_adders
 

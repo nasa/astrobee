@@ -38,24 +38,26 @@ class VoSmartProjectionFactorAdder
                                std::shared_ptr<PoseVelocityNodeAdderType> node_adder);
 
  private:
-  // Add factors either using allowed timestamps or max spacing
+  // Add factors using either set measurement spacing or max spacing.
   int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                                  const localization_common::Time newest_allowed_time,
                                  gtsam::NonlinearFactorGraph& factors) final;
 
+  // Add factors using downsampled measurements, determined by the measurement_spacing param.
+  // Measurements are in affect downsampled before being used for feature tracks.
+  int AddFactorsUsingDownsampledMeasurements(gtsam::NonlinearFactorGraph& factors) const;
+
   // Add factors using the max spacing between feature point measurements given the max number of
   // feature points to add.
-  int AddFactorsUsingMaxSpacing(gtsam::NonlinearFactorGraph& factors) const;
+  // int AddFactorsUsingMaxSpacing(gtsam::NonlinearFactorGraph& factors) const;
 
-  // Add factors using allowed timestamps which are simply a downsampled set of measurements to acheive the desired
-  // spacing.
-  int AddFactorsUsingAllowedTimestamps(gtsam::NonlinearFactorGraph& factors) const;
-
-  // Helper function to add factors given a set spacing.
-  int AddFactorsUsingSetSpacing(
+  // Helper function to add factors given a desired spacing.
+  // Each factor is spaced starting with the latest measurement and downsampling
+  // until the max number of points are added per factor.
+  /*int AddFactorsUsingSetSpacing(
     const vision_common::FeatureTrackLengthMap& feature_tracks, const int spacing,
     const double feature_track_min_separation,
-    std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points) const;
+    std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points) const;*/
 
   // Helper function to add a smart factor given a set of feature track points.
   // Assumes points are ordered from oldest to latest, so oldest points are
@@ -64,8 +66,8 @@ class VoSmartProjectionFactorAdder
                       gtsam::NonlinearFactorGraph& factors) const;
 
   // Helper function to see if a point is too close in image space to other points belonging to other feature tracks.
-  bool TooClose(const std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points,
-                const vision_common::FeaturePoint& point, const double feature_track_min_separation) const;
+  /*bool TooClose(const std::unordered_map<vision_common::FeatureId, vision_common::FeaturePoint>& added_points,
+                const vision_common::FeaturePoint& point, const double feature_track_min_separation) const;*/
 
   // Functions to split and fix smart factors
   void SplitSmartFactorsIfNeeded(gtsam::NonlinearFactorGraph& factors) const;
@@ -109,11 +111,13 @@ int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddMeasurementBased
 
   // Create smart factors based on feature tracks
   int num_added_factors = 0;
-  if (params_.use_allowed_timestamps) {
-    num_added_factors = AddFactorsUsingAllowedTimestamps(factors);
+  /*if (params_.use_set_measurement_spacing) {
+    num_added_factors = AddFactorsUsingDownsampledMeasurements(factors);
   } else {
     num_added_factors = AddFactorsUsingMaxSpacing(factors);
-  }
+  }*/
+  // TODO(rsoussan): Remove unused code? Merge with DownsampledMeasurements method? (I.e. too close, etc).
+  num_added_factors = AddFactorsUsingDownsampledMeasurements(factors);
   feature_tracker_.RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
   // Attempt to fix and split broken factors if enabled
   if (params_.splitting) SplitSmartFactorsIfNeeded(*graph_values_, factors_to_add);
@@ -121,6 +125,20 @@ int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddMeasurementBased
 }
 
 template <typename PoseVelocityNodeAdderType>
+int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingDownsampledMeasurements(
+  gtsam::NonlinearFactorGraph& factors) {
+  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
+    const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());
+    const double average_distance_from_mean = vc::AverageDistanceFromMean(points);
+    if (vc::ValidPointSet(points.size(), average_distance_from_mean, params_.min_avg_distance_from_mean,
+                          params_.min_num_points) &&
+        static_cast<int>(smart_factors_to_add.size()) < params_.max_num_factors) {
+      AddSmartFactor(points, smart_factors_to_add);
+    }
+  }
+}
+
+/*template <typename PoseVelocityNodeAdderType>
 int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingMaxSpacing(
   gtsam::NonlinearFactorGraph& factors) {
   const auto& feature_tracks = feature_tracker_->feature_tracks_length_ordered();
@@ -138,23 +156,9 @@ int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingMaxS
     // Zero min separation so any valid feature track is added as a fallback to try to add up to max_num_factors
     AddFactorsUsingSetSpacing(feature_tracks, spacing, 0, smart_factors_to_add, added_points);
   }
-}
+}*/
 
-template <typename PoseVelocityNodeAdderType>
-int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingAllowedTimestamps(
-  gtsam::NonlinearFactorGraph& factors) {
-  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
-    const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());
-    const double average_distance_from_mean = vc::AverageDistanceFromMean(points);
-    if (vc::ValidPointSet(points.size(), average_distance_from_mean, params_.min_avg_distance_from_mean,
-                          params_.min_num_points) &&
-        static_cast<int>(smart_factors_to_add.size()) < params_.max_num_factors) {
-      AddSmartFactor(points, smart_factors_to_add);
-    }
-  }
-}
-
-template <typename PoseVelocityNodeAdderType>
+/*template <typename PoseVelocityNodeAdderType>
 int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingSetSpacing(
   const vc::FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
   std::unordered_map<vc::FeatureId, vc::FeaturePoint>& added_points) {
@@ -175,7 +179,7 @@ int VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddFactorsUsingSetS
       added_points.emplace(points.front().feature_track_id, points.front());
     }
   }
-}
+}*/
 
 template <typename PoseVelocityNodeAdderType>
 void VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddSmartFactor(
@@ -211,7 +215,7 @@ void VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::AddSmartFactor(
   }
 }
 
-template <typename PoseVelocityNodeAdderType>
+/*template <typename PoseVelocityNodeAdderType>
 bool VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::TooClose(
   const std::unordered_map<vc::FeatureId, vc::FeaturePoint>& added_points, const vc::FeaturePoint& point,
   const double feature_track_min_separation) const {
@@ -222,7 +226,7 @@ bool VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::TooClose(
     }
   }
   return false;
-}
+}*/
 
 template <typename PoseVelocityNodeAdderType>
 void VoSmartProjectionFactorAdder<PoseVelocityNodeAdderType>::SplitSmartFactorsIfNeeded(

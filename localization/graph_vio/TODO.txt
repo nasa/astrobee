@@ -1,13 +1,24 @@
   - implement loc factor adder! (AB)
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
-    - add spaced feature tracker!
-      - test these functions! (Aa)
         
     - test vo factor adder! (AA)
-      - add comments to functions!
+      - start test!
+        - pass measurement spacing to feature tracker in smart factor!
+        - add method to add feature point measurements!
+          - only use 3 tracks!
+          - only use 3 timestamps!
+        - default set params!
+          - turn most things off, use identity calibration and intrinsics
+      - add comments to params!
+          - test each of these!
+      - int AddFactorsUsingMaxSpacing(gtsam::NonlinearFactorGraph& factors) const;
+      - int AddFactorsUsingAllowedTimestamps(gtsam::NonlinearFactorGraph& factors) const;
+
+
+      - add comments to splitting functions!
       - add option to relinearize in smart factor more frequently! test this!
-      - clean up smart factor fixing code! test this!
+      - clean up smart factor fixing code! (AAA)
         - add better comments to functions!
       - test other smart factor functions!
     - test loc factor adder!
