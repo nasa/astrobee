@@ -64,6 +64,7 @@ def generate_launch_description():
                 package='ground_truth_localizer',
                 plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
                 name='ground_truth_localizer',
+                parameters=[{'use_sim_time': True}]
                 ),
             # ComposableNode(
             #     package='image_sampler',
@@ -378,13 +379,13 @@ def generate_launch_description():
         name='mlp_dock',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='dock',
-            #     plugin='dock::DockNodelet',
-            #     name='dock',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='dock',
+                plugin='dock::DockComponent',
+                name='dock'),
+                #extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
         ComposableNodeContainer(
