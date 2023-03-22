@@ -42,12 +42,16 @@ void SpacedFeatureTracker::Clear() {
   allowed_timestamps_.clear();
 }
 
-std::vector<std::vector<lc::TimestampedValue<FeaturePoint>>> SpacedFeatureTracker::SpacedFeatureTracks() const {
-  std::vector<std::vector<lc::TimestampedValue<FeaturePoint>>> spaced_feature_tracks;
+std::vector<FeaturePoints> SpacedFeatureTracker::SpacedFeatureTracks() const {
+  std::vector<FeaturePoints> spaced_feature_tracks;
   for (const auto& feature_track : feature_tracks()) {
     const auto downsampled_track = feature_track.second.DownsampledValues(allowed_timestamps_);
     if (downsampled_track.empty()) continue;
-    spaced_feature_tracks.emplace_back(feature_track.second.DownsampledValues(allowed_timestamps_));
+    FeaturePoints points;
+    for (const auto& point : downsampled_track) {
+      points.emplace_back(point.value);
+    }
+    spaced_feature_tracks.emplace_back(points);
   }
 
   return spaced_feature_tracks;
