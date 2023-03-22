@@ -491,6 +491,65 @@ TEST_F(SpacedFeatureTrackerTest, SpacedTracksSpacing2) {
   }
 }
 
+TEST_F(SpacedFeatureTrackerTest, SpacedTracksSpacing0) {
+  const int measurement_spacing = 0;
+  InitializeWithoutRemoval(measurement_spacing);
+  EXPECT_EQ(feature_tracker_->size(), 0);
+  EXPECT_TRUE(feature_tracker_->empty());
+
+  // Simple test with one track
+  const int num_times = 10;
+  std::vector<vc::FeaturePoints> timestamped_points(num_times);
+  std::vector<vc::FeaturePoint> points;
+  for (int time = 0; time < num_times; ++time) {
+    // Make image points different for different measurements
+    const vc::FeaturePoint p(time, time + 1, time + 1, 0, time);
+    timestamped_points[time].emplace_back(p);
+  }
+
+  // All measurements should be available
+  for (int time = 0; time < num_times; ++time) {
+    feature_tracker_->Update(timestamped_points[time]);
+    EXPECT_EQ(feature_tracker_->size(), 1);
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    EXPECT_EQ(tracks.size(), 1);
+    const auto& track_0 = tracks[0];
+    EXPECT_EQ(track_0.size(), time + 1);
+    for (int i = 0; i < time; ++i) EXPECT_SAME_POINT(track_0[i].value, timestamped_points[i][0]);
+  }
+}
+
+TEST_F(SpacedFeatureTrackerTest, SpacedTracksSpacing3) {
+  const int measurement_spacing = 3;
+  InitializeWithoutRemoval(measurement_spacing);
+  EXPECT_EQ(feature_tracker_->size(), 0);
+  EXPECT_TRUE(feature_tracker_->empty());
+
+  // Simple test with one track
+  const int num_times = 10;
+  std::vector<vc::FeaturePoints> timestamped_points(num_times);
+  std::vector<vc::FeaturePoint> points;
+  for (int time = 0; time < num_times; ++time) {
+    // Make image points different for different measurements
+    const vc::FeaturePoint p(time, time + 1, time + 1, 0, time);
+    timestamped_points[time].emplace_back(p);
+  }
+
+  // Every 4th measurement should be available
+  for (int time = 0; time < num_times; ++time) {
+    feature_tracker_->Update(timestamped_points[time]);
+    EXPECT_EQ(feature_tracker_->size(), 1);
+    const auto tracks = feature_tracker_->SpacedFeatureTracks();
+    EXPECT_EQ(tracks.size(), 1);
+    const auto& track_0 = tracks[0];
+    const int expected_size = time / 4 + 1;
+    EXPECT_EQ(track_0.size(), expected_size);
+    for (int i = 0; i < expected_size; ++i) {
+      EXPECT_SAME_POINT(track_0[i].value, timestamped_points[4 * i][0]);
+    }
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
