@@ -53,10 +53,6 @@ Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const 
 
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
 
-// TODO(rsoussan): Rename these
-bool ValidPointSet(const int num_points, const double average_distance_from_mean,
-                   const double min_avg_distance_from_mean, const int min_num_points);
-
 double AverageDistanceFromMean(const std::vector<FeaturePoint>& points);
 
 // Implementation

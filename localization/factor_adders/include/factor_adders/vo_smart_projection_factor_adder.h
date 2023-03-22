@@ -68,6 +68,9 @@ class VoSmartProjectionFactorAdder
   bool AddSmartFactor(const vision_common::FeaturePoints& feature_track_points,
                       gtsam::NonlinearFactorGraph& factors) const;
 
+  // Checks the average distance from the mean and the number of points in the track.
+  bool ValidTrack(const vision_common::FeaturePoints& feature_track);
+
   // Functions to split and fix smart factors
   void SplitSmartFactorsIfNeeded(const gtsam::Values& values, gtsam::NonlinearFactorGraph& factors) const;
   boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
@@ -115,14 +118,10 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledM
   gtsam::NonlinearFactorGraph& factors) const {
   int num_added_factors = 0;
   for (const auto& feature_track : feature_tracker_->SpacedFeatureTracks()) {
-    const double average_distance_from_mean = vision_common::AverageDistanceFromMean(feature_track);
-    if (vision_common::ValidPointSet(feature_track.size(), average_distance_from_mean,
-                                     params_.min_avg_distance_from_mean, params_.min_num_points_per_factor) &&
-        num_added_factors < params_.max_num_factors) {
+    if (ValidTrack(feature_track) && num_added_factors < params_.max_num_factors) {
       if (AddSmartFactor(feature_track, factors)) ++num_added_factors;
     }
   }
-
   return num_added_factors;
 }
 
@@ -160,6 +159,13 @@ bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
   }
   factors.push_back(smart_factor);
   return true;
+}
+
+template <typename PoseNodeAdderType>
+bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::ValidTrack(const vision_common::FeaturePoints& feature_track) {
+  const double average_distance_from_mean = vision_common::AverageDistanceFromMean(feature_track);
+  if (static_cast<int>(feature_track.size()) < params_.min_num_points_per_factor) return false;
+  return (average_distance_from_mean >= params_.min_avg_distance_from_mean);
 }
 
 template <typename PoseNodeAdderType>

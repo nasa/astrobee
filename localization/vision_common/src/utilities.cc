@@ -65,12 +65,6 @@ Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat
   return lc::Isometry3d(translation, rotation);
 }
 
-bool ValidPointSet(const int num_points, const double average_distance_from_mean,
-                   const double min_avg_distance_from_mean, const int min_num_points) {
-  if (num_points < min_num_points) return false;
-  return (average_distance_from_mean >= min_avg_distance_from_mean);
-}
-
 double AverageDistanceFromMean(const std::vector<FeaturePoint>& points) {
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
