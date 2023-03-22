@@ -63,8 +63,7 @@ def generate_launch_description():
             ComposableNode(
                 package='ground_truth_localizer',
                 plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
-                name='ground_truth_localizer',
-                parameters=[{'use_sim_time': True}]
+                name='ground_truth_localizer'
                 ),
             # ComposableNode(
             #     package='image_sampler',
