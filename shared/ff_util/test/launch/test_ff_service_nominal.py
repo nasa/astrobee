@@ -33,11 +33,11 @@ from utilities.utilities import *
 @pytest.mark.launch_test
 @launch_testing.markers.keep_alive
 def generate_test_description():
-    test_ff_service = Node(
+    test_ff_service_nominal = Node(
         executable=launch.substitutions.PathJoinSubstitution(
             [
                 launch.substitutions.LaunchConfiguration("test_binary_dir"),
-                "test_ff_service",
+                "test_ff_service_nominal",
             ]
         ),
         output="screen",
@@ -66,18 +66,31 @@ def generate_test_description():
                 description="Binary directory of package containing test executables",
                 default_value="/src/astrobee/build/ff_util",
             ),
-            test_ff_service,
+            ComposableNodeContainer(
+                name='ff_util',
+                namespace='',
+                package='rclcpp_components',
+                executable='component_container_mt',
+                composable_node_descriptions=[
+                    ComposableNode(
+                        package='ff_util',
+                        plugin='ff_util::TestServiceServer',
+                        name='test_ff_service_server',
+                        extra_arguments=[{'use_intra_process_comms': True}]),
+                ]
+            ),
+            test_ff_service_nominal,
             # Tell launch when to start the test
             launch_testing.actions.ReadyToTest(),
         ]
     ), {
-        "test_ff_service": test_ff_service,
+        "test_ff_service_nominal": test_ff_service_nominal,
     }
 
 
 class TestTerminatingProcessStops(unittest.TestCase):
-    def test_proc_terminates(self, proc_info, test_ff_service):
-        proc_info.assertWaitForShutdown(process=test_ff_service, timeout=30)
+    def test_proc_terminates(self, proc_info, test_ff_service_nominal):
+        proc_info.assertWaitForShutdown(process=test_ff_service_nominal, timeout=30)
 
 
 # These tests are run after the processes in generate_test_description() have shutdown.
