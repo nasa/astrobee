@@ -24,6 +24,7 @@
 #include <node_adders/node_adder.h>
 #include <node_adders/utilities.h>
 #include <nodes/nodes.h>
+#include <vision_common/feature_point.h>
 
 #include <gtest/gtest.h>
 
@@ -32,6 +33,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace na = node_adders;
 namespace no = nodes;
+namespace vc = vision_common;
 
 // Test node adder that just returns keys that should be used.
 // Key values are calculated using the integer timestamps passed.
@@ -65,12 +67,17 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
 
   void SetUp() final {}
 
+  // Add measurements for each track at multiple timestamps
   void AddMeasurements() {
-    constexpr int kNumMeasurements = 10;
-    for (int i = 0; i < kNumMeasurements; ++i) {
-      /*const lm::VoSmartProjectionMeasurement measurement(i + 1, i);
+    for (int time = 0; time < num_measurements_; ++time) {
+      lm::FeaturePointsMeasurement measurement;
+      measurement.timestamp = time;
+      for (int track_id = 0; track_id < num_tracks_; ++track_id) {
+        // Make image points different for different measurements
+        const vc::FeaturePoint p(track_id * 10 + time, track_id * 10 + time + 1, time + 1, track_id, time);
+        measurement.feature_points.emplace_back(p);
+      }
       measurements_.emplace_back(measurement);
-      factor_adder_->AddMeasurement(measurement);*/
     }
   }
 
@@ -80,22 +87,40 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
 
   fa::VoSmartProjectionFactorAdderParams DefaultParams() {
     fa::VoSmartProjectionFactorAdderParams params;
-    /*params.enabled = true;
+    // Feature Tracker Params
+    params.spaced_feature_tracker.measurement_spacing = 2;
+    params.spaced_feature_tracker.remove_undetected_feature_tracks = true;
+    params.max_num_factors = 3;
+    params.min_num_points = 2;
+    params.max_num_points_per_factor = 5;
+    params.min_avg_distance_from_mean = 1e-9;
+    params.robust = true;
+    params.rotation_only_fallback = false;
+    params.splitting = false;
+    params.scale_noise_with_num_points = false;
+    params.noise_scale = 1;
+    params.body_T_cam = gtsam::Pose3::identity();
+    params.cam_intrinsics = boost::make_shared<gtsam::Cal3_S2>();
+    params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+    // Smart Factor Params
+    params.smart_factor.verboseCheirality = false;
+    params.smart_factor.setRankTolerance(1e-9);
+    params.smart_factor.setLandmarkDistanceThreshold(3);
+    params.smart_factor.setDynamicOutlierRejectionThreshold(1);
+    params.smart_factor.setRetriangulationThreshold(0.1);
+    params.smart_factor.setDegeneracyMode(gtsam::DegeneracyMode::HANDLE_INFINITY);
+    params.smart_factor.setEnableEPI(false);
+    params.enabled = true;
     params.huber_k = 1.345;
-    params.add_velocity_prior = true;
-    params.add_pose_between_factor = true;
-    params.prior_velocity_stddev = 0.1;
-    params.pose_between_factor_translation_stddev = 0.2;
-    params.pose_between_factor_rotation_stddev = 0.3;*/
     return params;
   }
 
   std::unique_ptr<fa::VoSmartProjectionFactorAdder<SimplePoseNodeAdder>> factor_adder_;
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
-
- private:
   std::vector<lm::FeaturePointsMeasurement> measurements_;
+  int num_measurements_ = 3;
+  int num_tracks_ = 3;
 };
 
 TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
