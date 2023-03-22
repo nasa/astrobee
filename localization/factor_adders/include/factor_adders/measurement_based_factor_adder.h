@@ -47,6 +47,9 @@ class MeasurementBasedFactorAdder : public FactorAdder {
 
  private:
   // Adds factors based on measurements.
+  // While measurements older than oldest_allowed_time are removed as part of the AddFactors function,
+  // it may be desired to also remove and measurements used to make factors in this function
+  // to avoid creating repeat factors for measurements.
   virtual int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                                          const localization_common::Time newest_allowed_time,
                                          gtsam::NonlinearFactorGraph& factors) = 0;
