@@ -17,30 +17,42 @@
  */
 
 #include <ff_common/init.h>
-#include <localization_analysis/sparse_mapping_pose_adder.h>
+#include <localization_analysis/map_matcher.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include <gtsam/geometry/Pose3.h>
-
 namespace po = boost::program_options;
 namespace lc = localization_common;
 
 int main(int argc, char** argv) {
+  std::string output_bagfile;
   std::string robot_config_file;
   std::string world;
-  po::options_description desc(
-    "Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics");
-  desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
-                                                       "Input bagfile")(
-    "config-path,c", po::value<std::string>()->required(), "Config path")(
+  std::string config_path_prefix;
+  po::options_description desc("Matches images to provided map and saves matches features and poses to a new bag file");
+  desc.add_options()("help,h", "produce help message")(
+    "bagfile", po::value<std::string>()->required(),
+    "Input bagfile containing image messages.")
+(
+    "map-file", po::value<std::string>()->required(), "Map file")
+(
+    "config-path,c", po::value<std::string>()->required(), "Path to config directory.")
+(
+    "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
+(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
+    "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value(""),
+    "Output bagfile, defaults to input_bag + _map_matches.bag")
+    ("config-path-prefix,p",
+                            po::value<std::string>(&config_path_prefix)->default_value(""),
+                            "Config path prefix");
   po::positional_options_description p;
   p.add("bagfile", 1);
+  p.add("map-file", 1);
   p.add("config-path", 1);
   po::variables_map vm;
   try {
@@ -56,6 +68,7 @@ int main(int argc, char** argv) {
   }
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
+  const std::string map_file = vm["map-file"].as<std::string>();
   const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
@@ -67,19 +80,18 @@ int main(int argc, char** argv) {
     LogFatal("Bagfile " << input_bag << " not found.");
   }
 
-  boost::filesystem::path input_bag_path(input_bag);
-  boost::filesystem::path output_bag_path =
-    input_bag_path.parent_path() /
-    boost::filesystem::path(input_bag_path.stem().string() + "_with_sparse_mapping_poses.bag");
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
-  config_reader::ConfigReader config;
-  config.AddFile("geometry.config");
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
+  if (!boost::filesystem::exists(map_file)) {
+    LogFatal("Map file " << map_file << " not found.");
   }
 
-  const gtsam::Pose3 body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
-  localization_analysis::SparseMappingPoseAdder sparse_mapping_pose_adder(input_bag, output_bag_path.string(),
-                                                                          body_T_nav_cam.inverse());
-  sparse_mapping_pose_adder.AddPoses();
+  boost::filesystem::path input_bag_path(input_bag);
+  if (vm["output-bagfile"].defaulted()) {
+    boost::filesystem::path output_bag_path =
+      boost::filesystem::current_path() / boost::filesystem::path(input_bag_path.stem().string() + "_map_matches.bag");
+    output_bagfile = output_bag_path.string();
+  }
+  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
+  config_reader::ConfigReader config;
+  localization_analysis::MapMatcher map_matcher(input_bag, map_file, image_topic, output_bagfile, config_path_prefix);
+  map_matcher.AddMapMatches();
 }
