@@ -225,6 +225,43 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   EXPECT_SAME_FACTOR(1, {5, 6, 7});
 }
 
+TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
+  auto params = DefaultParams();
+  params.spaced_feature_tracker.measurement_spacing = 1;
+  Initialize(params);
+  const int max_factors = std::min(params.max_num_factors, num_tracks_);
+  // Add first measurement
+  // No factors should be added since there are too few measurements for each factor
+  factor_adder_->AddMeasurement(measurements_[0]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 0);
+  // Track: Measurement Timestamps
+  // 0: 0
+  // 1: 0
+  // 2: 0
+  EXPECT_EQ(factors_.size(), 0);
+  // Add second measurement
+  // No factors added since skip second measurement due to measurement spacing
+  factor_adder_->AddMeasurement(measurements_[1]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(1), factors_), 0);
+  // Track: Measurement Timestamps (skipped measurements in parenthesis)
+  // 0: 0, (1)
+  // 1: 0, (1)
+  // 2: 0, (1)
+  EXPECT_EQ(factors_.size(), 0);
+  // Add 3rd measurement
+  // Add factors from t: 0->3
+  factor_adder_->AddMeasurement(measurements_[2]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
+  // Track: Measurement Timestamps
+  // 0: 0, (1), 2
+  // 1: 0, (1), 2
+  // 2: 0, (1), 2
+  EXPECT_SAME_FACTOR(0, {0, 2});
+  EXPECT_SAME_FACTOR(1, {0, 2});
+  // TODO(rsoussan): test removing old measurements! should slide removed measurements!
+  // unallowed measurements should still beskipped!
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
