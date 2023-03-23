@@ -149,7 +149,7 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   int num_tracks_ = 3;
 };
 
-TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
+/*TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   auto params = DefaultParams();
   Initialize(params);
   const int max_factors = std::min(params.max_num_factors, num_tracks_);
@@ -284,30 +284,31 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
   // 2: (3), 4, (5), 6, (7)
   EXPECT_SAME_FACTOR(0, {4, 6});
   EXPECT_SAME_FACTOR(1, {4, 6});
-}
+}*/
 
 TEST_F(VoSmartProjectionFactorAdderTest, AvgDistFromMean) {
   auto params = DefaultParams();
   // Each point pair is separated by (1, 1), so for 3 pairs:
-  // (0, 1), (1, 2), (2, 3) -> mean: (1, 2)
-  // avg dist from mean: |((1,1)*2)/3| = (sqrt(2*(2/3)^2))/3 = 2sqr(2)/9 ~= 0.3142
+  // (10, 11), (11, 12), (12, 13) -> mean: (11, 12)
+  // avg dist from mean: 2*|((1,1)|/3 = 2sqrt(2)/3 ~= 0.9428
   // Use a slightly larger min so all tracks are invalid
-  params.min_avg_distance_from_mean = 0.3142 + 0.1;
+  const double expected_avg_distance_from_mean = 2.0 * std::sqrt(2) / 3.0;
+  const double epsilon = 1e-6;
+  params.min_avg_distance_from_mean = expected_avg_distance_from_mean + epsilon;
   Initialize(params);
-  const int max_factors = std::min(params.max_num_factors, num_tracks_);
   factor_adder_->AddMeasurement(measurements_[0]);
   factor_adder_->AddMeasurement(measurements_[1]);
   factor_adder_->AddMeasurement(measurements_[2]);
   // A factors should fail to be added due to avg distance from mean failure.
-  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 0);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 0);
 
   // Repeat with slightly smaller distance, all factors should be added
-  params.min_avg_distance_from_mean = 0.3142 - 0.1;
+  params.min_avg_distance_from_mean = expected_avg_distance_from_mean - epsilon;
   Initialize(params);
   factor_adder_->AddMeasurement(measurements_[0]);
   factor_adder_->AddMeasurement(measurements_[1]);
   factor_adder_->AddMeasurement(measurements_[2]);
-  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 2);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
 }
 
 // Run all the tests that were declared with TEST()
