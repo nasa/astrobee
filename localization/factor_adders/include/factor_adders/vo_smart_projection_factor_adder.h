@@ -242,7 +242,6 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingIndivid
   return boost::none;
 }
 
-// TODO(rsoussan): Remove duplicate code with previous function
 template <typename PoseNodeAdderType>
 boost::optional<SharedRobustSmartFactor>
 VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasurementSequence(
@@ -260,18 +259,14 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
       measurements_to_add.emplace_back(original_measurements[i]);
       keys_to_add.emplace_back(original_keys[i]);
     }
-    auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor,
-      params_.rotation_only_fallback, params_.robust, params_.huber_k);
-    new_smart_factor->add(measurements_to_add, keys_to_add);
-    const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
-    if (new_point.valid()) {
+    const auto fixed_smart_factor = FixedSmartFactor(values, measurements_to_add, keys_to_add);
+    if (fixed_smart_factor) {
       LogDebug(
         "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing most recent "
         "measurements. Original "
         "measurement size: "
         << original_measurements.size() << ", new size: " << num_measurements_to_add);
-      return new_smart_factor;
+      return fixed_smart_factor;
     } else {
       --num_measurements_to_add;
     }
@@ -287,18 +282,14 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
         measurements_to_add.emplace_back(original_measurements[i]);
         keys_to_add.emplace_back(original_keys[i]);
       }
-      auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-        params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor,
-        params_.rotation_only_fallback, params_.robust, params_.huber_k);
-      new_smart_factor->add(measurements_to_add, keys_to_add);
-      const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
-      if (new_point.valid()) {
+      const auto fixed_smart_factor = FixedSmartFactor(values, measurements_to_add, keys_to_add);
+      if (fixed_smart_factor) {
         LogDebug(
           "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing oldest measurements. "
           "Original "
           "measurement size: "
           << original_measurements.size() << ", new size: " << num_measurements_to_add);
-        return new_smart_factor;
+        return fixed_smart_factor;
       } else {
         --num_measurements_to_add;
       }
