@@ -128,20 +128,48 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
 TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   auto params = DefaultParams();
   Initialize(params);
+  const int max_factors = std::min(params.max_num_factors, num_tracks_);
   // Add first measurement
   // No factors should be added since there are too few measurements for each factor
   factor_adder_->AddMeasurement(measurements_[0]);
   EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 0);
+  // Track: Measurement Timestamps
+  // 0: 0
+  // 1: 0
+  // 2: 0
   EXPECT_EQ(factors_.size(), 0);
   // Add second measurement
   factor_adder_->AddMeasurement(measurements_[1]);
   // No factors added if don't include second measurement timestamp
   EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), (timestamp(0) + timestamp(1)) / 2.0, factors_), 0);
+  // Track: Measurement Timestamps
+  // 0: 0
+  // 1: 0
+  // 2: 0
   EXPECT_EQ(factors_.size(), 0);
   // All factors added if include second measurement timestamp
-  const int max_factors = std::min(params.max_num_factors, num_tracks_);
   EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(1), factors_), max_factors);
+  // Track: Measurement Timestamps
+  // 0: 0, 1
+  // 1: 0, 1
+  // 2: 0, 1
   EXPECT_EQ(factors_.size(), max_factors);
+  // Add 3rd measurement
+  // Feature tracker should contain measurements at timestamp 1 and 2
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(1), timestamp(2), factors_), max_factors);
+  // Track: Measurement Timestamps
+  // 0: 1, 2
+  // 1: 1, 2
+  // 2: 1, 2
+  EXPECT_EQ(factors_.size(), max_factors);
+  /*// Only include 3rd measurement
+  // Feature tracker should contain measurements at timestamp 1 and 2
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(1), timestamp(2), factors_), max_factors);
+  // Track: Measurement Timestamps
+  // 0: 1, 2
+  // 1: 1, 2
+  // 2: 1, 2
+  EXPECT_EQ(factors_.size(), max_factors);*/
 }
 
 // Run all the tests that were declared with TEST()
