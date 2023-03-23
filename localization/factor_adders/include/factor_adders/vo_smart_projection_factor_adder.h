@@ -271,28 +271,26 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
       --num_measurements_to_add;
     }
   }
-  if (num_measurements_to_add < min_num_measurements) {
-    num_measurements_to_add = original_measurements.size() - 1;
-    // Try to remove min number of oldest measurements
-    while (num_measurements_to_add >= min_num_measurements) {
-      gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
-      gtsam::KeyVector keys_to_add;
-      for (int i = num_measurements_to_add;
-           i >= static_cast<int>(original_measurements.size()) - num_measurements_to_add; --i) {
-        measurements_to_add.emplace_back(original_measurements[i]);
-        keys_to_add.emplace_back(original_keys[i]);
-      }
-      const auto fixed_smart_factor = FixedSmartFactor(values, measurements_to_add, keys_to_add);
-      if (fixed_smart_factor) {
-        LogDebug(
-          "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing oldest measurements. "
-          "Original "
-          "measurement size: "
-          << original_measurements.size() << ", new size: " << num_measurements_to_add);
-        return fixed_smart_factor;
-      } else {
-        --num_measurements_to_add;
-      }
+  num_measurements_to_add = original_measurements.size() - 1;
+  // Try to remove min number of oldest measurements
+  while (num_measurements_to_add >= min_num_measurements) {
+    gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
+    gtsam::KeyVector keys_to_add;
+    for (int i = original_measurements.size() - 1;
+         i >= static_cast<int>(original_measurements.size()) - num_measurements_to_add; --i) {
+      measurements_to_add.emplace_back(original_measurements[i]);
+      keys_to_add.emplace_back(original_keys[i]);
+    }
+    const auto fixed_smart_factor = FixedSmartFactor(values, measurements_to_add, keys_to_add);
+    if (fixed_smart_factor) {
+      LogDebug(
+        "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing oldest measurements. "
+        "Original "
+        "measurement size: "
+        << original_measurements.size() << ", new size: " << num_measurements_to_add);
+      return fixed_smart_factor;
+    } else {
+      --num_measurements_to_add;
     }
   }
   // Failed to fix smart factor
