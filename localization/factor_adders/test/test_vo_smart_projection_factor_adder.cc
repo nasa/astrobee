@@ -356,6 +356,45 @@ TEST_F(VoSmartProjectionFactorAdderTest, ValidFactor) {
   EXPECT_SAME_FACTOR(0, {1, 2, 3}, measurements, {0, 1, 2});
 }
 
+TEST_F(VoSmartProjectionFactorAdderTest, InvalidMiddleMeasurementFactor) {
+  auto params = DefaultParams();
+  params.fix_invalid_factors = true;
+  params.min_avg_distance_from_mean = 0;
+  Initialize(params);
+  const int track_id = 0;
+  const int times = 3;
+  // Add same measurement at different timestamps
+  // Populate graph values with valid poses with translation spread
+  std::vector<lm::FeaturePointsMeasurement> measurements;
+  gtsam::KeyVector added_keys;
+  // Start with time 1 since first node in nodes has a key of 1
+  for (int time = 1; time <= times; ++time) {
+    lm::FeaturePointsMeasurement measurement;
+    measurement.timestamp = time;
+    const vc::FeaturePoint p(0, 0, time, track_id, time);
+    measurement.feature_points.emplace_back(p);
+    measurements.emplace_back(measurement);
+    gtsam::Rot3 rotation = gtsam::Rot3::identity();
+    // Make invalid measurement.
+    // Turn the camera in the opposite direction so point can't be triangulated
+    if (time == 2) {
+      rotation = gtsam::Rot3::Rz(M_PI);
+    }
+    const gtsam::Pose3 pose(rotation, gtsam::Point3(time, time, 0));
+    // Add node here since not actually added in simple node adder
+    const auto key = node_adder_->nodes().Add(pose);
+    added_keys.emplace_back(key);
+  }
+  factor_adder_->AddMeasurement(measurements[0]);
+  factor_adder_->AddMeasurement(measurements[1]);
+  factor_adder_->AddMeasurement(measurements[2]);
+  // Valid factor since with removed measurement should stil have two points.
+  EXPECT_EQ(factor_adder_->AddFactors(1, 3, factors_), 1);
+  // Middle measurement should be removed.
+  // Keys 1,3 should match to measurements 0,2
+  EXPECT_SAME_FACTOR(0, {1, 3}, measurements, {0, 2});
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
