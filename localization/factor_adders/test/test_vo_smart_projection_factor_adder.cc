@@ -214,15 +214,17 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   factor_adder_->AddMeasurement(measurements_[6]);
   factor_adder_->AddMeasurement(measurements_[7]);
   factor_adder_->AddMeasurement(measurements_[8]);
-  // Add factors from t: 5->7
-  EXPECT_EQ(factor_adder_->AddFactors(timestamp(5), timestamp(7), factors_), 2);
+  factor_adder_->AddMeasurement(measurements_[9]);
+  // Add factors from t: 5->8
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(5), timestamp(8), factors_), 2);
   // Track: Measurement Timestamps
-  // 0: 5, 6, 7
-  // 1: 5, 6, 7
-  // 2: 5, 6, 7
+  // 0: 5, 6, 7, 8
+  // 1: 5, 6, 7, 8
+  // 2: 5, 6, 7, 8
   EXPECT_EQ(factors_.size(), 2);
-  EXPECT_SAME_FACTOR(0, {5, 6, 7});
-  EXPECT_SAME_FACTOR(1, {5, 6, 7});
+  // Since max points per factor is 3, expect only latest three measurements to be used.
+  EXPECT_SAME_FACTOR(0, {6, 7, 8});
+  EXPECT_SAME_FACTOR(1, {6, 7, 8});
 }
 
 TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
@@ -258,8 +260,30 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
   // 2: 0, (1), 2
   EXPECT_SAME_FACTOR(0, {0, 2});
   EXPECT_SAME_FACTOR(1, {0, 2});
-  // TODO(rsoussan): test removing old measurements! should slide removed measurements!
-  // unallowed measurements should still beskipped!
+  // Adding repeat factors shouldn't change graph
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
+  // Track: Measurement Timestamps
+  // 0: 0, (1), 2
+  // 1: 0, (1), 2
+  // 2: 0, (1), 2
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_FACTOR(0, {0, 2});
+  EXPECT_SAME_FACTOR(1, {0, 2});
+  // Add measurements from 3->7
+  factor_adder_->AddMeasurement(measurements_[3]);
+  factor_adder_->AddMeasurement(measurements_[4]);
+  factor_adder_->AddMeasurement(measurements_[5]);
+  factor_adder_->AddMeasurement(measurements_[6]);
+  factor_adder_->AddMeasurement(measurements_[7]);
+  // Add factors from 3 -> 7
+  // Only timestamps 4 and 6 should be used
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(3), timestamp(7), factors_), 2);
+  // Track: Measurement Timestamps
+  // 0: (3), 4, (5), 6, (7)
+  // 1: (3), 4, (5), 6, (7)
+  // 2: (3), 4, (5), 6, (7)
+  EXPECT_SAME_FACTOR(0, {4, 6});
+  EXPECT_SAME_FACTOR(1, {4, 6});
 }
 
 // Run all the tests that were declared with TEST()
