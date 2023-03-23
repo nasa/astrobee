@@ -276,8 +276,8 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
   while (num_measurements_to_add >= min_num_measurements) {
     gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
     gtsam::KeyVector keys_to_add;
-    for (int i = original_measurements.size() - 1;
-         i >= static_cast<int>(original_measurements.size()) - num_measurements_to_add; --i) {
+    for (int i = original_measurements.size() - num_measurements_to_add;
+         i < static_cast<int>(original_measurements.size()); ++i) {
       measurements_to_add.emplace_back(original_measurements[i]);
       keys_to_add.emplace_back(original_keys[i]);
     }

@@ -526,10 +526,8 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidFirstTwoMeasurementsFactor) {
   // Valid factor since with removed measurement should still have two points.
   EXPECT_EQ(factor_adder_->AddFactors(1, 5, factors_), 1);
   // First two measurements should be removed.
-  // Keys 5,4,3 should match to measurements 2,3,4
-  // (Note keys reversed since measurement sequence from the beginning of
-  // the factor was fixed).
-  EXPECT_SAME_FACTOR(0, {5, 4, 3}, measurements, {2, 3, 4});
+  // Keys 3,4,5 should match to measurements 2,3,4
+  EXPECT_SAME_FACTOR(0, {3, 4, 5}, measurements, {2, 3, 4});
 }
 
 // Run all the tests that were declared with TEST()
