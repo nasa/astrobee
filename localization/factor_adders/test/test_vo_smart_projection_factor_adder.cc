@@ -222,9 +222,9 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   // 1: 5, 6, 7, 8
   // 2: 5, 6, 7, 8
   EXPECT_EQ(factors_.size(), 2);
-  // Since max points per factor is 3, expect only latest three measurements to be used.
-  EXPECT_SAME_FACTOR(0, {6, 7, 8});
-  EXPECT_SAME_FACTOR(1, {6, 7, 8});
+  // Since max points per factor is 3, expect only first three measurements to be used.
+  EXPECT_SAME_FACTOR(0, {5, 6, 7});
+  EXPECT_SAME_FACTOR(1, {5, 6, 7});
 }
 
 TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
