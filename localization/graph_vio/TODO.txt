@@ -4,11 +4,6 @@
         
     - test vo factor adder! (AA)
       - add simple test to make sure all factors are added!
-            - update single measurement factor adder test!!! (AA)
-                - test adding repeat factors! (shouldn't change things)
-                - test adding factors before you have measurements! (should still be able to add them later)
-                - test adding old factors after newer ones added
-                  - old measurements should be removed!
             - only add measurements <= latest allowed time!!!
               - test this in vo smart factor test! (AB)
       - add function to check factor equality!
