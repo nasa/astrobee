@@ -2,10 +2,11 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
         
-    - test vo factor adder! (AA)
-        - clean up splitting factors code??
-          - use original noise?
-          - add function to create and test factor?
+    - test vo splitting! (AA)
+      - create 4 poses and points that trinagulate fine, make sure no measurements are removed
+       - add 1 invalid measurement, make sure this is removed!
+      - add 2 invalid ones, make sure this sequence is removed!
+      - more tests? 
   - test loc factor adder! (B)
   - test graph optimizer! (C)
   - test sliding window optimizer! (D)

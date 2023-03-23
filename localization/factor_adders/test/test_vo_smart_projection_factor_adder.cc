@@ -53,7 +53,9 @@ class SimplePoseNodeAdder : public na::NodeAdder {
     return keys;
   }
 
-  const no::Nodes& nodes() { return nodes_; }
+  const no::Nodes& nodes() const { return nodes_; }
+
+  no::Nodes& nodes() { return nodes_; }
 
   std::string type() const final { return "simple_pose_node_adder"; }
 
@@ -149,7 +151,7 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   int num_tracks_ = 3;
 };
 
-/*TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
+TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   auto params = DefaultParams();
   Initialize(params);
   const int max_factors = std::min(params.max_num_factors, num_tracks_);
@@ -284,7 +286,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
   // 2: (3), 4, (5), 6, (7)
   EXPECT_SAME_FACTOR(0, {4, 6});
   EXPECT_SAME_FACTOR(1, {4, 6});
-}*/
+}
 
 TEST_F(VoSmartProjectionFactorAdderTest, AvgDistFromMean) {
   auto params = DefaultParams();
@@ -309,6 +311,35 @@ TEST_F(VoSmartProjectionFactorAdderTest, AvgDistFromMean) {
   factor_adder_->AddMeasurement(measurements_[1]);
   factor_adder_->AddMeasurement(measurements_[2]);
   EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
+}
+
+TEST_F(VoSmartProjectionFactorAdderTest, ValidFactor) {
+  auto params = DefaultParams();
+  params.fix_invalid_factors = true;
+  params.min_avg_distance_from_mean = 0;
+  Initialize(params);
+  const int track_id = 0;
+  const int times = 3;
+  // Add same measurement at different timestamps
+  // Populate graph values with valid poses with translation spread
+  std::vector<lm::FeaturePointsMeasurement> measurements;
+  for (int time = 0; time < times; ++time) {
+    lm::FeaturePointsMeasurement measurement;
+    measurement.timestamp = time;
+    const vc::FeaturePoint p(0, 0, time, track_id, time);
+    measurement.feature_points.emplace_back(p);
+    measurements.emplace_back(measurement);
+    const gtsam::Pose3 pose(gtsam::Rot3::identity(), gtsam::Point3(time, time, 0));
+    // Add node here since not actually added in simple node adder
+    node_adder_->nodes().Add(pose);
+  }
+  factor_adder_->AddMeasurement(measurements[0]);
+  factor_adder_->AddMeasurement(measurements[1]);
+  factor_adder_->AddMeasurement(measurements[2]);
+  // All measurements should be valid
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
+  EXPECT_SAME_FACTOR(0, {0, 1, 2});
+  EXPECT_SAME_FACTOR(0, {0, 1, 2});
 }
 
 // Run all the tests that were declared with TEST()
