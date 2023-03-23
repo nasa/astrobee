@@ -87,16 +87,27 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
     ASSERT_TRUE(smart_factor);
     const auto& keys = factor->keys();
     EXPECT_EQ(keys.size(), timestamps.size());
+    const auto& measurements = smart_factor->measured();
+    EXPECT_EQ(measurements.size(), timestamps.size());
     for (int i = 0; i < keys.size(); ++i) {
       EXPECT_EQ(keys[i], gtsam::Key(timestamps[i]));
+      EXPECT_MATRIX_NEAR(measurements[i], measurements_[timestamps[i]].feature_points[factor_index].image_point, 1e-6);
     }
-    // TODO(rsoussan): check noise!
+
+    // Check factor noise
+    // Uses inv sigma scaling, applies optional robust loss to whitened noise after
+    const double noise_scale =
+      params_.scale_noise_with_num_points ? params_.noise_scale * measurements.size() : params_.noise_scale;
+    const double expected_sigma = noise_scale * params_.cam_noise->sigma();
+    EXPECT_NEAR(smart_factor->noise_inv_sigma(), 1.0 / expected_sigma, 1e-6);
+    EXPECT_EQ(smart_factor->robust(), params_.robust);
   }
 
   lc::Time timestamp(const int measurement_index) { return measurements_[measurement_index].timestamp; }
 
   void Initialize(const fa::VoSmartProjectionFactorAdderParams& params) {
     factor_adder_.reset(new fa::VoSmartProjectionFactorAdder<SimplePoseNodeAdder>(params, node_adder_));
+    params_ = params;
   }
 
   fa::VoSmartProjectionFactorAdderParams DefaultParams() {
@@ -133,6 +144,7 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
   std::vector<lm::FeaturePointsMeasurement> measurements_;
+  fa::VoSmartProjectionFactorAdderParams params_;
   int num_measurements_ = 10;
   int num_tracks_ = 3;
 };

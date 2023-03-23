@@ -3,14 +3,29 @@
       - also add to standstill factor adder! base class factor adders! others!
         
     - test vo factor adder! (AA)
-      - add simple test to make sure all factors are added!
-              - make sure noise is correct? other parts of factor?
-        - test adding factors with spacing! (A)
-        - test avg distance from mean!
-      - test most params! make sure they work!
-  - test loc factor adder!
+        - test adding factors with spacing! (AA)
+        - test avg distance from mean! (AB)
+        - clean up splitting factors code??
+          - use original noise?
+          - add function to create and test factor?
+  - test loc factor adder! (B)
   - test graph optimizer! (C)
   - test sliding window optimizer! (D)
+
+  - add grah_vio! (E)
+    - publish odometry message!
+      - add new message type?
+      - convert velocity from odom frame to global frame??
+        - is velocity in global frame or body frame??
+      - add better way of getting relative covariance??
+  - add graph_localizer! (F)
+    - use pose node updater with odometry message! 
+    - add loc factor adder!
+
+    - add parameter reader!
+      - fail if parameter not read!!
+      - how to unit test these??
+
 
 
   isam2 optimizer issues!
@@ -24,28 +39,13 @@
 
   - TODO: implement others!
 
-  - add grah_vio! (E)
-    - publish odometry message!
-      - add new message type?
-  - add graph_localizer! (F)
-    - use pose node updater with odometry message! 
-    - add loc factor adder!
+
 
 - TODO: how to access opt iterations????
 - move serialization.cc back to graph optimizer?
       - make graph optimizer depend on graph_Factors?
   - add test with graph optimizer, simple factor adder, and simple node updater!!
-- add parameter reader package!!!!
-  - fail if parameter not read!!
-  - how to unit test these??
 
-  - smart factor adder (AB)
-    - how to remove old measurements in factor adder?
-- compile graph vio!
-- test graph vio!!! (AD)
-- compiple graph loc! (AB)
-  - convert velocity from odom frame to global frame!!!
-- test graph loc!!! (AC)
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
   - use graph bag???? 
