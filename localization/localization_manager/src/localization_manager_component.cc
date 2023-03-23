@@ -207,7 +207,7 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
     // SWITCH PIPELINE PATTERN
 
     // We are disabled or busy localizing and we get a new switch pipeline event
-    // We emable the pipline and possibly optical flow, and wait for stability
+    // We enable the pipeline and possibly optical flow, and wait for stability
     fsm_.Add(STATE::LOCALIZING, STATE::DISABLED, STATE::UNSTABLE,
       GOAL_SWITCH_PIPELINE, [this](FSM::Event const& event) -> FSM::State {
         if (goal_->second.RequiresOpticalFlow() && !OpticalFlow(true))
