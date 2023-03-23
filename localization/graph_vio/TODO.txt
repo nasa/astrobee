@@ -8,6 +8,8 @@
           - need to remove measurement from measurement set after its added!(AA)
             - update addsinglemeasurementbased factor to remove measurements after adding them! (only if factor created successfully????)
             - update single measurement factor adder test!!! (AB)
+            - only add measurements <= latest allowed time!!!
+              - test this...
       - add function to check factor equality!
         - check that contains each point from start to end index!
       - add function to check noiseequality!

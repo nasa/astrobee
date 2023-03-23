@@ -43,13 +43,17 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_time);
 
  protected:
+  // Helper function to process measurements in valid time range and remove them
+  // from the measurement buffer.
+  void ProcessMeasurements(const localization_common::Time oldest_allowed_time,
+                           const localization_common::Time newest_allowed_time,
+                           const std::function<void(const MeasurementType&)>& process_measurement_function);
+
   localization_common::TimestampedSet<MeasurementType> measurements_;
 
  private:
   // Adds factors based on measurements.
-  // While measurements older than oldest_allowed_time are removed as part of the AddFactors function,
-  // it may be desired to also remove and measurements used to make factors in this function
-  // to avoid creating repeat factors for measurements.
+  // Removes used measurements from measurement buffer.
   virtual int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                                          const localization_common::Time newest_allowed_time,
                                          gtsam::NonlinearFactorGraph& factors) = 0;
@@ -80,6 +84,24 @@ template <typename MeasurementType>
 void MeasurementBasedFactorAdder<MeasurementType>::RemoveOldMeasurements(
   const localization_common::Time oldest_allowed_timestamp) {
   measurements_.RemoveOldValues(oldest_allowed_timestamp);
+}
+
+template <typename MeasurementType>
+void MeasurementBasedFactorAdder<MeasurementType>::ProcessMeasurements(
+  const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
+  const std::function<void(const MeasurementType&)>& process_measurement_function) {
+  auto& measurements = measurements_.set();
+  for (auto it = measurements.begin(); it != measurements.end();) {
+    const auto& measurement = it->second;
+    const auto timestamp = it->first;
+    if (timestamp >= oldest_allowed_time && timestamp <= newest_allowed_time) {
+      process_measurement_function(measurement);
+      // Remove used measurements.
+      it = measurements.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 }  // namespace factor_adders
 

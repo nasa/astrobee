@@ -102,6 +102,8 @@ class TimestampedSet {
 
   const std::map<Time, T>& set() const;
 
+  std::map<Time, T>& set();
+
   typename std::map<Time, T>::const_iterator cend() const;
 
   // Returns iterators to values in range of oldest and latest allowed timestamps.
@@ -331,6 +333,11 @@ int TimestampedSet<T>::RemoveBelowLowerBoundValues(const Time timestamp) {
 
 template <typename T>
 const std::map<Time, T>& TimestampedSet<T>::set() const {
+  return timestamp_value_map_;
+}
+
+template <typename T>
+std::map<Time, T>& TimestampedSet<T>::set() {
   return timestamp_value_map_;
 }
 

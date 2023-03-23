@@ -90,7 +90,7 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   fa::VoSmartProjectionFactorAdderParams DefaultParams() {
     fa::VoSmartProjectionFactorAdderParams params;
     // Feature Tracker Params
-    params.spaced_feature_tracker.measurement_spacing = 2;
+    params.spaced_feature_tracker.measurement_spacing = 0;
     params.spaced_feature_tracker.remove_undetected_feature_tracks = true;
     params.max_num_factors = 2;
     params.min_num_points_per_factor = 2;
