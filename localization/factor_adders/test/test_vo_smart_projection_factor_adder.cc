@@ -286,6 +286,30 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddSpacedFactors) {
   EXPECT_SAME_FACTOR(1, {4, 6});
 }
 
+TEST_F(VoSmartProjectionFactorAdderTest, AvgDistFromMean) {
+  auto params = DefaultParams();
+  // Each point pair is separated by (1, 1), so for 3 pairs:
+  // (0, 1), (1, 2), (2, 3) -> mean: (1, 2)
+  // avg dist from mean: |((1,1)*2)/3| = (sqrt(2*(2/3)^2))/3 = 2sqr(2)/9 ~= 0.3142
+  // Use a slightly larger min so all tracks are invalid
+  params.min_avg_distance_from_mean = 0.3142 + 0.1;
+  Initialize(params);
+  const int max_factors = std::min(params.max_num_factors, num_tracks_);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  factor_adder_->AddMeasurement(measurements_[1]);
+  factor_adder_->AddMeasurement(measurements_[2]);
+  // A factors should fail to be added due to avg distance from mean failure.
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 0);
+
+  // Repeat with slightly smaller distance, all factors should be added
+  params.min_avg_distance_from_mean = 0.3142 - 0.1;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  factor_adder_->AddMeasurement(measurements_[1]);
+  factor_adder_->AddMeasurement(measurements_[2]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 2);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
