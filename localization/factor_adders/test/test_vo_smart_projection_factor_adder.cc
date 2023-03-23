@@ -121,7 +121,7 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
   std::vector<lm::FeaturePointsMeasurement> measurements_;
-  int num_measurements_ = 3;
+  int num_measurements_ = 10;
   int num_tracks_ = 3;
 };
 
@@ -171,6 +171,28 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   // 1: 1, 2
   // 2: 1, 2
   EXPECT_EQ(factors_.size(), 2);
+  // Add 4th and 5th Measurement
+  factor_adder_->AddMeasurement(measurements_[3]);
+  factor_adder_->AddMeasurement(measurements_[4]);
+  // Add factors from t: 5->6
+  // Should erase all measurements and add no factors
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(5), timestamp(6), factors_), 0);
+  // Track: Measurement Timestamps
+  // 0:
+  // 1:
+  // 2:
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(5), factors_), 0);
+  factor_adder_->AddMeasurement(measurements_[5]);
+  factor_adder_->AddMeasurement(measurements_[6]);
+  factor_adder_->AddMeasurement(measurements_[7]);
+  factor_adder_->AddMeasurement(measurements_[8]);
+  // Add factors from t: 5->7
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(5), timestamp(7), factors_), 3);
+  // Track: Measurement Timestamps
+  // 0: 5, 6, 7
+  // 1: 5, 6, 7
+  // 2: 5, 6, 7
+  EXPECT_EQ(factors_.size(), 3);
 }
 
 // Run all the tests that were declared with TEST()
