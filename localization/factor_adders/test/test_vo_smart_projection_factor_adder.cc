@@ -154,22 +154,23 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   // 1: 0, 1
   // 2: 0, 1
   EXPECT_EQ(factors_.size(), max_factors);
+  // Try to add factors from t: 1->2, but no measurement added yet for t2, so not enough
+  // measurements to add factors
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(1), timestamp(2), factors_), 0);
+  // Track: Measurement Timestamps
+  // 0: 1
+  // 1: 1
+  // 2: 1
+  EXPECT_EQ(factors_.size(), 0);
   // Add 3rd measurement
-  // Feature tracker should contain measurements at timestamp 1 and 2
-  EXPECT_EQ(factor_adder_->AddFactors(timestamp(1), timestamp(2), factors_), max_factors);
+  factor_adder_->AddMeasurement(measurements_[2]);
+  // Add factors from t: 1->2
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(1), timestamp(2), factors_), 2);
   // Track: Measurement Timestamps
   // 0: 1, 2
   // 1: 1, 2
   // 2: 1, 2
-  EXPECT_EQ(factors_.size(), max_factors);
-  /*// Only include 3rd measurement
-  // Feature tracker should contain measurements at timestamp 1 and 2
-  EXPECT_EQ(factor_adder_->AddFactors(timestamp(1), timestamp(2), factors_), max_factors);
-  // Track: Measurement Timestamps
-  // 0: 1, 2
-  // 1: 1, 2
-  // 2: 1, 2
-  EXPECT_EQ(factors_.size(), max_factors);*/
+  EXPECT_EQ(factors_.size(), 2);
 }
 
 // Run all the tests that were declared with TEST()
