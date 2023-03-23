@@ -3,7 +3,6 @@
       - also add to standstill factor adder! base class factor adders! others!
         
     - test vo factor adder! (AA)
-        - test avg distance from mean! (AB)
         - clean up splitting factors code??
           - use original noise?
           - add function to create and test factor?

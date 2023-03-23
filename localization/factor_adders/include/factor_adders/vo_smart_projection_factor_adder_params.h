@@ -51,9 +51,9 @@ struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
   // If triangulation fails, use a rotation-only version of the smart factor.
   // Otherwise, the smart factor is disabled.
   bool rotation_only_fallback;
-  // Attempt to fix smart factors that are degenerate using the various splitting methods
-  // to try and remove faulty measurements.
-  bool splitting;
+  // Attempt to fix smart factors that are invalid by removing individual measurements
+  // and if this fails measurement sequences.
+  bool fix_invalid_factors;
   // Scale the noise with the number of points, as a longer track the relies on a
   // longer history of poses tends to have higher error
   bool scale_noise_with_num_points;

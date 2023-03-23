@@ -121,7 +121,7 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
     params.min_avg_distance_from_mean = 1e-9;
     params.robust = true;
     params.rotation_only_fallback = false;
-    params.splitting = false;
+    params.fix_invalid_factors = false;
     params.scale_noise_with_num_points = false;
     params.noise_scale = 1;
     params.body_T_cam = gtsam::Pose3::identity();

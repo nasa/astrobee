@@ -71,12 +71,24 @@ class VoSmartProjectionFactorAdder
   // Checks the average distance from the mean and the number of points in the track.
   bool ValidTrack(const vision_common::FeaturePoints& feature_track) const;
 
-  // Functions to split and fix smart factors
-  void SplitSmartFactorsIfNeeded(const gtsam::Values& values, gtsam::NonlinearFactorGraph& factors) const;
+  // Fixes invalid smart factors (that suffer cheirality errors) by removing individual measurements and if that fails
+  // by removing measurement sequences.
+  // If both fail, the smart factor is left in the graph in case it becomes
+  // valid over the course of optimization.
+  void FixSmartFactors(const gtsam::Values& values, gtsam::NonlinearFactorGraph& factors) const;
+
+  // Attempts to fix smart factors by removing individual measurements.
   boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
     const gtsam::Values& values, const RobustSmartFactor& smart_factor) const;
+
+  // Attempts to fix smart factors by removing measurement sequences.
   boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
     const gtsam::Values& values, const RobustSmartFactor& smart_factor) const;
+
+  // Helper function for creating and testing a fixed smart factor
+  boost::optional<SharedRobustSmartFactor> FixedSmartFactor(
+    const gtsam::Values& values, gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector& measurements,
+    gtsam::KeyVector& keys) const;
 
   std::shared_ptr<PoseNodeAdderType> node_adder_;
   VoSmartProjectionFactorAdderParams params_;
@@ -109,8 +121,8 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddMeasurementBasedFactors(
   // Create smart factors based on feature tracks
   int num_added_factors = 0;
   num_added_factors = AddFactorsUsingDownsampledMeasurements(factors);
-  // Attempt to fix and split broken factors if enabled
-  if (params_.splitting) SplitSmartFactorsIfNeeded(node_adder_->nodes().values(), factors);
+  // Attempt to fix broken factors if enabled
+  if (params_.fix_invalid_factors) FixSmartFactors(node_adder_->nodes().values(), factors);
   return num_added_factors;
 }
 
@@ -171,8 +183,8 @@ bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::ValidTrack(
 }
 
 template <typename PoseNodeAdderType>
-void VoSmartProjectionFactorAdder<PoseNodeAdderType>::SplitSmartFactorsIfNeeded(
-  const gtsam::Values& values, gtsam::NonlinearFactorGraph& factors) const {
+void VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactors(const gtsam::Values& values,
+                                                                      gtsam::NonlinearFactorGraph& factors) const {
   for (auto& factor : factors) {
     auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor.get());
     if (!smart_factor) continue;
@@ -220,15 +232,11 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingIndivid
       measurements_to_add.emplace_back(original_measurements[i]);
       keys_to_add.emplace_back(original_keys[i]);
     }
-    auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor,
-      params_.rotation_only_fallback, params_.robust, params_.huber_k);
-    new_smart_factor->add(measurements_to_add, keys_to_add);
-    const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
-    if (new_point.valid()) {
+    const auto fixed_smart_factor = FixedSmartFactor(values, measurements_to_add, keys_to_add);
+    if (fixed_smart_factor) {
       LogDebug("FixSmartFactorByRemovingIndividualMeasurements: Fixed by removing measurement "
                << measurement_index_to_remove << ", num original measurements: " << original_measurements.size());
-      return new_smart_factor;
+      return fixed_smart_factor;
     }
   }
   return boost::none;
@@ -300,6 +308,20 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixSmartFactorByRemovingMeasure
   return boost::none;
   // TODO(rsoussan): delete factor if fail to find acceptable new one?
   // TODO(rsoussan): attempt to make a second factor with remaining measuremnts!!!
+}
+
+template <typename PoseNodeAdderType>
+boost::optional<SharedRobustSmartFactor> VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixedSmartFactor(
+  const gtsam::Values& values, gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector& measurements,
+  gtsam::KeyVector& keys) const {
+  // TODO(rsoussan): Scale noise with num measurements?
+  auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+    params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor, params_.rotation_only_fallback,
+    params_.robust, params_.huber_k);
+  new_smart_factor->add(measurements, keys);
+  const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(values));
+  if (!new_point.valid()) return boost::none;
+  return new_smart_factor;
 }
 }  // namespace factor_adders
 #endif  // FACTOR_ADDERS_VO_SMART_PROJECTION_FACTOR_ADDER_H_
