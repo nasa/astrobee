@@ -84,7 +84,8 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_FACTOR(const int factor_index, const std::vector<int>& timestamps,
-                          const std::vector<lm::FeaturePointsMeasurement>& measurements) {
+                          const std::vector<lm::FeaturePointsMeasurement>& measurements,
+                          const std::vector<int>& measurement_indices) {
     const auto factor = factors_[factor_index];
     const auto smart_factor = dynamic_cast<const fa::RobustSmartFactor*>(factor.get());
     ASSERT_TRUE(smart_factor);
@@ -94,8 +95,8 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
     EXPECT_EQ(factor_measurements.size(), timestamps.size());
     for (int i = 0; i < keys.size(); ++i) {
       EXPECT_EQ(keys[i], gtsam::Key(timestamps[i]));
-      EXPECT_MATRIX_NEAR(factor_measurements[i], measurements[timestamps[i]].feature_points[factor_index].image_point,
-                         1e-6);
+      EXPECT_MATRIX_NEAR(factor_measurements[i],
+                         measurements[measurement_indices[i]].feature_points[factor_index].image_point, 1e-6);
     }
 
     // Check factor noise
@@ -108,7 +109,11 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
   }
 
   void EXPECT_SAME_FACTOR(const int factor_index, const std::vector<int>& timestamps) {
-    EXPECT_SAME_FACTOR(factor_index, timestamps, measurements_);
+    std::vector<int> measurement_indices;
+    for (const auto& time : timestamps) {
+      measurement_indices.emplace_back(timestamps[time]);
+    }
+    EXPECT_SAME_FACTOR(factor_index, timestamps, measurements_, measurement_indices);
   }
 
   lc::Time timestamp(const int measurement_index) { return measurements_[measurement_index].timestamp; }
@@ -330,7 +335,8 @@ TEST_F(VoSmartProjectionFactorAdderTest, ValidFactor) {
   // Populate graph values with valid poses with translation spread
   std::vector<lm::FeaturePointsMeasurement> measurements;
   gtsam::KeyVector added_keys;
-  for (int time = 0; time < times; ++time) {
+  // Start with time 1 since first node in nodes has a key of 1
+  for (int time = 1; time <= times; ++time) {
     lm::FeaturePointsMeasurement measurement;
     measurement.timestamp = time;
     const vc::FeaturePoint p(0, 0, time, track_id, time);
@@ -345,9 +351,9 @@ TEST_F(VoSmartProjectionFactorAdderTest, ValidFactor) {
   factor_adder_->AddMeasurement(measurements[1]);
   factor_adder_->AddMeasurement(measurements[2]);
   // All measurements should be valid
-  // EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
-  // EXPECT_SAME_FACTOR(0, {0, 1, 2});
-  // EXPECT_SAME_FACTOR(0, {0, 1, 2});
+  EXPECT_EQ(factor_adder_->AddFactors(1, 3, factors_), 1);
+  // Keys 1,2,3, should match to measurements 0,1,2
+  EXPECT_SAME_FACTOR(0, {1, 2, 3}, measurements, {0, 1, 2});
 }
 
 // Run all the tests that were declared with TEST()
