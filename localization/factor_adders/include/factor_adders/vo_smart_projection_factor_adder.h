@@ -96,11 +96,10 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddMeasurementBasedFactors(
   const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
   gtsam::NonlinearFactorGraph& factors) {
   // Update feature tracker with new measurements and remove measurements after adding them.
-  ProcessMeasurements(
-    oldest_allowed_time, newest_allowed_time,
-    [this](const localization_measurements::FeaturePointsMeasurement& measurement,
-           gtsam::NonlinearFactorGraph& factors) { feature_tracker_->Update(measurement.feature_points); },
-    factors);
+  ProcessMeasurements(oldest_allowed_time, newest_allowed_time,
+                      [this](const localization_measurements::FeaturePointsMeasurement& measurement) {
+                        feature_tracker_->Update(measurement.feature_points);
+                      });
 
   // Remove old smart factors before adding new ones, since otherwise there would be repeat factors
   // for already existing feature tracks

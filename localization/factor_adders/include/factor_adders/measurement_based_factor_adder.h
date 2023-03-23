@@ -50,6 +50,11 @@ class MeasurementBasedFactorAdder : public FactorAdder {
     const std::function<void(const MeasurementType&, gtsam::NonlinearFactorGraph&)>& process_measurement_function,
     gtsam::NonlinearFactorGraph& factors);
 
+  // Wrapper for ProcessMeasurements that doesn't use factors.
+  void ProcessMeasurements(const localization_common::Time oldest_allowed_time,
+                           const localization_common::Time newest_allowed_time,
+                           const std::function<void(const MeasurementType&)>& process_measurement_function);
+
   localization_common::TimestampedSet<MeasurementType> measurements_;
 
  private:
@@ -104,6 +109,19 @@ void MeasurementBasedFactorAdder<MeasurementType>::ProcessMeasurements(
       ++it;
     }
   }
+}
+
+template <typename MeasurementType>
+void MeasurementBasedFactorAdder<MeasurementType>::ProcessMeasurements(
+  const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
+  const std::function<void(const MeasurementType&)>& process_measurement_function) {
+  gtsam::NonlinearFactorGraph dummy_factors;
+  ProcessMeasurements(
+    oldest_allowed_time, newest_allowed_time,
+    [&process_measurement_function](const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) {
+      process_measurement_function(measurement);
+    },
+    dummy_factors);
 }
 }  // namespace factor_adders
 
