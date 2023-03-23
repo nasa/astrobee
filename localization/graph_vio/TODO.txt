@@ -4,9 +4,9 @@
         
     - test vo factor adder! (AA)
       - add simple test to make sure all factors are added!
-            - add test to make sure pose keys in factor are correct! (AB)
               - make sure noise is correct? other parts of factor?
-        - test adding factors with spacing!
+        - test adding factors with spacing! (A)
+        - test avg distance from mean!
       - test most params! make sure they work!
   - test loc factor adder!
   - test graph optimizer! (C)

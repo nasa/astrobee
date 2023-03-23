@@ -165,6 +165,8 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   // 0: 0, 1
   // 1: 0, 1
   // 2: 0, 1
+  EXPECT_SAME_FACTOR(0, {0, 1});
+  EXPECT_SAME_FACTOR(0, {0, 1});
   EXPECT_EQ(factors_.size(), max_factors);
   // Try to add factors from t: 1->2, but no measurement added yet for t2, so not enough
   // measurements to add factors
@@ -182,6 +184,8 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   // 0: 1, 2
   // 1: 1, 2
   // 2: 1, 2
+  EXPECT_SAME_FACTOR(0, {1, 2});
+  EXPECT_SAME_FACTOR(1, {1, 2});
   EXPECT_EQ(factors_.size(), 2);
   // Add 4th and 5th Measurement
   factor_adder_->AddMeasurement(measurements_[3]);
@@ -206,6 +210,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   // 2: 5, 6, 7
   EXPECT_EQ(factors_.size(), 2);
   EXPECT_SAME_FACTOR(0, {5, 6, 7});
+  EXPECT_SAME_FACTOR(1, {5, 6, 7});
 }
 
 // Run all the tests that were declared with TEST()
