@@ -81,6 +81,18 @@ class VoSmartProjectionFactorAdderTest : public ::testing::Test {
     }
   }
 
+  void EXPECT_SAME_FACTOR(const int factor_index, const std::vector<int>& timestamps) {
+    const auto factor = factors_[factor_index];
+    const auto smart_factor = dynamic_cast<const fa::RobustSmartFactor*>(factor.get());
+    ASSERT_TRUE(smart_factor);
+    const auto& keys = factor->keys();
+    EXPECT_EQ(keys.size(), timestamps.size());
+    for (int i = 0; i < keys.size(); ++i) {
+      EXPECT_EQ(keys[i], gtsam::Key(timestamps[i]));
+    }
+    // TODO(rsoussan): check noise!
+  }
+
   lc::Time timestamp(const int measurement_index) { return measurements_[measurement_index].timestamp; }
 
   void Initialize(const fa::VoSmartProjectionFactorAdderParams& params) {
@@ -187,12 +199,13 @@ TEST_F(VoSmartProjectionFactorAdderTest, AddFactors) {
   factor_adder_->AddMeasurement(measurements_[7]);
   factor_adder_->AddMeasurement(measurements_[8]);
   // Add factors from t: 5->7
-  EXPECT_EQ(factor_adder_->AddFactors(timestamp(5), timestamp(7), factors_), 3);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(5), timestamp(7), factors_), 2);
   // Track: Measurement Timestamps
   // 0: 5, 6, 7
   // 1: 5, 6, 7
   // 2: 5, 6, 7
-  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_FACTOR(0, {5, 6, 7});
 }
 
 // Run all the tests that were declared with TEST()
