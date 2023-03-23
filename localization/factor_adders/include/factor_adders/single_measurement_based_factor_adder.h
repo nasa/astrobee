@@ -53,11 +53,12 @@ int SingleMeasurementBasedFactorAdder<MeasurementType>::AddMeasurementBasedFacto
   const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
   gtsam::NonlinearFactorGraph& factors) {
   int num_added_factors = 0;
-  const auto lower_and_upper_bound_its = this->measurements_.InRangeValues(oldest_allowed_time, newest_allowed_time);
-  for (auto it = lower_and_upper_bound_its.first; it != lower_and_upper_bound_its.second; ++it) {
-    num_added_factors += AddFactorsForSingleMeasurement(it->second, factors);
-  }
-
+  this->ProcessMeasurements(
+    oldest_allowed_time, newest_allowed_time,
+    [this, &num_added_factors](const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) {
+      num_added_factors += AddFactorsForSingleMeasurement(measurement, factors);
+    },
+    factors);
   return num_added_factors;
 }
 }  // namespace factor_adders
