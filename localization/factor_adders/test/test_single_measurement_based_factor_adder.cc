@@ -89,6 +89,10 @@ class SingleMeasurementBasedFactorAdderTest : public ::testing::Test {
 
   void EXPECT_SAME_PRIOR_FACTOR(const int index) { EXPECT_SAME_PRIOR_FACTOR(index, pose(index)); }
 
+  void EXPECT_SAME_PRIOR_FACTOR(const int factor_index, const int pose_index) {
+    EXPECT_SAME_PRIOR_FACTOR(factor_index, pose(pose_index));
+  }
+
   lc::Time time(int index) { return measurements_[index].timestamp; }
 
   const gtsam::Pose3& pose(const int index) { return measurements_[index].pose; }
@@ -114,6 +118,13 @@ TEST_F(SingleMeasurementBasedFactorAdderTest, AddMeasurements) {
   EXPECT_SAME_PRIOR_FACTOR(1);
   EXPECT_SAME_PRIOR_FACTOR(2);
   EXPECT_SAME_PRIOR_FACTOR(3);
+  // Add factors 1, 2, 3 again, should have no affect
+  EXPECT_EQ(factor_adder_.AddFactors(time(1) - 0.1, time(3) + 0.1, factors_), 0);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
   // Add factors 4, 5
   EXPECT_EQ(factor_adder_.AddFactors(time(4) - 0.1, time(5), factors_), 2);
   EXPECT_EQ(factors_.size(), 6);
@@ -123,7 +134,7 @@ TEST_F(SingleMeasurementBasedFactorAdderTest, AddMeasurements) {
   EXPECT_SAME_PRIOR_FACTOR(3);
   EXPECT_SAME_PRIOR_FACTOR(4);
   EXPECT_SAME_PRIOR_FACTOR(5);
-  // Old measurements should be removed up to measurement 3, expect adding factors 0,1,2 to fail
+  // Old and used measurements should be removed up, expect adding factors 0,1,2 to fail
   EXPECT_EQ(factor_adder_.AddFactors(time(0) - 0.1, time(2), factors_), 0);
   EXPECT_EQ(factors_.size(), 6);
   EXPECT_SAME_PRIOR_FACTOR(0);
@@ -132,9 +143,32 @@ TEST_F(SingleMeasurementBasedFactorAdderTest, AddMeasurements) {
   EXPECT_SAME_PRIOR_FACTOR(3);
   EXPECT_SAME_PRIOR_FACTOR(4);
   EXPECT_SAME_PRIOR_FACTOR(5);
+  // Add factors 8, 9
+  EXPECT_EQ(factor_adder_.AddFactors(time(8) - 0.1, time(9), factors_), 2);
+  EXPECT_EQ(factors_.size(), 8);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
+  EXPECT_SAME_PRIOR_FACTOR(4);
+  EXPECT_SAME_PRIOR_FACTOR(5);
+  EXPECT_SAME_PRIOR_FACTOR(6, 8);
+  EXPECT_SAME_PRIOR_FACTOR(7, 9);
+  // Add factors 6,7 - should fail since already used an oldest allowed time (8) newer
+  // than each of these and therefore measurements were removed
+  EXPECT_EQ(factor_adder_.AddFactors(time(6) - 0.1, time(7), factors_), 0);
+  EXPECT_EQ(factors_.size(), 8);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
+  EXPECT_SAME_PRIOR_FACTOR(4);
+  EXPECT_SAME_PRIOR_FACTOR(5);
+  EXPECT_SAME_PRIOR_FACTOR(6, 8);
+  EXPECT_SAME_PRIOR_FACTOR(7, 9);
   // Can't add factors newer than measurements
   EXPECT_EQ(factor_adder_.AddFactors(time(9) + 0.1, time(9) + 1000.1, factors_), 0);
-  EXPECT_EQ(factors_.size(), 6);
+  EXPECT_EQ(factors_.size(), 8);
 }
 
 // Run all the tests that were declared with TEST()

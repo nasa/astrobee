@@ -4,12 +4,13 @@
         
     - test vo factor adder! (AA)
       - add simple test to make sure all factors are added!
-        - how to avoid repeatedly adding measurements to factors????
-          - need to remove measurement from measurement set after its added!(AA)
-            - update addsinglemeasurementbased factor to remove measurements after adding them! (only if factor created successfully????)
-            - update single measurement factor adder test!!! (AB)
+            - update single measurement factor adder test!!! (AA)
+                - test adding repeat factors! (shouldn't change things)
+                - test adding factors before you have measurements! (should still be able to add them later)
+                - test adding old factors after newer ones added
+                  - old measurements should be removed!
             - only add measurements <= latest allowed time!!!
-              - test this!
+              - test this in vo smart factor test! (AB)
       - add function to check factor equality!
         - check that contains each point from start to end index!
       - add function to check noiseequality!
