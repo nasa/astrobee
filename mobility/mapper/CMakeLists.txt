@@ -32,10 +32,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D EIGEN_MAX_STATIC_ALIGN_BYTES=0")
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 
-
+find_package(std_srvs REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
-# find_package(octomap REQUIRED)
+
+find_package(visualization_msgs REQUIRED)
+find_package(octomap REQUIRED)
 
   # message_runtime
 
@@ -74,7 +76,7 @@ add_library(${PROJECT_NAME} SHARED
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
 target_link_libraries(${PROJECT_NAME} ${OCTOMAP_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_util)
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components std_srvs ff_msgs ff_util visualization_msgs octomap)
 rclcpp_components_register_nodes(${PROJECT_NAME} "mapper::MapperComponent")
 
 
