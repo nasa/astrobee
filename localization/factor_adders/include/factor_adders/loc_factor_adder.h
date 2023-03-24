@@ -125,7 +125,7 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
     LogError("AddLocProjectionFactors: Failed to get pose key.");
     return 0;
   }
-  const auto world_T_body = node_adder_->nodes().Node<gtsam::Pose3>(*pose_key);
+  const auto world_T_body = node_adder_->nodes().template Node<gtsam::Pose3>(*pose_key);
   if (!world_T_body) {
     LogError("AddLocProjectionFactors: Failed to get world_T_body at timestamp "
              << matched_projections_measurement.timestamp << ".");
@@ -138,7 +138,8 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
     // Use the landmark distance from the camera to inversly scale the noise if desired.
     if (params_.scale_projection_noise_with_landmark_distance) {
       const Eigen::Vector3d& world_t_landmark = matched_projection.map_point;
-      const Eigen::Isometry3d nav_cam_T_world = (world_T_body * params_.body_T_cam).inverse();
+      const Eigen::Isometry3d nav_cam_T_world =
+        localization_common::EigenPose(*world_T_body * params_.body_T_cam).inverse();
       const gtsam::Point3 nav_cam_t_landmark = nav_cam_T_world * world_t_landmark;
       // Don't use robust cost here to more effectively correct a drift occurance
       noise = gtsam::SharedIsotropic(
