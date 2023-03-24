@@ -213,6 +213,7 @@ TEST_F(LocFactorAdderTest, ProjectionNoise) {
 TEST_F(LocFactorAdderTest, ScaleProjectionNoiseWithNumLandmarks) {
   auto params = DefaultParams();
   params.add_projection_factors = true;
+  params.scale_projection_noise_with_num_landmarks = true;
   Initialize(params);
   // Add a measurement with only one match
   auto measurement_0 = measurements_[0];
