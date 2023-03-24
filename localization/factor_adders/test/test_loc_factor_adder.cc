@@ -23,6 +23,9 @@
 #include <localization_measurements/matched_projections_measurement.h>
 #include <node_adders/node_adder.h>
 #include <node_adders/utilities.h>
+#include <nodes/nodes.h>
+
+#include <gtsam/geometry/Pose3.h>
 
 #include <gtest/gtest.h>
 
@@ -30,6 +33,7 @@ namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace na = node_adders;
+namespace no = nodes;
 
 // Test node adder that just returns keys that should be used.
 // Key values are calculated using the integer timestamps passed.
@@ -66,11 +70,18 @@ class LocFactorAdderTest : public ::testing::Test {
   void SetUp() final {}
 
   void AddMeasurements() {
-    constexpr int kNumMeasurements = 10;
-    for (int i = 0; i < kNumMeasurements; ++i) {
-      const lm::MatchedProjectionsMeasurement measurement(i + 1, i);
-      measurements_.emplace_back(measurement);
-      factor_adder_->AddMeasurement(measurement);
+    const int num_times = 10;
+    const int num_projections_per_measurement = 5;
+    for (int time = 0; time < num_times; ++time) {
+      lm::MatchedProjectionsMeasurement measurement;
+      measurement.global_T_cam = lc::RandomPose();
+      measurement.timestamp = time;
+      for (int i = 0; i < num_projections_per_measurement; ++i) {
+        const lm::ImagePoint image_point(i, i + 1);
+        const lm::MapPoint map_point(i, i + 1, i + 2);
+        const lm::MatchedProjection matched_projection(image_point, map_point, time);
+        measurement.matched_projections.emplace_back(matched_projection);
+      }
     }
   }
 

@@ -23,6 +23,8 @@
 #include <factor_adders/loc_factor_adder_params.h>
 #include <graph_factors/loc_pose_factor.h>
 #include <graph_factors/loc_projection_factor.h>
+#include <localization_common/averager.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
@@ -47,12 +49,12 @@ class LocFactorAdder
 
   // Adds a loc pose factor (pose prior)
   int AddLocPoseFactor(const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
-                       gtsam::NonlinearFactorGraph& factors) final;
+                       gtsam::NonlinearFactorGraph& factors);
 
   // Adds a loc projection factor. If a reprojection error occurs, adds a loc pose factor.
   int AddLocProjectionFactor(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
-    gtsam::NonlinearFactorGraph& factors) final;
+    gtsam::NonlinearFactorGraph& factors);
 
   // Helper function to add a pose node if needed and return the node's key.
   boost::optional<gtsam::Key> AddPoseNode(const localization_common::Time timestamp,
@@ -85,15 +87,15 @@ int LocFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
     return 0;
   }
 
-  if (static_cast<int>(matched_projections_measurement.matched_projections.size()) < params().min_num_matches) {
+  if (static_cast<int>(matched_projections_measurement.matched_projections.size()) < params_.min_num_matches) {
     LogDebug("AddFactorsForSingleMeasurement: Not enough matches in projection measurement.");
     return 0;
   }
 
   const int num_landmarks = matched_projections_measurement.matched_projections.size();
   num_landmarks_averager_.Update(num_landmarks);
-  num_loc_projection_factors = 0;
-  num_loc_pose_factors = 0;
+  int num_loc_projection_factors = 0;
+  int num_loc_pose_factors = 0;
   if (params_.add_projection_factors) {
     num_loc_projection_factors = AddLocProjectionFactor(matched_projections_measurement, factors);
     // Add loc pose factors as a fallback if all projection factors failed and fallback
@@ -115,14 +117,15 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
   gtsam::NonlinearFactorGraph& factors) {
   double noise_scale = params_.projection_noise_scale;
   if (params_.scale_projection_noise_with_num_landmarks) {
+    const int num_landmarks = matched_projections_measurement.matched_projections.size();
     noise_scale *= std::pow((num_landmarks_averager_.average() / static_cast<double>(num_landmarks)), 2);
   }
   const auto pose_key = AddPoseNode(matched_projections_measurement.timestamp, factors);
   if (!pose_key) {
-    LogError("AddLocProjectionFactors: Failed to get pose key".);
+    LogError("AddLocProjectionFactors: Failed to get pose key.");
     return 0;
   }
-  const auto world_T_body = node_adder_->Node<gtsam::Pose3>(*pose_key);
+  const auto world_T_body = node_adder_->nodes().Node<gtsam::Pose3>(*pose_key);
   if (!world_T_body) {
     LogError("AddLocProjectionFactors: Failed to get world_T_body at timestamp "
              << matched_projections_measurement.timestamp << ".");
@@ -141,12 +144,13 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
       noise = gtsam::SharedIsotropic(
         gtsam::noiseModel::Isotropic::Sigma(2, params_.projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
     } else {
-    noise = lc::Robust(gtsam::SharedIsotropic(
-      gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params_.cam_noise->sigma()));
+      noise = localization_common::Robust(
+        gtsam::SharedIsotropic(gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params_.cam_noise->sigma())),
+        params_.huber_k);
     }
-    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-      matched_projection.image_point, matched_projection.map_point, noise, params_.huber_k), pose_key,
-      params_.cam_intrinsics, params_.body_T_cam));
+    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
+      new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, noise, *pose_key,
+                                       params_.cam_intrinsics, params_.body_T_cam));
     // Check for errors, discard factor if too large of projection error occurs
     // or a cheirality error occurs
     const auto error = (loc_projection_factor->evaluateError(*world_T_body)).norm();
@@ -159,7 +163,8 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
   }
 
   LogDebug("AddFactorsForSingleMeasurement: Added " << num_loc_projection_factors
-                                                    << " loc projection factors at timestamp " << timestamp << ".");
+                                                    << " loc projection factors at timestamp "
+                                                    << matched_projections_measurement.timestamp << ".");
   return num_loc_projection_factors;
 }
 
@@ -169,22 +174,24 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocPoseFactor(
   gtsam::NonlinearFactorGraph& factors) {
   double noise_scale = params_.pose_noise_scale;
   if (params_.scale_pose_noise_with_num_landmarks) {
+    const int num_landmarks = matched_projections_measurement.matched_projections.size();
     noise_scale *= std::pow((num_landmarks_averager_.average() / static_cast<double>(num_landmarks)), 2);
   }
   const auto pose_key = AddPoseNode(matched_projections_measurement.timestamp, factors);
   if (!pose_key) {
-    LogError("AddLocProjectionFactors: Failed to get pose key".);
+    LogError("AddLocProjectionFactors: Failed to get pose key.");
     return 0;
   }
 
-  const auto pose_noise = go::Robust(
+  const auto pose_noise = localization_common::Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas_)),
     params_.huber_k);
 
   gtsam::LocPoseFactor::shared_ptr pose_prior_factor(new gtsam::LocPoseFactor(
-    pose_key, matched_projections_measurement.global_T_cam * params_.body_T_cam.inverse(), pose_noise));
+    *pose_key, matched_projections_measurement.global_T_cam * params_.body_T_cam.inverse(), pose_noise));
   factors.push_back(pose_prior_factor);
-  LogDebug("AddLocPoseFactor: Added loc pose prior factor at timestamp " << timestamp << ".");
+  LogDebug("AddLocPoseFactor: Added loc pose prior factor at timestamp " << matched_projections_measurement.timestamp
+                                                                         << ".");
   return 1;
 }
 

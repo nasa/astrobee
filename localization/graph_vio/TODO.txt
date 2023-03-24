@@ -1,14 +1,16 @@
   - implement loc factor adder! (AB)
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
+
   - test loc factor adder! (A)
     - make fake matched projections measurement! (AA)
-    - add projection factors!
+    - add projection factors! (AB)
       - test these! expect same factor!
-    - add pose factors!
-    - add pose fallback factors!
-    - test valid error norm!
-    - noise scaling?
+    - add pose factors! (AC)
+    - add pose fallback factors! (AD)
+    - test valid error norm! (AE)
+    - noise scaling? (AF)
+
   - test graph optimizer! (B)
   - test sliding window optimizer! (C)
 

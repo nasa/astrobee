@@ -21,6 +21,9 @@
 
 #include <factor_adders/factor_adder_params.h>
 
+#include <gtsam/geometry/Cal3_S2.h>
+#include <gtsam/geometry/Pose3.h>
+
 namespace factor_adders {
 struct LocFactorAdderParams : public FactorAdderParams {
   // Add pose prior factors using estimated pose from matched
