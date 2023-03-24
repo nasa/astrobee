@@ -87,7 +87,8 @@ int LocFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
     return 0;
   }
 
-  if (static_cast<int>(matched_projections_measurement.matched_projections.size()) < params_.min_num_matches) {
+  if (static_cast<int>(matched_projections_measurement.matched_projections.size()) <
+      params_.min_num_matches_per_measurement) {
     LogDebug("AddFactorsForSingleMeasurement: Not enough matches in projection measurement.");
     return 0;
   }
@@ -160,7 +161,7 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
     if (cheirality_error) continue;
     factors.push_back(loc_projection_factor);
     ++num_loc_projection_factors;
-    if (num_loc_projection_factors >= params_.max_num_factors) break;
+    if (num_loc_projection_factors >= params_.max_num_projection_factors) break;
   }
 
   LogDebug("AddFactorsForSingleMeasurement: Added " << num_loc_projection_factors

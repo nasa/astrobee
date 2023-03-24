@@ -48,9 +48,9 @@ struct LocFactorAdderParams : public FactorAdderParams {
   // Relative projections noise scale.
   double projection_noise_scale;
   // Max num projection factors to add for a matched projections measurement.
-  int max_num_factors;
+  int max_num_projection_factors;
   // Min number of matched projections to create a factor (prior or projection).
-  int min_num_matches;
+  int min_num_matches_per_measurement;
   // Max projection error norm for a projection factor to be valid.
   double max_valid_projection_error;
   // Camera extrinsics.

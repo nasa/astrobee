@@ -67,21 +67,20 @@ class LocFactorAdderTest : public ::testing::Test {
  public:
   LocFactorAdderTest() { node_adder_.reset(new SimplePoseNodeAdder()); }
 
-  void SetUp() final {}
+  void SetUp() final { AddMeasurements(); }
 
   void AddMeasurements() {
-    const int num_times = 10;
-    const int num_projections_per_measurement = 5;
-    for (int time = 0; time < num_times; ++time) {
+    for (int time = 0; time < num_times_; ++time) {
       lm::MatchedProjectionsMeasurement measurement;
       measurement.global_T_cam = lc::RandomPose();
       measurement.timestamp = time;
-      for (int i = 0; i < num_projections_per_measurement; ++i) {
+      for (int i = 0; i < num_projections_per_measurement_; ++i) {
         const lm::ImagePoint image_point(i, i + 1);
         const lm::MapPoint map_point(i, i + 1, i + 2);
         const lm::MatchedProjection matched_projection(image_point, map_point, time);
         measurement.matched_projections.emplace_back(matched_projection);
       }
+      measurements_.emplace_back(measurement);
     }
   }
 
@@ -101,9 +100,9 @@ class LocFactorAdderTest : public ::testing::Test {
     params.scale_projection_noise_with_landmark_distance = false;
     params.pose_noise_scale = 2;
     params.projection_noise_scale = 2;
-    params.max_num_factors = 3;
-    params.min_num_matches = 2;
-    params.max_valid_projection_error = 10;
+    params.max_num_projection_factors = 3;
+    params.min_num_matches_per_measurement = 1;
+    params.max_valid_projection_error = 1e6;
     params.body_T_cam = gtsam::Pose3::identity();
     params.cam_intrinsics = boost::make_shared<gtsam::Cal3_S2>();
     params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
@@ -113,15 +112,18 @@ class LocFactorAdderTest : public ::testing::Test {
   std::unique_ptr<fa::LocFactorAdder<SimplePoseNodeAdder>> factor_adder_;
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
-
- private:
+  const int num_times_ = 10;
+  const int num_projections_per_measurement_ = 3;
   std::vector<lm::MatchedProjectionsMeasurement> measurements_;
 };
 
 TEST_F(LocFactorAdderTest, ProjectionFactors) {
   auto params = DefaultParams();
+  params.add_projection_factors = true;
   Initialize(params);
-  AddMeasurements();
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), num_projections_per_measurement_);
   /*  // Add first factors
     EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
     EXPECT_EQ(factors_.size(), 2);
