@@ -28,46 +28,39 @@
 
 #include <string>
 
-FF_DEFINE_LOGGER("test_ff_service_nominal")
+FF_DEFINE_LOGGER("test_ff_service_no_connection");
 
 bool test_done = false;
 
 void ResultsCallback(std_msgs::msg::String const& msg) {
   FF_INFO_STREAM("Received results from client: " << msg.data);
-  EXPECT_EQ(msg.data, "The response was correct!");
+  EXPECT_EQ(msg.data, "The response was empty!");
   test_done = true;
 }
 
-/*void TimerCallback() {
-  std_msgs::msg::String msg = std_msgs::msg::String();
-  msg.data = "Nominal service test";
-  trigger_pub->publish(msg);
-  FF_INFO_STREAM("After publishing trigger message.");
-}*/
-
-TEST(ff_service, Nominal) {
+TEST(ff_service, NoConnection) {
   test_done = false;
   rclcpp::Node::SharedPtr test_node =
-                  std::make_shared<rclcpp::Node>("test_ff_service_nominal");
+                std::make_shared<rclcpp::Node>("test_ff_service_no_connection");
 
   Subscriber<std_msgs::msg::String> results_sub;
   Publisher<std_msgs::msg::String> trigger_pub;
-
-  ff_util::FreeFlyerTimer test_timer_;
 
   results_sub = FF_CREATE_SUBSCRIBER(test_node,
                             std_msgs::msg::String,
                             "/client_result",
                             1,
                             std::bind(&ResultsCallback, std::placeholders::_1));
+
   rclcpp::QoS latched_qos(1);
   latched_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
-  trigger_pub = test_node->create_publisher<std_msgs::msg::String>("/client_trigger", latched_qos);
+  trigger_pub =
+    test_node->create_publisher<std_msgs::msg::String>("/client_trigger",
+                                                       latched_qos);
 
   // Publish trigger message after test service client starts up
-  // test_timer_.createTimer(1.0, &TimerCallback, test_node, true, true);
   std_msgs::msg::String msg = std_msgs::msg::String();
-  msg.data = "Nominal service test";
+  msg.data = "No connection service test";
   trigger_pub->publish(msg);
   FF_INFO_STREAM("After publishing trigger message.");
 

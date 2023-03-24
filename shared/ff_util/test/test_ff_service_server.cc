@@ -23,6 +23,9 @@
 #include <gtest/gtest.h>
 
 #include <ff_msgs/srv/set_rate.hpp>
+
+#include <std_msgs/msg/string.hpp>
+
 #include <string>
 
 FF_DEFINE_LOGGER("test_ff_service_server")
@@ -40,35 +43,24 @@ class TestServiceServer : public ff_util::FreeFlyerComponent {
                 this,
                 std::placeholders::_1,
                 std::placeholders::_2));
-    nh_ = node;
   }
 
   void SetRateCallback(const std::shared_ptr<ff_msgs::srv::SetRate::Request> req,
                        std::shared_ptr<ff_msgs::srv::SetRate::Response> res) {
-    std::chrono::nanoseconds ns(2000000000);
-    rclcpp::sleep_for(ns);
-    FF_ERROR_STREAM("In the set rate callback. which: " << req->which << "  rate: "<< req->rate);
+    FF_INFO_STREAM("In the set rate callback. which: " << req->which);
+    FF_INFO_STREAM("Request rate: "<< req->rate);
     if (req->which == ff_msgs::srv::SetRate::Request::DISK_STATE &&
         req->rate == 5) {
-      FF_ERROR("In first if.");
       res->success = true;
       res->status = "Which is disk state.";
     } else {
       res->success = false;
       res->status = "Which is " + std::to_string(req->rate);
     }
-    FF_ERROR_STREAM("In the set rate callback. success: " << res->success << "  status: "<< res->status);
-    // test_timer_.createTimer(1.0, &ff_util::TestServiceServer::TimerCallback, nh_, false, true);
-  }
-
-  void TimerCallback() {
-    FF_ERROR_STREAM("I'm alive!!!");
   }
 
  private:
   Service<ff_msgs::srv::SetRate> service_;
-  // ff_util::FreeFlyerTimer test_timer_;
-  rclcpp::Node::SharedPtr nh_;
 };
 
 }  // namespace ff_util

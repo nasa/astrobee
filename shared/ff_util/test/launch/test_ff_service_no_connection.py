@@ -33,19 +33,15 @@ from utilities.utilities import *
 @pytest.mark.launch_test
 @launch_testing.markers.keep_alive
 def generate_test_description():
-    test_ff_service_nominal = Node(
+    test_ff_service_no_connection = Node(
         executable=launch.substitutions.PathJoinSubstitution(
             [
                 launch.substitutions.LaunchConfiguration("test_binary_dir"),
-                "test_ff_service_nominal",
+                "test_ff_service_no_connection",
             ]
         ),
         output="screen",
     )
-
-    # This is necessary to get unbuffered output from the process under test
-    proc_env = os.environ.copy()
-    proc_env["PYTHONUNBUFFERED"] = "1"
 
     return launch.LaunchDescription(
         [
@@ -71,33 +67,29 @@ def generate_test_description():
                 default_value="/src/astrobee/build/ff_util",
             ),
             ComposableNodeContainer(
-                name="ff_util_server",
+                name="ff_util",
                 namespace="",
                 package="rclcpp_components",
-                executable="component_container_mt",
+                executable="component_container",
                 composable_node_descriptions=[
                     ComposableNode(
                         package="ff_util",
-                        plugin="ff_util::TestServiceServer",
-                        name="test_ff_service_server",
-                    ),
-                    ComposableNode(
-                        package="ff_util",
                         plugin="ff_util::TestServiceClient",
-                        name="test_ff_service_client",
-                    ),
+                        name="test_ff_service_client"),
                 ]
             ),
-            test_ff_service_nominal,
+            test_ff_service_no_connection,
             # Tell launch when to start the test
             launch_testing.actions.ReadyToTest(),
         ]
-    ), {"test_ff_service_nominal": test_ff_service_nominal}
+    ), {
+        "test_ff_service_no_connection": test_ff_service_no_connection,
+    }
 
 
 class TestTerminatingProcessStops(unittest.TestCase):
-    def test_proc_terminates(self, proc_info, test_ff_service_nominal):
-        proc_info.assertWaitForShutdown(process=test_ff_service_nominal, timeout=30)
+    def test_proc_terminates(self, proc_info, test_ff_service_no_connection):
+        proc_info.assertWaitForShutdown(process=test_ff_service_no_connection, timeout=30)
 
 
 # These tests are run after the processes in generate_test_description() have shutdown.
