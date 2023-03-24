@@ -90,6 +90,7 @@ class LocFactorAdderTest : public ::testing::Test {
 
   void Initialize(const fa::LocFactorAdderParams& params) {
     factor_adder_.reset(new fa::LocFactorAdder<SimplePoseNodeAdder>(params, node_adder_));
+    params_ = params;
   }
 
   fa::LocFactorAdderParams DefaultParams() {
@@ -113,12 +114,24 @@ class LocFactorAdderTest : public ::testing::Test {
     return params;
   }
 
+  void EXPECT_SAME_PROJECTION_FACTOR(const int factor_index, const int measurement_time, const int measurement_index) {
+    const auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factors_[factor_index].get());
+    ASSERT_TRUE(projection_factor);
+    const auto& measurement = measurements_[measurement_index].matched_projections[measurement_index];
+    EXPECT_MATRIX_NEAR(projection_factor->measured(), measurement.image_point, 1e-6);
+    EXPECT_MATRIX_NEAR(projection_factor->landmark_point(), measurement.map_point, 1e-6);
+    EXPECT_MATRIX_NEAR(projection_factor->body_P_sensor()->matrix(), params_.body_T_cam, 1e-6);
+    EXPECT_MATRIX_NEAR(projection_factor->calibration()->matrix(), params_.cam_intrinsics->matrix(), 1e-6);
+    // TODO(rsoussan): check noise!
+  }
+
   std::unique_ptr<fa::LocFactorAdder<SimplePoseNodeAdder>> factor_adder_;
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
   const int num_times_ = 10;
   const int num_projections_per_measurement_ = 3;
   std::vector<lm::MatchedProjectionsMeasurement> measurements_;
+  fa::LocFactorAdderParams params_;
 };
 
 TEST_F(LocFactorAdderTest, ProjectionFactors) {
@@ -128,6 +141,9 @@ TEST_F(LocFactorAdderTest, ProjectionFactors) {
   factor_adder_->AddMeasurement(measurements_[0]);
   // Add first factors
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), num_projections_per_measurement_);
+  EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+  EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
+  EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
   /*  // Add first factors
     EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
     EXPECT_EQ(factors_.size(), 2);
