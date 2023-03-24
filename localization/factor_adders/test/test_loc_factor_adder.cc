@@ -111,6 +111,8 @@ class LocFactorAdderTest : public ::testing::Test {
     params.body_T_cam = gtsam::Pose3::identity();
     params.cam_intrinsics = boost::make_shared<gtsam::Cal3_S2>();
     params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+    params.huber_k = 1.345;
+    params.enabled = true;
     return params;
   }
 
@@ -141,39 +143,35 @@ TEST_F(LocFactorAdderTest, ProjectionFactors) {
   factor_adder_->AddMeasurement(measurements_[0]);
   // Add first factors
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), num_projections_per_measurement_);
+  EXPECT_EQ(factors_.size(), 3);
   EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
   EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
   EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
-  /*  // Add first factors
-    EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
-    EXPECT_EQ(factors_.size(), 2);
-    // Keys and their indices:
-    // pose_0: 0, velocity_0: 1
-    // pose_1: 2, velocity_1: 3
-    // Factors and their indices:
-    // pose_between: 0, velocity_prior: 1
-    EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
-    // Use velocity_1 key since velocity prior is added to most recent timestamp
-    // in standstill measurement
-    EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 3);
-    // Add 2nd and 3rd factors
-    EXPECT_EQ(factor_adder_->AddFactors((time(0) + time(1)) / 2.0, (time(2) + time(3)) / 2.0, factors_), 4);
-    EXPECT_EQ(factors_.size(), 6);
-    // Keys and their indices:
-    // pose_0: 0, velocity_0: 1
-    // pose_1: 2, velocity_1: 3
-    // pose_2: 4, velocity_1: 5
-    // pose_3: 6, velocity_1: 7
-    // Factors and their indices:
-    // pose_between: 0, velocity_prior: 1
-    // pose_between: 2, velocity_prior: 3
-    // pose_between: 4, velocity_prior: 5
-    EXPECT_SAME_POSE_BETWEEN_FACTOR(0, 0);
-    EXPECT_SAME_VELOCITY_PRIOR_FACTOR(1, 3);
-    EXPECT_SAME_POSE_BETWEEN_FACTOR(2, 2);
-    EXPECT_SAME_VELOCITY_PRIOR_FACTOR(3, 5);
-    EXPECT_SAME_POSE_BETWEEN_FACTOR(4, 4);
-    EXPECT_SAME_VELOCITY_PRIOR_FACTOR(5, 7);*/
+
+  // Add second factors
+  factor_adder_->AddMeasurement(measurements_[1]);
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), num_projections_per_measurement_);
+  EXPECT_EQ(factors_.size(), 6);
+  // t0 factors
+  EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+  EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
+  EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
+  // t1 factors
+  EXPECT_SAME_PROJECTION_FACTOR(3, 1, 0);
+  EXPECT_SAME_PROJECTION_FACTOR(4, 1, 1);
+  EXPECT_SAME_PROJECTION_FACTOR(5, 1, 2);
+
+  // Repeat add factors with no new measurements, nothing should change
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 0);
+  EXPECT_EQ(factors_.size(), 6);
+  /* // t0 factors
+   EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+   EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
+   EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
+   // t1 factors
+   EXPECT_SAME_PROJECTION_FACTOR(3, 1, 0);
+   EXPECT_SAME_PROJECTION_FACTOR(4, 1, 1);
+   EXPECT_SAME_PROJECTION_FACTOR(5, 1, 2);*/
 }
 
 // Run all the tests that were declared with TEST()
