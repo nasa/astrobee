@@ -222,11 +222,12 @@ def generate_launch_description():
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='mapper',
-            #     plugin='mapper::MapperNodelet',
-            #     name='mapper',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='mapper',
+                plugin='mapper::MapperComponent',
+                name='mapper',
+                # extra_arguments=[{'use_intra_process_comms': True}]
+                ),
             ]
         ),
         ComposableNodeContainer(

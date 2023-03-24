@@ -69,7 +69,7 @@ void SampledTrajectory3D::PrintSamples() {
 
 void SampledTrajectory3D::SetMaxDev(const double &max_dev) {
   max_dev_ = max_dev;
-  ROS_DEBUG("Trajectory compression max deviation is set to: %f", max_dev_);
+  std::cout << "Trajectory compression max deviation is set to: " << max_dev_  << std::endl;
 }
 
 void SampledTrajectory3D::SetResolution(const double &resolution) {
@@ -77,7 +77,7 @@ void SampledTrajectory3D::SetResolution(const double &resolution) {
   thickness_ = 1.4*resolution;
   thick_traj_.setResolution(resolution_);
   thick_traj_.clear();
-  ROS_DEBUG("Trajectory resolution is set to: %f", resolution_);
+  std::cout << "Trajectory resolution is set to " << resolution_  << std::endl;
 }
 
 void SampledTrajectory3D::DeleteSample(const int &index) {
@@ -128,7 +128,7 @@ void SampledTrajectory3D::CompressSamples() {
     else
       break;
   }
-  // ROS_INFO("Number of non-colinear points: %d", n_compressed_points_);
+  // std::cout << "Number of non-colinear points: " << n_compressed_points_;
 
   // now compress the remaining points
   double min_dist;
@@ -159,7 +159,7 @@ void SampledTrajectory3D::CompressSamples() {
     else
       DeleteSample(delete_index);
   }
-  // ROS_INFO("Compressed points: %d", n_compressed_points_);
+  // FF_INFO("Compressed points: %d", n_compressed_points_);
 }
 
 
@@ -383,19 +383,17 @@ void SampledTrajectory3D::SortCollisions(const std::vector<octomap::point3d> &co
     sample.point.y = cloud_ptr_->points[point_idx[0]].y;
     sample.point.z = cloud_ptr_->points[point_idx[0]].z;
     sample.header.stamp = ros::Time(time_[point_idx[0]]);
-    sample.header.seq = point_idx[0];
     (*samples)[i] = sample;
   }
   std::sort(samples->begin(), samples->end(), ComparePointStamped);
 }
 
-
-void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker_array) {    // Publish occupied nodes
+void SampledTrajectory3D::TrajVisMarkers(const rclcpp::Time rostime,
+                                         visualization_msgs::MarkerArray* marker_array) {  // Publish occupied nodes
   // Markers: each marker array stores a set of nodes with similar size
   // visualization_msgs::MarkerArray occupiedNodesVis;
   const int tree_depth = thick_traj_.getTreeDepth();
   marker_array->markers.resize(tree_depth+1);
-  const ros::Time rostime = ros::Time::now();
 
   // Set color parameters
   std_msgs::ColorRGBA color;
@@ -442,9 +440,8 @@ void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker
   }
 }
 
-void SampledTrajectory3D::SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array) {
+void SampledTrajectory3D::SamplesVisMarkers(const rclcpp::Time rostime, visualization_msgs::MarkerArray* marker_array) {
   // marker_array->markers.resize(1);
-  const ros::Time rostime = ros::Time::now();
   visualization_msgs::Marker marker;
 
   // Set color parameters
@@ -483,9 +480,9 @@ void SampledTrajectory3D::SamplesVisMarkers(visualization_msgs::MarkerArray* mar
   marker_array->markers.push_back(marker);
 }
 
-void SampledTrajectory3D::CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array) {
+void SampledTrajectory3D::CompressedVisMarkers(const rclcpp::Time rostime,
+                                               visualization_msgs::MarkerArray* marker_array) {
   // marker_array->markers.resize(1);
-  const ros::Time rostime = ros::Time::now();
   visualization_msgs::Marker marker;
 
   // Set color parameters
@@ -540,7 +537,7 @@ void SampledTrajectory3D::ClearObject() {
 // Return the sample with lowest time
 bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
                          const geometry_msgs::PointStamped &sample2) {
-  return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
+  return rclcpp::Time(sample1.header.stamp).seconds() < rclcpp::Time(sample2.header.stamp).seconds();
 }
 
 }  // namespace sampled_traj

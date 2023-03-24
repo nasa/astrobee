@@ -408,28 +408,24 @@ int main(int argc, char *argv[]) {
     &tf_buffer_, &client_s_, &client_t_));
   client_t_.Create(nh, ACTION_MOBILITY_MOTION);
   // For moves and executes check that we are configured correctly
-  if (FLAGS_move || !FLAGS_exec.empty()) {
-    ff_util::ConfigClient cfg(nh, NODE_CHOREOGRAPHER);
-    // if (FLAGS_vel   > 0) cfg.Set<double>("desired_vel", FLAGS_vel);
-    // if (FLAGS_accel > 0) cfg.Set<double>("desired_accel", FLAGS_accel);
-    // if (FLAGS_omega > 0) cfg.Set<double>("desired_omega", FLAGS_omega);
-    // if (FLAGS_alpha > 0) cfg.Set<double>("desired_alpha", FLAGS_alpha);
-    // if (FLAGS_rate  > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
-    if (FLAGS_tolerance_pos > 0) cfg.Set<double>("tolerance_pos", FLAGS_tolerance_pos);
-    cfg.Set<bool>("enable_collision_checking", !FLAGS_nocollision);
-    cfg.Set<bool>("enable_validation", !FLAGS_novalidate);
-    cfg.Set<bool>("enable_bootstrapping", !FLAGS_nobootstrap);
-    cfg.Set<bool>("enable_immediate", !FLAGS_noimmediate);
-    cfg.Set<bool>("enable_timesync", FLAGS_timesync);
-    cfg.Set<bool>("enable_replanning", FLAGS_replan);
-    cfg.Set<bool>("enable_faceforward", FLAGS_ff);
-    if (!FLAGS_planner.empty())
-      cfg.Set<std::string>("planner", FLAGS_planner);
-    if (!cfg.Reconfigure()) {
-      std::cout << "Could not reconfigure the choreographer node " << std::endl;
-      rclcpp::shutdown();
-    }
-  }
+  // if (FLAGS_move || !FLAGS_exec.empty()) {
+  //   ff_util::ConfigClient cfg(nh, NODE_CHOREOGRAPHER);
+  //   if (FLAGS_vel   > 0) cfg.Set<double>("desired_vel", FLAGS_vel);
+  //   if (FLAGS_accel > 0) cfg.Set<double>("desired_accel", FLAGS_accel);
+  //   if (FLAGS_omega > 0) cfg.Set<double>("desired_omega", FLAGS_omega);
+  //   if (FLAGS_alpha > 0) cfg.Set<double>("desired_alpha", FLAGS_alpha);
+  //   if (FLAGS_rate  > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
+  //   if (FLAGS_tolerance_pos > 0) cfg.Set<double>("tolerance_pos", FLAGS_tolerance_pos);
+  //   cfg.Set<bool>("enable_collision_checking", !FLAGS_nocollision);
+  //   cfg.Set<bool>("enable_validation", !FLAGS_novalidate);
+  //   cfg.Set<bool>("enable_bootstrapping", !FLAGS_nobootstrap);
+  //   cfg.Set<bool>("enable_immediate", !FLAGS_noimmediate);
+  //   cfg.Set<bool>("enable_timesync", FLAGS_timesync);
+  //   cfg.Set<bool>("enable_replanning", FLAGS_replan);
+  //   cfg.Set<bool>("enable_faceforward", FLAGS_ff);
+  //   if (!FLAGS_planner.empty())
+  //     cfg.Set<std::string>("planner", FLAGS_planner);
+  // }
   // Synchronous mode
   rclcpp::spin(nh);
   // Finish commandline flags

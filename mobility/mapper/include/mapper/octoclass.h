@@ -22,10 +22,17 @@
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
-#include <tf/transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <pcl/point_types.h>
-#include <sensor_msgs/point_cloud2_iterator.h>
-#include <visualization_msgs/MarkerArray.h>
+#include <sensor_msgs/point_cloud2_iterator.hpp>
+namespace sensor_msgs {
+typedef msg::PointCloud2 PointCloud2;
+}  // namespace sensor_msgs
+#include <visualization_msgs/msg/marker_array.hpp>
+namespace visualization_msgs {
+typedef msg::Marker Marker;
+typedef msg::MarkerArray MarkerArray;
+}  // namespace visualization_msgs
 #include <vector>
 #include <iostream>
 #include "mapper/indexed_octree_key.h"
@@ -89,11 +96,13 @@ class OctoClass{
                                   std::vector<octomap::point3d> *colliding_nodes);
 
   // Visualization methods
-  void TreeVisMarkers(visualization_msgs::MarkerArray *obstacles,
+  void TreeVisMarkers(const rclcpp::Time rostime,
+                      visualization_msgs::MarkerArray *obstacles,
                       visualization_msgs::MarkerArray *free,
                       sensor_msgs::PointCloud2* obstacles_cloud,
                       sensor_msgs::PointCloud2* free_cloud);
-  void InflatedVisMarkers(visualization_msgs::MarkerArray *obstacles,
+  void InflatedVisMarkers(const rclcpp::Time rostime,
+                          visualization_msgs::MarkerArray *obstacles,
                           visualization_msgs::MarkerArray *free,
                           sensor_msgs::PointCloud2* obstacles_cloud,
                           sensor_msgs::PointCloud2* free_cloud);

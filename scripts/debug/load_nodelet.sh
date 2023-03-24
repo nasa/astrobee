@@ -41,7 +41,7 @@ then
 elif [ "$nodelet_name" = mapper ]
 then
   manager_name="mlp_mobility"
-  nodelet_type="mapper/MapperNodelet"
+  nodelet_type="mapper/MapperComponent"
 fi
 
 rosservice call /"$manager_name"/load_nodelet /"$nodelet_name" "$nodelet_type" [] [] [] ""

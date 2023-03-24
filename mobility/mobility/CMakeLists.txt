@@ -29,11 +29,11 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 
 find_package(ff_common REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(ff_msgs REQUIRED)
 # find_package(mapper REQUIRED)
 find_package(planner_trapezoidal REQUIRED)
 # find_package(planner_qp REQUIRED)
-find_package(ff_msgs REQUIRED)
-find_package(ff_util REQUIRED)
 find_package(jsonloader REQUIRED)
 
 
@@ -55,7 +55,7 @@ include_directories(
 
 ## Declare a C++ executable: teleop
 add_executable(teleop tools/teleop.cc)
-ament_target_dependencies(teleop rclcpp ff_common ff_util ff_msgs)
+ament_target_dependencies(teleop rclcpp ff_common ff_util ff_msgs jsonloader)
 target_link_libraries(teleop
   gflags glog)
 
@@ -75,10 +75,12 @@ install(TARGETS teleop
 #   LIBRARY DESTINATION lib
 #   RUNTIME DESTINATION lib/${PROJECT_NAME}
 # )
-install(CODE "execute_process(
-  COMMAND ln -s ../../bin/plangen share/${PROJECT_NAME}
-  COMMAND ln -s ../../bin/teleop share/${PROJECT_NAME}
-  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-  OUTPUT_QUIET
-  ERROR_QUIET
-  )")
+# install(CODE "execute_process(
+#   COMMAND ln -s ../../bin/plangen share/${PROJECT_NAME}
+#   COMMAND ln -s ../../bin/teleop share/${PROJECT_NAME}
+#   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+#   OUTPUT_QUIET
+#   ERROR_QUIET
+#   )")
+
+ament_package()

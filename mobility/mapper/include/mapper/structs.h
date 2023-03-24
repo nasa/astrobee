@@ -20,8 +20,14 @@
 #define MAPPER_STRUCTS_H_
 
 // PCL specific includes
-#include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::TransformStamped TransformStamped;
+}  // namespace geometry_msgs
+#include <sensor_msgs/msg/point_cloud2.hpp>
+namespace sensor_msgs {
+typedef msg::PointCloud2 PointCloud2;
+}  // namespace sensor_msgs
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -29,8 +35,11 @@
 #include <mapper/octoclass.h>
 #include <mapper/sampled_trajectory.h>
 
-// Astrobee message types
-#include <ff_msgs/ControlGoal.h>
+// // Astrobee message types
+// #include <ff_msgs/msg/control_goal.hpp>
+// namespace ff_msgs {
+// typedef msg::ControlGoal ControlGoal;
+// }  // namespace ff_msgs
 
 // c++ libraries
 #include <queue>

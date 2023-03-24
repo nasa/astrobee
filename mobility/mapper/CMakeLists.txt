@@ -15,27 +15,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(mapper)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
 ## This fixes the Eigen aligment issue
 ## http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D EIGEN_MAX_STATIC_ALIGN_BYTES=0")
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  pluginlib
-  ff_util
-  ff_msgs
-  message_runtime
-  octomap
-)
+# Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+
+
+find_package(ff_util REQUIRED)
+find_package(ff_msgs REQUIRED)
+# find_package(octomap REQUIRED)
+
+  # message_runtime
+
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Octomap REQUIRED)
@@ -45,19 +48,6 @@ find_package(Eigen3 REQUIRED)
 # Find PCL
 find_package(PCL REQUIRED COMPONENTS common)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES
-    mapper
-  CATKIN_DEPENDS
-    roscpp
-    nodelet
-    pluginlib
-    ff_util
-    ff_msgs
-    message_runtime
-)
-
 ###########
 ## Build ##
 ###########
@@ -65,16 +55,15 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   ${OCTOMAP_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(mapper
+add_library(${PROJECT_NAME} SHARED
   src/callbacks.cc
-  src/mapper_nodelet.cc
+  src/mapper_component.cc
   src/octoclass.cc
   src/polynomials.cc
   src/sampled_trajectory.cc
@@ -82,21 +71,27 @@ add_library(mapper
   src/threads.cc
   src/visualization_functions.cc
 )
-add_dependencies(mapper ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mapper ${OCTOMAP_LIBRARIES} ${catkin_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(${PROJECT_NAME} ${OCTOMAP_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_util)
+rclcpp_components_register_nodes(${PROJECT_NAME} "mapper::MapperComponent")
 
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
+if(BUILD_TESTING)
+
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ros_testing REQUIRED)
+
   # Mapper initialization fault tester
-  add_rostest_gtest(test_init_mapper
-    test/test_init_mapper.test
-    test/test_init_mapper.cc
-  )
+  # add_rostest_gtest(test_init_mapper
+  #   test/test_init_mapper.test
+  #   test/test_init_mapper.cc
+  # )
 
-  target_link_libraries(test_init_mapper
-    ${catkin_LIBRARIES} glog
-  )
+  # target_link_libraries(test_init_mapper
+  #   ${catkin_LIBRARIES} glog
+  # )
 endif()
 
 #############
@@ -105,19 +100,15 @@ endif()
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
@@ -127,3 +118,4 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
 
+ament_package()

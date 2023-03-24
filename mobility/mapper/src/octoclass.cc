@@ -37,7 +37,7 @@ OctoClass::OctoClass() {}
 
 void OctoClass::SetMemoryTime(const double memory) {
   memory_time_ = memory;
-  ROS_DEBUG("Fading memory time: %f seconds", memory_time_);
+  std::cout << "Fading memory time: " << memory_time_ << " seconds" << std::endl;
 }
 
 double OctoClass::GetMemoryTime() {
@@ -46,12 +46,12 @@ double OctoClass::GetMemoryTime() {
 
 void OctoClass::SetMaxRange(const double max_range) {
   max_range_ = max_range;
-  ROS_DEBUG("Maximum range: %f meters", max_range_);
+  std::cout << "Maximum range: " << max_range_ << " meters" << std::endl;
 }
 
 void OctoClass::SetMinRange(const double min_range) {
   min_range_ = min_range;
-  ROS_DEBUG("Minimum range: %f meters", min_range_);
+  std::cout << "Minimum range: " << min_range_ << " meters" << std::endl;
 }
 
 void OctoClass::SetResolution(const double resolution_in) {
@@ -80,7 +80,7 @@ void OctoClass::SetResolution(const double resolution_in) {
       }
     }
   }
-  ROS_DEBUG("Map resolution: %f meters", resolution_);
+  std::cout << "Map resolution: " << resolution_ << " meters" << std::endl;
 }
 
 double OctoClass::GetResolution() {
@@ -93,7 +93,7 @@ void OctoClass::SetMapInflation(const double inflate_radius) {
   sphere_.clear();
   static Eigen::Vector3d xyz;
   // if (inflateMap) {
-  ROS_DEBUG("The map is being inflated by a radius of %f!", inflate_radius_);
+  std::cout << "The map is being inflated by a radius of " << inflate_radius_ << "!" << std::endl;
   const int max_xyz = static_cast<int>(round(inflate_radius_/resolution_));
   const float max_dist = inflate_radius_*inflate_radius_;
   static float d_origin;
@@ -117,19 +117,19 @@ double OctoClass::GetMapInflation() {
 void OctoClass::SetCamFrustum(const double fov,
                               const double aspect_ratio) {
   cam_frustum_ = algebra_3d::FrustumPlanes(fov, aspect_ratio);
-  ROS_DEBUG("Cam frustum was set!");
+  std::cout << "Cam frustum was set!" << std::endl;
 }
 
 void OctoClass::ResetMap() {
   tree_.clear();
   tree_inflated_.clear();
-  ROS_DEBUG("Map was reset!");
+  std::cout << "Map was reset!" << std::endl;
 }
 
 void OctoClass::SetOccupancyThreshold(const double occupancy_threshold) {
   tree_.setOccupancyThres(occupancy_threshold);
   tree_inflated_.setOccupancyThres(occupancy_threshold);
-  ROS_DEBUG("Occupancy probability threshold: %f", occupancy_threshold);
+  std::cout << "Occupancy probability threshold: " << occupancy_threshold << std::endl;
 }
 
 void OctoClass::SetHitMissProbabilities(const double probability_hit,
@@ -138,8 +138,8 @@ void OctoClass::SetHitMissProbabilities(const double probability_hit,
   tree_.setProbMiss(probability_miss);
   tree_inflated_.setProbHit(probability_hit);
   tree_inflated_.setProbMiss(probability_miss);
-  ROS_DEBUG("Probability hit: %f", probability_hit);
-  ROS_DEBUG("Probability miss: %f", probability_miss);
+  std::cout << "Probability hit: " << probability_hit << std::endl;
+  std::cout << "Probability miss: " << probability_miss << std::endl;
 }
 
 void OctoClass::SetClampingThresholds(const double clamping_threshold_min,
@@ -148,8 +148,8 @@ void OctoClass::SetClampingThresholds(const double clamping_threshold_min,
   tree_.setClampingThresMax(clamping_threshold_max);
   tree_inflated_.setClampingThresMin(clamping_threshold_min);
   tree_inflated_.setClampingThresMax(clamping_threshold_max);
-  ROS_DEBUG("Clamping threshold minimum: %f", clamping_threshold_min);
-  ROS_DEBUG("Clamping threshold maximum: %f", clamping_threshold_max);
+  std::cout << "Clamping threshold minimum: " << clamping_threshold_min << std::endl;
+  std::cout << "Clamping threshold maximum: " << clamping_threshold_max << std::endl;
 }
 
 // // Function obtained from https://github.com/OctoMap/octomap_ros
@@ -476,14 +476,14 @@ void OctoClass::FindCollidingNodesInflated(const pcl::PointCloud< pcl::PointXYZ 
 // }
 
 // adapted from https:// ithub.com/OctoMap/octomap_mapping
-void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
+void OctoClass::TreeVisMarkers(const rclcpp::Time rostime,
+                               visualization_msgs::MarkerArray* obstacles,
                                visualization_msgs::MarkerArray* free,
                                sensor_msgs::PointCloud2* obstacles_cloud,
                                sensor_msgs::PointCloud2* free_cloud) {
   // Markers: each marker array stores a set of nodes with similar size
   obstacles->markers.resize(tree_depth_+1);
   free->markers.resize(tree_depth_+1);
-  const ros::Time rostime = ros::Time::now();
 
   // get pointcloud holder
   pcl::PointCloud<pcl::PointXYZ>  free_points, obstacles_points;
@@ -550,22 +550,22 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
   }
 
   pcl::toROSMsg(free_points, *free_cloud);
-  free_cloud->header.stamp = ros::Time::now();
+  free_cloud->header.stamp = rostime;
   free_cloud->header.frame_id = "world";
   pcl::toROSMsg(obstacles_points, *obstacles_cloud);
-  obstacles_cloud->header.stamp = ros::Time::now();
+  obstacles_cloud->header.stamp = rostime;
   obstacles_cloud->header.frame_id = "world";
 }
 
 // adapted from https:// github.com/OctoMap/octomap_mapping
-void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
+void OctoClass::InflatedVisMarkers(const rclcpp::Time rostime,
+                                   visualization_msgs::MarkerArray* obstacles,
                                    visualization_msgs::MarkerArray* free,
                                    sensor_msgs::PointCloud2* obstacles_cloud,
                                    sensor_msgs::PointCloud2* free_cloud) {
   // Markers: each marker array stores a set of nodes with similar size
   obstacles->markers.resize(tree_depth_+1);
   free->markers.resize(tree_depth_+1);
-  const ros::Time rostime = ros::Time::now();
 
   // get pointcloud holder
   pcl::PointCloud<pcl::PointXYZ> free_points, obstacles_points;
@@ -630,10 +630,10 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
       free->markers[i].action = visualization_msgs::Marker::DELETE;
   }
   pcl::toROSMsg(free_points, *free_cloud);
-  free_cloud->header.stamp = ros::Time::now();
+  free_cloud->header.stamp = rostime;
   free_cloud->header.frame_id = "world";
   pcl::toROSMsg(obstacles_points, *obstacles_cloud);
-  obstacles_cloud->header.stamp = ros::Time::now();
+  obstacles_cloud->header.stamp = rostime;
   obstacles_cloud->header.frame_id = "world";
 }
 
@@ -802,10 +802,10 @@ void OctoClass::BBXOccVolume(const Eigen::Vector3d &box_min,
   // Calculate final volume
   *volume = 0;
   for (uint i = 0; i < n_nodes_per_depth.size(); i++) {
-      // ROS_INFO("Nodes in depth %d: %d", int(i), int(n_nodes_per_depth[i]));
+      // std::cout << "Nodes in depth "  << int(i) << ": " << int(n_nodes_per_depth[i]);
       *volume = *volume + static_cast<double>(n_nodes_per_depth[i]) * depth_volumes_[i];
   }
-  // ROS_INFO("Volume calculated: %f", volume);
+  // std::cout << "Volume calculated: " << volume;
 }
 
 // Return all free nodes within a bounding box

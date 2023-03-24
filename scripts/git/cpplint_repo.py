@@ -71,7 +71,11 @@ def main():
         ):
             continue
         for filename in filenames:
-            if "agast_score" in filename or "brisk" in filename:
+            if (
+                "agast_score" in filename
+                or "brisk" in filename
+                or "pcl_conversions" in filename
+            ):
                 continue
             if not filename.endswith(
                 (

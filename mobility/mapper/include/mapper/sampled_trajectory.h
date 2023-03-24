@@ -19,14 +19,23 @@
 #ifndef MAPPER_SAMPLED_TRAJECTORY_H_
 #define MAPPER_SAMPLED_TRAJECTORY_H_
 
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/point_stamped.hpp>
+namespace geometry_msgs {
+typedef msg::Point Point;
+typedef msg::PointStamped PointStamped;
+}  // namespace geometry_msgs
+#include <visualization_msgs/msg/marker_array.hpp>
+namespace visualization_msgs {
+typedef msg::Marker Marker;
+typedef msg::MarkerArray MarkerArray;
+}  // namespace visualization_msgs
+
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -89,9 +98,9 @@ class SampledTrajectory3D{
   void CreateKdTree();
   void SortCollisions(const std::vector<octomap::point3d> &colliding_nodes,
             std::vector<geometry_msgs::PointStamped> *samples);
-  void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
-  void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
-  void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
+  void TrajVisMarkers(const rclcpp::Time rostime, visualization_msgs::MarkerArray* marker_array);
+  void SamplesVisMarkers(const rclcpp::Time rostime, visualization_msgs::MarkerArray* marker_array);
+  void CompressedVisMarkers(const rclcpp::Time rostime, visualization_msgs::MarkerArray* marker_array);
   void ClearObject();  // Clear all the data within this object
 };
 
