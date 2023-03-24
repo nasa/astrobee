@@ -174,6 +174,31 @@ TEST_F(LocFactorAdderTest, ProjectionFactors) {
    EXPECT_SAME_PROJECTION_FACTOR(5, 1, 2);*/
 }
 
+TEST_F(LocFactorAdderTest, MaxProjectionFactors) {
+  auto params = DefaultParams();
+  params.add_projection_factors = true;
+  params.max_num_projection_factors = 2;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factors, only max_num_projection_factors should be added
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), params.max_num_projection_factors);
+  EXPECT_EQ(factors_.size(), params.max_num_projection_factors);
+  EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+  EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
+}
+
+TEST_F(LocFactorAdderTest, MinNumMeasurementsPerFactor) {
+  auto params = DefaultParams();
+  params.add_projection_factors = true;
+  params.add_pose_priors = true;
+  params.min_num_matches_per_measurement = 10;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factors, none should be added
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 0);
+  EXPECT_EQ(factors_.size(), 0);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
