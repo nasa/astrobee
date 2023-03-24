@@ -71,7 +71,7 @@ def generate_test_description():
                 default_value="/src/astrobee/build/ff_util",
             ),
             ComposableNodeContainer(
-                name="ff_util_server",
+                name="ff_util",
                 namespace="",
                 package="rclcpp_components",
                 executable="component_container_mt",
