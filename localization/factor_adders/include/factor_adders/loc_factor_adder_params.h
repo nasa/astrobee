@@ -43,7 +43,7 @@ struct LocFactorAdderParams : public FactorAdderParams {
   // to the current number of matches when creating a projections factor.
   // Yields lower noise for measurements with more than average matches.
   bool scale_projection_noise_with_num_landmarks;
-  // Scale projection factor noise using inverse of distance to landmark.
+  // Scale projection factor noise using the inverse of the distance to a landmark.
   bool scale_projection_noise_with_landmark_distance;
   // Relative pose noise scale.
   double pose_noise_scale;

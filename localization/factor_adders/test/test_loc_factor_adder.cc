@@ -132,6 +132,14 @@ class LocFactorAdderTest : public ::testing::Test {
     EXPECT_MATRIX_NEAR(na::Covariance(projection_factor->noiseModel()), na::Covariance(noise), 1e-6);
   }
 
+  void EXPECT_SAME_NOISE_NON_ROBUST(const int factor_index, const gtsam::SharedNoiseModel& noise) {
+    const auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factors_[factor_index].get());
+    ASSERT_TRUE(projection_factor);
+    const auto factor_noise = dynamic_cast<gtsam::noiseModel::Gaussian*>(projection_factor)->covariance();
+    const auto expected_noise = dynamic_cast<gtsam::noiseModel::Gaussian*>(noise.get())->covariance();
+    EXPECT_MATRIX_NEAR(factor_noise, expected_noise, 1e-6);
+  }
+
   std::unique_ptr<fa::LocFactorAdder<SimplePoseNodeAdder>> factor_adder_;
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
@@ -248,6 +256,28 @@ TEST_F(LocFactorAdderTest, ScaleProjectionNoiseWithNumLandmarks) {
     EXPECT_SAME_NOISE(1, expected_noise);
     EXPECT_SAME_NOISE(2, expected_noise);
     EXPECT_SAME_NOISE(3, expected_noise);
+  }
+}
+
+TEST_F(LocFactorAdderTest, ScaleProjectionNoiseWithLandmarkDistance) {
+  auto params = DefaultParams();
+  params.add_projection_factors = true;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), params.max_num_projection_factors);
+  const auto world_T_body = node_adder_->nodes().Node<gtsam::Pose3>(factors_[0]->keys()[0]);
+  ASSERT_TRUE(world_T_body != boost::none);
+  // Check first factor noise
+  {
+    const Eigen::Vector3d& world_t_landmark = measurements_[0].matched_projections[0].map_point;
+    const Eigen::Isometry3d nav_cam_T_world =
+      localization_common::EigenPose(*world_T_body * params_.body_T_cam).inverse();
+    const gtsam::Point3 nav_cam_t_landmark = nav_cam_T_world * world_t_landmark;
+    // Don't use robust cost here to more effectively correct a drift occurance
+    const auto expected_noise = gtsam::SharedIsotropic(
+      gtsam::noiseModel::Isotropic::Sigma(2, params_.projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
+    EXPECT_SAME_NOISE(0, expected_noise);
   }
 }
 
