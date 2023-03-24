@@ -94,11 +94,11 @@ int LocFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   num_landmarks_averager_.Update(num_landmarks);
   num_loc_projection_factors = 0;
   num_loc_pose_factors = 0;
-  if (params_.add_projections) {
+  if (params_.add_projection_factors) {
     num_loc_projection_factors = AddLocProjectionFactor(matched_projections_measurement, factors);
     // Add loc pose factors as a fallback if all projection factors failed and fallback
     // enabled
-    if (num_loc_projection_factors == 0 && params_.add_prior_if_projections_fail) {
+    if (num_loc_projection_factors == 0 && params_.add_prior_if_projection_factors_fail) {
       num_loc_pose_factors = AddLocPoseFactor(matched_projections_measurement, factors);
     }
   }
@@ -133,7 +133,7 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
     gtsam::SharedNoiseModel noise;
     // Use the landmark distance from the camera to inversly scale the noise if desired.
-    if (params_.weight_projections_with_distance) {
+    if (params_.scale_projection_noise_with_landmark_distance) {
       const Eigen::Vector3d& world_t_landmark = matched_projection.map_point;
       const Eigen::Isometry3d nav_cam_T_world = (world_T_body * params_.body_T_cam).inverse();
       const gtsam::Point3 nav_cam_t_landmark = nav_cam_T_world * world_t_landmark;
@@ -150,7 +150,7 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
     // Check for errors, discard factor if too large of projection error occurs
     // or a cheirality error occurs
     const auto error = (loc_projection_factor->evaluateError(*world_T_body)).norm();
-    if (error > params_.max_inlier_weighted_projection_norm) continue;
+    if (error > params_.max_valid_projection_error) continue;
     const auto cheirality_error = loc_projection_factor->cheiralityError(*world_T_body);
     if (cheirality_error) continue;
     factors.push_back(loc_projection_factor);

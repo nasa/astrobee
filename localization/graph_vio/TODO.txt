@@ -2,6 +2,13 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
   - test loc factor adder! (A)
+    - make fake matched projections measurement! (AA)
+    - add projection factors!
+      - test these! expect same factor!
+    - add pose factors!
+    - add pose fallback factors!
+    - test valid error norm!
+    - noise scaling?
   - test graph optimizer! (B)
   - test sliding window optimizer! (C)
 
