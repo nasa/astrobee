@@ -124,7 +124,12 @@ class LocFactorAdderTest : public ::testing::Test {
     EXPECT_MATRIX_NEAR(projection_factor->landmark_point(), measurement.map_point, 1e-6);
     EXPECT_MATRIX_NEAR(projection_factor->body_P_sensor()->matrix(), params_.body_T_cam, 1e-6);
     EXPECT_MATRIX_NEAR(projection_factor->calibration()->matrix(), params_.cam_intrinsics->matrix(), 1e-6);
-    // TODO(rsoussan): check noise!
+  }
+
+  void EXPECT_SAME_NOISE(const int factor_index, const gtsam::SharedNoiseModel& noise) {
+    const auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factors_[factor_index].get());
+    ASSERT_TRUE(projection_factor);
+    EXPECT_MATRIX_NEAR(na::Covariance(projection_factor->noiseModel()), na::Covariance(noise), 1e-6);
   }
 
   std::unique_ptr<fa::LocFactorAdder<SimplePoseNodeAdder>> factor_adder_;
@@ -164,14 +169,6 @@ TEST_F(LocFactorAdderTest, ProjectionFactors) {
   // Repeat add factors with no new measurements, nothing should change
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 0);
   EXPECT_EQ(factors_.size(), 6);
-  /* // t0 factors
-   EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
-   EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
-   EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
-   // t1 factors
-   EXPECT_SAME_PROJECTION_FACTOR(3, 1, 0);
-   EXPECT_SAME_PROJECTION_FACTOR(4, 1, 1);
-   EXPECT_SAME_PROJECTION_FACTOR(5, 1, 2);*/
 }
 
 TEST_F(LocFactorAdderTest, MaxProjectionFactors) {
@@ -197,6 +194,20 @@ TEST_F(LocFactorAdderTest, MinNumMeasurementsPerFactor) {
   // Add first factors, none should be added
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 0);
   EXPECT_EQ(factors_.size(), 0);
+}
+
+TEST_F(LocFactorAdderTest, ProjectionNoise) {
+  auto params = DefaultParams();
+  params.add_projection_factors = true;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), params.max_num_projection_factors);
+  const auto expected_noise =
+    localization_common::Robust(gtsam::SharedIsotropic(gtsam::noiseModel::Isotropic::Sigma(
+                                  2, params_.projection_noise_scale * params_.cam_noise->sigma())),
+                                params_.huber_k);
+  EXPECT_SAME_NOISE(0, expected_noise);
 }
 
 // Run all the tests that were declared with TEST()
