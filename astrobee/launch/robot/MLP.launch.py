@@ -226,8 +226,7 @@ def generate_launch_description():
                 package='mapper',
                 plugin='mapper::MapperComponent',
                 name='mapper',
-                # extra_arguments=[{'use_intra_process_comms': True}]
-                ),
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(
@@ -425,7 +424,7 @@ def generate_launch_description():
                 package='states',
                 plugin='states::StatesComponent',
                 name='states',
-                extra_arguments=[{'use_intra_process_comms': True}]),
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
     ])

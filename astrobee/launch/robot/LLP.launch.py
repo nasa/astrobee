@@ -59,13 +59,13 @@ def generate_launch_description():
                 package='ctl',
                 plugin='ctl::CtlComponent',
                 name='ctl',
-                extra_arguments=[{'use_intra_process_comms': True}]
+                extra_arguments=[{'use_intra_process_comms': False}]
                 ),
             ComposableNode(
                 package='fam',
                 plugin='fam::FamComponent',
                 name='fam',
-                extra_arguments=[{'use_intra_process_comms': True}]
+                extra_arguments=[{'use_intra_process_comms': False}]
                 )
             ]
         ),

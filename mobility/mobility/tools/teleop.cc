@@ -291,26 +291,26 @@ void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
   ff_util::FreeFlyerActionClient<ff_msgs::Localization> * client_s_,
   ff_util::FreeFlyerActionClient<ff_msgs::Motion> * client_t_) {
   // Check to see if connected
-  if (!client_s_->IsConnected()) return;  // Switch
+  // if (!client_s_->IsConnected()) return;  // Switch
   if (!client_t_->IsConnected()) return;  // Mobility
   if (sent_)                     return;  // Avoid calling twice
   else
     sent_ = true;
   // Package up and send the move goal
-  if (!FLAGS_loc.empty() || FLAGS_bias || FLAGS_reset) {
-    ff_msgs::Localization::Goal goal;
-    if (!FLAGS_loc.empty()) {
-      goal.command = ff_msgs::Localization::Goal::COMMAND_SWITCH_PIPELINE;
-      goal.pipeline = FLAGS_loc;
-    }
-    if (FLAGS_reset)
-      goal.command = ff_msgs::Localization::Goal::COMMAND_RESET_FILTER;
-    if (FLAGS_bias)
-      goal.command = ff_msgs::Localization::Goal::COMMAND_ESTIMATE_BIAS;
-    if (!client_s_->SendGoal(goal))
-      std::cout << "Localization client did not accept goal" << std::endl;
-    return;
-  }
+  // if (!FLAGS_loc.empty() || FLAGS_bias || FLAGS_reset) {
+  //   ff_msgs::Localization::Goal goal;
+  //   if (!FLAGS_loc.empty()) {
+  //     goal.command = ff_msgs::Localization::Goal::COMMAND_SWITCH_PIPELINE;
+  //     goal.pipeline = FLAGS_loc;
+  //   }
+  //   if (FLAGS_reset)
+  //     goal.command = ff_msgs::Localization::Goal::COMMAND_RESET_FILTER;
+  //   if (FLAGS_bias)
+  //     goal.command = ff_msgs::Localization::Goal::COMMAND_ESTIMATE_BIAS;
+  //   if (!client_s_->SendGoal(goal))
+  //     std::cout << "Localization client did not accept goal" << std::endl;
+  //   return;
+  // }
   // Fake a switch result to trigger the releop action
   SResultCallback(ff_util::FreeFlyerActionState::SUCCESS, nullptr,
     tf_buffer_, client_t_);
@@ -376,7 +376,7 @@ int main(int argc, char *argv[]) {
   ff_util::FreeFlyerActionClient<ff_msgs::Localization> client_s_;
   ff_util::FreeFlyerActionClient<ff_msgs::Motion> client_t_;
   // Create a node handle
-  auto nh = rclcpp::Node::make_shared(std::string("/") + FLAGS_ns);
+  auto nh = rclcpp::Node::make_shared(FLAGS_ns + std::string("_teleop_tool"));
   // TF2 Subscriber
   tf2_ros::Buffer tf_buffer_(nh->get_clock());
   tf2_ros::TransformListener tfListener(tf_buffer_);
