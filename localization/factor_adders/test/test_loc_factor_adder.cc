@@ -41,7 +41,10 @@ class SimplePoseNodeAdder : public na::NodeAdder {
  public:
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
 
-  bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }
+  bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
+    nodes_.Add(gtsam::Pose3::identity());
+    return true;
+  }
 
   bool CanAddNode(const localization_common::Time timestamp) const final { return true; }
 
@@ -49,7 +52,8 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   // First key is pose key.
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const final {
     gtsam::KeyVector keys;
-    keys.emplace_back(gtsam::Key(static_cast<int>(timestamp)));
+    // Offset by 1 since node keys start at 1
+    keys.emplace_back(gtsam::Key(static_cast<int>(timestamp + 1)));
     return keys;
   }
 
@@ -123,7 +127,7 @@ TEST_F(LocFactorAdderTest, ProjectionFactors) {
   Initialize(params);
   factor_adder_->AddMeasurement(measurements_[0]);
   // Add first factors
-  EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), num_projections_per_measurement_);
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), num_projections_per_measurement_);
   /*  // Add first factors
     EXPECT_EQ(factor_adder_->AddFactors(time(0), time(0), factors_), 2);
     EXPECT_EQ(factors_.size(), 2);
