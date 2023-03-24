@@ -39,7 +39,9 @@ struct LocFactorAdderParams : public FactorAdderParams {
   double prior_quaternion_stddev;
   // Inversely scale noise with the number of matched projections when creating a pose factor.
   bool scale_pose_noise_with_num_landmarks;
-  // Inversely scale noise with the number of matched projections when creating a projections factor.
+  // Scale projection noise with the square of the ratio of the average number of matches per measurement
+  // to the current number of matches when creating a projections factor.
+  // Yields lower noise for measurements with more than average matches.
   bool scale_projection_noise_with_num_landmarks;
   // Scale projection factor noise using inverse of distance to landmark.
   bool scale_projection_noise_with_landmark_distance;
