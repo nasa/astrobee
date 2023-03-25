@@ -3,11 +3,18 @@
       - also add to standstill factor adder! base class factor adders! others!
 
   - test graph optimizer! (A)
-      - add simple optimizer
       - add simple node adder, simple factor adder
-        - test adding factors! 
-            - test getting covariances
-            - test that marginals exist
+     - add simple optimizer
+        - does nothing...
+     - test adding factors! 
+        - test getting covariances
+        - test that marginals exist
+ 
+    - update node adders to take nodes on construction!!!!
+      - add another constructor in node adders that take nodes instead of nodestype
+      - remove default nodes!
+      - remove default nodes in timestamped_combind_nodes!
+      - add shared_ptr<nodes> to node_Adder base class? add constructor that takes nodes?
   - test sliding window optimizer! (B)
   - test optimizers!!
       - test nonlinear optimizer! (C)

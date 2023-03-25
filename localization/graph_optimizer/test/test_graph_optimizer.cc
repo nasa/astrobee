@@ -22,62 +22,96 @@
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <node_adders/node_adder.h>
+#include <nodes/nodes.h>
 
 #include <gtest/gtest.h>
 
 namespace fa = factor_adders;
+namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace na = node_adders;
+namespace no = nodes;
 
 // Test node adder that just returns keys that should be used.
-// Key values are calculated using the integer timestamps passed, where the
-// first key is a pose key and second is a velocity key.
-// Pose keys are 2*timestamp and velocity keys are 2*timestamp + 1.
-/*class SimplePoseVelocityNodeAdder : public na::NodeAdder {
+// Key values are calculated using the integer timestamps passed.
+// TODO(rsoussan): Unify this with VO factor_adder test
+class SimpleNodeAdder : public na::NodeAdder {
  public:
+  explicit SimpleNodeAdder(std::shared_ptr<no::Nodes> nodes) : nodes_(nodes) {}
+
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
 
-  bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }
+  bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
+    nodes_->Add(gtsam::Pose3::identity());
+    return true;
+  }
 
   bool CanAddNode(const localization_common::Time timestamp) const final { return true; }
 
   // Assumes integer timestamps that perfectly cast to ints.
-  // First key is pose key, second is velocity key
+  // First key is pose key.
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const final {
     gtsam::KeyVector keys;
-    keys.emplace_back(gtsam::Key(static_cast<int>(timestamp) * 2));
-    keys.emplace_back(gtsam::Key(static_cast<int>(timestamp) * 2 + 1));
+    // Offset by 1 since node keys start at 1
+    keys.emplace_back(gtsam::Key(static_cast<int>(timestamp + 1)));
     return keys;
   }
 
-  std::string type() const final { return "simple_pose_velocity_node_adder"; }
-};*/
+  std::string type() const final { return "simple_pose_node_adder"; }
+
+ private:
+  std::shared_ptr<no::Nodes> nodes_;
+};
+
+class SimpleFactorAdder : public fa::FactorAdder {
+ public:
+  SimpleFactorAdder(const fa::FactorAdderParams& params, std::shared_ptr<SimpleNodeAdder> node_adder)
+      : fa::FactorAdder(params), node_adder_(node_adder) {}
+  int AddFactors(const localization_common::Time oldest_allowed_time,
+                 const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final {
+    node_adder_->AddNode(oldest_allowed_time, factors);
+    node_adder_->AddNode(newest_allowed_time, factors);
+    // TODO(rsoussan): add factors!
+    return 2;
+  }
+
+  std::shared_ptr<SimpleNodeAdder> node_adder_;
+};
 
 class GraphOptimizerTest : public ::testing::Test {
  public:
-  GraphOptimizerTest() { node_adder_.reset(new SimplePoseVelocityNodeAdder()); }
+  GraphOptimizerTest() {}
 
   void SetUp() final {}
 
-  void Initialize(const fa::GraphOptimizerParams& params) {
-    factor_adder_.reset(new fa::GraphOptimizer<SimplePoseVelocityNodeAdder>(params, node_adder_));
+  void Initialize(const go::GraphOptimizerParams& params) {
+    // graph_optimizer_.reset(new go::GraphOptimizer(params));
+    // TODO(rsoussan): remove this! get from graph optimizer!
+    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
+    node_adder_.reset(new SimpleNodeAdder(nodes));
+    factor_adder_.reset(new SimpleFactorAdder(DefaultFactorAdderParams(), node_adder_));
+    // graph_optimizer_->AddNodeAdder(node_adder_);
+    // graph_optimizer_->AddFactorAdder(factor_adder_);
   }
 
-  fa::GraphOptimizerParams DefaultParams() {
-    fa::GraphOptimizerParams params;
-    params.enabled = true;
+  go::GraphOptimizerParams DefaultParams() {
+    go::GraphOptimizerParams params;
     params.huber_k = 1.345;
-    params.add_velocity_prior = true;
-    params.add_pose_between_factor = true;
-    params.prior_velocity_stddev = 0.1;
-    params.pose_between_factor_translation_stddev = 0.2;
-    params.pose_between_factor_rotation_stddev = 0.3;
+    params.log_stats_on_destruction = false;
+    params.print_after_optimization = false;
     return params;
   }
 
-  std::unique_ptr<fa::GraphOptimizer<SimplePoseVelocityNodeAdder>> factor_adder_;
-  std::shared_ptr<SimplePoseVelocityNodeAdder> node_adder_;
-  gtsam::NonlinearFactorGraph factors_;
+  fa::FactorAdderParams DefaultFactorAdderParams() {
+    fa::FactorAdderParams params;
+    params.enabled = true;
+    params.huber_k = 1.345;
+    return params;
+  }
+
+  std::unique_ptr<go::GraphOptimizer> graph_optimizer_;
+  std::shared_ptr<SimpleFactorAdder> factor_adder_;
+  std::shared_ptr<SimpleNodeAdder> node_adder_;
 };
 
 TEST_F(GraphOptimizerTest, PoseAndVelocityFactors) {

@@ -163,7 +163,7 @@ class GraphOptimizer {
 
 // Implementation
 template <typename OptimizerType, typename OptimizerParamsType>
-GraphOptimizer(const GraphOptimizerParams& params, const OptimizerParamsType& optimizer_params) {
+GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, const OptimizerParamsType& optimizer_params) {
   std::unique_ptr<OptimizerType> optimizer(new OptimizerType(optimizer_params));
   GraphOptimizer(params, std::move(optimizer));
 }
