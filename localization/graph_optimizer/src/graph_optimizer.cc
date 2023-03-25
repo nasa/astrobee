@@ -82,6 +82,8 @@ gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors_; }
 
 const int GraphOptimizer::num_factors() const { return factors_.size(); }
 
+const int GraphOptimizer::num_nodes() const { return nodes_->size(); }
+
 const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
 std::shared_ptr<nodes::Nodes> GraphOptimizer::nodes() { return nodes_; }

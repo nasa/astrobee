@@ -87,6 +87,9 @@ class GraphOptimizer {
   // Returns number of factors currently in the graph.
   const int num_factors() const;
 
+  // Returns number of nodes currently in the graph.
+  const int num_nodes() const;
+
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
 

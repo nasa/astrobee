@@ -145,7 +145,14 @@ TEST_F(GraphOptimizerTest, AddFactors) {
   EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
   EXPECT_EQ(graph_optimizer_->factors().size(), 1);
   EXPECT_EQ(graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(graph_optimizer_->nodes()->size(), 1);
+  EXPECT_EQ(graph_optimizer_->num_nodes(), 1);
+  EXPECT_TRUE(graph_optimizer_->Optimize());
+  // Add second factors
+  EXPECT_EQ(graph_optimizer_->AddFactors(1, 2), 1);
+  EXPECT_EQ(graph_optimizer_->factors().size(), 2);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 2);
+  EXPECT_EQ(graph_optimizer_->num_nodes(), 1);
+  EXPECT_TRUE(graph_optimizer_->Optimize());
 }
 
 // Run all the tests that were declared with TEST()
