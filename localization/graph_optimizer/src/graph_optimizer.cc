@@ -26,10 +26,14 @@ namespace graph_optimizer {
 namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace na = node_adders;
+namespace no = nodes;
 namespace op = optimizers;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<optimizers::Optimizer> optimizer)
-    : params_(params), optimizer_(std::move(optimizer)), stats_logger_(params_.log_stats_on_destruction) {
+    : params_(params),
+      optimizer_(std::move(optimizer)),
+      nodes_(new no::Nodes()),
+      stats_logger_(params_.log_stats_on_destruction) {
   AddAveragersAndTimers();
 }
 

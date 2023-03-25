@@ -107,8 +107,8 @@ class GraphOptimizerTest : public ::testing::Test {
     graph_optimizer_.reset(new go::GraphOptimizer(params, std::move(optimizer)));
     node_adder_.reset(new SimpleNodeAdder(graph_optimizer_->nodes()));
     factor_adder_.reset(new SimpleFactorAdder(DefaultFactorAdderParams(), node_adder_));
-    // graph_optimizer_->AddNodeAdder(node_adder_);
-    // graph_optimizer_->AddFactorAdder(factor_adder_);
+    graph_optimizer_->AddNodeAdder(node_adder_);
+    graph_optimizer_->AddFactorAdder(factor_adder_);
   }
 
   go::GraphOptimizerParams DefaultParams() {
@@ -137,9 +137,15 @@ class GraphOptimizerTest : public ::testing::Test {
   std::shared_ptr<SimpleNodeAdder> node_adder_;
 };
 
-TEST_F(GraphOptimizerTest, PoseAndVelocityFactors) {
+TEST_F(GraphOptimizerTest, AddFactors) {
   auto params = DefaultParams();
   Initialize(params);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 0);
+  // Add first factors
+  EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
+  EXPECT_EQ(graph_optimizer_->factors().size(), 1);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 1);
+  EXPECT_EQ(graph_optimizer_->nodes()->size(), 1);
 }
 
 // Run all the tests that were declared with TEST()
