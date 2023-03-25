@@ -116,6 +116,16 @@ class LocFactorAdderTest : public ::testing::Test {
     return params;
   }
 
+  void EXPECT_SAME_POSE_FACTOR(const int factor_index, const int measurement_time) {
+    const auto pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factors_[factor_index].get());
+    ASSERT_TRUE(pose_factor);
+    const gtsam::Pose3 factor_pose = pose_factor->prior();
+    const gtsam::Pose3 measurement_pose = measurements_[measurement_time].global_T_cam * params_.body_T_cam.inverse();
+    EXPECT_MATRIX_NEAR(factor_pose, measurement_pose, 1e-6);
+    // EXPECT_MATRIX_NEAR(pose_factor->prior(), measurements_[measurement_time].global_T_cam *
+    // params_.body_T_cam.inverse(), 1e-6);
+  }
+
   void EXPECT_SAME_PROJECTION_FACTOR(const int factor_index, const int measurement_time, const int measurement_index) {
     const auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factors_[factor_index].get());
     ASSERT_TRUE(projection_factor);
@@ -332,7 +342,7 @@ TEST_F(LocFactorAdderTest, MinReprojectionError) {
   // Redo adding factors, but set projection error threshold slightly below previous error.
   // Factor shouldn't be added.
   {
-    factors_.clear();
+    factors_ = gtsam::NonlinearFactorGraph();
     auto params = DefaultParams();
     params.add_projection_factors = true;
     params.max_valid_projection_error = projection_error - epsilon;
@@ -349,7 +359,7 @@ TEST_F(LocFactorAdderTest, MinReprojectionError) {
   // Redo adding factors, but set projection error threshold slightly above previous error.
   // Factor should be added.
   {
-    factors_.clear();
+    factors_ = gtsam::NonlinearFactorGraph();
     auto params = DefaultParams();
     params.add_projection_factors = true;
     params.max_valid_projection_error = projection_error + epsilon;
@@ -364,6 +374,24 @@ TEST_F(LocFactorAdderTest, MinReprojectionError) {
     EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
     EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
   }
+}
+
+TEST_F(LocFactorAdderTest, PoseFactors) {
+  auto params = DefaultParams();
+  params.add_pose_priors = true;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factor
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  EXPECT_SAME_POSE_FACTOR(0, 0);
+
+  factor_adder_->AddMeasurement(measurements_[1]);
+  // Add second factor
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_POSE_FACTOR(0, 0);
+  EXPECT_SAME_POSE_FACTOR(1, 1);
 }
 
 // Run all the tests that were declared with TEST()
