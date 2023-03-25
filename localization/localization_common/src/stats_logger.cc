@@ -18,6 +18,12 @@
 #include <localization_common/stats_logger.h>
 
 namespace localization_common {
+StatsLogger::StatsLogger(const bool log_on_destruction) : log_on_destruction_(log_on_destruction) {}
+
+StatsLogger::~StatsLogger() {
+  if (log_on_destruction_) Log();
+}
+
 void StatsLogger::AddAverager(localization_common::Averager& averager) { averagers_.emplace_back(averager); }
 
 void StatsLogger::AddTimer(localization_common::Timer& timer) { timers_.emplace_back(timer); }

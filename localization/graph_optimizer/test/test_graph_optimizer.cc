@@ -23,6 +23,7 @@
 #include <localization_common/utilities.h>
 #include <node_adders/node_adder.h>
 #include <nodes/nodes.h>
+#include <optimizers/optimizer.h>
 
 #include <gtest/gtest.h>
 
@@ -31,6 +32,7 @@ namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace na = node_adders;
 namespace no = nodes;
+namespace op = optimizers;
 
 // Test node adder that just returns keys that should be used.
 // Key values are calculated using the integer timestamps passed.
@@ -83,6 +85,17 @@ class SimpleFactorAdder : public fa::FactorAdder {
   std::shared_ptr<SimpleNodeAdder> node_adder_;
 };
 
+class SimpleOptimizer : public op::Optimizer {
+ public:
+  explicit SimpleOptimizer(const op::OptimizerParams& params) : op::Optimizer(params) {}
+
+  bool Optimize(const gtsam::NonlinearFactorGraph& factors, gtsam::Values& values) final { return true; }
+
+  boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const final {
+    return gtsam::Matrix(gtsam::Matrix6::Identity());
+  }
+};
+
 class GraphOptimizerTest : public ::testing::Test {
  public:
   GraphOptimizerTest() {}
@@ -90,10 +103,9 @@ class GraphOptimizerTest : public ::testing::Test {
   void SetUp() final {}
 
   void Initialize(const go::GraphOptimizerParams& params) {
-    // graph_optimizer_.reset(new go::GraphOptimizer(params));
-    // TODO(rsoussan): remove this! get from graph optimizer!
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    node_adder_.reset(new SimpleNodeAdder(nodes));
+    std::unique_ptr<SimpleOptimizer> optimizer(new SimpleOptimizer(DefaultOptimizerParams()));
+    graph_optimizer_.reset(new go::GraphOptimizer(params, std::move(optimizer)));
+    node_adder_.reset(new SimpleNodeAdder(graph_optimizer_->nodes()));
     factor_adder_.reset(new SimpleFactorAdder(DefaultFactorAdderParams(), node_adder_));
     // graph_optimizer_->AddNodeAdder(node_adder_);
     // graph_optimizer_->AddFactorAdder(factor_adder_);
@@ -111,6 +123,12 @@ class GraphOptimizerTest : public ::testing::Test {
     fa::FactorAdderParams params;
     params.enabled = true;
     params.huber_k = 1.345;
+    return params;
+  }
+
+  op::OptimizerParams DefaultOptimizerParams() {
+    op::OptimizerParams params;
+    params.marginals_factorization = "qr";
     return params;
   }
 

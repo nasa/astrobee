@@ -3,8 +3,6 @@
       - also add to standstill factor adder! base class factor adders! others!
 
   - test graph optimizer! (A)
-     - add simple optimizer (AA)
-        - does nothing...
      - test adding factors! 
         - test getting covariances
         - test that marginals exist

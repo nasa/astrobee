@@ -31,6 +31,8 @@ class StatsLogger {
  public:
   explicit StatsLogger(const bool log_on_destruction = true);
 
+  ~StatsLogger();
+
   // Add averager for logging
   void AddAverager(localization_common::Averager& averager);
 
@@ -64,6 +66,8 @@ class StatsLogger {
   void Log(const std::vector<std::reference_wrapper<Logger>>& loggers) const {
     for (const auto& logger : loggers) logger.get().Log();
   }
+
+  bool log_on_destruction_;
 };
 }  // namespace localization_common
 

@@ -68,7 +68,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_graph_optimizer.cc
   )
   target_link_libraries(test_graph_optimizer
-    ${catkin_LIBRARIES} 
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
 endif() 
 
