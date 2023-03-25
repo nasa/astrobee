@@ -69,10 +69,15 @@ class SimpleFactorAdder : public fa::FactorAdder {
       : fa::FactorAdder(params), node_adder_(node_adder) {}
   int AddFactors(const localization_common::Time oldest_allowed_time,
                  const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final {
-    node_adder_->AddNode(oldest_allowed_time, factors);
     node_adder_->AddNode(newest_allowed_time, factors);
-    // TODO(rsoussan): add factors!
-    return 2;
+    const auto keys = node_adder_->Keys(newest_allowed_time);
+    const gtsam::Vector6 noise_sigmas((gtsam::Vector(6) << 0.1, 0.1, 0.1, 0.2, 0.2, 0.2).finished());
+    const auto noise =
+      lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_sigmas)), params_.huber_k);
+    gtsam::PriorFactor<gtsam::Pose3>::shared_ptr prior_factor(
+      new gtsam::PriorFactor<gtsam::Pose3>(keys[0], gtsam::Pose3::identity(), noise));
+    factors.push_back(prior_factor);
+    return 1;
   }
 
   std::shared_ptr<SimpleNodeAdder> node_adder_;
