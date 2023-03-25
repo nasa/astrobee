@@ -453,6 +453,34 @@ TEST_F(LocFactorAdderTest, ScalePoseNoiseWithNumLandmarks) {
   }
 }
 
+TEST_F(LocFactorAdderTest, PoseFallback) {
+  auto params = DefaultParams();
+  params.add_projection_factors = true;
+  params.add_pose_priors = false;
+  params.add_prior_if_projection_factors_fail = true;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), num_projections_per_measurement_);
+  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+  EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
+  EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
+
+  // Force cheirality error for projections, add second factor, expect pose prior to be added
+  auto measurement_1 = measurements_[1];
+  for (int i = 0; i < num_projections_per_measurement_; ++i) {
+    measurement_1.matched_projections[i].map_point = lm::MapPoint(-100 + i, -99 + i, -98 + i);
+  }
+  factor_adder_->AddMeasurement(measurement_1);
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+  EXPECT_SAME_PROJECTION_FACTOR(1, 0, 1);
+  EXPECT_SAME_PROJECTION_FACTOR(2, 0, 2);
+  EXPECT_SAME_POSE_FACTOR(3, 1);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
