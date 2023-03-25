@@ -305,6 +305,67 @@ TEST_F(LocFactorAdderTest, ScaleProjectionNoiseWithLandmarkDistance) {
   }
 }
 
+TEST_F(LocFactorAdderTest, MinReprojectionError) {
+  auto params = DefaultParams();
+  params.add_projection_factors = true;
+  params.max_valid_projection_error = 1e6;
+  Initialize(params);
+  // Add a measurement with only one match
+  auto measurement_0 = measurements_[0];
+  // Remove all measurements after the first
+  measurement_0.matched_projections.erase(measurement_0.matched_projections.begin() + 1,
+                                          measurement_0.matched_projections.end());
+  factor_adder_->AddMeasurement(measurement_0);
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  const auto world_T_body = node_adder_->nodes().Node<gtsam::Pose3>(factors_[0]->keys()[0]);
+  ASSERT_TRUE(world_T_body != boost::none);
+  double projection_error;
+  // Check projection error
+  {
+    const auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factors_[0].get());
+    ASSERT_TRUE(projection_factor);
+    projection_error = projection_factor->evaluateError(*world_T_body).norm();
+  }
+
+  const double epsilon = 1e-3;
+  // Redo adding factors, but set projection error threshold slightly below previous error.
+  // Factor shouldn't be added.
+  {
+    factors_.clear();
+    auto params = DefaultParams();
+    params.add_projection_factors = true;
+    params.max_valid_projection_error = projection_error - epsilon;
+    Initialize(params);
+    // Add a measurement with only one match
+    auto measurement_0 = measurements_[0];
+    // Remove all measurements after the first
+    measurement_0.matched_projections.erase(measurement_0.matched_projections.begin() + 1,
+                                            measurement_0.matched_projections.end());
+    factor_adder_->AddMeasurement(measurement_0);
+    // Factor should fail due to reprojection error
+    EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 0);
+  }
+  // Redo adding factors, but set projection error threshold slightly above previous error.
+  // Factor should be added.
+  {
+    factors_.clear();
+    auto params = DefaultParams();
+    params.add_projection_factors = true;
+    params.max_valid_projection_error = projection_error + epsilon;
+    Initialize(params);
+    // Add a measurement with only one match
+    auto measurement_0 = measurements_[0];
+    // Remove all measurements after the first
+    measurement_0.matched_projections.erase(measurement_0.matched_projections.begin() + 1,
+                                            measurement_0.matched_projections.end());
+    factor_adder_->AddMeasurement(measurement_0);
+    // Factor should succeed
+    EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+    EXPECT_SAME_PROJECTION_FACTOR(0, 0, 0);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
