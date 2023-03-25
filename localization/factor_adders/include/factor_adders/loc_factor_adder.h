@@ -71,11 +71,10 @@ template <typename PoseNodeAdderType>
 LocFactorAdder<PoseNodeAdderType>::LocFactorAdder(const LocFactorAdderParams& params,
                                                   std::shared_ptr<PoseNodeAdderType> node_adder)
     : Base(params), params_(params), node_adder_(node_adder) {
-  const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params_.prior_translation_stddev,
-                                                params_.prior_translation_stddev, params_.prior_translation_stddev,
-                                                params_.prior_quaternion_stddev, params_.prior_quaternion_stddev,
-                                                params_.prior_quaternion_stddev)
-                                                 .finished());
+  pose_prior_noise_sigmas_ = (gtsam::Vector(6) << params_.prior_translation_stddev, params_.prior_translation_stddev,
+                              params_.prior_translation_stddev, params_.prior_quaternion_stddev,
+                              params_.prior_quaternion_stddev, params_.prior_quaternion_stddev)
+                               .finished();
 }
 
 template <typename PoseNodeAdderType>
@@ -136,7 +135,7 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
   int num_loc_projection_factors = 0;
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
     gtsam::SharedNoiseModel noise;
-    // Use the landmark distance from the camera to inversly scale the noise if desired.
+    // Use the landmark distance from the camera to inversely scale the noise if desired.
     if (params_.scale_projection_noise_with_landmark_distance) {
       const Eigen::Vector3d& world_t_landmark = matched_projection.map_point;
       const Eigen::Isometry3d nav_cam_T_world =

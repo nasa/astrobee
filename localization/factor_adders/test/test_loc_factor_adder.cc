@@ -69,13 +69,7 @@ class SimplePoseNodeAdder : public na::NodeAdder {
 
 class LocFactorAdderTest : public ::testing::Test {
  public:
-  LocFactorAdderTest() {
-    node_adder_.reset(new SimplePoseNodeAdder());
-    pose_prior_noise_sigmas_ = (gtsam::Vector(6) << params_.prior_translation_stddev, params_.prior_translation_stddev,
-                                params_.prior_translation_stddev, params_.prior_quaternion_stddev,
-                                params_.prior_quaternion_stddev, params_.prior_quaternion_stddev)
-                                 .finished();
-  }
+  LocFactorAdderTest() { node_adder_.reset(new SimplePoseNodeAdder()); }
 
   void SetUp() final { AddMeasurements(); }
 
@@ -97,6 +91,10 @@ class LocFactorAdderTest : public ::testing::Test {
   void Initialize(const fa::LocFactorAdderParams& params) {
     factor_adder_.reset(new fa::LocFactorAdder<SimplePoseNodeAdder>(params, node_adder_));
     params_ = params;
+    pose_prior_noise_sigmas_ = (gtsam::Vector(6) << params_.prior_translation_stddev, params_.prior_translation_stddev,
+                                params_.prior_translation_stddev, params_.prior_quaternion_stddev,
+                                params_.prior_quaternion_stddev, params_.prior_quaternion_stddev)
+                                 .finished();
   }
 
   fa::LocFactorAdderParams DefaultParams() {

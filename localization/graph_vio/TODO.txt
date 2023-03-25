@@ -3,16 +3,13 @@
       - also add to standstill factor adder! base class factor adders! others!
 
   - test loc factor adder! (A)
-    - make fake matched projections measurement! (AA)
-    - add projection factors! (AB)
-      - test these! expect same factor!
-    - add pose factors! (AC)
-    - add pose fallback factors! (AD)
-    - test valid error norm! (AE)
-    - noise scaling? (AF)
+    - add pose fallback factors! (AC)
 
   - test graph optimizer! (B)
   - test sliding window optimizer! (C)
+
+  - send pose/cov history from vio, add all poses/covs in pose node (update old values)
+      - add support for this in timestamped_set? (updating old values)
 
   - add grah_vio! (E)
     - publish odometry message!
