@@ -69,7 +69,13 @@ class SimplePoseNodeAdder : public na::NodeAdder {
 
 class LocFactorAdderTest : public ::testing::Test {
  public:
-  LocFactorAdderTest() { node_adder_.reset(new SimplePoseNodeAdder()); }
+  LocFactorAdderTest() {
+    node_adder_.reset(new SimplePoseNodeAdder());
+    pose_prior_noise_sigmas_ = (gtsam::Vector(6) << params_.prior_translation_stddev, params_.prior_translation_stddev,
+                                params_.prior_translation_stddev, params_.prior_quaternion_stddev,
+                                params_.prior_quaternion_stddev, params_.prior_quaternion_stddev)
+                                 .finished();
+  }
 
   void SetUp() final { AddMeasurements(); }
 
@@ -151,6 +157,12 @@ class LocFactorAdderTest : public ::testing::Test {
     EXPECT_MATRIX_NEAR(factor_noise, expected_noise, 1e-6);
   }
 
+  void EXPECT_SAME_POSE_NOISE(const int factor_index, const gtsam::SharedNoiseModel& noise) {
+    const auto pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factors_[factor_index].get());
+    ASSERT_TRUE(pose_factor);
+    EXPECT_MATRIX_NEAR(na::Covariance(pose_factor->noiseModel()), na::Covariance(noise), 1e-6);
+  }
+
   std::unique_ptr<fa::LocFactorAdder<SimplePoseNodeAdder>> factor_adder_;
   std::shared_ptr<SimplePoseNodeAdder> node_adder_;
   gtsam::NonlinearFactorGraph factors_;
@@ -158,6 +170,7 @@ class LocFactorAdderTest : public ::testing::Test {
   const int num_projections_per_measurement_ = 3;
   std::vector<lm::MatchedProjectionsMeasurement> measurements_;
   fa::LocFactorAdderParams params_;
+  gtsam::Vector6 pose_prior_noise_sigmas_;
 };
 
 TEST_F(LocFactorAdderTest, ProjectionFactors) {
@@ -385,13 +398,20 @@ TEST_F(LocFactorAdderTest, PoseFactors) {
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
   EXPECT_EQ(factors_.size(), 1);
   EXPECT_SAME_POSE_FACTOR(0, 0);
+  const auto pose_noise = localization_common::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(
+      Eigen::Ref<const Eigen::VectorXd>(params_.pose_noise_scale * pose_prior_noise_sigmas_)),
+    params_.huber_k);
+  EXPECT_SAME_POSE_NOISE(0, pose_noise);
 
   factor_adder_->AddMeasurement(measurements_[1]);
   // Add second factor
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
   EXPECT_EQ(factors_.size(), 2);
   EXPECT_SAME_POSE_FACTOR(0, 0);
+  EXPECT_SAME_POSE_NOISE(0, pose_noise);
   EXPECT_SAME_POSE_FACTOR(1, 1);
+  EXPECT_SAME_POSE_NOISE(1, pose_noise);
 }
 
 // Run all the tests that were declared with TEST()
