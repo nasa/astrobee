@@ -63,6 +63,13 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  add_rostest_gtest(test_graph_optimizer
+    test/test_graph_optimizer.test
+    test/test_graph_optimizer.cc
+  )
+  target_link_libraries(test_graph_optimizer
+    factor_adders ${catkin_LIBRARIES} 
+  )
 endif() 
 
 #############

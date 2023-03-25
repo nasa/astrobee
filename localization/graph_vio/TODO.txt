@@ -2,13 +2,17 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
 
-  - test loc factor adder! (A)
-    - add pose fallback factors! (AC)
+  - test graph optimizer! (A)
+      - add simple optimizer
+      - add simple node adder, simple factor adder
+        - test adding factors! 
+            - test getting covariances
+            - test that marginals exist
+  - test sliding window optimizer! (B)
+  - test optimizers!!
+      - test nonlinear optimizer! (C)
 
-  - test graph optimizer! (B)
-  - test sliding window optimizer! (C)
-
-  - send pose/cov history from vio, add all poses/covs in pose node (update old values)
+  - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
 
   - add grah_vio! (E)

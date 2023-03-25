@@ -49,7 +49,12 @@ namespace graph_optimizer {
 // Acts as a base class for the SlidingWindowGraphOptimizer.
 class GraphOptimizer {
  public:
-  explicit GraphOptimizer(const GraphOptimizerParams& params);
+  // Construct GraphOptimizer with provided optimizer.
+  GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<optimizers::Optimizer> optimizer);
+
+  // Construct GraphOptimizer and construct optimizer in this constructor.
+  template <typename OptimizerType, typename OptimizerParamsType>
+  GraphOptimizer(const GraphOptimizerParams& params, const OptimizerParamsType& optimizer_params);
 
   // Default constructor for serialization only
   GraphOptimizer() {}
@@ -130,6 +135,7 @@ class GraphOptimizer {
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(optimizer_);
     ar& BOOST_SERIALIZATION_NVP(factors_);
     ar& BOOST_SERIALIZATION_NVP(nodes_);
     ar& BOOST_SERIALIZATION_NVP(factor_adders_);
@@ -154,6 +160,13 @@ class GraphOptimizer {
   localization_common::Averager iterations_averager_ = localization_common::Averager("Optimization Iterations");
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
 };
+
+// Implementation
+template <typename OptimizerType, typename OptimizerParamsType>
+GraphOptimizer(const GraphOptimizerParams& params, const OptimizerParamsType& optimizer_params) {
+  std::unique_ptr<OptimizerType> optimizer(new OptimizerType(optimizer_params));
+  GraphOptimizer(params, std::move(optimizer));
+}
 }  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_

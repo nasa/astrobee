@@ -18,25 +18,14 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#include <optimizers/isam2_optimizer_params.h>
-#include <optimizers/nonlinear_optimizer_params.h>
-
-#include <string>
-
 namespace graph_optimizer {
 struct GraphOptimizerParams {
-  // Optimizer to use. Either "nonlinear" or "isam2".
-  std::string optimizer;
   // Huber k used for all factors.
   double huber_k;
   // Log statistics after destruction.
   bool log_stats_on_destruction;
   // Log factor graph info and stats after optimization.
   bool print_after_optimization;
-  // Params for nonlinear optimizer if used.
-  optimizers::NonlinearOptimizerParams nonlinear_optimizer;
-  // Params for isam2 optimizer if used.
-  optimizers::ISAM2OptimizerParams isam2_optimizer;
 };
 }  // namespace graph_optimizer
 

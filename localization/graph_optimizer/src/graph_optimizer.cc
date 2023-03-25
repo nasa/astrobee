@@ -28,9 +28,8 @@ namespace lc = localization_common;
 namespace na = node_adders;
 namespace op = optimizers;
 
-GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
-    : params_(params), stats_logger_(params_.log_stats_on_destruction) {
-  SetOptimizer();
+GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<optimizers::Optimizer> optimizer)
+    : params_(params), optimizer_(std::move(optimizer)), stats_logger_(params_.log_stats_on_destruction) {
   AddAveragersAndTimers();
 }
 
@@ -106,16 +105,6 @@ void GraphOptimizer::Print() const {
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
   factors_.saveGraph(of, nodes_->values());
-}
-
-void GraphOptimizer::SetOptimizer() {
-  if (params_.optimizer == "nonlinear") {
-    optimizer_.reset(new op::NonlinearOptimizer(params_.nonlinear_optimizer));
-  } else if (params_.optimizer == "isam2") {
-    optimizer_.reset(new op::ISAM2Optimizer(params_.isam2_optimizer));
-  } else {  // Default to nonlinear optimizer
-    optimizer_.reset(new op::NonlinearOptimizer(params_.nonlinear_optimizer));
-  }
 }
 
 void GraphOptimizer::AddAveragersAndTimers() {
