@@ -414,6 +414,45 @@ TEST_F(LocFactorAdderTest, PoseFactors) {
   EXPECT_SAME_POSE_NOISE(1, pose_noise);
 }
 
+TEST_F(LocFactorAdderTest, ScalePoseNoiseWithNumLandmarks) {
+  auto params = DefaultParams();
+  params.add_pose_priors = true;
+  params.scale_pose_noise_with_num_landmarks = true;
+  Initialize(params);
+  // Add a measurement with only one match
+  auto measurement_0 = measurements_[0];
+  // Remove all measurements after the first
+  measurement_0.matched_projections.erase(measurement_0.matched_projections.begin() + 1,
+                                          measurement_0.matched_projections.end());
+  factor_adder_->AddMeasurement(measurement_0);
+  // Add first factors
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  {
+    // Ratio is 1 for the first measurement
+    const double num_landmarks_ratio = 1;
+    const double noise_scale = params_.pose_noise_scale * std::pow(num_landmarks_ratio, 2);
+    const auto expected_noise = localization_common::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas_)),
+      params_.huber_k);
+    EXPECT_SAME_POSE_NOISE(0, expected_noise);
+  }
+  // Add second measurement with all matches
+  factor_adder_->AddMeasurement(measurements_[1]);
+  // Add second factors
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 2);
+  {
+    // New average is (1+3)/2 = 2, so ratio is 2/3 for the second measurement
+    const double num_landmarks_ratio = 2.0 / 3.0;
+    const double noise_scale = params_.pose_noise_scale * std::pow(num_landmarks_ratio, 2);
+    const auto expected_noise = localization_common::Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas_)),
+      params_.huber_k);
+    EXPECT_SAME_POSE_NOISE(1, expected_noise);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
