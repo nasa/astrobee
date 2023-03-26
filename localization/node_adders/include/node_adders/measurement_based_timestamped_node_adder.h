@@ -19,6 +19,7 @@
 #ifndef NODE_ADDERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_ADDER_H_
 #define NODE_ADDERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_ADDER_H_
 
+#include <node_adders/measurement_based_timestamped_node_adder_params.h>
 #include <node_adders/timestamped_node_adder.h>
 
 namespace node_adders {

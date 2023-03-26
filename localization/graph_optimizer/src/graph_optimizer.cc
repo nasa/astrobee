@@ -113,6 +113,8 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   factors_.saveGraph(of, nodes_->values());
 }
 
+boost::optional<const gtsam::Marginals&> GraphOptimizer::marginals() const { return optimizer_->marginals(); }
+
 void GraphOptimizer::AddAveragersAndTimers() {
   stats_logger_.AddTimer(optimization_timer_);
   stats_logger_.AddAverager(iterations_averager_);

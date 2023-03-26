@@ -174,6 +174,7 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 std::string TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::type() const {
   static_assert(sizeof(NodeType) == std::size_t(-1), "This needs to be specialized by template class.");
+  return "";
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
@@ -336,6 +337,7 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
     LogError("SplitOldRelativeFactor: Failed to add second relative factor.");
     return false;
   }
+  return true;
 }
 }  // namespace node_adders
 

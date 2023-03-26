@@ -123,9 +123,6 @@ class GraphOptimizer {
   boost::optional<const gtsam::Marginals&> marginals() const;
 
  private:
-  // Sets optimizer to use based on params
-  void SetOptimizer();
-
   // Add averagers and timers for logging.
   void AddAveragersAndTimers();
 

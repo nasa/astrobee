@@ -42,7 +42,7 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params,
                               std::unique_ptr<optimizers::Optimizer> optimizer);
 
-  virtual ~SlidingWindowGraphOptimizer();
+  virtual ~SlidingWindowGraphOptimizer() = default;
 
   // Default constructor for serialization only
   SlidingWindowGraphOptimizer() {}

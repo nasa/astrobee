@@ -22,6 +22,8 @@
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <node_adders/pose_node_adder.h>
+#include <node_adders/pose_node_adder_model.h>
+#include <node_adders/pose_node_adder_params.h>
 #include <nodes/nodes.h>
 #include <optimizers/optimizer.h>
 
@@ -56,11 +58,11 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     std::unique_ptr<SimpleOptimizer> optimizer(new SimpleOptimizer(DefaultOptimizerParams()));
     sliding_window_graph_optimizer_.reset(
       new sw::SlidingWindowGraphOptimizer(DefaultSlidingWindowGraphOptimizerParams(), std::move(optimizer)));
-    std::shared_ptr < no::TimestampedNodes<gtsam::Pose3> timestamped_pose_nodes(
-                        new no::TimestampedNodes < gtsam::Pose3(sliding_window_graph_optimizer_->nodes()));
+    std::shared_ptr<no::TimestampedNodes<gtsam::Pose3>> timestamped_pose_nodes(
+      new no::TimestampedNodes<gtsam::Pose3>(sliding_window_graph_optimizer_->nodes()));
     pose_node_adder_.reset(
       new na::PoseNodeAdder(DefaultPoseNodeAdderParams(), DefaultPoseNodeAdderModelParams(), timestamped_pose_nodes));
-    loc_factor_adder_.reset(new LocFactorAdder(DefaultLocFactorAdderParams(), pose_node_adder_));
+    loc_factor_adder_.reset(new fa::LocFactorAdder<na::PoseNodeAdder>(DefaultLocFactorAdderParams(), pose_node_adder_));
     sliding_window_graph_optimizer_->AddSlidingWindowNodeAdder(pose_node_adder_);
     sliding_window_graph_optimizer_->AddFactorAdder(loc_factor_adder_);
   }
@@ -74,8 +76,8 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     return params;
   }
 
-  na::PoseNodeAdderModelParams DefaultPoseNodeAdderModelParams() {
-    na::PoseNodeAdderModelParams params;
+  na::TimestampedNodeAdderModelParams DefaultPoseNodeAdderModelParams() {
+    na::TimestampedNodeAdderModelParams params;
     params.huber_k = 1.345;
     return params;
   }
@@ -98,7 +100,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
   }
 
   fa::LocFactorAdderParams DefaultLocFactorAdderParams() {
-    fa::FactorAdderParams params;
+    fa::LocFactorAdderParams params;
     params.add_pose_priors = true;
     params.add_projection_factors = false;
     params.prior_translation_stddev = 0.1;
@@ -106,7 +108,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     params.scale_pose_noise_with_num_landmarks = false;
     params.pose_noise_scale = 1;
     params.min_num_matches_per_measurement = 0;
-    params.body_T_cam = gtsam::Pose3::Identity();
+    params.body_T_cam = gtsam::Pose3::identity();
     params.enabled = true;
     params.huber_k = 1.345;
     return params;
@@ -118,8 +120,8 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     return params;
   }
 
-  std::unique_ptr<go::SlidingWindowGraphOptimizer> graph_optimizer_;
-  std::shared_ptr<fa::LocFactorAdder> loc_factor_adder_;
+  std::unique_ptr<sw::SlidingWindowGraphOptimizer> sliding_window_graph_optimizer_;
+  std::shared_ptr<fa::LocFactorAdder<na::PoseNodeAdder>> loc_factor_adder_;
   std::shared_ptr<na::PoseNodeAdder> pose_node_adder_;
 };
 
