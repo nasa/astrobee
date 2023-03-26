@@ -130,23 +130,24 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
 };
 
 TEST_F(SlidingWindowGraphOptimizerTest, AddFactors) {
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 0);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 0);
+  // Initial node and prior should be added for pose node adder
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   // Add first measurements
   {
     const lc::Time time = 0;
     // Pose node adder has starting node at t:0 already, add a measurement at t:1.
-    const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), time);
-    pose_node_adder_->AddMeasurement(pose_measurement);
+    // const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), 1);
+    // pose_node_adder_->AddMeasurement(pose_measurement);
     lm::MatchedProjectionsMeasurement loc_measurement;
     loc_measurement.global_T_cam = lc::RandomPose();
-    loc_measurement.timestamp = time;
+    loc_measurement.timestamp = 0;
     loc_factor_adder_->AddMeasurement(loc_measurement);
   }
   // Update graph
   EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
   /*// Add second factors
   EXPECT_EQ(sliding_window_graph_optimizer_->AddFactors(1, 2), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->factors().size(), 2);

@@ -52,7 +52,9 @@ bool SlidingWindowGraphOptimizer::Update() {
 bool SlidingWindowGraphOptimizer::SlideWindow() {
   const auto new_start_time = NewStartTime();
   if (!new_start_time) {
-    LogError("SlideWindow: Failed to get new start time, node adders may be empty. Not sliding window.");
+    LogError(
+      "SlideWindow: Failed to get new start time, node adders may not have enough nodes to slide window. Not sliding "
+      "window.");
     return false;
   }
   if (!marginals()) {
