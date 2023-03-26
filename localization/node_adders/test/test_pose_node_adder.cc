@@ -614,6 +614,12 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   EXPECT_EQ(factors_.size(), 3);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
   EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  // Slide window with time older than oldest allowed time, nothing should happen
+  ASSERT_TRUE(pose_node_adder_->SlideWindow(-1, boost::none, gtsam::KeyVector(), params_.huber_k, factors_));
+  EXPECT_EQ(nodes.size(), 3);
+  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
   // Add 3rd node, nodes: 4, duration 3
   ASSERT_TRUE(pose_node_adder_->AddNode(timestamps_[2], factors_));
   EXPECT_EQ(nodes.size(), 4);
