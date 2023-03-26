@@ -41,30 +41,27 @@ void SlidingWindowGraphOptimizer::AddSlidingWindowNodeAdder(
 bool SlidingWindowGraphOptimizer::Update() {
   LogDebug("Update: Updating.");
   update_timer_.Start();
+  AddFactors(WindowStartAndEndTimes());
+  if (params_.slide_window_before_optimization) SlideWindow();
   GraphOptimizer::Optimize();
-  if (marginals()) {
-    if (!SlideWindow(*(marginals()), *end_time_)) {
-      LogError("Update: Failed to slide window.");
-      return false;
-    }
-  }
-  end_time_ = EndTime();
+  if (!params_.slide_window_before_optimization) SlideWindow();
   update_timer_.Stop();
   return true;
 }
 
-bool SlidingWindowGraphOptimizer::SlideWindow(const gtsam::Marginals& marginals, const lc::Time end_time) {
-  const auto ideal_new_start_time = SlideWindowNewStartTime();
-  if (!ideal_new_start_time) {
-    LogDebug("SlideWindow: No states removed. ");
-    return true;
+bool SlidingWindowGraphOptimizer::SlideWindow() {
+  const auto new_start_time = NewStartTime();
+  if (!new_start_time) {
+    LogError("SlideWindow: Failed to get new start time, node adders may be empty. Not sliding window.");
+    return false;
   }
-  // Ensure that new start time isn't more recent than current end time
-  // since then priors couldn't be added for the new start nodes.
-  if (end_time < *ideal_new_start_time) LogError("SlideWindow: Ideal start time is more recent than current end time.");
-  const auto new_start_time = std::min(end_time, *ideal_new_start_time);
-
-  const auto old_keys = OldKeys(new_start_time);
+  if (!marginals()) {
+    LogError(
+      "SlideWindow: No marginals available, a valid graph optimization may not have been performed yet. Not sliding "
+      "window.");
+    return false;
+  }
+  const auto old_keys = OldKeys(*new_start_time);
   const auto old_factors = lc::RemoveFactors(old_keys, factors());
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
@@ -74,7 +71,7 @@ bool SlidingWindowGraphOptimizer::SlideWindow(const gtsam::Marginals& marginals,
   }
 
   for (auto& sliding_window_node_adder : sliding_window_node_adders_)
-    sliding_window_node_adder->SlideWindow(new_start_time, marginals, old_keys, params_.huber_k, factors());
+    sliding_window_node_adder->SlideWindow(*new_start_time, marginals(), old_keys, params_.huber_k, factors());
   return true;
 }
 
@@ -95,18 +92,6 @@ gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::MarginalFactors(
   return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, values());
 }
 
-boost::optional<lc::Time> SlidingWindowGraphOptimizer::SlideWindowNewStartTime() const {
-  boost::optional<lc::Time> new_start_time;
-  for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
-    const auto node_new_start_time = sliding_window_node_adder->SlideWindowNewStartTime();
-    if (node_new_start_time) {
-      new_start_time = new_start_time ? std::min(*node_new_start_time, *new_start_time) : *node_new_start_time;
-    }
-  }
-
-  return new_start_time;
-}
-
 gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common::Time oldest_allowed_time) const {
   gtsam::KeyVector all_old_keys;
   for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
@@ -116,15 +101,67 @@ gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common:
   return all_old_keys;
 }
 
-boost::optional<lc::Time> SlidingWindowGraphOptimizer::EndTime() const {
-  boost::optional<lc::Time> end_time;
+std::pair<lc::Time, lc::Time> SlidingWindowGraphOptimizer::WindowStartAndEndTimes() const {
+  auto start_time = EarliestNodeAdderStartTime();
+  if (!start_time) start_time = 0;
+  // Ensure all new factors are added
+  // TODO(rsoussan): Add param to set window size if sliding window after optimization?
+  const lc::Time end_time = std::numeric_limits<double>::max();
+  return {*start_time, end_time};
+}
+
+boost::optional<lc::Time> SlidingWindowGraphOptimizer::NewStartTime() const {
+  const auto ideal_new_start_time = IdealNodeAddersNewStartTime();
+  if (!ideal_new_start_time) {
+    LogDebug("NewStartTime: No start times available.");
+    return boost::none;
+  }
+  // Ensure that new start time isn't more recent than current end time
+  // since then priors couldn't be added for the new start nodes.
+  const auto end_time = LatestNodeAdderEndTime();
+  if (!end_time) {
+    LogDebug("NewStartTime: No end time available.");
+    return boost::none;
+  }
+  if (*end_time < *ideal_new_start_time)
+    LogError("NewStartTime: Ideal start time is more recent than current end time.");
+  return std::min(*end_time, *ideal_new_start_time);
+}
+
+boost::optional<lc::Time> SlidingWindowGraphOptimizer::IdealNodeAddersNewStartTime() const {
+  boost::optional<lc::Time> new_start_time;
   for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
-    const auto node_end_time = sliding_window_node_adder->EndTime();
-    if (node_end_time) {
-      end_time = end_time ? std::max(*end_time, *node_end_time) : *node_end_time;
+    const auto node_adder_new_start_time = sliding_window_node_adder->SlideWindowNewStartTime();
+    if (node_adder_new_start_time) {
+      new_start_time =
+        new_start_time ? std::min(*node_adder_new_start_time, *new_start_time) : *node_adder_new_start_time;
     }
   }
-  return end_time;
+
+  return new_start_time;
+}
+
+boost::optional<lc::Time> SlidingWindowGraphOptimizer::EarliestNodeAdderStartTime() const {
+  boost::optional<lc::Time> earliest_start_time;
+  for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
+    const auto node_adder_start_time = sliding_window_node_adder->StartTime();
+    if (node_adder_start_time) {
+      earliest_start_time =
+        earliest_start_time ? std::min(*earliest_start_time, *node_adder_start_time) : *node_adder_start_time;
+    }
+  }
+  return earliest_start_time;
+}
+
+boost::optional<lc::Time> SlidingWindowGraphOptimizer::LatestNodeAdderEndTime() const {
+  boost::optional<lc::Time> latest_end_time;
+  for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
+    const auto node_adder_end_time = sliding_window_node_adder->EndTime();
+    if (node_adder_end_time) {
+      latest_end_time = latest_end_time ? std::max(*latest_end_time, *node_adder_end_time) : *node_adder_end_time;
+    }
+  }
+  return latest_end_time;
 }
 
 void SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger().AddTimer(update_timer_); }

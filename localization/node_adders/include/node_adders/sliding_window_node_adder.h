@@ -38,7 +38,7 @@ class SlidingWindowNodeAdder : public NodeAdder {
   // The oldest allowed timestamp is also determing by the graph optimizer based on
   // the ideal oldest allowed timestamps of each node adder used in the graph.
   virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                           const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                           const boost::optional<const gtsam::Marginals&>& marginals, const gtsam::KeyVector& old_keys,
                            const double huber_k, gtsam::NonlinearFactorGraph& factors) = 0;
 
   // Returns the oldest node time that should remain after SlideWindow is called.

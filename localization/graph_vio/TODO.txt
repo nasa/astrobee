@@ -11,10 +11,22 @@
     - clean up factor adder paarams??
       - too many copies in base classes?
   - test sliding window optimizer! (A)
+    - need to change removefactors function! make exception for smart factors! (A)
+  // TODO(rsoussan): Add function in loc common test utils to make random pose with covariance!
+  // Also update node adders pose node adder test!
+
      - Update
       - add factors, update, make sure old factors are removed!
+        - tune graph size based on pose node adder duration!
+        - how to control adding priors?
+            - in node adder!!
+        - test new start time/end time!
+          - add a second dummy node adder that simply sets these, make sure it works!
+        - todo to test adding marginal factors?
+
   - test optimizers!!
       - test nonlinear optimizer! (B)
+  - remove types from node adders! not needed!
 
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)

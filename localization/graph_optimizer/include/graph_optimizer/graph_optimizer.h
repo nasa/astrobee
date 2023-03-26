@@ -33,6 +33,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace graph_optimizer {
@@ -70,6 +71,9 @@ class GraphOptimizer {
   // adders.
   // TODO(rsoussan): Return both?
   int AddFactors(const localization_common::Time start_time, const localization_common::Time end_time);
+
+  // Wrapper for AddFactors passing a pair of timestamps.
+  int AddFactors(const std::pair<localization_common::Time, localization_common::Time>& start_and_end_time);
 
   // Performs optimization on the factor graph.
   bool Optimize();

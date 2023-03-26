@@ -629,8 +629,7 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   EXPECT_EQ(*new_oldest_time, timestamps_[1]);
   const auto old_keys = pose_node_adder_->OldKeys(*new_oldest_time, factors_);
   EXPECT_EQ(old_keys.size(), 2);
-  const boost::optional<gtsam::Marginals> marginals(boost::none);
-  ASSERT_TRUE(pose_node_adder_->SlideWindow(*new_oldest_time, marginals, old_keys, params_.huber_k, factors_));
+  ASSERT_TRUE(pose_node_adder_->SlideWindow(*new_oldest_time, boost::none, old_keys, params_.huber_k, factors_));
   EXPECT_EQ(nodes.size(), 2);
   // 3 nodes should be the 3 poses added after the start node
   EXPECT_SAME_NODE(timestamps_[1], pose(1));

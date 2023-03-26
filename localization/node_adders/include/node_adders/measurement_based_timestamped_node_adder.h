@@ -45,7 +45,7 @@ class MeasurementBasedTimestampedNodeAdder
 
   // Slides window and removes old measurements
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                   const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                   const boost::optional<const gtsam::Marginals&>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
 
  private:
@@ -92,7 +92,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 bool MeasurementBasedTimestampedNodeAdder<
   MeasurementType, NodeType, TimestampedNodesType,
   MeasurementBasedTimestampedNodeAdderModelType>::SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                                                              const boost::optional<gtsam::Marginals>& marginals,
+                                                              const boost::optional<const gtsam::Marginals&>& marginals,
                                                               const gtsam::KeyVector& old_keys, const double huber_k,
                                                               gtsam::NonlinearFactorGraph& factors) {
   if (!Base::SlideWindow(oldest_allowed_timestamp, marginals, old_keys, huber_k, factors)) {

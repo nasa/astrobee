@@ -25,6 +25,10 @@ struct SlidingWindowGraphOptimizerParams : public graph_optimizer::GraphOptimize
   // Add marginal factors to the graph after sliding the window.
   // Marginal factors consist of linearized errors for factors removed after sliding the window.
   bool add_marginal_factors;
+  // Slide window before or after optimization. Sliding before optimization
+  // ensures a set window size is used during optimization while sliding after
+  // allows more nodes and factors to be included.
+  bool slide_window_before_optimization;
 };
 }  // namespace sliding_window_graph_optimizer
 

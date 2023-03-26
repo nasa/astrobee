@@ -26,6 +26,7 @@
 
 #include <boost/serialization/serialization.hpp>
 
+#include <utility>
 #include <vector>
 
 namespace sliding_window_graph_optimizer {
@@ -53,34 +54,45 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // the GraphOptimizer::AddNodeAdder() function.
   void AddSlidingWindowNodeAdder(std::shared_ptr<node_adders::SlidingWindowNodeAdder> sliding_window_node_adder);
 
-  // Optimizes the graph and slides the window.
+  // Adds factors up to the latest measurements, optimizes the graph, and slides the window.
+  // Slides the window before or after optimization depending on params.
   // See SlideWindow() function comments for more details on sliding the window.
   bool Update();
 
  private:
-  // Calculates new start time for the graph using sliding window node adders and
-  // removes nodes older than this start time.
+  // Removes nodes older than calculated new start time (see NewStartTime() for how this is calculated).
   // Removes any factors depending on a removed node and optionally adds marginalized
   // factors containing linearized errors for each removed factors.
   // Optionally adds prior factors using marginalized covariances to new start nodes.
-  bool SlideWindow(const gtsam::Marginals& marginals, const localization_common::Time end_time);
+  bool SlideWindow();
 
   // Creates marginal factors using linearized errors of removed factors.
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
                                               const gtsam::KeyVector& old_keys,
                                               const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
 
-  // New start time that will constrain the graph to the desired window size.
-  // Calculated using the oldest of the desired start times for each sliding window node adder.
-  // TODO(rsoussan): Use latest of the desired start times?
-  boost::optional<localization_common::Time> SlideWindowNewStartTime() const;
-
   // Old keys for nodes. Calculated and accumulated for each sliding window node adder.
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const;
 
-  // Current end time of the sliding window. Calcualted using the latest end time
-  // of the sliding window node adders.
-  boost::optional<localization_common::Time> EndTime() const;
+  // Calculates start and end time limits for new factors to add.
+  // Uses max end time to ensure all possible new factors are added, and uses oldest node adder
+  // start time to ensure no factors older than oldest graph node are added.
+  std::pair<localization_common::Time, localization_common::Time> WindowStartAndEndTimes() const;
+
+  // Calculates new start time for the graph using the earliest of the sliding window node adders
+  // desired new start times. Ensures this doesn't occur after the current end time.
+  boost::optional<localization_common::Time> NewStartTime() const;
+
+  // Desired new start time that will constrain the graph to a certain window size.
+  // Calculated using the oldest of the desired start times for each sliding window node adder.
+  // TODO(rsoussan): Use latest of the desired start times?
+  boost::optional<localization_common::Time> IdealNodeAddersNewStartTime() const;
+
+  // Earliest start time of the sliding window node adders.
+  boost::optional<localization_common::Time> EarliestNodeAdderStartTime() const;
+
+  // Latest end time of the sliding window node adders.
+  boost::optional<localization_common::Time> LatestNodeAdderEndTime() const;
 
   // Add averagers and timers for logging
   void AddAveragersAndTimers();
@@ -92,13 +104,11 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(params_);
     ar& BOOST_SERIALIZATION_NVP(sliding_window_node_adders_);
-    ar& BOOST_SERIALIZATION_NVP(end_time_);
     ar& BOOST_SERIALIZATION_NVP(update_timer_);
   }
 
   SlidingWindowGraphOptimizerParams params_;
   std::vector<std::shared_ptr<node_adders::SlidingWindowNodeAdder>> sliding_window_node_adders_;
-  boost::optional<localization_common::Time> end_time_;
 
   // Logging
   localization_common::Timer update_timer_ = localization_common::Timer("Update");

@@ -59,7 +59,7 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
   // The oldest allowed timestamp is also determing by the graph optimizer based on
   // the ideal oldest allowed timestamps of each node adder used in the graph.
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                   const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                   const boost::optional<const gtsam::Marginals&>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) override;
 
   std::string type() const override;
@@ -133,7 +133,7 @@ void TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::SlideWindow(
-  const localization_common::Time oldest_allowed_timestamp, const boost::optional<gtsam::Marginals>& marginals,
+  const localization_common::Time oldest_allowed_timestamp, const boost::optional<const gtsam::Marginals&>& marginals,
   const gtsam::KeyVector& old_keys, const double huber_k, gtsam::NonlinearFactorGraph& factors) {
   nodes_->RemoveOldNodes(oldest_allowed_timestamp);
   if (params_.add_priors) {

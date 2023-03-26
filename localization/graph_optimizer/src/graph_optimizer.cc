@@ -45,12 +45,16 @@ void GraphOptimizer::AddFactorAdder(std::shared_ptr<fa::FactorAdder> factor_adde
   factor_adders_.emplace_back(std::move(factor_adder));
 }
 
-int GraphOptimizer::AddFactors(const localization_common::Time start_time, const localization_common::Time end_time) {
+int GraphOptimizer::AddFactors(const lc::Time start_time, const lc::Time end_time) {
   int num_added_factors = 0;
   for (const auto& factor_adder : factor_adders_) {
     num_added_factors += factor_adder->AddFactors(start_time, end_time, factors_);
   }
   return num_added_factors;
+}
+
+int GraphOptimizer::AddFactors(const std::pair<lc::Time, lc::Time>& start_and_end_time) {
+  return AddFactors(start_and_end_time.first, start_and_end_time.second);
 }
 
 bool GraphOptimizer::Optimize() {
@@ -90,7 +94,7 @@ std::shared_ptr<nodes::Nodes> GraphOptimizer::nodes() { return nodes_; }
 
 const gtsam::Values& GraphOptimizer::values() const { return nodes_->values(); }
 
-localization_common::StatsLogger& GraphOptimizer::stats_logger() { return stats_logger_; }
+lc::StatsLogger& GraphOptimizer::stats_logger() { return stats_logger_; }
 
 double GraphOptimizer::TotalGraphError() const {
   double total_error = 0;
