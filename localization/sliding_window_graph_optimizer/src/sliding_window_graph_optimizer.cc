@@ -65,7 +65,7 @@ bool SlidingWindowGraphOptimizer::SlideWindow(const gtsam::Marginals& marginals,
   const auto new_start_time = std::min(end_time, *ideal_new_start_time);
 
   const auto old_keys = OldKeys(new_start_time);
-  const auto old_factors = lc::RemoveOldFactors(old_keys, factors());
+  const auto old_factors = lc::RemoveFactors(old_keys, factors());
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {

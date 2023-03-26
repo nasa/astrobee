@@ -11,9 +11,8 @@
     - clean up factor adder paarams??
       - too many copies in base classes?
   - test sliding window optimizer! (A)
-    - use sliding window pose adder
-    - use loc factor adder
-      - use pose priors!
+     - Update
+      - add factors, update, make sure old factors are removed!
   - test optimizers!!
       - test nonlinear optimizer! (B)
 
