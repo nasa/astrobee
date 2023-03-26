@@ -70,6 +70,21 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     sliding_window_graph_optimizer_->AddFactorAdder(loc_factor_adder_);
   }
 
+  void AddLocMeasurement(const int time) {
+    lm::MatchedProjectionsMeasurement loc_measurement;
+    // Need at least one matched projection for measurement to be valid.
+    lm::MatchedProjection matched_projection(gtsam::Point2(), gtsam::Point3(), time);
+    loc_measurement.matched_projections.emplace_back(matched_projection);
+    loc_measurement.global_T_cam = lc::RandomPose();
+    loc_measurement.timestamp = time;
+    loc_factor_adder_->AddMeasurement(loc_measurement);
+  }
+
+  void AddPoseMeasurement(const int time) {
+    const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), time);
+    pose_node_adder_->AddMeasurement(pose_measurement);
+  }
+
   sw::SlidingWindowGraphOptimizerParams DefaultSlidingWindowGraphOptimizerParams() {
     sw::SlidingWindowGraphOptimizerParams params;
     params.add_marginal_factors = false;
@@ -139,15 +154,14 @@ TEST_F(SlidingWindowGraphOptimizerTest, AddFactors) {
     // Pose node adder has starting node at t:0 already, add a measurement at t:1.
     // const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), 1);
     // pose_node_adder_->AddMeasurement(pose_measurement);
-    lm::MatchedProjectionsMeasurement loc_measurement;
-    loc_measurement.global_T_cam = lc::RandomPose();
-    loc_measurement.timestamp = 0;
-    loc_factor_adder_->AddMeasurement(loc_measurement);
   }
+  // Add first measurements
+  // Add loc measurement at pose node initial time so no new pose nodes are added.
+  AddLocMeasurement(0);
   // Update graph
   EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   /*// Add second factors
   EXPECT_EQ(sliding_window_graph_optimizer_->AddFactors(1, 2), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->factors().size(), 2);
