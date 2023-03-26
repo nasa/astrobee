@@ -41,7 +41,17 @@ class SimpleNodeAdder : public na::NodeAdder {
  public:
   explicit SimpleNodeAdder(std::shared_ptr<no::Nodes> nodes) : nodes_(nodes) {}
 
-  void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
+  // Add prior factor and node
+  void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors) final {
+    AddNode(0, factors);
+    const auto keys = Keys(0);
+    const gtsam::Vector6 noise_sigmas((gtsam::Vector(6) << 0.1, 0.1, 0.1, 0.2, 0.2, 0.2).finished());
+    const auto noise =
+      lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_sigmas)), huber_k);
+    gtsam::PriorFactor<gtsam::Pose3>::shared_ptr prior_factor(
+      new gtsam::PriorFactor<gtsam::Pose3>(keys[0], gtsam::Pose3::identity(), noise));
+    factors.push_back(prior_factor);
+  }
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
     nodes_->Add(gtsam::Pose3::identity());
@@ -63,6 +73,7 @@ class SimpleNodeAdder : public na::NodeAdder {
 
  private:
   std::shared_ptr<no::Nodes> nodes_;
+  const double huber_k = 1.345;
 };
 
 class SimpleFactorAdder : public fa::FactorAdder {
@@ -140,30 +151,32 @@ class GraphOptimizerTest : public ::testing::Test {
 TEST_F(GraphOptimizerTest, AddFactors) {
   auto params = DefaultParams();
   Initialize(params);
-  EXPECT_EQ(graph_optimizer_->num_factors(), 0);
-  // Add first factors
-  EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
-  EXPECT_EQ(graph_optimizer_->factors().size(), 1);
+  // Node and factor should be added for initial node adder node and prior
   EXPECT_EQ(graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(graph_optimizer_->num_nodes(), 1);
-  EXPECT_TRUE(graph_optimizer_->Optimize());
-  // Add second factors
-  EXPECT_EQ(graph_optimizer_->AddFactors(1, 2), 1);
+  // Add first factors
+  EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
   EXPECT_EQ(graph_optimizer_->factors().size(), 2);
   EXPECT_EQ(graph_optimizer_->num_factors(), 2);
   EXPECT_EQ(graph_optimizer_->num_nodes(), 2);
+  EXPECT_TRUE(graph_optimizer_->Optimize());
+  // Add second factors
+  EXPECT_EQ(graph_optimizer_->AddFactors(1, 2), 1);
+  EXPECT_EQ(graph_optimizer_->factors().size(), 3);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 3);
+  EXPECT_EQ(graph_optimizer_->num_nodes(), 3);
   EXPECT_TRUE(graph_optimizer_->Optimize());
 }
 
 TEST_F(GraphOptimizerTest, Covariance) {
   auto params = DefaultParams();
   Initialize(params);
-  EXPECT_EQ(graph_optimizer_->num_factors(), 0);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 1);
   // Add first factors
   EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
-  EXPECT_EQ(graph_optimizer_->factors().size(), 1);
-  EXPECT_EQ(graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(graph_optimizer_->factors().size(), 2);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 2);
+  EXPECT_EQ(graph_optimizer_->num_nodes(), 2);
   EXPECT_TRUE(graph_optimizer_->Optimize());
   const auto keys = node_adder_->Keys(0);
   const auto covariance = graph_optimizer_->Covariance(keys[0]);
