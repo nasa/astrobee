@@ -39,7 +39,8 @@ namespace sliding_window_graph_optimizer {
 // ensure SlideWindow() is called for the sliding window node adder.
 class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
  public:
-  explicit SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params);
+  SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params,
+                              std::unique_ptr<optimizers::Optimizer> optimizer);
 
   virtual ~SlidingWindowGraphOptimizer();
 

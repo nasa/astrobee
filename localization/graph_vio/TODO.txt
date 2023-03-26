@@ -2,10 +2,6 @@
     - add serialization!
       - also add to standstill factor adder! base class factor adders! others!
 
-  - test graph optimizer! (A)
-     - test adding factors! 
-        - test getting covariances
-        - test that marginals exist
  
     - update node adders to take nodes on construction!!!!
       - add another constructor in node adders that take nodes instead of nodestype
@@ -14,9 +10,12 @@
       - add shared_ptr<nodes> to node_Adder base class? add constructor that takes nodes?
     - clean up factor adder paarams??
       - too many copies in base classes?
-  - test sliding window optimizer! (B)
+  - test sliding window optimizer! (A)
+    - use sliding window pose adder
+    - use loc factor adder
+      - use pose priors!
   - test optimizers!!
-      - test nonlinear optimizer! (C)
+      - test nonlinear optimizer! (B)
 
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)

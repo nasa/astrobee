@@ -26,8 +26,9 @@ namespace sliding_window_graph_optimizer {
 namespace lc = localization_common;
 namespace na = node_adders;
 
-SlidingWindowGraphOptimizer::SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params)
-    : params_(params), GraphOptimizer(params) {
+SlidingWindowGraphOptimizer::SlidingWindowGraphOptimizer(const SlidingWindowGraphOptimizerParams& params,
+                                                         std::unique_ptr<optimizers::Optimizer> optimizer)
+    : params_(params), GraphOptimizer(params, std::move(optimizer)) {
   AddAveragersAndTimers();
 }
 
