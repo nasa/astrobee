@@ -12,9 +12,8 @@
       - too many copies in base classes?
   - test sliding window optimizer! (A)
     - need to change removefactors function! make exception for smart factors! (A)
-  // TODO(rsoussan): Add function in loc common test utils to make random pose with covariance!
-  // Also update node adders pose node adder test!
-
+        - test this!!!!
+      - fix bugs in test!! (AA)
      - Update
       - add factors, update, make sure old factors are removed!
         - tune graph size based on pose node adder duration!

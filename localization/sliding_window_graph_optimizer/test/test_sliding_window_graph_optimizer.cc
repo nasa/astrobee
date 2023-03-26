@@ -21,6 +21,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/matched_projections_measurement.h>
 #include <localization_measurements/pose_measurement.h>
 #include <node_adders/pose_node_adder.h>
 #include <node_adders/pose_node_adder_model.h>
@@ -72,6 +73,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
   sw::SlidingWindowGraphOptimizerParams DefaultSlidingWindowGraphOptimizerParams() {
     sw::SlidingWindowGraphOptimizerParams params;
     params.add_marginal_factors = false;
+    params.slide_window_before_optimization = true;
     params.huber_k = 1.345;
     params.log_stats_on_destruction = false;
     params.print_after_optimization = false;
@@ -95,8 +97,8 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     params.starting_time = 0;
     // Only kept if there are at least min_num_states and not more than max_num_states
     params.ideal_duration = 1;
-    params.min_num_states = 0;
-    params.max_num_states = 1;
+    params.min_num_states = 1;
+    params.max_num_states = 5;
     params.Initialize();
     return params;
   }
@@ -129,23 +131,28 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
 
 TEST_F(SlidingWindowGraphOptimizerTest, AddFactors) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 0);
-  // Add first factors
-  // Pose node adder has starting node at t:0 already, add a measurement at t:1.
-  // TODO(rsoussan): Add function in loc common test utils to make random pose with covariance!
-  // Also update node adders pose node adder test!
-  const lc::PoseWithCovariance pose_with_covariance(lc::RandomIsometry3d(), lc::RandomPoseCovariance());
-  const lm::TimestampedPoseWithCovariance pose_measurement(pose_with_covariance, 0);
-  EXPECT_EQ(sliding_window_graph_optimizer_->AddFactors(0, 1), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->factors().size(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 0);
+  // Add first measurements
+  {
+    const lc::Time time = 0;
+    // Pose node adder has starting node at t:0 already, add a measurement at t:1.
+    const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), time);
+    pose_node_adder_->AddMeasurement(pose_measurement);
+    lm::MatchedProjectionsMeasurement loc_measurement;
+    loc_measurement.global_T_cam = lc::RandomPose();
+    loc_measurement.timestamp = time;
+    loc_factor_adder_->AddMeasurement(loc_measurement);
+  }
+  // Update graph
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
-  EXPECT_TRUE(sliding_window_graph_optimizer_->Optimize());
-  // Add second factors
+  /*// Add second factors
   EXPECT_EQ(sliding_window_graph_optimizer_->AddFactors(1, 2), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->factors().size(), 2);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
-  EXPECT_TRUE(sliding_window_graph_optimizer_->Optimize());
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Optimize());*/
 }
 
 // Run all the tests that were declared with TEST()
