@@ -59,6 +59,7 @@ class GraphOptimizer {
   virtual ~GraphOptimizer() = default;
 
   // Adds node adder used for graph optimization.
+  // Initializes the nodes and priors for the node adder.
   void AddNodeAdder(std::shared_ptr<node_adders::NodeAdder> node_adder);
 
   // Adds factor adder used for graph optimization.

@@ -38,6 +38,7 @@ GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_p
 }
 
 void GraphOptimizer::AddNodeAdder(std::shared_ptr<na::NodeAdder> node_adder) {
+  node_adder->AddInitialNodesAndPriors(factors_);
   node_adders_.emplace_back(std::move(node_adder));
 }
 
