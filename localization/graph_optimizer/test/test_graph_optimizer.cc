@@ -71,8 +71,8 @@ class SimpleFactorAdder : public fa::FactorAdder {
       : fa::FactorAdder(params), node_adder_(node_adder) {}
   int AddFactors(const localization_common::Time oldest_allowed_time,
                  const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) final {
-    node_adder_->AddNode(newest_allowed_time, factors);
-    const auto keys = node_adder_->Keys(newest_allowed_time);
+    node_adder_->AddNode(oldest_allowed_time, factors);
+    const auto keys = node_adder_->Keys(oldest_allowed_time);
     const gtsam::Vector6 noise_sigmas((gtsam::Vector(6) << 0.1, 0.1, 0.1, 0.2, 0.2, 0.2).finished());
     const auto noise =
       lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_sigmas)), params_.huber_k);
@@ -151,8 +151,24 @@ TEST_F(GraphOptimizerTest, AddFactors) {
   EXPECT_EQ(graph_optimizer_->AddFactors(1, 2), 1);
   EXPECT_EQ(graph_optimizer_->factors().size(), 2);
   EXPECT_EQ(graph_optimizer_->num_factors(), 2);
+  EXPECT_EQ(graph_optimizer_->num_nodes(), 2);
+  EXPECT_TRUE(graph_optimizer_->Optimize());
+}
+
+TEST_F(GraphOptimizerTest, Covariance) {
+  auto params = DefaultParams();
+  Initialize(params);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 0);
+  // Add first factors
+  EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
+  EXPECT_EQ(graph_optimizer_->factors().size(), 1);
+  EXPECT_EQ(graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(graph_optimizer_->num_nodes(), 1);
   EXPECT_TRUE(graph_optimizer_->Optimize());
+  const auto keys = node_adder_->Keys(0);
+  const auto covariance = graph_optimizer_->Covariance(keys[0]);
+  EXPECT_TRUE(covariance != boost::none);
+  EXPECT_MATRIX_NEAR(gtsam::Matrix(*covariance), gtsam::Matrix6::Identity(), 1e-6);
 }
 
 // Run all the tests that were declared with TEST()
