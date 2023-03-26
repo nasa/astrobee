@@ -108,7 +108,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     params.starting_prior_quaternion_stddev = 0.2;
     params.start_node = gtsam::Pose3::identity();
     params.huber_k = 1.345;
-    params.add_priors = false;
+    params.add_priors = true;
     params.starting_time = 0;
     // Only kept if there are at least min_num_states and not more than max_num_states
     params.ideal_duration = 1;
@@ -144,7 +144,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
   std::shared_ptr<na::PoseNodeAdder> pose_node_adder_;
 };
 
-TEST_F(SlidingWindowGraphOptimizerTest, AddFactors) {
+TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
@@ -160,14 +160,47 @@ TEST_F(SlidingWindowGraphOptimizerTest, AddFactors) {
   AddLocMeasurement(0);
   // Update graph
   EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
+  // Pose node times:
+  // 0
+  // Pose node num nodes: 1
+  // Pose node duration: 0
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 5
+  // No violations, nothing should be removed.
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
-  /*// Add second factors
-  EXPECT_EQ(sliding_window_graph_optimizer_->AddFactors(1, 2), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->factors().size(), 2);
+  // Expect 2 factors (prior and measurement on first node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
+  // Add second measurements
+  AddLocMeasurement(1);
+  AddPoseMeasurement(1);
+  // Update graph
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
+  // Pose node times:
+  // 0 1
+  // Pose node num nodes: 2
+  // Pose node duration: 1
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 5
+  // No violations, nothing should be removed.
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
-  EXPECT_TRUE(sliding_window_graph_optimizer_->Optimize());*/
+  // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
+  // Add third measurements
+  AddLocMeasurement(2);
+  AddPoseMeasurement(2);
+  // Update graph
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
+  // Pose node times:
+  // 0 1 2
+  // Pose node num nodes: 3
+  // Pose node duration: 2
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 5
+  // Duration too large, oldest node should be removed.
+  // Pose slide window pose node times:
+  // 1 2
+  // Pose node num nodes: 2
+  // Pose node duration: 1
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
+  // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
 }
 
 // Run all the tests that were declared with TEST()

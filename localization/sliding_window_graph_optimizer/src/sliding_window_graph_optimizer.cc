@@ -52,14 +52,8 @@ bool SlidingWindowGraphOptimizer::Update() {
 bool SlidingWindowGraphOptimizer::SlideWindow() {
   const auto new_start_time = NewStartTime();
   if (!new_start_time) {
-    LogError(
+    LogDebug(
       "SlideWindow: Failed to get new start time, node adders may not have enough nodes to slide window. Not sliding "
-      "window.");
-    return false;
-  }
-  if (!marginals()) {
-    LogError(
-      "SlideWindow: No marginals available, a valid graph optimization may not have been performed yet. Not sliding "
       "window.");
     return false;
   }
