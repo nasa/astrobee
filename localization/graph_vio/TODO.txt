@@ -11,14 +11,15 @@
     - clean up factor adder paarams??
       - too many copies in base classes?
   - test sliding window optimizer! (A)
-    - need to change removefactors function! make exception for smart factors! (A)
+    - need to change removefactors function! make exception for smart factors! (BB)
+        - need to make new function for this (or just add bool to current remove factors)! (removefactors should still work elsewhere, especially in vo factor adder!)
         - test this!!!!
       - fix bugs in test!! (AA)
+        - in timestamped node adder, only slide window if provided time is newer than oldest current time! (AAAA)
+            - test this in node adder tests!!
      - Update
-      - add factors, update, make sure old factors are removed!
-        - tune graph size based on pose node adder duration!
-        - how to control adding priors?
-            - in node adder!!
+        - check factor types!!
+        - test slide window num nodes violation!
         - test new start time/end time!
           - add a second dummy node adder that simply sets these, make sure it works!
         - todo to test adding marginal factors?
