@@ -38,6 +38,9 @@ class FactorAdder {
   virtual int AddFactors(const localization_common::Time oldest_allowed_time,
                          const localization_common::Time newest_allowed_time, gtsam::NonlinearFactorGraph& factors) = 0;
 
+  // Whether a factor can be added at the provided time.
+  virtual bool CanAddFactor(const localization_common::Time time) const = 0;
+
  protected:
   FactorAdderParams params_;
 };

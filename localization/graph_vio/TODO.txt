@@ -10,17 +10,23 @@
       - add shared_ptr<nodes> to node_Adder base class? add constructor that takes nodes?
     - clean up factor adder paarams??
       - too many copies in base classes?
-  - test sliding window optimizer! (A)
+
+  - test sliding window optimizer! (B)
+    - need to make sure factors aren't added past end time! (AA)
+      - only add nodes if can add node true!
+        - only remove single measurement nodes if true!
+          - need this function in factor adders! CanAddFactor!
+        - test!
+        - how to add for cumulative factors??
     - need to change removefactors function! make exception for smart factors! (BB)
         - need to make new function for this (or just add bool to current remove factors)! (removefactors should still work elsewhere, especially in vo factor adder!)
         - test this!!!!
-      - fix bugs in test!! (AA)
-        - in timestamped node adder, only slide window if provided time is newer than oldest current time! (AAAA)
-            - test this in node adder tests!!
+            - test this function in loc utils
+            - test in sliding graph optimizer?
      - Update
-        - check factor types!!
-        - test slide window num nodes violation!
-        - test new start time/end time!
+        - check factor types!! (AC)
+        - test slide window num nodes violation! (AA)
+        - test new start time/end time! (AB)
           - add a second dummy node adder that simply sets these, make sure it works!
         - todo to test adding marginal factors?
 
