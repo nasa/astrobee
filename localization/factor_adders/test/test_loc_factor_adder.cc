@@ -48,7 +48,7 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   }
 
   bool CanAddNode(const localization_common::Time timestamp) const final {
-    return timestamp < latest_measurement_time_;
+    return timestamp <= latest_measurement_time_;
   }
 
   // Assumes integer timestamps that perfectly cast to ints.

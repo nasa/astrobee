@@ -107,9 +107,12 @@ template <typename PoseNodeAdderType>
 int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddMeasurementBasedFactors(
   const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
   gtsam::NonlinearFactorGraph& factors) {
-  // Update feature tracker with new measurements and remove these from the measurement buffer.
+  // Update feature tracker with new measurements and remove these from the measurement buffer if nodes can be created
+  // for them.
   ProcessMeasurements(oldest_allowed_time, newest_allowed_time,
                       [this](const localization_measurements::FeaturePointsMeasurement& measurement) {
+                        // Don't add measurements until pose nodes can be created at their timestamp
+                        if (!node_adder_->CanAddNode(measurement.timestamp)) return false;
                         feature_tracker_->Update(measurement.feature_points);
                         return true;
                       });

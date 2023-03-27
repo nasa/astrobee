@@ -44,12 +44,13 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }
 
   bool CanAddNode(const localization_common::Time timestamp) const final {
-    return timestamp < latest_measurement_time_;
+    return timestamp <= latest_measurement_time_;
   }
 
   // Assumes integer timestamps that perfectly cast to ints.
   // First key is pose key.
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const final {
+    if (!CanAddNode(timestamp)) return gtsam::KeyVector();
     gtsam::KeyVector keys;
     keys.emplace_back(gtsam::Key(static_cast<int>(timestamp)));
     return keys;
@@ -62,7 +63,7 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   std::string type() const final { return "simple_pose_node_adder"; }
 
   // Simulate measurement delay for node adder and control end of measurements time.
-  int latest_measurement_time_ = 0;
+  double latest_measurement_time_ = 10;
 
  private:
   no::Nodes nodes_;
@@ -556,7 +557,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, TooSoonFactors) {
   // 1: 0, 1
   // 2: 0, 1
   EXPECT_SAME_FACTOR(0, {0, 1});
-  EXPECT_SAME_FACTOR(0, {0, 1});
+  EXPECT_SAME_FACTOR(1, {0, 1});
   EXPECT_EQ(factors_.size(), max_factors);
   // Add factor too soon, set node adder latest measurement before factor newest_allowed_time
   // so factor can't be created.
