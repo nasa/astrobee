@@ -124,7 +124,7 @@ class LocFactorAdderTest : public ::testing::Test {
     return params;
   }
 
-  void EXPECT_SAME_POSE_FACTOR(const int factor_index, const int measurement_time) {
+  void EXPECT_SAME_POSE_FACTOR(const int factor_index, const int measurement_index) {
     const auto pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factors_[factor_index].get());
     ASSERT_TRUE(pose_factor);
     const gtsam::Pose3 factor_pose = pose_factor->prior();

@@ -12,7 +12,6 @@
 
   - test optimizers!!
       - test nonlinear optimizer! (A)
-  - remove types from node adders! not needed! (C)
 
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
