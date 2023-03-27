@@ -47,6 +47,13 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
 
   // Whether a factor can be added at the provided time.
   virtual bool CanAddFactor(const localization_common::Time time) const = 0;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(MeasurementBasedFactorAdder<MeasurementType>);
+  }
 };
 
 // Implementation

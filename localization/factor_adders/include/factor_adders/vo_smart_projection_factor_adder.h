@@ -52,6 +52,9 @@ class VoSmartProjectionFactorAdder
   VoSmartProjectionFactorAdder(const VoSmartProjectionFactorAdderParams& params,
                                std::shared_ptr<PoseNodeAdderType> node_adder);
 
+  // Default constructor for serialization only.
+  VoSmartProjectionFactorAdder() = default;
+
  private:
   // Add factors using either set measurement spacing or max spacing.
   int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
@@ -89,6 +92,16 @@ class VoSmartProjectionFactorAdder
   boost::optional<SharedRobustSmartFactor> FixedSmartFactor(
     const gtsam::Values& values, gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector& measurements,
     gtsam::KeyVector& keys) const;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+    ar& BOOST_SERIALIZATION_NVP(node_adder_);
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
+  }
 
   std::shared_ptr<PoseNodeAdderType> node_adder_;
   VoSmartProjectionFactorAdderParams params_;

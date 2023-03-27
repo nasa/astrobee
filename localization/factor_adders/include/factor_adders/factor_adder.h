@@ -24,6 +24,8 @@
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <vector>
 
 namespace factor_adders {
@@ -31,6 +33,10 @@ namespace factor_adders {
 class FactorAdder {
  public:
   explicit FactorAdder(const FactorAdderParams& params) : params_(params) {}
+
+  // Default constructor for serialization only
+  FactorAdder() = default;
+
   virtual ~FactorAdder() = default;
 
   // Add factors in valid time range to existing factor graph.
@@ -40,6 +46,14 @@ class FactorAdder {
 
  protected:
   FactorAdderParams params_;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(params_);
+  }
 };
 }  // namespace factor_adders
 

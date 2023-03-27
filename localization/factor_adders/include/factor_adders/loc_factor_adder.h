@@ -39,6 +39,9 @@ class LocFactorAdder
  public:
   LocFactorAdder(const LocFactorAdderParams& params, const std::shared_ptr<PoseNodeAdderType> node_adder);
 
+  // Default constructor for serialization only.
+  LocFactorAdder() = default;
+
  private:
   // Adds loc projection factor or loc pose factor depending on params.
   // If the loc projection factor is selected but fails due to a reprojection error, adds a loc pose factor
@@ -62,6 +65,17 @@ class LocFactorAdder
   // Helper function to add a pose node if needed and return the node's key.
   boost::optional<gtsam::Key> AddPoseNode(const localization_common::Time timestamp,
                                           gtsam::NonlinearFactorGraph& factors);
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+    ar& BOOST_SERIALIZATION_NVP(node_adder_);
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(num_landmarks_averager_);
+    ar& BOOST_SERIALIZATION_NVP(pose_prior_noise_sigmas_);
+  }
 
   std::shared_ptr<PoseNodeAdderType> node_adder_;
   LocFactorAdderParams params_;

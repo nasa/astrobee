@@ -64,6 +64,14 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   virtual int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                                          const localization_common::Time newest_allowed_time,
                                          gtsam::NonlinearFactorGraph& factors) = 0;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(FactorAdder);
+    ar& BOOST_SERIALIZATION_NVP(measurements_);
+  }
 };
 
 // Implementation

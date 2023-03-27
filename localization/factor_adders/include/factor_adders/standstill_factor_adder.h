@@ -40,6 +40,9 @@ class StandstillFactorAdder
   StandstillFactorAdder(const StandstillFactorAdderParams& params,
                         const std::shared_ptr<PoseVelocityNodeAdderType> node_adder);
 
+  // Default constructor for serialization only
+  StandstillFactorAdder() = default;
+
  private:
   // Adds zero velocity and/or zero relative pose factors depending on params.
   int AddFactorsForSingleMeasurement(const localization_measurements::StandstillMeasurement& standstill_measurement,
@@ -53,6 +56,17 @@ class StandstillFactorAdder
   // Adds a relative pose between factor with zero relative movement between nodes at timestamp a and b.
   bool AddZeroRelativePoseFactor(const localization_common::Time timestamp_a,
                                  const localization_common::Time timestamp_b, gtsam::NonlinearFactorGraph& factors);
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+    ar& BOOST_SERIALIZATION_NVP(node_adder_);
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(zero_velocity_noise_);
+    ar& BOOST_SERIALIZATION_NVP(zero_relative_pose_noise_);
+  }
 
   std::shared_ptr<PoseVelocityNodeAdderType> node_adder_;
   StandstillFactorAdderParams params_;
