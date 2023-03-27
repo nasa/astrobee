@@ -1,8 +1,6 @@
     - add serialization! (C)
       - also add to standstill factor adder! base class factor adders! others!
 
-    - add comments to timestamped set! (A)
- 
     - clean up factor adder paarams?? (B)
       - too many copies in base classes?
 

@@ -64,8 +64,6 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   virtual int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                                          const localization_common::Time newest_allowed_time,
                                          gtsam::NonlinearFactorGraph& factors) = 0;
-
-  FactorAdderParams params_;
 };
 
 // Implementation
