@@ -43,7 +43,9 @@ class SimplePoseNodeAdder : public na::NodeAdder {
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }
 
-  bool CanAddNode(const localization_common::Time timestamp) const final { return true; }
+  bool CanAddNode(const localization_common::Time timestamp) const final {
+    return timestamp < latest_measurement_time_;
+  }
 
   // Assumes integer timestamps that perfectly cast to ints.
   // First key is pose key.
@@ -58,6 +60,9 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   no::Nodes& nodes() { return nodes_; }
 
   std::string type() const final { return "simple_pose_node_adder"; }
+
+  // Simulate measurement delay for node adder and control end of measurements time.
+  int latest_measurement_time_ = 0;
 
  private:
   no::Nodes nodes_;
@@ -528,6 +533,50 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidFirstTwoMeasurementsFactor) {
   // First two measurements should be removed.
   // Keys 3,4,5 should match to measurements 2,3,4
   EXPECT_SAME_FACTOR(0, {3, 4, 5}, measurements, {2, 3, 4});
+}
+
+TEST_F(VoSmartProjectionFactorAdderTest, TooSoonFactors) {
+  auto params = DefaultParams();
+  Initialize(params);
+  const int max_factors = std::min(params.max_num_factors, num_tracks_);
+  // Add first measurement
+  // No factors should be added since there are too few measurements for each factor
+  factor_adder_->AddMeasurement(measurements_[0]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(0), factors_), 0);
+  // Track: Measurement Timestamps
+  // 0: 0
+  // 1: 0
+  // 2: 0
+  EXPECT_EQ(factors_.size(), 0);
+  // Add second measurement
+  factor_adder_->AddMeasurement(measurements_[1]);
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(1), factors_), max_factors);
+  // Track: Measurement Timestamps
+  // 0: 0, 1
+  // 1: 0, 1
+  // 2: 0, 1
+  EXPECT_SAME_FACTOR(0, {0, 1});
+  EXPECT_SAME_FACTOR(0, {0, 1});
+  EXPECT_EQ(factors_.size(), max_factors);
+  // Add factor too soon, set node adder latest measurement before factor newest_allowed_time
+  // so factor can't be created.
+  factor_adder_->AddMeasurement(measurements_[2]);
+  node_adder_->latest_measurement_time_ = 1.5;
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
+  // Track: Measurement Timestamps
+  // 0: 0, 1, 2
+  // 1: 0, 1, 2
+  // 2: 0, 1, 2
+  EXPECT_SAME_FACTOR(0, {0, 1});
+  EXPECT_SAME_FACTOR(0, {0, 1});
+  EXPECT_EQ(factors_.size(), max_factors);
+  // Change node adder latest measurement time back, make sure measurement for factor
+  // adder hasn't been removed and latest measurements are still added to factor.
+  node_adder_->latest_measurement_time_ = 2;
+  EXPECT_EQ(factor_adder_->AddFactors(timestamp(0), timestamp(2), factors_), 2);
+  EXPECT_SAME_FACTOR(0, {0, 1, 2});
+  EXPECT_SAME_FACTOR(1, {0, 1, 2});
+  EXPECT_EQ(factors_.size(), max_factors);
 }
 
 // Run all the tests that were declared with TEST()
