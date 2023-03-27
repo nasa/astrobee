@@ -37,6 +37,7 @@ class CombinedNavStateNodeAdderModelTest : public ::testing::Test {
   CombinedNavStateNodeAdderModelTest()
       : params_(na::DefaultCombinedNavStateNodeAdderModelParams()),
         model_(params_),
+        nodes_(std::make_shared<no::Nodes>()),
         imu_integrator_(params_.imu_integrator) {}
   void SetUp() final {
     const Eigen::Vector3d acceleration(0.01, 0.02, 0.03);

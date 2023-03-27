@@ -3,10 +3,6 @@
 
  
     - update node adders to take nodes on construction!!!! (D)
-      - add another constructor in node adders that take nodes instead of nodestype
-      - remove default nodes!
-      - remove default nodes in timestamped_combind_nodes!
-      - add shared_ptr<nodes> to node_Adder base class? add constructor that takes nodes?
     - clean up factor adder paarams??
       - too many copies in base classes?
 

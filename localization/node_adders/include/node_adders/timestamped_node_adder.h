@@ -37,10 +37,19 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
   using Base = SlidingWindowNodeAdder;
 
  public:
+  // Construct using nodes. Creates timestamped nodes interally.
   TimestampedNodeAdder(const TimestampedNodeAdderParams<NodeType>& params,
                        const typename NodeAdderModelType::Params& node_adder_model_params,
-                       std::shared_ptr<TimestampedNodesType> nodes = std::make_shared<TimestampedNodesType>());
+                       std::shared_ptr<nodes::Nodes> nodes);
+
+  // Construct using already constructed timestamped nodes.
+  TimestampedNodeAdder(const TimestampedNodeAdderParams<NodeType>& params,
+                       const typename NodeAdderModelType::Params& node_adder_model_params,
+                       std::shared_ptr<TimestampedNodesType> timestamped_nodes);
+
+  // For serialization only
   TimestampedNodeAdder() = default;
+
   virtual ~TimestampedNodeAdder() = default;
 
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors) final;
@@ -110,8 +119,17 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::TimestampedNodeAdder(
   const TimestampedNodeAdderParams<NodeType>& params,
-  const typename NodeAdderModelType::Params& node_adder_model_params, std::shared_ptr<TimestampedNodesType> nodes)
-    : params_(params), nodes_(nodes), node_adder_model_(node_adder_model_params) {}
+  const typename NodeAdderModelType::Params& node_adder_model_params, std::shared_ptr<nodes::Nodes> nodes)
+    : params_(params),
+      nodes_(std::make_shared<TimestampedNodesType>(nodes)),
+      node_adder_model_(node_adder_model_params) {}
+
+template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
+TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::TimestampedNodeAdder(
+  const TimestampedNodeAdderParams<NodeType>& params,
+  const typename NodeAdderModelType::Params& node_adder_model_params,
+  std::shared_ptr<TimestampedNodesType> timestamped_nodes)
+    : params_(params), nodes_(timestamped_nodes), node_adder_model_(node_adder_model_params) {}
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 void TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::AddInitialNodesAndPriors(
