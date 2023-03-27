@@ -21,17 +21,23 @@
 #include <gflags/gflags_completions.h>
 
 // Include RPOS
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 // FSW includes
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/config_client.h>
 
 // Action
-#include <ff_msgs/ArmState.h>
-#include <ff_msgs/ArmAction.h>
-#include <ff_msgs/JointSampleStamped.h>
-#include <ff_msgs/JointSample.h>
+#include <ff_msgs/msg/arm_state.hpp>
+#include <ff_msgs/action/arm.hpp>
+#include <ff_msgs/msg/joint_sample_stamped.hpp>
+#include <ff_msgs/msg/joint_sample.hpp>
+namespace ff_msgs {
+typedef msg::ArmState ArmState;
+typedef msg::JointSampleStamped JointSampleStamped;
+typedef msg::JointSample JointSample;
+typedef action::Arm Arm;
+}
 
 // C++ STL includes
 #include <iostream>
@@ -65,7 +71,7 @@ DEFINE_double(deadline, -1.0, "Action deadline timeout");
 
 // Arm action result
 void ResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-  ff_msgs::ArmResultConstPtr const& result) {
+  std::shared_ptr<const ff_msgs::Arm::Result> result) {
   switch (result_code) {
   // Result will be a null pointer
   case ff_util::FreeFlyerActionState::Enum::TIMEOUT_ON_CONNECT:
@@ -91,11 +97,11 @@ void ResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     break;
   }
   // In all cases we must shutdown
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
 // Arm action feedback
-void FeedbackCallback(ff_msgs::ArmFeedbackConstPtr const& feedback) {
+void FeedbackCallback(const std::shared_ptr<const ff_msgs::Arm::Feedback> feedback) {
   // Determine the state
   static std::string str;
   switch (feedback->state.state) {
@@ -124,7 +130,7 @@ void FeedbackCallback(ff_msgs::ArmFeedbackConstPtr const& feedback) {
 
 // Ensure all clients are connected
 void ConnectedCallback(
-  ff_util::FreeFlyerActionClient<ff_msgs::ArmAction> *client) {
+  ff_util::FreeFlyerActionClient<ff_msgs::Arm> *client) {
   // Check to see if connected
   if (!client->IsConnected()) return;
   // Print out a status message
@@ -132,26 +138,26 @@ void ConnectedCallback(
             << "State: CONNECTED"
             << "                                 ";
   // Prepare the goal
-  ff_msgs::ArmGoal goal;
-  if (FLAGS_open)        goal.command = ff_msgs::ArmGoal::GRIPPER_OPEN;
-  else if (FLAGS_close)  goal.command = ff_msgs::ArmGoal::GRIPPER_CLOSE;
-  else if (FLAGS_stow)   goal.command = ff_msgs::ArmGoal::ARM_STOW;
-  else if (FLAGS_deploy) goal.command = ff_msgs::ArmGoal::ARM_DEPLOY;
-  else if (FLAGS_stop)   goal.command = ff_msgs::ArmGoal::ARM_STOP;
+  ff_msgs::Arm::Goal goal;
+  if (FLAGS_open)        goal.command = ff_msgs::Arm::Goal::GRIPPER_OPEN;
+  else if (FLAGS_close)  goal.command = ff_msgs::Arm::Goal::GRIPPER_CLOSE;
+  else if (FLAGS_stow)   goal.command = ff_msgs::Arm::Goal::ARM_STOW;
+  else if (FLAGS_deploy) goal.command = ff_msgs::Arm::Goal::ARM_DEPLOY;
+  else if (FLAGS_stop)   goal.command = ff_msgs::Arm::Goal::ARM_STOP;
   if (!std::isinf(FLAGS_set)) {
-    goal.command = ff_msgs::ArmGoal::GRIPPER_SET;
+    goal.command = ff_msgs::Arm::Goal::GRIPPER_SET;
     goal.gripper = FLAGS_set;
   }
   if (!std::isinf(FLAGS_pan)) {
-    goal.command = ff_msgs::ArmGoal::ARM_PAN;
+    goal.command = ff_msgs::Arm::Goal::ARM_PAN;
     goal.pan = FLAGS_pan;
   }
   if (!std::isinf(FLAGS_tilt)) {
-    goal.command = ff_msgs::ArmGoal::ARM_TILT;
+    goal.command = ff_msgs::Arm::Goal::ARM_TILT;
     goal.tilt= FLAGS_tilt;
   }
   if (!std::isinf(FLAGS_pan) && !std::isinf(FLAGS_tilt))
-    goal.command = ff_msgs::ArmGoal::ARM_MOVE;
+    goal.command = ff_msgs::Arm::Goal::ARM_MOVE;
   // Send the goal
   client->SendGoal(goal);
 }
@@ -159,7 +165,9 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "control", ros::init_options::AnonymousName);
+  // TODO(ana): AnonymousName option has not yet been implemented in ROS2, but it is in the works
+  // https://github.com/ros2/rcl/issues/1034
+  rclcpp::init(argc, argv);  //, "control", ros::init_options::AnonymousName);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun arm arm_tool <opts>");
   google::SetVersionString("0.1.0");
@@ -182,9 +190,9 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // Action clients
-  ff_util::FreeFlyerActionClient<ff_msgs::ArmAction> client;
+  ff_util::FreeFlyerActionClient<ff_msgs::Arm> client;
   // Create a node handle
-  ros::NodeHandle nh(std::string("/") + FLAGS_ns);
+  auto nh = std::make_shared<rclcpp::Node>("arm_tool");
   // Setup SWITCH action
   client.SetConnectedTimeout(FLAGS_connect);
   client.SetActiveTimeout(FLAGS_active);
@@ -196,13 +204,13 @@ int main(int argc, char *argv[]) {
   client.SetResultCallback(std::bind(ResultCallback,
     std::placeholders::_1, std::placeholders::_2));
   client.SetConnectedCallback(std::bind(ConnectedCallback, &client));
-  client.Create(&nh, ACTION_BEHAVIORS_ARM);
+  client.Create(nh, ACTION_BEHAVIORS_ARM);
   // Print out a status message
   std::cout << '\r' << std::flush
             << "State: CONNECTING"
             << "                                 ";
   // Synchronous mode
-  ros::spin();
+  rclcpp::spin(nh);
   // Finish commandline flags
   google::ShutDownCommandLineFlags();
   // Make for great success

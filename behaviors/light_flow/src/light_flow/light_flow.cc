@@ -18,7 +18,6 @@
 
 #include "../../include/light_flow.h"
 #include <assert.h>
-
 #include <ff_common/ff_names.h>
 #include <jsoncpp/json/allocator.h>
 #include <jsoncpp/json/json.h>

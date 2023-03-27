@@ -23,7 +23,7 @@
 #include <ff_msgs/CompressedFileAck.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_msgs/CommandStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <boost/filesystem.hpp>
 
@@ -144,8 +144,7 @@ int main(int argc, char** argv) {
                               std::bind(&on_connect, std::placeholders::_1, cf));
 
   // After the zones are received, commands a set zones to the executive
-  command_pub = n.advertise<ff_msgs::CommandStamped>(
-                                                    TOPIC_COMMAND, 5, true);
+  command_pub = n.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 5);
 
   // Subscriber that receives confirmation that the zones were received
   ros::Subscriber cf_acK_pub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10, &on_cf_ack);

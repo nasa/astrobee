@@ -1,1 +1,1 @@
-Please visit the [Astrobee Documentation](https://nasa.github.io/astrobee/documentation.html)
+Please visit the [Astrobee Documentation](https://nasa.github.io/astrobee/v/develop/)

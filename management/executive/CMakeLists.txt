@@ -40,7 +40,7 @@ find_package(jsonloader REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 # Find jsoncpp
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(JsonCpp REQUIRED)
 
 ###########

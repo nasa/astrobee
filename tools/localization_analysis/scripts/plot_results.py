@@ -26,8 +26,9 @@ import argparse
 import os
 import sys
 
-import loc_states
 import matplotlib
+
+import loc_states
 import plot_helpers
 import poses
 import rmse_utilities

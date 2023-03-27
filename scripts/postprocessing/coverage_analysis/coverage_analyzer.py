@@ -11,8 +11,10 @@ import subprocess
 import sys
 import timeit
 
-import constants
+import numpy as np
 from tf.transformations import *
+
+import constants
 
 
 class Coverage_Analyzer:
@@ -45,19 +47,28 @@ class Coverage_Analyzer:
         self.x_fin_bay67 = 0.0
 
     # Returns the squared distance between two Points (x,y,z)
-    def pose_inside_cube(self, robot_pose, cube_pose, grid_size):
-        cube_center = grid_size / 2.0
+    def pos_inside_cube(self, pos, cube_center, grid_size):
+        """
+        Return true if pos is within the cube centered at cube_center
+        with width grid_size.
 
-        cube_squared = ((cube_center) ** 2) * 3
+        Note: Right now this actually checks if pos is in the
+        circumscribing sphere around the cube, which has 2.7x more
+        volume! Not changing it for backward compatibility with
+        previous analyses.
+        """
+        cube_half_width = grid_size / 2.0
+
+        cube_half_diag_squared = ((cube_half_width) ** 2) * 3
 
         error_squared = (
-            (robot_pose[0] - cube_pose[0]) ** 2
-            + (robot_pose[1] - cube_pose[1]) ** 2
-            + (robot_pose[2] - cube_pose[2]) ** 2
+            (pos[0] - cube_center[0]) ** 2
+            + (pos[1] - cube_center[1]) ** 2
+            + (pos[2] - cube_center[2]) ** 2
         )
 
-        # True if inside cube
-        return error_squared < cube_squared
+        # True if inside circumscribing sphere around cube
+        return error_squared < cube_half_diag_squared
 
     # Calculates the relative rotation between 2 quaternions, returns angle between them
     def quat_error(self, robot_quat, test_quat):
@@ -128,7 +139,7 @@ class Coverage_Analyzer:
                     test_pose = [testPt[1], testPt[2], testPt[3]]
                     test_quat = [testPt[4], testPt[5], testPt[6], testPt[7]]
 
-                    if self.pose_inside_cube(robot_pose, test_pose, grid_size) == True:
+                    if self.pos_inside_cube(robot_pose, test_pose, grid_size) == True:
                         f_out.write(
                             "{:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(
                                 ml_num,
@@ -184,63 +195,94 @@ class Coverage_Analyzer:
                     if len(vals) == 3:
                         f_out.write("{:s}".format(line))
 
-    # From the landmark poses remove  all repeated landmarks
-    def remove_repeated_poses(self, database_fileOut, feat_only_fileOut):
-
+    def get_unique_feat_pos_lines(self, database_path):
+        """
+        Return a list of unique lines in the file. Output lines remain
+        sorted in order of first occurrence.
+        """
         lines_seen = set()  # holds lines seen
         print(
-            "Removing duplicated feature poses from {:s} and creating {:s}".format(
-                database_fileOut, feat_only_fileOut
+            "Reading feature positions from {:s} and removing repeats".format(
+                database_path
             )
         )
 
         match = 0
         numlines = 0
-        with open(feat_only_fileOut, "w") as f_out:
-            with open(database_fileOut, "r+") as f_in:
-
-                for line in f_in:
-                    if line not in lines_seen:
-                        f_out.write(line)
-                        lines_seen.add(line)
-                        match += 1
-                    numlines += 1
+        result = []
+        with open(database_path, "r") as f_in:
+            for line in f_in:
+                if line not in lines_seen:
+                    result.append(line)
+                    lines_seen.add(line)
+                    match += 1
+                numlines += 1
         print("Found {:d} unique lines in {:d} lines".format(match, numlines))
+        return result
 
-    # Find any landmark pose within a cube of grid_size from the landmark poses-only file
-    # and generate a coverage file with the tested pose (center of the cube) and
-    # the number of features found within that cube
-    def find_nearby_cube_pose(
-        self, px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-    ):
+    def write_unique_pos_lines(self, unique_feat_pos_lines, feat_only_fileOut):
+        """
+        Write the specified lines to the file.
+        """
+        print("Writing unique feature positions to {:s}".format(feat_only_fileOut))
+        with open(feat_only_fileOut, "w") as f_out:
+            for line in unique_feat_pos_lines:
+                f_out.write(line)
 
+    def parse_pos(self, pos_lines):
+        """
+        Parse and return the feature positions from the specified lines.
+
+        Input: A collection of lines read from a text file. A subset
+        of the lines should include three space-separated numbers
+        interpreted as a position. Blank lines, comments, and lines
+        with a different number of fields are ignored.
+
+        Return: An N x 3 array of feature positions.
+        """
+        result = []
+        for line in pos_lines:
+            # Skip empty lines and those starting with comments
+            line = line.strip()
+            if line == "" or line.startswith("#"):
+                continue
+
+            # Extract all the values separated by whitespace
+            vals = line.split()
+
+            if len(vals) == 3:
+                result.extend((float(vals[0]), float(vals[1]), float(vals[2])))
+        return np.array(result).reshape((-1, 3))
+
+    def find_nearby_cube_pos(self, px, py, pz, grid_size, feat_pos, coverage_out):
+        """
+        Output the number of feature positions within the cube.
+
+        Input: The cube is centered at (px, py, pz) and has width grid_size.
+        The feature positions are in feat_pos, an N x 3 array.
+
+        Output: Write a line to the coverage_out stream describing the number
+        of features in the cube followed by the cube center.
+
+        Note! For backward compatibility with previous coverage
+        analyses, currently this function is checking if features are
+        in the circumscribing sphere around the cube rather than
+        strictly within the cube. (This tends to make feature counts
+        much higher.)
+        """
         num_ml = 0
 
-        with open(coverage_fileOut, "a") as f_out:
-            with open(feat_only_fileOut, "r") as f_in:
+        cube_center = np.array((px, py, pz))
 
-                for line in f_in:
-                    # Skip empty lines and those starting with comments
-                    if re.match("^\s*\n", line) or re.match("^\s*\#", line):
-                        continue
+        # This would be the correct logic for a cube:
+        # in_cube = (np.max(np.absolute(feat_pos - cube_center), axis=1) < 0.5 * grid_size)
 
-                    # Extract all the values separated by spaces
-                    vals = []
-                    for v in re.split("\s+", line):
-                        if v == "":
-                            continue
-                        vals.append(v)
+        # But instead we'll try to be backward-compatible and do a sphere:
+        dist_to_corner = np.sqrt(3 * (0.5 * grid_size) ** 2)
+        in_cube = np.linalg.norm(feat_pos - cube_center, axis=1) < dist_to_corner
 
-                    if len(vals) == 3:
-                        robot_pose = [float(vals[0]), float(vals[1]), float(vals[2])]
-                        cube_pose = [px, py, pz]
-
-                        if (
-                            self.pose_inside_cube(robot_pose, cube_pose, grid_size)
-                            == True
-                        ):
-                            num_ml += 1
-                f_out.write("{:d} {:.3f} {:.3f} {:.3f}\n".format(num_ml, px, py, pz))
+        num_ml = np.count_nonzero(in_cube)
+        coverage_out.write("{:d} {:.3f} {:.3f} {:.3f}\n".format(num_ml, px, py, pz))
 
     # Equivalent to using math.isclose() since this is Python 2.7x
     def is_close(self, a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -297,7 +339,7 @@ class Coverage_Analyzer:
         )
 
     def calculate_coverage_overhead(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+        self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
     ):
 
         current_bay = bay_num + 1
@@ -319,20 +361,16 @@ class Coverage_Analyzer:
 
         ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
 
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Overhead_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
+        coverage_out.write("# Wall Overhead_%s %.5f\n" % (current_bay, grid_size))
 
         for i in range(xlen):
             for j in range(ylen):
                 px = (start_pos_x - grid_size * i) - p_center
                 py = (start_pos_y - grid_size * j) - p_center
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_forward(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+        self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
     ):
 
         current_bay = bay_num + 1
@@ -352,9 +390,9 @@ class Coverage_Analyzer:
 
         ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
 
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Forward_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
+        coverage_out.write(
+            "# Wall Forward_" + str(current_bay) + " " + str(grid_size) + "\n"
+        )
 
         for i in range(ylen):
             for j in range(zlen):
@@ -362,12 +400,10 @@ class Coverage_Analyzer:
                 pz = (
                     constants.ZMAX_BAY16 + grid_size * j
                 ) + p_center  # Using z_max to have better coverage on the overhead.
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_aft(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+        self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
     ):
 
         current_bay = bay_num + 1
@@ -387,9 +423,9 @@ class Coverage_Analyzer:
 
         ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
 
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Aft_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
+        coverage_out.write(
+            "# Wall Aft_" + str(current_bay) + " " + str(grid_size) + "\n"
+        )
 
         for i in range(ylen):
             for j in range(zlen):
@@ -397,12 +433,10 @@ class Coverage_Analyzer:
                 pz = (
                     constants.ZMAX_BAY16 + grid_size * j
                 ) + p_center  # Using z_max to have better coverage on the overhead.
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
     def calculate_coverage_deck(
-        self, bay_num, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+        self, bay_num, start_pos_y, stop_pos_y, feat_pos, coverage_out
     ):
         current_bay = bay_num + 1
         print("Finding matches Deck Bay" + str(current_bay))
@@ -423,23 +457,16 @@ class Coverage_Analyzer:
 
         ylen = int(abs(stop_pos_y - start_pos_y) / grid_size)
 
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Deck_" + str(current_bay) + " " + str(grid_size) + "\n")
-        f_out.close()
+        coverage_out.write("# Wall Deck_%s %.5f\n" % (current_bay, grid_size))
 
         for i in range(xlen):
             for j in range(ylen):
                 px = (start_pos_x - grid_size * i) - p_center
                 py = (start_pos_y - grid_size * j) - p_center
-                self.find_nearby_cube_pose(
-                    px, py, pz, grid_size, feat_only_fileOut, coverage_fileOut
-                )
+                self.find_nearby_cube_pos(px, py, pz, grid_size, feat_pos, coverage_out)
 
-    def calculate_coverage_airlock(self, feat_only_fileOut, coverage_fileOut):
-
-        f_out = open(coverage_fileOut, "a")
-        f_out.write("# Wall Airlock" + " " + str(self.grid_size) + "\n")
-        f_out.close()
+    def calculate_coverage_airlock(self, feat_pos, coverage_out):
+        coverage_out.write("# Wall Airlock" + " " + str(self.grid_size) + "\n")
 
         print("Finding matches Airlock")
         p_center = self.grid_size / 2.0  # Center of the cube
@@ -460,48 +487,38 @@ class Coverage_Analyzer:
             for j in range(zlen):
                 px = (constants.XMAX_AIRLK + self.grid_size * i) + p_center
                 pz = (constants.ZMAX_AIRLK + self.grid_size * j) + p_center
-                self.find_nearby_cube_pose(
-                    px, py, pz, self.grid_size, feat_only_fileOut, coverage_fileOut
+                self.find_nearby_cube_pos(
+                    px, py, pz, self.grid_size, feat_pos, coverage_out
                 )
 
-    def find_nearby_features_from_file(self, feat_only_fileOut, coverage_fileOut):
-
-        print(
-            "Finding matches from pose file {:s}, creating coverage file: {:s}".format(
-                feat_only_fileOut, coverage_fileOut
-            )
-        )
-
-        f_out = open(coverage_fileOut, "w")
-        f_out.write("#Num_ML Cube_Center_Pose (X Y Z)\n")
-        f_out.close()
+    def find_nearby_features_from_file(self, feat_pos, coverage_out):
+        coverage_out.write("#Num_ML Cube_Center_Pose (X Y Z)\n")
 
         for bay, positions in constants.BAYS_Y_LIMITS.items():
             start_pos_y = positions[0]
             stop_pos_y = positions[1]
 
             self.calculate_coverage_overhead(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+                bay, start_pos_y, stop_pos_y, feat_pos, coverage_out
             )
             self.calculate_coverage_forward(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+                bay, start_pos_y, stop_pos_y, feat_pos, coverage_out
             )
             self.calculate_coverage_aft(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+                bay, start_pos_y, stop_pos_y, feat_pos, coverage_out
             )
             self.calculate_coverage_deck(
-                bay, start_pos_y, stop_pos_y, feat_only_fileOut, coverage_fileOut
+                bay, start_pos_y, stop_pos_y, feat_pos, coverage_out
             )
 
-        self.calculate_coverage_airlock(feat_only_fileOut, coverage_fileOut)
+        self.calculate_coverage_airlock(feat_pos, coverage_out)
 
     def remove_tmp_file(self, fileToRemove):
         os.remove(fileToRemove)
         print("Removing temporary file: {:s}".format(fileToRemove))
 
 
-if __name__ == "__main__":
-
+def main():
     try:
 
         if len(sys.argv) < 1:
@@ -528,10 +545,18 @@ if __name__ == "__main__":
 
         obj.set_grid_params()
         obj.feature_extraction(activity_database_fileIn, database_fileOut)
-        obj.remove_repeated_poses(database_fileOut, feat_only_fileOut)
+        unique_feat_pos_lines = obj.get_unique_feat_pos_lines(database_fileOut)
+        obj.write_unique_pos_lines(unique_feat_pos_lines, feat_only_fileOut)
+        feat_pos = obj.parse_pos(unique_feat_pos_lines)
 
         tic = timeit.default_timer()
-        obj.find_nearby_features_from_file(feat_only_fileOut, coverage_fileOut)
+        with open(coverage_fileOut, "w") as coverage_out:
+            print(
+                "Finding matches from feature positions, creating coverage file: {:s}".format(
+                    coverage_fileOut
+                )
+            )
+            obj.find_nearby_features_from_file(feat_pos, coverage_out)
         toc = timeit.default_timer()
         elapsedTime = toc - tic
         print("Time to create coverage file: {:.2f}s".format(elapsedTime))
@@ -541,3 +566,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n <-CTRL-C EXIT: USER manually exited!->")
         sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
