@@ -49,6 +49,8 @@ class SimpleAdder : public fa::SingleMeasurementBasedFactorAdder<lm::PoseMeasure
                              params_.huber_k);
   }
 
+  int end_time_ = 10;
+
  private:
   int AddFactorsForSingleMeasurement(const lm::PoseMeasurement& measurement,
                                      gtsam::NonlinearFactorGraph& factors) final {
@@ -58,7 +60,8 @@ class SimpleAdder : public fa::SingleMeasurementBasedFactorAdder<lm::PoseMeasure
     return 1;
   }
 
-  bool CanAddFactor(const localization_common::Time time) const final { return true; }
+  // Simulate some node adder delay and don't add factors if past end time.
+  bool CanAddFactor(const localization_common::Time time) const final { return time < end_time_; }
 
   int key_value_ = 0;
   gtsam::SharedNoiseModel pose_noise_;
@@ -74,8 +77,11 @@ class SingleMeasurementBasedFactorAdderTest : public ::testing::Test {
     for (int i = 0; i < kNumMeasurements; ++i) {
       const lm::PoseMeasurement measurement(lc::RandomPose(), lc::Time(i));
       measurements_.emplace_back(measurement);
-      factor_adder_.AddMeasurement(measurement);
     }
+  }
+
+  void AddMeasurements() {
+    for (const auto& measurement : measurements_) factor_adder_.AddMeasurement(measurement);
   }
 
   // TODO(rsoussan): Unify this with pose_node_adder test!
@@ -107,6 +113,7 @@ class SingleMeasurementBasedFactorAdderTest : public ::testing::Test {
 };
 
 TEST_F(SingleMeasurementBasedFactorAdderTest, AddMeasurements) {
+  AddMeasurements();
   EXPECT_EQ(factor_adder_.AddFactors(-100, -10, factors_), 0);
   EXPECT_EQ(factors_.size(), 0);
   // Add factor 0
@@ -171,6 +178,28 @@ TEST_F(SingleMeasurementBasedFactorAdderTest, AddMeasurements) {
   // Can't add factors newer than measurements
   EXPECT_EQ(factor_adder_.AddFactors(time(9) + 0.1, time(9) + 1000.1, factors_), 0);
   EXPECT_EQ(factors_.size(), 8);
+}
+
+TEST_F(SingleMeasurementBasedFactorAdderTest, AddFactorsTooSoon) {
+  AddMeasurements();
+  // Add factor 0
+  EXPECT_EQ(factor_adder_.AddFactors(-100.1, time(0), factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  // Make factors unaddable, make sure none are added
+  factor_adder_.end_time_ = 0.5;
+  EXPECT_EQ(factor_adder_.AddFactors(time(1), time(3), factors_), 0);
+  EXPECT_EQ(factors_.size(), 1);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  // Increase end time, measurements shouldn't have been removed and
+  // now factors should be added.
+  factor_adder_.end_time_ = 10;
+  EXPECT_EQ(factor_adder_.AddFactors(time(1), time(3), factors_), 3);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_PRIOR_FACTOR(0);
+  EXPECT_SAME_PRIOR_FACTOR(1);
+  EXPECT_SAME_PRIOR_FACTOR(2);
+  EXPECT_SAME_PRIOR_FACTOR(3);
 }
 
 // Run all the tests that were declared with TEST()

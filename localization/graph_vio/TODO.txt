@@ -12,13 +12,10 @@
       - too many copies in base classes?
 
   - test sliding window optimizer! (B)
-    - need to make sure factors aren't added past end time! (AA)
-      - only add nodes if can add node true!
-        - only remove single measurement nodes if true!
-          - need this function in factor adders! CanAddFactor!
-        - test!
-        - how to add for cumulative factors??
-    - need to change removefactors function! make exception for smart factors! (BB)
+        - test added too new factor adder measurement factors, make sure they can be added after adding measurements to node adder! (AA)
+          - test for single factor adder
+          - test for vo factor adder
+    - need to change removefactors function! make exception for smart factors! (AB)
         - need to make new function for this (or just add bool to current remove factors)! (removefactors should still work elsewhere, especially in vo factor adder!)
         - test this!!!!
             - test this function in loc utils
