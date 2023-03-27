@@ -17,7 +17,7 @@
  */
 
 #include <factor_adders/loc_factor_adder.h>
-#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
+#include <graph_factors/robust_smart_projection_pose_factor.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
@@ -28,6 +28,7 @@
 #include <node_adders/pose_node_adder_params.h>
 #include <nodes/nodes.h>
 #include <optimizers/optimizer.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
 
 #include <gtest/gtest.h>
 
@@ -296,7 +297,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 8);
 }
 
-TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersStartTime) {
+TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersNewStartTime) {
   sliding_window_graph_optimizer_->AddSlidingWindowNodeAdder(dummy_node_adder_);
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
@@ -321,6 +322,42 @@ TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersStartTime) {
   // Expect 3 factors (prior, one between factor, 2 measurements)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
 }
+
+TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowPruneCumulativeFactor) {
+  // Initial node and prior should be added for pose node adder
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  // Add 4 nodes to populate graph with 5 nodes (1 over max)
+  const double time_increment = 0.1;
+  for (int i = 1; i <= 4; ++i) {
+    AddLocMeasurement(time_increment * i);
+    AddPoseMeasurement(time_increment * i);
+  }
+  // Hackily add a cumulative factor (smart factor) using all pose nodes.
+  {
+    using SmartFactorCalibration = gtsam::Cal3_S2;
+    using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<SmartFactorCalibration>;
+    auto smart_factor = boost::make_shared<RobustSmartFactor>(gtsam::noiseModel::Isotropic::Sigma(2, 0.1),
+                                                              boost::make_shared<gtsam::Cal3_S2>(), gtsam::Pose3(),
+                                                              gtsam::SmartProjectionParams(), true, true, 1.345);
+    for (int i = 1; i <= 5; ++i) {
+      smart_factor->add(gtsam::Point2(i + 1, i + 2), gtsam::Key(i));
+    }
+    sliding_window_graph_optimizer_->factors().push_back(smart_factor);
+  }
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
+  // Pose node times:
+  // 0, 0.1, 0.2, 0.3, 0.4
+  // Pose node num nodes: 5
+  // Pose node duration: 0.4
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
+  // 1st node should be removed.
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
+  // Expect 9 factors (prior, three between factors, 4 measurements, 1 smart factor)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 9);
+}
+
+// TODO(rsoussan): Test adding marginal factors
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {

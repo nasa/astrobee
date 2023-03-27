@@ -12,11 +12,6 @@
       - too many copies in base classes?
 
      - Update
-        - test new start time/end time! (AB)
-          - add a second dummy node adder that simply sets these, make sure it works!
-        - test remove factors! (AA)
-            - test with cumulative factor!!!
-              - make fake one??
         - todo to test adding marginal factors?
 
   - test optimizers!!

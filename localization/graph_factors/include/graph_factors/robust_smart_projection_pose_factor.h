@@ -66,10 +66,11 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
 
   // Helper function to return copy of factor with only measurements for allowed keys.
   boost::shared_ptr<NonlinearFactor> PrunedCopy(const std::unordered_set<gtsam::Key>& keys_to_remove) const final {
-    boost::shared_ptr<RobustSmartProjectionPoseFactor> pruned_factor(new RobustSmartProjectionPoseFactor(
-      sharedNoiseModel_, calibration(), body_P_sensor(), params_, rotation_only_fallback_, robust_, huber_k_));
-    for (int i = 0; i < keys().size(); ++i) {
-      if (keys_to_remove.count(keys()[i]) == 0) pruned_factor->add(measured()[i], keys()[i]);
+    boost::shared_ptr<RobustSmartProjectionPoseFactor> pruned_factor(
+      new RobustSmartProjectionPoseFactor(sharedNoiseModel_, this->calibration(), this->body_P_sensor(), params_,
+                                          rotation_only_fallback_, robust_, huber_k_));
+    for (int i = 0; i < this->keys().size(); ++i) {
+      if (keys_to_remove.count(this->keys()[i]) == 0) pruned_factor->add(this->measured()[i], this->keys()[i]);
     }
     return pruned_factor;
   }
