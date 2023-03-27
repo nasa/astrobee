@@ -29,6 +29,10 @@ namespace gtsam {
 // be removed instead of removing the entire factor.
 class CumulativeFactor {
  public:
+  virtual ~CumulativeFactor() = default;
+
+  // Returns a copy of the factor with keys in keys_to_remove removed along with
+  // any associated measurements.
   virtual boost::shared_ptr<NonlinearFactor> PrunedCopy(const std::unordered_set<gtsam::Key>& keys_to_remove) const = 0;
 };
 }  // namespace gtsam

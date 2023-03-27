@@ -28,7 +28,7 @@
 
 namespace gtsam {
 template <class CALIBRATION>
-class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRATION>, CumulativeFactor {
+class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRATION>, public CumulativeFactor {
   typedef PinholePose<CALIBRATION> Camera;
   typedef SmartFactorBase<Camera> Base;
   typedef typename Camera::Measurement Z;
