@@ -70,7 +70,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     sliding_window_graph_optimizer_->AddFactorAdder(loc_factor_adder_);
   }
 
-  void AddLocMeasurement(const int time) {
+  void AddLocMeasurement(const double time) {
     lm::MatchedProjectionsMeasurement loc_measurement;
     // Need at least one matched projection for measurement to be valid.
     lm::MatchedProjection matched_projection(gtsam::Point2(), gtsam::Point3(), time);
@@ -80,7 +80,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     loc_factor_adder_->AddMeasurement(loc_measurement);
   }
 
-  void AddPoseMeasurement(const int time) {
+  void AddPoseMeasurement(const double time) {
     const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), time);
     pose_node_adder_->AddMeasurement(pose_measurement);
   }
@@ -202,7 +202,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   // Add 3 nodes to populate graph with 4 nodes (max)
   const double time_increment = 0.1;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 1; i <= 3; ++i) {
     AddLocMeasurement(time_increment * i);
     AddPoseMeasurement(time_increment * i);
   }
@@ -232,8 +232,8 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   // Pose node num nodes: 4
   // Pose node duration: 0.3
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
-  // Expect 7 factors (prior, three between factors, 3 measurements)
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 7);
+  // Expect 8 factors (prior, three between factors, 4 measurements)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 8);
 }
 
 // Run all the tests that were declared with TEST()
