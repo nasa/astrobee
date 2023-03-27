@@ -24,17 +24,10 @@
 #include <node_adders/combined_nav_state_nodes.h>
 #include <node_adders/measurement_based_timestamped_node_adder.h>
 
-#include <string>
-
 namespace node_adders {
 using CombinedNavStateNodeAdder =
   MeasurementBasedTimestampedNodeAdder<localization_measurements::ImuMeasurement, CombinedNavStateNodes,
                                        CombinedNavStateNodeAdderModel>;
-
-template <>
-std::string CombinedNavStateNodeAdder::type() const final {
-  return "combined_nav_state";
-}
 }  // namespace node_adders
 
 #endif  // NODE_ADDERS_COMBINED_NAV_STATE_NODE_ADDER_H_

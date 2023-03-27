@@ -25,7 +25,6 @@
 #include <nodes/timestamped_nodes.h>
 
 #include <algorithm>
-#include <string>
 #include <vector>
 
 namespace node_adders {
@@ -61,8 +60,6 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<const gtsam::Marginals&>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) override;
-
-  std::string type() const override;
 
   // Returns the oldest node time that should remain after SlideWindow is called.
   // Calculated using params to ensure the set min/max node limits are enforced
@@ -173,12 +170,6 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
   }
 
   return true;
-}
-
-template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
-std::string TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::type() const {
-  static_assert(sizeof(NodeType) == std::size_t(-1), "This needs to be specialized by template class.");
-  return "";
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>

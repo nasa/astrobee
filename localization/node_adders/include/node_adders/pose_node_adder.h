@@ -26,19 +26,11 @@
 
 #include <gtsam/geometry/Pose3.h>
 
-#include <string>
-
 namespace node_adders {
 // Timestamp-based node adder using timestamped poses with covariances.
 using PoseNodeAdder =
   MeasurementBasedTimestampedNodeAdder<localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3,
                                        nodes::TimestampedNodes<gtsam::Pose3>, PoseNodeAdderModel>;
-
-template <>
-std::string TimestampedNodeAdder<gtsam::Pose3, nodes::TimestampedNodes<gtsam::Pose3>, PoseNodeAdderModel>::type()
-  const {
-  return "pose";
-}
 }  // namespace node_adders
 
 #endif  // NODE_ADDERS_POSE_NODE_ADDER_H_

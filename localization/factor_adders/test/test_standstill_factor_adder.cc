@@ -51,8 +51,6 @@ class SimplePoseVelocityNodeAdder : public na::NodeAdder {
     keys.emplace_back(gtsam::Key(static_cast<int>(timestamp) * 2 + 1));
     return keys;
   }
-
-  std::string type() const final { return "simple_pose_velocity_node_adder"; }
 };
 
 class StandstillFactorAdderTest : public ::testing::Test {

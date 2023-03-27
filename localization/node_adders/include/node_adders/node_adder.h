@@ -23,8 +23,6 @@
 
 #include <gtsam/nonlinear/Marginals.h>
 
-#include <string>
-
 namespace node_adders {
 // Base class for adding nodes to a graph. A different node adder should be used
 // for each node type added to the graph. Nodes can consist of multiple types that are added in unison,
@@ -45,9 +43,6 @@ class NodeAdder {
 
   // Returns keys for a node at the timestamp.
   virtual gtsam::KeyVector Keys(const localization_common::Time timestamp) const = 0;
-
-  // Returns the node adder type name.
-  virtual std::string type() const = 0;
 };
 }  // namespace node_adders
 

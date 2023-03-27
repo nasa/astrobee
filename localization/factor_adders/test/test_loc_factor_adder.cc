@@ -64,8 +64,6 @@ class SimplePoseNodeAdder : public na::NodeAdder {
 
   no::Nodes& nodes() { return nodes_; }
 
-  std::string type() const final { return "simple_pose_node_adder"; }
-
   // Simulate measurement delay for node adder and control end of measurements time.
   int latest_measurement_time_ = 10;
 

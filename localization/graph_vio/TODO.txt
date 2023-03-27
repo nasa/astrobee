@@ -1,9 +1,8 @@
-  - implement loc factor adder! (AB)
-    - add serialization!
+    - add serialization! (B)
       - also add to standstill factor adder! base class factor adders! others!
 
  
-    - update node adders to take nodes on construction!!!!
+    - update node adders to take nodes on construction!!!! (D)
       - add another constructor in node adders that take nodes instead of nodestype
       - remove default nodes!
       - remove default nodes in timestamped_combind_nodes!
@@ -11,12 +10,9 @@
     - clean up factor adder paarams??
       - too many copies in base classes?
 
-     - Update
-        - todo to test adding marginal factors?
-
   - test optimizers!!
-      - test nonlinear optimizer! (B)
-  - remove types from node adders! not needed!
+      - test nonlinear optimizer! (A)
+  - remove types from node adders! not needed! (C)
 
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
@@ -31,7 +27,7 @@
     - use pose node updater with odometry message! 
     - add loc factor adder!
 
-    - add parameter reader!
+    - add parameter reader! (G)
       - fail if parameter not read!!
       - how to unit test these??
 

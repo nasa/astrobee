@@ -80,8 +80,6 @@ class DummySlidingWindowNodeAdder : public na::SlidingWindowNodeAdder {
 
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const final { return gtsam::KeyVector(); }
 
-  std::string type() const final { return ""; }
-
   lc::Time new_start_time_;
   lc::Time start_time_;
   lc::Time end_time_;

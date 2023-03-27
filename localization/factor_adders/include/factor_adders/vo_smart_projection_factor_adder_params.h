@@ -27,8 +27,6 @@
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/slam/SmartFactorParams.h>
 
-#include <string>
-
 namespace factor_adders {
 struct VoSmartProjectionFactorAdderParams : public FactorAdderParams {
   vision_common::SpacedFeatureTrackerParams spaced_feature_tracker;

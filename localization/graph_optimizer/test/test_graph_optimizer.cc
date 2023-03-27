@@ -69,8 +69,6 @@ class SimpleNodeAdder : public na::NodeAdder {
     return keys;
   }
 
-  std::string type() const final { return "simple_pose_node_adder"; }
-
  private:
   std::shared_ptr<no::Nodes> nodes_;
   const double huber_k = 1.345;
