@@ -51,6 +51,41 @@ class SimpleOptimizer : public op::Optimizer {
   }
 };
 
+// For testing new window start time and end time
+class DummySlidingWindowNodeAdder : public na::SlidingWindowNodeAdder {
+ public:
+  bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
+                   const boost::optional<const gtsam::Marginals&>& marginals, const gtsam::KeyVector& old_keys,
+                   const double huber_k, gtsam::NonlinearFactorGraph& factors) final {
+    return true;
+  }
+
+  boost::optional<localization_common::Time> SlideWindowNewStartTime() const final { return new_start_time_; }
+
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
+                           const gtsam::NonlinearFactorGraph& graph) const final {
+    return gtsam::KeyVector();
+  }
+
+  boost::optional<localization_common::Time> StartTime() const final { return start_time_; }
+
+  boost::optional<localization_common::Time> EndTime() const final { return end_time_; }
+
+  void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final { return; }
+
+  bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }
+
+  bool CanAddNode(const localization_common::Time timestamp) const final { return true; }
+
+  gtsam::KeyVector Keys(const localization_common::Time timestamp) const final { return gtsam::KeyVector(); }
+
+  std::string type() const final { return ""; }
+
+  lc::Time new_start_time_;
+  lc::Time start_time_;
+  lc::Time end_time_;
+};
+
 class SlidingWindowGraphOptimizerTest : public ::testing::Test {
  public:
   SlidingWindowGraphOptimizerTest() {}
@@ -65,6 +100,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
       new no::TimestampedNodes<gtsam::Pose3>(sliding_window_graph_optimizer_->nodes()));
     pose_node_adder_.reset(
       new na::PoseNodeAdder(DefaultPoseNodeAdderParams(), DefaultPoseNodeAdderModelParams(), timestamped_pose_nodes));
+    dummy_node_adder_.reset(new DummySlidingWindowNodeAdder());
     loc_factor_adder_params_ = DefaultLocFactorAdderParams();
     loc_factor_adder_.reset(new fa::LocFactorAdder<na::PoseNodeAdder>(loc_factor_adder_params_, pose_node_adder_));
     sliding_window_graph_optimizer_->AddSlidingWindowNodeAdder(pose_node_adder_);
@@ -157,6 +193,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
   std::shared_ptr<fa::LocFactorAdder<na::PoseNodeAdder>> loc_factor_adder_;
   fa::LocFactorAdderParams loc_factor_adder_params_;
   std::shared_ptr<na::PoseNodeAdder> pose_node_adder_;
+  std::shared_ptr<DummySlidingWindowNodeAdder> dummy_node_adder_;
   std::vector<lm::MatchedProjectionsMeasurement> loc_measurements_;
   std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
 };
@@ -257,6 +294,32 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
   // Expect 8 factors (prior, three between factors, 4 measurements)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 8);
+}
+
+TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersStartTime) {
+  sliding_window_graph_optimizer_->AddSlidingWindowNodeAdder(dummy_node_adder_);
+  // Initial node and prior should be added for pose node adder
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  // Add 3 nodes to populate graph with 4 nodes (max)
+  const double time_increment = 1;
+  for (int i = 1; i <= 3; ++i) {
+    AddLocMeasurement(time_increment * i);
+    AddPoseMeasurement(time_increment * i);
+  }
+  // Set second node adder start time to 2 so first measurement shouldn't be added
+  dummy_node_adder_->start_time_ = 2;
+  // Set other times to be negligable
+  dummy_node_adder_->new_start_time_ = 0;
+  dummy_node_adder_->end_time_ = 100;
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
+  // Pose node times:
+  // 0, 2, 3
+  // Pose node num nodes: 3
+  // Pose node duration: 3
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 3);
+  // Expect 5 factors (prior, two between factors, 2 measurements)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 5);
 }
 
 // Run all the tests that were declared with TEST()
