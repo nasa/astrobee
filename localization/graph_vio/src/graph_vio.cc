@@ -26,18 +26,24 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
     : SlidingWindowGraphOptimizer(params.sliding_window_graph_optimizer,
                                   std::make_unique<optimizers::NonlinearOptimizer>(params.nonlinear_optimizer)),
       params_(params) {
-  // TODO(rsoussan): initialize node adders!
-  // initialize factor adders!
-  // set optimizer in sliding window graph optimizer! How??
   // Initialize node adders
+  combined_nav_state_node_adder_ = std::make_shared<node_adders::CombinedNavStateNodeAdder>(
+    params_.combined_nav_state_node_adder, params_.combined_nav_state_node_adder_model, nodes());
+  // Initialize factor adders
+  vo_smart_projection_factor_adder_ =
+    std::make_shared<factor_adders::VoSmartProjectionFactorAdder<node_adders::CombinedNavStateNodeAdder>>(
+      params_.vo_smart_projection_factor_adder, combined_nav_state_node_adder_);
+  standstill_factor_adder_ =
+    std::make_shared<factor_adders::StandstillFactorAdder<node_adders::CombinedNavStateNodeAdder>>(
+      params_.standstill_factor_adder, combined_nav_state_node_adder_);
 }
 
-void AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  // TODO(rsoussan): push to node adder!
+void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
+  combined_nav_state_node_adder_->AddMeasurement(imu_measurement);
 }
 
-void AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& feature_points_measurement) {
-  // TODO(rsoussan): push to vo adder!
-  // check for standstill!
+void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& feature_points_measurement) {
+  vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);
+  // TODO(rsoussan): check for standstill!
 }
 }  // namespace graph_vio

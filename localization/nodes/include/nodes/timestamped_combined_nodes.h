@@ -132,6 +132,9 @@ class TimestampedCombinedNodes {
   // Returns whether the container contains a node at the provided timestamp.
   bool Contains(const localization_common::Time timestamp) const;
 
+  // Const accessor for internal gtsam values.
+  const gtsam::Values& values() const;
+
  private:
   // Removes a node with the provided keys if it exists.
   bool Remove(const gtsam::KeyVector& keys);
@@ -363,6 +366,11 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Clos
   const auto closest = timestamp_keys_map_.Closest(timestamp);
   if (!closest) return boost::none;
   return Node(*closest);
+}
+
+template <typename NodeType, bool CombinedType>
+const gtsam::Values& TimestampedCombinedNodes<NodeType, CombinedType>::values() const {
+  return nodes_->values();
 }
 
 template <typename NodeType, bool CombinedType>

@@ -48,7 +48,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
   // Adds feature points measurement to vo smart projection factor adder.
-  bool AddFeaturePointsMeasurement(
+  void AddFeaturePointsMeasurement(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement);
 
  private:
