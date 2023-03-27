@@ -12,11 +12,11 @@
       - too many copies in base classes?
 
      - Update
-        - check factor types!! (AC)
-        - test slide window num nodes violation! (AA)
+        - check factor types!! (AA)
+          - add expect between factor 
         - test new start time/end time! (AB)
           - add a second dummy node adder that simply sets these, make sure it works!
-        - test remove factors! (AD)
+        - test remove factors! (AC)
             - test with cumulative factor!!!
               - make fake one??
         - todo to test adding marginal factors?

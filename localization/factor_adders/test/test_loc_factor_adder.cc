@@ -130,10 +130,8 @@ class LocFactorAdderTest : public ::testing::Test {
     const auto pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factors_[factor_index].get());
     ASSERT_TRUE(pose_factor);
     const gtsam::Pose3 factor_pose = pose_factor->prior();
-    const gtsam::Pose3 measurement_pose = measurements_[measurement_time].global_T_cam * params_.body_T_cam.inverse();
+    const gtsam::Pose3 measurement_pose = measurements_[measurement_index].global_T_cam * params_.body_T_cam.inverse();
     EXPECT_MATRIX_NEAR(factor_pose, measurement_pose, 1e-6);
-    // EXPECT_MATRIX_NEAR(pose_factor->prior(), measurements_[measurement_time].global_T_cam *
-    // params_.body_T_cam.inverse(), 1e-6);
   }
 
   void EXPECT_SAME_PROJECTION_FACTOR(const int factor_index, const int measurement_time, const int measurement_index) {

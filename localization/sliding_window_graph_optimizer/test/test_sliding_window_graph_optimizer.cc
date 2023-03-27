@@ -65,7 +65,8 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
       new no::TimestampedNodes<gtsam::Pose3>(sliding_window_graph_optimizer_->nodes()));
     pose_node_adder_.reset(
       new na::PoseNodeAdder(DefaultPoseNodeAdderParams(), DefaultPoseNodeAdderModelParams(), timestamped_pose_nodes));
-    loc_factor_adder_.reset(new fa::LocFactorAdder<na::PoseNodeAdder>(DefaultLocFactorAdderParams(), pose_node_adder_));
+    loc_factor_adder_params_ = DefaultLocFactorAdderParams();
+    loc_factor_adder_.reset(new fa::LocFactorAdder<na::PoseNodeAdder>(loc_factor_adder_params_, pose_node_adder_));
     sliding_window_graph_optimizer_->AddSlidingWindowNodeAdder(pose_node_adder_);
     sliding_window_graph_optimizer_->AddFactorAdder(loc_factor_adder_);
   }
@@ -78,11 +79,13 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     loc_measurement.global_T_cam = lc::RandomPose();
     loc_measurement.timestamp = time;
     loc_factor_adder_->AddMeasurement(loc_measurement);
+    loc_measurements_.emplace_back(loc_measurement);
   }
 
   void AddPoseMeasurement(const double time) {
     const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), time);
     pose_node_adder_->AddMeasurement(pose_measurement);
+    pose_measurements_.emplace_back(pose_measurement);
   }
 
   sw::SlidingWindowGraphOptimizerParams DefaultSlidingWindowGraphOptimizerParams() {
@@ -139,9 +142,23 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     return params;
   }
 
+  // TODO(rsoussan): Merge this with loc factor adder test
+  void EXPECT_SAME_LOC_POSE_FACTOR(const int factor_index, const int measurement_index) {
+    const auto pose_factor =
+      dynamic_cast<gtsam::LocPoseFactor*>(sliding_window_graph_optimizer_->factors()[factor_index].get());
+    ASSERT_TRUE(pose_factor);
+    const gtsam::Pose3 factor_pose = pose_factor->prior();
+    const gtsam::Pose3 measurement_pose =
+      loc_measurements_[measurement_index].global_T_cam * loc_factor_adder_params_.body_T_cam.inverse();
+    EXPECT_MATRIX_NEAR(factor_pose, measurement_pose, 1e-6);
+  }
+
   std::unique_ptr<sw::SlidingWindowGraphOptimizer> sliding_window_graph_optimizer_;
   std::shared_ptr<fa::LocFactorAdder<na::PoseNodeAdder>> loc_factor_adder_;
+  fa::LocFactorAdderParams loc_factor_adder_params_;
   std::shared_ptr<na::PoseNodeAdder> pose_node_adder_;
+  std::vector<lm::MatchedProjectionsMeasurement> loc_measurements_;
+  std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
 };
 
 TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
@@ -162,6 +179,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   // Expect 2 factors (prior and measurement on first node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
+  EXPECT_SAME_LOC_POSE_FACTOR(1, 0);
   // Add second measurements
   AddLocMeasurement(1);
   AddPoseMeasurement(1);
@@ -176,6 +194,8 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
   // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
+  EXPECT_SAME_LOC_POSE_FACTOR(1, 0);
+  EXPECT_SAME_LOC_POSE_FACTOR(3, 1);
   // Add third measurements
   AddLocMeasurement(2);
   AddPoseMeasurement(2);
@@ -194,6 +214,9 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
   // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
+  // Pose prior removed then added last
+  EXPECT_SAME_LOC_POSE_FACTOR(0, 1);
+  EXPECT_SAME_LOC_POSE_FACTOR(2, 2);
 }
 
 TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
