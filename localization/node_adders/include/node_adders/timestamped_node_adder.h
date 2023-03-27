@@ -135,7 +135,7 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeAdderMo
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::SlideWindow(
   const localization_common::Time oldest_allowed_timestamp, const boost::optional<const gtsam::Marginals&>& marginals,
   const gtsam::KeyVector& old_keys, const double huber_k, gtsam::NonlinearFactorGraph& factors) {
-  if (oldest_allowed_timestamp <= StartTime()) {
+  if (oldest_allowed_timestamp <= *(StartTime())) {
     LogDebug("SlideWindow: Oldest allowed timestamp older than current start time, nothing to do.");
     return true;
   }

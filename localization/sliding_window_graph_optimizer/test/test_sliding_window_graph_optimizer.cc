@@ -302,24 +302,24 @@ TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersStartTime) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   // Add 3 nodes to populate graph with 4 nodes (max)
-  const double time_increment = 1;
+  const double time_increment = 0.1;
   for (int i = 1; i <= 3; ++i) {
     AddLocMeasurement(time_increment * i);
     AddPoseMeasurement(time_increment * i);
   }
-  // Set second node adder start time to 2 so first measurement shouldn't be added
-  dummy_node_adder_->start_time_ = 2;
+  // Set second node adder new start time to 0.2 so first two nodes should be removed
+  dummy_node_adder_->new_start_time_ = 0.2;
   // Set other times to be negligable
-  dummy_node_adder_->new_start_time_ = 0;
+  dummy_node_adder_->start_time_ = 0;
   dummy_node_adder_->end_time_ = 100;
   EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
   // Pose node times:
-  // 0, 2, 3
-  // Pose node num nodes: 3
-  // Pose node duration: 3
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 3);
-  // Expect 5 factors (prior, two between factors, 2 measurements)
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 5);
+  // 0.2, 0.3
+  // Pose node num nodes: 2
+  // Pose node duration: 0.1
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
+  // Expect 3 factors (prior, one between factor, 2 measurements)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
 }
 
 // Run all the tests that were declared with TEST()
