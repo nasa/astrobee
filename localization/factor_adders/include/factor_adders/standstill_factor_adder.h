@@ -45,6 +45,9 @@ class StandstillFactorAdder
   int AddFactorsForSingleMeasurement(const localization_measurements::StandstillMeasurement& standstill_measurement,
                                      gtsam::NonlinearFactorGraph& factors) final;
 
+  // Returns whether the node adder can add a node at the provided time.
+  bool CanAddFactor(const localization_common::Time time) const final;
+
   // Adds a velocity prior at the provided timestamp with zero velocity.
   bool AddZeroVelocityPrior(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors);
   // Adds a relative pose between factor with zero relative movement between nodes at timestamp a and b.
@@ -93,6 +96,11 @@ int StandstillFactorAdder<PoseVelocityNodeAdderType>::AddFactorsForSingleMeasure
     if (AddZeroVelocityPrior(standstill_measurement.timestamp, factors)) ++num_factors_added;
   }
   return num_factors_added;
+}
+
+template <typename PoseVelocityNodeAdderType>
+bool StandstillFactorAdder<PoseVelocityNodeAdderType>::CanAddFactor(const localization_common::Time time) const {
+  return node_adder_->CanAddNode(time);
 }
 
 template <typename PoseVelocityNodeAdderType>

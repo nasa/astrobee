@@ -111,6 +111,7 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddMeasurementBasedFactors(
   ProcessMeasurements(oldest_allowed_time, newest_allowed_time,
                       [this](const localization_measurements::FeaturePointsMeasurement& measurement) {
                         feature_tracker_->Update(measurement.feature_points);
+                        return true;
                       });
   // Remove old feature track points before adding factors
   feature_tracker_->RemoveOldPoints(oldest_allowed_time);

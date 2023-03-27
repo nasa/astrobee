@@ -43,17 +43,18 @@ class MeasurementBasedFactorAdder : public FactorAdder {
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_time);
 
  protected:
-  // Helper function to process measurements in valid time range and remove them
+  // Helper function to process measurements in valid time range and remove processed ones
   // from the measurement buffer.
+  // Removes the measurement if the process_measurement_function returns true.
   void ProcessMeasurements(
     const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
-    const std::function<void(const MeasurementType&, gtsam::NonlinearFactorGraph&)>& process_measurement_function,
+    const std::function<bool(const MeasurementType&, gtsam::NonlinearFactorGraph&)>& process_measurement_function,
     gtsam::NonlinearFactorGraph& factors);
 
   // Wrapper for ProcessMeasurements that doesn't use factors.
   void ProcessMeasurements(const localization_common::Time oldest_allowed_time,
                            const localization_common::Time newest_allowed_time,
-                           const std::function<void(const MeasurementType&)>& process_measurement_function);
+                           const std::function<bool(const MeasurementType&)>& process_measurement_function);
 
   localization_common::TimestampedSet<MeasurementType> measurements_;
 
@@ -95,14 +96,14 @@ void MeasurementBasedFactorAdder<MeasurementType>::RemoveOldMeasurements(
 template <typename MeasurementType>
 void MeasurementBasedFactorAdder<MeasurementType>::ProcessMeasurements(
   const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
-  const std::function<void(const MeasurementType&, gtsam::NonlinearFactorGraph&)>& process_measurement_function,
+  const std::function<bool(const MeasurementType&, gtsam::NonlinearFactorGraph&)>& process_measurement_function,
   gtsam::NonlinearFactorGraph& factors) {
   auto& measurements = measurements_.set();
   for (auto it = measurements.begin(); it != measurements.end();) {
     const auto& measurement = it->second;
     const auto timestamp = it->first;
-    if (timestamp >= oldest_allowed_time && timestamp <= newest_allowed_time) {
-      process_measurement_function(measurement, factors);
+    if (timestamp >= oldest_allowed_time && timestamp <= newest_allowed_time &&
+        process_measurement_function(measurement, factors)) {
       // Remove used measurements.
       it = measurements.erase(it);
     } else {
@@ -114,12 +115,12 @@ void MeasurementBasedFactorAdder<MeasurementType>::ProcessMeasurements(
 template <typename MeasurementType>
 void MeasurementBasedFactorAdder<MeasurementType>::ProcessMeasurements(
   const localization_common::Time oldest_allowed_time, const localization_common::Time newest_allowed_time,
-  const std::function<void(const MeasurementType&)>& process_measurement_function) {
+  const std::function<bool(const MeasurementType&)>& process_measurement_function) {
   gtsam::NonlinearFactorGraph dummy_factors;
   ProcessMeasurements(
     oldest_allowed_time, newest_allowed_time,
     [&process_measurement_function](const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) {
-      process_measurement_function(measurement);
+      return process_measurement_function(measurement);
     },
     dummy_factors);
 }

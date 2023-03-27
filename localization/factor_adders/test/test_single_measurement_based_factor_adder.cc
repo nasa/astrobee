@@ -58,6 +58,8 @@ class SimpleAdder : public fa::SingleMeasurementBasedFactorAdder<lm::PoseMeasure
     return 1;
   }
 
+  bool CanAddFactor(const localization_common::Time time) const final { return true; }
+
   int key_value_ = 0;
   gtsam::SharedNoiseModel pose_noise_;
   SimpleAdderParams params_;

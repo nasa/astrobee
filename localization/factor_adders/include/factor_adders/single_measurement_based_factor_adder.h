@@ -33,14 +33,20 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
  private:
   // Add factors for all measurements in valid time range to existing factor graph.
   // Calls AddFactors(measurement) for each measurement in range.
+  // Subsequently removes measurements that are addable (for example, if a corresponding
+  // node adder can create a node at it's timestamp) as determined by CanAddFactor().
   // Returns number of added factors.
   int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
                                  const localization_common::Time newest_allowed_time,
                                  gtsam::NonlinearFactorGraph& factors) final;
 
   // Add factors given a single measurement.
+  // Returns number of added factors.
   virtual int AddFactorsForSingleMeasurement(const MeasurementType& measurement,
                                              gtsam::NonlinearFactorGraph& factors) = 0;
+
+  // Whether a factor can be added at the provided time.
+  virtual bool CanAddFactor(const localization_common::Time time) const = 0;
 };
 
 // Implementation
@@ -56,7 +62,9 @@ int SingleMeasurementBasedFactorAdder<MeasurementType>::AddMeasurementBasedFacto
   this->ProcessMeasurements(
     oldest_allowed_time, newest_allowed_time,
     [this, &num_added_factors](const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) {
+      if (!CanAddFactor(measurement.timestamp)) return false;
       num_added_factors += AddFactorsForSingleMeasurement(measurement, factors);
+      return true;
     },
     factors);
   return num_added_factors;
