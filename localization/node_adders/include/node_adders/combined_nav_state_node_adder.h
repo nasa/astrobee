@@ -21,13 +21,13 @@
 
 #include <localization_measurements/imu_measurement.h>
 #include <node_adders/combined_nav_state_node_adder_model.h>
-#include <node_adders/combined_nav_state_nodes.h>
 #include <node_adders/measurement_based_timestamped_node_adder.h>
+#include <nodes/combined_nav_state_nodes.h>
 
 namespace node_adders {
 using CombinedNavStateNodeAdder =
-  MeasurementBasedTimestampedNodeAdder<localization_measurements::ImuMeasurement, CombinedNavStateNodes,
-                                       CombinedNavStateNodeAdderModel>;
+  MeasurementBasedTimestampedNodeAdder<localization_measurements::ImuMeasurement, localization_common::CombinedNavState,
+                                       nodes::CombinedNavStateNodes, CombinedNavStateNodeAdderModel>;
 }  // namespace node_adders
 
 #endif  // NODE_ADDERS_COMBINED_NAV_STATE_NODE_ADDER_H_

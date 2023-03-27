@@ -32,15 +32,16 @@ class MeasurementBasedTimestampedNodeAdder
   using Base = TimestampedNodeAdder<NodeType, TimestampedNodesType, MeasurementBasedTimestampedNodeAdderModelType>;
 
  public:
+  using Params = MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>;
   // Construct using nodes. Creates timestamped nodes interally.
   MeasurementBasedTimestampedNodeAdder(
-    const MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>& params,
+    const Params& params,
     const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<nodes::Nodes> nodes);
 
   // Construct using already constructed timestamped nodes.
   MeasurementBasedTimestampedNodeAdder(
-    const MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>& params,
+    const Params& params,
     const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<TimestampedNodesType> timestamped_nodes);
 
@@ -71,7 +72,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
                                      MeasurementBasedTimestampedNodeAdderModelType>::
   MeasurementBasedTimestampedNodeAdder(
-    const MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>& params,
+    const Params& params,
     const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<nodes::Nodes> nodes)
     : Base(params, node_adder_model_params, std::move(nodes)) {
@@ -84,7 +85,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
                                      MeasurementBasedTimestampedNodeAdderModelType>::
   MeasurementBasedTimestampedNodeAdder(
-    const MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>& params,
+    const Params& params,
     const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<TimestampedNodesType> timestamped_nodes)
     : Base(params, node_adder_model_params, std::move(timestamped_nodes)) {

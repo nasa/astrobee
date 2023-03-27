@@ -15,34 +15,38 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 #ifndef GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 #define GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 
-#include <graph_vio/calibration_params.h>
-#include <graph_vio/factor_params.h>
-#include <node_updaters/combined_nav_state_node_updater_params.h>
-#include <node_updaters/feature_point_node_updater_params.h>
-#include <vision_common/feature_tracker_params.h>
-#include <graph_vio/graph_initializer_params.h>
-#include <graph_optimizer/graph_optimizer_params.h>
-#include <localization_measurements/fan_speed_mode.h>
+#include <factor_adders/standstill_factor_adder_params.h>
+#include <factor_adders/vo_smart_projection_factor_adder_params.h>
+#include <node_adders/combined_nav_state_node_adder.h>
+#include <node_adders/combined_nav_state_node_adder_model_params.h>
+#include <optimizers/nonlinear_optimizer.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
 
-#include <string>
+#include <boost/serialization/serialization.hpp>
 
 namespace graph_vio {
 struct GraphVIOParams {
-  node_updaters::CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
-  CalibrationParams calibration;
-  FactorParams factor;
-  node_updaters::FeaturePointNodeUpdaterParams feature_point_node_updater;
-  vision_common::FeatureTrackerParams feature_tracker;
-  graph_optimizer::GraphOptimizerParams graph_optimizer;
-  GraphInitializerParams graph_initializer;
-  double max_standstill_feature_track_avg_distance_from_mean;
-  int standstill_min_num_points_per_track;
-  double huber_k;
-  double standstill_feature_track_duration;
-  localization_measurements::FanSpeedMode initial_fan_speed_mode;
+  factor_adders::StandstillFactorAdderParams standstill_factor_adder;
+  factor_adders::VoSmartProjectionFactorAdderParams vo_smart_projection_factor_adder;
+  node_adders::CombinedNavStateNodeAdder::Params combined_nav_state_node_adder;
+  node_adders::CombinedNavStateNodeAdderModelParams combined_nav_state_node_adder_model;
+  optimizers::NonlinearOptimizerParams nonlinear_optimizer;
+  sliding_window_graph_optimizer::SlidingWindowGraphOptimizerParams sliding_window_graph_optimizer;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(standstill_factor_adder);
+    ar& BOOST_SERIALIZATION_NVP(vo_smart_projection_factor_adder);
+    ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_adder);
+    ar& BOOST_SERIALIZATION_NVP(nonlinear_optimizer);
+    ar& BOOST_SERIALIZATION_NVP(sliding_window_graph_optimizer);
+  }
 };
 }  // namespace graph_vio
 

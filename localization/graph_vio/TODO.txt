@@ -1,10 +1,18 @@
-  - test optimizers!!
-      - test nonlinear optimizer! (A)
-
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
 
-  - add grah_vio! (B)
+  - add grah_vio! (A)
+    - add constructor for graph optmizer that initializes optimizer!!
+        - (reuse old code)
+    - add combined imu node adder
+      - add function to add these!
+      - add using params in measurement based timestamped node adder!
+    - vo and standstill factor adders
+      - add function to addthese!
+    - add params!
+      - add params for each node adder, factor adder
+
+  in ros_graph_vio: (B)
     - publish odometry message!
       - add new message type?
       - convert velocity from odom frame to global frame??
