@@ -42,11 +42,14 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
+    if (!CanAddNode(timestamp)) return false;
     nodes_.Add(gtsam::Pose3::identity());
     return true;
   }
 
-  bool CanAddNode(const localization_common::Time timestamp) const final { return true; }
+  bool CanAddNode(const localization_common::Time timestamp) const final {
+    return timestamp < latest_measurement_time_;
+  }
 
   // Assumes integer timestamps that perfectly cast to ints.
   // First key is pose key.
@@ -62,6 +65,9 @@ class SimplePoseNodeAdder : public na::NodeAdder {
   no::Nodes& nodes() { return nodes_; }
 
   std::string type() const final { return "simple_pose_node_adder"; }
+
+  // Simulate measurement delay for node adder and control end of measurements time.
+  int latest_measurement_time_ = 10;
 
  private:
   no::Nodes nodes_;
@@ -410,6 +416,31 @@ TEST_F(LocFactorAdderTest, PoseFactors) {
   EXPECT_SAME_POSE_NOISE(0, pose_noise);
   EXPECT_SAME_POSE_FACTOR(1, 1);
   EXPECT_SAME_POSE_NOISE(1, pose_noise);
+}
+
+TEST_F(LocFactorAdderTest, PoseFactorsTooSoon) {
+  auto params = DefaultParams();
+  params.add_pose_priors = true;
+  Initialize(params);
+  factor_adder_->AddMeasurement(measurements_[0]);
+  // Add first factor
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  EXPECT_SAME_POSE_FACTOR(0, 0);
+  // Add factor too soon, set node adder latest measurement before factor newest_allowed_time
+  // so factor can't be created.
+  node_adder_->latest_measurement_time_ = 0.5;
+  factor_adder_->AddMeasurement(measurements_[1]);
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 0);
+  EXPECT_EQ(factors_.size(), 1);
+  EXPECT_SAME_POSE_FACTOR(0, 0);
+  // Change node adder latest measurement time back, make sure measurement for factor
+  // adder hasn't been removed and factor can still be created.
+  node_adder_->latest_measurement_time_ = 2;
+  EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_POSE_FACTOR(0, 0);
+  EXPECT_SAME_POSE_FACTOR(1, 1);
 }
 
 TEST_F(LocFactorAdderTest, ScalePoseNoiseWithNumLandmarks) {
