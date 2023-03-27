@@ -1,30 +1,23 @@
-    - add serialization! (C)
-      - also add to standstill factor adder! base class factor adders! others!
-
-    - clean up factor adder paarams?? (B)
-      - too many copies in base classes?
-
   - test optimizers!!
-      - test nonlinear optimizer! (D)
+      - test nonlinear optimizer! (A)
 
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
 
-  - add grah_vio! (E)
+  - add grah_vio! (B)
     - publish odometry message!
       - add new message type?
       - convert velocity from odom frame to global frame??
         - is velocity in global frame or body frame??
       - add better way of getting relative covariance??
-  - add graph_localizer! (F)
+
+  - add graph_localizer! (C)
     - use pose node updater with odometry message! 
     - add loc factor adder!
 
     - add parameter reader! (G)
       - fail if parameter not read!!
       - how to unit test these??
-
-
 
   isam2 optimizer issues!
     - need to account for values removed when sliding window!
