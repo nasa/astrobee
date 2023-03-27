@@ -60,14 +60,9 @@ class TimestampedCombinedNodes {
   // Returns a node at the provided timestamp if it exists.
   boost::optional<NodeType> Node(const localization_common::Time timestamp) const;
 
-  // Helper function that returns a node with the provided timestamped keys if it exists.
-  // TODO(rsoussan): Make this private?
-  boost::optional<NodeType> Node(const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const;
-
   // Returns a portion of a combined node (or a full non-combined node)
   // with the provided key if it exists.
-  // To return a combined node, use one of the above Node accessor functions instead.
-  // TODO(rsoussan): Rename this?
+  // To return a combined node, use Node(timestamp) instead.
   template <typename T>
   boost::optional<T> Node(const gtsam::Key& key) const;
 
@@ -144,8 +139,11 @@ class TimestampedCombinedNodes {
   // Adds a node and returns the keys associated with it.
   gtsam::KeyVector Add(const NodeType& node);
 
-  // Returns the node with the provied keys and timestamp if it exists.
+  // Helper function that returns a node with the provied keys and timestamp if it exists.
   boost::optional<NodeType> Node(const gtsam::KeyVector& keys, const localization_common::Time timestamp) const;
+
+  // Helper function that returns a node with the provided timestamped keys if it exists.
+  boost::optional<NodeType> Node(const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const;
 
   friend class boost::serialization::access;
   template <class ARCHIVE>
@@ -187,21 +185,6 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node
 }
 
 template <typename NodeType, bool CombinedType>
-bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const localization_common::Time& timestamp) {
-  const auto value = timestamp_keys_map_.Get(timestamp);
-  if (!value) return false;
-  bool successful_removal = true;
-  successful_removal = successful_removal && timestamp_keys_map_.Remove(timestamp);
-  successful_removal = successful_removal && Remove(value->value);
-  return successful_removal;
-}
-
-template <typename NodeType, bool CombinedType>
-bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const gtsam::KeyVector& keys) {
-  return nodes_->Remove(keys);
-}
-
-template <typename NodeType, bool CombinedType>
 boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
   const localization_common::Time timestamp) const {
   const auto keys = Keys(timestamp);
@@ -226,6 +209,21 @@ gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Keys(
   const localization_common::Time timestamp) const {
   if (!Contains(timestamp)) return {};
   return (timestamp_keys_map_.Get(timestamp))->value;
+}
+
+template <typename NodeType, bool CombinedType>
+bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const localization_common::Time& timestamp) {
+  const auto value = timestamp_keys_map_.Get(timestamp);
+  if (!value) return false;
+  bool successful_removal = true;
+  successful_removal = successful_removal && timestamp_keys_map_.Remove(timestamp);
+  successful_removal = successful_removal && Remove(value->value);
+  return successful_removal;
+}
+
+template <typename NodeType, bool CombinedType>
+bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const gtsam::KeyVector& keys) {
+  return nodes_->Remove(keys);
 }
 
 template <typename NodeType, bool CombinedType>
