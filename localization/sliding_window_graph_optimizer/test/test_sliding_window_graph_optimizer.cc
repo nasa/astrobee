@@ -324,6 +324,8 @@ TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersNewStartTime) {
 }
 
 TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowPruneCumulativeFactor) {
+  using SmartFactorCalibration = gtsam::Cal3_S2;
+  using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<SmartFactorCalibration>;
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
@@ -335,8 +337,6 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowPruneCumulativeFactor) {
   }
   // Hackily add a cumulative factor (smart factor) using all pose nodes.
   {
-    using SmartFactorCalibration = gtsam::Cal3_S2;
-    using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<SmartFactorCalibration>;
     auto smart_factor = boost::make_shared<RobustSmartFactor>(gtsam::noiseModel::Isotropic::Sigma(2, 0.1),
                                                               boost::make_shared<gtsam::Cal3_S2>(), gtsam::Pose3(),
                                                               gtsam::SmartProjectionParams(), true, true, 1.345);
@@ -355,6 +355,17 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowPruneCumulativeFactor) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
   // Expect 9 factors (prior, three between factors, 4 measurements, 1 smart factor)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 9);
+  // Smart factor should be in first index since added before updating graph.
+  const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(sliding_window_graph_optimizer_->factors()[0].get());
+  ASSERT_TRUE(smart_factor);
+  EXPECT_EQ(smart_factor->keys().size(), 4);
+  for (int i = 0; i < 4; ++i) {
+    // Keys are offset by 1, and 1st key is removed
+    const int key = i + 2;
+    EXPECT_EQ(smart_factor->keys()[i], key);
+    // Point is (key+1, key+2)
+    EXPECT_MATRIX_NEAR(smart_factor->measured()[i], gtsam::Point2(key + 1, key + 2), 1e-6);
+  }
 }
 
 // TODO(rsoussan): Test adding marginal factors
