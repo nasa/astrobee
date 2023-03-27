@@ -43,62 +43,108 @@ template <typename NodeType, bool CombinedType = true>
 // with CombinedType = false.
 class TimestampedCombinedNodes {
  public:
-  explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes = std::make_shared<Nodes>());
+  // Nodes should be provided by a graph optimizer and the same nodes
+  // should be passed to all timestamped nodes in the graph.
+  explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes);
 
+  // For serialization only
+  TimestampedCombinedNodes() = default;
+
+  // Add a node at the provided timestamp and return the GTSAM keys that correspond to it.
+  // The keys are used in graph factors to connect a factor to a node.
+  // Note that a single node can have multiple keys, for example a pose velocity node
+  // may have a pose key and velocity key. The ordering of keys is set in the specialized
+  // Add(node) function for the NodeType.
   gtsam::KeyVector Add(const localization_common::Time timestamp, const NodeType& node);
 
+  // Returns a node at the provided timestamp if it exists.
   boost::optional<NodeType> Node(const localization_common::Time timestamp) const;
 
+  // Helper function that returns a node with the provided timestamped keys if it exists.
+  // TODO(rsoussan): Make this private?
   boost::optional<NodeType> Node(const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const;
 
+  // Returns a portion of a combined node (or a full non-combined node)
+  // with the provided key if it exists.
+  // To return a combined node, use one of the above Node accessor functions instead.
+  // TODO(rsoussan): Rename this?
   template <typename T>
   boost::optional<T> Node(const gtsam::Key& key) const;
 
+  // Returns the keys for a timestamped node given the timestamp if it exists.
+  // If not, an empty key vector is returned.
   gtsam::KeyVector Keys(const localization_common::Time timestamp) const;
 
+  // Removes a node at the provided timestamp if it exists.
+  // Returns if a node was successfully removed.
   bool Remove(const localization_common::Time& timestamp);
 
+  // Returns the number of nodes. This does not return the number of values,
+  // so if one combined node containing a pose and velocity exists, this will
+  // return 1 for example.
   size_t size() const;
 
+  // Returns if there node container is empty.
   bool empty() const;
 
+  // Returns the oldest timestamp of the nodes in the container.
+  // Returns boost::none if no nodes exists.
   boost::optional<localization_common::Time> OldestTimestamp() const;
 
+  // Returns the oldest nodes in the container.
+  // Returns boost::none if no nodes exists.
   boost::optional<NodeType> OldestNode() const;
 
+  // Returns the latest timestamp of the nodes in the container.
+  // Returns boost::none if no nodes exists.
   boost::optional<localization_common::Time> LatestTimestamp() const;
 
+  // Returns the latest node in the container.
+  // Returns boost::none if no nodes exists.
   boost::optional<NodeType> LatestNode() const;
 
-  // Return lower and upper bounds.  Equal values are set as lower and upper bound.
+  // Returns lower and upper time bounds for the provided timestamp.  Equal values are set as lower and upper bound.
   std::pair<boost::optional<localization_common::Time>, boost::optional<localization_common::Time>>
   LowerAndUpperBoundTimestamps(const localization_common::Time timestamp) const;
 
-  // Return lower and upper bounds.  Equal values are set as lower and upper bound.
+  // Return lower and upper node bounds for the provided timestamp.  Equal values are set as lower and upper bound.
   std::pair<boost::optional<NodeType>, boost::optional<NodeType>> LowerAndUpperBoundNodes(
     const localization_common::Time timestamp) const;
 
+  // Returns the closest node in time to the provided timestamp.
   boost::optional<NodeType> ClosestNode(const localization_common::Time timestamp) const;
 
+  // Returns the lower bounded or equal in time node to the provided timestamp.
   boost::optional<NodeType> LowerBoundOrEqualNode(const localization_common::Time timestamp) const;
 
+  // Returns all nodes older than the provided oldest_allowed_timestamp.
   std::vector<NodeType> OldNodes(const localization_common::Time oldest_allowed_timestamp) const;
 
-  gtsam::KeyVector OldKeys(const localization_common::Time timestamp) const;
+  // Returns keys for all nodes older than the provied oldest_allowed_timestamp.
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_timestamp) const;
 
+  // Removes nodes older than the provied timestamp.
+  // Returns the number of removed nodes.
   int RemoveOldNodes(const localization_common::Time oldest_allowed_timestamp);
 
+  // Returns a vector containing the timestamps of all nodes in the container.
+  // Timestamps are sorted from oldest to latest.
   std::vector<localization_common::Time> Timestamps() const;
 
+  // Returns the total duration of node timestamps in the container.
   double Duration() const;
 
+  // Returns whether the container contains a node at the provided timestamp.
   bool Contains(const localization_common::Time timestamp) const;
 
  private:
+  // Removes a node with the provided keys if it exists.
   bool Remove(const gtsam::KeyVector& keys);
 
+  // Adds a node and returns the keys associated with it.
   gtsam::KeyVector Add(const NodeType& node);
 
+  // Returns the node with the provied keys and timestamp if it exists.
   boost::optional<NodeType> Node(const gtsam::KeyVector& keys, const localization_common::Time timestamp) const;
 
   friend class boost::serialization::access;
