@@ -249,27 +249,4 @@ PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
   return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
 }
-
-gtsam::NonlinearFactorGraph RemoveFactors(const gtsam::KeyVector& keys, gtsam::NonlinearFactorGraph& factors) {
-  gtsam::NonlinearFactorGraph removed_factors;
-  if (keys.empty()) return removed_factors;
-
-  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
-    bool found_key = false;
-    for (const auto& key : keys) {
-      if ((*factor_it)->find(key) != (*factor_it)->end()) {
-        found_key = true;
-        break;
-      }
-    }
-    if (found_key) {
-      removed_factors.push_back(*factor_it);
-      factor_it = factors.erase(factor_it);
-    } else {
-      ++factor_it;
-    }
-  }
-
-  return removed_factors;
-}
 }  // namespace localization_common

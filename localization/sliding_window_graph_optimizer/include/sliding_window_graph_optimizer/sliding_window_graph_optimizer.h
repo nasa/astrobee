@@ -94,6 +94,11 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // Latest end time of the sliding window node adders.
   boost::optional<localization_common::Time> LatestNodeAdderEndTime() const;
 
+  // Removes any factors containg a key in the provided keys.
+  // Prunes measurements and keys from cumulative factors instead of removing them.
+  // Returns removed factors.
+  gtsam::NonlinearFactorGraph RemoveFactors(const gtsam::KeyVector& keys_to_remove);
+
   // Add averagers and timers for logging
   void AddAveragersAndTimers();
 

@@ -19,6 +19,8 @@
 #ifndef GRAPH_FACTORS_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
 #define GRAPH_FACTORS_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
 
+#include <graph_factors/cumulative_factor.h>
+
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 #include <utility>
@@ -26,7 +28,7 @@
 
 namespace gtsam {
 template <class CALIBRATION>
-class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRATION> {
+class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRATION>, CumulativeFactor {
   typedef PinholePose<CALIBRATION> Camera;
   typedef SmartFactorBase<Camera> Base;
   typedef typename Camera::Measurement Z;
@@ -49,6 +51,8 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
                                   const bool rotation_only_fallback = false, const bool robust = true,
                                   const double huber_k = 1.0)
       : SmartProjectionPoseFactor<CALIBRATION>(sharedNoiseModel, K, body_P_sensor, params),
+        sharedNoiseModel_(sharedNoiseModel),
+        params_(params),
         rotation_only_fallback_(rotation_only_fallback),
         robust_(robust),
         huber_k_(huber_k) {
@@ -58,6 +62,16 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     if (!sharedIsotropic) throw std::runtime_error("RobustSmartProjectionPoseFactor: needs isotropic");
     noise_inv_sigma_ = 1.0 / sharedIsotropic->sigma();
     triangulation_params_ = params.triangulation;
+  }
+
+  // Helper function to return copy of factor with only measurements for allowed keys.
+  boost::shared_ptr<NonlinearFactor> PrunedCopy(const std::unordered_set<gtsam::Key>& keys_to_remove) const final {
+    boost::shared_ptr<RobustSmartProjectionPoseFactor> pruned_factor(new RobustSmartProjectionPoseFactor(
+      sharedNoiseModel_, calibration(), body_P_sensor(), params_, rotation_only_fallback_, robust_, huber_k_));
+    for (int i = 0; i < keys().size(); ++i) {
+      if (keys_to_remove.count(keys()[i]) == 0) pruned_factor->add(measured()[i], keys()[i]);
+    }
+    return pruned_factor;
   }
 
   boost::shared_ptr<GaussianFactor> linearize(const Values& values) const override {
@@ -233,6 +247,9 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   double noise_inv_sigma_;
   // TODO(rsoussan): Remove once result_ serialization bug in gtsam fixed
   TriangulationParameters triangulation_params_;
+  // Copies stored here to access for empty measurement copy creation
+  SharedNoiseModel sharedNoiseModel_;
+  SmartProjectionParams params_;
 };
 }  // namespace gtsam
 

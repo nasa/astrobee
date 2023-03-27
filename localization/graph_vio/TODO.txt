@@ -13,6 +13,11 @@
 
   - test sliding window optimizer! (B)
     - need to change removefactors function! make exception for smart factors! (AB)
+        - add graph factor cumulative factor base class! (AAA)
+        - if can cast to this, cast and call function to return factor with only allowed keys! (AAB)
+        - use for smart factor fixing as well! (AAC)
+        - test this!
+
         - need to make new function for this (or just add bool to current remove factors)! (removefactors should still work elsewhere, especially in vo factor adder!)
         - test this!!!!
             - test this function in loc utils

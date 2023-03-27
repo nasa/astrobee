@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <graph_factors/cumulative_factor.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
@@ -58,7 +59,7 @@ bool SlidingWindowGraphOptimizer::SlideWindow() {
     return false;
   }
   const auto old_keys = OldKeys(*new_start_time);
-  const auto old_factors = lc::RemoveFactors(old_keys, factors());
+  const auto old_factors = RemoveFactors(old_keys);
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
@@ -164,6 +165,41 @@ boost::optional<lc::Time> SlidingWindowGraphOptimizer::LatestNodeAdderEndTime() 
     }
   }
   return latest_end_time;
+}
+
+gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::RemoveFactors(const gtsam::KeyVector& keys_to_remove) {
+  gtsam::NonlinearFactorGraph removed_factors;
+  if (keys_to_remove.empty()) return removed_factors;
+  // Create set for quick lookup
+  std::unordered_set<gtsam::Key> keys_to_remove_set;
+  for (const auto& key : keys_to_remove) {
+    keys_to_remove_set.emplace(key);
+  }
+
+  for (auto factor_it = factors().begin(); factor_it != factors().end();) {
+    const auto cumulative_factor = dynamic_cast<const gtsam::CumulativeFactor*>(factor_it->get());
+    // TODO(rsoussan): Add function to create factor from keys and measurements that are removed!
+    // Return this with removed factors.
+    if (cumulative_factor) {
+      *factor_it = cumulative_factor->PrunedCopy(keys_to_remove_set);
+      ++factor_it;
+      continue;
+    }
+    bool remove_factor = false;
+    const auto& factor_keys = (*factor_it)->keys();
+    for (const auto& factor_key : factor_keys) {
+      if (keys_to_remove_set.count(factor_key) > 0) {
+        remove_factor = true;
+      }
+    }
+    if (!remove_factor) {
+      ++factor_it;
+    } else {
+      removed_factors.push_back(*factor_it);
+      factor_it = factors().erase(factor_it);
+    }
+  }
+  return removed_factors;
 }
 
 void SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger().AddTimer(update_timer_); }

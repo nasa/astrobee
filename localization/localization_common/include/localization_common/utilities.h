@@ -161,9 +161,6 @@ PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 
-// Removes any factors containg a key in the provided keys.
-gtsam::NonlinearFactorGraph RemoveFactors(const gtsam::KeyVector& keys, gtsam::NonlinearFactorGraph& factors);
-
 template <typename FactorType>
 void DeleteFactors(gtsam::NonlinearFactorGraph& graph);
 
