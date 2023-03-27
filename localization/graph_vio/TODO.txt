@@ -1,8 +1,11 @@
     - add serialization! (B)
       - also add to standstill factor adder! base class factor adders! others!
 
+    - clean up node functions!
+      - make some private!
+
+    - add comments to timestamped set!
  
-    - update node adders to take nodes on construction!!!! (D)
     - clean up factor adder paarams??
       - too many copies in base classes?
 
