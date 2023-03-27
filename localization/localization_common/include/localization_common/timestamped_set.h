@@ -32,6 +32,7 @@
 #include <vector>
 
 namespace localization_common {
+// Helper wrapper class that returns a value and timestamp.
 template <typename T>
 struct TimestampedValue {
   TimestampedValue(const Time timestamp, const T& value) : timestamp(timestamp), value(value) {}
@@ -41,6 +42,8 @@ struct TimestampedValue {
   T value;
 };
 
+// Stores a set of timesetamped values and provides many functions to
+// access and interact with the values using timestamps.
 template <typename T>
 class TimestampedSet {
  public:
@@ -50,42 +53,68 @@ class TimestampedSet {
   // Assumes values have corresponding timestamps at the same index and each timestamp is unique.
   TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values);
 
+  // Adds a value at the corresponding timestamp.
+  // Returns whether the value was successfully added.
   bool Add(const Time timestamp, const T& value);
 
+  // Removes a value at the provided timestamp if it exists.
+  // Returns whether the value was sucessfully removed.
   bool Remove(const Time timestamp);
 
+  // Get the timestamped value at the provied timestamp.
+  // Returns boost::none if no value exists.
   boost::optional<TimestampedValue<T>> Get(const Time timestamp) const;
 
+  // Returns the number of timestamped values in the set.
   size_t size() const;
 
+  // Returns whether the set is empty.
   bool empty() const;
 
+  // Clears all values and timestamps from the set.
   void Clear();
 
+  // Returns the oldest timestamped value in the set.
+  // Returns boost::none if the set is empty.
   boost::optional<TimestampedValue<T>> Oldest() const;
 
+  // Returns the latest timestamped value in the set.
+  // Returns boost::none if the set is empty.
   boost::optional<TimestampedValue<T>> Latest() const;
 
+  // Returns whether oldest_timestamp <= timestamp <= latest timestamp for the set.
   bool WithinBounds(const Time timestamp) const;
 
-  // Return lower and upper bounds.  Equal values are set as both lower and upper bound.
+  // Returns the lower and upper bound timestamped values in the set corresponding to the
+  // provided timestamp.  If the set has a value at the provided timestamp,
+  // both the lower and upper bound will be set to this value.
   std::pair<boost::optional<TimestampedValue<T>>, boost::optional<TimestampedValue<T>>> LowerAndUpperBound(
     const Time timestamp) const;
 
+  // Returns the closest timestamped value in the set to the provided timestamp
+  // or boost::none if the set is empty.
   boost::optional<TimestampedValue<T>> Closest(const Time timestamp) const;
 
+  // Returns the lower bound or equal timestamped value in the set corresponding to the
+  // provided timestamp or boost::none if the set is empty.
   boost::optional<TimestampedValue<T>> LowerBoundOrEqual(const Time timestamp) const;
 
+  // Returns a vector containing the ordered (oldest to latest) timestamps contained
+  // in the set.
   std::vector<Time> Timestamps() const;
 
+  // Returns the total duration of time (latest_time - oldest_time) contained in the set.
   double Duration() const;
 
+  // Returns whether the set contains the provided timestamp.
   bool Contains(const Time timestamp) const;
 
   // Returns the latest values not older than the provided oldest allowed timestamp.
   // Orders values from older to later values.
   std::vector<TimestampedValue<T>> LatestValues(const Time oldest_allowed_timestamp) const;
 
+  // Returns timestamped values in the set older than the provided oldest allowed timestamp.
+  // Values are ordered from oldest to latest.
   std::vector<TimestampedValue<T>> OldValues(const Time oldest_allowed_timestamp) const;
 
   // Returns values occuring at the provided timestamps.
@@ -93,6 +122,8 @@ class TimestampedSet {
   template <typename TimestampSetType>
   std::vector<TimestampedValue<T>> DownsampledValues(const TimestampSetType& allowed_timestamps) const;
 
+  // Removes values older than the provided oldest_allowed_timestamp.
+  // Returns the number of removed values.
   int RemoveOldValues(const Time oldest_allowed_timestamp);
 
   // Finds the lower bound element for timestamp and removes all values below this.
@@ -100,10 +131,13 @@ class TimestampedSet {
   // equal to the provided timestamp.
   int RemoveBelowLowerBoundValues(const Time timestamp);
 
+  // Returns a const reference to the internal map containing timestamps and corresponding values.
   const std::map<Time, T>& set() const;
 
+  // Returns a reference to the internal map containing timestamps and corresponding values.
   std::map<Time, T>& set();
 
+  // Returns an end iterator for the internal map containing timestamps and corresponding values.
   typename std::map<Time, T>::const_iterator cend() const;
 
   // Returns iterators to values in range of oldest and latest allowed timestamps.

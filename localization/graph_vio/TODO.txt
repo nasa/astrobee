@@ -1,16 +1,13 @@
-    - add serialization! (B)
+    - add serialization! (C)
       - also add to standstill factor adder! base class factor adders! others!
 
-    - clean up node functions!
-      - make some private!
-
-    - add comments to timestamped set!
+    - add comments to timestamped set! (A)
  
-    - clean up factor adder paarams??
+    - clean up factor adder paarams?? (B)
       - too many copies in base classes?
 
   - test optimizers!!
-      - test nonlinear optimizer! (A)
+      - test nonlinear optimizer! (D)
 
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
