@@ -99,9 +99,13 @@ gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common:
 
 std::pair<lc::Time, lc::Time> SlidingWindowGraphOptimizer::WindowStartAndEndTimes() const {
   auto start_time = EarliestNodeAdderStartTime();
+  // Shouldn't occur since node adders initialize their first nodes when added to the graph.
   if (!start_time) start_time = 0;
-  // Ensure all new factors are added
-  // TODO(rsoussan): Add param to set window size if sliding window after optimization?
+  // Add all new factors possible.
+  // When sliding window before optimization, this will keep the latest factors and
+  // compute the relative start time wrt them.
+  // When sliding window after optimization, this may increase the window size too much.
+  // TODO(rsoussan): Add param to set window size (start time) if sliding window after optimization?
   const lc::Time end_time = std::numeric_limits<double>::max();
   return {*start_time, end_time};
 }
@@ -129,8 +133,10 @@ boost::optional<lc::Time> SlidingWindowGraphOptimizer::IdealNodeAddersNewStartTi
   for (const auto& sliding_window_node_adder : sliding_window_node_adders_) {
     const auto node_adder_new_start_time = sliding_window_node_adder->SlideWindowNewStartTime();
     if (node_adder_new_start_time) {
+      // Use max here so the latest start time is chosen and window sizes for all node adders
+      // are <= desired sizes.
       new_start_time =
-        new_start_time ? std::min(*node_adder_new_start_time, *new_start_time) : *node_adder_new_start_time;
+        new_start_time ? std::max(*node_adder_new_start_time, *new_start_time) : *node_adder_new_start_time;
     }
   }
 

@@ -84,8 +84,8 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   boost::optional<localization_common::Time> NewStartTime() const;
 
   // Desired new start time that will constrain the graph to a certain window size.
-  // Calculated using the oldest of the desired start times for each sliding window node adder.
-  // TODO(rsoussan): Use latest of the desired start times?
+  // Calculated using the latest of the desired start times for each sliding window node adder
+  // so that all node adder window sizes are <= their desired size.
   boost::optional<localization_common::Time> IdealNodeAddersNewStartTime() const;
 
   // Earliest start time of the sliding window node adders.

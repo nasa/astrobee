@@ -12,9 +12,6 @@
       - too many copies in base classes?
 
   - test sliding window optimizer! (B)
-        - test added too new factor adder measurement factors, make sure they can be added after adding measurements to node adder! (AA)
-          - test for single factor adder
-          - test for vo factor adder
     - need to change removefactors function! make exception for smart factors! (AB)
         - need to make new function for this (or just add bool to current remove factors)! (removefactors should still work elsewhere, especially in vo factor adder!)
         - test this!!!!
