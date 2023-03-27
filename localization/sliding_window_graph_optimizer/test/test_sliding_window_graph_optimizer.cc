@@ -113,7 +113,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     // Only kept if there are at least min_num_states and not more than max_num_states
     params.ideal_duration = 1;
     params.min_num_states = 1;
-    params.max_num_states = 5;
+    params.max_num_states = 4;
     params.Initialize();
     return params;
   }
@@ -149,13 +149,6 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   // Add first measurements
-  {
-    const lc::Time time = 0;
-    // Pose node adder has starting node at t:0 already, add a measurement at t:1.
-    // const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), 1);
-    // pose_node_adder_->AddMeasurement(pose_measurement);
-  }
-  // Add first measurements
   // Add loc measurement at pose node initial time so no new pose nodes are added.
   AddLocMeasurement(0);
   // Update graph
@@ -164,7 +157,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // 0
   // Pose node num nodes: 1
   // Pose node duration: 0
-  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 5
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // No violations, nothing should be removed.
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
   // Expect 2 factors (prior and measurement on first node)
@@ -178,7 +171,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // 0 1
   // Pose node num nodes: 2
   // Pose node duration: 1
-  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 5
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // No violations, nothing should be removed.
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
   // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
@@ -192,7 +185,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // 0 1 2
   // Pose node num nodes: 3
   // Pose node duration: 2
-  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 5
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // Duration too large, oldest node should be removed.
   // Pose slide window pose node times:
   // 1 2
@@ -201,6 +194,46 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
   // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
+}
+
+TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
+  // Initial node and prior should be added for pose node adder
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  // Add 3 nodes to populate graph with 4 nodes (max)
+  const double time_increment = 0.1;
+  for (int i = 0; i < 3; ++i) {
+    AddLocMeasurement(time_increment * i);
+    AddPoseMeasurement(time_increment * i);
+  }
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
+  // Pose node times:
+  // 0, 0.1, 0.2, 0.3
+  // Pose node num nodes: 4
+  // Pose node duration: 0.3
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
+  // No violations, nothing should be removed.
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
+  // Expect 7 factors (prior, three between factors, 3 measurements)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 7);
+  // Violate num nodes limit
+  // Add second measurements
+  AddLocMeasurement(0.4);
+  AddPoseMeasurement(0.4);
+  EXPECT_TRUE(sliding_window_graph_optimizer_->Update());
+  // Pose node times:
+  // 0, 0.1, 0.2, 0.3, 0.4
+  // Pose node num nodes: 5
+  // Pose node duration: 0.4
+  // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
+  // Too many nodes, first node should be removed.
+  // Pose slide window pose node times:
+  // 0.1, 0.2, 0.3, 0.4
+  // Pose node num nodes: 4
+  // Pose node duration: 0.3
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
+  // Expect 7 factors (prior, three between factors, 3 measurements)
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 7);
 }
 
 // Run all the tests that were declared with TEST()
