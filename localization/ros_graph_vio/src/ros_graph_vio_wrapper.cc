@@ -105,8 +105,25 @@ void GraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
 ff_msgs::CombinedNavStateArray GraphVIOWrapper::CombinedNavStateArrayMsg() const {
   ff_msgs::CombinedNavStateArray msg;
   if (!Initialized()) return msg;
-  // TODO(rsoussan): fill in header, get combined nav state history, fill in!
-  // Add function in msg conversions to write combined nav state and covariance to
-  // combined nav state msg!!! (AAA)
+  const auto& nodes = graph_vio_->nodes();
+  for (const auto& time : nodes.Timestamps()) {
+    const auto combined_nav_state = nodes.Node(time);
+    const auto keys = nodes.Keys(time);
+    if (!combined_nav_state || keys.empty() || keys.size() != 3) {
+      LogError("CombinedNavStateArrayMsg: Failed to get combined nav state and keys.");
+      return msg;
+    }
+    const auto pose_covariance = graph_vio_->Covariance(keys[0]);
+    const auto velocity_covariance = graph_vio_->Covariance(keys[1]);
+    const auto imu_bias_covariance = graph_vio_->Covariance(keys[2]);
+    if (!pose_covariance || !velocity_covariance || !imu_bias_covariance) {
+      LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
+      return msg;
+    }
+    const auto msg.combined_nav_states.push_back(
+      lc::CombinedNavStateToMsg(*combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));
+  }
+  lc::TimeToHeader(*(nodes.LatestTime), msg.header);
+  return msg;
 }
 }  // namespace graph_vio

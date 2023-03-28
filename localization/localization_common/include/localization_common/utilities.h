@@ -106,8 +106,7 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
 ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
                                                 const PoseCovariance& pose_covariance,
                                                 const Eigen::Matrix3d& velocity_covariance,
-                                                const Eigen::Matrix3d& accelerometer_bias_covariance,
-                                                const Eigen::Matrix3d& gyroscope_bias_covariance);
+                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance);
 
 template <class LocMsgType>
 void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);

@@ -18,5 +18,8 @@
 
 geometry_msgs/Vector3 accelerometer_bias 
 geometry_msgs/Vector3 gyroscope_bias 
-float64[9] accelerometer_bias_covariance
-float64[9] gyroscope_bias_covariance
+# Ordered as accelerometer then gyroscope bias covarainces
+# Top left 3x3 block is the accelerometer bias covariances, 
+# bottom right 3x3 block is the gyroscope bias covariances,
+# and other blocks are accelerometer/gyroscope covariances.
+float64[36] covariance
