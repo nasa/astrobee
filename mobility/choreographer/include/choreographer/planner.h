@@ -44,7 +44,14 @@
 #include <ff_msgs/srv/get_zones.hpp>
 #include <ff_msgs/srv/get_occupancy_map.hpp>
 #include <ff_msgs/srv/get_map.hpp>
-
+namespace ff_msgs {
+typedef action::Plan Plan;
+typedef msg::Zone Zone;
+typedef srv::GetZones GetZones;
+typedef srv::GetOccupancyMap GetOccupancyMap;
+typedef srv::RegisterPlanner RegisterPlanner;
+typedef srv::GetMap GetMap;
+}  // namespace ff_msgs
 
 // Voxel map
 #include <jps3d/planner/jps_3d_util.h>
@@ -61,7 +68,7 @@ namespace planner {
 FF_DEFINE_LOGGER("planner");
 
 // Convenience declarations
-using RESPONSE = ff_msgs::action::Plan::Result;
+using RESPONSE = ff_msgs::Plan::Result;
 
 // Abstract class for implementing planners
 class PlannerImplementation : public ff_util::FreeFlyerComponent {
@@ -93,10 +100,10 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
  protected:
   // Derived classes must implement these functions
   virtual bool InitializePlanner(NodeHandle &nh) = 0;
-  virtual void PlanCallback(ff_msgs::action::Plan::Goal const& goal) = 0;
+  virtual void PlanCallback(ff_msgs::Plan::Goal const& goal) = 0;
 
   // Send the planner result
-  void PlanResult(ff_msgs::action::Plan::Result::SharedPtr const& result) {
+  void PlanResult(ff_msgs::Plan::Result::SharedPtr const& result) {
     switch (state_) {
     case PLANNING:
       FF_DEBUG_STREAM("Plan result received");
@@ -110,7 +117,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   }
 
   // Send some planner feedback
-  void PlanFeedback(ff_msgs::action::Plan::Feedback::SharedPtr const& feedback) {
+  void PlanFeedback(ff_msgs::Plan::Feedback::SharedPtr const& feedback) {
     switch (state_) {
     case PLANNING:
       server_p_.SendFeedback(feedback);
@@ -122,9 +129,9 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   }
 
   // Get the keepin and keepout zones
-  bool GetZones(std::vector < ff_msgs::msg::Zone > & zones) {
-    ff_msgs::srv::GetZones::Request request;
-    auto response = std::make_shared<ff_msgs::srv::GetZones::Response>();
+  bool GetZones(std::vector < ff_msgs::Zone > & zones) {
+    ff_msgs::GetZones::Request request;
+    auto response = std::make_shared<ff_msgs::GetZones::Response>();
     client_z_.waitForExistence(5.0);
     if (client_z_.isValid() && client_z_.call(request, response)) {
       zones = response->zones;
@@ -134,8 +141,8 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   }
   // Get the keepin and keepout zones
   bool GetZonesMap(std::vector<signed char> &map, Vec3f &origin, Vec3i &dim, double &map_res) {
-    ff_msgs::srv::GetOccupancyMap::Request request;
-    auto response = std::make_shared<ff_msgs::srv::GetOccupancyMap::Response>();
+    ff_msgs::GetOccupancyMap::Request request;
+    auto response = std::make_shared<ff_msgs::GetOccupancyMap::Response>();
     client_z_m_.waitForExistence(5.0);
     if (client_z_m_.isValid() && client_z_m_.call(request, response)) {
       map.resize(response->map.size());
@@ -152,8 +159,8 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     return false;
   }
   bool GetFreeMap(pcl::PointCloud<pcl::PointXYZ> *points, float *resolution) {
-    ff_msgs::srv::GetMap::Request request;
-    auto response = std::make_shared<ff_msgs::srv::GetMap::Response>();
+    ff_msgs::GetMap::Request request;
+    auto response = std::make_shared<ff_msgs::GetMap::Response>();
     client_f_.waitForExistence(5.0);
     if (client_f_.isValid() && client_f_.call(request, response)) {
       pcl::fromROSMsg(response->points, *points);
@@ -163,8 +170,8 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     return false;
   }
   bool GetObstacleMap(pcl::PointCloud<pcl::PointXYZ> *points, float *resolution) {
-    ff_msgs::srv::GetMap::Request request;
-    auto response = std::make_shared<ff_msgs::srv::GetMap::Response>();
+    ff_msgs::GetMap::Request request;
+    auto response = std::make_shared<ff_msgs::GetMap::Response>();
     client_o_.waitForExistence(5.0);
     if (client_o_.isValid() && client_o_.call(request, response)) {
       // pcl::fromROSMsg(response->points, *points);
@@ -221,7 +228,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
 
   // Finish this action
   void Complete(int32_t response_code,
-                ff_msgs::action::Plan::Result::SharedPtr result = ff_msgs::action::Plan::Result::SharedPtr()) {
+                ff_msgs::Plan::Result::SharedPtr result = ff_msgs::Plan::Result::SharedPtr()) {
     switch (state_) {
     case PLANNING:
       result->response = response_code;
@@ -251,7 +258,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     if (state_ != INITIALIZING) return;      // Don't initialize twice
     // Register this planner
     FF_DEBUG_STREAM("Registering planner");
-    auto response = std::make_shared<ff_msgs::srv::RegisterPlanner::Response>();
+    auto response = std::make_shared<ff_msgs::RegisterPlanner::Response>();
     client_r_.waitForExistence(5.0);
     if (client_r_.isValid() && client_r_.call(registration_, response)) {}
 
@@ -297,7 +304,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   }
 
   // Called when a new planning goal arrives
-  void GoalCallback(std::shared_ptr<const ff_msgs::action::Plan::Goal> const& old_goal) {
+  void GoalCallback(std::shared_ptr<const ff_msgs::Plan::Goal> const& old_goal) {
     FF_DEBUG_STREAM("A new plan request was just received");
     // FF_DEBUG_STREAM(*old_goal);
     switch (state_) {
@@ -327,12 +334,12 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
 
  private:
   State state_;                                          // Planner state
-  ff_util::FreeFlyerActionServer<ff_msgs::action::Plan> server_p_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetZones> client_z_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetOccupancyMap> client_z_m_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::srv::RegisterPlanner> client_r_;
-  ff_util::FreeFlyerServiceClient<ff_msgs::srv::GetMap> client_f_, client_o_;
-  ff_msgs::srv::RegisterPlanner::Request registration_;                // Registration info
+  ff_util::FreeFlyerActionServer<ff_msgs::Plan> server_p_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetZones> client_z_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetOccupancyMap> client_z_m_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::RegisterPlanner> client_r_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetMap> client_f_, client_o_;
+  ff_msgs::RegisterPlanner::Request registration_;                // Registration info
   config_reader::ConfigReader cfg_fm_;                   // Configuration
 };
 

@@ -95,6 +95,9 @@ DEFINE_double(deadline, -1.0, "Action deadline timeout");
 // Avoid sending the command multiple times
 bool sent_ = false;
 
+std::shared_ptr<tf2_ros::Buffer> buffer_;
+std::shared_ptr<tf2_ros::TransformListener> listener_;
+
 // Generic completion function
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   std::shared_ptr<const ff_msgs::Motion::Result> result) {
@@ -152,7 +155,6 @@ void SFeedbackCallback(const std::shared_ptr<const ff_msgs::Localization::Feedba
 // Switch result
 void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   std::shared_ptr<const ff_msgs::Localization::Result> result,
-  tf2_ros::Buffer * tf_buffer_,
   ff_util::FreeFlyerActionClient<ff_msgs::Motion> * action) {
   // Setup a new mobility goal
   ff_msgs::Motion::Goal goal;
@@ -175,10 +177,10 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
       geometry_msgs::PoseStamped state;
       try {
         std::string ns = FLAGS_ns;
-        geometry_msgs::TransformStamped tfs = tf_buffer_->lookupTransform(
+        geometry_msgs::TransformStamped tfs = buffer_->lookupTransform(
           std::string(FRAME_NAME_WORLD),
           (ns.empty() ? "body" : ns + "/" + std::string(FRAME_NAME_BODY)),
-          ros::Time(0));
+          ros::Time(0), rclcpp::Duration::from_seconds(5.0));
         state.header = tfs.header;
         state.pose = msg_conversions::ros_transform_to_ros_pose(tfs.transform);
       } catch (tf2::TransformException &ex) {
@@ -287,8 +289,7 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
 }
 
 // Ensure all clients are connected
-void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
-  ff_util::FreeFlyerActionClient<ff_msgs::Localization> * client_s_,
+void ConnectedCallback(ff_util::FreeFlyerActionClient<ff_msgs::Localization> * client_s_,
   ff_util::FreeFlyerActionClient<ff_msgs::Motion> * client_t_) {
   // Check to see if connected
   // if (!client_s_->IsConnected()) return;  // Switch
@@ -313,7 +314,7 @@ void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
   // }
   // Fake a switch result to trigger the releop action
   SResultCallback(ff_util::FreeFlyerActionState::SUCCESS, nullptr,
-    tf_buffer_, client_t_);
+    client_t_);
 }
 
 // Main entry point for application
@@ -378,8 +379,8 @@ int main(int argc, char *argv[]) {
   // Create a node handle
   auto nh = rclcpp::Node::make_shared(FLAGS_ns + std::string("_teleop_tool"));
   // TF2 Subscriber
-  tf2_ros::Buffer tf_buffer_(nh->get_clock());
-  tf2_ros::TransformListener tfListener(tf_buffer_);
+  buffer_.reset(new tf2_ros::Buffer(nh->get_clock()));
+  listener_.reset(new tf2_ros::TransformListener(*buffer_));
   // Setup SWITCH action
   client_s_.SetConnectedTimeout(FLAGS_connect);
   client_s_.SetActiveTimeout(FLAGS_active);
@@ -390,9 +391,9 @@ int main(int argc, char *argv[]) {
     SFeedbackCallback, std::placeholders::_1));
   client_s_.SetResultCallback(std::bind(
     SResultCallback, std::placeholders::_1, std::placeholders::_2,
-    &tf_buffer_, &client_t_));
+    &client_t_));
   client_s_.SetConnectedCallback(std::bind(ConnectedCallback,
-    &tf_buffer_, &client_s_, &client_t_));
+    &client_s_, &client_t_));
   client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
   // Setup MOBILITY action
   client_t_.SetConnectedTimeout(FLAGS_connect);
@@ -405,7 +406,7 @@ int main(int argc, char *argv[]) {
   client_t_.SetResultCallback(std::bind(
     MResultCallback, std::placeholders::_1, std::placeholders::_2));
   client_t_.SetConnectedCallback(std::bind(ConnectedCallback,
-    &tf_buffer_, &client_s_, &client_t_));
+    &client_s_, &client_t_));
   client_t_.Create(nh, ACTION_MOBILITY_MOTION);
   // For moves and executes check that we are configured correctly
   // if (FLAGS_move || !FLAGS_exec.empty()) {

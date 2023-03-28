@@ -35,11 +35,9 @@
 // Actions
 #include <ff_msgs/action/motion.hpp>
 #include <ff_msgs/action/control.hpp>
-#include <ff_msgs/action/plan.hpp>
 namespace ff_msgs {
 typedef action::Motion Motion;
 typedef action::Control Control;
-typedef action::Plan Plan;
 }  // namespace ff_msgs
 
 // For the trapezoidal planner implementation
@@ -93,14 +91,15 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
 
   void PlanCallback(ff_msgs::Plan::Goal const& goal) {
     // Do some basic error checks
-    ff_msgs::Plan::Result::SharedPtr plan_result;
-    plan_result->response = RESPONSE::SUCCESS;
+    ff_msgs::Plan::Result plan_result;
+    plan_result.response = RESPONSE::SUCCESS;
     if (goal.states.size() < 2)
-      plan_result->response = RESPONSE::NOT_ENOUGH_STATES;
+      plan_result.response = RESPONSE::NOT_ENOUGH_STATES;
     if (goal.check_obstacles)
-      plan_result->response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
-    if (plan_result->response < 0)
-      return PlanResult(plan_result);
+      plan_result.response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
+    if (plan_result.response < 0)
+      return PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
+
     // Save the information
     desired_vel_   = goal.desired_vel;
     desired_omega_ = goal.desired_omega;
@@ -108,7 +107,7 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
     desired_alpha_ = goal.desired_alpha;
     min_control_period_ = 1.0 / goal.desired_rate;
     // Setup header and keep track of time as we generate trapezoidal ramps
-    plan_result->segment.clear();
+    plan_result.segment.clear();
     // Generate the trapezoidal ramp
     rclcpp::Time offset = goal.states.front().header.stamp;
     for (size_t i = 1; i < goal.states.size(); i++) {
@@ -164,27 +163,27 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
         tf_3.linear() = q.toRotationMatrix();
         // Initial rotation into direction orientation
         // Default speeds are set by the planner configuration
-        InsertTrapezoid(plan_result->segment, offset, dt, tf_1, tf_2,
+        InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_2,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
-        InsertTrapezoid(plan_result->segment, offset, dt, tf_2, tf_3,
+        InsertTrapezoid(plan_result.segment, offset, dt, tf_2, tf_3,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
-        InsertTrapezoid(plan_result->segment, offset, dt, tf_3, tf_4,
+        InsertTrapezoid(plan_result.segment, offset, dt, tf_3, tf_4,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
       } else {
         // Fully-holonomic smear of delta across all axes
-        InsertTrapezoid(plan_result->segment, offset, dt, tf_1, tf_4,
+        InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_4,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
       }
     }
     // Special case: we might already be there
-    if (plan_result->segment.size() < 2)
-      plan_result->response = RESPONSE::ALREADY_THERE;
+    if (plan_result.segment.size() < 2)
+      plan_result.response = RESPONSE::ALREADY_THERE;
     // Callback with the result
-    return PlanResult(plan_result);
+    return PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
   }
 
   // Called to interrupt the process

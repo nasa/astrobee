@@ -349,11 +349,11 @@ def generate_launch_description():
                 plugin='choreographer::ChoreographerComponent',
                 name='choreographer',
                 extra_arguments=[{'use_intra_process_comms': False}]),
-            # ComposableNode(
-            #     package='planner_trapezoidal',
-            #     plugin='planner_trapezoidal::PlannerTrapezoidalNodelet',
-            #     name='planner_trapezoidal',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='planner_trapezoidal',
+                plugin='planner_trapezoidal::PlannerTrapezoidalComponent',
+                name='planner_trapezoidal',
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ComposableNode(
                 package='framestore',
                 plugin='mobility::FrameStore',
