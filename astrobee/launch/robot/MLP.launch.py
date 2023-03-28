@@ -358,8 +358,7 @@ def generate_launch_description():
                 package='framestore',
                 plugin='mobility::FrameStore',
                 name='framestore',
-                # extra_arguments=[{'use_intra_process_comms': True}]
-                ),
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(
