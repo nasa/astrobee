@@ -70,7 +70,7 @@ class RosGraphVIOWrapper {
   // Resets the graph and and loads biases from a saved file.
   void ResetBiasesFromFileAndResetVIO();
 
-  // Creates a CombinedNavStateArrayMSg using the history
+  // Creates a CombinedNavStateArrayMsg using the history
   // of nav states and covariances in graph_vio.
   ff_msgs::CombinedNavStateArray CombinedNavStateArrayMsg() const;
 

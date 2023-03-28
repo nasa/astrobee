@@ -44,48 +44,69 @@ class RosGraphVIONodelet : public ff_util::FreeFlyerNodelet {
   RosGraphVIONodelet();
 
  private:
+  // Subscribes to and advertises topics. Calls Run() to start processing loop.
   void Initialize(ros::NodeHandle* nh) final;
 
-  bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
-
-  void DisableVIO();
-
-  void EnableVIO();
-
-  bool vio_enabled() const;
-
-  bool ResetBiasesAndVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-
-  bool ResetBiasesFromFileAndResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-
-  bool ResetBiasesFromFileAndResetVIO();
-
-  bool ResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-
-  void ResetAndEnableVIO();
-
+  // Subscribes to and advertises topics.
   void SubscribeAndAdvertise(ros::NodeHandle* nh);
 
-  void InitializeGraph();
+  // Set mode for VIO. Disables if mode is none, resets and enables if swtiched from none.
+  bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
+
+  // Disabled VIO. Prevents any messages from being added to VIO, halts publishing
+  // messages from VIO, and halts updating VIO.
+  void DisableVIO();
+
+  // Enables VIO.
+  void EnableVIO();
+
+  // Whether VIO is enabled.
+  bool vio_enabled() const;
+
+  // Resets the graph and biases. Biases need to be estimated again by the bias initializer.
+  bool ResetBiasesAndVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
+  // Wrapper for ResetBiasesFromFileAndResetVIO triggered by service call.
+  bool ResetBiasesFromFileAndResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
+  // Resets the graph and and loads biases from a saved file.
+  bool ResetBiasesFromFileAndResetVIO();
+
+  // Wrapper for ResetAndEnableVIO triggered by service call.
+  bool ResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
+  // Resets the graph with the latest biases.
+  void ResetAndEnableVIO();
 
   // void PublishVIOState();
 
   // void PublishVIOGraph();
 
+  // Publishes CombinedNavStateArrayMsg using the history
+  // of nav states and covariances in graph_vio.
   void PublishGraphVIOStates();
 
+  // Publishes empty reset message.
   void PublishReset() const;
 
+  // Publishes CombinedNavStateArrayMsg and other graph messages if VIO is enabled.
   void PublishGraphMessages();
 
+  // Publishes heartbeat message.
   void PublishHeartbeat();
 
+  // Passes feature points msg to ros_graph_vio_wrapper if VIO is enabled.
   void FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
 
+  // Passes IMU msg to ros_graph_vio_wrapper if VIO is enabled.
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
+  // Passes flight mode msg to ros_graph_vio_wrapper if VIO is enabled.
   void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
 
+  // Adds messages to ros_graph_vio_wrapper from callback queue, updates
+  // the ros_graph_vio_wrapper, and pubishes messages.
+  // Runs iteratively on start up at a max 100Hz rate.
   void Run();
 
   ros_graph_vio::RosGraphVIOWrapper ros_graph_vio_wrapper_;

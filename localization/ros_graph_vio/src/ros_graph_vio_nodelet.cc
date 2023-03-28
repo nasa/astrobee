@@ -127,20 +127,6 @@ void RosGraphVIONodelet::ResetAndEnableVIO() {
   EnableVIO();
 }
 
-void RosGraphVIONodelet::FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
-  if (!vio_enabled()) return;
-  ros_graph_vio_wrapper_.FeaturePointsCallback(*feature_array_msg);
-}
-
-void RosGraphVIONodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  if (!vio_enabled()) return;
-  ros_graph_vio_wrapper_.ImuCallback(*imu_msg);
-}
-
-void RosGraphVIONodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
-  ros_graph_vio_wrapper_.FlightModeCallback(*mode);
-}
-
 void RosGraphVIONodelet::PublishGraphVIOStates() {
   auto msg = ros_graph_vio_wrapper_.CombinedNavStateArrayMsg();
   if (msg.combined_nav_states.empty()) {
@@ -180,6 +166,20 @@ void RosGraphVIONodelet::PublishGraphMessages() {
   // if (ros_graph_vio_wrapper_.save_graph_dot_file()) ros_graph_vio_wrapper_.SaveGraphDotFile();
 }
 
+void RosGraphVIONodelet::FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
+  if (!vio_enabled()) return;
+  ros_graph_vio_wrapper_.FeaturePointsCallback(*feature_array_msg);
+}
+
+void RosGraphVIONodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
+  if (!vio_enabled()) return;
+  ros_graph_vio_wrapper_.ImuCallback(*imu_msg);
+}
+
+void RosGraphVIONodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
+  ros_graph_vio_wrapper_.FlightModeCallback(*mode);
+}
+
 void RosGraphVIONodelet::Run() {
   ros::Rate rate(100);
   // Load Biases from file by default
@@ -187,7 +187,7 @@ void RosGraphVIONodelet::Run() {
   ResetBiasesFromFileAndResetVIO();
   while (ros::ok()) {
     private_queue_.callAvailable();
-    ros_graph_vio_wrapper_.Update();
+    if (vio_enabled()) ros_graph_vio_wrapper_.Update();
     PublishGraphMessages();
     PublishHeartbeat();
     rate.sleep();
