@@ -15,7 +15,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 #ifndef NODES_TIMESTAMPED_NODES_H_
 #define NODES_TIMESTAMPED_NODES_H_
 
@@ -23,7 +22,46 @@
 
 namespace nodes {
 template <typename NodeType>
-using TimestampedNodes = TimestampedCombinedNodes<NodeType, false>;
+class TimestampedNodes : public TimestampedCombinedNodes<NodeType> {
+  using Base = TimestampedCombinedNodes<NodeType>;
+
+ public:
+  explicit TimestampedNodes(std::shared_ptr<Nodes> nodes);
+
+  // For serialization only
+  TimestampedNodes() = default;
+
+ private:
+  gtsam::KeyVector AddNode(const NodeType& node) final;
+
+  boost::optional<NodeType> GetNode(const gtsam::KeyVector& keys,
+                                    const localization_common::Time timestamp) const final;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+  }
+};
+
+// Implementation
+template <typename NodeType>
+TimestampedNodes<NodeType>::TimestampedNodes(std::shared_ptr<Nodes> nodes)
+    : TimestampedCombinedNodes<NodeType>(nodes) {}
+
+template <typename NodeType>
+gtsam::KeyVector TimestampedNodes<NodeType>::AddNode(const NodeType& node) {
+  const auto key = this->nodes_->Add(node);
+  return {key};
+}
+
+template <typename NodeType>
+boost::optional<NodeType> TimestampedNodes<NodeType>::GetNode(const gtsam::KeyVector& keys,
+                                                              const localization_common::Time timestamp) const {
+  // Assumes keys only has a single key since using non-combined type
+  return Base::template Node<NodeType>(keys[0]);
+}
 }  // namespace nodes
 
 #endif  // NODES_TIMESTAMPED_NODES_H_

@@ -22,7 +22,28 @@
 #include <nodes/timestamped_combined_nodes.h>
 
 namespace nodes {
-using CombinedNavStateNodes = TimestampedCombinedNodes<localization_common::CombinedNavState>;
+class CombinedNavStateNodes : public TimestampedCombinedNodes<localization_common::CombinedNavState> {
+  using Base = TimestampedCombinedNodes<localization_common::CombinedNavState>;
+
+ public:
+  explicit CombinedNavStateNodes(std::shared_ptr<Nodes> nodes);
+
+  // For serialization only
+  CombinedNavStateNodes() = default;
+
+ private:
+  gtsam::KeyVector AddNode(const localization_common::CombinedNavState& node) final;
+
+  boost::optional<localization_common::CombinedNavState> GetNode(const gtsam::KeyVector& keys,
+                                                                 const localization_common::Time timestamp) const final;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+  }
+};
 }  // namespace nodes
 
 #endif  // NODES_COMBINED_NAV_STATE_NODES_H_

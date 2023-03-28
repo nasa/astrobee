@@ -33,7 +33,7 @@
 #include <vector>
 
 namespace nodes {
-template <typename NodeType, bool CombinedType = true>
+template <typename NodeType>
 // Container for timestamped nodes with multiple values per node.
 // Enables a NodeAdder to couple multiple values at the same timestamp that are always added and updated together into a
 // single combined node. For example, a visual-intertial NodeAdder may always add and update pose, velocity, and
@@ -49,6 +49,8 @@ class TimestampedCombinedNodes {
 
   // For serialization only
   TimestampedCombinedNodes() = default;
+
+  virtual ~TimestampedCombinedNodes() = default;
 
   // Add a node at the provided timestamp and return the GTSAM keys that correspond to it.
   // The keys are used in graph factors to connect a factor to a node.
@@ -135,15 +137,19 @@ class TimestampedCombinedNodes {
   // Const accessor for internal gtsam values.
   const gtsam::Values& values() const;
 
+ protected:
+  std::shared_ptr<Nodes> nodes_;
+
  private:
   // Removes a node with the provided keys if it exists.
   bool Remove(const gtsam::KeyVector& keys);
 
   // Adds a node and returns the keys associated with it.
-  gtsam::KeyVector Add(const NodeType& node);
+  virtual gtsam::KeyVector AddNode(const NodeType& node) = 0;
 
   // Helper function that returns a node with the provied keys and timestamp if it exists.
-  boost::optional<NodeType> Node(const gtsam::KeyVector& keys, const localization_common::Time timestamp) const;
+  virtual boost::optional<NodeType> GetNode(const gtsam::KeyVector& keys,
+                                            const localization_common::Time timestamp) const = 0;
 
   // Helper function that returns a node with the provided timestamped keys if it exists.
   boost::optional<NodeType> Node(const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const;
@@ -152,70 +158,49 @@ class TimestampedCombinedNodes {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/);
 
-  std::shared_ptr<Nodes> nodes_;
   localization_common::TimestampedSet<gtsam::KeyVector> timestamp_keys_map_;
 };
 
 // Implementation
-template <typename NodeType, bool CombinedType>
-TimestampedCombinedNodes<NodeType, CombinedType>::TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes)
-    : nodes_(std::move(nodes)) {}
+template <typename NodeType>
+TimestampedCombinedNodes<NodeType>::TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes) : nodes_(std::move(nodes)) {}
 
-template <typename NodeType, bool CombinedType>
-gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Add(const localization_common::Time timestamp,
-                                                                       const NodeType& node) {
+template <typename NodeType>
+gtsam::KeyVector TimestampedCombinedNodes<NodeType>::Add(const localization_common::Time timestamp,
+                                                         const NodeType& node) {
   if (Contains(timestamp)) return gtsam::KeyVector();
-  gtsam::KeyVector keys = Add(node);
+  gtsam::KeyVector keys = AddNode(node);
   timestamp_keys_map_.Add(timestamp, keys);
   return keys;
 }
 
-template <typename NodeType, bool CombinedType>
-gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Add(const NodeType& node) {
-  static_assert(!CombinedType, "This needs to be specialized for combined types.");
-  // Implementation for non-combined type
-  const auto key = nodes_->Add(node);
-  return {key};
-}
-
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
-  const gtsam::KeyVector& keys, const localization_common::Time timestamp) const {
-  static_assert(!CombinedType, "This needs to be specialized for combined types.");
-  // Implementation for non-combined type
-  // Assumes keys only has a single key since using non-combined type
-  return nodes_->Node<NodeType>(keys[0]);
-}
-
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
-  const localization_common::Time timestamp) const {
+template <typename NodeType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::Node(const localization_common::Time timestamp) const {
   const auto keys = Keys(timestamp);
   if (keys.empty()) return boost::none;
-  return Node(keys, timestamp);
+  return GetNode(keys, timestamp);
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::Node(
+template <typename NodeType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::Node(
   const localization_common::TimestampedValue<gtsam::KeyVector>& timestamped_keys) const {
-  return Node(timestamped_keys.value, timestamped_keys.timestamp);
+  return GetNode(timestamped_keys.value, timestamped_keys.timestamp);
 }
 
-template <typename NodeType, bool CombinedType>
+template <typename NodeType>
 template <typename T>
-boost::optional<T> TimestampedCombinedNodes<NodeType, CombinedType>::Node(const gtsam::Key& key) const {
+boost::optional<T> TimestampedCombinedNodes<NodeType>::Node(const gtsam::Key& key) const {
   return nodes_->Node<T>(key);
 }
 
-template <typename NodeType, bool CombinedType>
-gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::Keys(
-  const localization_common::Time timestamp) const {
+template <typename NodeType>
+gtsam::KeyVector TimestampedCombinedNodes<NodeType>::Keys(const localization_common::Time timestamp) const {
   if (!Contains(timestamp)) return {};
   return (timestamp_keys_map_.Get(timestamp))->value;
 }
 
-template <typename NodeType, bool CombinedType>
-bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const localization_common::Time& timestamp) {
+template <typename NodeType>
+bool TimestampedCombinedNodes<NodeType>::Remove(const localization_common::Time& timestamp) {
   const auto value = timestamp_keys_map_.Get(timestamp);
   if (!value) return false;
   bool successful_removal = true;
@@ -224,53 +209,52 @@ bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const localization
   return successful_removal;
 }
 
-template <typename NodeType, bool CombinedType>
-bool TimestampedCombinedNodes<NodeType, CombinedType>::Remove(const gtsam::KeyVector& keys) {
+template <typename NodeType>
+bool TimestampedCombinedNodes<NodeType>::Remove(const gtsam::KeyVector& keys) {
   return nodes_->Remove(keys);
 }
 
-template <typename NodeType, bool CombinedType>
-size_t TimestampedCombinedNodes<NodeType, CombinedType>::size() const {
+template <typename NodeType>
+size_t TimestampedCombinedNodes<NodeType>::size() const {
   return timestamp_keys_map_.size();
 }
 
-template <typename NodeType, bool CombinedType>
-bool TimestampedCombinedNodes<NodeType, CombinedType>::empty() const {
+template <typename NodeType>
+bool TimestampedCombinedNodes<NodeType>::empty() const {
   return timestamp_keys_map_.empty();
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<localization_common::Time> TimestampedCombinedNodes<NodeType, CombinedType>::OldestTimestamp() const {
+template <typename NodeType>
+boost::optional<localization_common::Time> TimestampedCombinedNodes<NodeType>::OldestTimestamp() const {
   const auto oldest = timestamp_keys_map_.Oldest();
   if (!oldest) return boost::none;
   return oldest->timestamp;
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::OldestNode() const {
+template <typename NodeType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::OldestNode() const {
   const auto oldest = timestamp_keys_map_.Oldest();
   if (!oldest) return boost::none;
   return Node(*oldest);
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<localization_common::Time> TimestampedCombinedNodes<NodeType, CombinedType>::LatestTimestamp() const {
+template <typename NodeType>
+boost::optional<localization_common::Time> TimestampedCombinedNodes<NodeType>::LatestTimestamp() const {
   const auto latest = timestamp_keys_map_.Latest();
   if (!latest) return boost::none;
   return latest->timestamp;
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::LatestNode() const {
+template <typename NodeType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::LatestNode() const {
   const auto latest = timestamp_keys_map_.Latest();
   if (!latest) return boost::none;
   return Node(*latest);
 }
 
-template <typename NodeType, bool CombinedType>
+template <typename NodeType>
 std::pair<boost::optional<localization_common::Time>, boost::optional<localization_common::Time>>
-TimestampedCombinedNodes<NodeType, CombinedType>::LowerAndUpperBoundTimestamps(
-  const localization_common::Time timestamp) const {
+TimestampedCombinedNodes<NodeType>::LowerAndUpperBoundTimestamps(const localization_common::Time timestamp) const {
   const auto lower_and_upper_bound = timestamp_keys_map_.LowerAndUpperBound(timestamp);
   boost::optional<localization_common::Time> lower_bound;
   if (!lower_and_upper_bound.first)
@@ -285,10 +269,9 @@ TimestampedCombinedNodes<NodeType, CombinedType>::LowerAndUpperBoundTimestamps(
   return {lower_bound, upper_bound};
 }
 
-template <typename NodeType, bool CombinedType>
+template <typename NodeType>
 std::pair<boost::optional<NodeType>, boost::optional<NodeType>>
-TimestampedCombinedNodes<NodeType, CombinedType>::LowerAndUpperBoundNodes(
-  const localization_common::Time timestamp) const {
+TimestampedCombinedNodes<NodeType>::LowerAndUpperBoundNodes(const localization_common::Time timestamp) const {
   const auto lower_and_upper_bound = timestamp_keys_map_.LowerAndUpperBound(timestamp);
   boost::optional<NodeType> lower_bound;
   if (!lower_and_upper_bound.first)
@@ -303,26 +286,26 @@ TimestampedCombinedNodes<NodeType, CombinedType>::LowerAndUpperBoundNodes(
   return {lower_bound, upper_bound};
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::LowerBoundOrEqualNode(
+template <typename NodeType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::LowerBoundOrEqualNode(
   const localization_common::Time timestamp) const {
   const auto lower_bound_or_equal = timestamp_keys_map_.LowerBoundOrEqual(timestamp);
   if (!lower_bound_or_equal) return boost::none;
   return Node(*lower_bound_or_equal);
 }
 
-template <typename NodeType, bool CombinedType>
-std::vector<localization_common::Time> TimestampedCombinedNodes<NodeType, CombinedType>::Timestamps() const {
+template <typename NodeType>
+std::vector<localization_common::Time> TimestampedCombinedNodes<NodeType>::Timestamps() const {
   return timestamp_keys_map_.Timestamps();
 }
 
-template <typename NodeType, bool CombinedType>
-double TimestampedCombinedNodes<NodeType, CombinedType>::Duration() const {
+template <typename NodeType>
+double TimestampedCombinedNodes<NodeType>::Duration() const {
   return timestamp_keys_map_.Duration();
 }
 
-template <typename NodeType, bool CombinedType>
-std::vector<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::OldNodes(
+template <typename NodeType>
+std::vector<NodeType> TimestampedCombinedNodes<NodeType>::OldNodes(
   const localization_common::Time oldest_allowed_timestamp) const {
   const auto old_values = timestamp_keys_map_.OldValues(oldest_allowed_timestamp);
   std::vector<NodeType> old_nodes;
@@ -337,8 +320,8 @@ std::vector<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::OldNodes
   return old_nodes;
 }
 
-template <typename NodeType, bool CombinedType>
-gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::OldKeys(
+template <typename NodeType>
+gtsam::KeyVector TimestampedCombinedNodes<NodeType>::OldKeys(
   const localization_common::Time oldest_allowed_timestamp) const {
   const auto old_timestamp_key_sets = timestamp_keys_map_.OldValues(oldest_allowed_timestamp);
   gtsam::KeyVector all_old_keys;
@@ -349,9 +332,8 @@ gtsam::KeyVector TimestampedCombinedNodes<NodeType, CombinedType>::OldKeys(
   return all_old_keys;
 }
 
-template <typename NodeType, bool CombinedType>
-int TimestampedCombinedNodes<NodeType, CombinedType>::RemoveOldNodes(
-  const localization_common::Time oldest_allowed_timestamp) {
+template <typename NodeType>
+int TimestampedCombinedNodes<NodeType>::RemoveOldNodes(const localization_common::Time oldest_allowed_timestamp) {
   const auto old_values = timestamp_keys_map_.OldValues(oldest_allowed_timestamp);
   timestamp_keys_map_.RemoveOldValues(oldest_allowed_timestamp);
   int num_removed_nodes = 0;
@@ -360,27 +342,27 @@ int TimestampedCombinedNodes<NodeType, CombinedType>::RemoveOldNodes(
   return num_removed_nodes;
 }
 
-template <typename NodeType, bool CombinedType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType, CombinedType>::ClosestNode(
+template <typename NodeType>
+boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::ClosestNode(
   const localization_common::Time timestamp) const {
   const auto closest = timestamp_keys_map_.Closest(timestamp);
   if (!closest) return boost::none;
   return Node(*closest);
 }
 
-template <typename NodeType, bool CombinedType>
-const gtsam::Values& TimestampedCombinedNodes<NodeType, CombinedType>::values() const {
+template <typename NodeType>
+const gtsam::Values& TimestampedCombinedNodes<NodeType>::values() const {
   return nodes_->values();
 }
 
-template <typename NodeType, bool CombinedType>
-bool TimestampedCombinedNodes<NodeType, CombinedType>::Contains(const localization_common::Time timestamp) const {
+template <typename NodeType>
+bool TimestampedCombinedNodes<NodeType>::Contains(const localization_common::Time timestamp) const {
   return timestamp_keys_map_.Contains(timestamp);
 }
 
-template <typename NodeType, bool CombinedType>
+template <typename NodeType>
 template <class ARCHIVE>
-void TimestampedCombinedNodes<NodeType, CombinedType>::serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+void TimestampedCombinedNodes<NodeType>::serialize(ARCHIVE& ar, const unsigned int /*version*/) {
   ar& BOOST_SERIALIZATION_NVP(nodes_);
   ar& BOOST_SERIALIZATION_NVP(timestamp_keys_map_);
 }
