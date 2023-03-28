@@ -25,8 +25,8 @@
 #include <ff_util/ff_nodelet.h>
 #include <localization_common/ros_timer.h>
 #include <localization_common/timer.h>
-#include <ros_graph_vio/graph_vio_nodelet_params.h>
-#include <ros_graph_vio/graph_vio_wrapper.h>
+#include <ros_graph_vio/ros_graph_vio_nodelet_params.h>
+#include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -72,6 +72,8 @@ class RosGraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   // void PublishVIOGraph();
 
+  void PublishGraphVIOStates();
+
   void PublishReset() const;
 
   void PublishGraphMessages();
@@ -91,9 +93,8 @@ class RosGraphVIONodelet : public ff_util::FreeFlyerNodelet {
   ros::CallbackQueue private_queue_;
   bool vio_enabled_ = true;
   ros::Subscriber imu_sub_, fp_sub_, flight_mode_sub_;
-  ros::Publisher state_pub_, graph_pub_, pose_pub_, reset_pub_, heartbeat_pub_;
+  ros::Publisher states_pub_, graph_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
-  tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;
   RosGraphVIONodeletParams params_;

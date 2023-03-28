@@ -26,6 +26,7 @@
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/standstill_measurement.h>
 #include <node_adders/combined_nav_state_node_adder.h>
+#include <nodes/combined_nav_state_nodes.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
 // #include <vision_common/feature_tracker.h>
 
@@ -52,7 +53,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement);
 
   // Returns a const reference to combined nav state nodes.
-  const node_adder::CombinedNavStateNodes& nodes() const;
+  const nodes::CombinedNavStateNodes& combined_nav_state_nodes() const;
 
  private:
   // void CheckForStandstill();

@@ -10,6 +10,7 @@
             - is velocity in global frame or body frame??
 
   - update nodelet! (A)
+    - add comments to nodelet
     - TODO: create graph message!
     - TODO: only publish states message if optimization has occured again!
 

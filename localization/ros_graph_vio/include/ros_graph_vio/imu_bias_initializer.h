@@ -22,6 +22,7 @@
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <msg_conversions/msg_conversions.h>
+#include <ros_graph_vio/imu_bias_initializer_params.h>
 
 #include <gtsam/navigation/ImuBias.h>
 
@@ -35,8 +36,8 @@ namespace ros_graph_vio {
 // change, so gravity is considered a constant IMU bias that contributes to the estimated IMU bias.
 class ImuBiasInitializer {
  public:
-  // Add flight speed mode measurement for IMU bias filter.
-  void AddFlightSpeedModeMeasurement(const lm::FanSpeedMode fan_speed_mode);
+  // Add fan speed mode measurement for IMU bias filter.
+  void AddFanSpeedModeMeasurement(const localization_measurements::FanSpeedMode fan_speed_mode);
 
   // Add IMU measurement. Estimate biases if enough measurements have been received and
   // save this to a file.
@@ -45,8 +46,11 @@ class ImuBiasInitializer {
   // Returns bias if it is available.
   boost::optional<gtsam::imuBias::ConstantBias> Bias() const;
 
+  // Manually sets the bias and saves it to file.
+  void UpdateBias(const gtsam::imuBias::ConstantBias& bias);
+
   // Clears measurement buffer, filter, and estimated bias.
-  void ResetBiases();
+  void Reset();
 
   // Loads the IMU bias from a file (filename set in params).
   bool LoadFromFile();

@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <ros_graph_vio/imu_bias_initializer.h>
 
 #include <iostream>
@@ -23,7 +24,7 @@
 
 namespace ros_graph_vio {
 namespace lm = localization_measurements;
-void ImuBiasInitializer::AddFlightSpeedModeMeasurement(const lm::FanSpeedMode fan_speed_mode) {
+void ImuBiasInitializer::AddFanSpeedModeMeasurement(const lm::FanSpeedMode fan_speed_mode) {
   imu_bias_filter_->SetFanSpeedMode(fan_speed_mode);
 }
 

@@ -20,8 +20,9 @@
 
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
-#include <ff_msgs/GraphVIOState.h>
-#include <ff_msgs/SerializedGraph.h>
+#include <ff_msgs/CombinedNavStateArray.h>
+// #include <ff_msgs/GraphVIOState.h>
+// #include <ff_msgs/SerializedGraph.h>
 #include <graph_vio/graph_vio.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
@@ -68,6 +69,10 @@ class RosGraphVIOWrapper {
 
   // Resets the graph and and loads biases from a saved file.
   void ResetBiasesFromFileAndResetVIO();
+
+  // Creates a CombinedNavStateArrayMSg using the history
+  // of nav states and covariances in graph_vio.
+  ff_msgs::CombinedNavStateArray CombinedNavStateArrayMsg() const;
 
  private:
   // Initialize the graph if the IMU bias is initialized.

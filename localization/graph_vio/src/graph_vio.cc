@@ -19,23 +19,25 @@
 #include <graph_vio/graph_vio.h>
 
 namespace graph_vio {
+namespace fa = factor_adders;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace na = node_adders;
+namespace no = nodes;
+namespace op = optimizers;
 
 GraphVIO::GraphVIO(const GraphVIOParams& params)
     : SlidingWindowGraphOptimizer(params.sliding_window_graph_optimizer,
-                                  std::make_unique<optimizers::NonlinearOptimizer>(params.nonlinear_optimizer)),
+                                  std::make_unique<op::NonlinearOptimizer>(params.nonlinear_optimizer)),
       params_(params) {
   // Initialize node adders
-  combined_nav_state_node_adder_ = std::make_shared<node_adders::CombinedNavStateNodeAdder>(
+  combined_nav_state_node_adder_ = std::make_shared<na::CombinedNavStateNodeAdder>(
     params_.combined_nav_state_node_adder, params_.combined_nav_state_node_adder_model, nodes());
   // Initialize factor adders
-  vo_smart_projection_factor_adder_ =
-    std::make_shared<factor_adders::VoSmartProjectionFactorAdder<node_adders::CombinedNavStateNodeAdder>>(
-      params_.vo_smart_projection_factor_adder, combined_nav_state_node_adder_);
-  standstill_factor_adder_ =
-    std::make_shared<factor_adders::StandstillFactorAdder<node_adders::CombinedNavStateNodeAdder>>(
-      params_.standstill_factor_adder, combined_nav_state_node_adder_);
+  vo_smart_projection_factor_adder_ = std::make_shared<fa::VoSmartProjectionFactorAdder<na::CombinedNavStateNodeAdder>>(
+    params_.vo_smart_projection_factor_adder, combined_nav_state_node_adder_);
+  standstill_factor_adder_ = std::make_shared<fa::StandstillFactorAdder<na::CombinedNavStateNodeAdder>>(
+    params_.standstill_factor_adder, combined_nav_state_node_adder_);
 }
 
 void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
@@ -47,5 +49,7 @@ void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& f
   // TODO(rsoussan): check for standstill!
 }
 
-const node_adder::CombinedNavStateNodes& GraphVIO::nodes() const { return combined_nav_state_node_adder_->nodes(); }
+const no::CombinedNavStateNodes& GraphVIO::combined_nav_state_nodes() const {
+  return combined_nav_state_node_adder_->nodes();
+}
 }  // namespace graph_vio

@@ -18,11 +18,11 @@
 #ifndef ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_PARAMS_H_
 #define ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_PARAMS_H_
 
-namespace graph_vio {
-struct GraphVIONodeletParams {
+namespace ros_graph_vio {
+struct RosGraphVIONodeletParams {
   int max_imu_buffer_size;
-  int max_optical_flow_buffer_size;
+  int max_feature_point_buffer_size;
 };
-}  // namespace graph_vio
+}  // namespace ros_graph_vio
 
 #endif  // ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_PARAMS_H_
