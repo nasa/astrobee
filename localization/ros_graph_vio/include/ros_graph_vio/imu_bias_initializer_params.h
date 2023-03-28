@@ -18,19 +18,14 @@
 #ifndef ROS_GRAPH_VIO_IMU_BIAS_INITIALIZER_PARAMS_H_
 #define ROS_GRAPH_VIO_IMU_BIAS_INITIALIZER_PARAMS_H_
 
-#include <imu_integration/latest_imu_integrator_params.h>
 #include <imu_integration/imu_filter_params.h>
-
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/base/Vector.h>
 
 #include <string>
 
 namespace ros_graph_vio {
-// TODO(rsoussan): Clean this up, only use what is needed from imu integration params
-struct ImuBiasInitializerParams : public imu_integration::LatestImuIntegratorParams {
-  gtsam::Vector3 global_V_body_start;
+struct ImuBiasInitializerParams {
   std::string imu_bias_filename;
+  imu_integration::ImuFilterParams filter;
   int num_bias_estimation_measurements;
 };
 }  // namespace ros_graph_vio

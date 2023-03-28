@@ -37,8 +37,7 @@ void ImuBiasInitializer::AddImuMeasurement(const localization_measurements::ImuM
     imu_bias_measurements_.emplace_back(*filtered_imu_measurement);
   }
   // Nothing to do if not enough measurements have been received.
-  if (static_cast<int>(imu_bias_measurements_.size()) < params_.graph_initializer.num_bias_estimation_measurements)
-    return;
+  if (static_cast<int>(imu_bias_measurements_.size()) < params_.num_bias_estimation_measurements) return;
 
   // Estimate bias if enough measurements have been received.
   // Assumes standstill, so simply average accelerometer and gyro measurements.

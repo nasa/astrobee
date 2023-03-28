@@ -46,4 +46,6 @@ void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& f
   vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);
   // TODO(rsoussan): check for standstill!
 }
+
+const node_adder::CombinedNavStateNodes& GraphVIO::nodes() const { return combined_nav_state_node_adder_->nodes(); }
 }  // namespace graph_vio

@@ -43,14 +43,6 @@ void GraphVIOWrapper::LoadConfigs(const std::string& graph_config_path_prefix) {
     LogFatal("Failed to read config files.");
   }
 
-  if (!config.GetBool("publish_graph", &publish_graph_)) {
-    LogFatal("Failed to load publish_graph.");
-  }
-
-  if (!config.GetBool("save_graph_dot_file", &save_graph_dot_file_)) {
-    LogFatal("Failed to load save_graph_dot_file.");
-  }
-
   LoadGraphVIOParams(config, params_);
 }
 
@@ -75,8 +67,9 @@ void GraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
 }
 
 void GraphVIOWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
-  fan_speed_mode_ = lm::ConvertFanSpeedMode(flight_mode.speed);
-  if (Initialized()) graph_vio_->SetFanSpeedMode(fan_speed_mode_);
+  const auto fan_speed_mode = lm::ConvertFanSpeedMode(flight_mode.speed);
+  // TODO(rsoussan): Add support for fan speed mode in graph vio
+  // if (Initialized()) graph_vio_->SetFanSpeedMode(fan_speed_mode_);
   imu_bias_initializer_.AddFanSpeedModeMeasurement(fan_speed_mode_);
 }
 
@@ -92,8 +85,8 @@ void GraphVIOWrapper::ResetVIO() {
     LogError("ResetVIO: VIO not initialized, nothing to do.");
     return;
   }
-  // TODO(rsoussan): Get latest bias from graph vio!
-  imu_bias_initializer_.UpdateBias(latest_bias);
+  const auto latest_combined_nav_state = graph_vio_->nodes().LatestNode();
+  imu_bias_initializer_.UpdateBias(latest_combined_nav_state->bias());
   graph_vio_.reset();
 }
 

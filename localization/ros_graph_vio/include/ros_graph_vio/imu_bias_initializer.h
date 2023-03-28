@@ -31,6 +31,8 @@ namespace ros_graph_vio {
 // Buffers IMU measurements (and flight speed mode if available to help filter speed specific vibration noise) and
 // estimates IMU biases. Assumes standstill behavior so the estimated bias is simply the average of the buffered
 // measurements. Saves biases to a file and optionally loads from a file as well.
+// If using in a gravity environment, assumes the IMU orientation wrt gravity doesn't
+// change, so gravity is considered a constant IMU bias that contributes to the estimated IMU bias.
 class ImuBiasInitializer {
  public:
   // Add flight speed mode measurement for IMU bias filter.

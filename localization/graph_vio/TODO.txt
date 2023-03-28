@@ -3,21 +3,23 @@
 
   - graph vio:
     - support checking for standstill!!! (B)
+    - add better way of getting relative covariance??
 
   add ros_graph_vio: (A)
-        - get latest bias from graph vio after adding imu measurement (AC)
-      - how to access pose/cov history? (AAB)
-        -add support in nodes somehow?? just use timestamped nodes!
-    - create odometry message!
-      - add new message type!
-      - convert velocity from odom frame to global frame??
+    - create odometry message! (AA)
+      - add CombinedNavState message! (AAA)
+        - pose, velocity, bias, their covariances, timestamp!
+      - add CombinedNavStateArray message! (AAAB)
+      - convert velocity from odom frame to global frame?? (AAC)
         - is velocity in global frame or body frame??
-      - add better way of getting relative covariance??
-    - create graph message!
-      - update nodelet!
-        - publish graph and odometry messages!
+      - get history of combined nav states and their covariances! AAD
+        - send this in message!
+        - add function in ros_graph_vio to fill this in!
+  - update nodelet! (AB)
+        - publish odometry messages!
         - push msgs through to wrapper
         - subscribe to resets and such
+    - TODO: create graph message!
 
   - add graph_localizer! (B)
     - copy graph vio! modify for loc!

@@ -69,25 +69,6 @@ class RosGraphVIOWrapper {
   // Resets the graph and and loads biases from a saved file.
   void ResetBiasesFromFileAndResetVIO();
 
-  // Gets the latest combined nav state from the graph.
-  // boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
-
-  // Creates a vio state msg using the latest combined nav state from the graph.
-  // boost::optional<ff_msgs::GraphVIOState> LatestVIOStateMsg();
-
-  // Creates a graph msg using the latest combined nav state from the graph.
-  // boost::optional<ff_msgs::SerializedGraph> LatestGraphMsg() const;
-
-  // boost::optional<const vision_common::FeatureTrackIdMap&> feature_tracks() const;
-
-  // boost::optional<const GraphVIO&> graph_vio() const;
-
-  // void SaveGraphDotFile() const;
-
-  // bool publish_graph() const;
-
-  // bool save_graph_dot_file() const;
-
  private:
   // Initialize the graph if the IMU bias is initialized.
   void Initialize();
@@ -95,10 +76,6 @@ class RosGraphVIOWrapper {
   std::unique_ptr<graph_vio::GraphVIO> graph_vio_;
   graph_vio::GraphVIOParams params_;
   ImuBiasInitializer imu_bias_initializer_;
-  // TODO(rsoussan): Make graph vio wrapper params
-  // bool publish_graph_;
-  // bool save_graph_dot_file_;
-  // boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
 };
 }  // namespace ros_graph_vio
 

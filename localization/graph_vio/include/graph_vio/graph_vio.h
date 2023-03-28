@@ -51,6 +51,9 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
   void AddFeaturePointsMeasurement(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement);
 
+  // Returns a const reference to combined nav state nodes.
+  const node_adder::CombinedNavStateNodes& nodes() const;
+
  private:
   // void CheckForStandstill();
   // bool ValidGraph() const final;
