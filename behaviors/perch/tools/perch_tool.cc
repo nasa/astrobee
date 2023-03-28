@@ -21,14 +21,17 @@
 #include <gflags/gflags_completions.h>
 
 // Include RPOS
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // FSW includes
 #include <ff_common/ff_names.h>
 #include <ff_util/ff_action.h>
 
 // Action
-#include <ff_msgs/PerchAction.h>
+#include <ff_msgs/action/perch.hpp>
+namespace ff_msgs {
+  typedef action::Perch Perch;
+}  // namespace ff_msgs
 
 // C++ STL includes
 #include <iostream>
@@ -53,7 +56,7 @@ DEFINE_double(response, 90.0, "Action response timeout");
 DEFINE_double(deadline, -1.0, "Action deadline timeout");
 
 // Perch action feedback
-void FeedbackCallback(ff_msgs::PerchFeedbackConstPtr const& feedback) {
+void FeedbackCallback(const std::shared_ptr<const ff_msgs::Perch::Feedback> feedback) {
   std::cout << "\r                                                   "
             << "\rFSM: " << feedback->state.fsm_event
             << " -> " << feedback->state.fsm_state << std::flush;
@@ -61,7 +64,7 @@ void FeedbackCallback(ff_msgs::PerchFeedbackConstPtr const& feedback) {
 
 // Perch action result
 void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
-  ff_msgs::PerchResultConstPtr const& result) {
+  std::shared_ptr<const ff_msgs::Perch::Result> result) {
   std::cout << std::endl << "Result: ";
   // Print general response code
   switch (code) {
@@ -86,23 +89,23 @@ void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
 teardown:
   std::cout << std::endl;
   // In all cases we must shutdown
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
 // Ensure all clients are connected
 void ConnectedCallback(
-  ff_util::FreeFlyerActionClient<ff_msgs::PerchAction> *client) {
+  ff_util::FreeFlyerActionClient<ff_msgs::Perch> *client) {
   // Check to see if connected
   if (!client->IsConnected()) return;
   // Print out a status message
   std::cout << "\r                                                   "
             << "\rState: CONNECTED" << std::flush;
   // Prepare the goal
-  ff_msgs::PerchGoal goal;
+  ff_msgs::Perch::Goal goal;
   if (FLAGS_perch) {
-    goal.command = ff_msgs::PerchGoal::PERCH;
+    goal.command = ff_msgs::Perch::Goal::PERCH;
   } else if (FLAGS_unperch) {
-    goal.command = ff_msgs::PerchGoal::UNPERCH;
+    goal.command = ff_msgs::Perch::Goal::UNPERCH;
   }
   client->SendGoal(goal);
 }
@@ -110,7 +113,7 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "perch_tool", ros::init_options::AnonymousName);
+  rclcpp::init(argc, argv);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun perch perch_tool <opts>");
   google::SetVersionString("0.1.0");
@@ -125,9 +128,11 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // Action clients
-  ff_util::FreeFlyerActionClient<ff_msgs::PerchAction> client;
+  ff_util::FreeFlyerActionClient<ff_msgs::Perch> client;
   // Create a node handle
-  ros::NodeHandle nh(std::string("/") + FLAGS_ns);
+  std::string ns = std::string("/") + FLAGS_ns;
+  auto nh = std::make_shared<rclcpp::Node>("perch_tool", ns);
+
   // Setup SWITCH action
   client.SetConnectedTimeout(FLAGS_connect);
   client.SetActiveTimeout(FLAGS_active);
@@ -139,13 +144,13 @@ int main(int argc, char *argv[]) {
   client.SetResultCallback(std::bind(ResultCallback,
     std::placeholders::_1, std::placeholders::_2));
   client.SetConnectedCallback(std::bind(ConnectedCallback, &client));
-  client.Create(&nh, ACTION_BEHAVIORS_PERCH);
+  client.Create(nh, ACTION_BEHAVIORS_PERCH);
   // Print out a status message
   std::cout << "\r                                                   "
             << "\rState: CONNECTING" << std::flush;
   // Synchronous mode
-  ros::spin();
-  // Finish commandline flags
+  rclcpp::spin(nh);
+  // Finish command line flags
   google::ShutDownCommandLineFlags();
   // Make for great success
   return 0;
