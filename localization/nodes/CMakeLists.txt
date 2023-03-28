@@ -55,6 +55,7 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
+  src/combined_nav_state_nodes.cc
   src/nodes.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
