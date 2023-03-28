@@ -1,0 +1,116 @@
+/* Copyright (c) 2017, United States Government, as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ *
+ * All rights reserved.
+ *
+ * The Astrobee platform is licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+#ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_
+#define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_
+
+#include <ff_msgs/CombinedNavStateArray.h>
+#include <ff_msgs/VisualLandmarks.h>
+#include <ff_msgs/Heartbeat.h>
+#include <ff_msgs/ResetMap.h>
+#include <ff_msgs/SetEkfInput.h>
+#include <ff_util/ff_nodelet.h>
+#include <localization_common/ros_timer.h>
+#include <localization_common/timer.h>
+#include <ros_graph_localizer/ros_graph_localizer_nodelet_params.h>
+#include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
+
+#include <ros/node_handle.h>
+#include <ros/publisher.h>
+#include <ros/subscriber.h>
+#include <std_srvs/Empty.h>
+#include <tf2_ros/transform_broadcaster.h>
+
+#include <string>
+#include <vector>
+
+namespace ros_graph_localizer {
+class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
+ public:
+  RosGraphLocalizerNodelet();
+
+ private:
+  // Subscribes to and advertises topics. Calls Run() to start processing loop.
+  void Initialize(ros::NodeHandle* nh) final;
+
+  // Subscribes to and advertises topics.
+  void SubscribeAndAdvertise(ros::NodeHandle* nh);
+
+  // Set mode for Localizer. Disables if mode is none, resets and enables if swtiched from none.
+  bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
+
+  // Disabled Localizer. Prevents any messages from being added to Localizer, halts publishing
+  // messages from Localizer, and halts updating Localizer.
+  void DisableLocalizer();
+
+  // Enables Localizer.
+  void EnableLocalizer();
+
+  // Whether Localizer is enabled.
+  bool localizer_enabled() const;
+
+  // Wrapper for ResetAndEnableLocalizer triggered by service call.
+  bool ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
+  // Resets the graph.
+  void ResetAndEnableLocalizer();
+
+  // Resets the localizer and clears the sparse map matched projections buffer
+  // so old measurements aren't used with a new map.
+  bool ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
+
+  // void PublishLocalizerState();
+
+  // void PublishLocalizerGraph();
+
+  // Publishes empty reset message.
+  void PublishReset() const;
+
+  // Publishes Loc pose message and other graph messages if Localizer is enabled.
+  void PublishGraphMessages();
+
+  // Publishes heartbeat message.
+  void PublishHeartbeat();
+
+  // Passes sparse map visual landmarks msg to ros_graph_localizer_wrapper if Localizer is enabled.
+  void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
+
+  // Passes combined nav state array msg to ros_graph_localizer_wrapper if Localizer is enabled.
+  void CombinedNavStateArrayCallback(const ff_msgs::CombinedNavStateArray::ConstPtr& combined_nav_state_array_msg);
+
+  // Adds messages to ros_graph_localizer_wrapper from callback queue, updates
+  // the ros_graph_localizer_wrapper, and pubishes messages.
+  // Runs iteratively on start up at a max 100Hz rate.
+  void Run();
+
+  ros_graph_localizer::RosGraphLocalizerWrapper ros_graph_localizer_wrapper_;
+  ros::NodeHandle private_nh_;
+  ros::CallbackQueue private_queue_;
+  bool localizer_enabled_ = true;
+  ros::Subscriber pose_sub_, sparse_map_vl_sub_;
+  ros::Publisher reset_pub_, heartbeat_pub_;
+  ros::ServiceServer bias_srv_, bias_from_file_srv_, reset_map_srv_, reset_srv_, input_mode_srv_;
+  std::string platform_name_;
+  ff_msgs::Heartbeat heartbeat_;
+  RosGraphLocalizerNodeletParams params_;
+  int last_mode_ = -1;
+
+  ros::Time last_heartbeat_time_;
+};
+}  // namespace ros_graph_localizer
+
+#endif  // ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_

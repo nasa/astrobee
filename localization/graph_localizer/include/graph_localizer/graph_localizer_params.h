@@ -29,7 +29,7 @@
 
 namespace graph_localizer {
 struct GraphLocalizerParams {
-  factor_adders::LocFactorAdderParams loc_factor_adder;
+  factor_adders::LocFactorAdderParams sparse_map_loc_factor_adder;
   node_adders::PoseNodeAdderParams pose_node_adder;
   node_adders::TimestampedNodeAdderModelParams pose_node_adder_model;
   optimizers::NonlinearOptimizerParams nonlinear_optimizer;
@@ -39,7 +39,7 @@ struct GraphLocalizerParams {
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_NVP(loc_factor_adder);
+    ar& BOOST_SERIALIZATION_NVP(sparse_map_loc_factor_adder);
     ar& BOOST_SERIALIZATION_NVP(pose_node_adder);
     ar& BOOST_SERIALIZATION_NVP(pose_node_adder_model);
     ar& BOOST_SERIALIZATION_NVP(nonlinear_optimizer);

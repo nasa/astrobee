@@ -44,8 +44,8 @@ class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraph
   // Adds pose measurement to the pose node adder.
   void AddPoseMeasurement(const localization_measurements::TimestampedPoseWithCovariance& pose_measurement);
 
-  // Adds matched projections measurement to loc factor adder.
-  void AddMatchedProjectionsMeasurement(
+  // Adds sparse map matched projections measurement to loc factor adder.
+  void AddSparseMapMatchedProjectionsMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
 
   // Returns a const reference to pose nodes.
@@ -60,14 +60,14 @@ class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraph
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(sliding_window_graph_optimizer::SlidingWindowGraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(params_);
-    ar& BOOST_SERIALIZATION_NVP(loc_factor_adder_);
+    ar& BOOST_SERIALIZATION_NVP(sparse_map_loc_factor_adder_);
     ar& BOOST_SERIALIZATION_NVP(pose_node_adder_);
   }
 
   GraphLocalizerParams params_;
 
   // Factor Adders
-  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::PoseNodeAdder>> loc_factor_adder_;
+  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::PoseNodeAdder>> sparse_map_loc_factor_adder_;
 
   // Node Adders
   std::shared_ptr<node_adders::PoseNodeAdder> pose_node_adder_;

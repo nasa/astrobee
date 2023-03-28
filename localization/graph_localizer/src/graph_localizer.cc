@@ -34,17 +34,17 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   pose_node_adder_ =
     std::make_shared<na::PoseNodeAdder>(params_.pose_node_adder, params_.pose_node_adder_model, nodes());
   // Initialize factor adders
-  loc_factor_adder_ =
-    std::make_shared<fa::LocFactorAdder<na::PoseNodeAdder>>(params_.loc_factor_adder, pose_node_adder_);
+  sparse_map_loc_factor_adder_ =
+    std::make_shared<fa::LocFactorAdder<na::PoseNodeAdder>>(params_.sparse_map_loc_factor_adder, pose_node_adder_);
 }
 
 void GraphLocalizer::AddPoseMeasurement(const lm::TimestampedPoseWithCovariance& pose_measurement) {
   pose_node_adder_->AddMeasurement(pose_measurement);
 }
 
-void GraphLocalizer::AddMatchedProjectionsMeasurement(
+void GraphLocalizer::AddSparseMapMatchedProjectionsMeasurement(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
-  loc_factor_adder_->AddMeasurement(matched_projections_measurement);
+  sparse_map_loc_factor_adder_->AddMeasurement(matched_projections_measurement);
 }
 
 const no::TimestampedNodes<gtsam::Pose3>& GraphLocalizer::pose_nodes() const { return pose_node_adder_->nodes(); }
