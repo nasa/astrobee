@@ -28,6 +28,7 @@ set(dependencies
   rclcpp
   rclcpp_components
   geometry_msgs
+  std_srvs
   tf2
   tf2_ros
   tf2_geometry_msgs

@@ -18,6 +18,7 @@
 
   <build_depend>rclcpp</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
   <build_depend>ff_hw_msgs</build_depend>
   <build_depend>ff_msgs</build_depend>
   <build_depend>ff_util</build_depend>
@@ -27,6 +28,7 @@
 
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
   <exec_depend>ff_hw_msgs</exec_depend>
   <exec_depend>ff_msgs</exec_depend>
   <exec_depend>ff_util</exec_depend>
