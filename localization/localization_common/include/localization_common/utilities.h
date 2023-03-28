@@ -93,9 +93,9 @@ geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::st
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
 
-CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphVIOState& msg);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::CombinedNavState& msg);
 
-CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphVIOState& msg);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::CombinedNavState& msg);
 
 // Returns gravity corrected accelerometer measurement
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
@@ -106,7 +106,7 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
 ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
                                                 const PoseCovariance& pose_covariance,
                                                 const Eigen::Matrix3d& velocity_covariance,
-                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance);
+const Eigen::Matrix<double, 6, 6>& imu_bias_covariance);
 
 template <class LocMsgType>
 void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);

@@ -120,23 +120,20 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
   return transform;
 }
 
-CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphVIOState& msg) {
-  const auto pose = PoseFromMsg(msg.pose);
-  const auto velocity = mc::VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(msg.velocity);
-  const auto accel_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.accel_bias);
-  const auto gyro_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.gyro_bias);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::CombinedNavState& msg) {
+  const auto pose = PoseFromMsg(msg.pose.pose);
+  const auto velocity = mc::VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(msg.velocity.velocity);
+  const auto accel_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.imu_bias.accelerometer_bias);
+  const auto gyro_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.imu_bias.gyroscope_bias);
   const auto timestamp = TimeFromHeader(msg.header);
   return CombinedNavState(pose, velocity, gtsam::imuBias::ConstantBias(accel_bias, gyro_bias), timestamp);
 }
 
-CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphVIOState& msg) {
-  const Eigen::Vector3d orientation_variances = mc::CovDiagToVariances(&msg.cov_diag[0]);
-  const Eigen::Vector3d gyro_bias_variances = mc::CovDiagToVariances(&msg.cov_diag[3]);
-  const Eigen::Vector3d velocity_variances = mc::CovDiagToVariances(&msg.cov_diag[6]);
-  const Eigen::Vector3d accelerometer_bias_variances = mc::CovDiagToVariances(&msg.cov_diag[9]);
-  const Eigen::Vector3d position_variances = mc::CovDiagToVariances(&msg.cov_diag[12]);
-  return CombinedNavStateCovariances(position_variances, orientation_variances, velocity_variances,
-                                     accelerometer_bias_variances, gyro_bias_variances);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::CombinedNavState& msg) {
+  const auto pose_covariance = mc::EigenCovarianceFromMsg<6>(msg.pose.covariance);
+  const auto velocity_covariance = mc::EigenCovarianceFromMsg<3>(msg.velocity.covariance);
+  const auto imu_bias_covariance = mc::EigenCovarianceFromMsg<6>(msg.imu_bias.covariance);
+  return CombinedNavStateCovariances(pose_covariance, velocity_covariance, imu_bias_covariance);
 }
 
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
@@ -152,7 +149,7 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
 ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
                                                 const PoseCovariance& pose_covariance,
                                                 const Eigen::Matrix3d& velocity_covariance,
-                                                const Eigen::Matrix3d& imu_bias_covariance) {
+const Eigen::Matrix<double, 6, 6>& imu_bias_covariance) {
   ff_msgs::CombinedNavState msg;
   TimeToHeader(combined_nav_state.timestamp(), msg.header);
   // Write CombinedNavState

@@ -145,6 +145,17 @@ void EigenCovarianceToMsg(const Eigen::Matrix<double, Dim, Dim>& covariance, Arr
     }
   }
 }
+
+template <int Dim, typename ArrayType>
+Eigen::Matrix<double, Dim, Dim> EigenCovarianceFromMsg(const ArrayType& covariance_array) {
+  Eigen::Matrix<double, Dim, Dim> covariance;
+  for (int i = 0; i < Dim; ++i) {
+    for (int j = 0; j < Dim; ++j) {
+      covariance(i, j) = covariance_array[i*Dim + j];
+    }
+  }
+  return covariance;
+}
 }  // namespace msg_conversions
 
 #endif  // MSG_CONVERSIONS_MSG_CONVERSIONS_H_

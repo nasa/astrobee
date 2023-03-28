@@ -57,8 +57,14 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
 
 void RosGraphLocalizerWrapper::CombinedNavStateArrayCallback(
   const ff_msgs::CombinedNavStateArray& combined_nav_state_array_msg) {
-  // TODO(rsoussan): Use latest timestamp to create pose measurement! Add todo to use pose history!
-  // if (Initialized()) graph_localizer_->AddPoseMeasurement(combined_nav_state_array_msg);
+  // TODO(rsoussan): Send full pose/cov history instead of just latest pose/cov
+  const auto& latest_combined_nav_state_msg = combined_nav_state_array_msg.combined_nav_states.back();
+  const auto latest_combined_nav_state = lc::CombinedNavStateFromMsg(latest_combined_nav_state_msg);
+  const auto latest_covariances = lc::CombinedNavStateCovariancesFromMsg(latest_combined_nav_state_msg);
+  const lm::TimestampedPoseWithCovariance pose_measurement(
+    lc::PoseWithCovariance(lc::EigenPose(latest_combined_nav_state.pose()), latest_covariances.pose_covariance()),
+    latest_combined_nav_state.timestamp());
+  if (Initialized()) graph_localizer_->AddPoseMeasurement(pose_measurement);
 }
 
 void RosGraphLocalizerWrapper::Update() {

@@ -14,12 +14,14 @@
     - TODO: only publish states message if optimization has occured again!
 
   - add ros_graph_localizer! (A)
-    - get latest timestamp from combined nav states msg and send this!
-    - when reset localizer, wait until initial pose is received!!!
+    - get latest timestamp from combined nav states msg and send this! (AA)
+        - change combined nav state array msg to spilt bias covs! (AAA)
+          - update to/from messages!
+    - add publishing message to nodeleet and wrapper (AB)
+      - which message to publish??
+    - when reset localizer, wait until initial pose is received!!! (AC) 
       - add logic in wrapper for this!
       - also wait until vo message is received??
-    - add publishing message to nodeleet and wrapper
-      - which message to publish??
 
     - add parameter reader! (C)
       - fail if parameter not read!!
