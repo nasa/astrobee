@@ -5,13 +5,11 @@
     - support checking for standstill!!! (B)
     - add better way of getting relative covariance??
 
-  add ros_graph_vio: (A)
-    - create odometry message! (AA)
-        - fill this in ros_graph_vio! (AAB)
-           - convert velocity from odom frame to global frame?? (AAC)
+  - ros_graph_vio_wrapper:
+    - convert velocity from odom frame to global frame?? 
             - is velocity in global frame or body frame??
 
-  - update nodelet! (AB)
+  - update nodelet! (A)
         - publish odometry messages!
         - push msgs through to wrapper
         - subscribe to resets and such

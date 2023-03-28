@@ -1,9 +1,9 @@
-<library path="lib/libgraph_localizer">
-  <class name="graph_localizer/GraphLocalizerNodelet"
-	 type="graph_localizer::GraphLocalizerNodelet"
+<library path="lib/libros_graph_vio">
+  <class name="ros_graph_vio/RosGraphVIONodelet"
+	 type="ros_graph_vio::RosGraphVIONodelet"
 	 base_class_type="nodelet::Nodelet">
     <description>
-      This nodelet wraps graph localizer 
+      This nodelet wraps graph vio 
     </description>
   </class>
 </library>

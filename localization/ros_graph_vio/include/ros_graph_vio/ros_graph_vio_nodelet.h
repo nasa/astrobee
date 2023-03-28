@@ -22,12 +22,11 @@
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/SetEkfInput.h>
-#include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_nodelet.h>
-#include <graph_vio/graph_vio_nodelet_params.h>
-#include <graph_vio/graph_vio_wrapper.h>
 #include <localization_common/ros_timer.h>
 #include <localization_common/timer.h>
+#include <ros_graph_vio/graph_vio_nodelet_params.h>
+#include <ros_graph_vio/graph_vio_wrapper.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -39,10 +38,10 @@
 #include <string>
 #include <vector>
 
-namespace graph_vio {
-class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
+namespace ros_graph_vio {
+class RosGraphVIONodelet : public ff_util::FreeFlyerNodelet {
  public:
-  GraphVIONodelet();
+  RosGraphVIONodelet();
 
  private:
   void Initialize(ros::NodeHandle* nh) final;
@@ -69,9 +68,9 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   void InitializeGraph();
 
-  void PublishVIOState();
+  // void PublishVIOState();
 
-  void PublishVIOGraph();
+  // void PublishVIOGraph();
 
   void PublishReset() const;
 
@@ -79,7 +78,7 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishHeartbeat();
 
-  void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
+  void FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
 
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
@@ -87,27 +86,21 @@ class GraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   void Run();
 
-  graph_vio::GraphVIOWrapper graph_vio_wrapper_;
+  ros_graph_vio::RosGraphVIOWrapper ros_graph_vio_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool vio_enabled_ = true;
-  ros::Subscriber imu_sub_, of_sub_, flight_mode_sub_;
+  ros::Subscriber imu_sub_, fp_sub_, flight_mode_sub_;
   ros::Publisher state_pub_, graph_pub_, pose_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;
-  GraphVIONodeletParams params_;
+  RosGraphVIONodeletParams params_;
   int last_mode_ = -1;
 
   ros::Time last_heartbeat_time_;
-
-  // Timers
-  localization_common::RosTimer of_timer_ = localization_common::RosTimer("OF msg");
-  localization_common::RosTimer imu_timer_ = localization_common::RosTimer("Imu msg");
-  localization_common::Timer callbacks_timer_ = localization_common::Timer("Callbacks");
-  localization_common::Timer nodelet_runtime_timer_ = localization_common::Timer("Nodelet Runtime");
 };
-}  // namespace graph_vio
+}  // namespace ros_graph_vio
 
 #endif  // ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_H_

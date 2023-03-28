@@ -16,23 +16,21 @@
  * under the License.
  */
 
-#include <ff_msgs/GraphVIOState.h>
-#include <ff_msgs/SerializedGraph.h>
+#include <ff_msgs/CombinedNavStateArray.h>
 #include <ff_util/ff_names.h>
-#include <graph_vio/graph_vio_nodelet.h>
-#include <graph_vio/parameter_reader.h>
-#include <graph_vio/utilities.h>
+// #include <graph_vio/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
+#include <ros_graph_vio/ros_graph_vio_nodelet.h>
 
 #include <std_msgs/Empty.h>
 
-namespace graph_vio {
+namespace ros_graph_vio {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 
-GraphVIONodelet::GraphVIONodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_VIO, true) {
+RosGraphVIONodelet::RosGraphVIONodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_VIO, true) {
   private_nh_.setCallbackQueue(&private_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
@@ -46,7 +44,7 @@ GraphVIONodelet::GraphVIONodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_VIO, t
   last_heartbeat_time_ = ros::Time::now();
 }
 
-void GraphVIONodelet::Initialize(ros::NodeHandle* nh) {
+void RosGraphVIONodelet::Initialize(ros::NodeHandle* nh) {
   // Setup the platform name
   platform_name_ = GetPlatform();
   platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
@@ -56,26 +54,26 @@ void GraphVIONodelet::Initialize(ros::NodeHandle* nh) {
   Run();
 }
 
-void GraphVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  state_pub_ = nh->advertise<ff_msgs::GraphVIOState>(TOPIC_GRAPH_VIO_STATE, 10);
-  pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_VIO_POSE, 10);
-  graph_pub_ = nh->advertise<ff_msgs::SerializedGraph>(TOPIC_GRAPH_VIO, 10);
+void RosGraphVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
+  states_pub_ = nh->advertise<ff_msgs::CombinedNavStateArray>(TOPIC_VIO_STATES, 10);
+  // graph_pub_ = nh->advertise<ff_msgs::SerializedGraph>(TOPIC_GRAPH_VIO, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size, &GraphVIONodelet::ImuCallback, this,
-                                   ros::TransportHints().tcpNoDelay());
-  of_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
-                                  &GraphVIONodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
-  flight_mode_sub_ = private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &GraphVIONodelet::FlightModeCallback, this);
-  bias_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphVIONodelet::ResetBiasesAndVIO, this);
+  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size, &RosGraphVIONodelet::ImuCallback,
+                                   this, ros::TransportHints().tcpNoDelay());
+  fp_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_feature_points_buffer_size,
+                                  &RosGraphVIONodelet::FeaturePointsCallback, this, ros::TransportHints().tcpNoDelay());
+  flight_mode_sub_ =
+    private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosGraphVIONodelet::FlightModeCallback, this);
+  bias_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &RosGraphVIONodelet::ResetBiasesAndVIO, this);
   bias_from_file_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE,
-                                                     &GraphVIONodelet::ResetBiasesFromFileAndResetVIO, this);
-  reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphVIONodelet::ResetVIO, this);
-  input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphVIONodelet::SetMode, this);
+                                                     &RosGraphVIONodelet::ResetBiasesFromFileAndResetVIO, this);
+  reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &RosGraphVIONodelet::ResetVIO, this);
+  input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &RosGraphVIONodelet::SetMode, this);
 }
 
-bool GraphVIONodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
+bool RosGraphVIONodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
   const auto input_mode = req.mode;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
     LogInfo("Received Mode None request, turning off VIO.");
@@ -91,13 +89,13 @@ bool GraphVIONodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEk
   return true;
 }
 
-void GraphVIONodelet::DisableVIO() { vio_enabled_ = false; }
+void RosGraphVIONodelet::DisableVIO() { vio_enabled_ = false; }
 
-void GraphVIONodelet::EnableVIO() { vio_enabled_ = true; }
+void RosGraphVIONodelet::EnableVIO() { vio_enabled_ = true; }
 
-bool GraphVIONodelet::vio_enabled() const { return vio_enabled_; }
+bool RosGraphVIONodelet::vio_enabled() const { return vio_enabled_; }
 
-bool GraphVIONodelet::ResetBiasesAndVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+bool RosGraphVIONodelet::ResetBiasesAndVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   DisableVIO();
   graph_vio_wrapper_.ResetBiasesAndVIO();
   PublishReset();
@@ -105,11 +103,11 @@ bool GraphVIONodelet::ResetBiasesAndVIO(std_srvs::Empty::Request& req, std_srvs:
   return true;
 }
 
-bool GraphVIONodelet::ResetBiasesFromFileAndResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+bool RosGraphVIONodelet::ResetBiasesFromFileAndResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   return ResetBiasesFromFileAndResetVIO();
 }
 
-bool GraphVIONodelet::ResetBiasesFromFileAndResetVIO() {
+bool RosGraphVIONodelet::ResetBiasesFromFileAndResetVIO() {
   DisableVIO();
   graph_vio_wrapper_.ResetBiasesFromFileAndResetVIO();
   PublishReset();
@@ -117,27 +115,24 @@ bool GraphVIONodelet::ResetBiasesFromFileAndResetVIO() {
   return true;
 }
 
-bool GraphVIONodelet::ResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+bool RosGraphVIONodelet::ResetVIO(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   ResetAndEnableVIO();
   return true;
 }
 
-void GraphVIONodelet::ResetAndEnableVIO() {
+void RosGraphVIONodelet::ResetAndEnableVIO() {
   DisableVIO();
   graph_vio_wrapper_.ResetVIO();
   PublishReset();
   EnableVIO();
 }
 
-void GraphVIONodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
-  of_timer_.HeaderDiff(feature_array_msg->header);
-  of_timer_.VlogEveryN(100, 2);
-
+void RosGraphVIONodelet::FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   if (!vio_enabled()) return;
-  graph_vio_wrapper_.OpticalFlowCallback(*feature_array_msg);
+  graph_vio_wrapper_.FeaturePointsCallback(*feature_array_msg);
 }
 
-void GraphVIONodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
+void RosGraphVIONodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_timer_.HeaderDiff(imu_msg->header);
   imu_timer_.VlogEveryN(100, 2);
 
@@ -145,11 +140,11 @@ void GraphVIONodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   graph_vio_wrapper_.ImuCallback(*imu_msg);
 }
 
-void GraphVIONodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
+void RosGraphVIONodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
   graph_vio_wrapper_.FlightModeCallback(*mode);
 }
 
-void GraphVIONodelet::PublishVIOState() {
+/*void RosGraphVIONodelet::PublishVIOState() {
   auto latest_vio_state_msg = graph_vio_wrapper_.LatestVIOStateMsg();
   if (!latest_vio_state_msg) {
     LogDebugEveryN(100, "PublishVIOState: Failed to get latest vio state msg.");
@@ -158,39 +153,39 @@ void GraphVIONodelet::PublishVIOState() {
   latest_vio_state_msg->callbacks_time = callbacks_timer_.last_value();
   latest_vio_state_msg->nodelet_runtime = nodelet_runtime_timer_.last_value();
   state_pub_.publish(*latest_vio_state_msg);
-}
+}*/
 
-void GraphVIONodelet::PublishVIOGraph() {
+/*void RosGraphVIONodelet::PublishVIOGraph() {
   const auto latest_vio_graph_msg = graph_vio_wrapper_.LatestGraphMsg();
   if (!latest_vio_graph_msg) {
     LogDebugEveryN(100, "PublishVIOGraph: Failed to get latest vio graph msg.");
     return;
   }
   graph_pub_.publish(*latest_vio_graph_msg);
-}
+}*/
 
-void GraphVIONodelet::PublishReset() const {
+void RosGraphVIONodelet::PublishReset() const {
   std_msgs::Empty msg;
   reset_pub_.publish(msg);
 }
 
-void GraphVIONodelet::PublishHeartbeat() {
+void RosGraphVIONodelet::PublishHeartbeat() {
   heartbeat_.header.stamp = ros::Time::now();
   if ((heartbeat_.header.stamp - last_heartbeat_time_).toSec() < 1.0) return;
   heartbeat_pub_.publish(heartbeat_);
   last_heartbeat_time_ = heartbeat_.header.stamp;
 }
 
-void GraphVIONodelet::PublishGraphMessages() {
+void RosGraphVIONodelet::PublishGraphMessages() {
   if (!vio_enabled()) return;
 
   // Publish loc information here since graph updates occur on optical flow updates
-  PublishVIOState();
-  if (graph_vio_wrapper_.publish_graph()) PublishVIOGraph();
-  if (graph_vio_wrapper_.save_graph_dot_file()) graph_vio_wrapper_.SaveGraphDotFile();
+  // PublishVIOState();
+  // if (graph_vio_wrapper_.publish_graph()) PublishVIOGraph();
+  // if (graph_vio_wrapper_.save_graph_dot_file()) graph_vio_wrapper_.SaveGraphDotFile();
 }
 
-void GraphVIONodelet::Run() {
+void RosGraphVIONodelet::Run() {
   ros::Rate rate(100);
   // Load Biases from file by default
   // Biases reestimated if a intialize bias service call is received
@@ -207,6 +202,6 @@ void GraphVIONodelet::Run() {
     rate.sleep();
   }
 }
-}  // namespace graph_vio
+}  // namespace ros_graph_vio
 
-PLUGINLIB_EXPORT_CLASS(graph_vio::GraphVIONodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(ros_graph_vio::RosGraphVIONodelet, nodelet::Nodelet);
