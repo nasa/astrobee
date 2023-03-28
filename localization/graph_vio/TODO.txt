@@ -10,10 +10,8 @@
             - is velocity in global frame or body frame??
 
   - update nodelet! (A)
-        - publish odometry messages!
-        - push msgs through to wrapper
-        - subscribe to resets and such
     - TODO: create graph message!
+    - TODO: only publish states message if optimization has occured again!
 
   - add graph_localizer! (B)
     - copy graph vio! modify for loc!
