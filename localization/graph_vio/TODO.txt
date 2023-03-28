@@ -7,14 +7,10 @@
 
   add ros_graph_vio: (A)
     - create odometry message! (AA)
-      - add CombinedNavState message! (AAA)
-        - pose, velocity, bias, their covariances, timestamp!
-      - add CombinedNavStateArray message! (AAAB)
-      - convert velocity from odom frame to global frame?? (AAC)
-        - is velocity in global frame or body frame??
-      - get history of combined nav states and their covariances! AAD
-        - send this in message!
-        - add function in ros_graph_vio to fill this in!
+        - fill this in ros_graph_vio! (AAB)
+           - convert velocity from odom frame to global frame?? (AAC)
+            - is velocity in global frame or body frame??
+
   - update nodelet! (AB)
         - publish odometry messages!
         - push msgs through to wrapper

@@ -137,11 +137,11 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
   msg_rotation.z = rotation.z();
 }
 
-template <typename ArrayType>
-void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array) {
-  for (int i = 0; i < 6; ++i) {
-    for (int j = 0; j < 6; ++j) {
-      covariance_array[i*6 + j] = covariance(i, j);
+template <typename ArrayType, int Dim>
+void EigenCovarianceToMsg(const Eigen::Matrix<double, Dim, Dim>& covariance, ArrayType& covariance_array) {
+  for (int i = 0; i < Dim; ++i) {
+    for (int j = 0; j < Dim; ++j) {
+      covariance_array[i*Dim + j] = covariance(i, j);
     }
   }
 }

@@ -20,6 +20,7 @@
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
 #include <config_reader/config_reader.h>
+#include <ff_msgs/CombinedNavState.h>
 #include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
@@ -102,11 +103,17 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
                                                          const gtsam::Pose3& global_T_body,
                                                          const gtsam::Vector3& uncorrected_accelerometer_measurement);
 
-template <class LocMsgType>
-void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);
+ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
+                                                const PoseCovariance& pose_covariance,
+                                                const Eigen::Matrix3d& velocity_covariance,
+                                                const Eigen::Matrix3d& accelerometer_bias_covariance,
+                                                const Eigen::Matrix3d& gyroscope_bias_covariance);
 
 template <class LocMsgType>
-void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg);
+void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);
+
+template <class LocMsgType>
+void CombinedNavStateCovariancesToLocMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg);
 
 template <typename MatrixType>
 double LogDeterminant(const MatrixType& matrix);
@@ -172,7 +179,7 @@ std::vector<const FactorType*> Factors(const gtsam::NonlinearFactorGraph& graph)
 
 // Implementations
 template <class LocMsgType>
-void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
+void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
   PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
   msg_conversions::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
   msg_conversions::VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
@@ -181,7 +188,7 @@ void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgTyp
 }
 
 template <class LocMsgType>
-void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg) {
+void CombinedNavStateCovariancesToLocMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg) {
   // Orientation (0-2)
   msg_conversions::VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
 

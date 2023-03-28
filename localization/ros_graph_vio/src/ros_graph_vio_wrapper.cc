@@ -101,4 +101,12 @@ void GraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
   imu_bias_initializer_.LoadFromFile();
   graph_vio_.reset();
 }
+
+ff_msgs::CombinedNavStateArray GraphVIOWrapper::CombinedNavStateArrayMsg() const {
+  ff_msgs::CombinedNavStateArray msg;
+  if (!Initialized()) return msg;
+  // TODO(rsoussan): fill in header, get combined nav state history, fill in!
+  // Add function in msg conversions to write combined nav state and covariance to
+  // combined nav state msg!!! (AAA)
+}
 }  // namespace graph_vio

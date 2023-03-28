@@ -149,6 +149,26 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
   return (uncorrected_accelerometer_measurement + imu_F_gravity);
 }
 
+ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
+                                                const PoseCovariance& pose_covariance,
+                                                const Eigen::Matrix3d& velocity_covariance,
+                                                const Eigen::Matrix3d& accelerometer_bias_covariance,
+                                                const Eigen::Matrix3d& gyroscope_bias_covariance) {
+  ff_msgs::CombinedNavState msg;
+  // Write CombinedNavState
+  PoseToMsg(combined_nav_state.pose(), msg.pose.pose);
+  msg_conversions::VectorToMsg(combined_nav_state.velocity(), msg.velocity.velocity);
+  msg_conversions::VectorToMsg(combined_nav_state.bias().accelerometer(), msg.imu_bias.accelerometer_bias);
+  msg_conversions::VectorToMsg(combined_nav_state.bias().gyroscope(), msg.imu_bias.gyroscope_bias);
+
+  // Write covariances
+  msg_conversions::EigenCovarianceToMsg(pose_covariance, msg.pose.covariance);
+  msg_conversions::EigenCovarianceToMsg(velocity_covariance, msg.velocity.covariance);
+  msg_conversions::EigenCovarianceToMsg(accelerometer_bias_covariance, msg.imu_bias.accelerometer_bias_covariance);
+  msg_conversions::EigenCovarianceToMsg(gyroscope_bias_covariance, msg.imu_bias.gyroscope_bias_covariance);
+  return msg;
+}
+
 double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
 
 double Rad2Deg(const double radians) { return 180.0 / M_PI * radians; }
