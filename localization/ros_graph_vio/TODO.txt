@@ -1,37 +1,22 @@
   - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
       - add support for this in timestamped_set? (updating old values)
 
-  - graph vio:
-    - support checking for standstill!!! (B)
-
-  add ros_graph_vio: (A)
-      - add comments to graph initializer! (AAA)
-        - reorganize this too
-          - rename to imu_bias_initializer (AA)
-          - move loading graph vio params to ros graph vio wrapper? (AB)
-          - move params somewhere else?? (AC)
-      - how to access pose/cov history? (AAB)
-        -add support in nodes somehow??
-      - add latest biases??
+  - add grah_vio! (A)
+    - inherit from sliding window optimizer
+    - add combined imu node adder, vo and standstill factor adders
     - publish odometry message!
-      - add new message type!
+      - add new message type?
       - convert velocity from odom frame to global frame??
         - is velocity in global frame or body frame??
       - add better way of getting relative covariance??
-      - update nodelet!
 
-  - add graph_localizer! (B)
-    - copy graph vio! modify for loc!
+  - add graph_localizer! (C)
     - use pose node updater with odometry message! 
     - add loc factor adder!
 
-  - add ros_graph_localizer! (C)
-
-    - add parameter reader! (D)
+    - add parameter reader! (G)
       - fail if parameter not read!!
       - how to unit test these??
-
-  - test in sim! (E)
 
   isam2 optimizer issues!
     - need to account for values removed when sliding window!
@@ -47,6 +32,9 @@
 
 
 - TODO: how to access opt iterations????
+- move serialization.cc back to graph optimizer?
+      - make graph optimizer depend on graph_Factors?
+  - add test with graph optimizer, simple factor adder, and simple node updater!!
 
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
@@ -65,4 +53,3 @@
   - tools: loc rvz plugins, imu bias tester
 - update imu_augmentor, make sure it compiles!
   - add tests?
-- rename imu_augmentor to ros_imu_augmentor
