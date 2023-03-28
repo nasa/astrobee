@@ -9,19 +9,18 @@
     - convert velocity from odom frame to global frame?? 
             - is velocity in global frame or body frame??
 
-  - update nodelet! (A)
-    - add comments to nodelet
+  - ros graph vio nodelet:
     - TODO: create graph message!
     - TODO: only publish states message if optimization has occured again!
 
-  - add graph_localizer! (B)
+  - add graph_localizer! (A)
     - copy graph vio! modify for loc!
     - use pose node updater with odometry message! 
     - add loc factor adder!
 
-  - add ros_graph_localizer! (C)
+  - add ros_graph_localizer! (B)
 
-    - add parameter reader! (D)
+    - add parameter reader! (C)
       - fail if parameter not read!!
       - how to unit test these??
 

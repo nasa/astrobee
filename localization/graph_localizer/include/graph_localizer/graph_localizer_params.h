@@ -15,28 +15,36 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/handrail_params.h>
-#include <graph_localizer/graph_initializer_params.h>
-#include <graph_optimizer/graph_optimizer_params.h>
+#include <factor_adders/loc_factor_adder_params.h>
+#include <node_adders/pose_node_adder_params.h>
+#include <node_adders/timestamped_node_adder_model_params.h>
+#include <optimizers/nonlinear_optimizer.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
 
-#include <string>
+#include <boost/serialization/serialization.hpp>
 
 namespace graph_localizer {
 struct GraphLocalizerParams {
-  // CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
-  CalibrationParams calibration;
-  FactorParams factor;
-  graph_optimizer::GraphOptimizerParams graph_optimizer;
-  GraphInitializerParams graph_initializer;
-  HandrailParams handrail;
-  double huber_k;
-  bool estimate_world_T_dock_using_loc;
+  factor_adders::LocFactorAdderParams loc_factor_adder;
+  node_adders::PoseNodeAdderParams pose_node_adder;
+  node_adders::TimestampedNodeAdderModelParams pose_node_adder_model;
+  optimizers::NonlinearOptimizerParams nonlinear_optimizer;
+  sliding_window_graph_optimizer::SlidingWindowGraphOptimizerParams sliding_window_graph_optimizer;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(loc_factor_adder);
+    ar& BOOST_SERIALIZATION_NVP(pose_node_adder);
+    ar& BOOST_SERIALIZATION_NVP(pose_node_adder_model);
+    ar& BOOST_SERIALIZATION_NVP(nonlinear_optimizer);
+    ar& BOOST_SERIALIZATION_NVP(sliding_window_graph_optimizer);
+  }
 };
 }  // namespace graph_localizer
 

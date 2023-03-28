@@ -29,21 +29,12 @@ find_package(Eigen3 REQUIRED)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  nodelet
-  camera
-  config_reader
   factor_adders
-  ff_util
-  ff_msgs
   graph_factors
-  graph_optimizer
-  graph_values
-  imu_integration
   localization_common
   localization_measurements
-  msg_conversions
-  node_updaters
-  vision_common
+  node_adders
+  sliding_window_graph_optimizer
 )
 
 # Find OpenCV
@@ -54,21 +45,12 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
   CATKIN_DEPENDS
-    nodelet
-    camera
-    config_reader
     factor_adders
-    ff_util
-    ff_msgs
     graph_factors
-    graph_optimizer
-    graph_values
-    imu_integration
     localization_common
     localization_measurements
-    msg_conversions
-    node_updaters
-    vision_common
+    node_adders
+    sliding_window_graph_optimizer
 )
 
 ###########
@@ -103,20 +85,9 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
-

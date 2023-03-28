@@ -19,114 +19,58 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 
-#include <graph_localizer/depth_odometry_factor_adder.h>
-#include <graph_localizer/handrail_factor_adder.h>
+#include <factor_adders/loc_factor_adder.h>
 #include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/graph_localizer_stats.h>
-#include <graph_localizer/loc_factor_adder.h>
-#include <graph_localizer/loc_graph_action_completer.h>
-#include <graph_localizer/rotation_factor_adder.h>
-#include <graph_optimizer/graph_optimizer.h>
-#include <localization_common/time.h>
-#include <localization_measurements/depth_odometry_measurement.h>
-#include <localization_measurements/handrail_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
-
-#include <gtsam/geometry/Cal3_S2.h>
-#include <gtsam/geometry/PinholePose.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/navigation/NavState.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/Marginals.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <localization_measurements/pose_measurement.h>
+#include <node_adders/pose_node_adder.h>
+#include <nodes/timestamped_nodes.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
 
 #include <boost/serialization/serialization.hpp>
 
-#include <map>
-#include <string>
-#include <utility>
-#include <vector>
-
 namespace graph_localizer {
-namespace sym = gtsam::symbol_shorthand;
-using Calibration = gtsam::Cal3_S2;
-using Camera = gtsam::PinholePose<Calibration>;
-
-class GraphLocalizer : public graph_optimizer::GraphOptimizer {
+// Siding window graph optimizer that uses matched projections and odomery poses to perform localization.
+// Uses the PoseNodeAdder to add relative odometry pose factors between graph nodes.
+// Matched projections typically come from matching images to a map of image
+// features.
+class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraphOptimizer {
  public:
   explicit GraphLocalizer(const GraphLocalizerParams& params);
+
   // For Serialization Only
   GraphLocalizer() {}
-  ~GraphLocalizer() = default;
-  /*boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
-  boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
-    const localization_common::Time time) const;
-  boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
-  LatestCombinedNavStateAndCovariances() const;*/
-  void AddARTagMeasurement(
+
+  // Adds pose measurement to the pose node adder.
+  void AddPoseMeasurement(const localization_measurements::TimestampedPoseWithCovariance& pose_measurement);
+
+  // Adds matched projections measurement to loc factor adder.
+  void AddMatchedProjectionsMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddSparseMappingMeasurement(
-    const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
-  void AddDepthOdometryMeasurement(
-    const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement);
-  bool DoPostOptimizeActions() final;
 
-  boost::optional<localization_common::Time> LatestExtrapolatedPoseTime() const;
-
-  const GraphLocalizerParams& params() const;
-
-  const GraphLocalizerStats& graph_localizer_stats() const;
-
-  /*const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
-
-  const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;*/
+  // Returns a const reference to pose nodes.
+  const nodes::TimestampedNodes<gtsam::Pose3>& pose_nodes() const;
 
  private:
-  void InitializeNodeUpdaters();
-  void InitializeFactorAdders();
-  void InitializeGraphActionCompleters();
-  void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
-                                const boost::optional<gtsam::Marginals>& marginals) final;
-
-  boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
-  LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
-
-  void BufferCumulativeFactors() final;
-
-  void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) final;
-
-  bool ValidGraph() const final;
-
-  bool ReadyToAddFactors(const localization_common::Time timestamp) const final;
-
-  bool MeasurementRecentEnough(const localization_common::Time timestamp) const final;
-
-  void PrintFactorDebugInfo() const final;
+  // bool ValidGraph() const final;
 
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphOptimizer);
-    // ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_updater_);
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(sliding_window_graph_optimizer::SlidingWindowGraphOptimizer);
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(loc_factor_adder_);
+    ar& BOOST_SERIALIZATION_NVP(pose_node_adder_);
   }
 
   GraphLocalizerParams params_;
 
   // Factor Adders
-  std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
-  std::shared_ptr<DepthOdometryFactorAdder> depth_odometry_factor_adder_;
-  std::shared_ptr<HandrailFactorAdder> handrail_factor_adder_;
-  std::shared_ptr<LocFactorAdder> loc_factor_adder_;
-  std::shared_ptr<RotationFactorAdder> rotation_factor_adder_;
+  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::PoseNodeAdder>> loc_factor_adder_;
 
-  // Node Updaters
-//  std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
-
-  // Graph Action Completers
-  std::shared_ptr<LocGraphActionCompleter> ar_tag_loc_graph_action_completer_;
-  std::shared_ptr<LocGraphActionCompleter> loc_graph_action_completer_;
+  // Node Adders
+  std::shared_ptr<node_adders::PoseNodeAdder> pose_node_adder_;
 };
 }  // namespace graph_localizer
 
