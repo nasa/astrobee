@@ -5,20 +5,19 @@
     - support checking for standstill!!! (B)
 
   add ros_graph_vio: (A)
-      - add comments to graph initializer! (AAA)
-        - reorganize this too
-          - rename to imu_bias_initializer (AA)
-          - move loading graph vio params to ros graph vio wrapper? (AB)
-          - move params somewhere else?? (AC)
+        - get latest bias from graph vio after adding imu measurement (AC)
       - how to access pose/cov history? (AAB)
-        -add support in nodes somehow??
-      - add latest biases??
-    - publish odometry message!
+        -add support in nodes somehow?? just use timestamped nodes!
+    - create odometry message!
       - add new message type!
       - convert velocity from odom frame to global frame??
         - is velocity in global frame or body frame??
       - add better way of getting relative covariance??
+    - create graph message!
       - update nodelet!
+        - publish graph and odometry messages!
+        - push msgs through to wrapper
+        - subscribe to resets and such
 
   - add graph_localizer! (B)
     - copy graph vio! modify for loc!

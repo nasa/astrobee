@@ -35,9 +35,13 @@ class ImuBiasInitializer {
  public:
   // Add flight speed mode measurement for IMU bias filter.
   void AddFlightSpeedModeMeasurement(const lm::FanSpeedMode fan_speed_mode);
+
   // Add IMU measurement. Estimate biases if enough measurements have been received and
   // save this to a file.
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
+
+  // Returns bias if it is available.
+  boost::optional<gtsam::imuBias::ConstantBias> Bias() const;
 
   // Clears measurement buffer, filter, and estimated bias.
   void ResetBiases();

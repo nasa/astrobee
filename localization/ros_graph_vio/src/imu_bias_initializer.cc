@@ -57,7 +57,14 @@ void ImuBiasInitializer::AddImuMeasurement(const localization_measurements::ImuM
   SaveToFile();
 }
 
-void ImuBiasInitializer::ResetBiases() {
+boost::optional<gtsam::imuBias::ConstantBias> ImuBiasInitializer::Bias() const { return imu_bias_; }
+
+void ImuBiasInitializer::UpdateBias(const gtsam::imuBias::ConstantBias& bias) {
+  imu_bias_ = bias;
+  SaveToFile();
+}
+
+void ImuBiasInitializer::Reset() {
   imu_bias_ = boost::none;
   imu_bias_filter_.reset(new imu_integration::DynamicImuFilter(params_.filter));
   imu_bias_measurements_.clear();
