@@ -1,14 +1,21 @@
-  - when reset localizer, wait until initial pose is received!!! (AA) 
-      - add logic in wrapper for this!
-      - also wait until vo message is received??
-      - what happens if there's a gap in vo messages???
-        - reset localizer???
-
   - graph vio:
-    - support checking for standstill!!! (B)
+          - create standstill measurement if necessary
+          - update graph_vio_wrapper to get standstill info when create message
     - add better way of getting relative covariance??
 
-  - add parameter reader! (C)
+      - wait until vo message is received to initialize loc?? (B)
+        - need to wait for bias estimation...
+        - make sure to keep updating initial pose!
+        - add logic to wait for first vio message!
+          - add function to initialize with vl message? (no, just put in that function..)
+
+      - what happens if there's a gap in vo messages???
+        - reset localizer!
+        - TODO to fill gap with imu extrapolation?
+
+  - check if factor adders are enabled in graph loc/vio before adding measurements!
+
+  - add parameter reader! (B)
       - fail if parameter not read!!
       - how to unit test these??
 

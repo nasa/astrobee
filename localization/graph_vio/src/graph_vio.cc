@@ -17,6 +17,7 @@
  */
 
 #include <graph_vio/graph_vio.h>
+#include <vision_common/utilities.h>
 
 namespace graph_vio {
 namespace fa = factor_adders;
@@ -25,11 +26,13 @@ namespace lm = localization_measurements;
 namespace na = node_adders;
 namespace no = nodes;
 namespace op = optimizers;
+namespace vc = vision_common;
 
 GraphVIO::GraphVIO(const GraphVIOParams& params)
     : SlidingWindowGraphOptimizer(params.sliding_window_graph_optimizer,
                                   std::make_unique<op::NonlinearOptimizer>(params.nonlinear_optimizer)),
-      params_(params) {
+      params_(params),
+      standstill_(false) {
   // Initialize node adders
   combined_nav_state_node_adder_ = std::make_shared<na::CombinedNavStateNodeAdder>(
     params_.combined_nav_state_node_adder, params_.combined_nav_state_node_adder_model, nodes());
@@ -46,10 +49,17 @@ void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
 
 void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& feature_points_measurement) {
   vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);
-  // TODO(rsoussan): check for standstill!
+
+  standstill_ =
+    vc::Standstill(vo_smart_projection_factor_adder_->feature_tracker().feature_tracks(), params_.standstill);
+  // TODO(rsoussan): create standstill measurement! pass to factor adder!
+  // TODO(rsoussan): how to get previous timestamp???
 }
 
 const no::CombinedNavStateNodes& GraphVIO::combined_nav_state_nodes() const {
   return combined_nav_state_node_adder_->nodes();
 }
+
+bool GraphVIO::standstill() const { return standstill_; }
+
 }  // namespace graph_vio

@@ -55,6 +55,9 @@ class VoSmartProjectionFactorAdder
   // Default constructor for serialization only.
   VoSmartProjectionFactorAdder() = default;
 
+  // Const accesor to feature tracker
+  const vision_common::SpacedFeatureTracker& feature_tracker() const;
+
  private:
   // Add factors using either set measurement spacing or max spacing.
   int AddMeasurementBasedFactors(const localization_common::Time oldest_allowed_time,
@@ -114,6 +117,11 @@ VoSmartProjectionFactorAdder<PoseNodeAdderType>::VoSmartProjectionFactorAdder(
   const VoSmartProjectionFactorAdderParams& params, std::shared_ptr<PoseNodeAdderType> node_adder)
     : Base(params), params_(params), node_adder_(node_adder) {
   feature_tracker_.reset(new vision_common::SpacedFeatureTracker(params.spaced_feature_tracker));
+}
+
+template <typename PoseNodeAdderType>
+const vision_common::SpacedFeatureTracker& VoSmartProjectionFactorAdder<PoseNodeAdderType>::feature_tracker() const {
+  return *feature_tracker_;
 }
 
 template <typename PoseNodeAdderType>

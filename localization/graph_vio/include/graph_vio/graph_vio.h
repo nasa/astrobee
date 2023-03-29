@@ -55,8 +55,13 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
   // Returns a const reference to combined nav state nodes.
   const nodes::CombinedNavStateNodes& combined_nav_state_nodes() const;
 
+  // Returns whether standstill is detected or not.
+  bool standstill() const;
+
  private:
-  // void CheckForStandstill();
+  // Uses the latest feature track points to detect standstill.
+  bool CheckForStandstill(const localization_common::Time oldest_allowed_time);
+
   // bool ValidGraph() const final;
 
   // Serialization function
@@ -71,6 +76,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
   }
 
   GraphVIOParams params_;
+  bool standstill_;
 
   // Factor Adders
   std::shared_ptr<factor_adders::VoSmartProjectionFactorAdder<node_adders::CombinedNavStateNodeAdder>>

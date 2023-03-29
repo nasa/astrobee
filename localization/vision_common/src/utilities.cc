@@ -65,6 +65,15 @@ Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat
   return lc::Isometry3d(translation, rotation);
 }
 
+double AverageDistanceFromMean(const std::vector<lc::TimestampedValue<FeaturePoint>>& timestamped_points) {
+  // TODO(rsoussan): Do this more efficiently/avoid conversion
+  std::vector<FeaturePoint> points;
+  for (const auto& timestamped_point : timestamped_points) {
+    points.emplace_back(timestamped_point.value);
+  }
+  return AverageDistanceFromMean(points);
+}
+
 double AverageDistanceFromMean(const std::vector<FeaturePoint>& points) {
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
