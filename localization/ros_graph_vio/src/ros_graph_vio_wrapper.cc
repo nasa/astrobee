@@ -127,6 +127,7 @@ ff_msgs::GraphVIOState RosGraphVIOWrapper::GraphVIOStateMsg() const {
   }
   lc::TimeToHeader(*(nodes.LatestTimestamp()), msg.header);
   msg.child_frame_id = "odom";
+  msg.standstill = graph_vio_->standstill();
   // TODO(rsoussan): Add more stats here!
   return msg;
 }
