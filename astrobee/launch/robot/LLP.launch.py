@@ -53,20 +53,18 @@ def generate_launch_description():
         name='llp_gnc',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
             ComposableNode(
                 package='ctl',
                 plugin='ctl::CtlComponent',
                 name='ctl',
-                extra_arguments=[{'use_intra_process_comms': False}]
-                ),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ComposableNode(
                 package='fam',
                 plugin='fam::FamComponent',
                 name='fam',
-                extra_arguments=[{'use_intra_process_comms': False}]
-                )
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
         ComposableNodeContainer(
@@ -195,7 +193,7 @@ def generate_launch_description():
                 package='light_flow',
                 plugin='light_flow::LightFlowComponent',
                 name='light_flow',
-                extra_arguments=[{'use_intra_process_comms': True}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
     ])

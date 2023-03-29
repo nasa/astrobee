@@ -64,7 +64,7 @@ def generate_launch_description():
                 package='ground_truth_localizer',
                 plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
                 name='ground_truth_localizer',
-                ),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             # ComposableNode(
             #     package='image_sampler',
             #     plugin='image_sampler::ImageSampler',
@@ -226,7 +226,7 @@ def generate_launch_description():
                 package='mapper',
                 plugin='mapper::MapperComponent',
                 name='mapper',
-                extra_arguments=[{'use_intra_process_comms': False}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
         ComposableNodeContainer(
@@ -348,17 +348,17 @@ def generate_launch_description():
                 package='choreographer',
                 plugin='choreographer::ChoreographerComponent',
                 name='choreographer',
-                extra_arguments=[{'use_intra_process_comms': False}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ComposableNode(
                 package='planner_trapezoidal',
                 plugin='planner_trapezoidal::PlannerTrapezoidalComponent',
                 name='planner_trapezoidal',
-                extra_arguments=[{'use_intra_process_comms': False}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ComposableNode(
                 package='framestore',
                 plugin='mobility::FrameStore',
                 name='framestore',
-                extra_arguments=[{'use_intra_process_comms': False}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
         ComposableNodeContainer(
@@ -423,7 +423,7 @@ def generate_launch_description():
                 package='states',
                 plugin='states::StatesComponent',
                 name='states',
-                extra_arguments=[{'use_intra_process_comms': False}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
     ])
