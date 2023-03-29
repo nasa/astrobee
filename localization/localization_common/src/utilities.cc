@@ -30,8 +30,9 @@
 namespace localization_common {
 namespace mc = msg_conversions;
 
-gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
-  const auto body_T_sensor = mc::LoadEigenTransform(config, transform_config_name);
+gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name,
+                           const std::string& prefix) {
+  const auto body_T_sensor = mc::LoadEigenTransform(config, transform_config_name, prefix);
   return GtPose(body_T_sensor);
 }
 
@@ -41,8 +42,9 @@ gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::strin
   return vec;
 }
 
-gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name) {
-  const camera::CameraParameters cam_params(&config, intrinsics_config_name.c_str());
+gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
+                                    const std::string& prefix) {
+  const camera::CameraParameters cam_params(&config, (prefix + intrinsics_config_name).c_str());
   const auto intrinsics = cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
   // Assumes zero skew
   return gtsam::Cal3_S2(intrinsics(0, 0), intrinsics(1, 1), 0, intrinsics(0, 2), intrinsics(1, 2));
@@ -149,7 +151,7 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
 ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
                                                 const PoseCovariance& pose_covariance,
                                                 const Eigen::Matrix3d& velocity_covariance,
-const Eigen::Matrix<double, 6, 6>& imu_bias_covariance) {
+                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance) {
   ff_msgs::CombinedNavState msg;
   TimeToHeader(combined_nav_state.timestamp(), msg.header);
   // Write CombinedNavState

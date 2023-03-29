@@ -59,9 +59,13 @@ include_directories(
   ${GLOG_INCLUDE_DIRS}
 )
 
+file(GLOB cc_files
+     "src/*.cc"
+)
+
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/graph_optimizer.cc
+  ${cc_files}
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

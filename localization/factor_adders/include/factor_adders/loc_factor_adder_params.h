@@ -23,6 +23,7 @@
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/linear/NoiseModel.h>
 
 namespace factor_adders {
 struct LocFactorAdderParams : public FactorAdderParams {

@@ -46,11 +46,13 @@
 #include <vector>
 
 namespace localization_common {
-gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name,
+                           const std::string& prefix = "");
 
 gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name);
 
-gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name);
+gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
+                                    const std::string& prefix = "");
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
@@ -106,7 +108,7 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
 ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
                                                 const PoseCovariance& pose_covariance,
                                                 const Eigen::Matrix3d& velocity_covariance,
-const Eigen::Matrix<double, 6, 6>& imu_bias_covariance);
+                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance);
 
 template <class LocMsgType>
 void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);

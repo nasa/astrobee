@@ -16,12 +16,14 @@
  * under the License.
  */
 
-#include <parameter_reader/factor_adders.h>
+#include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
+#include <parameter_reader/factor_adders.h>
 
 namespace parameter_reader {
-namespace mc = msg_conversions;
 namespace fa = factor_adders;
+namespace lc = localization_common;
+namespace mc = msg_conversions;
 
 void LoadFactorAdderParams(config_reader::ConfigReader& config, fa::FactorAdderParams& params,
                            const std::string& prefix) {
@@ -45,8 +47,7 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, fa::LocFactor
   LOAD_PARAM(params.max_num_projection_factors, config, prefix);
   LOAD_PARAM(params.min_num_matches_per_measurement, config, prefix);
   LOAD_PARAM(params.max_valid_projection_error, config, prefix);
-  params.body_T_cam = mc::LoadEigenTransform(config, "body_T_cam", prefix);
-  // TODO(rsoussan): add prefix option to these!
+  params.body_T_cam = lc::LoadTransform(config, "body_T_cam", prefix);
   // TODO(rsoussan): make not necessarily nav cam specific?
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam", prefix)));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "nav_cam_noise_stddev", prefix));
@@ -58,5 +59,4 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::St
 void LoadVoSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                             fa::VoSmartProjectionFactorAdderParams& params, const std::string& prefix) {
 }
-}  // namespace parameter_reader
 }  // namespace parameter_reader
