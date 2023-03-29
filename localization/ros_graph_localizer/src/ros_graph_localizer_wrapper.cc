@@ -55,10 +55,8 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
 }
 
-void RosGraphLocalizerWrapper::CombinedNavStateArrayCallback(
-  const ff_msgs::CombinedNavStateArray& combined_nav_state_array_msg) {
-  // TODO(rsoussan): Send full pose/cov history instead of just latest pose/cov
-  const auto& latest_combined_nav_state_msg = combined_nav_state_array_msg.combined_nav_states.back();
+void RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
+  const auto& latest_combined_nav_state_msg = graph_vio_state_msg.combined_nav_states.combined_nav_states.back();
   const auto latest_combined_nav_state = lc::CombinedNavStateFromMsg(latest_combined_nav_state_msg);
   const auto latest_covariances = lc::CombinedNavStateCovariancesFromMsg(latest_combined_nav_state_msg);
   const lm::TimestampedPoseWithCovariance pose_measurement(
@@ -81,5 +79,17 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
   }
   // TODO(rsoussan): Don't initialize until new sparse map pose received!!
   graph_localizer_.reset(new gl::GraphLocalizer(params_));
+}
+
+ff_msgs::GraphLocState RosGraphLocalizerWrapper::GraphLocStateMsg() const {
+  ff_msgs::GraphLocState msg;
+  const auto latest_pose = *(graph_localizer_->pose_nodes().LatestNode());
+  const auto latest_timestamp = *(graph_localizer_->pose_nodes().LatestTimestamp());
+  const auto latest_keys = graph_localizer_->pose_nodes().Keys(latest_timestamp);
+  const auto latest_pose_covariance = *(graph_localizer_->Covariance(latest_keys[0]));
+  lc::PoseToMsg(latest_pose, msg.pose.pose);
+  mc::EigenCovarianceToMsg(latest_pose_covariance, msg.pose.covariance);
+  // TODO(rsoussan): set other graph info!
+  return msg;
 }
 }  // namespace ros_graph_localizer

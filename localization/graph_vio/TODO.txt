@@ -6,20 +6,25 @@
     - add better way of getting relative covariance??
 
   - ros_graph_vio_wrapper:
+    - add rest of opt stats to graph_vio
     - convert velocity from odom frame to global frame?? 
             - is velocity in global frame or body frame??
 
   - ros graph vio nodelet:
-    - TODO: create graph message!
+    - fill GraphVIOMessage!! (AABBB) 
     - TODO: only publish states message if optimization has occured again!
+        - add indicator for this in graph optimizer? last optimize time? optimize count?
 
   - add ros_graph_localizer! (A)
-    - get latest timestamp from combined nav states msg and send this! (AA)
-        - change combined nav state array msg to spilt bias covs! (AAA)
-          - update to/from messages!
-    - add publishing message to nodeleet and wrapper (AB)
-      - which message to publish??
-    - when reset localizer, wait until initial pose is received!!! (AC) 
+    - add publishing message to nodeleet and wrapper (AA)
+      - Fill GraphLocMessage! (AAA)
+        - publish this!
+
+  - need to update imu augmentor to subscribe to both odom and loc! (C)
+      - extrapolate loc with odom!
+        - then extrapolate this with imu data!
+
+    - when reset localizer, wait until initial pose is received!!! (AB) 
       - add logic in wrapper for this!
       - also wait until vo message is received??
 

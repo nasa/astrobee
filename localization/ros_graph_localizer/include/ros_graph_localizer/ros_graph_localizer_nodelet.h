@@ -18,7 +18,7 @@
 #ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_
 #define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_
 
-#include <ff_msgs/CombinedNavStateArray.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/ResetMap.h>
@@ -89,8 +89,8 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Passes sparse map visual landmarks msg to ros_graph_localizer_wrapper if Localizer is enabled.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
 
-  // Passes combined nav state array msg to ros_graph_localizer_wrapper if Localizer is enabled.
-  void CombinedNavStateArrayCallback(const ff_msgs::CombinedNavStateArray::ConstPtr& combined_nav_state_array_msg);
+  // Passes graph vio state msg to ros_graph_localizer_wrapper if Localizer is enabled.
+  void GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg);
 
   // Adds messages to ros_graph_localizer_wrapper from callback queue, updates
   // the ros_graph_localizer_wrapper, and pubishes messages.
@@ -101,8 +101,8 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
-  ros::Subscriber pose_sub_, sparse_map_vl_sub_;
-  ros::Publisher reset_pub_, heartbeat_pub_;
+  ros::Subscriber graph_vio_sub_, sparse_map_vl_sub_;
+  ros::Publisher graph_loc_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer bias_srv_, bias_from_file_srv_, reset_map_srv_, reset_srv_, input_mode_srv_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;

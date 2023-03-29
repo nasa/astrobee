@@ -18,9 +18,9 @@
 #ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_H_
 #define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_H_
 
-#include <ff_msgs/CombinedNavStateArray.h>
+#include <ff_msgs/GraphVIOState.h>
+#include <ff_msgs/GraphLocState.h>
 #include <ff_msgs/VisualLandmarks.h>
-// #include <ff_msgs/GraphVIOState.h>
 // #include <ff_msgs/SerializedGraph.h>
 #include <graph_localizer/graph_localizer.h>
 
@@ -41,8 +41,8 @@ class RosGraphLocalizerWrapper {
   // Add sparse map visual landmarks msg to graph_localizer.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
-  // Add combined nav state array to graph localizer.
-  void CombinedNavStateArrayCallback(const ff_msgs::CombinedNavStateArray& combined_nav_state_array_msg);
+  // Add graph vio state to graph localizer.
+  void GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg);
 
   // Updates the graph_localizer if it has been initialized.
   void Update();
@@ -52,6 +52,10 @@ class RosGraphLocalizerWrapper {
 
   // Resets the graph.
   void ResetLocalizer();
+
+  // Creates graph loc state msg using latest pose and graph information
+  // in graph localizer.
+  ff_msgs::GraphLocState GraphLocStateMsg() const;
 
  private:
   // Initialize the graph

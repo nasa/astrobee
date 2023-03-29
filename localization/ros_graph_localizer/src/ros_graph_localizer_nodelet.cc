@@ -55,11 +55,12 @@ void RosGraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
+  graph_loc_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GRAPH_LOC_STATE, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
-  pose_sub_ = private_nh_.subscribe(TOPIC_GRAPH_VIO_STATES, params_.max_pose_buffer_size,
-                                    &RosGraphLocalizerNodelet::CombinedNavStateArrayCallback, this,
-                                    ros::TransportHints().tcpNoDelay());
+  graph_vio_sub_ =
+    private_nh_.subscribe(TOPIC_GRAPH_VIO_STATE, params_.max_graph_vio_state_buffer_size,
+                          &RosGraphLocalizerNodelet::GraphVIOStateCallback, this, ros::TransportHints().tcpNoDelay());
   sparse_map_vl_sub_ = private_nh_.subscribe(
     TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_matched_projections_buffer_size,
     &RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
@@ -162,10 +163,9 @@ void RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback(
   ros_graph_localizer_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
 }
 
-void RosGraphLocalizerNodelet::CombinedNavStateArrayCallback(
-  const ff_msgs::CombinedNavStateArray::ConstPtr& combined_nav_state_array_msg) {
+void RosGraphLocalizerNodelet::GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg) {
   if (!localizer_enabled()) return;
-  ros_graph_localizer_wrapper_.CombinedNavStateArrayCallback(*combined_nav_state_array_msg);
+  ros_graph_localizer_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
 }
 
 void RosGraphLocalizerNodelet::Run() {
