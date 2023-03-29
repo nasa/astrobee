@@ -24,7 +24,7 @@
 #include <string>
 
 namespace parameter_reader {
-void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params,
+void LoadGraphOptimizerParams(config_reader::ConfigReader& config, graph_optimizer::GraphOptimizerParams& params,
                               const std::string& prefix = "");
 }  // namespace parameter_reader
 

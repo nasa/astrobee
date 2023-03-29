@@ -38,10 +38,10 @@
 #include <string>
 
 // Helper macro to automatically load a parameter for a basic type (int/bool/double).
-// Assumes function is called as LOAD_PARAM(param.val, prefix) and assumes the format of
-// x.y for the variable name (passing simply y will fail.)
+// Assumes function is called as LOAD_PARAM(param.val, config, prefix) and assumes the format of
+// param.y for the variable name (passing simply y will fail.)
 #define LOAD_PARAM(val, config, prefix) \
-  load((config), (val), std::string(#val).substr(std::string(#val).find_last_of(".") + 1), (prefix))
+  msg_conversions::Load((config), (val), std::string(#val).substr(std::string(#val).find_last_of(".") + 1), (prefix))
 
 namespace msg_conversions {
 

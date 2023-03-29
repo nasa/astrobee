@@ -20,9 +20,10 @@
 #include <msg_conversions/msg_conversions.h>
 
 namespace parameter_reader {
+namespace go = graph_optimizer;
 namespace mc = msg_conversions;
 
-void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params,
+void LoadGraphOptimizerParams(config_reader::ConfigReader& config, go::GraphOptimizerParams& params,
                               const std::string& prefix) {
   LOAD_PARAM(params.huber_k, config, prefix);
   LOAD_PARAM(params.log_stats_on_destruction, config, prefix);
