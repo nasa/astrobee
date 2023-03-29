@@ -44,7 +44,8 @@ void GraphLocalizer::AddPoseMeasurement(const lm::TimestampedPoseWithCovariance&
 
 void GraphLocalizer::AddSparseMapMatchedProjectionsMeasurement(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
-  sparse_map_loc_factor_adder_->AddMeasurement(matched_projections_measurement);
+  if (params_.sparse_map_loc_factor_adder.enabled)
+    sparse_map_loc_factor_adder_->AddMeasurement(matched_projections_measurement);
 }
 
 const no::TimestampedNodes<gtsam::Pose3>& GraphLocalizer::pose_nodes() const { return pose_node_adder_->nodes(); }

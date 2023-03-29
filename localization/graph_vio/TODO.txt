@@ -1,21 +1,18 @@
   - graph vio:
-          - update graph_vio_wrapper to get standstill info when create message
     - add better way of getting relative covariance??
 
-      - wait until vo message is received to initialize loc?? (B)
+      - wait until vo message is received to initialize loc?? (A)
         - need to wait for bias estimation...
         - make sure to keep updating initial pose!
         - add logic to wait for first vio message!
           - add function to initialize with vl message? (no, just put in that function..)
 
-      - what happens if there's a gap in vo messages??? (C)
+      - what happens if there's a gap in vo messages??? (B)
         - reset localizer!
           - catch this in ros_graph_loc wrapper!
         - TODO to fill gap with imu extrapolation?
 
-  - check if factor adders are enabled in graph loc/vio before adding measurements! (D)
-
-  - need to update imu augmentor to subscribe to both odom and loc! (E)
+  - need to update imu augmentor to subscribe to both odom and loc! (C)
       - extrapolate loc with odom!
       - then extrapolate this with imu data!
       - rename!
