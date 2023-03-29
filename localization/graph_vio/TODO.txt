@@ -1,6 +1,8 @@
   - when reset localizer, wait until initial pose is received!!! (AA) 
       - add logic in wrapper for this!
       - also wait until vo message is received??
+      - what happens if there's a gap in vo messages???
+        - reset localizer???
 
   - graph vio:
     - support checking for standstill!!! (B)
@@ -9,6 +11,8 @@
   - add parameter reader! (C)
       - fail if parameter not read!!
       - how to unit test these??
+
+  - add sanity checkers to loc!
 
   - ros_graph_vio_wrapper:
     - add rest of opt stats to graph_vio

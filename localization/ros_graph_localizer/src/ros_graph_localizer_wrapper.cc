@@ -50,9 +50,18 @@ void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_
 }
 
 void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  if (Initialized())
+  // Initialize with pose estimate if not initialized yet
+  if (!Initialized()) {
+    const auto world_T_body = lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose,
+                                                            params_.sparse_map_loc_factor_adder.body_T_cam.inverse());
+    params_.pose_node_adder.start_node = world_T_body;
+    params_.pose_node_adder.starting_time = lc::TimeFromHeader(visual_landmarks_msg.header);
+    params_.pose_node_adder.Initialize();
+    graph_localizer_.reset(new gl::GraphLocalizer(params_));
+  } else {  // Otherwise add measurement to graph
     graph_localizer_->AddSparseMapMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+  }
 }
 
 void RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
@@ -77,8 +86,7 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
     LogError("ResetLocalizer: Localizer not initialized, nothing to do.");
     return;
   }
-  // TODO(rsoussan): Don't initialize until new sparse map pose received!!
-  graph_localizer_.reset(new gl::GraphLocalizer(params_));
+  graph_localizer_.reset();
 }
 
 ff_msgs::GraphLocState RosGraphLocalizerWrapper::GraphLocStateMsg() const {
