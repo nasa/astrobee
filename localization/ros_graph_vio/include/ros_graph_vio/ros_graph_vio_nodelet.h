@@ -82,9 +82,9 @@ class RosGraphVIONodelet : public ff_util::FreeFlyerNodelet {
 
   // void PublishVIOGraph();
 
-  // Publishes CombinedNavStateArrayMsg using the history
+  // Publishes GraphVIOState msg using the history
   // of nav states and covariances in graph_vio.
-  void PublishGraphVIOStates();
+  void PublishGraphVIOState();
 
   // Publishes empty reset message.
   void PublishReset() const;
@@ -114,7 +114,7 @@ class RosGraphVIONodelet : public ff_util::FreeFlyerNodelet {
   ros::CallbackQueue private_queue_;
   bool vio_enabled_ = true;
   ros::Subscriber imu_sub_, fp_sub_, flight_mode_sub_;
-  ros::Publisher states_pub_, graph_pub_, reset_pub_, heartbeat_pub_;
+  ros::Publisher graph_vio_state_pub_, graph_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;

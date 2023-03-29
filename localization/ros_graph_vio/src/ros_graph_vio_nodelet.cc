@@ -55,7 +55,7 @@ void RosGraphVIONodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void RosGraphVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  states_pub_ = nh->advertise<ff_msgs::CombinedNavStateArray>(TOPIC_GRAPH_VIO_STATES, 10);
+  graph_vio_state_pub_ = nh->advertise<ff_msgs::GraphVIOState>(TOPIC_GRAPH_VIO_STATE, 10);
   // graph_pub_ = nh->advertise<ff_msgs::SerializedGraph>(TOPIC_GRAPH_VIO, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
@@ -127,23 +127,14 @@ void RosGraphVIONodelet::ResetAndEnableVIO() {
   EnableVIO();
 }
 
-void RosGraphVIONodelet::PublishGraphVIOStates() {
-  auto msg = ros_graph_vio_wrapper_.CombinedNavStateArrayMsg();
-  if (msg.combined_nav_states.empty()) {
+void RosGraphVIONodelet::PublishGraphVIOState() {
+  auto msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
+  if (msg.combined_nav_states.combined_nav_states.empty()) {
     LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
     return;
   }
-  states_pub_.publish(msg);
+  graph_vio_state_pub_.publish(msg);
 }
-
-/*void RosGraphVIONodelet::PublishVIOGraph() {
-  const auto latest_vio_graph_msg = ros_graph_vio_wrapper_.LatestGraphMsg();
-  if (!latest_vio_graph_msg) {
-    LogDebugEveryN(100, "PublishVIOGraph: Failed to get latest vio graph msg.");
-    return;
-  }
-  graph_pub_.publish(*latest_vio_graph_msg);
-}*/
 
 void RosGraphVIONodelet::PublishReset() const {
   std_msgs::Empty msg;
@@ -161,7 +152,7 @@ void RosGraphVIONodelet::PublishGraphMessages() {
   if (!vio_enabled()) return;
 
   // TODO(rsoussan): Only publish if things have changed?
-  PublishGraphVIOStates();
+  PublishGraphVIOState();
   // if (ros_graph_vio_wrapper_.publish_graph()) PublishVIOGraph();
   // if (ros_graph_vio_wrapper_.save_graph_dot_file()) ros_graph_vio_wrapper_.SaveGraphDotFile();
 }

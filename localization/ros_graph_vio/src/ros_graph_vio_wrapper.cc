@@ -104,8 +104,8 @@ void RosGraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
   graph_vio_.reset();
 }
 
-ff_msgs::CombinedNavStateArray RosGraphVIOWrapper::CombinedNavStateArrayMsg() const {
-  ff_msgs::CombinedNavStateArray msg;
+ff_msgs::GraphVIOState RosGraphVIOWrapper::GraphVIOStateMsg() const {
+  ff_msgs::GraphVIOState msg;
   if (!Initialized()) return msg;
   const auto& nodes = graph_vio_->combined_nav_state_nodes();
   for (const auto& time : nodes.Timestamps()) {
@@ -122,10 +122,12 @@ ff_msgs::CombinedNavStateArray RosGraphVIOWrapper::CombinedNavStateArrayMsg() co
       LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
       return msg;
     }
-    msg.combined_nav_states.push_back(
+    msg.combined_nav_states.combined_nav_states.push_back(
       lc::CombinedNavStateToMsg(*combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));
   }
   lc::TimeToHeader(*(nodes.LatestTimestamp()), msg.header);
+  msg.child_frame_id = "odom";
+  // TODO(rsoussan): Add more stats here!
   return msg;
 }
 }  // namespace ros_graph_vio

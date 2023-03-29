@@ -1,9 +1,14 @@
-  - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
-      - add support for this in timestamped_set? (updating old values)
+  - when reset localizer, wait until initial pose is received!!! (AA) 
+      - add logic in wrapper for this!
+      - also wait until vo message is received??
 
   - graph vio:
     - support checking for standstill!!! (B)
     - add better way of getting relative covariance??
+
+  - add parameter reader! (C)
+      - fail if parameter not read!!
+      - how to unit test these??
 
   - ros_graph_vio_wrapper:
     - add rest of opt stats to graph_vio
@@ -11,27 +16,17 @@
             - is velocity in global frame or body frame??
 
   - ros graph vio nodelet:
-    - fill GraphVIOMessage!! (AABBB) 
     - TODO: only publish states message if optimization has occured again!
         - add indicator for this in graph optimizer? last optimize time? optimize count?
 
-  - add ros_graph_localizer! (A)
-    - add publishing message to nodeleet and wrapper (AA)
-      - Fill GraphLocMessage! (AAA)
-        - add rest of opt stats to graph loc message in ros_Graph_loc_wraper!
-        - publish this!
+  - ros graph loc nodelet:
+    - add rest of opt stats to graph loc message in ros_Graph_loc_wraper!
 
   - need to update imu augmentor to subscribe to both odom and loc! (C)
       - extrapolate loc with odom!
-        - then extrapolate this with imu data!
+      - then extrapolate this with imu data!
+      - rename!
 
-    - when reset localizer, wait until initial pose is received!!! (AB) 
-      - add logic in wrapper for this!
-      - also wait until vo message is received??
-
-    - add parameter reader! (C)
-      - fail if parameter not read!!
-      - how to unit test these??
 
   - test in sim! (E)
 
@@ -46,9 +41,10 @@
 
   - TODO: implement others!
 
-
-
 - TODO: how to access opt iterations????
+
+- send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
+  - add support for this in timestamped_set? (updating old values)
 
 - add graph vio to graph bag!
   - run_graph_Bag, plot_graph_bag
