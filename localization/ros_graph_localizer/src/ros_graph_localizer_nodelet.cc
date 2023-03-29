@@ -118,14 +118,10 @@ bool RosGraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs
   return true;
 }
 
-/*void RosGraphLocalizerNodelet::PublishGraphLocalizerStates() {
-  auto msg = ros_graph_localizer_wrapper_.CombinedNavStateArrayMsg();
-  if (msg.combined_nav_states.empty()) {
-    LogDebugEveryN(100, "PublishLocalizerState: Failed to get localizer states msg.");
-    return;
-  }
-  states_pub_.publish(msg);
-}*/
+void RosGraphLocalizerNodelet::PublishGraphLocalizerState() {
+  const auto msg = ros_graph_localizer_wrapper_.GraphLocStateMsg();
+  graph_loc_pub_.publish(msg);
+}
 
 /*void RosGraphLocalizerNodelet::PublishLocalizerGraph() {
   const auto latest_localizer_graph_msg = ros_graph_localizer_wrapper_.LatestGraphMsg();
@@ -152,7 +148,7 @@ void RosGraphLocalizerNodelet::PublishGraphMessages() {
   if (!localizer_enabled()) return;
 
   // TODO(rsoussan): Only publish if things have changed?
-  // PublishGraphLocalizerStates();
+  PublishGraphLocalizerState();
   // if (ros_graph_localizer_wrapper_.publish_graph()) PublishLocalizerGraph();
   // if (ros_graph_localizer_wrapper_.save_graph_dot_file()) ros_graph_localizer_wrapper_.SaveGraphDotFile();
 }

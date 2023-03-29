@@ -73,7 +73,8 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // so old measurements aren't used with a new map.
   bool ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
 
-  // void PublishLocalizerState();
+  // Publish latest graph localizer state msg.
+  void PublishGraphLocalizerState();
 
   // void PublishLocalizerGraph();
 

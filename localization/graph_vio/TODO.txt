@@ -18,6 +18,7 @@
   - add ros_graph_localizer! (A)
     - add publishing message to nodeleet and wrapper (AA)
       - Fill GraphLocMessage! (AAA)
+        - add rest of opt stats to graph loc message in ros_Graph_loc_wraper!
         - publish this!
 
   - need to update imu augmentor to subscribe to both odom and loc! (C)
