@@ -230,7 +230,7 @@ namespace planner_trapezoidal {
       }
       // Add the setpoint to the segment
       ff_util::Setpoint sp;
-      sp.when = offset + rclcpp::Duration::from_seconds(state.t);
+      sp.when = offset + rclcpp::Duration(std::chrono::duration<float>(state.t));
       sp.pose.position = msg_conversions::eigen_to_ros_point(state.p);
       sp.pose.orientation = msg_conversions::eigen_to_ros_quat(state.q);
       sp.twist.linear = msg_conversions::eigen_to_ros_vector(state.v);
@@ -240,7 +240,7 @@ namespace planner_trapezoidal {
       segment.push_back(sp);
     }
     // Increment the offset by the total time
-    offset += rclcpp::Duration::from_seconds(tmin);
+    offset += rclcpp::Duration(std::chrono::duration<float>(tmin));
   }
 
 
