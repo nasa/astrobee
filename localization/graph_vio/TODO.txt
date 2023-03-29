@@ -1,5 +1,4 @@
   - graph vio:
-          - create standstill measurement if necessary
           - update graph_vio_wrapper to get standstill info when create message
     - add better way of getting relative covariance??
 
@@ -9,13 +8,19 @@
         - add logic to wait for first vio message!
           - add function to initialize with vl message? (no, just put in that function..)
 
-      - what happens if there's a gap in vo messages???
+      - what happens if there's a gap in vo messages??? (C)
         - reset localizer!
+          - catch this in ros_graph_loc wrapper!
         - TODO to fill gap with imu extrapolation?
 
-  - check if factor adders are enabled in graph loc/vio before adding measurements!
+  - check if factor adders are enabled in graph loc/vio before adding measurements! (D)
 
-  - add parameter reader! (B)
+  - need to update imu augmentor to subscribe to both odom and loc! (E)
+      - extrapolate loc with odom!
+      - then extrapolate this with imu data!
+      - rename!
+
+  - add parameter reader! (F)
       - fail if parameter not read!!
       - how to unit test these??
 
@@ -32,11 +37,6 @@
 
   - ros graph loc nodelet:
     - add rest of opt stats to graph loc message in ros_Graph_loc_wraper!
-
-  - need to update imu augmentor to subscribe to both odom and loc! (C)
-      - extrapolate loc with odom!
-      - then extrapolate this with imu data!
-      - rename!
 
 
   - test in sim! (E)

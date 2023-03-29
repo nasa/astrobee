@@ -48,12 +48,19 @@ void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
 }
 
 void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& feature_points_measurement) {
-  vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);
+  if (params_.vo_smart_projection_factor_adder.enabled)
+    vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);
 
-  standstill_ =
-    vc::Standstill(vo_smart_projection_factor_adder_->feature_tracker().feature_tracks(), params_.standstill);
-  // TODO(rsoussan): create standstill measurement! pass to factor adder!
-  // TODO(rsoussan): how to get previous timestamp???
+  if (params_.standstill_factor_adder.enabled) {
+    // Check for standstill and add standstill measurement if detected.
+    const auto& feature_tracks = vo_smart_projection_factor_adder_->feature_tracker().feature_tracks();
+    standstill_ = vc::Standstill(feature_tracks, params_.standstill);
+    if (standstill_) {
+      const lc::Time latest_timestamp = feature_points_measurement.timestamp;
+      const auto previous_timestamp = feature_tracks.cbegin()->second.SecondLatestTimestamp();
+      standstill_factor_adder_->AddMeasurement(lm::StandstillMeasurement(latest_timestamp, *previous_timestamp));
+    }
+  }
 }
 
 const no::CombinedNavStateNodes& GraphVIO::combined_nav_state_nodes() const {
