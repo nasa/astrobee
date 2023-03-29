@@ -82,10 +82,19 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
 }
 
 void RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
+  const auto timestamp = lc::TimeFromHeader(graph_vio_state_msg.header);
   // Buffer measurements before initialization so they can be added once initialized.
   if (!Initialized()) {
-    const auto timestamp = lc::TimeFromHeader(graph_vio_state_msg.header);
     vio_measurement_buffer_.Add(timestamp, graph_vio_state_msg);
+    return;
+  }
+
+  // Check if gap in vio msgs is too large, reset localizer if so.
+  if (last_vio_msg_time_ && (timestamp - *last_vio_msg_time_) > params_.max_vio_measurement_gap) {
+    LogError("GraphVIOStateCallback: VIO msg gap exceeded, resetting localizer. Msg time: "
+             << timestamp << ", last msg time: " << *last_vio_msg_time_
+             << ", max gap: " << params_.max_vio_measurement_gap);
+    ResetLocalizer();
     return;
   }
 
@@ -97,6 +106,7 @@ void RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
     lc::PoseWithCovariance(lc::EigenPose(latest_combined_nav_state.pose()), latest_covariances.pose_covariance()),
     latest_combined_nav_state.timestamp());
   graph_localizer_->AddPoseMeasurement(pose_measurement);
+  last_vio_msg_time_ = timestamp;
 }
 
 void RosGraphLocalizerWrapper::Update() {
@@ -112,6 +122,8 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
     return;
   }
   graph_localizer_.reset();
+  vio_measurement_buffer_.Clear();
+  last_vio_msg_time_ = boost::none;
 }
 
 ff_msgs::GraphLocState RosGraphLocalizerWrapper::GraphLocStateMsg() const {

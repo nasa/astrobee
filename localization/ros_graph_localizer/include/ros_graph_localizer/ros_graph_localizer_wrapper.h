@@ -65,6 +65,7 @@ class RosGraphLocalizerWrapper {
   std::unique_ptr<graph_localizer::GraphLocalizer> graph_localizer_;
   graph_localizer::GraphLocalizerParams params_;
   localization_common::TimestampedSet<ff_msgs::GraphVIOState> vio_measurement_buffer_;
+  boost::optional<localization_common::Time> last_vio_msg_time_;
 };
 }  // namespace ros_graph_localizer
 

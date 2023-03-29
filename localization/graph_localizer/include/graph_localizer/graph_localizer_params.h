@@ -34,6 +34,8 @@ struct GraphLocalizerParams {
   node_adders::TimestampedNodeAdderModelParams pose_node_adder_model;
   optimizers::NonlinearOptimizerParams nonlinear_optimizer;
   sliding_window_graph_optimizer::SlidingWindowGraphOptimizerParams sliding_window_graph_optimizer;
+  // Max gap between vio measurements. If this is exceeded, graph localizer is reset.
+  double max_vio_measurement_gap;
 
   // Serialization function
   friend class boost::serialization::access;
@@ -44,6 +46,7 @@ struct GraphLocalizerParams {
     ar& BOOST_SERIALIZATION_NVP(pose_node_adder_model);
     ar& BOOST_SERIALIZATION_NVP(nonlinear_optimizer);
     ar& BOOST_SERIALIZATION_NVP(sliding_window_graph_optimizer);
+    ar& BOOST_SERIALIZATION_NVP(max_vio_measurement_gap);
   }
 };
 }  // namespace graph_localizer
