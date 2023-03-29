@@ -23,6 +23,7 @@
 #include <ff_msgs/VisualLandmarks.h>
 // #include <ff_msgs/SerializedGraph.h>
 #include <graph_localizer/graph_localizer.h>
+#include <localization_common/timestamped_set.h>
 
 #include <memory>
 #include <string>
@@ -63,6 +64,7 @@ class RosGraphLocalizerWrapper {
 
   std::unique_ptr<graph_localizer::GraphLocalizer> graph_localizer_;
   graph_localizer::GraphLocalizerParams params_;
+  localization_common::TimestampedSet<ff_msgs::GraphVIOState> vio_measurement_buffer_;
 };
 }  // namespace ros_graph_localizer
 
