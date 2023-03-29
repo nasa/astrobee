@@ -1,9 +1,7 @@
   - add parameter reader! (A)
-      - finish factor adders! (AA)
       - add others!
           nodes
           node adders
-          vision common
           graph vio
           graph localizer
           ros graph vio

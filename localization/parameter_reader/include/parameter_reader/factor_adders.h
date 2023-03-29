@@ -24,6 +24,8 @@
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <factor_adders/vo_smart_projection_factor_adder_params.h>
 
+#include <gtsam/slam/SmartFactorParams.h>
+
 #include <string>
 
 namespace parameter_reader {
@@ -40,6 +42,9 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config,
 void LoadVoSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                             factor_adders::VoSmartProjectionFactorAdderParams& params,
                                             const std::string& prefix = "");
+
+void LoadSmartProjectionParams(config_reader::ConfigReader& config, gtsam::SmartProjectionParams& params,
+                               const std::string& prefix = "");
 }  // namespace parameter_reader
 
 #endif  // PARAMETER_READER_FACTOR_ADDERS_H_
