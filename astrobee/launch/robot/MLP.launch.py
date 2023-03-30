@@ -55,11 +55,11 @@ def generate_launch_description():
         executable='component_container',
         condition=IfCondition(LaunchConfiguration("gtloc")),
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='localization_manager',
-            #     plugin='localization_manager::LocalizationManagerNodelet',
-            #     name='localization_manager',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                 package='localization_manager',
+                 plugin='localization_manager::LocalizationManagerComponent',
+                 name='localization_manager',
+                ),
             ComposableNode(
                 package='ground_truth_localizer',
                 plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
