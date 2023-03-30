@@ -28,7 +28,7 @@ class OpStateAutoReturn : public OpState {
  public:
   ~OpStateAutoReturn() {}
 
-  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SHaredPtr const cmd);
+//  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
  protected:
   explicit OpStateAutoReturn(std::string const& name, unsigned char id) :

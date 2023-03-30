@@ -19,6 +19,8 @@
 #include "executive/op_state.h"
 #include "executive/op_state_repo.h"
 
+FF_DEFINE_LOGGER("op_state")
+
 // TODO(Katie) Get rid of error output. Output mainly for debug purposes
 namespace executive {
 OpState::OpState(std::string const& name, unsigned char id) :
@@ -110,7 +112,7 @@ void OpState::AckCmd(std::string const& cmd_id,
     exec_->PublishCmdAck(cmd_id, completed_status, message, status);
   }
 }
-
+/*
 std::string OpState::GenerateActionFailedMsg(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               Action const& action,
@@ -196,7 +198,7 @@ bool OpState::PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
          ("Pause plan not accepted in opstate " + name() + "!"));
   return false;
 }
-
+*/
 OpState* OpState::TransitionToState(unsigned char id) {
   if (id == ff_msgs::msg::OpState::READY) {
     return OpStateRepo::Instance()->ready()->StartupState();
@@ -214,7 +216,7 @@ OpState* OpState::TransitionToState(unsigned char id) {
   return this;
 }
 
-void OpState::SetPlanStatus(bool successful, std::string err_msg) {
+/*void OpState::SetPlanStatus(bool successful, std::string err_msg) {
   exec_->SetPlanExecState(ff_msgs::msg::ExecState::PAUSED);
   if (successful) {
     // Ack run plan command as cancelled since we are pausing the plan until the
@@ -231,6 +233,6 @@ void OpState::SetPlanStatus(bool successful, std::string err_msg) {
            err_msg);
     exec_->PublishPlanStatus(ff_msgs::msg::AckStatus::REQUEUED);
   }
-}
+}*/
 
 }  // namespace executive

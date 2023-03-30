@@ -20,6 +20,8 @@
 #ifndef EXECUTIVE_UTILS_SEQUENCER_COMMAND_CONVERSION_H_
 #define EXECUTIVE_UTILS_SEQUENCER_COMMAND_CONVERSION_H_
 
+#include <ff_msgs/msg/command_stamped.hpp>
+
 #include <memory>
 #include <string>
 #include <unordered_map>

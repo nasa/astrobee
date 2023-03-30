@@ -19,7 +19,7 @@
 #include "executive/op_state_auto_return.h"
 
 namespace executive {
-OpState* OpStateAutoReturn::HandleCmd(
+/*OpState* OpStateAutoReturn::HandleCmd(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
   // Check if command is accepted in every op state and if so, execute it
@@ -68,5 +68,5 @@ OpState* OpStateAutoReturn::HandleCmd(
            err_msg);
   }
   return this;
-}
+}*/
 }  // namespace executive

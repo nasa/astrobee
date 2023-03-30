@@ -19,6 +19,7 @@
 #include "executive/op_state_teleop.h"
 
 namespace executive {
+/*
 OpState* OpStateTeleop::HandleCmd(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
@@ -211,5 +212,5 @@ OpState* OpStateTeleop::HandleResult(
   // ready
   return OpStateRepo::Instance()->ready()->StartupState();
 }
-
+*/
 }  // namespace executive

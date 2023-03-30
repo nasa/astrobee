@@ -20,8 +20,8 @@
 
 namespace executive {
 
-OpState* OpStateFault::HandleCmd(
-                        ff_msgs::msg::CommandStampedPtr::SharedPtr const cmd) {
+/*OpState* OpStateFault::HandleCmd(
+                        ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
   std::string err_msg;
   // Check if command is accepted in every op state and execute it if it is
@@ -95,7 +95,7 @@ OpState* OpStateFault::HandleCmd(
     AckCmd(cmd->cmd_id,
            ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
            err_msg);
-    ROS_WARN("Executive: %s", err_msg.c_str());
+    FF_WARN("Executive: %s", err_msg.c_str());
   }
   return this;
 }
@@ -104,7 +104,7 @@ OpState* OpStateFault::HandleGuestScienceAck(
                                 ff_msgs::msg::AckStamped::SharedPtr const ack) {
   // If the command is not part of a plan, it gets acked in the executive
   // If the command isn't done, don't do anything.
-  if (ack->completed_status.status == ff_msg::msg::AckCompletedStatus::NOT) {
+  if (ack->completed_status.status == ff_msgs::msg::AckCompletedStatus::NOT) {
     return this;
   } else if (ack->completed_status.status !=
                                         ff_msgs::msg::AckCompletedStatus::OK) {
@@ -148,5 +148,5 @@ OpState* OpStateFault::HandleResult(
 
   return this;
 }
-
+*/
 }  // namespace executive

@@ -20,8 +20,10 @@
 
 #include <ff_util/config_client.h>
 
+FF_DEFINE_LOGGER("op_state_ready")
+
 namespace executive {
-OpState* OpStateReady::HandleCmd(
+/*OpState* OpStateReady::HandleCmd(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   std::string err_msg;
   bool completed = false, successful = false;
@@ -196,7 +198,7 @@ OpState* OpStateReady::HandleCmd(
 }
 
 OpState* OpStateReady::HandleGuestScienceAck(
-                              ff_msgs::msg::AckStamped::SharedPtr const& ack) {
+                              ff_msgs::msg::AckStamped::SharedPtr const ack) {
   // There is a small possibility that the ready state will have to handle a
   // guest science ack for a plan. This is possible if the plan state starts a
   // guest science command, a fault occurs so we transition to the fault state,
@@ -213,5 +215,5 @@ OpState* OpStateReady::HandleGuestScienceAck(
     SetPlanStatus(true);
   }
   return this;
-}
+} */
 }  // namespace executive

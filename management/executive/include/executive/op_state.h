@@ -58,13 +58,13 @@ class OpState {
   virtual OpState* HandleWaitCallback();
 
   virtual OpState* HandleGuestScienceAck(
-                                ff_msgs::msg::AckStamped::SharedPtr const& ack);
+                                ff_msgs::msg::AckStamped::SharedPtr const ack);
 
   virtual void AckCmd(std::string const& cmd_id,
               uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK,
               std::string const& message = "",
               uint8_t status = ff_msgs::msg::AckStatus::COMPLETED);
-
+/*
   std::string GenerateActionFailedMsg(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               Action const& action,
@@ -72,17 +72,16 @@ class OpState {
 
   std::string GetActionString(Action const& action);
 
-  virtual bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const& cmd);
-
+  virtual bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+*/
   OpState* TransitionToState(unsigned char id);
-
   std::string const& name() const {return name_;}
   unsigned char const& id() const {return id_;}
 
  protected:
   OpState(std::string const& name, unsigned char id);
   void SetExec(Executive *const exec);
-  void SetPlanStatus(bool successful, std::string err_msg = "");
+  // void SetPlanStatus(bool successful, std::string err_msg = "");
 
   std::string const name_;
   unsigned char const id_;

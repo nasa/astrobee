@@ -26,7 +26,7 @@ FF_DEFINE_LOGGER("executive");
 
 namespace executive {
 
-Executive::Executive() :
+explicit Executive::Executive(rclcpp::NodeOptions const& options) :
   ff_util::FreeFlyerComponent(options, NODE_EXECUTIVE),
   state_(OpStateRepo::Instance()->ready()),
   sys_monitor_init_fault_response_(new ff_msgs::msg::CommandStamped()),
@@ -61,7 +61,7 @@ Executive::~Executive() {
 
 /************************ Message and timeout callbacks ***********************/
 void Executive::CameraStatesCallback(
-                      ff_msgs::msg::CameraStatesStampedConstPtr const& state) {
+                    ff_msgs::msg::CameraStatesStamped::SharedPtr const state) {
   unsigned int i, j;
   bool streaming = false;
   ff_util::FreeFlyerService<ff_hw_msgs::srv::ConfigureSystemLeds> led_srv;
@@ -70,34 +70,35 @@ void Executive::CameraStatesCallback(
   // elements so this doesn't waste too much time
   // Don't care about cameras not in the camera states array
   for (i = 0; i < state->states.size(); i++) {
-    for (j = 0; j < camera_states_.states.size(); j++) {
+    for (j = 0; j < camera_states_->states.size(); j++) {
       if (state->states[i].camera_name ==
-                                        camera_states_.states[j].camera_name) {
-        camera_states_.states[j].streaming = state->states[i].streaming;
+                                        camera_states_->states[j].camera_name) {
+        camera_states_->states[j].streaming = state->states[i].streaming;
       }
     }
   }
 
   // The state message usually only contains one camera so we have to go through
   // all the camera states to see if any are streaming
-  for (i = 0; i < camera_states_.states.size(); i++) {
-    streaming |= camera_states_.states[i].streaming;
+  for (i = 0; i < camera_states_->states.size(); i++) {
+    streaming |= camera_states_->states[i].streaming;
   }
 
   if (streaming && !live_led_on_) {
-    led_srv.request.live = ff_hw_msgs::msg::ConfigureSystemLeds::Request::ON;
+    led_srv.request->live = ff_hw_msgs::srv::ConfigureSystemLeds::Request::ON;
     if (ConfigureLed(led_srv)) {
       live_led_on_ = true;
     }
   } else if (!streaming && live_led_on_) {
-    led_srv.request.live = ff_hw_msgs::msg::ConfigureSystemLeds::Request::OFF;
+    led_srv.request->live = ff_hw_msgs::srv::ConfigureSystemLeds::Request::OFF;
     if (ConfigureLed(led_srv)) {
       live_led_on_ = false;
     }
   }
 }
 
-void Executive::CmdCallback(ff_msgs::msg::CommandStampedPtr const& cmd) {
+
+void Executive::CmdCallback(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   // Check to see if the command came from a guest science apk. If it did,
   // make sure a primary apk is running
   if (cmd->cmd_origin == "guest_science") {
@@ -118,16 +119,16 @@ void Executive::CmdCallback(ff_msgs::msg::CommandStampedPtr const& cmd) {
 }
 
 void Executive::DataToDiskCallback(
-                            ff_msgs::msg::CompressedFileConstPtr const& data) {
+                          ff_msgs::msg::CompressedFile::SharedPtr const data) {
   data_to_disk_ = data;
 
-  cf_ack_.header.stamp = GetTimeNow();
-  cf_ack_.id = data_to_disk_->id;
-  cf_ack_pub_.publish(cf_ack_);
+  cf_ack_->header.stamp = GetTimeNow();
+  cf_ack_->id = data_to_disk_->id;
+  cf_ack_pub_->publish(*cf_ack_);
 }
 
 void Executive::DockStateCallback(
-                                ff_msgs::msg::DockStateConstPtr const& state) {
+                              ff_msgs::msg::DockState::SharedPtr const state) {
   dock_state_ = state;
 
   // Check to see if the dock state is docking/docked/undocking. If it is, we
@@ -146,8 +147,8 @@ void Executive::DockStateCallback(
 }
 
 void Executive::FaultStateCallback(
-                              ff_msgs::msg::FaultStateConstPtr const& state) {
-  ff_hw_msgs::msg::ConfigureSystemLeds led_srv;
+                              ff_msgs::msg::FaultState::SharedPtr const state) {
+  ff_util::FreeFlyerService<ff_hw_msgs::srv::ConfigureSystemLeds> led_srv;
   fault_state_ = state;
 
   // Check if we are in the fault state
@@ -155,8 +156,8 @@ void Executive::FaultStateCallback(
     // Check if the blocked fault is cleared
     if (state->state != ff_msgs::msg::FaultState::BLOCKED) {
       // Turn a2 led off so the astronauts can see there is no longer a fault
-      led_srv.request.status_a2 =
-                            ff_hw_msgs::msg::ConfigureSystemLeds::Request::OFF;
+      led_srv.request->status_a2 =
+                            ff_hw_msgs::srv::ConfigureSystemLeds::Request::OFF;
       ConfigureLed(led_srv);
 
       // Check if an action is in progress, if so transition to teleop
@@ -172,8 +173,8 @@ void Executive::FaultStateCallback(
     // Check if a blocking fault is occurring
     if (state->state == ff_msgs::msg::FaultState::BLOCKED) {
       // Turn a2 led on and blinking so the astronauts can see there is a fault
-      led_srv.request.status_a2 =
-                            ff_hw_msgs::msg::ConfigureSystemLeds::Request::FAST;
+      led_srv.request->status_a2 =
+                            ff_hw_msgs::srv::ConfigureSystemLeds::Request::FAST;
       ConfigureLed(led_srv);
 
       // If so, transiton to fault state
@@ -183,11 +184,11 @@ void Executive::FaultStateCallback(
 }
 
 void Executive::GuestScienceAckCallback(
-                                  ff_msgs::msg::AckStampedConstPtr const& ack) {
+                                ff_msgs::msg::AckStamped::SharedPtr const ack) {
   if (ack->cmd_id == "plan") {
     SetOpState(state_->HandleGuestScienceAck(ack));
   } else {
-    cmd_ack_pub_.publish(ack);
+    cmd_ack_pub_->publish(*ack);
   }
 
   // Clear guest science command timers
@@ -201,12 +202,12 @@ void Executive::GuestScienceAckCallback(
 }
 
 void Executive::GuestScienceConfigCallback(
-                      ff_msgs::msg::GuestScienceConfigConstPtr const& config) {
+                    ff_msgs::msg::GuestScienceConfig::SharedPtr const config) {
   guest_science_config_ = config;
 }
 
 void Executive::GuestScienceStateCallback(
-                        ff_msgs::msg::GuestScienceStateConstPtr const& state) {
+                      ff_msgs::msg::GuestScienceState::SharedPtr const state) {
   unsigned int i = 0;
   std::string primary_apk = "None";
 
@@ -227,14 +228,14 @@ void Executive::GuestScienceStateCallback(
 
   // Also check that the state and config are the same size because it would be
   // really bad if they weren't.
-  if (state->runningApks.size() != guest_science_config_->apks.size()) {
+  if (state->running_apks.size() != guest_science_config_->apks.size()) {
     FF_ERROR("Guest science apk array size doesn't match but serial does");
     return;
   }
 
   // Check to see if any apks are running
-  for (i = 0; i < state->runningApks.size(); i++) {
-    if (state->runningApks[i]) {
+  for (i = 0; i < state->running_apks.size(); i++) {
+    if (state->running_apks[i]) {
       // Check if primary
       if (guest_science_config_->apks[i].primary) {
         if (primary_apk == "None") {
@@ -279,31 +280,32 @@ void Executive::GuestScienceStartStopRestartCmdTimeoutCallback() {
 
 
 void Executive::InertiaCallback(
-                  geometry_msgs::msg::InertiaStampedConstPtr const& inertia) {
+                  geometry_msgs::msg::InertiaStamped::SharedPtr const inertia) {
   current_inertia_ = inertia;
 }
 
 void Executive::LedConnectedCallback() {
-  ff_hw_msgs::msg::ConfigureSystemLeds led_srv;
+  ff_util::FreeFlyerService<ff_hw_msgs::srv::ConfigureSystemLeds> led_srv;
 
   // Set video light since this means the fsw started
-  led_srv.request.video = ff_hw_msgs::msg::ConfigureSystemLeds::Request::ON;
+  led_srv.request->video = ff_hw_msgs::srv::ConfigureSystemLeds::Request::ON;
 
   // Check if we are in the fault state
   if (state_->id() == ff_msgs::msg::OpState::FAULT) {
     // If so, turn a2 led on and blinking so astronauts can see there is a fault
-    led_srv.request.status_a2 =
-                            ff_hw_msgs::msg::ConfigureSystemLeds::Request::FAST;
+    led_srv.request->status_a2 =
+                            ff_hw_msgs::srv::ConfigureSystemLeds::Request::FAST;
     ConfigureLed(led_srv);
   } else {
     // Turn a2 led off to signify that the executive is ready.
-    led_srv.request.status_a2 =
-                            ff_hw_msgs::msg::ConfigureSystemLeds::Request::OFF;
+    led_srv.request->status_a2 =
+                            ff_hw_msgs::srv::ConfigureSystemLeds::Request::OFF;
     ConfigureLed(led_srv);
   }
 }
 
-void Executive::MotionStateCallback(ff_msgs::msg::MotionStatePtr const& state) {
+void Executive::MotionStateCallback(
+                            ff_msgs::msg::MotionState::SharedPtr const state) {
   if (motion_state_ == NULL) {
     motion_state_ = state;
   }
@@ -354,7 +356,7 @@ void Executive::MotionStateCallback(ff_msgs::msg::MotionStatePtr const& state) {
 }
 
 void Executive::PerchStateCallback(
-                              ff_msgs::msg::PerchStateConstPtr const& state) {
+                              ff_msgs::msg::PerchState::SharedPtr const state) {
   perch_state_ = state;
 
   // Check to see if the perch state is perching/perched/unperching. If it is,
@@ -384,16 +386,17 @@ void Executive::PerchStateCallback(
   }
 }
 
-void Executive::PlanCallback(ff_msgs::msg::CompressedFileConstPtr const& plan) {
+void Executive::PlanCallback(
+                          ff_msgs::msg::CompressedFile::SharedPtr const plan) {
   plan_ = plan;
 
-  cf_ack_.header.stamp = GetTimeNow();
-  cf_ack_.id = plan_->id;
-  cf_ack_pub_.publish(cf_ack_);
+  cf_ack_->header.stamp = GetTimeNow();
+  cf_ack_->id = plan_->id;
+  cf_ack_pub_->publish(*cf_ack_);
 }
 
 void Executive::SysMonitorHeartbeatCallback(
-                            ff_msgs::msg::HeartbeatConstPtr const& heartbeat) {
+                          ff_msgs::msg::Heartbeat::SharedPtr const heartbeat) {
   sys_monitor_heartbeat_timer_.stop();
 
   // Stop the startup timer everytime since it isn't an expensive operation
@@ -425,7 +428,7 @@ void Executive::SysMonitorHeartbeatCallback(
     FF_ERROR("System monitor initalization fault detected in executive.");
     sys_monitor_init_fault_occurring_ = true;
     sys_monitor_init_fault_response_->cmd_id = "executive" +
-                                                std::to_string(GetTimeNow.sec);
+                                        std::to_string(GetTimeNow().seconds());
     CmdCallback(sys_monitor_init_fault_response_);
     // If fault is blocking, transition to fault state
     if (sys_monitor_init_fault_blocking_) {
@@ -461,7 +464,7 @@ void Executive::SysMonitorTimeoutCallback() {
   // needs to trigger the system monitor heartbeat missed fault.
   sys_monitor_heartbeat_fault_occurring_ = true;
   sys_monitor_heartbeat_fault_response_->cmd_id = "executive" +
-                                              std::to_string(GetTimeNow().sec);
+                                        std::to_string(GetTimeNow().seconds());
   CmdCallback(sys_monitor_heartbeat_fault_response_);
   // If fault is blocking, transition to fault state
   if (sys_monitor_heartbeat_fault_blocking_) {
@@ -476,12 +479,12 @@ void Executive::WaitCallback() {
 }
 
 void Executive::ZonesCallback(
-                            ff_msgs::msg::CompressedFileConstPtr const& zones) {
+                          ff_msgs::msg::CompressedFile::SharedPtr const zones) {
   zones_ = zones;
 
-  cf_ack_.header.stamp = GetTimeNow();
-  cf_ack_.id = zones_->id;
-  cf_ack_pub_.publish(cf_ack_);
+  cf_ack_->header.stamp = GetTimeNow();
+  cf_ack_->id = zones_->id;
+  cf_ack_pub_->publish(*cf_ack_);
 }
 
 /************************ Action based commands *******************************/
@@ -542,7 +545,7 @@ void Executive::CancelAction(Action action, std::string cmd) {
 }
 
 // TODO(Katie) Add stow check
-bool Executive::FillArmGoal(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::FillArmGoal(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool successful = true;
   std::string err_msg;
   if (cmd->cmd_name == CommandConstants::CMD_NAME_ARM_PAN_AND_TILT) {
@@ -562,11 +565,11 @@ bool Executive::FillArmGoal(ff_msgs::msg::CommandStampedPtr const& cmd) {
       arm_goal_.pan = cmd->args[0].f;
       arm_goal_.tilt = cmd->args[1].f;
       if (cmd->args[2].s == "Pan" || cmd->args[2].s == "pan") {
-        arm_goal_.command = ff_msgs::msg::ArmGoal::ARM_PAN;
+        arm_goal_.command = ff_msgs::action::Arm::Goal::ARM_PAN;
       } else if (cmd->args[2].s == "Tilt" || cmd->args[2].s == "tilt") {
-        arm_goal_.command = ff_msgs::msg::ArmGoal::ARM_TILT;
+        arm_goal_.command = ff_msgs::action::Arm::Goal::ARM_TILT;
       } else if (cmd->args[2].s == "Both" || cmd->args[2].s == "both") {
-        arm_goal_.command = ff_msgs::msg::ArmGoal::ARM_MOVE;
+        arm_goal_.command = ff_msgs::action::Arm::Goal::ARM_MOVE;
       } else {
         successful = false;
         err_msg = "Unrecognized which parameter in pan and tilt command. Got: "
@@ -574,7 +577,7 @@ bool Executive::FillArmGoal(ff_msgs::msg::CommandStampedPtr const& cmd) {
       }
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DEPLOY_ARM) {
-    arm_goal_.command = ff_msgs::msg::ArmGoal::ARM_DEPLOY;
+    arm_goal_.command = ff_msgs::action::Arm::Goal::ARM_DEPLOY;
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_GRIPPER_CONTROL) {
     // Gripper control has one argument which is a booleanused to specify
     // whether to open or close the arm
@@ -585,15 +588,15 @@ bool Executive::FillArmGoal(ff_msgs::msg::CommandStampedPtr const& cmd) {
     } else {
       // True means open
       if (cmd->args[0].b) {
-        arm_goal_.command = ff_msgs::msg::ArmGoal::GRIPPER_OPEN;
+        arm_goal_.command = ff_msgs::action::Arm::Goal::GRIPPER_OPEN;
       } else {
-        arm_goal_.command = ff_msgs::msg::ArmGoal::GRIPPER_CLOSE;
+        arm_goal_.command = ff_msgs::action::Arm::Goal::GRIPPER_CLOSE;
       }
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
-    arm_goal_.command = ff_msgs::msg::ArmGoal::ARM_STOW;
+    arm_goal_.command = ff_msgs::action::Arm::Goal::ARM_STOW;
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
-    arm_goal_.command = ff_msgs::msg::ArmGoal::ARM_STOP;
+    arm_goal_.command = ff_msgs::action::Arm::Goal::ARM_STOP;
   } else {
     successful = false;
     err_msg = "Arm command not recognized in fill arm goal.";
@@ -608,7 +611,7 @@ bool Executive::FillArmGoal(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::FillDockGoal(ff_msgs::msg::CommandStampedPtr const& cmd,
+bool Executive::FillDockGoal(ff_msgs::msg::CommandStamped::SharedPtr const cmd,
                              bool return_to_dock) {
   bool successful = true;
   std::string err_msg;
@@ -623,19 +626,19 @@ bool Executive::FillDockGoal(ff_msgs::msg::CommandStampedPtr const& cmd,
       err_msg = "Malformed argument for dock command in plan.";
     }
 
-    dock_goal_.command = ff_msgs::msg::DockGoal::DOCK;
+    dock_goal_.command = ff_msgs::action::Dock::Goal::DOCK;
     if (cmd->args[0].i == 1) {
-      dock_goal_.berth = ff_msgs::msg::DockGoal::BERTH_1;
+      dock_goal_.berth = ff_msgs::action::Dock::Goal::BERTH_1;
     } else if (cmd->args[0].i == 2) {
-      dock_goal_.berth = ff_msgs::msg::DockGoal::BERTH_2;
+      dock_goal_.berth = ff_msgs::action::Dock::Goal::BERTH_2;
     } else {
       successful = false;
       err_msg = "Berth must be 1 or 2 not " +  std::to_string(cmd->args[0].i);
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNDOCK) {
-    dock_goal_.command = ff_msgs::msg::DockGoal::UNDOCK;
+    dock_goal_.command = ff_msgs::action::Dock::Goal::UNDOCK;
     // We don't need a berth to undock
-    dock_goal_.berth = ff_msgs::msg::DockGoal::BERTH_UNKNOWN;
+    dock_goal_.berth = ff_msgs::action::Dock::Goal::BERTH_UNKNOWN;
   } else {
     successful = false;
     err_msg = "Dock command not recognized in fill dock goal.";
@@ -652,7 +655,7 @@ bool Executive::FillDockGoal(ff_msgs::msg::CommandStampedPtr const& cmd,
 }
 
 bool Executive::FillMotionGoal(Action action,
-                               ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   jsonloader::Segment segment;
   // Flight mode needs to be set for all motion actions
   motion_goal_.flight_mode = agent_state_.flight_mode;
@@ -661,7 +664,7 @@ bool Executive::FillMotionGoal(Action action,
     case EXECUTE:
       segment = sequencer_.CurrentSegment();
 
-      motion_goal_.command = ff_msgs::msg::MotionGoal::EXEC;
+      motion_goal_.command = ff_msgs::action::Motion::Goal::EXEC;
       // Convert JSON to a segment type
       motion_goal_.segment =
                     sequencer::Segment2Trajectory(sequencer_.CurrentSegment());
@@ -670,11 +673,11 @@ bool Executive::FillMotionGoal(Action action,
       break;
     case IDLE:
       // Need to set flight mode to off so the PMCs shutdown
-      motion_goal_.flight_mode = ff_msgs::msg::MotionGoal::OFF;
-      motion_goal_.command = ff_msgs::msg::MotionGoal::IDLE;
+      motion_goal_.flight_mode = ff_msgs::action::Motion::Goal::OFF;
+      motion_goal_.command = ff_msgs::action::Motion::Goal::IDLE;
       break;
     case STOP:
-      motion_goal_.command = ff_msgs::msg::MotionGoal::STOP;
+      motion_goal_.command = ff_msgs::action::Motion::Goal::STOP;
       break;
     case MOVE:
       if (cmd == nullptr) {
@@ -684,16 +687,16 @@ bool Executive::FillMotionGoal(Action action,
 
       if (cmd->args.size() != 4 ||
           cmd->args[0].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_STRING ||
-          cmd->args[1].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d ||
-          cmd->args[2].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d ||
-          cmd->args[3].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_MAT33f) {
+          cmd->args[1].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_VEC3D ||
+          cmd->args[2].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_VEC3D ||
+          cmd->args[3].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_MAT33F) {
         state_->AckCmd(cmd->cmd_id,
                        ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX,
                        "Malformed arguments for simple move 6dof command!");
         return false;
       }
 
-      motion_goal_.command = ff_msgs::msg::MotionGoal::MOVE;
+      motion_goal_.command = ff_msgs::action::Motion::Goal::MOVE;
       if (motion_goal_.states.size() != 1) {
         motion_goal_.states.resize(1);
       }
@@ -846,8 +849,8 @@ bool Executive::RemoveAction(Action action) {
 
 /************************ Action callbacks ************************************/
 void Executive::ArmResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::msg::ArmResultConstPtr const& result) {
+                        ff_util::FreeFlyerActionState::Enum const& state,
+                        ff_msgs::action::Arm::Result::SharedPtr const result) {
   std::string response = "";
   Action current_action = arm_ac_.action();
   std::string cmd_id = arm_ac_.cmd_id();
@@ -872,8 +875,8 @@ void Executive::ArmResultCallback(
 }
 
 void Executive::DockResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::msg::DockResultConstPtr const& result) {
+                        ff_util::FreeFlyerActionState::Enum const& state,
+                        ff_msgs::action::Dock::Result::SharedPtr const result) {
   std::string response = "";
   Action current_action = dock_ac_.action();
   std::string cmd_id = dock_ac_.cmd_id();
@@ -898,8 +901,8 @@ void Executive::DockResultCallback(
 }
 
 void Executive::LocalizationResultCallback(
-                      ff_util::FreeFlyerActionState::Enum const& state,
-                      ff_msgs::msg::LocalizationResultConstPtr const& result) {
+                ff_util::FreeFlyerActionState::Enum const& state,
+                ff_msgs::action::Localization::Result::SharedPtr const result) {
   std::string response = "";
   Action current_action = localization_ac_.action();
   std::string cmd_id = localization_ac_.cmd_id();
@@ -928,17 +931,19 @@ void Executive::LocalizationResultCallback(
 }
 
 void Executive::MotionFeedbackCallback(
-                        ff_msgs::msg::MotionFeedbackConstPtr const& feedback) {
+                  ff_msgs::action::Motion::Feedback::SharedPtr const feedback) {
   // The only feedback used from the motion action is the execute feedback and
   // it goes to the sequencer. Otherwise there isn't much to with the feedback
+  // TODO(Katie) Figure this out when we figure out how to send progress in the
+  // motion feedback
   if (motion_ac_.action() == EXECUTE) {
-    sequencer_.Feedback(feedback->progress);
+    // sequencer_.Feedback(feedback->progress);
   }
 }
 
 void Executive::MotionResultCallback(
-                            ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::msg::MotionResultConstPtr const& result) {
+                      ff_util::FreeFlyerActionState::Enum const& state,
+                      ff_msgs::action::Motion::Result::SharedPtr const result) {
   std::string response = "";
   Action current_action = motion_ac_.action();
   std::string cmd_id = motion_ac_.cmd_id();
@@ -963,8 +968,8 @@ void Executive::MotionResultCallback(
 }
 
 void Executive::PerchResultCallback(
-                            ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::msg::PerchResultConstPtr const& result) {
+                      ff_util::FreeFlyerActionState::Enum const& state,
+                      ff_msgs::action::Perch::Result::SharedPtr const result) {
   std::string response = "";
   Action current_action = perch_ac_.action();
   std::string cmd_id = perch_ac_.cmd_id();
@@ -1004,21 +1009,21 @@ void Executive::PublishCmdAck(std::string const& cmd_id,
   ack_.status.status = status;
   ack_.completed_status.status = completed_status;
   ack_.message = message;
-  cmd_ack_pub_.publish(ack_);
+  cmd_ack_pub_->publish(ack_);
 }
 
 void Executive::PublishPlan() {
-  plan_pub_.publish(plan_);
+  plan_pub_->publish(*plan_);
 }
 
 void Executive::PublishPlanStatus(uint8_t status) {
   // The sequencer sets the plan status to executing for every plan status but
   // since the executive has knowledge of if the plan has just started,
   // is paused, or is executing, the executive sets the status.
-  ff_msgs::msgs::PlanStatusStamped plan_status = sequencer_.plan_status();
+  ff_msgs::msg::PlanStatusStamped plan_status = sequencer_.plan_status();
   plan_status.header.stamp = GetTimeNow();
   plan_status.status.status = status;
-  plan_status_pub_.publish(plan_status);
+  plan_status_pub_->publish(plan_status);
 }
 
 /************************ Getters *********************************************/
@@ -1070,7 +1075,7 @@ void Executive::SetMobilityState(uint8_t state, uint32_t sub_state) {
 
 void Executive::SetOpState(OpState* state) {
   if (state_->id() != state->id()) {
-    NODELET_INFO("Executive state changing from [%s(%i)] to [%s(%i)].",
+    FF_INFO("Executive state changing from [%s(%i)] to [%s(%i)].",
              state_->name().c_str(), state_->id(),
              state->name().c_str(), state->id());
     agent_state_.operating_state.state = state->id();
@@ -1092,9 +1097,9 @@ void Executive::SetRunPlanCmdId(std::string cmd_id) {
 // Used as a helper function to send a failed ack when the command is not
 // accepted in the current mobility state
 void Executive::AckMobilityStateIssue(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd,
-                                  std::string const& current_mobility_state,
-                                  std::string const& accepted_mobility_state) {
+                              ff_msgs::msg::CommandStamped::SharedPtr const cmd,
+                              std::string const& current_mobility_state,
+                              std::string const& accepted_mobility_state) {
   std::string err_msg = cmd->cmd_name + " not accepted while " +
                                                   current_mobility_state + "!";
   if (accepted_mobility_state != "") {
@@ -1106,7 +1111,7 @@ void Executive::AckMobilityStateIssue(
                  err_msg);
 }
 
-bool Executive::ArmControl(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::ArmControl(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   // Check to make sure we aren't trying to dock or perch
   if (agent_state_.mobility_state.state ==
                                         ff_msgs::msg::MobilityState::DOCKING) {
@@ -1142,11 +1147,11 @@ bool Executive::ArmControl(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::CheckServiceExists(ros::ServiceClient& serviceIn,
+bool Executive::CheckServiceExists(bool serviceExists,
                                    std::string const& serviceName,
                                    std::string const& cmd_id) {
   std::string err_msg = "";
-  if (!serviceIn.exists()) {
+  if (!serviceExists) {
     err_msg = serviceName + " service isn't running! Node may have died!";
     state_->AckCmd(cmd_id,
                    ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
@@ -1172,15 +1177,16 @@ bool Executive::CheckStoppedOrDrifting(std::string const& cmd_id,
   return false;
 }
 
-bool Executive::ConfigureLed(ff_hw_msgs::msg::ConfigureSystemLeds& led_srv) {
+bool Executive::ConfigureLed(
+    ff_util::FreeFlyerService<ff_hw_msgs::srv::ConfigureSystemLeds>& led_srv) {
   if (!led_client_.Call(led_srv)) {
     FF_ERROR("Configure system leds service not running!");
     return false;
   }
 
-  if (!led_srv.response.success) {
+  if (!led_srv.response->success) {
     FF_ERROR("Configure system leds failed with message %s.",
-             led_srv.response.status.c_str());
+             led_srv.response->status.c_str());
     return false;
   }
 
@@ -1193,7 +1199,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   // Initialize choreographer config client if it hasn't been initialized
   if (!choreographer_cfg_) {
     choreographer_cfg_ =
-              std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
+              std::make_shared<ff_util::ConfigClient>(nh_, NODE_CHOREOGRAPHER);
   }
 
   // Set values for configuring, these values will persist until changed
@@ -1228,7 +1234,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
 
   // Set the collision distance in the mapper
   ff_util::FreeFlyerService<ff_msgs::srv::SetFloat> collision_distance_srv;
-  collision_distance_srv.request.data = agent_state_.collision_distance;
+  collision_distance_srv.request->data = agent_state_.collision_distance;
 
   // Check to make sure the service is valid and running
   // Don't use the check service exists function since we don't want to
@@ -1244,7 +1250,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
     return false;
   }
 
-  if (!collision_distance_srv.response.success) {
+  if (!collision_distance_srv.response->success) {
     err_msg = "Set collision distance service was not successful.";
     return false;
   }
@@ -1256,7 +1262,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
 // the astrobee is in some sort of stopped state. Send a failed execution ack
 // and return false if mobility state is flying, docking, perching, or stopping.
 bool Executive::FailCommandIfMoving(
-                                   ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   if (agent_state_.mobility_state.state ==
                                           ff_msgs::msg::MobilityState::FLYING) {
     AckMobilityStateIssue(cmd, "flying");
@@ -1288,7 +1294,8 @@ bool Executive::FailCommandIfMoving(
   return false;
 }
 
-bool Executive::LoadUnloadNodelet(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::LoadUnloadNodelet(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool load = true;
   std::string which = "Load";
   int num_args = cmd->args.size();
@@ -1300,7 +1307,7 @@ bool Executive::LoadUnloadNodelet(ff_msgs::msg::CommandStampedPtr const& cmd) {
 
   ff_util::FreeFlyerService<ff_msgs::srv::UnloadLoadNodelet>
                                                         unload_load_nodelet_srv;
-  unload_load_nodelet_srv.request.load = load;
+  unload_load_nodelet_srv.request->load = load;
 
   // Don't load/unload a nodelet while moving
   if (FailCommandIfMoving(cmd)) {
@@ -1339,18 +1346,18 @@ bool Executive::LoadUnloadNodelet(ff_msgs::msg::CommandStampedPtr const& cmd) {
       }
 
       if (i == 0) {
-        unload_load_nodelet_srv.request.name = cmd->args[0].s;
+        unload_load_nodelet_srv.request->name = cmd->args[0].s;
       } else if (i == 1) {
-        unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
+        unload_load_nodelet_srv.request->manager_name = cmd->args[1].s;
       } else if (i == 2) {
-        unload_load_nodelet_srv.request.type = cmd->args[2].s;
+        unload_load_nodelet_srv.request->type = cmd->args[2].s;
       } else {
-        unload_load_nodelet_srv.request.bond_id = cmd->args[3].s;
+        unload_load_nodelet_srv.request->bond_id = cmd->args[3].s;
       }
     }
 
     // Check if the load/unload nodelet service is running
-    if (!CheckServiceExists(unload_load_nodelet_client_,
+    if (!CheckServiceExists(unload_load_nodelet_client_.exists(),
                             "Load/unload nodelet",
                             cmd->cmd_id)) {
       return false;
@@ -1364,12 +1371,12 @@ bool Executive::LoadUnloadNodelet(ff_msgs::msg::CommandStampedPtr const& cmd) {
       return false;
     }
 
-    if (unload_load_nodelet_srv.response.result !=
-                      ff_msgs::msg::UnloadLoadNodelet::Response::SUCCESSFUL) {
+    if (unload_load_nodelet_srv.response->result !=
+                      ff_msgs::srv::UnloadLoadNodelet::Response::SUCCESSFUL) {
       state_->AckCmd(cmd->cmd_id,
                      ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                      (which + " nodelet failed with result " +
-                      std::to_string(unload_load_nodelet_srv.response.result)));
+                     std::to_string(unload_load_nodelet_srv.response->result)));
       return false;
     }
 
@@ -1389,7 +1396,8 @@ rclcpp::Duration Executive::MsToSec(std::string timestamp) {
   return rclcpp::Duration(secs, nsecs);
 }
 
-bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
+bool Executive::PowerItem(ff_msgs::msg::CommandStamped::SharedPtr const cmd,
+                          bool on) {
   uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK;
   std::string err_msg = "";
   bool success;
@@ -1411,12 +1419,12 @@ bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
       cmd->args[0].s ==
         CommandConstants::PARAM_NAME_POWERED_COMPONENT_PMCS_AND_SIGNAL_LIGHTS) {
     ff_util::FreeFlyerService<ff_hw_msgs::srv::SetEnabled> enable_srv;
-    enable_srv.request.enabled = on;
+    enable_srv.request->enabled = on;
 
     if (cmd->args[0].s ==
                 CommandConstants::PARAM_NAME_POWERED_COMPONENT_LASER_POINTER) {
       // Check to make sure the laser service is valid and running
-      if (!CheckServiceExists(laser_enable_client_,
+      if (!CheckServiceExists(laser_enable_client_.exists(),
                               "Enable laser",
                               cmd->cmd_id)) {
         return false;
@@ -1424,7 +1432,9 @@ bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
       success = laser_enable_client_.call(enable_srv);
     } else {  // PMCS
       // Check to make sure the pmc service is valid and running
-      if (!CheckServiceExists(pmc_enable_client_, "Enable PMC", cmd->cmd_id)) {
+      if (!CheckServiceExists(pmc_enable_client_.exists(),
+                              "Enable PMC",
+                              cmd->cmd_id)) {
         return false;
       }
       success = pmc_enable_client_.call(enable_srv);
@@ -1434,34 +1444,34 @@ bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
     if (!success) {
       err_msg = "Service returned false.";
       completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
-    } else if (!enable_srv.response.success) {
-      err_msg = enable_srv.response.status_message;
+    } else if (!enable_srv.response->success) {
+      err_msg = enable_srv.response->status_message;
       completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
     }
   } else {  // Item is probably a payload
     ff_util::FreeFlyerService<ff_hw_msgs::srv::ConfigurePayloadPower>
                                                                     config_srv;
-    config_srv.request.top_front = config_srv.request.PERSIST;
-    config_srv.request.bottom_front = config_srv.request.PERSIST;
-    config_srv.request.top_aft = config_srv.request.PERSIST;
-    config_srv.request.bottom_aft = config_srv.request.PERSIST;
+    config_srv.request->top_front = config_srv.request->PERSIST;
+    config_srv.request->bottom_front = config_srv.request->PERSIST;
+    config_srv.request->top_aft = config_srv.request->PERSIST;
+    config_srv.request->bottom_aft = config_srv.request->PERSIST;
 
     uint8_t power;
     if (on) {
-      power = ff_hw_msgs::msg::ConfigurePayloadPower::Request::ON;
+      power = ff_hw_msgs::srv::ConfigurePayloadPower::Request::ON;
     } else {
-      power = ff_hw_msgs::msg::ConfigurePayloadPower::Request::OFF;
+      power = ff_hw_msgs::srv::ConfigurePayloadPower::Request::OFF;
     }
 
     if (cmd->args[0].s ==
               CommandConstants::PARAM_NAME_POWERED_COMPONENT_PAYLOAD_TOP_AFT) {
-      config_srv.request.top_aft = power;
+      config_srv.request->top_aft = power;
     } else if (cmd->args[0].s ==
             CommandConstants::PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_AFT) {
-      config_srv.request.bottom_aft = power;
+      config_srv.request->bottom_aft = power;
     } else if (cmd->args[0].s ==
           CommandConstants::PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_FRONT) {
-      config_srv.request.bottom_front = power;
+      config_srv.request->bottom_front = power;
     } else {  // Item wasn't recognized
       err_msg = "Item " + cmd->args[0].s + " not recognized in power item.";
       state_->AckCmd(cmd->cmd_id,
@@ -1470,7 +1480,7 @@ bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
       return false;
     }
 
-    if (!CheckServiceExists(payload_power_client_,
+    if (!CheckServiceExists(payload_power_client_.exists(),
                             "Power payload",
                             cmd->cmd_id)) {
       return false;
@@ -1482,8 +1492,8 @@ bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
     if (!success) {
       err_msg = "Power payload service returned false.";
       completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
-    } else if (!config_srv.response.success) {
-      err_msg = config_srv.response.status;
+    } else if (!config_srv.response->success) {
+      err_msg = config_srv.response->status;
       completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
     }
   }
@@ -1493,7 +1503,7 @@ bool Executive::PowerItem(ff_msgs::msg::CommandStampedPtr const& cmd, bool on) {
 }
 
 bool Executive::ProcessGuestScienceCommand(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   int gs_command_timeout_mod = gs_command_timeout_;
   // Check if command is restart. If so, need to extract time to add to the
   // timeout
@@ -1562,8 +1572,8 @@ bool Executive::ProcessGuestScienceCommand(
     }
   }
 
-  gs_cmd_pub_.publish(cmd);
-  gs_start_stop_restart_command_timer_.setPeriod(gs_command_timeout_mod));
+  gs_cmd_pub_->publish(*cmd);
+  gs_start_stop_restart_command_timer_.setPeriod(gs_command_timeout_mod);
   gs_start_stop_restart_command_timer_.start();
   gs_start_stop_restart_cmd_id_ = cmd->cmd_id;
   return true;
@@ -1571,7 +1581,7 @@ bool Executive::ProcessGuestScienceCommand(
 
 bool Executive::ResetEkf(std::string const& cmd_id) {
   localization_goal_.command =
-                          ff_msgs::msg::LocalizationGoal::COMMAND_RESET_FILTER;
+                      ff_msgs::action::Localization::Goal::COMMAND_RESET_FILTER;
   // Don't need to specify a pipeline for reset but clear it just in case
   localization_goal_.pipeline = "";
 
@@ -1599,7 +1609,7 @@ sequencer::ItemType Executive::GetCurrentPlanItemType() {
   return sequencer_.CurrentType();
 }
 
-ff_msgs::CommandStampedPtr Executive::GetPlanCommand() {
+ff_msgs::msg::CommandStamped::SharedPtr Executive::GetPlanCommand() {
   return sequencer_.CurrentCommand();
 }
 
@@ -1607,12 +1617,14 @@ bool Executive::GetSetPlanInertia(std::string const& cmd_id) {
   // If the plan has inertia, set it. Otherwise, leave the inertia the way it is
   if (sequencer_.HaveInertia()) {
     ff_util::FreeFlyerService<ff_msgs::srv::SetInertia> inertia_srv;
-    inertia_srv.request.inertia = sequencer_.GetInertia();
+    inertia_srv.request->inertia = sequencer_.GetInertia();
     // Plan header doesn't contain the center of mass so we need to get the
     // current center of mass
-    inertia_srv.request.inertia.inertia.com = current_inertia_->inertia.com;
+    inertia_srv.request->inertia.inertia.com = current_inertia_->inertia.com;
 
-    if (!CheckServiceExists(set_inertia_client_, "Set inertia", cmd_id)) {
+    if (!CheckServiceExists(set_inertia_client_.exists(),
+                            "Set inertia",
+                            cmd_id)) {
       return false;
     }
 
@@ -1623,7 +1635,7 @@ bool Executive::GetSetPlanInertia(std::string const& cmd_id) {
       return false;
     }
 
-    if (!inertia_srv.response.success) {
+    if (!inertia_srv.response->success) {
       state_->AckCmd(cmd_id,
                      ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                      "Set inertia srv returned unsuccessful for plan inertia");
@@ -1644,12 +1656,13 @@ void Executive::GetSetPlanOperatingLimits() {
 }
 
 /************************ Commands ********************************************/
-bool Executive::ArmPanAndTilt(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::ArmPanAndTilt(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing arm pan and tilt command!");
   return ArmControl(cmd);
 }
 
-bool Executive::AutoReturn(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::AutoReturn(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing auto return command!");
   bool successful = false;
   std::string err_msg;
@@ -1687,7 +1700,8 @@ bool Executive::AutoReturn(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::CustomGuestScience(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::CustomGuestScience(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing custom guest science command!");
   // Check command arguments are correcy before sending to the guest science
   // manager
@@ -1709,14 +1723,14 @@ bool Executive::CustomGuestScience(ff_msgs::msg::CommandStampedPtr const& cmd) {
     return false;
   }
 
-  gs_cmd_pub_.publish(cmd);
+  gs_cmd_pub_->publish(*cmd);
   gs_custom_command_timer_.setPeriod(gs_command_timeout_);
   gs_custom_command_timer_.start();
   gs_custom_cmd_id_ = cmd->cmd_id;
   return true;
 }
 
-bool Executive::DeployArm(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::DeployArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing deploy arm command!");
   // Check if Astrobee is perching/perched. Arm control will check the rest.
   if (agent_state_.mobility_state.state ==
@@ -1730,7 +1744,7 @@ bool Executive::DeployArm(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return ArmControl(cmd);
 }
 
-bool Executive::Dock(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Dock(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing dock command!");
   bool successful = false;
   std::string err_msg;
@@ -1766,13 +1780,13 @@ bool Executive::Dock(ff_msgs::msg::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::EnableAstrobeeIntercomms(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing enable astrobee intercomms command!");
 
   ff_util::FreeFlyerService<ff_msgs::srv::ResponseOnly>
                                                 enable_astrobee_intercomms_srv;
 
-  if (!CheckServiceExists(enable_astrobee_intercommunication_client_,
+  if (!CheckServiceExists(enable_astrobee_intercommunication_client_.exists(),
                           "Enable astrobee intercommunication",
                           cmd->cmd_id)) {
     return false;
@@ -1786,19 +1800,19 @@ bool Executive::EnableAstrobeeIntercomms(
     return false;
   }
 
-  if (!enable_astrobee_intercomms_srv.response.success) {
+  if (!enable_astrobee_intercomms_srv.response->success) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                    ("Enable astrobee intercommunication failed with result: " +
-                    enable_astrobee_intercomms_srv.response.status));
+                    enable_astrobee_intercomms_srv.response->status));
     return false;
   }
 
   state_->AckCmd(cmd->cmd_id);
   return true;
 }
-
-bool Executive::Fault(ff_msgs::msg::CommandStampedPtr const& cmd) {
+/*
+bool Executive::Fault(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing fault command!");
 
   // Only transition to the fault state if the fault command came from the
@@ -1821,12 +1835,14 @@ bool Executive::Fault(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::GripperControl(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::GripperControl(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing gripper control command!");
   return ArmControl(cmd);
 }
 
-bool Executive::IdlePropulsion(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::IdlePropulsion(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing idle propulsion command!");
 
   // Cancel any motion actions being executed include the arm
@@ -1872,7 +1888,8 @@ bool Executive::IdlePropulsion(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return StartAction(IDLE, cmd->cmd_id);
 }
 
-bool Executive::InitializeBias(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::InitializeBias(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing initialize bias command!");
   // We don't want to initialize the bias when stopped because we will not be
   // completely still
@@ -1893,23 +1910,23 @@ bool Executive::InitializeBias(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::LoadNodelet(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::LoadNodelet(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing load nodelet command!");
   return LoadUnloadNodelet(cmd);
 }
-
-bool Executive::NoOp(ff_msgs::msg::CommandStampedPtr const& cmd) {
+*/
+bool Executive::NoOp(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing noop command!");
   state_->AckCmd(cmd->cmd_id);
   return true;
 }
-
-bool Executive::PausePlan(ff_msgs::msg::CommandStampedPtr const& cmd) {
+/*
+bool Executive::PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing pause plan command!");
   return state_->PausePlan(cmd);
 }
 
-bool Executive::Perch(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Perch(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing perch command!");
   bool successful = false;
   std::string err_msg;
@@ -1942,17 +1959,18 @@ bool Executive::Perch(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::PowerItemOff(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::PowerItemOff(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing power item off command!");
   return PowerItem(cmd, false);
 }
 
-bool Executive::PowerItemOn(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::PowerItemOn(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing power item on command!");
   return PowerItem(cmd, true);
 }
 
-bool Executive::Prepare(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Prepare(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing prepare command!");
   // TODO(Katie) Stub, change to be actual code
   // Astrobee needs to be either stopped or drifting
@@ -1965,7 +1983,8 @@ bool Executive::Prepare(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::ReacquirePosition(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::ReacquirePosition(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing reacquire position command!");
   if (FailCommandIfMoving(cmd)) {
     // Reacquire position tries to get astrobee localizing again with mapped
@@ -1979,7 +1998,7 @@ bool Executive::ReacquirePosition(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::ResetEkf(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::ResetEkf(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing reset ekf command!");
   if (FailCommandIfMoving(cmd)) {
     return ResetEkf(cmd->cmd_id);
@@ -1988,12 +2007,12 @@ bool Executive::ResetEkf(ff_msgs::msg::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::RestartGuestScience(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing restart guest science command!");
   return ProcessGuestScienceCommand(cmd);
 }
 
-bool Executive::RunPlan(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::RunPlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing run plan command!");
   if (agent_state_.plan_execution_state.state !=
                                             ff_msgs::msg::ExecState::PAUSED) {
@@ -2019,8 +2038,8 @@ bool Executive::RunPlan(ff_msgs::msg::CommandStampedPtr const& cmd) {
                  ff_msgs::msg::AckStatus::EXECUTING);
   return true;
 }
-
-bool Executive::SetCamera(ff_msgs::msg::CommandStampedPtr const& cmd) {
+*/
+bool Executive::SetCamera(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set camera command!");
   std::string err_msg = "";
   uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK;
@@ -2055,13 +2074,13 @@ bool Executive::SetCamera(ff_msgs::msg::CommandStampedPtr const& cmd) {
     // Need to ensure mode is valid
     int mode;
     if (cmd->args[1].s == CommandConstants::PARAM_NAME_CAMERA_MODE_BOTH) {
-      mode = ff_msgs:msg:::ConfigureCamera::Request::BOTH;
+      mode = ff_msgs::srv::ConfigureCamera::Request::BOTH;
     } else if (cmd->args[1].s ==
                           CommandConstants::PARAM_NAME_CAMERA_MODE_RECORDING) {
-      mode = ff_msgs::msg::ConfigureCamera::Request::RECORDING;
+      mode = ff_msgs::srv::ConfigureCamera::Request::RECORDING;
     } else if (cmd->args[1].s ==
                           CommandConstants::PARAM_NAME_CAMERA_MODE_STREAMING) {
-      mode = ff_msgs::msg::ConfigureCamera::Request::STREAMING;
+      mode = ff_msgs::srv::ConfigureCamera::Request::STREAMING;
     } else {
       successful = false;
       err_msg = "Camera mode invalid. Options are Both, Streaming, Recording";
@@ -2073,11 +2092,11 @@ bool Executive::SetCamera(ff_msgs::msg::CommandStampedPtr const& cmd) {
       height = cmd->args[2].s.substr((pos + 1));
 
       ff_util::FreeFlyerService<ff_msgs::srv::ConfigureCamera> config_img_srv;
-      config_img_srv.request.mode = mode;
-      config_img_srv.request.rate = cmd->args[3].f;
-      config_img_srv.request.width = std::stoi(width);
-      config_img_srv.request.height = std::stoi(height);
-      config_img_srv.request.bitrate = cmd->args[4].f;
+      config_img_srv.request->mode = mode;
+      config_img_srv.request->rate = cmd->args[3].f;
+      config_img_srv.request->width = std::stoi(width);
+      config_img_srv.request->height = std::stoi(height);
+      config_img_srv.request->bitrate = cmd->args[4].f;
 
       if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
         // Check to make sure the dock cam service is valid
@@ -2176,7 +2195,8 @@ bool Executive::SetCamera(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::SetCameraRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetCameraRecording(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set camera recording command!");
   bool successful = true;
   std::string err_msg;
@@ -2190,9 +2210,9 @@ bool Executive::SetCameraRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
     completed_status = ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX;
   } else {
     ff_util::FreeFlyerService<ff_msgs::srv::EnableCamera> enable_img_srv;
-    enable_img_srv.request.mode =
-                                ff_msgs::msg::EnableCamera::Request::RECORDING;
-    enable_img_srv.request.enable = cmd->args[1].b;
+    enable_img_srv.request->mode =
+                                ff_msgs::srv::EnableCamera::Request::RECORDING;
+    enable_img_srv.request->enable = cmd->args[1].b;
 
     if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
       // Check to make sure the dock cam enable service exists
@@ -2276,7 +2296,8 @@ bool Executive::SetCameraRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::SetCameraStreaming(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetCameraStreaming(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set camera streaming command!");
   bool successful = true;
   std::string err_msg = "";
@@ -2289,10 +2310,10 @@ bool Executive::SetCameraStreaming(ff_msgs::msg::CommandStampedPtr const& cmd) {
     err_msg = "Malformed arguments for set camera streaming!";
     completed_status = ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX;
   } else {
-    ff_msgs::srv::EnableCamera enable_img_srv;
-    enable_img_srv.request.mode =
-                                ff_msgs::msg::EnableCamera::Request::STREAMING;
-    enable_img_srv.request.enable = cmd->args[1].b;
+    ff_util::FreeFlyerService<ff_msgs::srv::EnableCamera> enable_img_srv;
+    enable_img_srv.request->mode =
+                                ff_msgs::srv::EnableCamera::Request::STREAMING;
+    enable_img_srv.request->enable = cmd->args[1].b;
 
     if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
       // Check to make sure the dock cam service is valid
@@ -2375,8 +2396,9 @@ bool Executive::SetCameraStreaming(ff_msgs::msg::CommandStampedPtr const& cmd) {
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
-
-bool Executive::SetCheckObstacles(ff_msgs::msg::CommandStampedPtr const& cmd) {
+/*
+bool Executive::SetCheckObstacles(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set check obstacles command!");
   // Don't set whether to check obstacles when moving
   if (FailCommandIfMoving(cmd)) {
@@ -2397,7 +2419,8 @@ bool Executive::SetCheckObstacles(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SetCheckZones(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetCheckZones(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set check zones command!");
   // Don't set whether to check zones when moving
   if (FailCommandIfMoving(cmd)) {
@@ -2417,11 +2440,11 @@ bool Executive::SetCheckZones(ff_msgs::msg::CommandStampedPtr const& cmd) {
   }
   return false;
 }
-
-bool Executive::SetDataToDisk(ff_msgs::msg::CommandStampedPtr const& cmd) {
+*/
+bool Executive::SetDataToDisk(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set data to disk command!");
   if (data_to_disk_) {
-    ff_msgs::srv::SetDataToDisk data_srv;
+    ff_util::FreeFlyerService<ff_msgs::srv::SetDataToDisk> data_srv;
     std::string file_contents;
 
     // Decompress file into a string
@@ -2459,7 +2482,7 @@ bool Executive::SetDataToDisk(ff_msgs::msg::CommandStampedPtr const& cmd) {
     }
 
     // Get name
-    data_srv.request.state.name = file_obj["name"].asString();
+    data_srv.request->state.name = file_obj["name"].asString();
 
     // Check to make sure topic settings exists
     if (!file_obj.isMember("topicSettings") ||
@@ -2492,9 +2515,9 @@ bool Executive::SetDataToDisk(ff_msgs::msg::CommandStampedPtr const& cmd) {
       }
 
       if (data_obj["downlinkOption"].asString() == "immediate") {
-        save_settings.downlinkOption = ff_msgs::msg::SaveSettings::IMMEDIATE;
+        save_settings.downlink_option = ff_msgs::msg::SaveSettings::IMMEDIATE;
       } else if (data_obj["downlinkOption"].asString() == "delayed") {
-        save_settings.downlinkOption = ff_msgs::msg::SaveSettings::DELAYED;
+        save_settings.downlink_option = ff_msgs::msg::SaveSettings::DELAYED;
       } else {
         state_->AckCmd(cmd->cmd_id,
                        ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX,
@@ -2512,11 +2535,11 @@ bool Executive::SetDataToDisk(ff_msgs::msg::CommandStampedPtr const& cmd) {
       }
       save_settings.frequency = data_obj["frequency"].asFloat();
 
-      data_srv.request.state.topic_save_settings.push_back(save_settings);
+      data_srv.request->state.topic_save_settings.push_back(save_settings);
     }
 
     // Check to make sure the service is valid and running
-    if (!CheckServiceExists(set_data_client_,
+    if (!CheckServiceExists(set_data_client_.exists(),
                             "Set data to disk",
                             cmd->cmd_id)) {
       return false;
@@ -2529,10 +2552,10 @@ bool Executive::SetDataToDisk(ff_msgs::msg::CommandStampedPtr const& cmd) {
       return false;
     }
 
-    if (!data_srv.response.success) {
+    if (!data_srv.response->success) {
       state_->AckCmd(cmd->cmd_id,
                      ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
-                     data_srv.response.status);
+                     data_srv.response->status);
       return false;
     }
 
@@ -2549,7 +2572,7 @@ bool Executive::SetDataToDisk(ff_msgs::msg::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::SetEnableAutoReturn(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set enable auto return command!");
   if (cmd->args.size() != 1 ||
       cmd->args[0].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_BOOL) {
@@ -2565,8 +2588,9 @@ bool Executive::SetEnableAutoReturn(
   state_->AckCmd(cmd->cmd_id);
   return true;
 }
-
-bool Executive::SetEnableImmediate(ff_msgs::msg::CommandStampedPtr const& cmd) {
+/*
+bool Executive::SetEnableImmediate(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set enable immediate command!");
   if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
@@ -2586,7 +2610,8 @@ bool Executive::SetEnableImmediate(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SetEnableReplan(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetEnableReplan(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set enable replan command!");
   if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
@@ -2607,7 +2632,7 @@ bool Executive::SetEnableReplan(ff_msgs::msg::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::SetFlashlightBrightness(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set flashlight brightness command!");
   bool successful = true;
   uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK;
@@ -2681,7 +2706,8 @@ bool Executive::SetFlashlightBrightness(
   return successful;
 }
 
-bool Executive::SetHolonomicMode(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetHolonomicMode(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set holonomic mode command!");
   if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
@@ -2701,7 +2727,7 @@ bool Executive::SetHolonomicMode(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SetInertia(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetInertia(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set inertia command!");
   if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 4 ||
@@ -2735,7 +2761,9 @@ bool Executive::SetInertia(ff_msgs::msg::CommandStampedPtr const& cmd) {
     inertia_srv.request.inertia.inertia.iyz = cmd->args[3].mat33f[5];
     inertia_srv.request.inertia.inertia.izz = cmd->args[3].mat33f[8];
 
-    if (!CheckServiceExists(set_inertia_client_, "Set inertia", cmd->cmd_id)) {
+    if (!CheckServiceExists(set_inertia_client_.exists(),
+                            "Set inertia",
+                            cmd->cmd_id)) {
       return false;
     }
 
@@ -2760,7 +2788,8 @@ bool Executive::SetInertia(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SetOperatingLimits(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetOperatingLimits(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set operating limits command!");
   if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 7 ||
@@ -2811,7 +2840,7 @@ bool Executive::SetOperatingLimits(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SetPlan(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetPlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set plan command!");
   std::string err_msg;
   if (plan_) {
@@ -2852,7 +2881,7 @@ bool Executive::SetPlan(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SetPlanner(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SetPlanner(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set planner command!");
   // Don't set planner when moving
   if (FailCommandIfMoving(cmd)) {
@@ -2883,11 +2912,12 @@ bool Executive::SetPlanner(ff_msgs::msg::CommandStampedPtr const& cmd) {
   }
   return false;
 }
-
-bool Executive::SetTelemetryRate(ff_msgs::msg::CommandStampedPtr const& cmd) {
+*/
+bool Executive::SetTelemetryRate(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set telemetry rate command!");
   if (cmd->args.size() != 2 ||
-      cmd->args[0].data_type != ff_msgs:::msg::CommandArg::DATA_TYPE_STRING ||
+      cmd->args[0].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_STRING ||
       cmd->args[1].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT) {
     state_->AckCmd(cmd->cmd_id,
                   ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX,
@@ -2896,32 +2926,32 @@ bool Executive::SetTelemetryRate(ff_msgs::msg::CommandStampedPtr const& cmd) {
   }
 
   ff_util::FreeFlyerService<ff_msgs::srv::SetRate> set_rate_srv;
-  set_rate_srv.request.rate = cmd->args[1].f;
+  set_rate_srv.request->rate = cmd->args[1].f;
   if (cmd->args[0].s ==
                       CommandConstants::PARAM_NAME_TELEMETRY_TYPE_COMM_STATUS) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::COMM_STATUS;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::COMM_STATUS;
   } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_TELEMETRY_TYPE_CPU_STATE) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::CPU_STATE;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::CPU_STATE;
   } else if (cmd->args[0].s ==
                       CommandConstants::PARAM_NAME_TELEMETRY_TYPE_DISK_STATE) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::DISK_STATE;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::DISK_STATE;
   } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_TELEMETRY_TYPE_EKF_STATE) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::EKF_STATE;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::EKF_STATE;
   } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_TELEMETRY_TYPE_GNC_STATE) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::GNC_STATE;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::GNC_STATE;
   } else if (cmd->args[0].s ==
                     CommandConstants::PARAM_NAME_TELEMETRY_TYPE_PMC_CMD_STATE) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::PMC_CMD_STATE;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::PMC_CMD_STATE;
   } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_TELEMETRY_TYPE_POSITION) {
-    set_rate_srv.request.which = ff_msgs::msg::SetRate::Request::POSITION;
+    set_rate_srv.request->which = ff_msgs::srv::SetRate::Request::POSITION;
   } else if (cmd->args[0].s ==
               CommandConstants::PARAM_NAME_TELEMETRY_TYPE_SPARSE_MAPPING_POSE) {
-    set_rate_srv.request.which =
-                            ff_msgs::msg::SetRate::Request::SPARSE_MAPPING_POSE;
+    set_rate_srv.request->which =
+                            ff_msgs::srv::SetRate::Request::SPARSE_MAPPING_POSE;
   } else {
     state_->AckCmd(cmd->cmd_id,
                   ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX,
@@ -2929,7 +2959,9 @@ bool Executive::SetTelemetryRate(ff_msgs::msg::CommandStampedPtr const& cmd) {
     return false;
   }
 
-  if (!CheckServiceExists(set_rate_client_, "Set telem rate", cmd->cmd_id)) {
+  if (!CheckServiceExists(set_rate_client_.exists(),
+                          "Set telem rate",
+                          cmd->cmd_id)) {
     return false;
   }
 
@@ -2941,18 +2973,18 @@ bool Executive::SetTelemetryRate(ff_msgs::msg::CommandStampedPtr const& cmd) {
   }
 
   // Check to see if the rate was set successfully
-  if (!set_rate_srv.response.success) {
+  if (!set_rate_srv.response->success) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
-                   set_rate_srv.response.status);
+                   set_rate_srv.response->status);
     return false;
   }
 
   state_->AckCmd(cmd->cmd_id);
   return true;
 }
-
-bool Executive::SetZones(ff_msgs::msg::CommandStampedPtr const& cmd) {
+/*
+bool Executive::SetZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing set zones command!");
   if (FailCommandIfMoving(cmd)) {
     if (zones_) {
@@ -3105,7 +3137,8 @@ bool Executive::SetZones(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return false;
 }
 
-bool Executive::SkipPlanStep(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::SkipPlanStep(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing skip plan step command!");
   // Make sure plan execution state is paused
   if (agent_state_.plan_execution_state.state !=
@@ -3130,12 +3163,14 @@ bool Executive::SkipPlanStep(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::StartGuestScience(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::StartGuestScience(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing start guest science!");
   return ProcessGuestScienceCommand(cmd);
 }
-
-bool Executive::StartRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
+*/
+bool Executive::StartRecording(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing start recording command.");
   bool successful = true;
   std::string err_msg;
@@ -3147,23 +3182,23 @@ bool Executive::StartRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
     completed_status = ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX;
   } else {
     ff_util::FreeFlyerService<ff_msgs::srv::EnableRecording> enable_rec_srv;
-    enable_rec_srv.request.enable = true;
-    enable_rec_srv.request.bag_description = cmd->args[0].s;
+    enable_rec_srv.request->enable = true;
+    enable_rec_srv.request->bag_description = cmd->args[0].s;
 
     // Check to make sure the enable recording service exists
     if (!enable_recording_client_.exists()) {
       successful = false;
       err_msg = "Enable recording service not running! Node may have died!";
-      completed_status = ff_msgs::msg::ckCompletedStatus::EXEC_FAILED;
+      completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
     } else {
       // Call enable service and make sure it worked
       if (!enable_recording_client_.call(enable_rec_srv)) {
         successful = false;
         err_msg = "Enable recording service failed!";
         completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
-      } else if (!enable_rec_srv.response.success) {
+      } else if (!enable_rec_srv.response->success) {
         successful = false;
-        err_msg = enable_rec_srv.response.status;
+        err_msg = enable_rec_srv.response->status;
         completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
       }
     }
@@ -3171,7 +3206,7 @@ bool Executive::StartRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
-
+/*
 // Stop all motion is a tricky command since we may have multiple actions
 // running at one time. We also use stop to transition from idle to stopped
 // so we will wanted to start a stop pretty much all the time. The only time
@@ -3180,7 +3215,8 @@ bool Executive::StartRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
 // haven't activated the pmcs yet.
 // This function is also as pause for a plan so if the plan flag is set, we
 // need to check if we are downloading data and if so, stop it.
-bool Executive::StopAllMotion(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::StopAllMotion(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stop all motion command!");
   // We pretty much always start stop action even if stopped. See cases below
   // for situations we don't want to stop in
@@ -3346,7 +3382,7 @@ bool Executive::StopAllMotion(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::StopArm(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::StopArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stop arm command!");
   // Check for an arm action already being executed. If so, cancel it.
   if (IsActionRunning(ARM)) {
@@ -3363,20 +3399,22 @@ bool Executive::StopArm(ff_msgs::msg::CommandStampedPtr const& cmd) {
 
   return true;
 }
-
-bool Executive::StopGuestScience(ff_msgs::msg::CommandStampedPtr const& cmd) {
+*/
+bool Executive::StopGuestScience(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stop guest science command!");
   return ProcessGuestScienceCommand(cmd);
 }
 
-bool Executive::StopRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::StopRecording(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stop recording command!");
   bool successful = true;
   std::string err_msg;
   uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK;
 
-  ff_msgs::srv::EnableRecording enable_rec_srv;
-  enable_rec_srv.request.enable = false;
+  ff_util::FreeFlyerService<ff_msgs::srv::EnableRecording> enable_rec_srv;
+  enable_rec_srv.request->enable = false;
 
   // Check to make sure the enable recording service exists
   if (!enable_recording_client_.exists()) {
@@ -3389,9 +3427,9 @@ bool Executive::StopRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
       successful = false;
       err_msg = "Enable recording service failed!";
       completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
-    } else if (!enable_rec_srv.response.success) {
+    } else if (!enable_rec_srv.response->success) {
       successful = false;
-      err_msg = enable_rec_srv.response.status;
+      err_msg = enable_rec_srv.response->status;
       completed_status = ff_msgs::msg::AckCompletedStatus::EXEC_FAILED;
     }
   }
@@ -3399,8 +3437,8 @@ bool Executive::StopRecording(ff_msgs::msg::CommandStampedPtr const& cmd) {
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
-
-bool Executive::StowArm(ff_msgs::msg::CommandStampedPtr const& cmd) {
+/*
+bool Executive::StowArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stow arm command!");
   // Check if Astrobee is perched. Arm control will check the rest.
   if (agent_state_.mobility_state.state ==
@@ -3415,7 +3453,7 @@ bool Executive::StowArm(ff_msgs::msg::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::SwitchLocalization(
-                                  ff_msgs::msg::CommandStampedPtr const& cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_DEBUG("Executive executing switch localization command!");
   if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
@@ -3457,7 +3495,7 @@ bool Executive::SwitchLocalization(
   return false;
 }
 
-bool Executive::Undock(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Undock(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing undock command!");
   bool docked = false;
   std::string err_msg = "";
@@ -3494,12 +3532,13 @@ bool Executive::Undock(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return docked;
 }
 
-bool Executive::UnloadNodelet(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::UnloadNodelet(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing unload nodelet command!");
   return LoadUnloadNodelet(cmd);
 }
 
-bool Executive::Unperch(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Unperch(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing unperch command!");
   bool perched = false;
   std::string err_msg = "";
@@ -3535,11 +3574,11 @@ bool Executive::Unperch(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return perched;
 }
 
-bool Executive::Unterminate(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Unterminate(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   ff_util::FreeFlyerService<ff_hw_msgs::srv::ClearTerminate> clear_srv;
 
   // Clear eps terminate flag
-  if (!CheckServiceExists(eps_terminate_client_,
+  if (!CheckServiceExists(eps_terminate_client_.exists(),
                           "EPS terminate",
                           cmd->cmd_id)) {
     return false;
@@ -3563,7 +3602,7 @@ bool Executive::Unterminate(ff_msgs::msg::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::Wait(ff_msgs::msg::CommandStampedPtr const& cmd) {
+bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing wait command! Duration %f", cmd->args[0].f);
   if (cmd->args[0].data_type != ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT ||
       cmd->args[0].f < 0) {
@@ -3576,14 +3615,16 @@ bool Executive::Wait(ff_msgs::msg::CommandStampedPtr const& cmd) {
   StartWaitTimer(cmd->args[0].f);
   return true;
 }
-
+*/
 /************************ Protected *******************************************/
-void Executive::Initialize(ros::NodeHandle &nh) {
+/*void Executive::Initialize(NodeHandle &nh) {
   std::string err_msg;
   // Set executive in op state repo so the op_states can call this executive
   OpStateRepo::Instance()->SetExec(this);
 
   nh_ = *nh;
+
+  sequencer_.SetNodeHandle(nh);
 
   // Read in all the action timeouts. They are in config files so that they can
   // be changed on the fly.
@@ -4135,7 +4176,7 @@ bool Executive::ReadMapperParams() {
 }
 
 bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
-                            ff_msgs::msg::CommandStampedPtr cmd) {
+                            ff_msgs::msg::CommandStamped::SharedPtr cmd) {
   std::string cmd_name;
   if (!response->GetStr("name", &cmd_name)) {
     FF_ERROR("Fault response command name not specified.");
@@ -4271,10 +4312,10 @@ bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
 
   return true;
 }
-
+*/
 void Executive::PublishAgentState() {
   agent_state_.header.stamp = GetTimeNow();
-  agent_state_pub_.publish(agent_state_);
+  agent_state_pub_->publish(agent_state_);
 }
 
 }  // namespace executive

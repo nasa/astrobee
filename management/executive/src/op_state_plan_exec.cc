@@ -21,7 +21,7 @@
 #include "executive/op_state_repo.h"
 
 namespace executive {
-OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
+/*OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
   std::string err_msg;
 
   if (!exec_->GetSetPlanInertia(cmd_id)) {
@@ -465,5 +465,5 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
     return OpStateRepo::Instance()->ready()->StartupState();
   }
   return this;
-}
+} */
 }  // namespace executive

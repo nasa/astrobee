@@ -20,6 +20,8 @@
 #ifndef EXECUTIVE_UTILS_SEQUENCER_SEQUENCER_H_
 #define EXECUTIVE_UTILS_SEQUENCER_SEQUENCER_H_
 
+#include <ff_common/ff_ros.h>
+
 #include <ff_msgs/action/control.hpp>
 #include <ff_msgs/msg/agent_state_stamped.hpp>
 #include <ff_msgs/msg/control_state.hpp>
@@ -49,7 +51,7 @@ class Sequencer {
 
   // because unions can't even :/ OMG.
   ItemType CurrentType(bool reset_time = true) noexcept;
-  ff_msgs::msg::CommandStamped::Ptr CurrentCommand() noexcept;
+  ff_msgs::msg::CommandStamped::SharedPtr CurrentCommand() noexcept;
   jsonloader::Segment CurrentSegment() noexcept;
 
   // give feedback about the end of the current item (command/segment)
@@ -76,18 +78,22 @@ class Sequencer {
   geometry_msgs::msg::InertiaStamped GetInertia() const noexcept;
   bool GetOperatingLimits(ff_msgs::msg::AgentStateStamped &state) const noexcept;
 
+  void SetNodeHandle(NodeHandle nh);
+
  private:
   int AppendStatus(ff_msgs::msg::Status const& msg) noexcept;
 
   void Reset() noexcept;
 
-  friend bool LoadPlan(ff_msgs::msg::CompressedFile::ConstPtr const& cf,
+  friend bool LoadPlan(ff_msgs::msg::CompressedFile::SharedPtr const& cf,
                        Sequencer * seq);
 
   bool valid_;
 
   jsonloader::Plan plan_;
   ff_msgs::msg::PlanStatusStamped status_;
+
+  NodeHandle nh_;
 
   // when we started the current item
   rclcpp::Time start_;
@@ -108,7 +114,7 @@ class Sequencer {
 
 // load a plan from a compressed file.
 // returns true if everything be cool, otherwise not.
-bool LoadPlan(ff_msgs::msg::CompressedFile::ConstPtr const& cf, Sequencer *seq);
+bool LoadPlan(ff_msgs::msg::CompressedFile::SharedPtr const& cf, Sequencer *seq);
 
 std::vector<ff_msgs::msg::ControlState>
 Segment2Trajectory(jsonloader::Segment const& segment);

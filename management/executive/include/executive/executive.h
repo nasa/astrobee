@@ -98,7 +98,7 @@ class OpState;
  */
 class Executive : public ff_util::FreeFlyerComponent {
  public:
-  Executive();
+  explicit Executive(rclcpp::NodeOptions const& options);
   ~Executive();
 
   // Message and timeout callbacks
@@ -141,22 +141,22 @@ class Executive : public ff_util::FreeFlyerComponent {
 
   // Action callbacks
   void ArmResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                         ff_msgs::msg::ArmResult::SharedPtr const result);
+                         ff_msgs::action::Arm::Result::SharedPtr const result);
 
   void DockResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                          ff_msgs::msg::DockResult::SharedPtr const result);
+                        ff_msgs::action::Dock::Result::SharedPtr const result);
 
   void LocalizationResultCallback(
-                      ff_util::FreeFlyerActionState::Enum const& state,
-                      ff_msgs::msg::LocalizationResult::SharedPtr const result);
+                ff_util::FreeFlyerActionState::Enum const& state,
+                ff_msgs::action::Localization::Result::SharedPtr const result);
 
   void MotionFeedbackCallback(
-                        ff_msgs::msg::MotionFeedback::SharedPtr const feedback);
+                  ff_msgs::action::Motion::Feedback::SharedPtr const feedback);
   void MotionResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::msg::MotionResult::SharedPtr const result);
+                      ff_msgs::action::Motion::Result::SharedPtr const result);
 
   void PerchResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                           ff_msgs::msg::PerchResult::SharedPtr const result);
+                        ff_msgs::action::Perch::Result::SharedPtr const result);
 
   // Publishers
   void PublishCmdAck(std::string const& cmd_id,
@@ -183,16 +183,17 @@ class Executive : public ff_util::FreeFlyerComponent {
                              std::string const& current_mobility_state,
                              std::string const& accepted_mobility_state = "");
   bool ArmControl(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool CheckServiceExists(ros::ServiceClient& serviceIn,
+  bool CheckServiceExists(bool serviceExists,
                           std::string const& serviceName,
                           std::string const& cmd_in);
   bool CheckStoppedOrDrifting(std::string const& cmd_id,
                               std::string const& cmd_name);
-  bool ConfigureLed(ff_hw_msgs::msg::ConfigureSystemLeds& led_srv);
+  bool ConfigureLed(
+      ff_util::FreeFlyerService<ff_hw_msgs::srv::ConfigureSystemLeds>& led_srv);
   bool ConfigureMobility(bool move_to_start, std::string& err_msg);
   bool FailCommandIfMoving(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool LoadUnloadNodelet(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  ros::Time MsToSec(std::string timestamp);
+  rclcpp::Duration MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::msg::CommandStamped::SharedPtr const cmd, bool on);
   bool ProcessGuestScienceCommand(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd);
@@ -215,67 +216,68 @@ class Executive : public ff_util::FreeFlyerComponent {
   bool Dock(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool EnableAstrobeeIntercomms(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool Fault(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool GripperControl(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool IdlePropulsion(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool InitializeBias(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool LoadNodelet(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool Fault(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool GripperControl(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool IdlePropulsion(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool InitializeBias(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool LoadNodelet(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool NoOp(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool Perch(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool PowerItemOff(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool PowerItemOn(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool Prepare(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool ReacquirePosition(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool ResetEkf(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool RestartGuestScience(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool RunPlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool Perch(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool PowerItemOff(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool PowerItemOn(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool Prepare(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool ReacquirePosition(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool ResetEkf(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool RestartGuestScience(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool RunPlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool SetCamera(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool SetCameraRecording(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool SetCameraStreaming(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool SetCheckObstacles(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool SetCheckZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetCheckObstacles(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetCheckZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool SetDataToDisk(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool SetEnableAutoReturn(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-  bool SetEnableImmediate(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetEnableReplan(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetFlashlightBrightness(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetHolonomicMode(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetInertia(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetOperatingLimits(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetPlan(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetPlanner(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetTelemetryRate(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SetZones(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SkipPlanStep(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StartGuestScience(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StartRecording(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StopAllMotion(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StopArm(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StopRecording(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StopGuestScience(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool StowArm(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool SwitchLocalization(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool Undock(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool UnloadNodelet(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool Unperch(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool Unterminate(ff_msgs::msg::CommandStampedPtr const cmd);
-  bool Wait(ff_msgs::msg::CommandStampedPtr const cmd);
+//  bool SetEnableImmediate(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetEnableReplan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetFlashlightBrightness(
+//                            ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetHolonomicMode(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetInertia(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetOperatingLimits(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetPlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetPlanner(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool SetTelemetryRate(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SetZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool SkipPlanStep(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool StartGuestScience(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool StartRecording(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool StopAllMotion(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+//  bool StopArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool StopGuestScience(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool StopRecording(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+/*  bool StowArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool SwitchLocalization(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool Undock(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool UnloadNodelet(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool Unperch(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool Unterminate(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
  protected:
   virtual void Initialize(NodeHandle &nh);
   bool ReadParams();
   bool ReadMapperParams();
   bool ReadCommand(config_reader::ConfigReader::Table *response,
-                   ff_msgs::msg::CommandStamped::SharedPtr cmd);
+                   ff_msgs::msg::CommandStamped::SharedPtr cmd);*/
   void PublishAgentState();
   OpState* state_;
 
-  ExecutiveActionClient<ff_msgs::msg::ArmAction> arm_ac_;
-  ExecutiveActionClient<ff_msgs::msg::DockAction> dock_ac_;
-  ExecutiveActionClient<ff_msgs::msg::LocalizationAction> localization_ac_;
-  ExecutiveActionClient<ff_msgs::msg::MotionAction> motion_ac_;
-  ExecutiveActionClient<ff_msgs::msg::PerchAction> perch_ac_;
+  ExecutiveActionClient<ff_msgs::action::Arm> arm_ac_;
+  ExecutiveActionClient<ff_msgs::action::Dock> dock_ac_;
+  ExecutiveActionClient<ff_msgs::action::Localization> localization_ac_;
+  ExecutiveActionClient<ff_msgs::action::Motion> motion_ac_;
+  ExecutiveActionClient<ff_msgs::action::Perch> perch_ac_;
 
   config_reader::ConfigReader config_params_, mapper_config_params_;
 
@@ -283,26 +285,26 @@ class Executive : public ff_util::FreeFlyerComponent {
 
   ff_msgs::msg::AckStamped ack_;
 
-  ff_msgs::msg::CommandStampedPtr sys_monitor_init_fault_response_;
-  ff_msgs::msg::CommandStampedPtr sys_monitor_heartbeat_fault_response_;
+  ff_msgs::msg::CommandStamped::SharedPtr sys_monitor_init_fault_response_;
+  ff_msgs::msg::CommandStamped::SharedPtr sys_monitor_heartbeat_fault_response_;
 
-  ff_msgs::msg::CompressedFileAck cf_ack_;
-  ff_msgs::msg::CompressedFileConstPtr plan_, zones_, data_to_disk_;
+  ff_msgs::msg::CompressedFileAck::SharedPtr cf_ack_;
+  ff_msgs::msg::CompressedFile::SharedPtr plan_, zones_, data_to_disk_;
 
-  ff_msgs::msg::CameraStatesStamped camera_states_;
-  ff_msgs::msg::DockStateConstPtr dock_state_;
-  ff_msgs::msg::FaultStateConstPtr fault_state_;
-  ff_msgs::msg::GuestScienceConfigConstPtr guest_science_config_;
-  ff_msgs::msg::MotionStatePtr motion_state_;
-  ff_msgs::msg::PerchStateConstPtr perch_state_;
+  ff_msgs::msg::CameraStatesStamped::SharedPtr camera_states_;
+  ff_msgs::msg::DockState::SharedPtr dock_state_;
+  ff_msgs::msg::FaultState::SharedPtr fault_state_;
+  ff_msgs::msg::GuestScienceConfig::SharedPtr guest_science_config_;
+  ff_msgs::msg::MotionState::SharedPtr motion_state_;
+  ff_msgs::msg::PerchState::SharedPtr perch_state_;
 
-  ff_msgs::msg::ArmGoal arm_goal_;
-  ff_msgs::msg::DockGoal dock_goal_;
-  ff_msgs::msg::LocalizationGoal localization_goal_;
-  ff_msgs::msg::MotionGoal motion_goal_;
-  ff_msgs::msg::PerchGoal perch_goal_;
+  ff_msgs::action::Arm::Goal arm_goal_;
+  ff_msgs::action::Dock::Goal dock_goal_;
+  ff_msgs::action::Localization::Goal localization_goal_;
+  ff_msgs::action::Motion::Goal motion_goal_;
+  ff_msgs::action::Perch::Goal perch_goal_;
 
-  geometry_msgs::msg::InertiaStampedConstPtr current_inertia_;
+  geometry_msgs::msg::InertiaStamped::SharedPtr current_inertia_;
 
   NodeHandle nh_;
 
@@ -314,7 +316,7 @@ class Executive : public ff_util::FreeFlyerComponent {
   Publisher<ff_msgs::msg::CommandStamped> gs_cmd_pub_;
 
   FreeFlyerServiceClient<ff_msgs::srv::SetZones> zones_client_;
-  FreeFlyerServiceClient<ff_hw_msgs::srv::SetEnbled> laser_enable_client_;
+  FreeFlyerServiceClient<ff_hw_msgs::srv::SetEnabled> laser_enable_client_;
   FreeFlyerServiceClient<ff_hw_msgs::srv::SetFlashlight>
                                                       front_flashlight_client_;
   FreeFlyerServiceClient<ff_hw_msgs::srv::SetFlashlight>
@@ -326,7 +328,7 @@ class Executive : public ff_util::FreeFlyerComponent {
   FreeFlyerServiceClient<ff_msgs::srv::ConfigureCamera> nav_cam_config_client_;
   FreeFlyerServiceClient<ff_msgs::srv::EnableCamera> nav_cam_enable_client_;
   FreeFlyerServiceClient<ff_msgs::srv::ConfigureCamera> perch_cam_config_client_;
-  FreeFlyerServiceCLient<ff_msgs::srv::EnableCamera> perch_cam_enable_client_;
+  FreeFlyerServiceClient<ff_msgs::srv::EnableCamera> perch_cam_enable_client_;
   FreeFlyerServiceClient<ff_msgs::srv::ConfigureCamera> sci_cam_config_client_;
   FreeFlyerServiceClient<ff_msgs::srv::EnableCamera> sci_cam_enable_client_;
   FreeFlyerServiceClient<ff_hw_msgs::srv::ConfigurePayloadPower>
@@ -338,14 +340,14 @@ class Executive : public ff_util::FreeFlyerComponent {
   FreeFlyerServiceClient<ff_msgs::srv::EnableRecording>
                                                       enable_recording_client_;
   FreeFlyerServiceClient<ff_hw_msgs::srv::ClearTerminate> eps_terminate_client_;
-  FreeFlyerServiceClient<ff_msgs::srv::ResposeOnly>
+  FreeFlyerServiceClient<ff_msgs::srv::ResponseOnly>
                                     enable_astrobee_intercommunication_client_;
   FreeFlyerServiceClient<ff_msgs::srv::UnloadLoadNodelet> unload_load_nodelet_client_;
   FreeFlyerServiceClient<ff_msgs::srv::SetFloat> set_collision_distance_client_;
   FreeFlyerServiceClient<ff_hw_msgs::srv::ConfigureSystemLeds> led_client_;
 
 
-  Subscriber<ff_msgs::msg::CameraStateStamped> camera_state_sub_;
+  Subscriber<ff_msgs::msg::CameraStatesStamped> camera_state_sub_;
   Subscriber<ff_msgs::msg::CommandStamped> cmd_sub_;
   Subscriber<ff_msgs::msg::CompressedFile> data_sub_;
   Subscriber<ff_msgs::msg::DockState> dock_state_sub_;
@@ -354,7 +356,7 @@ class Executive : public ff_util::FreeFlyerComponent {
   Subscriber<ff_msgs::msg::GuestScienceConfig> gs_config_sub_;
   Subscriber<ff_msgs::msg::GuestScienceState> gs_state_sub_;
   Subscriber<ff_msgs::msg::Heartbeat> heartbeat_sub_;
-  Subscriber<ff_msgs::msg::InertiaStamped> inertia_sub_;
+  Subscriber<geometry_msgs::msg::InertiaStamped> inertia_sub_;
   Subscriber<ff_msgs::msg::MotionState> motion_sub_;
   Subscriber<ff_msgs::msg::PerchState> perch_state_sub_;
   Subscriber<ff_msgs::msg::CompressedFile> plan_sub_;

@@ -26,10 +26,12 @@
 
 #include <jsonloader/planio.h>
 
-#include <ff_msgs/msgscommand_constants.hpp>
+#include <ff_msgs/msg/command_constants.hpp>
 
 #include <cstdint>
 #include <unordered_map>
+
+FF_DEFINE_LOGGER("sequencer")
 
 namespace sequencer {
 
@@ -66,7 +68,7 @@ Waypoint2TrajectoryPoint(jsonloader::Waypoint const& w) {
   p.accel.angular = msg_conversions::eigen_to_ros_vector(
     sv::pose_vel_accel::GetAngularAcceleration(sv.vec).cast<double>());
 
-  p.when.nsec = w.ctime().nsec();
+  p.when.nanosec = w.ctime().nsec();
   p.when.sec = w.ctime().sec();
   return p;
 }
@@ -85,7 +87,7 @@ inline ff_msgs::msg::Status MakeStatus(std::uint8_t status,
 
 }  // namespace
 
-bool LoadPlan(ff_msgs::msg::CompressedFile::ConstPtr const& cf,
+bool LoadPlan(ff_msgs::msg::CompressedFile::SharedPtr const& cf,
               Sequencer *seq) {
   std::string out;
 
@@ -198,6 +200,10 @@ bool Sequencer::GetOperatingLimits(
   return true;
 }
 
+void Sequencer::SetNodeHandle(NodeHandle nh) {
+  nh_ = nh;
+}
+
 ItemType Sequencer::CurrentType(bool reset_time) noexcept {
   if (!valid_)
     return ItemType::NONE;
@@ -232,7 +238,7 @@ ItemType Sequencer::CurrentType(bool reset_time) noexcept {
 
   // http://imgur.com/vGyMAnB
   if (reset_time)
-    start_ = ros::Time::now();
+    start_ = nh_->get_clock()->now();
 
   if (plan_.GetMilestone(current_milestone_).IsSegment())
     return ItemType::SEGMENT;
@@ -253,8 +259,9 @@ jsonloader::Segment Sequencer::CurrentSegment() noexcept {
   return dynamic_cast<jsonloader::Segment const&>(m);
 }
 
-ff_msgs::msg::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
-  ff_msgs::msg::CommandStamped::Ptr cmd(new ff_msgs::msg::CommandStamped());
+ff_msgs::msg::CommandStamped::SharedPtr Sequencer::CurrentCommand() noexcept {
+  ff_msgs::msg::CommandStamped::SharedPtr cmd =
+                              std::make_shared<ff_msgs::msg::CommandStamped>();
   cmd->subsys_name = "INVALID";
   cmd->cmd_name = "INVALID";
   cmd->cmd_id = "plan";
@@ -292,11 +299,11 @@ ff_msgs::msg::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
 
 bool Sequencer::Feedback(ff_msgs::msg::AckCompletedStatus const& ack) noexcept {
   // WE DUN!
-  rclcpp::Time end = rclcpp::Time::now();
+  rclcpp::Time end = nh_->get_clock()->now();
   rclcpp::Duration d = end - start_;
 
   // update the current thing's status
-  AppendStatus(MakeStatus(ack.status, current_milestone_, current_command_, d.sec));
+  AppendStatus(MakeStatus(ack.status, current_milestone_, current_command_, d.seconds()));
 
   // skip ahead
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
@@ -307,7 +314,7 @@ bool Sequencer::Feedback(ff_msgs::msg::AckCompletedStatus const& ack) noexcept {
   } else {
     jsonloader::Station const& s = dynamic_cast<jsonloader::Station const&>(m);
     current_command_++;
-    station_duration_ += d.sec;
+    station_duration_ += d.seconds();
 
     if (static_cast<std::size_t>(current_command_) < s.commands().size())
       return true;

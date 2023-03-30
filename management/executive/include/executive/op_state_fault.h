@@ -27,7 +27,7 @@ class OpStateFault : public OpState {
  public:
   ~OpStateFault() {}
 
-  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+/*  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
   // Guest Science Ack
   OpState* HandleGuestScienceAck(ff_msgs::msg::AckStamped::SharedPtr const ack);
@@ -36,7 +36,7 @@ class OpStateFault : public OpState {
                         std::string const& result_response,
                         std::string const& cmd_id,
                         Action const& action);
-
+*/
  protected:
   explicit OpStateFault(std::string const& name, unsigned char id) :
     OpState(name, id) {}
