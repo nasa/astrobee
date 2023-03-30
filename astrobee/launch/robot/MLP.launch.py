@@ -391,13 +391,13 @@ def generate_launch_description():
         name='mlp_perch',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='perch',
-            #     plugin='perch::PerchNodelet',
-            #     name='perch',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='perch',
+                plugin='perch::PerchComponent',
+                name='perch'),
+                #extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
         ComposableNodeContainer(
