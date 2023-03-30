@@ -16,49 +16,65 @@
  * under the License.
  */
 
-// Standard includes
-#include <ros/ros.h>
-#include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
+// Standard ROS includes
+#include <rclcpp/rclcpp.hpp>
 
 // TF2 support
 #include <tf2_ros/transform_listener.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 // Shared project includes
 #include <msg_conversions/msg_conversions.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_service.h>
 #include <ff_util/ff_fsm.h>
 #include <ff_util/config_server.h>
 #include <ff_util/config_client.h>
 
-// Hardware messages
-#include <ff_hw_msgs/EpsDockStateStamped.h>
+// FSW actions, services, messages
+#include <ff_hw_msgs/msg/eps_dock_state_stamped.hpp>
+#include <ff_hw_msgs/srv/undock.hpp>
+namespace ff_hw_msgs {
+  typedef msg::EpsDockStateStamped EpsDockStateStamped;
+  typedef srv::Undock Undock;
+}  // namespace ff_hw_msgs
 
-// Software messages
-#include <ff_msgs/DockState.h>
+#include <ff_msgs/msg/dock_state.hpp>
+#include <ff_msgs/srv/set_state.hpp>
+#include <ff_msgs/srv/get_pipelines.hpp>
+#include <ff_msgs/action/motion.hpp>
+#include <ff_msgs/action/localization.hpp>
+#include <ff_msgs/action/dock.hpp>
+namespace ff_msgs {
+  typedef msg::DockState DockState;
+  typedef srv::SetState SetState;
+  typedef srv::GetPipelines GetPipelines;
+  typedef action::Motion Motion;
+  typedef action::Localization Localization;
+  typedef action::Dock Dock;
+}  // namespace ff_msgs
 
-// Services
-#include <ff_hw_msgs/Undock.h>
-#include <ff_msgs/SetState.h>
-#include <ff_msgs/GetPipelines.h>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+namespace geometry_msgs {
+  typedef msg::PoseStamped PoseStamped;
+  typedef msg::TransformStamped TransformStamped;
+}
 
-// Actions
-#include <ff_msgs/MotionAction.h>
-#include <ff_msgs/LocalizationAction.h>
-#include <ff_msgs/DockAction.h>
 
 /**
  * \ingroup beh
  */
 namespace dock {
 
+FF_DEFINE_LOGGER("dock");
+
 // Match the internal states and responses with the message definition
 using FSM = ff_util::FSM;
 using STATE = ff_msgs::DockState;
-using RESPONSE = ff_msgs::DockResult;
+using RESPONSE = ff_msgs::Dock::Result;
 
 /*
   This class provides the high-level logic that allows the freeflyer to
@@ -83,7 +99,7 @@ using RESPONSE = ff_msgs::DockResult;
       regardless of the progress (or lack thereof). The end state will
       either be docked (if still attached) or undocked (if in flight).
 */
-class DockNodelet : public ff_util::FreeFlyerNodelet {
+class DockComponent : public ff_util::FreeFlyerComponent {
  public:
   // All possible events that can occur
   enum : FSM::Event {
@@ -109,12 +125,12 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   };
 
   // Constructor boostraps freeflyer nodelet and sets initial FSM state
-  DockNodelet() : ff_util::FreeFlyerNodelet(NODE_DOCK, true),
-    fsm_(STATE::INITIALIZING, std::bind(&DockNodelet::UpdateCallback,
+  explicit DockComponent(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, NODE_DOCK, true),
+    fsm_(STATE::INITIALIZING, std::bind(&DockComponent::UpdateCallback,
       this, std::placeholders::_1, std::placeholders::_2)) {
     // Add the berths -> frame associations
-    berths_[ff_msgs::DockGoal::BERTH_1] = FRAME_NAME_DOCK_BERTH_1;
-    berths_[ff_msgs::DockGoal::BERTH_2] = FRAME_NAME_DOCK_BERTH_2;
+    berths_[ff_msgs::Dock::Goal::BERTH_1] = FRAME_NAME_DOCK_BERTH_1;
+    berths_[ff_msgs::Dock::Goal::BERTH_2] = FRAME_NAME_DOCK_BERTH_2;
     // Add the state transition lambda functions - refer to the FSM diagram
     // [0]
     fsm_.Add(STATE::INITIALIZING,
@@ -134,11 +150,12 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [3]
     fsm_.Add(STATE::UNDOCKED,
       GOAL_DOCK, [this](FSM::Event const& event) -> FSM::State {
-        ff_msgs::GetPipelines srv;
-        if (client_l_.Call(srv)) {
-          if (!srv.response.pipelines.empty() && srv.response.pipelines[0].id == "ar") {
+        ff_msgs::GetPipelines::Request req;
+        auto response = std::make_shared<ff_msgs::GetPipelines::Response>();
+        if (client_l_.call(req, response)) {
+          if (!response->pipelines.empty() && response->pipelines[0].id == "ar") {
             // Move to the approach pose using AR localization
-            Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
+            Move(APPROACH_POSE, ff_msgs::Motion::Goal::NOMINAL);
             return STATE::DOCKING_MOVING_TO_APPROACH_POSE;
           }
         }
@@ -148,7 +165,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [4]
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_ML_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
+        Move(APPROACH_POSE, ff_msgs::Motion::Goal::NOMINAL);
         return STATE::DOCKING_MOVING_TO_APPROACH_POSE;
       });
     // [5]
@@ -175,7 +192,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [31]
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_AR_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Move(BERTHING_POSE, ff_msgs::MotionGoal::PRECISION);
+        Move(BERTHING_POSE, ff_msgs::Motion::Goal::PRECISION);
         return STATE::DOCKING_MOVING_TO_COMPLETE_POSE;
       });
     // [32]
@@ -188,7 +205,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [8]
     fsm_.Add(STATE::DOCKING_MOVING_TO_COMPLETE_POSE,
       EPS_DOCKED, [this](FSM::Event const& event) -> FSM::State {
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
+        Move(APPROACH_POSE, ff_msgs::Motion::Goal::PRECISION);
         return STATE::DOCKING_CHECKING_ATTACHED;
       });
     // [9]
@@ -203,13 +220,13 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           err_ = RESPONSE::MOTION_COMPLETE_FAILED;
           err_msg_ = "Motion failed trying to go to complete pose";
         }
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
+        Move(APPROACH_POSE, ff_msgs::Motion::Goal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
       });
     // [10]
     fsm_.Add(STATE::DOCKING_CHECKING_ATTACHED,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Prep(ff_msgs::MotionGoal::OFF);
+        Prep(ff_msgs::Motion::Goal::OFF);
         return STATE::DOCKING_WAITING_FOR_SPIN_DOWN;
       });
     // [11]
@@ -217,7 +234,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_ATTACHED_FAILED;
         err_msg_ = "Check attached failed, magnets didn't stop robot's movement";
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
+        Move(APPROACH_POSE, ff_msgs::Motion::Goal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
       });
     // [12]
@@ -249,7 +266,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           Switch(LOCALIZATION_NONE);
           return STATE::RECOVERY_SWITCHING_TO_NO_LOC;
         }
-        Prep(ff_msgs::MotionGoal::NOMINAL);
+        Prep(ff_msgs::Motion::Goal::NOMINAL);
         return STATE::UNDOCKING_WAITING_FOR_SPIN_UP;
       });
     // [16]
@@ -310,13 +327,13 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
         // Problem case
         if (!Undock()) {
-          Prep(ff_msgs::MotionGoal::OFF);
+          Prep(ff_msgs::Motion::Goal::OFF);
           err_ = RESPONSE::EPS_UNDOCK_FAILED;
           err_msg_ = "There was a problem calling the eps undock service";
           return STATE::RECOVERY_WAITING_FOR_SPIN_DOWN;
         }
         // Nominal case
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
+        Move(APPROACH_POSE, ff_msgs::Motion::Goal::NOMINAL);
         return STATE::UNDOCKING_MOVING_TO_APPROACH_POSE;
       });
     // [27]
@@ -337,7 +354,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::PREP_ENABLE_FAILED;
         err_msg_ = "Spin up was not successful";
-        Prep(ff_msgs::MotionGoal::OFF);
+        Prep(ff_msgs::Motion::Goal::OFF);
         return STATE::RECOVERY_WAITING_FOR_SPIN_DOWN;
       });
     // [30]
@@ -353,7 +370,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(GOAL_CANCEL | GOAL_PREEMPT,
       [this](FSM::State const& state, FSM::Event const& event) -> FSM::State {
         switch (state) {
-        // Values we certaintly don't want to mess with
+        // Values we certainly don't want to mess with
         default:
         case STATE::INITIALIZING:
         case STATE::UNKNOWN:
@@ -395,41 +412,42 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           Result(RESPONSE::PREEMPTED, "Third party preempted operation");
           break;
         }
-        // Default case is to preserve the stata
+        // Default case is to preserve the state
         return state;
       });
   }
-  ~DockNodelet() {}
+  ~DockComponent() {}
 
  protected:
-  // Called to initialize this nodelet
-  void Initialize(ros::NodeHandle *nh) {
+  // Called to initialize this component
+  void Initialize(NodeHandle &nh) {
     // Grab some configuration parameters for this node from the LUA config reader
-    cfg_.Initialize(GetPrivateHandle(), "behaviors/dock.config");
-    if (!cfg_.Listen(boost::bind(
-      &DockNodelet::ReconfigureCallback, this, _1)))
+    cfg_.AddFile("behaviors/dock.config");
+    if (!cfg_.Initialize(nh))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Could not load config");
+                        "Could not start config server");
+
     // One shot timer to check if we undock with a timeout
-    timer_eps_ = nh->createTimer(
-      ros::Duration(cfg_.Get<double>("timeout_eps_response")),
-      &DockNodelet::DockTimerCallback, this, true, false);
+    timer_eps_.createTimer(cfg_.Get<double>("timeout_eps_response"),
+      std::bind(&DockComponent::DockTimerCallback, this), nh, true, false);
+
+    // Set buffer
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(nh->get_clock());
 
     // Create a transform buffer to listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
-      new tf2_ros::TransformListener(tf_buffer_));
+      new tf2_ros::TransformListener(*tf_buffer_));
 
     // Publish the docking state as a latched topic
-    pub_ = nh->advertise<ff_msgs::DockState>(
-      TOPIC_BEHAVIORS_DOCKING_STATE, 1, true);
+    pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::DockState, TOPIC_BEHAVIORS_DOCKING_STATE, 1);
 
     // Subscribe to be notified when the dock state changes
-    sub_s_ = nh->subscribe(TOPIC_HARDWARE_EPS_DOCK_STATE, 5,
-      &DockNodelet::DockStateCallback, this);
+    sub_s_ = FF_CREATE_SUBSCRIBER(nh, ff_hw_msgs::EpsDockStateStamped, TOPIC_HARDWARE_EPS_DOCK_STATE, 5,
+      std::bind(&DockComponent::DockStateCallback, this, std::placeholders::_1));
 
     // Allow the state to be manually set
-    server_set_state_ = nh->advertiseService(SERVICE_BEHAVIORS_DOCK_SET_STATE,
-      &DockNodelet::SetStateCallback, this);
+    server_set_state_ = FF_CREATE_SERVICE(nh, ff_msgs::SetState, SERVICE_BEHAVIORS_DOCK_SET_STATE,
+      std::bind(&DockComponent::SetStateCallback, this, std::placeholders::_1, std::placeholders::_2));
 
     // Query the current localization pipeline
     client_l_.Create(nh, SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE);
@@ -437,21 +455,21 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // Contact EPS service for undocking
     client_u_.SetConnectedTimeout(cfg_.Get<double>("timeout_undock_connected"));
     client_u_.SetConnectedCallback(std::bind(
-      &DockNodelet::ConnectedCallback, this));
+      &DockComponent::ConnectedCallback, this));
     client_u_.SetTimeoutCallback(std::bind(
-      &DockNodelet::UndockTimeoutCallback, this));
+      &DockComponent::UndockTimeoutCallback, this));
     client_u_.Create(nh, SERVICE_HARDWARE_EPS_UNDOCK);
 
     // Setup move client action
     client_m_.SetConnectedTimeout(cfg_.Get<double>("timeout_motion_connected"));
     client_m_.SetActiveTimeout(cfg_.Get<double>("timeout_motion_active"));
     client_m_.SetResponseTimeout(cfg_.Get<double>("timeout_motion_response"));
-    client_m_.SetFeedbackCallback(std::bind(&DockNodelet::MFeedbackCallback,
+    client_m_.SetFeedbackCallback(std::bind(&DockComponent::MFeedbackCallback,
       this, std::placeholders::_1));
-    client_m_.SetResultCallback(std::bind(&DockNodelet::MResultCallback,
+    client_m_.SetResultCallback(std::bind(&DockComponent::MResultCallback,
       this, std::placeholders::_1, std::placeholders::_2));
     client_m_.SetConnectedCallback(std::bind(
-      &DockNodelet::ConnectedCallback, this));
+      &DockComponent::ConnectedCallback, this));
     client_m_.Create(nh, ACTION_MOBILITY_MOTION);
 
     // Setup switch client action
@@ -460,20 +478,20 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     client_s_.SetResponseTimeout(cfg_.Get<double>("timeout_switch_response"));
     client_s_.SetDeadlineTimeout(cfg_.Get<double>("timeout_switch_deadline"));
     client_s_.SetFeedbackCallback(std::bind(
-      &DockNodelet::SFeedbackCallback, this, std::placeholders::_1));
-    client_s_.SetResultCallback(std::bind(&DockNodelet::SResultCallback,
+      &DockComponent::SFeedbackCallback, this, std::placeholders::_1));
+    client_s_.SetResultCallback(std::bind(&DockComponent::SResultCallback,
       this, std::placeholders::_1, std::placeholders::_2));
-    client_s_.SetConnectedCallback(std::bind(&DockNodelet::ConnectedCallback,
+    client_s_.SetConnectedCallback(std::bind(&DockComponent::ConnectedCallback,
       this));
     client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
 
     // Setup the execute action
     server_.SetGoalCallback(std::bind(
-      &DockNodelet::GoalCallback, this, std::placeholders::_1));
+      &DockComponent::GoalCallback, this, std::placeholders::_1));
     server_.SetPreemptCallback(std::bind(
-      &DockNodelet::PreemptCallback, this));
+      &DockComponent::PreemptCallback, this));
     server_.SetCancelCallback(std::bind(
-      &DockNodelet::CancelCallback, this));
+      &DockComponent::CancelCallback, this));
     server_.Create(nh, ACTION_BEHAVIORS_DOCK);
   }
 
@@ -491,18 +509,18 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
 
   // Ensure all clients are connected
   void ConnectedCallback() {
-    NODELET_DEBUG_STREAM("ConnectedCallback()");
+    FF_DEBUG_STREAM("ConnectedCallback()");
     if (!client_u_.IsConnected()) return;       // Undock service
     if (!client_s_.IsConnected()) return;       // Switch action
     if (!client_m_.IsConnected()) return;       // Move action
     fsm_.Update(READY);                         // Ready!
   }
 
-  // Called on registration of aplanner
-  bool SetStateCallback(ff_msgs::SetState::Request& req,
-                        ff_msgs::SetState::Response& res) {
-    fsm_.SetState(req.state);
-    res.success = true;
+  // Called on registration of a planner
+  bool SetStateCallback(const std::shared_ptr<ff_msgs::SetState::Request> req,
+                        std::shared_ptr<ff_msgs::SetState::Response> res) {
+    fsm_.SetState(req->state);
+    res->success = true;
     UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
     return true;
   }
@@ -520,9 +538,10 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       break;
     }
     // Package up the feedback
-    ff_msgs::DockResult result;
-    result.fsm_result = msg;
-    result.response = response;
+    auto result = std::make_shared<ff_msgs::Dock::Result>();
+    result->fsm_result = msg;
+    result->response = response;
+
     if (response > 0)
       server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
     else if (response < 0)
@@ -537,7 +556,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // Debug events
     ff_msgs::DockState msg;
     msg.header.frame_id = GetPlatform();
-    msg.header.stamp = ros::Time::now();
+    msg.header.stamp = GetTimeNow();
     msg.state = state;
     // Debug events
     switch (event) {
@@ -554,7 +573,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     case MOTION_FAILED:    msg.fsm_event = "MOTION_FAILED";    break;
     case MANUAL_STATE_SET: msg.fsm_event = "MANUAL_STATE_SET"; break;
     }
-    NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
+    FF_DEBUG_STREAM("Received event " << msg.fsm_event);
     // Debug state changes
     switch (state) {
     case STATE::INITIALIZING:
@@ -592,9 +611,9 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::RECOVERY_SWITCHING_TO_ML_LOC:
       msg.fsm_state = "RECOVERY_SWITCHING_TO_ML_LOC";      break;
     }
-    NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
+    FF_DEBUG_STREAM("State changed to " << msg.fsm_state);
     // Broadcast the docking state
-    pub_.publish(msg);
+    pub_->publish(msg);
     // Send the feedback if needed
     switch (state) {
     case STATE::INITIALIZING:
@@ -604,8 +623,8 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       break;
     default:
       {
-        ff_msgs::DockFeedback feedback;
-        feedback.state = msg;
+        auto feedback = std::make_shared<ff_msgs::Dock::Feedback>();
+        feedback->state = msg;
         server_.SendFeedback(feedback);
       }
     }
@@ -615,9 +634,9 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   bool CloseEnoughToApproach(std::string berth) {
     try {
       // Look up the body frame in the berth frame
-      geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
+      geometry_msgs::TransformStamped tf = tf_buffer_->lookupTransform(
         berth + "/approach", GetTransform(FRAME_NAME_BODY),
-          ros::Time(0));
+          tf2::TimePointZero);
       // Copy the transform
       double d = tf.transform.translation.x * tf.transform.translation.x
                + tf.transform.translation.y * tf.transform.translation.y
@@ -625,7 +644,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       // We need to be within the initial tolerance to start docking
       if (sqrt(d) > cfg_.Get<double>("initial_tolerance"))
         return false;
-    } catch (tf2::TransformException &ex) {
+    } catch (const tf2::TransformException &ex) {
       return false;
     }
     return true;
@@ -634,17 +653,17 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   bool CheckBerth() {
     // Look for the berth and confirm localization is working
     std::map<uint8_t, std::string>::iterator it;
-    ros::Time begin = ros::Time::now();
+    rclcpp::Time begin = GetTimeNow();
     // Some number bigger than the tolerance
     double d = cfg_.Get<double>("detection_tolerance") * 2;
     // Give localization time to stabilize if berth not detected within detection_timeout
-    while (((ros::Time::now() - begin).toSec() < cfg_.Get<double>("detection_timeout"))
+    while (((GetTimeNow() - begin).seconds() < cfg_.Get<double>("detection_timeout"))
           && sqrt(d) > cfg_.Get<double>("detection_tolerance")) {
       for (it = berths_.begin(); it != berths_.end(); it++) {
         try {
           // Look up the body frame in the berth frame
-          geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-            it->second + "/complete", GetTransform(FRAME_NAME_BODY), ros::Time(0));
+          geometry_msgs::TransformStamped tf = tf_buffer_->lookupTransform(
+            it->second + "/complete", GetTransform(FRAME_NAME_BODY), tf2::TimePointZero);
           // Copy the transform
           d = tf.transform.translation.x * tf.transform.translation.x
             + tf.transform.translation.y * tf.transform.translation.y
@@ -653,16 +672,16 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           if (sqrt(d) < cfg_.Get<double>("detection_tolerance"))
             break;
           else
-            ros::Duration(0.5).sleep();            // sleep for half a second
-        } catch (tf2::TransformException &ex) {}
+            rclcpp::sleep_for(std::chrono::milliseconds(500));  // sleep for half a second
+        } catch (const tf2::TransformException &ex) {}
       }
     }
     // Let the use know what's happening
     if (it == berths_.end()) {
-      NODELET_ERROR_STREAM("Could not detect berth from current pose");
+      FF_ERROR_STREAM("Could not detect berth from current pose");
       return false;
     } else {
-      NODELET_DEBUG_STREAM("Berth frame detected: " << it->second);
+      FF_DEBUG_STREAM("Berth frame detected: " << it->second);
       // At this point we should have good AR or ML localization, so we can
       // determine our pose to within a couple centimeters.
       frame_ = it->second;
@@ -676,26 +695,27 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // in an EPS_TIMEOUT event, which the FSM will use to recover.
     timer_eps_.start();
     // Call the undock service
-    ff_hw_msgs::Undock msg;
-    if (!client_u_.Call(msg))
+    ff_hw_msgs::Undock::Request request;
+    auto response = std::make_shared<ff_hw_msgs::Undock::Response>();
+    if (!client_u_.Call(request, response))
       return false;
     // Check that we actually called EPS undock() successfully
-    switch (msg.response.value) {
+    switch (response->value) {
     case ff_hw_msgs::Undock::Response::SUCCESS:
-      NODELET_DEBUG_STREAM("Undocking called successfully");
+      FF_DEBUG_STREAM("Undocking called successfully");
       return true;
     case ff_hw_msgs::Undock::Response::UNDOCK_FAILED:
     default:
       break;
     }
-    NODELET_DEBUG_STREAM("There was a problem calling the undock service");
+    FF_DEBUG_STREAM("There was a problem calling the undock service");
     return false;
   }
 
-  void DockStateCallback(ff_hw_msgs::EpsDockStateStamped::ConstPtr const& msg) {
+  void DockStateCallback(const std::shared_ptr<ff_hw_msgs::EpsDockStateStamped> msg) {
     switch (msg->state) {
     // We don't worry about a timeout on docking, because we'll get a motion
-    // failure if dockign doesn't succeed.
+    // failure if docking doesn't succeed.
     case ff_hw_msgs::EpsDockStateStamped::CONNECTING:
     case ff_hw_msgs::EpsDockStateStamped::DOCKED:
       return fsm_.Update(EPS_DOCKED);
@@ -708,7 +728,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     }
   }
 
-  void DockTimerCallback(const ros::TimerEvent&) {
+  void DockTimerCallback() {
     return fsm_.Update(EPS_TIMEOUT);
   }
 
@@ -717,19 +737,19 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   // Helper function for localization switching
   bool Switch(std::string const& pipeline) {
     // Send the switch goal
-    ff_msgs::LocalizationGoal goal;
-    goal.command = ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE;
+    ff_msgs::Localization::Goal goal;
+    goal.command = ff_msgs::Localization::Goal::COMMAND_SWITCH_PIPELINE;
     goal.pipeline = pipeline;
     return client_s_.SendGoal(goal);
   }
 
   // Ignore the switch feedback for now
   void SFeedbackCallback(
-    ff_msgs::LocalizationFeedbackConstPtr const& feedback) {}
+    const std::shared_ptr<const ff_msgs::Localization::Feedback> feedback) {}
 
   // Do something with the switch result
   void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-    ff_msgs::LocalizationResultConstPtr const& result) {
+    std::shared_ptr<const ff_msgs::Localization::Result> result) {
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(SWITCH_SUCCESS);
@@ -742,8 +762,8 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
 
   // Prepare for a motion
   bool Prep(std::string const& flight_mode) {
-    static ff_msgs::MotionGoal goal;
-    goal.command = ff_msgs::MotionGoal::PREP;
+    static ff_msgs::Motion::Goal goal;
+    goal.command = ff_msgs::Motion::Goal::PREP;
     goal.flight_mode = flight_mode;
     return client_m_.SendGoal(goal);
   }
@@ -751,14 +771,14 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   // Send a move command
   bool Move(DockPose type, std::string const& mode) {
     // Create a new motion foal
-    ff_msgs::MotionGoal goal;
-    goal.command = ff_msgs::MotionGoal::MOVE;
+    ff_msgs::Motion::Goal goal;
+    goal.command = ff_msgs::Motion::Goal::MOVE;
     goal.flight_mode = mode;
 
     // Package up the desired end pose
     geometry_msgs::PoseStamped msg;
-    msg.header.stamp = ros::Time::now();
-    ff_util::ConfigClient cfg(GetPlatformHandle(), NODE_CHOREOGRAPHER);
+    msg.header.stamp = GetTimeNow();
+    ff_util::ConfigClient cfg(node_, NODE_CHOREOGRAPHER);
     // Set parameters for the choreographer
     cfg.Set<bool>("enable_collision_checking", false);
     cfg.Set<bool>("enable_validation", false);
@@ -823,18 +843,18 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     for (auto & pose : goal.states) {
       try {
         // Look up the world -> berth transform
-        geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-          "world", pose.header.frame_id, ros::Time(0));
+        geometry_msgs::TransformStamped tf = tf_buffer_->lookupTransform(
+          "world", pose.header.frame_id, tf2::TimePointZero);
         // Copy the transform
         pose.pose = msg_conversions::ros_transform_to_ros_pose(tf.transform);
-      } catch (tf2::TransformException &ex) {
-        NODELET_WARN_STREAM("Transform failed" << ex.what());
+      } catch (const tf2::TransformException &ex) {
+        FF_WARN_STREAM("Transform failed" << ex.what());
         return false;
       }
     }
     // Reconfigure the choreographer
     if (!cfg.Reconfigure()) {
-      NODELET_ERROR_STREAM("Failed to reconfigure choreographer");
+      FF_ERROR_STREAM("Failed to reconfigure choreographer");
       return false;
     }
     // Send the goal to the mobility subsystem
@@ -842,11 +862,11 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Ignore the move feedback, for now
-  void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {}
+  void MFeedbackCallback(const std::shared_ptr<const ff_msgs::Motion::Feedback> feedback) {}
 
   // Result of a move action
   void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-    ff_msgs::MotionResultConstPtr const& result) {
+    std::shared_ptr<const ff_msgs::Motion::Result> result) {
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(MOTION_SUCCESS);
@@ -858,23 +878,23 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   // DOCK ACTION SERVER
 
   // A new arm action has been called
-  void GoalCallback(ff_msgs::DockGoalConstPtr const& goal) {
-    ff_msgs::DockResult result;
+  void GoalCallback(std::shared_ptr<const ff_msgs::Dock::Goal> goal) {
+    auto result = std::make_shared<ff_msgs::Dock::Result>();
     switch (goal->command) {
-    case ff_msgs::DockGoal::DOCK:
+    case ff_msgs::Dock::Goal::DOCK:
       // We are undocked
       if (fsm_.GetState() == STATE::UNDOCKED) {
         // Do we know about the specified berth?
         if (berths_.find(goal->berth) == berths_.end()) {
-          result.fsm_result = "Invalid berth specified";
-          result.response = RESPONSE::INVALID_BERTH;
+          result->fsm_result = "Invalid berth specified";
+          result->response = RESPONSE::INVALID_BERTH;
           server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
           return;
         }
         // Check that we are close enough to the approach pose
         if (!CloseEnoughToApproach(berths_[goal->berth]) && !goal->return_dock) {
-          result.fsm_result = "Too far from dock";
-          result.response = RESPONSE::TOO_FAR_AWAY_FROM_APPROACH;
+          result->fsm_result = "Too far from dock";
+          result->response = RESPONSE::TOO_FAR_AWAY_FROM_APPROACH;
           server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
           return;
         }
@@ -884,39 +904,39 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
         return fsm_.Update(GOAL_DOCK);
       // We are already docked
       } else if (fsm_.GetState() == STATE::DOCKED) {
-        result.fsm_result = "The robot is already docked";
-        result.response = RESPONSE::ALREADY_DOCKED;
+        result->fsm_result = "The robot is already docked";
+        result->response = RESPONSE::ALREADY_DOCKED;
         server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
         return;
       // We are not in  a position to dock
       } else {
-        result.fsm_result = "Docking only possible if undocked";
-        result.response = RESPONSE::NOT_IN_UNDOCKED_STATE;
+        result->fsm_result = "Docking only possible if undocked";
+        result->response = RESPONSE::NOT_IN_UNDOCKED_STATE;
         server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
         return;
       }
       break;
     // Undock command
-    case ff_msgs::DockGoal::UNDOCK:
+    case ff_msgs::Dock::Goal::UNDOCK:
       // We are docked
       if (fsm_.GetState() == STATE::DOCKED) {
         return fsm_.Update(GOAL_UNDOCK);
       // We are already undocked
       } else if (fsm_.GetState() == STATE::UNDOCKED) {
-        result.fsm_result = "The robot is already undocked";
-        result.response = RESPONSE::ALREADY_UNDOCKED;
+        result->fsm_result = "The robot is already undocked";
+        result->response = RESPONSE::ALREADY_UNDOCKED;
         server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
         return;
       // We are not in a position to undock
       } else {
-        result.fsm_result = "Undocking only possible if docked";
-        result.response = RESPONSE::NOT_IN_DOCKED_STATE;
+        result->fsm_result = "Undocking only possible if docked";
+        result->response = RESPONSE::NOT_IN_DOCKED_STATE;
       }
       break;
     // Invalid command
     default:
-      result.fsm_result = "Invalid command in request";
-      result.response = RESPONSE::INVALID_COMMAND;
+      result->fsm_result = "Invalid command in request";
+      result->response = RESPONSE::INVALID_COMMAND;
       server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
       break;
     }
@@ -932,38 +952,32 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     return fsm_.Update(GOAL_CANCEL);
   }
 
-  // RECONFIGURE REQUESTS
-
-  // When a new reconfigure request comes in, deal with that request
-  bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
-    if ( fsm_.GetState() == STATE::UNDOCKED
-      || fsm_.GetState() == STATE::DOCKED)
-      return cfg_.Reconfigure(config);
-    return false;
-  }
-
  protected:
   std::map<uint8_t, std::string> berths_;
   ff_util::FSM fsm_;
-  ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_m_;
-  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
+  ff_util::FreeFlyerActionClient<ff_msgs::Motion> client_m_;
+  ff_util::FreeFlyerActionClient<ff_msgs::Localization> client_s_;
   ff_util::FreeFlyerServiceClient<ff_msgs::GetPipelines>  client_l_;
   ff_util::FreeFlyerServiceClient<ff_hw_msgs::Undock> client_u_;
-  ff_util::FreeFlyerActionServer<ff_msgs::DockAction> server_;
+  ff_util::FreeFlyerActionServer<ff_msgs::Dock> server_;
   ff_util::ConfigServer cfg_;
-  tf2_ros::Buffer tf_buffer_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
-  ros::Publisher pub_;
-  ros::Subscriber sub_s_;
-  ros::Subscriber sub_p_;
-  ros::ServiceServer server_set_state_;
-  ros::Timer timer_eps_;
-  ros::Timer timer_pmc_;
+  rclcpp::Publisher<ff_msgs::DockState>::SharedPtr pub_;
+  rclcpp::Subscription<ff_hw_msgs::EpsDockStateStamped>::SharedPtr sub_s_;
+  rclcpp::Service<ff_msgs::SetState>::SharedPtr server_set_state_;
+  ff_util::FreeFlyerTimer timer_eps_;
+  ff_util::FreeFlyerTimer timer_pmc_;
   std::string frame_;
   int32_t err_;
   std::string err_msg_;
 };
 
-PLUGINLIB_EXPORT_CLASS(dock::DockNodelet, nodelet::Nodelet);
-
 }  // namespace dock
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(dock::DockComponent)
