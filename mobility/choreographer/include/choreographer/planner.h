@@ -94,7 +94,8 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   // Destructor deregisters with choreographer
   virtual ~PlannerImplementation() {
     registration_.unregister = true;
-    // client_r_.Call(registration_);
+    auto response = std::make_shared<ff_msgs::RegisterPlanner::Response>();
+    client_r_.call(registration_, response);
   }
 
  protected:
