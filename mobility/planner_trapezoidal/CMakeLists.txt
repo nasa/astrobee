@@ -62,34 +62,19 @@ target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_common ff_util ff_msgs PCL choreographer tf2_geometry_msgs)
+ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 rclcpp_components_register_nodes(${PROJECT_NAME} "planner_trapezoidal::PlannerTrapezoidalComponent")
 
 #############
 ## Install ##
 #############
 
-# ament_export_dependencies(ament_cmake rclcpp)
-ament_export_include_directories(include)
+target_include_directories(planner_trapezoidal
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
-# # Mark libraries for installation
-# install(TARGETS
-#   ARCHIVE DESTINATION lib/${PROJECT_NAME}
-#   LIBRARY DESTINATION lib/${PROJECT_NAME}
-#   RUNTIME DESTINATION bin
-# )
 
-# # Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}
-#   DESTINATION include/${PROJECT_NAME}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
@@ -100,6 +85,12 @@ install(TARGETS ${PROJECT_NAME}
   INCLUDES DESTINATION include
 )
 
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
 
 # Mark launch files for installation
 install(DIRECTORY launch/

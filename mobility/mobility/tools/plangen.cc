@@ -21,7 +21,7 @@
 #include <gflags/gflags_completions.h>
 
 // Include RPOS
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // FSW includes
 #include <ff_common/ff_names.h>
@@ -30,7 +30,10 @@
 #include <jsonloader/planio.h>
 
 // Primitive actions
-#include <ff_msgs/PlanAction.h>
+#include <ff_msgs/action/plan.hpp>
+namespace ff_msgs {
+typedef action::Plan Plan;
+}  // namespace ff_msgs
 
 // For the trapezoidal planner implementation
 #include <planner_trapezoidal/planner_trapezoidal.h>
@@ -172,7 +175,7 @@ int main(int argc, char *argv[]) {
     ff_util::Segment::const_iterator it;
     for (it = segment.begin(); it != segment.end(); it++) {
       Eigen::VectorXd S(20);
-      S << (it->when).toSec(), it->pose.position.x, it->pose.position.y, it->pose.position.z,
+      S << rclcpp::Time(it->when).toSec(), it->pose.position.x, it->pose.position.y, it->pose.position.z,
         it->twist.linear.x, it->twist.linear.y, it->twist.linear.z,
         it->accel.linear.x, it->accel.linear.y, it->accel.linear.z,
         it->pose.orientation.x, it->pose.orientation.y,
@@ -186,7 +189,7 @@ int main(int argc, char *argv[]) {
     } else if (FLAGS_output_type == "csv") {
       // Write accelerations only
       for (it = segment.begin(); it != segment.end(); it++) {
-        ofs << (it->when - segment.begin()->when).toSec()
+        ofs << (rclcpp::Time(it->when) - rclcpp::Time(segment.begin()->when)).toSec()
             << "," << it->accel.linear.x
             << "," << it->accel.linear.y
             << "," << it->accel.linear.z

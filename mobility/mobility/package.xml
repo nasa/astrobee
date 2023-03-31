@@ -19,17 +19,13 @@
   <build_depend>ff_msgs</build_depend>
   <build_depend>ff_util</build_depend>
   <build_depend>choreographer</build_depend>
-  <!-- <build_depend>mapper</build_depend> -->
   <build_depend>planner_trapezoidal</build_depend>
-  <build_depend>planner_qp</build_depend>
   <build_depend>jsonloader</build_depend>
 
   <exec_depend>ff_msgs</exec_depend>
   <exec_depend>ff_util</exec_depend>
   <exec_depend>choreographer</exec_depend>
-  <!-- <exec_depend>mapper</exec_depend> -->
   <exec_depend>planner_trapezoidal</exec_depend>
-  <exec_depend>planner_qp</exec_depend>
   <exec_depend>jsonloader</exec_depend>
   <export>
     <build_type>ament_cmake</build_type>

@@ -31,11 +31,10 @@ find_package(rclcpp REQUIRED)
 find_package(ff_common REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
-# find_package(mapper REQUIRED)
 find_package(planner_trapezoidal REQUIRED)
-# find_package(planner_qp REQUIRED)
 find_package(jsonloader REQUIRED)
 
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 ###########
 ## Build ##
@@ -47,11 +46,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ executable: plangen
-# add_executable(plangen tools/plangen.cc)
-# add_dependencies(plangen ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(plangen
-#   gflags glog ${catkin_LIBRARIES})
+# Declare a C++ executable: plangen
+add_executable(plangen tools/plangen.cc)
+ament_target_dependencies(plangen rclcpp ff_common ff_util ff_msgs jsonloader planner_trapezoidal)
+target_link_libraries(plangen
+  gflags glog ${Boost_LIBRARIES})
 
 ## Declare a C++ executable: teleop
 add_executable(teleop tools/teleop.cc)
@@ -62,6 +61,12 @@ target_link_libraries(teleop
 #############
 ## Install ##
 #############
+
+ament_export_dependencies(
+  ff_common
+  ff_util
+  jsonloader
+)
 
 # Install C++ executables
 # install(TARGETS plangen DESTINATION bin)
