@@ -126,26 +126,6 @@ ament_export_dependencies(
 
 ament_export_include_directories(include)
 
-# # Mark libraries for installation
-# install(TARGETS ${PROJECT_NAME}
-#   ARCHIVE DESTINATION lib
-#   LIBRARY DESTINATION lib
-#   RUNTIME DESTINATION bin
-# )
-
-# # Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}
-#   DESTINATION include
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
-
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
   EXPORT choreographer
@@ -153,6 +133,13 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 
 ament_package()

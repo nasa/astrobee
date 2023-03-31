@@ -174,7 +174,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     auto response = std::make_shared<ff_msgs::GetMap::Response>();
     client_o_.waitForExistence(5.0);
     if (client_o_.isValid() && client_o_.call(request, response)) {
-      // pcl::fromROSMsg(response->points, *points);
+      pcl::fromROSMsg(response->points, *points);
       *resolution = response->resolution;
       return true;
     }

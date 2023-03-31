@@ -33,10 +33,7 @@
 
 namespace ff_util {
 
-#ifndef FF_LOGGER
-#define FF_LOGGER
 FF_DEFINE_LOGGER("ff_action")
-#endif  // FF_LOGGER
 
 /////////////////////////////// ACTION SERVER CODE /////////////////////////////
 

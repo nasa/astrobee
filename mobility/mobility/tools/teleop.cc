@@ -385,16 +385,16 @@ int main(int argc, char *argv[]) {
   // client_s_.SetConnectedTimeout(FLAGS_connect);
   // client_s_.SetActiveTimeout(FLAGS_active);
   // client_s_.SetResponseTimeout(FLAGS_response);
-  if (FLAGS_deadline > 0)
-    client_s_.SetDeadlineTimeout(FLAGS_deadline);
-  client_s_.SetFeedbackCallback(std::bind(
-    SFeedbackCallback, std::placeholders::_1));
-  client_s_.SetResultCallback(std::bind(
-    SResultCallback, std::placeholders::_1, std::placeholders::_2,
-    &client_t_));
-  client_s_.SetConnectedCallback(std::bind(ConnectedCallback,
-    &client_s_, &client_t_));
-  client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
+  // if (FLAGS_deadline > 0)
+  //   client_s_.SetDeadlineTimeout(FLAGS_deadline);
+  // client_s_.SetFeedbackCallback(std::bind(
+  //   SFeedbackCallback, std::placeholders::_1));
+  // client_s_.SetResultCallback(std::bind(
+  //   SResultCallback, std::placeholders::_1, std::placeholders::_2,
+  //   &client_t_));
+  // client_s_.SetConnectedCallback(std::bind(ConnectedCallback,
+  //   &client_s_, &client_t_));
+  // client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
   // Setup MOBILITY action
   client_t_.SetConnectedTimeout(FLAGS_connect);
   client_t_.SetActiveTimeout(FLAGS_active);

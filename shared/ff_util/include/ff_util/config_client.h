@@ -27,11 +27,6 @@
 
 namespace ff_util {
 
-#ifndef FF_LOGGER
-#define FF_LOGGER
-FF_DEFINE_LOGGER("config_client");
-#endif  // FF_LOGGER
-
 class ConfigClient {
  public:
   // Constructor and destructor
@@ -43,7 +38,7 @@ class ConfigClient {
   template<typename T>
   bool Get(const std::string &name, T &value) {
     if (!parameters_client_->has_parameter(name)) {
-        FF_ERROR_STREAM("Cannot query parameter " << name);
+        Error("Cannot query parameter " + name);
         return false;
     }
     value = parameters_client_->get_parameter<T>(name);
@@ -55,7 +50,7 @@ class ConfigClient {
     rclcpp::Parameter p(name, value);
     auto result = parameters_client_->set_parameters({p});
     if (result.size() != 1 || !result[0].successful) {
-      FF_WARN_STREAM("Failed to set parameter " << name);
+      Error("Failed to set parameter " + name);
       return false;
     }
     return true;
@@ -65,12 +60,13 @@ class ConfigClient {
   T Get(const std::string &name) {
     T tmp;
     if (!Get(name, tmp)) {
-      FF_ERROR_STREAM("Cannot query parameter " << name);
+      Error("Cannot query parameter " + name);
     }
     return tmp;
   }
 
  private:
+  void Error(std::string out);
   // Private members
   std::shared_ptr<rclcpp::SyncParametersClient> parameters_client_;
 };

@@ -21,6 +21,8 @@
 
 #include <vector>
 
+FF_DEFINE_LOGGER("config_client");
+
 namespace ff_util {
 
 ConfigClient::ConfigClient(NodeHandle & nh, const std::string &node) {
@@ -30,4 +32,7 @@ ConfigClient::ConfigClient(NodeHandle & nh, const std::string &node) {
 
 ConfigClient::~ConfigClient() {}
 
+void ConfigClient::Error(std::string s) {
+  FF_ERROR_STREAM(s);
+}
 }  //  namespace ff_util
