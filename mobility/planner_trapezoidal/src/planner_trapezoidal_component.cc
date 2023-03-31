@@ -71,18 +71,10 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
       return false;
     }
 
-    // Setup a timer to forward diagnostics
-    timer_d_.createTimer(1 / DEFAULT_DIAGNOSTICS_RATE,
-                         std::bind(&PlannerTrapezoidalComponent::DiagnosticsCallback, this), nh, false, true);
-
     // Notify initialization complete
     FF_DEBUG_STREAM("Initialization complete");
     // Success
     return true;
-  }
-
-  void DiagnosticsCallback() {
-  //   // SendDiagnostics(cfg_.Dump());
   }
 
   double GetEpsilon() {
