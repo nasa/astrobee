@@ -71,9 +71,9 @@ class OpState {
                               std::string const& action_result = "");
 
   std::string GetActionString(Action const& action);
-
-  virtual bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 */
+  virtual bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+
   OpState* TransitionToState(unsigned char id);
   std::string const& name() const {return name_;}
   unsigned char const& id() const {return id_;}

@@ -191,14 +191,14 @@ std::string OpState::GetActionString(Action const& action) {
 
   return action_str;
 }
-
+*/
 bool OpState::PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   AckCmd(cmd->cmd_id,
          ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
          ("Pause plan not accepted in opstate " + name() + "!"));
   return false;
 }
-*/
+
 OpState* OpState::TransitionToState(unsigned char id) {
   if (id == ff_msgs::msg::OpState::READY) {
     return OpStateRepo::Instance()->ready()->StartupState();
