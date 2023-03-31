@@ -297,6 +297,7 @@ void ConnectedCallback(ff_util::FreeFlyerActionClient<ff_msgs::Localization> * c
   if (sent_)                     return;  // Avoid calling twice
   else
     sent_ = true;
+  // TODO(@mgouveia): Comment this back in when action exists
   // Package up and send the move goal
   // if (!FLAGS_loc.empty() || FLAGS_bias || FLAGS_reset) {
   //   ff_msgs::Localization::Goal goal;
@@ -381,6 +382,7 @@ int main(int argc, char *argv[]) {
   // TF2 Subscriber
   buffer_.reset(new tf2_ros::Buffer(nh->get_clock()));
   listener_.reset(new tf2_ros::TransformListener(*buffer_));
+  // TODO(@mgouveia): Comment this back in when action exists
   // Setup SWITCH action
   // client_s_.SetConnectedTimeout(FLAGS_connect);
   // client_s_.SetActiveTimeout(FLAGS_active);

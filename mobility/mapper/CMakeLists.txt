@@ -102,6 +102,7 @@ endif()
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
+  EXPORT mapper
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
