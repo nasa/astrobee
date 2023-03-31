@@ -62,6 +62,21 @@ ament_export_targets(ff_util HAS_LIBRARY_TARGET)
 
 # ament_target_dependencies(pose_stamped_msg_cnv rclcpp ff_common tf2_ros)
 
+add_library(test_ff_service SHARED
+  test/test_ff_service_server.cc
+  src/ff_component/ff_component.cc
+)
+target_compile_definitions(test_ff_service PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(test_ff_service rclcpp rclcpp_components ff_common config_reader ff_msgs)
+rclcpp_components_register_nodes(test_ff_service "ff_util::TestServiceServer")
+
+add_library(test_ff_client SHARED
+  test/test_ff_service_client.cc
+  src/ff_component/ff_component.cc
+)
+target_compile_definitions(test_ff_client PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(test_ff_client rclcpp rclcpp_components ff_common config_reader ff_msgs)
+rclcpp_components_register_nodes(test_ff_client "ff_util::TestServiceClient")
 
 #############
 ## Linting ##
@@ -87,11 +102,17 @@ if(BUILD_TESTING)
   add_ros_test(test/launch/test_ff_timer.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_service
-  # ament_add_gtest_executable(test_ff_service
-  #   test/test_ff_service.cc
-  # )
-  # target_link_libraries(test_ff_service ff_util)
-  # add_ros_test(test/launch/test_ff_service.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+  ament_add_gtest_executable(test_ff_service_nominal
+    test/test_ff_service_nominal.cc
+  )
+  target_link_libraries(test_ff_service_nominal test_ff_service)
+  add_ros_test(test/launch/test_ff_service_nominal.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+
+  ament_add_gtest_executable(test_ff_service_no_connection
+    test/test_ff_service_no_connection.cc
+  )
+  target_link_libraries(test_ff_service_no_connection test_ff_service)
+  add_ros_test(test/launch/test_ff_service_no_connection.py TIMEOUT "30" ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 
   # ff_action
   ament_add_gtest_executable(test_ff_action_nominal_behavior
@@ -193,9 +214,20 @@ install(TARGETS ff_util
   INCLUDES DESTINATION include
 )
 
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}
-  PATTERN ".svn" EXCLUDE)
+install(TARGETS test_ff_service
+  EXPORT test_ff_service
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+install(TARGETS test_ff_client
+  EXPORT test_ff_client
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 ament_package()
