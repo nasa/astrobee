@@ -181,6 +181,16 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   // Called to interrupt the process
   void CancelCallback() {}
 
+  void Error(std::string s) {
+    FF_ERROR_STREAM(s);
+  }
+  void Warn(std::string s) {
+    FF_WARN_STREAM(s);
+  }
+  void Debug(std::string s) {
+    FF_DEBUG_STREAM(s);
+  }
+
  protected:
   ff_util::ConfigServer cfg_;
   ff_util::FreeFlyerTimer timer_d_;

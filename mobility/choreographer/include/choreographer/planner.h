@@ -65,8 +65,6 @@ typedef srv::GetMap GetMap;
  */
 namespace planner {
 
-FF_DEFINE_LOGGER("planner");
-
 // Convenience declarations
 using RESPONSE = ff_msgs::Plan::Result;
 
@@ -102,17 +100,19 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   // Derived classes must implement these functions
   virtual bool InitializePlanner(NodeHandle &nh) = 0;
   virtual void PlanCallback(ff_msgs::Plan::Goal const& goal) = 0;
+  virtual void Error(std::string out) = 0;
+  virtual void Warn(std::string out) = 0;
+  virtual void Debug(std::string out) = 0;
 
   // Send the planner result
   void PlanResult(ff_msgs::Plan::Result::SharedPtr const& result) {
     switch (state_) {
     case PLANNING:
-      FF_DEBUG_STREAM("Plan result received");
-      // FF_DEBUG_STREAM(result);
+      Debug("Plan result received");
       Complete(result->response, result);
       break;
     default:
-      FF_WARN_STREAM("Plan result received in non-planning state");
+      Warn("Plan result received in non-planning state");
       break;
     }
   }
@@ -124,7 +124,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
       server_p_.SendFeedback(feedback);
       break;
     default:
-      FF_WARN_STREAM("Plan feedback received in non-planning state");
+      Warn("Plan feedback received in non-planning state");
       break;
     }
   }
@@ -222,7 +222,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   // Deal with a fault in a responsible manner - note that this may also be
   // called if action and service servers timeout on conenction.
   void InitFault(std::string const& msg ) {
-    FF_ERROR_STREAM(msg);
+    Error(msg);
     AssertFault(ff_util::INITIALIZATION_FAILED, msg);
     return;
   }
@@ -241,7 +241,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
         server_p_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
       break;
     default:
-      FF_WARN_STREAM("Plan result received in non-planning state");
+      Warn("Plan result received in non-planning state");
       break;
     }
     // We are now back to waiting
@@ -250,7 +250,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
 
   // Ensure all clients are connected
   void ConnectedCallback(void) {
-    FF_DEBUG_STREAM("ConnectedCallback()");
+    Debug("ConnectedCallback()");
     if (!client_z_.IsConnected()) return;    // Zones
     if (!client_z_m_.IsConnected()) return;  // Zones Map
     if (!client_r_.IsConnected()) return;    // Register
@@ -258,7 +258,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     if (!client_f_.IsConnected()) return;    // Register
     if (state_ != INITIALIZING) return;      // Don't initialize twice
     // Register this planner
-    FF_DEBUG_STREAM("Registering planner");
+    Debug("Registering planner");
     auto response = std::make_shared<ff_msgs::RegisterPlanner::Response>();
     client_r_.waitForExistence(5.0);
     if (client_r_.isValid() && client_r_.call(registration_, response)) {}
@@ -306,8 +306,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
 
   // Called when a new planning goal arrives
   void GoalCallback(std::shared_ptr<const ff_msgs::Plan::Goal> const& old_goal) {
-    FF_DEBUG_STREAM("A new plan request was just received");
-    // FF_DEBUG_STREAM(*old_goal);
+    Debug("A new plan request was just received");
     switch (state_) {
     default:
     case INITIALIZING:
