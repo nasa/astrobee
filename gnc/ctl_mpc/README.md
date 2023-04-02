@@ -1,4 +1,4 @@
-# ctl_acados_mpc
+# ctl_mpc Package
 This is an extension package for the [NASA Astrobee project](https://github.com/nasa/astrobee) which allows MPC with Acados.
 
 ## Installation
@@ -40,10 +40,10 @@ export ACADOS_SOURCE_DIR="<acados_root>"
 
 3. In the second terminal, you can send the astrobee on a mission! E.g. run: `rosrun executive teleop_tool -move -relative -pos "0 -1 0"`
 
-### (OPTIONAL in case you want to tune MPC parameters)
-5. Open `/solver/generate_solver.py` and tune the costs, constraints, etc. to your liking. Then run `python generate_solver.py`
+### (OPTIONAL in case you want to tune params/settings that are unavailable for change in the C++ code)
+5. Open `/solver/generate_solver.py` and tune the settings to your liking. Then run `python generate_solver.py`
 
 6. Re-build the package. You can do this by making sure you are in the package root folder (e.g. `$ASTROBEE_WS/gnc/ctl_acados_mpc`) and running `catkin build --this --no-deps`
 
 ## Acknowledgements
-A special thanks to Pedro Roque for instights, bug-fixing help and code contribution.
+A special thanks to Pedro Roque for instights, bug-fixing help and code contribution in the CMakeLists.txt.
