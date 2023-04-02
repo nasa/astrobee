@@ -1,0 +1,9 @@
+<library path="lib/libctl_mpc">
+  <class name="ctl_mpc/ctl_mpc"
+	 type="ctl_mpc::Ctl_MPCNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps GNC's implementations of the MPC control module.
+    </description>
+  </class>
+</library>

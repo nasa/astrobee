@@ -1,0 +1,16 @@
+Name: jsonlab
+Version: 1.9.8
+Date: 2019-22-10
+
+Title: A JSON/UBJSON/MessagePack encoder/decoder for MATLAB/Octave
+Author: Qianqian Fang <fangqq@gmail.com>
+Maintainer: Qianqian Fang <fangqq@gmail.com>
+
+Description:  JSONLab is a free and open-source implementation of a JSON/UBJSON/MessagePack 
+ encoder and a decoder in the native MATLAB language. It can be used to convert 
+ a MATLAB data structure (array, struct, cell, struct array and cell array) into
+ JSON/UBJSON formatted string, or decode a JSON/UBJSON/MessagePack file into 
+ MATLAB data. JSONLab supports both MATLAB and GNU Octave (a free MATLAB clone).
+
+URL: http://openjdata.org/jsonlab
+Categories: JSON

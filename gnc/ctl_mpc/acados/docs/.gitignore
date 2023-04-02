@@ -1,0 +1,8 @@
+.doctrees
+.buildinfo
+objects.inv
+genindex.html
+_build*
+doxygen.tag
+old_*
+env/

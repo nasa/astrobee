@@ -1,0 +1,235 @@
+###################################################################################################
+#                                                                                                 #
+# This file is part of BLASFEO.                                                                   #
+#                                                                                                 #
+# BLASFEO -- BLAS for embedded optimization.                                                      #
+# Copyright (C) 2019 by Gianluca Frison.                                                          #
+# Developed at IMTEK (University of Freiburg) under the supervision of Moritz Diehl.              #
+# All rights reserved.                                                                            #
+#                                                                                                 #
+# The 2-Clause BSD License                                                                        #
+#                                                                                                 #
+# Redistribution and use in source and binary forms, with or without                              #
+# modification, are permitted provided that the following conditions are met:                     #
+#                                                                                                 #
+# 1. Redistributions of source code must retain the above copyright notice, this                  #
+#    list of conditions and the following disclaimer.                                             #
+# 2. Redistributions in binary form must reproduce the above copyright notice,                    #
+#    this list of conditions and the following disclaimer in the documentation                    #
+#    and/or other materials provided with the distribution.                                       #
+#                                                                                                 #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND                 #
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED                   #
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE                          #
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR                 #
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES                  #
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;                    #
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND                     #
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT                      #
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS                   #
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                                    #
+#                                                                                                 #
+# Author: Gianluca Frison, gianluca.frison (at) imtek.uni-freiburg.de                             #
+#                                                                                                 #
+###################################################################################################
+
+######################
+# BLAS version 3.8.0 #
+######################
+
+#---------------------------------------------------------
+#  Comment out the next 6 definitions if you already have
+#  the Level 1 BLAS.
+#---------------------------------------------------------
+SBLAS1 = 
+SBLAS1 += netlib/blas/isamax.o
+SBLAS1 += netlib/blas/sasum.o
+#SBLAS1 += netlib/blas/saxpy.o
+SBLAS1 += netlib/blas/scopy.o
+#SBLAS1 += netlib/blas/sdot.o
+SBLAS1 += netlib/blas/snrm2.o
+SBLAS1 += netlib/blas/srot.o
+SBLAS1 += netlib/blas/srotg.o
+SBLAS1 += netlib/blas/sscal.o
+SBLAS1 += netlib/blas/sswap.o
+SBLAS1 += netlib/blas/sdsdot.o
+SBLAS1 += netlib/blas/srotmg.o
+SBLAS1 += netlib/blas/srotm.o
+
+CBLAS1 =
+CBLAS1 += netlib/blas/scabs1.o
+CBLAS1 += netlib/blas/scasum.o
+CBLAS1 += netlib/blas/scnrm2.o
+CBLAS1 += netlib/blas/icamax.o
+CBLAS1 += netlib/blas/caxpy.o
+CBLAS1 += netlib/blas/ccopy.o
+CBLAS1 += netlib/blas/cdotc.o
+CBLAS1 += netlib/blas/cdotu.o
+CBLAS1 += netlib/blas/csscal.o
+CBLAS1 += netlib/blas/crotg.o
+CBLAS1 += netlib/blas/cscal.o
+CBLAS1 += netlib/blas/cswap.o
+CBLAS1 += netlib/blas/csrot.o
+
+DBLAS1 =
+DBLAS1 += netlib/blas/idamax.o
+DBLAS1 += netlib/blas/dasum.o
+#DBLAS1 += netlib/blas/daxpy.o
+#DBLAS1 += netlib/blas/dcopy.o
+#DBLAS1 += netlib/blas/ddot.o
+DBLAS1 += netlib/blas/dnrm2.o
+DBLAS1 += netlib/blas/drot.o
+DBLAS1 += netlib/blas/drotg.o
+DBLAS1 += netlib/blas/dscal.o
+DBLAS1 += netlib/blas/dsdot.o
+DBLAS1 += netlib/blas/dswap.o
+DBLAS1 += netlib/blas/drotmg.o
+DBLAS1 += netlib/blas/drotm.o
+
+ZBLAS1 =
+ZBLAS1 += netlib/blas/dcabs1.o
+ZBLAS1 += netlib/blas/dzasum.o
+ZBLAS1 += netlib/blas/dznrm2.o
+ZBLAS1 += netlib/blas/izamax.o
+ZBLAS1 += netlib/blas/zaxpy.o
+ZBLAS1 += netlib/blas/zcopy.o
+ZBLAS1 += netlib/blas/zdotc.o
+ZBLAS1 += netlib/blas/zdotu.o
+ZBLAS1 += netlib/blas/zdscal.o
+ZBLAS1 += netlib/blas/zrotg.o
+ZBLAS1 += netlib/blas/zscal.o
+ZBLAS1 += netlib/blas/zswap.o
+ZBLAS1 += netlib/blas/zdrot.o
+
+#---------------------------------------------------------------------
+#  The following line defines auxiliary routines needed by both the
+#  Level 2 and Level 3 BLAS.  Comment it out only if you already have
+#  both the Level 2 and 3 BLAS.
+#---------------------------------------------------------------------
+ALLBLAS =
+ALLBLAS += netlib/blas/lsame.o
+ALLBLAS += netlib/blas/xerbla.o
+ALLBLAS += netlib/blas/xerbla_array.o
+
+#---------------------------------------------------------
+#  Comment out the next 4 definitions if you already have
+#  the Level 2 BLAS.
+#---------------------------------------------------------
+SBLAS2 =
+SBLAS2 += netlib/blas/sgemv.o
+SBLAS2 += netlib/blas/sgbmv.o
+SBLAS2 += netlib/blas/ssymv.o
+SBLAS2 += netlib/blas/ssbmv.o
+SBLAS2 += netlib/blas/sspmv.o
+SBLAS2 += netlib/blas/strmv.o
+SBLAS2 += netlib/blas/stbmv.o
+SBLAS2 += netlib/blas/stpmv.o
+SBLAS2 += netlib/blas/strsv.o
+SBLAS2 += netlib/blas/stbsv.o
+SBLAS2 += netlib/blas/stpsv.o
+SBLAS2 += netlib/blas/sger.o
+SBLAS2 += netlib/blas/ssyr.o
+SBLAS2 += netlib/blas/sspr.o
+SBLAS2 += netlib/blas/ssyr2.o
+SBLAS2 += netlib/blas/sspr2.o
+
+CBLAS2 =
+CBLAS2 += netlib/blas/cgemv.o
+CBLAS2 += netlib/blas/cgbmv.o
+CBLAS2 += netlib/blas/chemv.o
+CBLAS2 += netlib/blas/chbmv.o
+CBLAS2 += netlib/blas/chpmv.o
+CBLAS2 += netlib/blas/ctrmv.o
+CBLAS2 += netlib/blas/ctbmv.o
+CBLAS2 += netlib/blas/ctpmv.o
+CBLAS2 += netlib/blas/ctrsv.o
+CBLAS2 += netlib/blas/ctbsv.o
+CBLAS2 += netlib/blas/ctpsv.o
+CBLAS2 += netlib/blas/cgerc.o
+CBLAS2 += netlib/blas/cgeru.o
+CBLAS2 += netlib/blas/cher.o
+CBLAS2 += netlib/blas/chpr.o
+CBLAS2 += netlib/blas/cher2.o
+CBLAS2 += netlib/blas/chpr2.o
+
+DBLAS2 =
+#DBLAS2 += netlib/blas/dgemv.o
+DBLAS2 += netlib/blas/dgbmv.o
+#DBLAS2 += netlib/blas/dsymv.o
+DBLAS2 += netlib/blas/dsbmv.o
+DBLAS2 += netlib/blas/dspmv.o
+DBLAS2 += netlib/blas/dtrmv.o
+DBLAS2 += netlib/blas/dtbmv.o
+DBLAS2 += netlib/blas/dtpmv.o
+DBLAS2 += netlib/blas/dtrsv.o
+DBLAS2 += netlib/blas/dtbsv.o
+DBLAS2 += netlib/blas/dtpsv.o
+#DBLAS2 += netlib/blas/dger.o
+DBLAS2 += netlib/blas/dsyr.o
+DBLAS2 += netlib/blas/dspr.o
+DBLAS2 += netlib/blas/dsyr2.o
+DBLAS2 += netlib/blas/dspr2.o
+
+ZBLAS2 =
+ZBLAS2 += netlib/blas/zgemv.o
+ZBLAS2 += netlib/blas/zgbmv.o
+ZBLAS2 += netlib/blas/zhemv.o
+ZBLAS2 += netlib/blas/zhbmv.o
+ZBLAS2 += netlib/blas/zhpmv.o
+ZBLAS2 += netlib/blas/ztrmv.o
+ZBLAS2 += netlib/blas/ztbmv.o
+ZBLAS2 += netlib/blas/ztpmv.o
+ZBLAS2 += netlib/blas/ztrsv.o
+ZBLAS2 += netlib/blas/ztbsv.o
+ZBLAS2 += netlib/blas/ztpsv.o
+ZBLAS2 += netlib/blas/zgerc.o
+ZBLAS2 += netlib/blas/zgeru.o
+ZBLAS2 += netlib/blas/zher.o
+ZBLAS2 += netlib/blas/zhpr.o
+ZBLAS2 += netlib/blas/zher2.o
+ZBLAS2 += netlib/blas/zhpr2.o
+
+#---------------------------------------------------------
+#  Comment out the next 4 definitions if you already have
+#  the Level 3 BLAS.
+#---------------------------------------------------------
+SBLAS3 =
+#SBLAS3 += netlib/blas/sgemm.o
+SBLAS3 += netlib/blas/ssymm.o
+SBLAS3 += netlib/blas/ssyrk.o
+SBLAS3 += netlib/blas/ssyr2k.o
+SBLAS3 += netlib/blas/strmm.o
+#SBLAS3 += netlib/blas/strsm.o 
+
+CBLAS3 =
+CBLAS3 += netlib/blas/cgemm.o
+CBLAS3 += netlib/blas/csymm.o
+CBLAS3 += netlib/blas/csyrk.o
+CBLAS3 += netlib/blas/csyr2k.o
+CBLAS3 += netlib/blas/ctrmm.o
+CBLAS3 += netlib/blas/ctrsm.o
+CBLAS3 += netlib/blas/chemm.o
+CBLAS3 += netlib/blas/cherk.o
+CBLAS3 += netlib/blas/cher2k.o
+
+DBLAS3 =
+#DBLAS3 += netlib/blas/dgemm.o
+DBLAS3 += netlib/blas/dsymm.o
+#DBLAS3 += netlib/blas/dsyrk.o
+#DBLAS3 += netlib/blas/dsyr2k.o
+#DBLAS3 += netlib/blas/dtrmm.o
+#DBLAS3 += netlib/blas/dtrsm.o
+
+ZBLAS3 =
+ZBLAS3 += netlib/blas/zgemm.o
+ZBLAS3 += netlib/blas/zsymm.o
+ZBLAS3 += netlib/blas/zsyrk.o
+ZBLAS3 += netlib/blas/zsyr2k.o
+ZBLAS3 += netlib/blas/ztrmm.o
+ZBLAS3 += netlib/blas/ztrsm.o
+ZBLAS3 += netlib/blas/zhemm.o
+ZBLAS3 += netlib/blas/zherk.o
+ZBLAS3 += netlib/blas/zher2k.o
+
+NETLIB_BLAS_OBJS = $(SBLAS1) $(SBLAS2) $(SBLAS3) $(DBLAS1) $(DBLAS2) $(DBLAS3) $(CBLAS1) $(CBLAS2) $(CBLAS3) $(ZBLAS1) $(ZBLAS2) $(ZBLAS3) $(ALLBLAS)
+

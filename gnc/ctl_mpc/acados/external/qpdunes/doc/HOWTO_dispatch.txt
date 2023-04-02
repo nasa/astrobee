@@ -1,0 +1,71 @@
+git development repository:
+git@git.esat.kuleuven.be:qpDUNES_dev.git
+
+git group release repository:
+git@git.esat.kuleuven.be:qpDUNES.git
+
+git public repository:
+https://github.com/jfrasch/qpDUNES.git
+
+
+git branches
+------------
+
+show local branches:
+	git branch  
+	
+show remote branches:
+	git branch -r
+	
+show all branches:
+	git branch -a
+	
+clone into a specific local branch
+	git clone -b my-branch git@github.com:user/myproject.git
+
+
+How to bringt code from development to release
+----------------------------------------------
+
+1) go to a release folder; if non existent create it by
+	git clone git@git.esat.kuleuven.be:qpDUNES.git qpDUNES_dispatch
+	
+	git remote add qpDUNES_dev git@git.esat.kuleuven.be:qpDUNES_dev.git
+
+	git remote add qpDUNES_groupRelease git@git.esat.kuleuven.be:qpDUNES.git
+
+
+
+create a new unrelated branch
+	git checkout --orphan develop
+
+remote "old" unwanted files
+	git rm -rf .
+
+get the develop repository
+	git fetch qpDUNES_dev
+
+merge it into the develop branch
+	git merge qpDUNES_dev/master -m "merged develop remote into local develop branch"
+	
+	
+3) now pick files to be pulled into current branch
+
+	git checkout master
+	
+	git checkout develop <paths> ...
+	
+(if needed)
+
+	git add ...
+	
+	git ci -m "..."
+	
+	
+4) now push:
+	git push --dry-run --verbose origin master_with_qpOASES:master_qpOASES
+	git push  <REMOTENAME> <LOCALBRANCHNAME>:<REMOTEBRANCHNAME> 
+	
+
+
+

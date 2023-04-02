@@ -1,0 +1,9 @@
+<launch>
+  <arg name="name" default="ctl_mpc" />
+  <arg name="manager" default="" />
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="name" value="$(arg name)" />
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="class" value="ctl_mpc/ctl_mpc" />
+  </include>
+</launch>

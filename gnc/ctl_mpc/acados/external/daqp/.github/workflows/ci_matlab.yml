@@ -1,0 +1,26 @@
+name: Matlab CI
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    tags: "*"
+jobs:
+  my-job:
+    name: Make and run tests in MATLAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v1
+      - name: Build lib and mex in MATLAB
+        uses: matlab-actions/run-command@v1
+        with:
+          command: cd interfaces/daqp-matlab, make_daqp
+      - name: Run tests  in MATLAB
+        uses: matlab-actions/run-command@v1
+        with:
+          command: cd interfaces/daqp-matlab, runtest_daqp
