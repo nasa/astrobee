@@ -17,7 +17,7 @@
  */
 
 // Standard includes
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // FSW includes
 #include <ff_common/ff_names.h>
@@ -94,14 +94,14 @@ namespace planner_trapezoidal {
   }
 
   // Insert a trapezoid between two poses
-  void InsertTrapezoid(ff_util::Segment &segment, ros::Time & offset, double dt,
+  void InsertTrapezoid(ff_util::Segment &segment, rclcpp::Time & offset, double dt,
                        const Eigen::Affine3d & p0, const Eigen::Affine3d & p1,
                        double lin_v, double rot_v, double lin_a, double rot_a,
                        double min_control_period, double epsilon) {
     // Find the delta transform between the two poses
     Eigen::AngleAxisd error_ang(p0.rotation().inverse()* p1.rotation());
     Eigen::Vector3d error_vec(p1.translation() - p0.translation());
-    // Make sure that we are taking the minimum angle of rotatin
+    // Make sure that we are taking the minimum angle of rotation
     error_ang.angle() = fmod(error_ang.angle(), 2.0 * M_PI);
     if (error_ang.angle() > M_PI)
       error_ang.angle() -= 2.0 * M_PI;
@@ -230,7 +230,7 @@ namespace planner_trapezoidal {
       }
       // Add the setpoint to the segment
       ff_util::Setpoint sp;
-      sp.when = offset + ros::Duration(state.t);
+      sp.when = offset + rclcpp::Duration(std::chrono::duration<float>(state.t));
       sp.pose.position = msg_conversions::eigen_to_ros_point(state.p);
       sp.pose.orientation = msg_conversions::eigen_to_ros_quat(state.q);
       sp.twist.linear = msg_conversions::eigen_to_ros_vector(state.v);
@@ -240,7 +240,7 @@ namespace planner_trapezoidal {
       segment.push_back(sp);
     }
     // Increment the offset by the total time
-    offset += ros::Duration(tmin);
+    offset += rclcpp::Duration(std::chrono::duration<float>(tmin));
   }
 
 

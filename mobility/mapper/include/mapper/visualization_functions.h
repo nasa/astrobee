@@ -22,10 +22,24 @@
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 
-#include <visualization_msgs/MarkerArray.h>
-#include <ff_msgs/Zone.h>
-#include <ff_msgs/SetZones.h>
-#include <ff_msgs/GetZones.h>
+#include <visualization_msgs/msg/marker_array.hpp>
+namespace visualization_msgs {
+typedef msg::Marker Marker;
+typedef msg::MarkerArray MarkerArray;
+}  // namespace visualization_msgs
+#include <ff_msgs/msg/zone.hpp>
+#include <ff_msgs/srv/set_zones.hpp>
+#include <ff_msgs/srv/get_zones.hpp>
+namespace ff_msgs {
+typedef msg::Zone Zone;
+typedef srv::SetZones SetZones;
+typedef srv::GetZones GetZones;
+}  // namespace ff_msgs
+namespace std_msgs {
+typedef msg::Header Header;
+typedef msg::ColorRGBA ColorRGBA;
+}  // namespace std_msgs
+
 #include <msg_conversions/msg_conversions.h>
 #include <Eigen/Core>
 #include <string>
@@ -73,27 +87,32 @@ void DeleteMarkersTemplate(  // Delete all markers
   visualization_msgs::MarkerArray *marker_array);
 
 void DrawObstacleNodes(const std::vector<Eigen::Vector3d> &points,
+                       const rclcpp::Time rostime,
                        const std::string &frame_id,
                        const double &resolution,
                        visualization_msgs::MarkerArray *marker_array);
 
 void DrawTreeNodes(
     const std::vector<Eigen::Vector3d> points,
+    const rclcpp::Time rostime,
     const std::string& frame_id,
     const double resolution,
     visualization_msgs::MarkerArray *marker_array);
 
 void DrawCollidingNodes(const std::vector<Eigen::Vector3d> &points,
+                        const rclcpp::Time rostime,
                         const std::string &frame_id,
                         const double &resolution,
                         visualization_msgs::MarkerArray *marker_array);
 
 void DrawCollidingNodes(const std::vector<octomap::point3d> &points,
+                        const rclcpp::Time rostime,
                         const std::string &frame_id,
                         const double &resolution,
                         visualization_msgs::MarkerArray *marker_array);
 
 void DrawNodes(const std::vector<Eigen::Vector3d> &points,
+               const rclcpp::Time rostime,
                const std::string &frame_id,
                const std::string &ns,  // namespace
                const double &resolution,
@@ -102,6 +121,7 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
                visualization_msgs::MarkerArray *marker_array);
 
 void DrawNodes(const std::vector<octomap::point3d> &points,
+               const rclcpp::Time rostime,
                const std::string &frame_id,
                const std::string &ns,  // namespace
                const double &resolution,
@@ -110,21 +130,23 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
                visualization_msgs::MarkerArray *marker_array);
 
 void MarkerNode(const Eigen::Vector3d &point,
+                const rclcpp::Time rostime,
                 const std::string &frame_id,
                 const std::string &ns,  // namespace
                 const double &resolution,
                 const std_msgs::ColorRGBA &color,
                 const double &transparency,  // 0 -> transparent, 1 -> opaque
-                const int &seqNumber,
                 visualization_msgs::Marker *marker);
 
 void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::vector<Eigen::Vector3d> &waypoints,
+                       const rclcpp::Time rostime,
                        visualization_msgs::MarkerArray* markers);
 
 void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::vector<Eigen::Vector3d> &waypoints,
                        const std_msgs::ColorRGBA &color,
+                       const rclcpp::Time rostime,
                        const std::string &ns,  // namespace
                        visualization_msgs::MarkerArray* markers);
 

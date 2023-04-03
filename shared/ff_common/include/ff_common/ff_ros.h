@@ -50,10 +50,6 @@ using Service = ros::ServiceServer*;
 
 template<class MessageType>
 using ServiceClient = ros::ServiceClient*;
-#define FF_CREATE_SERVICE_CLIENT(serv_client, msg, topic)
-ros::ServiceClient __serv_client = nh_private_.serviceClient<msg>(topic);
-serv_client = &__serv_client
-
 using Duration = ros::Duration*;
 
 #define FF_DEBUG(...)   ROS_DEBUG_NAMED(ros::this_node::getName(), __VA_ARGS__)
@@ -109,9 +105,6 @@ using Service = std::shared_ptr<rclcpp::Service<MessageType>>;
 
 template<class MessageType>
 using ServiceClient = std::shared_ptr<rclcpp::Client<MessageType>>;
-#define FF_CREATE_SERVICE_CLIENT(node, msg, topic) \
-  node->create_client<msg>(topic)
-
 using Duration = std::shared_ptr<rclcpp::Duration>;
 
 #define FF_DEFINE_LOGGER(name) static const rclcpp::Logger _FF_LOGGER = rclcpp::get_logger(name);

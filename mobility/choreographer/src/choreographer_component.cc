@@ -65,12 +65,12 @@
 #include <map>
 #include <utility>
 
-FF_DEFINE_LOGGER("choreographer");
-
 /**
  * \ingroup mobility
  */
 namespace choreographer {
+
+FF_DEFINE_LOGGER("choreographer");
 
 // Convenience declarations
 using STATE = ff_msgs::msg::MotionState;
@@ -115,7 +115,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
 
   // Constructor
   explicit ChoreographerComponent(const rclcpp::NodeOptions & options) :
-    ff_util::FreeFlyerComponent(options, NODE_CHOREOGRAPHER),
+    ff_util::FreeFlyerComponent(options, NODE_CHOREOGRAPHER, true),
     fsm_(STATE::INITIALIZING, std::bind(&ChoreographerComponent::UpdateCallback,
       this, std::placeholders::_1, std::placeholders::_2)), tolerance_max_time_(0, 0) {
     feedback_ = std::make_shared<ff_msgs::action::Motion::Feedback>();
@@ -1159,6 +1159,10 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       path.poses.push_back(ps);
     }
     pub_segment_->publish(path);
+    tolerance_pos_timer_ = GetTimeNow();
+    tolerance_att_timer_ = GetTimeNow();
+    tolerance_vel_timer_ = GetTimeNow();
+    tolerance_omega_timer_ = GetTimeNow();
     // Success!
     return true;
   }
@@ -1172,7 +1176,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       if (flight_mode_.tolerance_pos > 0.0 &&
           feedback->error_position > flight_mode_.tolerance_pos) {
         // If tolerance is present more that the allowable time
-        if ((GetTimeNow() - tolerance_pos_timer) > tolerance_max_time_) {
+        if ((GetTimeNow() - tolerance_pos_timer_) > tolerance_max_time_) {
           FF_DEBUG_STREAM("Position tolerance violated");
           FF_DEBUG_STREAM("- Value: " << feedback->error_position
                                           << ", Thresh: "
@@ -1182,13 +1186,13 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
         }
       } else {
         // If there is no tolerance violation, reset time
-        tolerance_pos_timer = GetTimeNow();
+        tolerance_pos_timer_ = GetTimeNow();
       }
       // Check attitude tolerance
       if (flight_mode_.tolerance_att > 0.0 &&
           feedback->error_attitude > flight_mode_.tolerance_att) {
         // If tolerance is present more that the allowable time
-        if ((GetTimeNow() - tolerance_att_timer) > tolerance_max_time_) {
+        if ((GetTimeNow() - tolerance_att_timer_) > tolerance_max_time_) {
           FF_DEBUG_STREAM("Attitude tolerance violated");
           FF_DEBUG_STREAM("- Value: " << feedback->error_attitude
                                           << ", Thresh: "
@@ -1198,13 +1202,13 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
         }
       } else {
         // If there is no tolerance violation, reset time
-        tolerance_att_timer = GetTimeNow();
+        tolerance_att_timer_ = GetTimeNow();
       }
       // Check velocity tolerance
       if (flight_mode_.tolerance_vel > 0.0 &&
           feedback->error_velocity > flight_mode_.tolerance_vel) {
         // If tolerance is present more that the allowable time
-        if ((GetTimeNow() - tolerance_vel_timer) > tolerance_max_time_) {
+        if ((GetTimeNow() - tolerance_vel_timer_) > tolerance_max_time_) {
           FF_DEBUG_STREAM("Velocity tolerance violated");
           FF_DEBUG_STREAM("- Value: " << feedback->error_velocity
                                           << ", Thresh: "
@@ -1214,13 +1218,13 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
         }
       } else {
         // If there is no tolerance violation, reset time
-        tolerance_vel_timer = GetTimeNow();
+        tolerance_vel_timer_ = GetTimeNow();
       }
       // Check angular velocity tolerance
       if (flight_mode_.tolerance_omega > 0.0 &&
           feedback->error_omega > flight_mode_.tolerance_omega) {
         // If tolerance is present more that the allowable time
-        if ((GetTimeNow() - tolerance_omega_timer) > tolerance_max_time_) {
+        if ((GetTimeNow() - tolerance_omega_timer_) > tolerance_max_time_) {
           FF_DEBUG_STREAM("Angular velocity tolerance violated");
           FF_DEBUG_STREAM("- Value: " << feedback->error_omega
                                           << ", Thresh: "
@@ -1230,7 +1234,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
         }
       } else {
         // If there is no tolerance violation, reset time
-        tolerance_omega_timer = GetTimeNow();
+        tolerance_omega_timer_ = GetTimeNow();
       }
     // Send progress in stopping/idling/replanning
     case STATE::STOPPING:
@@ -1404,8 +1408,8 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
   rclcpp::Duration tolerance_max_time_;
   // Position error
   double pos_error_;
-  ros::Time tolerance_pos_timer, tolerance_att_timer,
-                tolerance_vel_timer, tolerance_omega_timer;
+  ros::Time tolerance_pos_timer_, tolerance_att_timer_,
+                tolerance_vel_timer_, tolerance_omega_timer_;
   // Cached number of replan attempts
   int replan_attempts_;
 };

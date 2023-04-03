@@ -53,18 +53,39 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("gtloc")),
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='localization_manager',
-            #     plugin='localization_manager::LocalizationManagerNodelet',
-            #     name='localization_manager',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                 package='localization_manager',
+                 plugin='localization_manager::LocalizationManagerComponent',
+                 name='localization_manager',
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ComposableNode(
                 package='ground_truth_localizer',
-                plugin='ground_truth_localizer::GroundTruthLocalizerNodelet',
+                plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
                 name='ground_truth_localizer',
-                # condition=IfCondition(LaunchConfiguration("gtloc"))
-                ),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+            # ComposableNode(
+            #     package='image_sampler',
+            #     plugin='image_sampler::ImageSampler',
+            #     name='image_sampler',
+            #     remappings=[('/image', '/burgerimage')],
+            #     parameters=[{'history': 'keep_last'}],
+            #     extra_arguments=[{'use_intra_process_comms': True}])
+            ]
+        ),
+        ComposableNodeContainer(
+        name='mlp_localization',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=UnlessCondition(LaunchConfiguration("gtloc")),
+        composable_node_descriptions=[
+            ComposableNode(
+                package='localization_manager',
+                plugin='localization_manager::LocalizationManagerNodelet',
+                name='localization_manager',
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             # ComposableNode(
             #     package='image_sampler',
             #     plugin='image_sampler::ImageSampler',
@@ -79,6 +100,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=UnlessCondition(LaunchConfiguration("gtloc")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='graph_loc',
@@ -92,6 +114,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='depth_odometry_nodelet',
@@ -149,7 +172,27 @@ def generate_launch_description():
         name='mlp_depth_cam',
         namespace='',
         package='rclcpp_components',
+        condition=UnlessCondition(LaunchConfiguration("drivers")),
         executable='component_container',
+        composable_node_descriptions=[
+            # ComposableNode(
+            #     package='handrail_detect',
+            #     plugin='handrail_detect::HandrailDetect',
+            #     name='handrail_detect',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            # ComposableNode(
+            #     package='planner_qp',
+            #     plugin='planner_qp::Planner',
+            #     name='planner_qp',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='mlp_depth_cam',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='handrail_detect',
@@ -179,11 +222,11 @@ def generate_launch_description():
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='mapper',
-            #     plugin='mapper::MapperNodelet',
-            #     name='mapper',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='mapper',
+                plugin='mapper::MapperComponent',
+                name='mapper',
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
         ComposableNodeContainer(
@@ -222,6 +265,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='sys_monitor',
@@ -237,6 +281,20 @@ def generate_launch_description():
             #     package='disk_monitor',
             #     plugin='disk_monitor::DiskMonitor',
             #     name='mlp_disk_monitor',
+            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='mlp_monitors',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=UnlessCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
+            # ComposableNode(
+            #     package='sys_monitor',
+            #     plugin='sys_monitor::SysMonitor',
+            #     name='sys_monitor',
             #     extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
@@ -271,6 +329,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='perching_arm',
@@ -283,63 +342,61 @@ def generate_launch_description():
         name='mlp_mobility',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
             ComposableNode(
                 package='choreographer',
                 plugin='choreographer::ChoreographerComponent',
                 name='choreographer',
-                extra_arguments=[{'use_intra_process_comms': False}]),
-            # ComposableNode(
-            #     package='planner_trapezoidal',
-            #     plugin='planner_trapezoidal::PlannerTrapezoidalNodelet',
-            #     name='planner_trapezoidal',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+            ComposableNode(
+                package='planner_trapezoidal',
+                plugin='planner_trapezoidal::PlannerTrapezoidalComponent',
+                name='planner_trapezoidal',
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ComposableNode(
                 package='framestore',
                 plugin='mobility::FrameStore',
                 name='framestore',
-                # extra_arguments=[{'use_intra_process_comms': True}]
-                ),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
         ComposableNodeContainer(
         name='mlp_arm',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='arm',
-            #     plugin='arm::ArmNodelet',
-            #     name='arm',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='arm',
+                plugin='arm::ArmComponent',
+                name='arm'),
             ]
         ),
         ComposableNodeContainer(
         name='mlp_dock',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='dock',
-            #     plugin='dock::DockNodelet',
-            #     name='dock',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='dock',
+                plugin='dock::DockComponent',
+                name='dock'),
+                #extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
         ComposableNodeContainer(
         name='mlp_perch',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='perch',
-            #     plugin='perch::PerchNodelet',
-            #     name='perch',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='perch',
+                plugin='perch::PerchComponent',
+                name='perch'),
+                #extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
         ComposableNodeContainer(
@@ -347,6 +404,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
             # ComposableNode(
             #     package='vive',
@@ -361,11 +419,11 @@ def generate_launch_description():
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='states',
-            #     plugin='states::StatesNodelet',
-            #     name='states',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='states',
+                plugin='states::StatesComponent',
+                name='states',
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
     ])

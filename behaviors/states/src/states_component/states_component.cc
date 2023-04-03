@@ -58,11 +58,11 @@ FF_DEFINE_LOGGER("states");
 
 namespace states {
 
-class StatesNodelet : public ff_util::FreeFlyerComponent {
+class StatesComponent : public ff_util::FreeFlyerComponent {
  public:
-  explicit StatesNodelet(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "states", true) {}
+  explicit StatesComponent(const rclcpp::NodeOptions& options) : ff_util::FreeFlyerComponent(options, "states", true) {}
 
-  virtual ~StatesNodelet() {
+  virtual ~StatesComponent() {
     // on nodelet shutdown, send a shutdown message on TOPIC_SIGNALS
     Shutdown();
   }
@@ -75,7 +75,7 @@ class StatesNodelet : public ff_util::FreeFlyerComponent {
         SERVICE_STREAMING_LIGHTS);
     pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::SignalState, TOPIC_SIGNALS, 1);
     sub_.push_back(FF_CREATE_SUBSCRIBER(nh, ff_msgs::CameraStatesStamped, TOPIC_MANAGEMENT_CAMERA_STATE, 1,
-                                 std::bind(&StatesNodelet::LiveStreamingCallback, this, std::placeholders::_1)));
+                                 std::bind(&StatesComponent::LiveStreamingCallback, this, std::placeholders::_1)));
     // on nodelet start, send a wakeup message on TOPIC_SIGNALS
     Startup();
   }
@@ -192,5 +192,5 @@ class StatesNodelet : public ff_util::FreeFlyerComponent {
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(states::StatesNodelet)
+RCLCPP_COMPONENTS_REGISTER_NODE(states::StatesComponent)
 

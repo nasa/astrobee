@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <mapper/mapper_nodelet.h>
+#include <mapper/mapper_component.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -24,13 +24,13 @@
 namespace mapper {
 
 // Thread for fading memory of the octomap
-void MapperNodelet::FadeTask(ros::TimerEvent const& event) {
+void MapperComponent::FadeTask() {
   if (globals_.octomap.memory_time_ > 0)
       globals_.octomap.FadeMemory(fading_memory_update_rate_);
 }
 
 // Sentinel
-void MapperNodelet::CollisionCheckTask() {
+void MapperComponent::CollisionCheckTask() {
   // visualization markers
   visualization_msgs::MarkerArray traj_markers, samples_markers;
   visualization_msgs::MarkerArray compressed_samples_markers, collision_markers;
@@ -39,7 +39,7 @@ void MapperNodelet::CollisionCheckTask() {
   int cloudsize;
 
   // Get time for when this task started
-  ros::Time time_now = ros::Time::now();
+  ros::Time time_now = GetTimeNow();
 
   // Copy trajectory into local point cloud
   pcl::PointCloud<pcl::PointXYZ> point_cloud_traj;
@@ -53,29 +53,29 @@ void MapperNodelet::CollisionCheckTask() {
   std::vector<double> time = globals_.sampled_traj.time_;
 
   // Send visualization markers
-  globals_.sampled_traj.TrajVisMarkers(&traj_markers);
-  globals_.sampled_traj.SamplesVisMarkers(&samples_markers);
-  globals_.sampled_traj.CompressedVisMarkers(&compressed_samples_markers);
-  path_marker_pub_.publish(traj_markers);
-  path_marker_pub_.publish(samples_markers);
-  path_marker_pub_.publish(compressed_samples_markers);
+  globals_.sampled_traj.TrajVisMarkers(GetTimeNow(), &traj_markers);
+  globals_.sampled_traj.SamplesVisMarkers(GetTimeNow(), &samples_markers);
+  globals_.sampled_traj.CompressedVisMarkers(GetTimeNow(), &compressed_samples_markers);
+  path_marker_pub_->publish(traj_markers);
+  path_marker_pub_->publish(samples_markers);
+  path_marker_pub_->publish(compressed_samples_markers);
 
   // Stop execution if there are no points in the trajectory structure
   cloudsize = point_cloud_traj.size();
   if (cloudsize <= 0) {
-    visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
-    path_marker_pub_.publish(traj_markers);
-    path_marker_pub_.publish(collision_markers);
+    visualization_functions::DrawCollidingNodes(colliding_nodes, GetTimeNow(), "world", 0.0, &collision_markers);
+    path_marker_pub_->publish(traj_markers);
+    path_marker_pub_->publish(collision_markers);
     return;
   }
 
   // Stop execution if the current time is beyond the final time of the trajectory
   if (time_now.toSec() > time.back()) {
     globals_.sampled_traj.ClearObject();
-    globals_.sampled_traj.TrajVisMarkers(&traj_markers);
-    visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
-    path_marker_pub_.publish(traj_markers);
-    path_marker_pub_.publish(collision_markers);
+    globals_.sampled_traj.TrajVisMarkers(GetTimeNow(), &traj_markers);
+    visualization_functions::DrawCollidingNodes(colliding_nodes, GetTimeNow(), "world", 0.0, &collision_markers);
+    path_marker_pub_->publish(traj_markers);
+    path_marker_pub_->publish(collision_markers);
     return;
   }
 
@@ -88,30 +88,30 @@ void MapperNodelet::CollisionCheckTask() {
     std::vector<geometry_msgs::PointStamped> sorted_collisions;
     globals_.sampled_traj.SortCollisions(colliding_nodes, &sorted_collisions);
 
-    double collision_time = (sorted_collisions[0].header.stamp - ros::Time::now()).toSec();
+    double collision_time = (rclcpp::Time(sorted_collisions[0].header.stamp) - GetTimeNow()).seconds();
     // uint lastCollisionIdx = sorted_collisions.back().header.seq;
     if (collision_time > 0) {
-      ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
+      FF_WARN("Imminent collision within %.3f seconds!", collision_time);
       // Publish the message
       ff_msgs::Hazard info;
-      info.header.stamp = ros::Time::now();
+      info.header.stamp = GetTimeNow();
       info.header.frame_id = GetPlatform();
       info.type = ff_msgs::Hazard::TYPE_OBSTACLE;
       info.hazard = sorted_collisions[0];
-      hazard_pub_.publish(info);
+      hazard_pub_->publish(info);
       // Unlock resources
       globals_.sampled_traj.ClearObject();
     }
   }
 
   // Draw colliding markers (delete if none)
-  visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 1.01*res, &collision_markers);
-  path_marker_pub_.publish(traj_markers);
-  path_marker_pub_.publish(collision_markers);
-  ros::Duration solver_time = ros::Time::now() - time_now;
+  visualization_functions::DrawCollidingNodes(colliding_nodes, GetTimeNow(), "world", 1.01*res, &collision_markers);
+  path_marker_pub_->publish(traj_markers);
+  path_marker_pub_->publish(collision_markers);
+  ros::Duration solver_time = GetTimeNow() - time_now;
 }
 
-void MapperNodelet::OctomappingTask() {
+void MapperComponent::OctomappingTask() {
   pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
   // If there are no pcl point clounds
@@ -120,20 +120,20 @@ void MapperNodelet::OctomappingTask() {
 
 // Update TF values
   try {
-    globals_.tf_cam2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+    globals_.tf_cam2world = buffer_->lookupTransform(FRAME_NAME_WORLD,
       GetTransform(FRAME_NAME_HAZ_CAM), ros::Time(0));
   } catch (tf2::TransformException &ex) {}
   try {
-    globals_.tf_perch2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+    globals_.tf_perch2world = buffer_->lookupTransform(FRAME_NAME_WORLD,
       GetTransform(FRAME_NAME_PERCH_CAM), ros::Time(0));
   } catch (tf2::TransformException &ex) {}
   try {
-    globals_.tf_body2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+    globals_.tf_body2world = buffer_->lookupTransform(FRAME_NAME_WORLD,
       GetTransform(FRAME_NAME_BODY), ros::Time(0));
   } catch (tf2::TransformException &ex) {}
 
   // Get time for when this task started
-  const ros::Time t0 = ros::Time::now();
+  const ros::Time t0 = GetTimeNow();
 
   // Get Point Cloud
   pcl::PointCloud<pcl::PointXYZ> point_cloud =
@@ -145,7 +145,7 @@ void MapperNodelet::OctomappingTask() {
   globals_.pcl_queue.pop();
 
   // Check if a tf message has been received already. If not, return
-  if (tf_cam2world.header.stamp.toSec() == 0)
+  if (tf_cam2world.header.stamp.sec == 0)
     return;
 
   // Transform pcl into world frame
@@ -164,52 +164,54 @@ void MapperNodelet::OctomappingTask() {
 
   // Publish visualization markers iff at least one node is subscribed to it
   bool pub_obstacles, pub_free, pub_obstacles_inflated, pub_free_inflated;
-  pub_obstacles = (obstacle_marker_pub_.getNumSubscribers() > 0) || (obstacle_cloud_pub_.getNumSubscribers() > 0);
-  pub_free = (free_space_marker_pub_.getNumSubscribers() > 0) || (free_space_cloud_pub_.getNumSubscribers() > 0);
-  pub_obstacles_inflated = (inflated_obstacle_marker_pub_.getNumSubscribers() > 0)
-                        || (inflated_obstacle_cloud_pub_.getNumSubscribers() > 0);
-  pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0)
-                   || (inflated_free_space_cloud_pub_.getNumSubscribers() > 0);
+  pub_obstacles =
+    (obstacle_marker_pub_->get_subscription_count() > 0) || (obstacle_cloud_pub_->get_subscription_count() > 0);
+  pub_free =
+    (free_space_marker_pub_->get_subscription_count() > 0) || (free_space_cloud_pub_->get_subscription_count() > 0);
+  pub_obstacles_inflated = (inflated_obstacle_marker_pub_->get_subscription_count() > 0)
+                        || (inflated_obstacle_cloud_pub_->get_subscription_count() > 0);
+  pub_free_inflated = (inflated_free_space_marker_pub_->get_subscription_count() > 0)
+                   || (inflated_free_space_cloud_pub_->get_subscription_count() > 0);
 
   if (pub_obstacles || pub_free) {
     visualization_msgs::MarkerArray obstacle_markers, free_markers;
     sensor_msgs::PointCloud2 obstacle_cloud, free_cloud;
-    globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers,
+    globals_.octomap.TreeVisMarkers(GetTimeNow(), &obstacle_markers, &free_markers,
                                     &obstacle_cloud,   &free_cloud);
     if (pub_obstacles) {
-      obstacle_marker_pub_.publish(obstacle_markers);
-      obstacle_cloud_pub_.publish(obstacle_cloud);
+      obstacle_marker_pub_->publish(obstacle_markers);
+      obstacle_cloud_pub_->publish(obstacle_cloud);
     }
     if (pub_free) {
-      free_space_marker_pub_.publish(free_markers);
-      free_space_cloud_pub_.publish(free_cloud);
+      free_space_marker_pub_->publish(free_markers);
+      free_space_cloud_pub_->publish(free_cloud);
     }
   }
 
   if (pub_obstacles_inflated || pub_free_inflated) {
     visualization_msgs::MarkerArray inflated_obstacle_markers, inflated_free_markers;
     sensor_msgs::PointCloud2 inflated_obstacle_cloud, inflated_free_cloud;
-    globals_.octomap.InflatedVisMarkers(&inflated_obstacle_markers, &inflated_free_markers,
+    globals_.octomap.InflatedVisMarkers(GetTimeNow(), &inflated_obstacle_markers, &inflated_free_markers,
                                         &inflated_obstacle_cloud,   &inflated_free_cloud);
     if (pub_obstacles_inflated) {
-      inflated_obstacle_marker_pub_.publish(inflated_obstacle_markers);
-      inflated_obstacle_cloud_pub_.publish(inflated_obstacle_cloud);
+      inflated_obstacle_marker_pub_->publish(inflated_obstacle_markers);
+      inflated_obstacle_cloud_pub_->publish(inflated_obstacle_cloud);
     }
     if (pub_free_inflated) {
-      inflated_free_space_marker_pub_.publish(inflated_free_markers);
-      inflated_free_space_cloud_pub_.publish(inflated_free_cloud);
+      inflated_free_space_marker_pub_->publish(inflated_free_markers);
+      inflated_free_space_cloud_pub_->publish(inflated_free_cloud);
     }
   }
 
-  if (cam_frustum_pub_.getNumSubscribers() > 0) {
+  if (cam_frustum_pub_->get_subscription_count() > 0) {
     visualization_msgs::Marker frustum_markers;
-    globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
-    cam_frustum_pub_.publish(frustum_markers);
+    globals_.octomap.cam_frustum_.VisualizeFrustum(GetTimeNow(), point_cloud.header.frame_id, &frustum_markers);
+    cam_frustum_pub_->publish(frustum_markers);
   }
 
   // Notify the collision checker to check for collision
   CollisionCheckTask();
-  ros::Duration map_time = ros::Time::now() - t0;
+  ros::Duration map_time = GetTimeNow() - t0;
 }
 
 }  // namespace mapper

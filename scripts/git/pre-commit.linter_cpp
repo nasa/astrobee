@@ -102,6 +102,7 @@ def main():
                 and not "brisk" in filename
                 and not "debian" in filename
                 and not "build" in filename
+                and not "pcl_conversions" in filename
             ):
                 cpp_files_to_lint.append(filename)
 

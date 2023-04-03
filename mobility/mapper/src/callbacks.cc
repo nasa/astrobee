@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#include <mapper/mapper_nodelet.h>
+#include <mapper/mapper_component.h>
 #include <vector>
 #include <string>
 #include "mapper/pcl_conversions.h"
 
 namespace mapper {
 
-void MapperNodelet::PclCallback(ros::TimerEvent const& event) {
+void MapperComponent::PclCallback() {
   // Get messages
   std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
   std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
@@ -32,10 +32,10 @@ void MapperNodelet::PclCallback(ros::TimerEvent const& event) {
     std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
     // Get depth message
     boost::shared_ptr<sensor_msgs::PointCloud2 const> msg;
-    msg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>(
-                      cam_prefix + cam + cam_suffix, ros::Duration(0.5));
+    // rclcpp::wait_for_message<sensor_msgs::PointCloud2>(msg, nh_,
+    //                   cam_prefix + cam + cam_suffix, std::chrono::duration<float>(0.5));
     if (msg == NULL) {
-      ROS_INFO("No point clound message received");
+      FF_INFO("No point clound message received");
     } else {
       // Structure to include pcl and its frame
       StampedPcl new_pcl;
@@ -55,10 +55,11 @@ void MapperNodelet::PclCallback(ros::TimerEvent const& event) {
     // Get depth message
     boost::shared_ptr<sensor_msgs::PointCloud2 const> msg;
 
-    msg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>(
-                      cam_prefix + cam + cam_suffix, ros::Duration(0.5));
+    // TODO(@mgouveia): New feature not available in current rolling
+    // rclcpp::wait_for_message(msg, nh_
+    //                   cam_prefix + cam + cam_suffix, std::chrono::duration<float>(0.5));
     if (msg == NULL) {
-      ROS_INFO("No point clound message received");
+      FF_INFO("No point clound message received");
     } else {
     // Structure to include pcl and its frame
     StampedPcl new_pcl;
@@ -78,7 +79,7 @@ void MapperNodelet::PclCallback(ros::TimerEvent const& event) {
 }
 
 
-void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
+void MapperComponent::SegmentCallback(const std::shared_ptr<ff_msgs::Segment> msg) {
   // Check for empty trajectory
   if (msg->segment.size() < 2)
     return;
@@ -88,7 +89,7 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
     return;
 
   // For timing this callback
-  ros::Time t0 = ros::Time::now();
+  ros::Time t0 = GetTimeNow();
 
   // transform message into set of polynomials
   polynomials::Trajectory3D poly_trajectories(*msg);
@@ -121,45 +122,44 @@ void MapperNodelet::SegmentCallback(const ff_msgs::Segment::ConstPtr &msg) {
   // Notify the collision checker to check for collision
   CollisionCheckTask();
 
-  ros::Duration solver_time = ros::Time::now() - t0;
-  ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
+  ros::Duration solver_time = GetTimeNow() - t0;
+  FF_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
 }
 
 // Send diagnostics
-void MapperNodelet::DiagnosticsCallback(const ros::TimerEvent &event) {
-  SendDiagnostics(cfg_.Dump());
+void MapperComponent::DiagnosticsCallback() {
+  ReconfigureCallback();
 }
 
 // Configure callback
-bool MapperNodelet::ReconfigureCallback(dynamic_reconfigure::Config &config) {
+bool MapperComponent::ReconfigureCallback() {
   if (state_ != IDLE)
     return false;
-  cfg_.Reconfigure(config);
   // Turn on mapper
   if (disable_mapper_ && !cfg_.Get<bool>("disable_mapper")) {
     // Timers
     timer_o_.start();
     timer_f_.start();
     // Subscribers
-    segment_sub_ = nh_->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
-      &MapperNodelet::SegmentCallback, this);
-    reset_sub_ = nh_->subscribe(TOPIC_GNC_EKF_RESET, 1,
-      &MapperNodelet::ResetCallback, this);
+    segment_sub_ = FF_CREATE_SUBSCRIBER(nh_, ff_msgs::Segment, TOPIC_GNC_CTL_SEGMENT, 1,
+      std::bind(&MapperComponent::SegmentCallback, this, std::placeholders::_1));
+    reset_sub_ = FF_CREATE_SUBSCRIBER(nh_, std_msgs::Empty, TOPIC_GNC_EKF_RESET, 1,
+      std::bind(&MapperComponent::ResetCallback, this, std::placeholders::_1));
   // Turn off mapper
   } else if (!disable_mapper_ && cfg_.Get<bool>("disable_mapper")) {
     // Timers
     timer_o_.stop();
     timer_f_.stop();
     // Subscribers
-    segment_sub_.shutdown();
-    reset_sub_.shutdown();
+    segment_sub_.reset();
+    reset_sub_.reset();
   }
   disable_mapper_ = cfg_.Get<bool>("disable_mapper");
 
   return true;
 }
 
-void MapperNodelet::ResetCallback(std_msgs::EmptyConstPtr const& msg) {
+void MapperComponent::ResetCallback(const std::shared_ptr<std_msgs::Empty> msg) {
   globals_.octomap.ResetMap();
 }
 

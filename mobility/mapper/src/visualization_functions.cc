@@ -31,7 +31,7 @@ void SetMarkerProperties(const std_msgs::Header &header,
   for (visualization_msgs::Marker& marker : markers->markers) {
     marker.header = header;
     marker.id = count;
-    marker.lifetime = ros::Duration(life_time);
+    marker.lifetime = rclcpp::Duration(std::chrono::duration<float>(life_time));
     ++count;
   }
 }
@@ -55,34 +55,39 @@ void SetMarkersForDeletion(visualization_msgs::MarkerArray* marker_array) {
 }
 
 void DrawObstacleNodes(const std::vector<Eigen::Vector3d> &points,
+                       const rclcpp::Time rostime,
                        const std::string &frame_id,
                        const double &resolution,
                        visualization_msgs::MarkerArray* marker_array) {
-  DrawNodes(points, frame_id, "obstacle", resolution, Color::Blue(), 0.1, marker_array);
+  DrawNodes(points, rostime, frame_id, "obstacle", resolution, Color::Blue(), 0.1, marker_array);
 }
 
 void DrawTreeNodes(const std::vector<Eigen::Vector3d> &points,
+                   const rclcpp::Time rostime,
                    const std::string &frame_id,
                    const double &resolution,
                    visualization_msgs::MarkerArray* marker_array) {
-  DrawNodes(points, frame_id, "path", resolution, Color::Orange(), 0.1, marker_array);
+  DrawNodes(points, rostime, frame_id, "path", resolution, Color::Orange(), 0.1, marker_array);
 }
 
 void DrawCollidingNodes(const std::vector<Eigen::Vector3d> &points,
+                        const rclcpp::Time rostime,
                         const std::string &frame_id,
                         const double &resolution,
                         visualization_msgs::MarkerArray* marker_array) {
-  DrawNodes(points, frame_id, "collision", resolution, Color::Red(), 0.9, marker_array);
+  DrawNodes(points, rostime, frame_id, "collision", resolution, Color::Red(), 0.9, marker_array);
 }
 
 void DrawCollidingNodes(const std::vector<octomap::point3d> &points,
+                        const rclcpp::Time rostime,
                         const std::string &frame_id,
                         const double &resolution,
                         visualization_msgs::MarkerArray *marker_array) {
-  DrawNodes(points, frame_id, "collision", resolution, Color::Red(), 0.9, marker_array);
+  DrawNodes(points, rostime, frame_id, "collision", resolution, Color::Red(), 0.9, marker_array);
 }
 
 void DrawNodes(const std::vector<Eigen::Vector3d> &points,
+               const rclcpp::Time rostime,
                const std::string &frame_id,
                const std::string &ns,  // namespace
                const double &resolution,
@@ -98,9 +103,8 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
   marker.scale.z = resolution;
   marker.ns = ns;
   marker.header.frame_id = frame_id;
-  marker.header.stamp = ros::Time::now();
+  marker.header.stamp = rostime;
   marker.pose.orientation.w = 1.0;
-  marker.header.seq = 0;
   marker.id = 0;
 
   // Get the number of requested waypoints
@@ -122,11 +126,12 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
 
   std_msgs::Header header;
   header.frame_id = frame_id;
-  header.stamp = ros::Time::now();
+  header.stamp = rostime;
   SetMarkerProperties(header, 0.0, marker_array);
 }
 
 void DrawNodes(const std::vector<octomap::point3d> &points,
+               const rclcpp::Time rostime,
                const std::string &frame_id,
                const std::string &ns,  // namespace
                const double &resolution,
@@ -142,9 +147,8 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
   marker.scale.z = resolution;
   marker.ns = ns;
   marker.header.frame_id = frame_id;
-  marker.header.stamp = ros::Time::now();
+  marker.header.stamp = rostime;
   marker.pose.orientation.w = 1.0;
-  marker.header.seq = 0;
   marker.id = 0;
 
   // Get the number of requested waypoints
@@ -166,17 +170,17 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
 
   std_msgs::Header header;
   header.frame_id = frame_id;
-  header.stamp = ros::Time::now();
+  header.stamp = rostime;
   SetMarkerProperties(header, 0.0, marker_array);
 }
 
 void MarkerNode(const Eigen::Vector3d &point,
+               const rclcpp::Time rostime,
                 const std::string &frame_id,
                 const std::string &ns,  // namespace
                 const double &resolution,
                 const std_msgs::ColorRGBA &color,
                 const double &transparency,  // 0 -> transparent, 1 -> opaque
-                const int &seqNumber,
                 visualization_msgs::Marker* marker) {
   marker->type = visualization_msgs::Marker::CUBE;
   marker->action = visualization_msgs::Marker::ADD;
@@ -187,7 +191,7 @@ void MarkerNode(const Eigen::Vector3d &point,
   marker->scale.z = resolution;
   marker->ns = ns;
   marker->header.frame_id = frame_id;
-  marker->header.stamp = ros::Time::now();
+  marker->header.stamp = rostime;
   marker->pose.orientation.w = 1.0;
 
   geometry_msgs::Point position_msg;
@@ -195,24 +199,25 @@ void MarkerNode(const Eigen::Vector3d &point,
   position_msg.y = point(1);
   position_msg.z = point(2);
   marker->pose.position = position_msg;
-  marker->header.seq = seqNumber;
 }
 
 void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::vector<Eigen::Vector3d> &waypoints,
+                       const rclcpp::Time rostime,
                        visualization_msgs::MarkerArray *markers) {
-  PathVisualization(total_path, waypoints, Color::Green(), "/Path", markers);
+  PathVisualization(total_path, waypoints, Color::Green(), rostime, "/Path", markers);
 }
 
 void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::vector<Eigen::Vector3d> &waypoints,
                        const std_msgs::ColorRGBA &color,
+                       const rclcpp::Time rostime,
                        const std::string &ns,  // namespace
                        visualization_msgs::MarkerArray *markers) {
   // Initialize edges marker
   visualization_msgs::Marker line_list;
   line_list.header.frame_id = "/world";
-  line_list.header.stamp = ros::Time::now();
+  line_list.header.stamp = rostime;
   line_list.ns = ns;
   line_list.action = visualization_msgs::Marker::ADD;
   line_list.type = visualization_msgs::Marker::LINE_LIST;
@@ -239,7 +244,7 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
   // Populate the waypoints
   visualization_msgs::Marker endpoints;
   endpoints.header.frame_id = "/world";
-  endpoints.header.stamp = ros::Time::now();
+  endpoints.header.stamp =  rostime;
   endpoints.ns = ns;
   endpoints.action = visualization_msgs::Marker::ADD;
   endpoints.type = visualization_msgs::Marker::SPHERE_LIST;

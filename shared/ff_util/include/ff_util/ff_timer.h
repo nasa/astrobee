@@ -90,6 +90,7 @@ class FreeFlyerTimer {
                    rclcpp::Clock::SharedPtr clock,
                    bool one_shot = false,
                    bool auto_start = true) {
+    if (period.toSec() < 0.0) period = rclcpp::Duration(0, 0);
     period_ = period;
     cb_timer_ = cb_timer;
     one_shot_ = one_shot;
@@ -119,6 +120,7 @@ class FreeFlyerTimer {
   }
 
   bool setPeriod(rclcpp::Duration period) {
+    if (period.toSec() < 0.0) period = rclcpp::Duration(0, 0);
     period_ = period;
     // See if the timer has been created
     if (created_) {

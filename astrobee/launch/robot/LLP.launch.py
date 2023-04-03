@@ -36,273 +36,164 @@ def generate_launch_description():
 
         SetEnvironmentVariable(name="ROS_HOSTNAME", condition=LaunchConfigurationNotEquals("llp", "local"),
                                value=LaunchConfiguration("llp")),
+
+
+        DeclareLaunchArgument("drivers",),                    # Start platform drivers
+        DeclareLaunchArgument("spurn", default_value=""),     # Prevent a specific node
+        DeclareLaunchArgument("nodes", default_value=""),     # Launch specific nodes
+        DeclareLaunchArgument("extra", default_value=""),     # Inject an additional node
+        DeclareLaunchArgument("debug", default_value=""),     # Debug node group
+
+        DeclareLaunchArgument("output",  default_value="log"),    # Output to screen or log
+        DeclareLaunchArgument("gtloc",   default_value="false"),  # Use Ground Truth Localizer
+
+
+
         ComposableNodeContainer(
         name='llp_gnc',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
             ComposableNode(
                 package='ctl',
                 plugin='ctl::CtlComponent',
                 name='ctl',
-                extra_arguments=[{'use_intra_process_comms': True}]),
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ComposableNode(
                 package='fam',
                 plugin='fam::FamComponent',
                 name='fam',
-                extra_arguments=[{'use_intra_process_comms': True}])
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
             ]
         ),
-        # ComposableNodeContainer(
-        # name='llp_imu_aug',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
+        ComposableNodeContainer(
+        name='llp_imu_aug',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("gtloc")),
+        composable_node_descriptions=[
         #     ComposableNode(
         #         package='imu_augmentor',
         #         plugin='imu_augmentor::ImuAugmentorNodelet',
         #         name='imu_aug',
         #         condition=IfCondition(LaunchConfiguration("gtloc")),
         #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
-        # ComposableNodeContainer(
-        # name='llp_monitors',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
+            ]
+        ),
+        ComposableNodeContainer(
+        name='llp_monitors',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
         #     ComposableNode(
-        #         package='localization_manager',
-        #         plugin='localization_manager::LocalizationManagerNodelet',
+        #         package='cpu_mem_monitor',
+        #         plugin='cpu_mem_monitor::CpuMemMonitor',
+        #         name='llp_cpu_mem_monitor',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+        #     ComposableNode(
+        #         package='disk_monitor',
+        #         plugin='disk_monitor::DiskMonitor',
+        #         name='llp_disk_monitor',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='llp_i2c',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
+        #     ComposableNode(
+        #         package='eps_driver',
+        #         plugin='eps_driver::EpsDriverNode',
+        #         name='eps_driver',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+        #     ComposableNode(
+        #         package='laser',
+        #         plugin='laser::LaserNodelet',
+        #         name='laser',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+        #     ComposableNode(
+        #         package='flashlight',
+        #         plugin='flashlight::FlashlightNodelet',
+        #         name='flashlight_front',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+        #     ComposableNode(
+        #         package='flashlight',
+        #         plugin='flashlight::FlashlightNodelet',
+        #         name='flashlight_aft',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='llp_serial',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
+        #     ComposableNode(
+        #         package='speed_cam',
+        #         plugin='speed_cam::SpeedCamNode',
+        #         name='speed_cam',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='llp_pmc',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
+        #     ComposableNode(
+        #         package='pmc_actuator',
+        #         plugin='pmc_actuator::PmcActuatorNodelet',
+        #         name='pmc_actuator',
+        #         extra_arguments=[{'use_intra_process_comms': True}]),
+            ]
+        ),
+        ComposableNodeContainer(
+        name='llp_imu',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
+        #     ComposableNode(
+        #         package='epson_imu',
+        #         plugin='epson_imu::EpsonImuNodelet',
         #         name='localization_manager',
         #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
-        # ComposableNodeContainer(
-        # name='llp_i2c',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
         #     ComposableNode(
-        #         package='localization_manager',
-        #         plugin='localization_manager::LocalizationManagerNodelet',
+        #         package='calibration_imu',
+        #         plugin='epson_imu::EpsonImuNodelet',
         #         name='localization_manager',
         #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
-        # ComposableNodeContainer(
-        # name='llp_serial',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
+            ]
+        ),
+        ComposableNodeContainer(
+        name='llp_lights',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container',
+        condition=IfCondition(LaunchConfiguration("drivers")),
+        composable_node_descriptions=[
         #     ComposableNode(
-        #         package='localization_manager',
-        #         plugin='localization_manager::LocalizationManagerNodelet',
-        #         name='localization_manager',
+        #         package='signal_lights',
+        #         plugin='signal_lights::SignalLightsNodelet',
+        #         name='signal_lights',
         #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
-        # ComposableNodeContainer(
-        # name='llp_pmc',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
-        #     ComposableNode(
-        #         package='localization_manager',
-        #         plugin='localization_manager::LocalizationManagerNodelet',
-        #         name='localization_manager',
-        #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
-        # ComposableNodeContainer(
-        # name='llp_imu',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
-        #     ComposableNode(
-        #         package='localization_manager',
-        #         plugin='localization_manager::LocalizationManagerNodelet',
-        #         name='localization_manager',
-        #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
-        # ComposableNodeContainer(
-        # name='llp_lights',
-        # namespace='',
-        # package='rclcpp_components',
-        # executable='component_container',
-        # composable_node_descriptions=[
-        #     ComposableNode(
-        #         package='localization_manager',
-        #         plugin='localization_manager::LocalizationManagerNodelet',
-        #         name='localization_manager',
-        #         extra_arguments=[{'use_intra_process_comms': True}]),
-        #     ]
-        # ),
+            ComposableNode(
+                package='light_flow',
+                plugin='light_flow::LightFlowComponent',
+                name='light_flow',
+                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+            ]
+        ),
     ])
-
-
-# <launch>
-
-#   <!-- Additional options -->
-#   <arg name="drivers"/>                       <!-- Should we launch drivers? -->
-#   <arg name="spurn" default=""/>              <!-- PRevent a specific node   -->
-#   <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
-#   <arg name="extra" default=""/>              <!-- Inject an additional node -->
-#   <arg name="debug" default=""/>              <!-- Debug a node set          -->
-#   <arg name="output" default="log"/>          <!-- Where to log              -->
-#   <arg name="gtloc" default="false"/>         <!-- Runs ground_truth_localizer -->
-
-
-
-#   <!-- Launch GNC nodes -->
-#   <group unless="$(arg gtloc)">
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
-#       <arg name="name" value="imu_aug" />
-#       <arg name="manager" value="llp_imu_aug" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#   </group>
-
-
-#   <!-- Launch driver nodes, if required -->
-#   <group if="$(arg drivers)">
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="epson_imu/EpsonImuNodelet" />
-#       <arg name="name" value="epson_imu" />
-#       <arg name="manager" value="llp_imu" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="epson_imu/EpsonImuNodelet" />
-#       <arg name="name" value="calibration_imu" />
-#       <arg name="manager" value="llp_imu" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="false" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="pmc_actuator/PmcActuatorNodelet" />
-#       <arg name="name" value="pmc_actuator" />
-#       <arg name="manager" value="llp_pmc" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="eps_driver/EpsDriverNode" />
-#       <arg name="name" value="eps_driver" />
-#       <arg name="manager" value="llp_i2c" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="laser/LaserNodelet" />
-#       <arg name="name" value="laser" />
-#       <arg name="manager" value="llp_i2c" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="flashlight/FlashlightNodelet" />
-#       <arg name="name" value="flashlight_front" />
-#       <arg name="manager" value="llp_i2c" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="flashlight/FlashlightNodelet" />
-#       <arg name="name" value="flashlight_aft" />
-#       <arg name="manager" value="llp_i2c" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="signal_lights/SignalLightsNodelet" />
-#       <arg name="name" value="signal_lights" />
-#       <arg name="manager" value="llp_lights" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="light_flow/LightFlowNodelet" />
-#       <arg name="name" value="light_flow" />
-#       <arg name="manager" value="llp_lights" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="speed_cam/SpeedCamNode" />
-#       <arg name="name" value="speed_cam" />
-#       <arg name="manager" value="llp_serial" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
-#       <arg name="name" value="llp_cpu_mem_monitor" />
-#       <arg name="manager" value="llp_monitors" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-#     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-#       <arg name="class" value="disk_monitor/DiskMonitor" />
-#       <arg name="name" value="llp_disk_monitor" />
-#       <arg name="manager" value="llp_monitors" />
-#       <arg name="spurn" value="$(arg spurn)" />
-#       <arg name="nodes" value="$(arg nodes)" />
-#       <arg name="extra" value="$(arg extra)" />
-#       <arg name="debug" value="$(arg debug)" />
-#       <arg name="default" value="true" />
-#     </include>
-
-#   </group>
-
-# </launch>

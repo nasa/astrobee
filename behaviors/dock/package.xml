@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<package>
+<package format="3">
   <name>dock</name>
   <version>0.0.0</version>
   <description>
-    The dock procedure.
+    Composite dock procedure.
   </description>
   <license>
     Apache License, Version 2.0
@@ -14,10 +14,8 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>nodelet</build_depend>
-  <build_depend>pluginlib</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>rclcpp</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>ff_hw_msgs</build_depend>
   <build_depend>ff_msgs</build_depend>
@@ -25,17 +23,17 @@
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>pluginlib</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>ff_hw_msgs</run_depend>
-  <run_depend>ff_msgs</run_depend>
-  <run_depend>ff_util</run_depend>
-  <run_depend>tf2</run_depend>
-  <run_depend>tf2_ros</run_depend>
-  <run_depend>tf2_geometry_msgs</run_depend>
+
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>ff_hw_msgs</exec_depend>
+  <exec_depend>ff_msgs</exec_depend>
+  <exec_depend>ff_util</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+
   <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

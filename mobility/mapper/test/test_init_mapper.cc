@@ -44,7 +44,7 @@ void FaultStateCallback(ff_msgs::FaultStateConstPtr const& state) {
   fault_state = state;
 }
 
-void FaultCheckTimeoutCallback(ros::TimerEvent const& te) {
+void FaultCheckTimeoutCallback() {
   bool found = false;
   for (unsigned int i = 0; i < fault_state->faults.size() && !found; i++) {
     if (static_cast<int>(fault_state->faults[i].id) == init_fault_id) {

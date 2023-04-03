@@ -20,14 +20,23 @@
 #define LOCALIZATION_MANAGER_LOCALIZATION_PIPELINE_H_
 
 // ROS
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 // Message types
-#include <ff_msgs/CameraRegistration.h>
-#include <ff_msgs/VisualLandmarks.h>
-#include <ff_msgs/DepthLandmarks.h>
-#include <ff_msgs/SetBool.h>
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/msg/camera_registration.hpp>
+#include <ff_msgs/msg/visual_landmarks.hpp>
+#include <ff_msgs/msg/depth_landmarks.hpp>
+#include <ff_msgs/msg/localization_pipeline.hpp>
+#include <ff_msgs/msg/ekf_state.hpp>
+#include <ff_msgs/srv/set_bool.hpp>
+namespace ff_msgs {
+  typedef msg::CameraRegistration CameraRegistration;
+  typedef msg::VisualLandmarks VisualLandmarks;
+  typedef msg::DepthLandmarks DepthLandmarks;
+  typedef msg::LocalizationPipeline LocalizationPipeline;
+  typedef msg::EkfState EkfState;
+  typedef srv::SetBool SetBool;
+}  // namespace ff_msgs
 
 // C++ includes
 #include <functional>
@@ -133,7 +142,7 @@ struct Pipeline {
   }
 
   // Initialize the pipeline
-  bool Initialize(ros::NodeHandle *nh,
+  bool Initialize(rclcpp::Node::SharedPtr nh,
     PipelineCallbackType cb_error,
     std::function<void(void)> cb_connected,
     std::function<void(void)> cb_timeout) {
@@ -163,22 +172,22 @@ struct Pipeline {
     // If we are enabling this pipeline
     if (enable) {
       if (components_ & COMPONENT_REGISTRATIONS) {
-        sub_reg_ = nh_->subscribe(topic_reg_, 1,
-          &Pipeline::RegistrationCallback, this);
-        timer_reg_ = nh_->createTimer(ros::Duration(timeout_reg_),
-          &Pipeline::RegistrationTimeoutCallback, this);
+        sub_reg_ = FF_CREATE_SUBSCRIBER(nh_, ff_msgs::CameraRegistration, topic_reg_, 1,
+          std::bind(&Pipeline::RegistrationCallback, this, std::placeholders::_1));
+        timer_reg_.createTimer(timeout_reg_,
+          std::bind(&Pipeline::RegistrationTimeoutCallback, this), nh_);
       }
       if (components_ & COMPONENT_VISUAL_FEATURES) {
-        sub_visual_ = nh_->subscribe(topic_visual_, 1,
-          &Pipeline::VisualCallback, this);
-        timer_visual_ = nh_->createTimer(ros::Duration(timeout_visual_),
-          &Pipeline::VisualTimeoutCallback, this, false, false);
+        sub_visual_ = FF_CREATE_SUBSCRIBER(nh_, ff_msgs::VisualLandmarks, topic_visual_, 1,
+          std::bind(&Pipeline::VisualCallback, this, std::placeholders::_1));
+        timer_visual_.createTimer(timeout_visual_,
+          std::bind(&Pipeline::VisualTimeoutCallback, this), nh_, false, false);
       }
       if (components_ & COMPONENT_DEPTH_FEATURES) {
-        sub_depth_ = nh_->subscribe(topic_depth_, 1,
-          &Pipeline::DepthCallback, this);
-        timer_depth_ = nh_->createTimer(ros::Duration(timeout_depth_),
-          &Pipeline::DepthTimeoutCallback, this);
+        sub_depth_ = FF_CREATE_SUBSCRIBER(nh_, ff_msgs::DepthLandmarks, topic_depth_, 1,
+          std::bind(&Pipeline::DepthCallback, this, std::placeholders::_1));
+        timer_depth_.createTimer(timeout_depth_,
+          std::bind(&Pipeline::DepthTimeoutCallback, this), nh_);
       }
     } else {
       // Make sure we don't keep monitoring the filter when the pipeline
@@ -186,23 +195,24 @@ struct Pipeline {
       Use(false);
       // Stop monitoring the raw pipeline stream.
       if (components_ & COMPONENT_VISUAL_FEATURES) {
-        sub_visual_.shutdown();
+        sub_visual_.reset();
         timer_visual_.stop();
       }
       if (components_ & COMPONENT_DEPTH_FEATURES) {
-        sub_depth_.shutdown();
+        sub_depth_.reset();
         timer_depth_.stop();
       }
       if (components_ & COMPONENT_REGISTRATIONS) {
-        sub_reg_.shutdown();
+        sub_reg_.reset();
         timer_reg_.stop();
       }
     }
-    // Enable or disable the pipeline if neededs
+    // Enable or disable the pipeline if needed
     if (components_ & COMPONENT_ENABLE) {
-      ff_msgs::SetBool msg;
-      msg.request.enable = enable;
-      if (!service_.Call(msg))
+      ff_msgs::SetBool::Request req;
+      req.enable = enable;
+      auto res = std::make_shared<ff_msgs::SetBool::Response>();
+      if (!service_.Call(req, res))
         return false;
     }
     return true;
@@ -213,14 +223,14 @@ struct Pipeline {
     // If we are enabling this pipeline
     if (enable) {
       if (components_ & COMPONENT_FILTER) {
-        sub_filter_ = nh_->subscribe(TOPIC_GNC_EKF, 1,
-          &Pipeline::FilterCallback, this);
-        timer_filter_ = nh_->createTimer(ros::Duration(timeout_filter_),
-          &Pipeline::FilterTimeoutCallback, this, false, false);
+        sub_filter_ = FF_CREATE_SUBSCRIBER(nh_, ff_msgs::EkfState, TOPIC_GNC_EKF, 1,
+          std::bind(&Pipeline::FilterCallback, this, std::placeholders::_1));
+        timer_filter_.createTimer(timeout_filter_,
+          std::bind(&Pipeline::FilterTimeoutCallback, this), nh_, false, false);
       }
     } else {
       if (components_ & COMPONENT_FILTER) {
-        sub_filter_.shutdown();
+        sub_filter_.reset();
         timer_filter_.stop();
       }
     }
@@ -229,18 +239,18 @@ struct Pipeline {
 
  protected:
   // Called back when registration pulses arrive for processing
-  void RegistrationCallback(ff_msgs::CameraRegistration::ConstPtr const& msg) {
+  void RegistrationCallback(const std::shared_ptr<ff_msgs::CameraRegistration> msg) {
     timer_reg_.stop();
     timer_reg_.start();
   }
 
   // Called when registration pulses don't arrive
-  void RegistrationTimeoutCallback(ros::TimerEvent const& event) {
+  void RegistrationTimeoutCallback() {
     callback_(ERROR_REGISTRATION_TIMEOUT);
   }
 
   // Called back when visual features arrive for processing
-  void VisualCallback(ff_msgs::VisualLandmarks::ConstPtr const& msg) {
+  void VisualCallback(const std::shared_ptr<ff_msgs::VisualLandmarks> msg) {
     if (msg->landmarks.size() < min_visual_)
       return;
     timer_visual_.stop();
@@ -248,12 +258,12 @@ struct Pipeline {
   }
 
   // Called when visual features don't arrive
-  void VisualTimeoutCallback(ros::TimerEvent const& event) {
+  void VisualTimeoutCallback() {
     callback_(ERROR_VISUAL_TIMEOUT);
   }
 
   // Called back when depth features arrive for processing
-  void DepthCallback(ff_msgs::DepthLandmarks::ConstPtr const& msg) {
+  void DepthCallback(const std::shared_ptr<ff_msgs::DepthLandmarks> msg) {
     if (msg->landmarks.size() < min_depth_)
       return;
     timer_depth_.stop();
@@ -261,12 +271,12 @@ struct Pipeline {
   }
 
   // Called when depth features don't arrive
-  void DepthTimeoutCallback(ros::TimerEvent const& event) {
+  void DepthTimeoutCallback() {
     callback_(ERROR_DEPTH_TIMEOUT);
   }
 
   // Called when filter estimates arrive
-  void FilterCallback(ff_msgs::EkfState::ConstPtr const& msg) {
+  void FilterCallback(const std::shared_ptr<ff_msgs::EkfState> msg) {
     if (msg->estimating_bias)
       callback_(ERROR_FILTER_BIAS);
     else if (msg->confidence > max_filter_)
@@ -276,7 +286,7 @@ struct Pipeline {
   }
 
   // Called when filter estimates don't arrive
-  void FilterTimeoutCallback(ros::TimerEvent const& event) {
+  void FilterTimeoutCallback() {
     callback_(ERROR_FILTER_TIMEOUT);
   }
 
@@ -284,11 +294,14 @@ struct Pipeline {
   uint8_t mode_, components_;
   std::string name_, topic_enable_, topic_reg_, topic_visual_, topic_depth_;
   double timeout_reg_, timeout_visual_, timeout_depth_, timeout_enable_, timeout_filter_;
-  ros::Subscriber sub_visual_, sub_depth_, sub_reg_, sub_filter_;
+  rclcpp::Subscription<ff_msgs::VisualLandmarks>::SharedPtr sub_visual_;
+  rclcpp::Subscription<ff_msgs::DepthLandmarks>::SharedPtr sub_depth_;
+  rclcpp::Subscription<ff_msgs::CameraRegistration>::SharedPtr sub_reg_;
+  rclcpp::Subscription<ff_msgs::EkfState>::SharedPtr sub_filter_;
   uint32_t min_visual_, min_depth_, max_filter_;
   ff_util::FreeFlyerServiceClient<ff_msgs::SetBool> service_;
-  ros::NodeHandle *nh_;
-  ros::Timer timer_visual_, timer_filter_, timer_depth_, timer_reg_;
+  rclcpp::Node::SharedPtr nh_;
+  ff_util::FreeFlyerTimer timer_visual_, timer_filter_, timer_depth_, timer_reg_;
   PipelineCallbackType callback_;
 };
 
