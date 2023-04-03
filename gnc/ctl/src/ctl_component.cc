@@ -30,7 +30,7 @@ class CtlComponent : public ff_util::FreeFlyerComponent {
   explicit CtlComponent(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options, NODE_CTL) {}
   ~CtlComponent() {}
   // This is called when the nodelet is loaded into the nodelet manager
-  void Initialize(NodeHandle nh) {
+  void Initialize(NodeHandle &nh) {
     // this used to be multi-threaded, but don't think it needs to be
     ctl_.reset(new ctl::Ctl(nh, GetName()));
   }

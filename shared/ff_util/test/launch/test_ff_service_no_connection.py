@@ -75,8 +75,9 @@ def generate_test_description():
                     ComposableNode(
                         package="ff_util",
                         plugin="ff_util::TestServiceClient",
-                        name="test_ff_service_client"),
-                ]
+                        name="test_ff_service_client",
+                    ),
+                ],
             ),
             test_ff_service_no_connection,
             # Tell launch when to start the test
@@ -89,7 +90,9 @@ def generate_test_description():
 
 class TestTerminatingProcessStops(unittest.TestCase):
     def test_proc_terminates(self, proc_info, test_ff_service_no_connection):
-        proc_info.assertWaitForShutdown(process=test_ff_service_no_connection, timeout=30)
+        proc_info.assertWaitForShutdown(
+            process=test_ff_service_no_connection, timeout=30
+        )
 
 
 # These tests are run after the processes in generate_test_description() have shutdown.

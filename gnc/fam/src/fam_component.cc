@@ -30,7 +30,7 @@ class FamComponent : public ff_util::FreeFlyerComponent {
   explicit FamComponent(const rclcpp::NodeOptions & options) : ff_util::FreeFlyerComponent(options, NODE_FAM) {}
   ~FamComponent() {}
   // This is called when the nodelet is loaded into the nodelet manager
-  void Initialize(NodeHandle nh) {
+  void Initialize(NodeHandle &nh) {
     // this used to be multi-threaded, but don't think it needs to be
     fam_.reset(new fam::Fam(nh));
   }

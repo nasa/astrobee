@@ -86,7 +86,7 @@ def generate_test_description():
                         plugin="ff_util::TestServiceClient",
                         name="test_ff_service_client",
                     ),
-                ]
+                ],
             ),
             test_ff_service_nominal,
             # Tell launch when to start the test

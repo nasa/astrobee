@@ -89,6 +89,7 @@ astrobee/zones/*.bin
 /*-rootfs
 /*-kernel
 /*-logs
+/log
 /qped.sublime-workspace
 *.egg
 *.egg-info

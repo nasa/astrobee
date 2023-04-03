@@ -53,8 +53,8 @@ add_library(jsonloader SHARED
   src/planio.cc
   src/validation.cc
 )
-ament_export_targets(jsonloader HAS_LIBRARY_TARGET)
 target_link_libraries(jsonloader gflags glog ${JSONCPP_LIBRARIES} )
+ament_export_targets(jsonloader HAS_LIBRARY_TARGET)
 
 #if(CATKIN_ENABLE_TESTING)
 #  find_package(rostest REQUIRED)
@@ -104,6 +104,8 @@ target_link_libraries(jsonloader gflags glog ${JSONCPP_LIBRARIES} )
 #############
 ## Install ##
 #############
+
+ament_export_include_directories(include)
 
 target_include_directories(jsonloader
   PUBLIC

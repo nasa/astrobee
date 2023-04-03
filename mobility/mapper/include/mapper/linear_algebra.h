@@ -186,11 +186,11 @@ class FrustumPlanes{
   }
 
   // Return visualization markers frustum visualization
-  void VisualizeFrustum(const std::string &frame_id,
+  void VisualizeFrustum(const rclcpp::Time rostime, const std::string &frame_id,
                         visualization_msgs::Marker *line_list) {
     // Initialize array
     line_list->header.frame_id = frame_id;
-    line_list->header.stamp = ros::Time::now();
+    line_list->header.stamp = rostime;
     line_list->ns = "fustrum/" + frame_id;
     line_list->action = visualization_msgs::Marker::ADD;
     line_list->pose.orientation.w = 1.0;
@@ -198,7 +198,7 @@ class FrustumPlanes{
     line_list->id = 0;
     line_list->scale.x = 0.01;  // Line width
     line_list->color = visualization_functions::Color::Red();
-    line_list->lifetime = ros::Duration(1);  // Disappears in 1 second
+    line_list->lifetime = rclcpp::Duration(std::chrono::duration<float>(1));  // Disappears in 1 second
 
     std::vector<Eigen::Vector3d> points;
     points.push_back(origin_);

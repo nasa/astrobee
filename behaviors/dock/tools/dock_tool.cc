@@ -21,14 +21,19 @@
 #include <gflags/gflags_completions.h>
 
 // Include RPOS
-#include <ros/ros.h>
+#include <ff_common/ff_ros.h>
 
 // FSW includes
 #include <ff_common/ff_names.h>
 #include <ff_util/ff_action.h>
 
-// Action
-#include <ff_msgs/DockAction.h>
+// FSW Action, messages, services
+#include <ff_msgs/action/dock.hpp>
+#include <ff_msgs/msg/dock_state.hpp>
+namespace ff_msgs {
+  typedef action::Dock Dock;
+  typedef msg::DockState DockState;
+}  // namespace ff_msgs
 
 // C++ STL includes
 #include <iostream>
@@ -58,7 +63,7 @@ DEFINE_double(deadline, -1.0, "Action deadline timeout");
 using STATE = ff_msgs::DockState;
 
 // Dock action feedback
-void FeedbackCallback(ff_msgs::DockFeedbackConstPtr const& feedback) {
+void FeedbackCallback(const std::shared_ptr<const ff_msgs::Dock::Feedback> feedback) {
   std::cout << "\r                                                   "
             << "\rFSM: " << feedback->state.fsm_event
             << " -> " << feedback->state.fsm_state << std::flush;
@@ -66,7 +71,7 @@ void FeedbackCallback(ff_msgs::DockFeedbackConstPtr const& feedback) {
 
 // Dock action result
 void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
-  ff_msgs::DockResultConstPtr const& result) {
+  std::shared_ptr<const ff_msgs::Dock::Result> result) {
   std::cout << std::endl << "Result: ";
   // Print general response code
   switch (code) {
@@ -91,32 +96,32 @@ void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
 teardown:
   std::cout << std::endl;
   // In all cases we must shutdown
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
 // Ensure all clients are connected
 void ConnectedCallback(
-  ff_util::FreeFlyerActionClient<ff_msgs::DockAction> *client) {
+  ff_util::FreeFlyerActionClient<ff_msgs::Dock> *client) {
   // Check to see if connected
   if (!client->IsConnected()) return;
   // Print out a status message
   std::cout << "\r                                                   "
             << "\rState: CONNECTED" << std::flush;
   // Prepare the goal
-  ff_msgs::DockGoal goal;
+  ff_msgs::Dock::Goal goal;
   if (FLAGS_dock) {
-    goal.command = ff_msgs::DockGoal::DOCK;
+    goal.command = ff_msgs::Dock::Goal::DOCK;
     switch (FLAGS_berth) {
-    case 1: goal.berth = ff_msgs::DockGoal::BERTH_1; break;
-    case 2: goal.berth = ff_msgs::DockGoal::BERTH_2; break;
+    case 1: goal.berth = ff_msgs::Dock::Goal::BERTH_1; break;
+    case 2: goal.berth = ff_msgs::Dock::Goal::BERTH_2; break;
     default:
       std::cout << "Error: invalid berth";
-      ros::shutdown();
+      rclcpp::shutdown();
       break;
     }
     goal.return_dock = FLAGS_return_dock;
   } else if (FLAGS_undock) {
-    goal.command = ff_msgs::DockGoal::UNDOCK;
+    goal.command = ff_msgs::Dock::Goal::UNDOCK;
   }
   client->SendGoal(goal);
 }
@@ -124,7 +129,8 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "dock_tool", ros::init_options::AnonymousName);
+  // ros::init(argc, argv, "dock_tool", ros::init_options::AnonymousName);
+  rclcpp::init(argc, argv);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun dock dock_tool <opts>");
   google::SetVersionString("0.1.0");
@@ -144,9 +150,11 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // Action clients
-  ff_util::FreeFlyerActionClient<ff_msgs::DockAction> client;
+  ff_util::FreeFlyerActionClient<ff_msgs::Dock> client;
   // Create a node handle
-  ros::NodeHandle nh(std::string("/") + FLAGS_ns);
+  std::string ns = std::string("/") + FLAGS_ns;
+  auto nh = std::make_shared<rclcpp::Node>("dock_tool", ns);
+
   // Setup SWITCH action
   client.SetConnectedTimeout(FLAGS_connect);
   client.SetActiveTimeout(FLAGS_active);
@@ -158,13 +166,13 @@ int main(int argc, char *argv[]) {
   client.SetResultCallback(std::bind(ResultCallback,
     std::placeholders::_1, std::placeholders::_2));
   client.SetConnectedCallback(std::bind(ConnectedCallback, &client));
-  client.Create(&nh, ACTION_BEHAVIORS_DOCK);
+  client.Create(nh, ACTION_BEHAVIORS_DOCK);
   // Print out a status message
   std::cout << "\r                                                   "
             << "\rState: CONNECTING" << std::flush;
   // Synchronous mode
-  ros::spin();
-  // Finish commandline flags
+  rclcpp::spin(nh);
+  // Finish command line flags
   google::ShutDownCommandLineFlags();
   // Make for great success
   return 0;

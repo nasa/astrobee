@@ -32,36 +32,7 @@ ConfigClient::ConfigClient(NodeHandle & nh, const std::string &node) {
 
 ConfigClient::~ConfigClient() {}
 
-// Templated functions
-
-template<typename T>
-bool ConfigClient::Get(const std::string &name, T &value) {
-  if (!parameters_client_->has_parameter(name)) {
-      FF_ERROR_STREAM("Cannot query parameter " << name);
-      return false;
-  }
-  value = parameters_client_->get_parameter<T>(name);
-  return true;
+void ConfigClient::Error(std::string s) {
+  FF_ERROR_STREAM(s);
 }
-
-template<typename T>
-bool ConfigClient::Set(const std::string &name, const T &value) {
-  rclcpp::Parameter p(name, value);
-  auto result = parameters_client_->set_parameters({p});
-  if (result.size() != 1 || !result[0].successful) {
-    FF_WARN_STREAM("Failed to set parameter " << name);
-    return false;
-  }
-  return true;
-}
-
-template<typename T>
-T ConfigClient::Get(const std::string &name) {
-  T tmp;
-  if (!Get(name, tmp)) {
-    FF_ERROR_STREAM("Cannot query parameter " << name);
-  }
-  return tmp;
-}
-
 }  //  namespace ff_util

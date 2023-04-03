@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <vector>
+#include "rclcpp/rclcpp.hpp"
 #include "mapper/polynomials.h"
 
 namespace polynomials {
@@ -254,18 +255,18 @@ void Poly3D::SegmentAtTime(const double time,
 Trajectory3D::Trajectory3D(const ff_msgs::Segment segments) {
   n_segments_ = segments.segment.size() - 1;
   if (n_segments_ > 0) {
-    ros::Time t0_segment;
-    ros::Time tf_segment;
+    rclcpp::Time t0_segment;
+    rclcpp::Time tf_segment;
 
-    t0_ = segments.segment[0].when.toSec();
-    tf_ = segments.segment[n_segments_].when.toSec();
+    t0_ = rclcpp::Time(segments.segment[0].when).seconds();
+    tf_ = rclcpp::Time(segments.segment[n_segments_].when).seconds();
 
     for (int i = 0; i < n_segments_; i++) {
       t0_segment = segments.segment[i].when;
       tf_segment = segments.segment[i+1].when;
 
-      Poly3D newSegment(t0_segment.toSec(),
-                        tf_segment.toSec(),
+      Poly3D newSegment(t0_segment.seconds(),
+                        tf_segment.seconds(),
                         segments.segment[i]);
       segments_poly_.push_back(newSegment);
     }
@@ -298,7 +299,7 @@ void Trajectory3D::TrajectoryAtTime(const double time,
   // if the code reaches this point, it means that we have to
   // return the value of the polynomial some time after tf (extrapolation)
   segments_poly_[n_segments_-1].SegmentAtTime(time, result);
-  ROS_WARN("Time extrapolation when returning polynomial!");
+  std::cout << "Time extrapolation when returning polynomial!" << std::endl;
   return;
 }
 
@@ -315,7 +316,7 @@ void Trajectory3D::TrajectoryAtTime(const double time,
   // if the code reaches this point, it means that we have to
   // return the value of the polynomial some time after tf (extrapolation)
   segments_poly_[n_segments_-1].SegmentAtTime(time, result);
-  ROS_WARN("Time extrapolation when returning polynomial!");
+  std::cout << "Time extrapolation when returning polynomial!" << std::endl;
   return;
 }
 

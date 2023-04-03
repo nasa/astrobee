@@ -20,7 +20,8 @@ from utilities.utilities import *
 
 def generate_launch_description():
     world_file = [get_path("worlds", "astrobee_gazebo"), "/", LaunchConfiguration('world'), ".world"]
-
+    config_file = ["--ros-args ", "--params-file ", get_path("config", "astrobee_gazebo"), "/", "params.yaml"]
+    # extra_gazebo_args = ["--ros-args", "--params-file", config_file]
     return LaunchDescription([
         DeclareLaunchArgument("gui", default_value="true"),
         DeclareLaunchArgument("speed",   default_value="1"),
@@ -40,6 +41,7 @@ def generate_launch_description():
                                 'world':   world_file,      # Execution context
                                 'verbose': LaunchConfiguration('debug'),   # Debug a node set
                                 'physics': LaunchConfiguration('physics'), # SIM IP address
+                                'extra_gazebo_args': config_file,
                                 }.items(),
         ),
         IncludeLaunchDescription(
