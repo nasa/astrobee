@@ -16,10 +16,9 @@
  * under the License.
  */
 
-#include <ff_common/init.h>
-
 #include <ff_common/ff_names.h>
 #include <ff_common/ff_ros.h>
+#include <ff_common/init.h>
 #include <ff_msgs/msg/compressed_file.hpp>
 #include <ff_msgs/msg/compressed_file_ack.hpp>
 #include <ff_msgs/msg/command_constants.hpp>

@@ -24,6 +24,7 @@
 
 #include <ff_msgs/action/control.hpp>
 #include <ff_msgs/msg/agent_state_stamped.hpp>
+#include <ff_msgs/msg/control_feedback.hpp>
 #include <ff_msgs/msg/control_state.hpp>
 #include <ff_msgs/msg/command_stamped.hpp>
 #include <ff_msgs/msg/compressed_file.hpp>
@@ -61,7 +62,7 @@ class Sequencer {
   bool Feedback(ff_msgs::msg::AckCompletedStatus const& ack) noexcept;
 
   // give feedback about an index in the current segment
-  void Feedback(ff_msgs::action::Control::Feedback const& progress) noexcept;
+  void Feedback(ff_msgs::msg::ControlFeedback const& progress) noexcept;
 
   // get the current plan status
   ff_msgs::msg::PlanStatusStamped const& plan_status() noexcept;

@@ -934,10 +934,8 @@ void Executive::MotionFeedbackCallback(
             std::shared_ptr<const ff_msgs::action::Motion::Feedback> feedback) {
   // The only feedback used from the motion action is the execute feedback and
   // it goes to the sequencer. Otherwise there isn't much to with the feedback
-  // TODO(Katie) Figure this out when we figure out how to send progress in the
-  // motion feedback
   if (motion_ac_.action() == EXECUTE) {
-    // sequencer_.Feedback(feedback->progress);
+    sequencer_.Feedback(feedback->progress);
   }
 }
 

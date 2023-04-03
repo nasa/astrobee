@@ -361,7 +361,7 @@ bool Sequencer::Feedback(ff_msgs::msg::AckCompletedStatus const& ack) noexcept {
 }
 
 void Sequencer::Feedback(
-                  ff_msgs::action::Control::Feedback const& progress) noexcept {
+                      ff_msgs::msg::ControlFeedback const& progress) noexcept {
   current_index_ = progress.index;  // ain't no thang
 }
 

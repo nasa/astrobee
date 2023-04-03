@@ -16,15 +16,17 @@
  * under the License.
  */
 
+#include <ff_common/ff_names.h>
+#include <ff_common/ff_ros.h>
 #include <ff_common/init.h>
 
-#include <ros/ros.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_msgs/CompressedFile.h>
-#include <ff_msgs/CompressedFileAck.h>
-#include <ff_msgs/PlanStatusStamped.h>
-#include <ff_common/ff_names.h>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/CommandStamped.hpp>
+#include <ff_msgs/msg/compressed_file.hpp>
+#include <ff_msgs/msg/compressed_file_ack.hpp>
+#include <ff_msgs/msg/plan_status_stamped.hpp>
+
+#include <ff_util/ff_timer.h>
 
 #include <boost/filesystem.hpp>
 
@@ -45,6 +47,15 @@
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
+FF_DEFINE_LOGGER("plan_pub")
+
+DEFINE_string(compression, "none",
+              "Type of compression [none, deflate, gzip]");
+
+constexpr uintmax_t kMaxSize = 128 * 1024;
+
+ros::Publisher command_pub;
+ros::Time plan_pub_time;
 
 bool ValidateCompression(const char* name, std::string const &value) {
   if (value == "none" || value == "gzip" || value == "deflate")
@@ -54,14 +65,6 @@ bool ValidateCompression(const char* name, std::string const &value) {
             << std::endl;
   return false;
 }
-
-DEFINE_string(compression, "none",
-              "Type of compression [none, deflate, gzip]");
-
-constexpr uintmax_t kMaxSize = 128 * 1024;
-
-ros::Publisher command_pub;
-ros::Time plan_pub_time;
 
 void on_connect(ros::SingleSubscriberPublisher const& sub,
                 ff_msgs::CompressedFile &cf) {
