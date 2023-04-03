@@ -403,7 +403,7 @@ namespace is_camera {
     if (!thread_running_ || ((pub_.getNumSubscribers() == 0) && (getNumBayerSubscribers() == 0))) return;
 
     // Get last generated image from buffer (index incremented after image completed)
-    sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ - 1) % kImageMsgBuffer];
+    sensor_msgs::ImagePtr& grey_image = img_msg_buffer_[(img_msg_buffer_idx_ + kImageMsgBuffer - 1) % kImageMsgBuffer];
 
     cv::Mat input(kImageHeight, kImageWidth,
                      cv::DataType<uint8_t>::type,
