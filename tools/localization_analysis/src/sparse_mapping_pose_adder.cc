@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_analysis/sparse_mapping_pose_adder.h>
 #include <localization_analysis/utilities.h>
 #include <graph_localizer/utilities.h>

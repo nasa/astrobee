@@ -20,7 +20,7 @@
 #define LIGHT_FLOW_H_
 
 #include <ff_hw_msgs/ConfigureLED.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <jsoncpp/json/value.h>
 #include <ros/ros.h>
 #include <stdio.h>

@@ -26,9 +26,10 @@ import os
 import shutil
 import sys
 
+import pandas as pd
+
 import bag_sweep
 import localization_common.utilities as lu
-import pandas as pd
 import parameter_sweep
 import plot_parameter_sweep_results
 

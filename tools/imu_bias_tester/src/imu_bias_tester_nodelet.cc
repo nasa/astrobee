@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <imu_bias_tester/imu_bias_tester_nodelet.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
