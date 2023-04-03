@@ -21,7 +21,7 @@
 #include "executive/op_state_repo.h"
 
 namespace executive {
-/*OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
+OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
   std::string err_msg;
 
   if (!exec_->GetSetPlanInertia(cmd_id)) {
@@ -177,7 +177,7 @@ OpState* OpStatePlanExec::HandleCmd(
       waiting_ = true;
     } else {
       err_msg = "Plan contains unknown command: " + cmd->cmd_name;
-      FF_ERROR("%s", err_msg.c_str());
+      exec_->Error(err_msg);
       AckPlanCmdFailed(ff_msgs::msg::AckCompletedStatus::BAD_SYNTAX, err_msg);
       return OpStateRepo::Instance()->ready()->StartupState();
     }
@@ -270,7 +270,7 @@ OpState* OpStatePlanExec::HandleCmd(
       AckCmd(cmd->cmd_id,
              ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
              err_msg);
-      FF_WARN("Executive: %s", err_msg.c_str());
+      exec_->Warn(err_msg);
     }
   }
   return this;
@@ -417,11 +417,11 @@ OpState* OpStatePlanExec::HandleActionComplete(
 OpState* OpStatePlanExec::AckStartPlanItem() {
   // Returns true if there are more commands/segments in the plan
   if (exec_->AckCurrentPlanItem()) {
-    FF_DEBUG("Starting next item in plan!");
+    exec_->Debug("Starting next item in plan!");
     exec_->PublishPlanStatus(ff_msgs::msg::AckStatus::EXECUTING);
     return StartNextPlanItem();
   } else {
-    FF_DEBUG("Plan complete!");
+    exec_->Debug("Plan complete!");
     AckCmd(exec_->GetRunPlanCmdId());
     exec_->PublishPlanStatus(ff_msgs::msg::AckStatus::COMPLETED);
     exec_->SetPlanExecState(ff_msgs::msg::ExecState::IDLE);
@@ -435,7 +435,7 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
   std::string err_msg;
 
   if (it == sequencer::ItemType::SEGMENT) {
-    FF_DEBUG("Got and sending segment.");
+    exec_->Debug("Got and sending segment.");
     exec_->FillMotionGoal(EXECUTE);
 
     if (!exec_->ConfigureMobility(first_segment_, err_msg)) {
@@ -452,18 +452,18 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
       first_segment_ = false;
     }
   } else if (it == sequencer::ItemType::COMMAND) {
-    FF_DEBUG("Executing next command.");
+    exec_->Debug("Executing next command.");
     return HandleCmd(exec_->GetPlanCommand());
   } else {
     // Plan is empty so it must have completed successfully
     // This covers the crazy case of a paused plan where the wait command was
     // the part of the plan that got paused and it was the last item in the
     // plan.
-    FF_INFO("Plan complete!!!");
+    exec_->Info("Plan complete!!!");
     AckCmd(exec_->GetRunPlanCmdId());
     exec_->SetPlanExecState(ff_msgs::msg::ExecState::IDLE);
     return OpStateRepo::Instance()->ready()->StartupState();
   }
   return this;
-} */
+}
 }  // namespace executive

@@ -20,7 +20,7 @@
 
 namespace executive {
 
-/*OpState* OpStateFault::HandleCmd(
+OpState* OpStateFault::HandleCmd(
                         ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
   std::string err_msg;
@@ -95,7 +95,7 @@ namespace executive {
     AckCmd(cmd->cmd_id,
            ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
            err_msg);
-    FF_WARN("Executive: %s", err_msg.c_str());
+    exec_->Warn(err_msg);
   }
   return this;
 }
@@ -148,5 +148,4 @@ OpState* OpStateFault::HandleResult(
 
   return this;
 }
-*/
 }  // namespace executive

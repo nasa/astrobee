@@ -27,14 +27,14 @@ namespace executive {
 class OpStateTeleop : public OpState {
  public:
   ~OpStateTeleop() {}
-/*
+
   OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
   OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
                         std::string const& result_response,
                         std::string const& cmd_id,
                         Action const& action);
-*/
+
  protected:
   explicit OpStateTeleop(std::string const& name, unsigned char id) :
     OpState(name, id) {}

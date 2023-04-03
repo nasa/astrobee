@@ -141,22 +141,22 @@ class Executive : public ff_util::FreeFlyerComponent {
 
   // Action callbacks
   void ArmResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                         ff_msgs::action::Arm::Result::SharedPtr const result);
+                    std::shared_ptr<const ff_msgs::action::Arm::Result> result);
 
   void DockResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                        ff_msgs::action::Dock::Result::SharedPtr const result);
+            std::shared_ptr<const ff_msgs::action::Dock::Result> const result);
 
   void LocalizationResultCallback(
-                ff_util::FreeFlyerActionState::Enum const& state,
-                ff_msgs::action::Localization::Result::SharedPtr const result);
+          ff_util::FreeFlyerActionState::Enum const& state,
+          std::shared_ptr<const ff_msgs::action::Localization::Result> result);
 
   void MotionFeedbackCallback(
-                  ff_msgs::action::Motion::Feedback::SharedPtr const feedback);
+            std::shared_ptr<const ff_msgs::action::Motion::Feedback> feedback);
   void MotionResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                      ff_msgs::action::Motion::Result::SharedPtr const result);
+                std::shared_ptr<const ff_msgs::action::Motion::Result> result);
 
   void PerchResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                        ff_msgs::action::Perch::Result::SharedPtr const result);
+                  std::shared_ptr<const ff_msgs::action::Perch::Result> result);
 
   // Publishers
   void PublishCmdAck(std::string const& cmd_id,
@@ -200,6 +200,12 @@ class Executive : public ff_util::FreeFlyerComponent {
   bool ResetEkf(std::string const& cmd_id);
   void StartWaitTimer(double duration);
   void StopWaitTimer();
+
+  // Output functions
+  void Debug(std::string output);
+  void Error(std::string output);
+  void Info(std::string output);
+  void Warn(std::string output);
 
   // Plan related functions
   bool AckCurrentPlanItem();
@@ -252,11 +258,11 @@ class Executive : public ff_util::FreeFlyerComponent {
   bool SkipPlanStep(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool StartGuestScience(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool StartRecording(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-//  bool StopAllMotion(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-//  bool StopArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool StopAllMotion(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool StopArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool StopGuestScience(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool StopRecording(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-/*  bool StowArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  bool StowArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool SwitchLocalization(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool Undock(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
   bool UnloadNodelet(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
@@ -269,7 +275,7 @@ class Executive : public ff_util::FreeFlyerComponent {
   bool ReadParams();
   bool ReadMapperParams();
   bool ReadCommand(config_reader::ConfigReader::Table *response,
-                   ff_msgs::msg::CommandStamped::SharedPtr cmd);*/
+                   ff_msgs::msg::CommandStamped::SharedPtr cmd);
   void PublishAgentState();
   OpState* state_;
 

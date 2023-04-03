@@ -20,10 +20,8 @@
 
 #include <ff_util/config_client.h>
 
-FF_DEFINE_LOGGER("op_state_ready")
-
 namespace executive {
-/*OpState* OpStateReady::HandleCmd(
+OpState* OpStateReady::HandleCmd(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   std::string err_msg;
   bool completed = false, successful = false;
@@ -192,7 +190,7 @@ namespace executive {
     AckCmd(cmd->cmd_id,
            ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
            err_msg);
-    FF_WARN("Executive: %s", err_msg.c_str());
+    exec_->Warn(err_msg);
   }
   return this;
 }
@@ -215,5 +213,5 @@ OpState* OpStateReady::HandleGuestScienceAck(
     SetPlanStatus(true);
   }
   return this;
-} */
+}
 }  // namespace executive

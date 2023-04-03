@@ -849,8 +849,8 @@ bool Executive::RemoveAction(Action action) {
 
 /************************ Action callbacks ************************************/
 void Executive::ArmResultCallback(
-                        ff_util::FreeFlyerActionState::Enum const& state,
-                        ff_msgs::action::Arm::Result::SharedPtr const result) {
+                  ff_util::FreeFlyerActionState::Enum const& state,
+                  std::shared_ptr<const ff_msgs::action::Arm::Result> result) {
   std::string response = "";
   Action current_action = arm_ac_.action();
   std::string cmd_id = arm_ac_.cmd_id();
@@ -875,8 +875,8 @@ void Executive::ArmResultCallback(
 }
 
 void Executive::DockResultCallback(
-                        ff_util::FreeFlyerActionState::Enum const& state,
-                        ff_msgs::action::Dock::Result::SharedPtr const result) {
+                  ff_util::FreeFlyerActionState::Enum const& state,
+                  std::shared_ptr<const ff_msgs::action::Dock::Result> result) {
   std::string response = "";
   Action current_action = dock_ac_.action();
   std::string cmd_id = dock_ac_.cmd_id();
@@ -901,8 +901,8 @@ void Executive::DockResultCallback(
 }
 
 void Executive::LocalizationResultCallback(
-                ff_util::FreeFlyerActionState::Enum const& state,
-                ff_msgs::action::Localization::Result::SharedPtr const result) {
+          ff_util::FreeFlyerActionState::Enum const& state,
+          std::shared_ptr<const ff_msgs::action::Localization::Result> result) {
   std::string response = "";
   Action current_action = localization_ac_.action();
   std::string cmd_id = localization_ac_.cmd_id();
@@ -931,7 +931,7 @@ void Executive::LocalizationResultCallback(
 }
 
 void Executive::MotionFeedbackCallback(
-                  ff_msgs::action::Motion::Feedback::SharedPtr const feedback) {
+            std::shared_ptr<const ff_msgs::action::Motion::Feedback> feedback) {
   // The only feedback used from the motion action is the execute feedback and
   // it goes to the sequencer. Otherwise there isn't much to with the feedback
   // TODO(Katie) Figure this out when we figure out how to send progress in the
@@ -942,8 +942,8 @@ void Executive::MotionFeedbackCallback(
 }
 
 void Executive::MotionResultCallback(
-                      ff_util::FreeFlyerActionState::Enum const& state,
-                      ff_msgs::action::Motion::Result::SharedPtr const result) {
+                ff_util::FreeFlyerActionState::Enum const& state,
+                std::shared_ptr<const ff_msgs::action::Motion::Result> result) {
   std::string response = "";
   Action current_action = motion_ac_.action();
   std::string cmd_id = motion_ac_.cmd_id();
@@ -968,8 +968,8 @@ void Executive::MotionResultCallback(
 }
 
 void Executive::PerchResultCallback(
-                      ff_util::FreeFlyerActionState::Enum const& state,
-                      ff_msgs::action::Perch::Result::SharedPtr const result) {
+                ff_util::FreeFlyerActionState::Enum const& state,
+                std::shared_ptr<const ff_msgs::action::Perch::Result> result) {
   std::string response = "";
   Action current_action = perch_ac_.action();
   std::string cmd_id = perch_ac_.cmd_id();
@@ -1595,6 +1595,22 @@ void Executive::StartWaitTimer(double duration) {
 
 void Executive::StopWaitTimer() {
   wait_timer_.stop();
+}
+
+/****************************** Output functions ******************************/
+void Debug(std::string output) {
+  FF_DEBUG_STREAM(output);
+}
+void Error(std::string output) {
+  FF_ERROR_STREAM(output);
+}
+
+void Info(std::string output) {
+  FF_INFO_STREAM(output);
+}
+
+void Warn(std::string output) {
+  FF_WARN_STREAM(output);
 }
 
 /************************ Plan related functions ******************************/
@@ -3026,7 +3042,7 @@ bool Executive::SetZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
 
       // Get timestamp in milliseconds and convert it to a number
       std::string timestamp = file_obj["timestamp"].asString();
-      zones_srv.request.timestamp = MsToSec(timestamp);
+      zones_srv.request->timestamp = MsToSec(timestamp);
 
       // Check to make sure zones array exists
       if (!file_obj.isMember("zones") || !file_obj["zones"].isArray()) {
@@ -3099,7 +3115,7 @@ bool Executive::SetZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
           zone.max.y = box_array[4].asFloat();
           zone.max.z = box_array[5].asFloat();
 
-          zones_srv.request.zones.push_back(zone);
+          zones_srv.request->zones.push_back(zone);
           i++;
         }
       }
@@ -3119,7 +3135,7 @@ bool Executive::SetZones(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
         return false;
       }
 
-      if (!zones_srv.response.success) {
+      if (!zones_srv.response->success) {
         state_->AckCmd(cmd->cmd_id,
                        ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                        "Set zones was not successful.");
@@ -3206,7 +3222,7 @@ bool Executive::StartRecording(
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
-/*
+
 // Stop all motion is a tricky command since we may have multiple actions
 // running at one time. We also use stop to transition from idle to stopped
 // so we will wanted to start a stop pretty much all the time. The only time
@@ -3253,7 +3269,7 @@ bool Executive::StopAllMotion(
     // Will check if we started the undock action but haven't received any
     // feedback in main for loop
   } else if (agent_state_.mobility_state.state ==
-                                      ff_msgs:::msg::MobilityState::PERCHING &&
+                                      ff_msgs::msg::MobilityState::PERCHING &&
              agent_state_.mobility_state.sub_state == 0) {
     err_msg = "Astrobee cannot stop while perched.";
     start_stop = false;
@@ -3399,7 +3415,7 @@ bool Executive::StopArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
 
   return true;
 }
-*/
+
 bool Executive::StopGuestScience(
                             ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stop guest science command!");
@@ -3437,7 +3453,7 @@ bool Executive::StopRecording(
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
-/*
+
 bool Executive::StowArm(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   FF_INFO("Executive executing stow arm command!");
   // Check if Astrobee is perched. Arm control will check the rest.
@@ -3465,30 +3481,30 @@ bool Executive::SwitchLocalization(
     }
 
     localization_goal_.command =
-                      ff_msgs::msg::LocalizationGoal::COMMAND_SWITCH_PIPELINE;
+                  ff_msgs::action::Localization::Goal::COMMAND_SWITCH_PIPELINE;
     if (cmd->args[0].s == CommandConstants::PARAM_NAME_LOCALIZATION_MODE_NONE) {
       localization_goal_.pipeline =
-                                ff_msgs::msg::LocalizationGoal::PIPELINE_NONE;
+                            ff_msgs::action::Localization::Goal::PIPELINE_NONE;
     } else if (cmd->args[0].s ==
               CommandConstants::PARAM_NAME_LOCALIZATION_MODE_MAPPED_LANDMARKS) {
       localization_goal_.pipeline =
-                        ff_msgs::msg::LocalizationGoal::PIPELINE_MAP_LANDMARKS;
+                    ff_msgs::action::Localization::Goal::PIPELINE_MAP_LANDMARKS;
     } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_LOCALIZATION_MODE_ARTAGS) {
       localization_goal_.pipeline =
-                              ff_msgs::msg::LocalizationGoal::PIPELINE_AR_TAGS;
+                          ff_msgs::action::Localization::Goal::PIPELINE_AR_TAGS;
     } else if (cmd->args[0].s ==
                       CommandConstants::PARAM_NAME_LOCALIZATION_MODE_HANDRAIL) {
       localization_goal_.pipeline =
-                            ff_msgs::msg::LocalizationGoal::PIPELINE_HANDRAIL;
+                        ff_msgs::action::Localization::Goal::PIPELINE_HANDRAIL;
     } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_LOCALIZATION_MODE_PERCH) {
       localization_goal_.pipeline =
-                                ff_msgs::msg::LocalizationGoal::PIPELINE_PERCH;
+                            ff_msgs::action::Localization::Goal::PIPELINE_PERCH;
     } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_LOCALIZATION_MODE_TRUTH) {
       localization_goal_.pipeline =
-                                ff_msgs::msg::LocalizationGoal::PIPELINE_TRUTH;
+                          ff_msgs::action::Localization::Goal::PIPELINE_TRUTH;
     }
     return StartAction(LOCALIZATION, cmd->cmd_id);
   }
@@ -3557,7 +3573,7 @@ bool Executive::Unperch(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
     err_msg = "Can't unperch when not perched. Astrobee is currently stopped.";
   } else {
     perched = true;
-    perch_goal_.command = ff_msgs::msg::PerchGoal::UNPERCH;
+    perch_goal_.command = ff_msgs::action::Perch::Goal::UNPERCH;
 
     if (!StartAction(UNPERCH, cmd->cmd_id)) {
       return false;
@@ -3585,10 +3601,10 @@ bool Executive::Unterminate(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   }
 
   if (eps_terminate_client_.call(clear_srv)) {
-    if (!clear_srv.response.success) {
+    if (!clear_srv.response->success) {
       state_->AckCmd(cmd->cmd_id,
                      ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
-                     clear_srv.response.status_message);
+                     clear_srv.response->status_message);
       return false;
     }
   } else {
@@ -3615,14 +3631,14 @@ bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   StartWaitTimer(cmd->args[0].f);
   return true;
 }
-*/
+
 /************************ Protected *******************************************/
-/*void Executive::Initialize(NodeHandle &nh) {
+void Executive::Initialize(NodeHandle &nh) {
   std::string err_msg;
   // Set executive in op state repo so the op_states can call this executive
   OpStateRepo::Instance()->SetExec(this);
 
-  nh_ = *nh;
+  nh_ = nh;
 
   sequencer_.SetNodeHandle(nh);
 
@@ -3644,11 +3660,11 @@ bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   }
 
   // Set up a timer to check and reload timeouts if they are changed.
-  reload_params_timer_ = nh_.createTimer(ros::Duration(1),
-      [this](ros::TimerEvent e) {
+  reload_params_timer_.createTimer(1.0,
+      [this]() {
           config_params_.CheckFilesUpdated(std::bind(&Executive::ReadParams,
                                                                       this));},
-      false, true);
+      nh, false, true);
 
   // initialize actions
   arm_ac_.SetActiveTimeout(action_active_timeout_);
@@ -3697,10 +3713,10 @@ bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
 
   // initialize subs
   camera_state_sub_ = FF_CREATE_SUBSCRIBER(nh_,
-      ff_msgs::msg::CameraStateStamped,
+      ff_msgs::msg::CameraStatesStamped,
       TOPIC_MANAGEMENT_CAMERA_STATE,
       sub_queue_size_,
-      std::bind(&Executive::CameraStatesCallback, this, std::placeholder::_1));
+      std::bind(&Executive::CameraStatesCallback, this, std::placeholders::_1));
 
   cmd_sub_ = FF_CREATE_SUBSCRIBER(nh_,
               ff_msgs::msg::CommandStamped,
@@ -3748,11 +3764,14 @@ bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
                                                         std::placeholders::_1));
 
   heartbeat_sub_ =
-    FF_CREATE_SUBSCRIBER(nh_, ff_msgs::msg::Heartbeat, TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT, sub_queue_size_,
+    FF_CREATE_SUBSCRIBER(nh_,
+                         ff_msgs::msg::Heartbeat,
+                         TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT,
+                         sub_queue_size_,
                          std::bind(&Executive::SysMonitorHeartbeatCallback, this, std::placeholders::_1));
 
   inertia_sub_ = FF_CREATE_SUBSCRIBER(nh_,
-          ff_msgs::msg::InertiaStamped,
+          geometry_msgs::msg::InertiaStamped,
           TOPIC_MOBILITY_INERTIA,
           sub_queue_size_,
           std::bind(&Executive::InertiaCallback, this, std::placeholders::_1));
@@ -3887,7 +3906,7 @@ bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   ff_msgs::msg::FlightMode flight_mode;
   if (!ff_util::FlightUtil::GetFlightMode(flight_mode, "nominal")) {
     err_msg = "Couldn't get flight mode nominal.";
-    NODELET_ERROR("%s", err_msg.c_str());
+    FF_ERROR("%s", err_msg.c_str());
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return;
   } else {
@@ -3903,66 +3922,70 @@ bool Executive::Wait(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   agent_state_.auto_return_enabled = true;
   agent_state_.immediate_enabled = true;
   agent_state_.replanning_enabled = false;
-  agent_state_.boot_time = GetTimeNow();
+  agent_state_.boot_time = GetTimeNow().seconds();
 
   PublishAgentState();
 
   // Publish blank plan status so that the GDS displays the correct plan info
-  ff_msgs::msgs::PlanStatusStamped plan_status;
+  ff_msgs::msg::PlanStatusStamped plan_status;
   plan_status.header.stamp = GetTimeNow();
   plan_status.name = "";
   plan_status.command = -1;
-  plan_status_pub_.publish(plan_status);
+  plan_status_pub_->publish(plan_status);
 
   // Initialize camera states vector. All we care about is if we are streaming
-  camera_states_.states.resize(3);
-  camera_states_.states[0].camera_name = "nav_cam";
-  camera_states_.states[0].streaming = false;
-  camera_states_.states[1].camera_name = "dock_cam";
-  camera_states_.states[1].streaming = false;
-  camera_states_.states[2].camera_name = "sci_cam";
-  camera_states_.states[2].streaming = false;
+  camera_states_->states.resize(3);
+  camera_states_->states[0].camera_name = "nav_cam";
+  camera_states_->states[0].streaming = false;
+  camera_states_->states[1].camera_name = "dock_cam";
+  camera_states_->states[1].streaming = false;
+  camera_states_->states[2].camera_name = "sci_cam";
+  camera_states_->states[2].streaming = false;
 
   // Create timer for wait command with a dummy duration since it will be
   // changed everytime it is started. Make it one shot and don't start until
   // wait command received
-  wait_timer_.createTimer(1.0, &Executive::WaitCallback, nh_, true, false);
+  wait_timer_.createTimer(1.0,
+                          std::bind(&Executive::WaitCallback, this),
+                          nh_,
+                          true,
+                          false);
 
 
   // Create timer for monitoring the system monitor heartbeat. Don't start it
   // until we receive the first heartbeat from the system monitor
   sys_monitor_heartbeat_timer_.createTimer(sys_monitor_heartbeat_timeout_,
-                                          &Executive::SysMonitorTimeoutCallback,
-                                          nh_,
-                                          false,
-                                          false);
+                        std::bind(&Executive::SysMonitorTimeoutCallback, this),
+                        nh_,
+                        false,
+                        false);
 
   // Create timer to make sure the system monitor was started
   sys_monitor_startup_timer_.createTimer(sys_monitor_startup_time_secs_,
-                                  &Executive::SysMonitorTimeoutCallback,
-                                  nh_,
-                                  true,
-                                  true);
+                        std::bind(&Executive::SysMonitorTimeoutCallback, this),
+                        nh_,
+                        true,
+                        true);
 
   // Create timer for guest science start and stop command timeout. If the guest
   // science manager doesn't respond to a start or stop guest science command
   // in the time specified, we need to ack command as failed. Make it one shot
   // and don't start until we send a guest science start or stop command
   gs_start_stop_restart_command_timer_.createTimer(gs_command_timeout_,
-                    &Executive::GuestScienceStartStopRestartCmdTimeoutCallback,
-                    nh_,
-                    true,
-                    false);
+    std::bind(&Executive::GuestScienceStartStopRestartCmdTimeoutCallback, this),
+    nh_,
+    true,
+    false);
 
   // Create timer for guest science custom command timeout. If the guest science
   // manager doesn't respond to a custom guest science command in the time
   // specified, we need to ack command as failed. Make it one shot and don't
   // start until we send a guest science custom command
   gs_custom_command_timer_.createTimer(gs_command_timeout_,
-                              &Executive::GuestScienceCustomCmdTimeoutCallback,
-                              nh_,
-                              true,
-                              false);
+              std::bind(&Executive::GuestScienceCustomCmdTimeoutCallback, this),
+              nh_,
+              true,
+              false);
 
   // Initialize the led service at the end of the initialize function as this
   // will turn off the booting up light and we only want to do this when the
@@ -4273,11 +4296,11 @@ bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
             cmd->args[i].s = val;
           }
           break;
-        case ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d:
+        case ff_msgs::msg::CommandArg::DATA_TYPE_VEC3D:
           {
             int j;
             double val;
-            cmd->args[i].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d;
+            cmd->args[i].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3D;
             for (j = 0; j < 3; ++j) {
               // Index to get vector values in table starts at 2
               if (!arg.GetReal((j + 2), &val)) {
@@ -4288,11 +4311,11 @@ bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
             }
           }
           break;
-        case ff_msgs::msg::CommandArg::DATA_TYPE_MAT33f:
+        case ff_msgs::msg::CommandArg::DATA_TYPE_MAT33F:
           {
             int j;
             float val;
-            cmd->args[i].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_MAT33f;
+            cmd->args[i].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_MAT33F;
             for (j = 0; j < 9; ++j) {
               // Index in get matrix values in table starts at 2
               if (!arg.GetReal((j + 2), &val)) {
@@ -4312,7 +4335,7 @@ bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
 
   return true;
 }
-*/
+
 void Executive::PublishAgentState() {
   agent_state_.header.stamp = GetTimeNow();
   agent_state_pub_->publish(agent_state_);

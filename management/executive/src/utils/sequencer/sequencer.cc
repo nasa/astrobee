@@ -31,7 +31,7 @@
 #include <cstdint>
 #include <unordered_map>
 
-FF_DEFINE_LOGGER("sequencer")
+FF_DEFINE_LOGGER("sequencer");
 
 namespace sequencer {
 
@@ -250,7 +250,7 @@ ItemType Sequencer::CurrentType(bool reset_time) noexcept {
 jsonloader::Segment Sequencer::CurrentSegment() noexcept {
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
   if (!m.IsSegment()) {
-    FF_WARN("requesting a segment, but current milestone is not a segment.");
+    FF_WARN("requesting a segment, but current milestone is not a segment");
     return jsonloader::Segment();
   }
 
@@ -270,7 +270,7 @@ ff_msgs::msg::CommandStamped::SharedPtr Sequencer::CurrentCommand() noexcept {
 
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
   if (!m.IsStation()) {
-    FF_WARN("requesting a command, but current milestone is not a station.");
+    FF_WARN("requesting a command, but current milestone is not a station");
     cmd.reset();
     return cmd;
   }
@@ -280,13 +280,15 @@ ff_msgs::msg::CommandStamped::SharedPtr Sequencer::CurrentCommand() noexcept {
 
   auto it = internal::kCmdGenMap.find(plan_cmd->type());
   if (it == internal::kCmdGenMap.end()) {
-    FF_ERROR("do not know how to generate command %s", plan_cmd->type().data());
+    FF_ERROR("do not know how to generate command %s",
+             plan_cmd->type().data());
     cmd.reset();
     return cmd;
   }
 
   if (!it->second.fn(plan_cmd, cmd.get())) {
-    FF_ERROR("error converting command %s", plan_cmd->type().data());
+    FF_ERROR("error converting command %s",
+             plan_cmd->type().data());
     cmd.reset();
     return cmd;
   }

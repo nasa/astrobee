@@ -28,7 +28,7 @@ namespace executive {
 class OpStatePlanExec : public OpState {
  public:
   ~OpStatePlanExec() {}
-/*
+
   OpState* StartupState(std::string const& cmd_id);
   OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
@@ -49,7 +49,7 @@ class OpStatePlanExec : public OpState {
   void AckPlanCmdFailed(uint8_t completed_status, std::string const& message);
 
   bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
-*/
+
  protected:
   explicit OpStatePlanExec(std::string const& name, unsigned char id) :
     OpState(name, id), waiting_(false) {}
@@ -57,14 +57,14 @@ class OpStatePlanExec : public OpState {
  private:
   // allow creation only by repo
   friend class OpStateRepo;
-/*
+
   OpState* HandleActionComplete(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               Action const& action,
                               std::string const& result);
   OpState* AckStartPlanItem();
   OpState* StartNextPlanItem();
-*/
+
   bool waiting_;
 
   // TODO(Katie) Remove before flight
