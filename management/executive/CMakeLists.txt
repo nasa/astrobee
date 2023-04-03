@@ -36,7 +36,6 @@ find_package(ff_util REQUIRED)
 find_package(jsonloader REQUIRED)
 
 # System dependencies are found with CMake's conventions
-#find_package(cmake_modules REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 # Find jsoncpp
@@ -59,7 +58,7 @@ add_library(sequencer SHARED
   src/utils/sequencer/plan_io.cc
   src/utils/sequencer/sequencer.cc
 )
-ament_target_dependencies(sequencer rclcpp rclcpp_components ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
+ament_target_dependencies(sequencer rclcpp rclcpp_components ff_common ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
 
 # Declare C++ libraries
 add_library(executive SHARED
@@ -73,14 +72,13 @@ add_library(executive SHARED
   src/op_state_teleop.cc
 )
 target_compile_definitions(executive PRIVATE "COMPOSITION_BUILDING_DLL")
-ament_target_dependencies(executive rclcpp rclcpp_components ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
+ament_target_dependencies(executive rclcpp rclcpp_components ff_common ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
 rclcpp_components_register_nodes(executive "executive::Executive")
 
 ## Declare a C++ executable: data_to_disk_pub
-#add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
-#add_dependencies(data_to_disk_pub ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(data_to_disk_pub
-#  executive gflags ${catkin_LIBRARIES})
+add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
+ament_target_dependencies(data_to_disk_pub rclcpp ff_common ff_msgs)
+target_link_libraries(data_to_disk_pub executive gflags)
 
 ## Declare a C++ executable: ekf_switch_mux
 #add_executable(ekf_switch_mux tools/ekf_switch_mux.cc)

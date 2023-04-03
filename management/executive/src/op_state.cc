@@ -19,8 +19,6 @@
 #include "executive/op_state.h"
 #include "executive/op_state_repo.h"
 
-FF_DEFINE_LOGGER("op_state")
-
 // TODO(Katie) Get rid of error output. Output mainly for debug purposes
 namespace executive {
 OpState::OpState(std::string const& name, unsigned char id) :
@@ -43,7 +41,7 @@ void OpState::SetExec(Executive *const exec) {
 }
 
 OpState* OpState::HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
-  FF_ERROR("Executive: Handle command not implemented yet!");
+  exec_->Error("Executive: Handle command not implemented yet!");
   return this;
 }
 
@@ -88,18 +86,18 @@ OpState* OpState::HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
                                std::string const& result_response,
                                std::string const& cmd_id,
                                Action const& action) {
-  FF_ERROR("Executive: Handle action result not implemented yet!");
+  exec_->Error("Executive: Handle action result not implemented yet!");
   return this;
 }
 
 OpState* OpState::HandleWaitCallback() {
-  FF_ERROR("Executive: Handle wait callback not implemented yet!");
+  exec_->Error("Executive: Handle wait callback not implemented yet!");
   return this;
 }
 
 OpState* OpState::HandleGuestScienceAck(
                                 ff_msgs::msg::AckStamped::SharedPtr const ack) {
-  FF_ERROR("Executive: Handle guest science ack not implemented yet!");
+  exec_->Error("Executive: Handle guest science ack not implemented yet!");
   return this;
 }
 
@@ -112,7 +110,7 @@ void OpState::AckCmd(std::string const& cmd_id,
     exec_->PublishCmdAck(cmd_id, completed_status, message, status);
   }
 }
-/*
+
 std::string OpState::GenerateActionFailedMsg(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               Action const& action,
@@ -186,12 +184,12 @@ std::string OpState::GetActionString(Action const& action) {
       action_str = "Unperch";
       break;
     default:
-      FF_ERROR("Executive: Action unknown or wrong in action result.");
+      exec_->Error("Executive: Action unknown or wrong in action result.");
   }
 
   return action_str;
 }
-*/
+
 bool OpState::PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   AckCmd(cmd->cmd_id,
          ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
@@ -212,11 +210,11 @@ OpState* OpState::TransitionToState(unsigned char id) {
     return OpStateRepo::Instance()->fault()->StartupState();
   }
 
-  FF_WARN("Executive: unknown state id in transition to state.");
+  exec_->Warn("Executive: unknown state id in transition to state.");
   return this;
 }
 
-/*void OpState::SetPlanStatus(bool successful, std::string err_msg) {
+void OpState::SetPlanStatus(bool successful, std::string err_msg) {
   exec_->SetPlanExecState(ff_msgs::msg::ExecState::PAUSED);
   if (successful) {
     // Ack run plan command as cancelled since we are pausing the plan until the
@@ -233,6 +231,6 @@ OpState* OpState::TransitionToState(unsigned char id) {
            err_msg);
     exec_->PublishPlanStatus(ff_msgs::msg::AckStatus::REQUEUED);
   }
-}*/
+}
 
 }  // namespace executive
