@@ -54,8 +54,12 @@ DEFINE_string(compression, "none",
 
 constexpr uintmax_t kMaxSize = 128 * 1024;
 
-ros::Publisher command_pub;
-ros::Time plan_pub_time;
+rclcpp::Time plan_pub_time;
+
+Publisher<ff_msgs::msg::CommandStamped> command_pub;
+
+ff_msgs::msg::CompressedFile cf;
+ff_util::FreeFlyerTimer data_sub_connected_timer;
 
 bool ValidateCompression(const char* name, std::string const &value) {
   if (value == "none" || value == "gzip" || value == "deflate")
@@ -66,48 +70,46 @@ bool ValidateCompression(const char* name, std::string const &value) {
   return false;
 }
 
-void on_connect(ros::SingleSubscriberPublisher const& sub,
-                ff_msgs::CompressedFile &cf) {
-  ROS_INFO("subscriber present: sending plan");
-  cf.header.stamp = ros::Time::now();
-  sub.publish(cf);
+void on_connect() {
+  FF_INFO("subscriber present: sending plan");
+  data_to_disk_pub->publish(cf);
 }
 
-void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
-  ROS_INFO("Got compressed file ack!");
+void on_cf_ack(ff_msgs::msg::CompressedFileAck::SharedPtr const cf_ack) {
+  FF_INFO("Got compressed file ack!");
   // compressed file ack is latched so we need to check the timestamp to make
   // sure this plan is being acked
   // ROS_WARN_STREAM(plan_pub_time << " : " << cf_ack->header.stamp);
   if (plan_pub_time <= cf_ack->header.stamp) {
-    ROS_INFO("Compressed file ack is valid! Sending set plan!");
-    ff_msgs::CommandStamped cmd;
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_PLAN;
+    FF_INFO("Compressed file ack is valid! Sending set plan!");
+    ff_msgs::msg::CommandStamped cmd;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_PLAN;
     cmd.subsys_name = "Astrobee";
-    command_pub.publish(cmd);
+    command_pub->publish(cmd);
   }
 }
 
 // Plan status is published after the plan is set so send run plan to start plan
-void on_plan_status(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
-  ROS_INFO("Got plan status!");
+void on_plan_status(ff_msgs::msg::PlanStatusStamped::SharedPtr const& ps) {
+  FF_INFO("Got plan status!");
   // plan status is latched so we need to check the timestamp to make sure this
   // plan is loaded
   // ROS_WARN_STREAM(plan_pub_time << " : " << ps->header.stamp);
   if (plan_pub_time <= ps->header.stamp) {
     ff_msgs::CommandStamped cmd;
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_RUN_PLAN;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_RUN_PLAN;
     cmd.subsys_name = "Astrobee";
-    command_pub.publish(cmd);
+    command_pub->publish(cmd);
 
-    ROS_INFO_STREAM("received plan status: " << ps->name);
-    ros::shutdown();
+    FF_INFO_STREAM("received plan status: " << ps->name);
+    rclcpp::shutdown();
   }
 }
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
-  ros::init(argc, argv, "plan_pub");
-  ros::NodeHandle n;
+  rclcpp::init(argc, argv);
+  NodeHandle nh;
 
   ros::Time::waitForValid();
 
@@ -123,8 +125,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  ff_msgs::CompressedFile cf;
-  cf.header.seq = 1;
   cf.header.frame_id = "world";
 
   // Load the plan
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
   }
 
 
-  plan_pub_time = ros::Time::now();
+  plan_pub_time = nh->get_clock()->now();
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;
 
   std::string sub_topic_command = TOPIC_COMMAND;

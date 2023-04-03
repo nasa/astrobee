@@ -19,10 +19,12 @@
 #include <ff_common/ff_names.h>
 #include <ff_common/ff_ros.h>
 #include <ff_common/init.h>
+
 #include <ff_msgs/msg/compressed_file.hpp>
 #include <ff_msgs/msg/compressed_file_ack.hpp>
 #include <ff_msgs/msg/command_constants.hpp>
 #include <ff_msgs/msg/command_stamped.hpp>
+
 #include <ff_util/ff_timer.h>
 
 #include <boost/filesystem.hpp>
@@ -50,11 +52,14 @@ DEFINE_string(compression, "none",
               "Type of compression [none, deflate, gzip]");
 
 constexpr uintmax_t kMaxSize = 128 * 1024;
+
 rclcpp::Time data_pub_time;
+
 Publisher<ff_msgs::msg::CommandStamped> command_pub;
 Publisher<ff_msgs::msg::CompressedFile> data_to_disk_pub;
-ff_util::FreeFlyerTimer data_sub_connected_timer;
+
 ff_msgs::msg::CompressedFile cf;
+ff_util::FreeFlyerTimer data_sub_connected_timer;
 
 bool ValidateCompression(const char* name, std::string const &value) {
   if (value == "none" || value == "gzip" || value == "deflate")
@@ -65,7 +70,7 @@ bool ValidateCompression(const char* name, std::string const &value) {
   return false;
 }
 
-void on_connect() {  // NOLINT
+void on_connect() {
   FF_INFO("subscriber present: sending data to disk");
   data_to_disk_pub->publish(cf);
 }
@@ -79,7 +84,7 @@ void on_cf_ack(ff_msgs::msg::CompressedFileAck::SharedPtr const cf_ack) {
     cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_DATA_TO_DISK;
     cmd.subsys_name = "Astrobee";
     command_pub->publish(cmd);
-    ros::shutdown();
+    rclcpp::shutdown();
   }
 }
 
@@ -93,6 +98,7 @@ void TimerCallback() {
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   rclcpp::init(argc, argv);
+  NodeHandle nh;
 
   if (!google::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
     std::cerr << "Failed to register compression flag validator." << std::endl;
@@ -143,7 +149,6 @@ int main(int argc, char** argv) {
     cf.file.push_back(static_cast<unsigned char>(c));
   }
 
-  NodeHandle nh;
   data_pub_time = nh->get_clock()->now();
 
   data_sub_connected_timer.createTimer(1.0, &TimerCallback, nh);
