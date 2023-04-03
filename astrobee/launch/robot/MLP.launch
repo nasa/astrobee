@@ -137,7 +137,7 @@
 
   <!-- Mobility -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="class" value="mapper/MapperNodelet" />
+    <arg name="class" value="mapper/MapperComponent" />
     <arg name="name" value="mapper" />
     <arg name="manager" value="mlp_mapper" />
     <arg name="spurn" value="$(arg spurn)" />

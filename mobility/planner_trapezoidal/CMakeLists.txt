@@ -15,88 +15,86 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(planner_trapezoidal)
 
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  nodelet
-  pluginlib
-  actionlib
-  choreographer
-  tf2_geometry_msgs
-  ff_util
-  ff_msgs
-  mapper
-)
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
+
+## Find amend and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+
+find_package(ff_common REQUIRED)
+find_package(ff_util REQUIRED)
+find_package(ff_msgs REQUIRED)
+
+find_package(choreographer REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+# find_package(mapper REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 find_package(PCL REQUIRED COMPONENTS common)
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES
-    planner_trapezoidal
-  CATKIN_DEPENDS
-    roscpp
-    nodelet
-    pluginlib
-    actionlib
-    choreographer
-    tf2_geometry_msgs
-    ff_util
-    ff_msgs
-    mapper
-)
 
 ###########
 ## Build ##
 ###########
 
+message(STATUS "Boost_INCLUDE_DIRS contains: ${Boost_INCLUDE_DIRS}")
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(planner_trapezoidal
+add_library(${PROJECT_NAME} SHARED
   src/planner_trapezoidal.cc
-  src/planner_trapezoidal_nodelet.cc
+  src/planner_trapezoidal_component.cc
 )
-add_dependencies(planner_trapezoidal ${catkin_EXPORTED_TARGETS})
-target_link_libraries(planner_trapezoidal ${catkin_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_common ff_util ff_msgs PCL choreographer tf2_geometry_msgs)
+ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+rclcpp_components_register_nodes(${PROJECT_NAME} "planner_trapezoidal::PlannerTrapezoidalComponent")
 
 #############
 ## Install ##
 #############
 
+target_include_directories(planner_trapezoidal
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  EXPORT planner_trapezoidal
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
 
 # Mark launch files for installation
 install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  DESTINATION share/${PROJECT_NAME}/launch
   PATTERN ".svn" EXCLUDE)
+
+ament_package()

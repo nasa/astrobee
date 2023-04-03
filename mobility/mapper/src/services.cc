@@ -16,86 +16,86 @@
  * under the License.
  */
 
-#include <mapper/mapper_nodelet.h>
+#include <mapper/mapper_component.h>
 #include <limits>
 #include <vector>
 
 namespace mapper {
 
 // Update resolution of the map
-bool MapperNodelet::SetResolution(ff_msgs::SetFloat::Request &req,
-                                     ff_msgs::SetFloat::Response &res) {
-  globals_.octomap.SetResolution(req.data);
-  res.success = true;
+bool MapperComponent::SetResolution(const std::shared_ptr<ff_msgs::SetFloat::Request> req,
+                                     std::shared_ptr<ff_msgs::SetFloat::Response> res) {
+  globals_.octomap.SetResolution(req->data);
+  res->success = true;
   return true;
 }
 // Update resolution of the map
-bool MapperNodelet::GetResolution(ff_msgs::GetFloat::Request &req,
-                                     ff_msgs::GetFloat::Response &res) {
-  res.data = globals_.octomap.GetResolution();
-  res.success = true;
+bool MapperComponent::GetResolution(const std::shared_ptr<ff_msgs::GetFloat::Request> req,
+                                     std::shared_ptr<ff_msgs::GetFloat::Response> res) {
+  res->data = globals_.octomap.GetResolution();
+  res->success = true;
   return true;
 }
 
 // Update map memory time
-bool MapperNodelet::SetMemoryTime(ff_msgs::SetFloat::Request &req,
-                                     ff_msgs::SetFloat::Response &res) {
-  globals_.octomap.SetMemoryTime(req.data);
-  res.success = true;
+bool MapperComponent::SetMemoryTime(const std::shared_ptr<ff_msgs::SetFloat::Request> req,
+                                     std::shared_ptr<ff_msgs::SetFloat::Response> res) {
+  globals_.octomap.SetMemoryTime(req->data);
+  res->success = true;
   return true;
 }
 // Update map memory time
-bool MapperNodelet::GetMemoryTime(ff_msgs::GetFloat::Request &req,
-                                     ff_msgs::GetFloat::Response &res) {
-  res.data = globals_.octomap.GetMemoryTime();
-  res.success = true;
+bool MapperComponent::GetMemoryTime(const std::shared_ptr<ff_msgs::GetFloat::Request> req,
+                                     std::shared_ptr<ff_msgs::GetFloat::Response> res) {
+  res->data = globals_.octomap.GetMemoryTime();
+  res->success = true;
   return true;
 }
 
-bool MapperNodelet::SetCollisionDistance(ff_msgs::SetFloat::Request &req,
-                                 ff_msgs::SetFloat::Response &res) {
-  globals_.octomap.SetMapInflation(req.data + cfg_.Get<double>("robot_radius"));
-  res.success = true;
+bool MapperComponent::SetCollisionDistance(const std::shared_ptr<ff_msgs::SetFloat::Request> req,
+                                 std::shared_ptr<ff_msgs::SetFloat::Response> res) {
+  globals_.octomap.SetMapInflation(req->data + cfg_.Get<double>("robot_radius"));
+  res->success = true;
   return true;
 }
-bool MapperNodelet::GetMapInflation(ff_msgs::GetFloat::Request &req,
-                                 ff_msgs::GetFloat::Response &res) {
-  res.data = globals_.octomap.GetMapInflation();
-  res.success = true;
+bool MapperComponent::GetMapInflation(const std::shared_ptr<ff_msgs::GetFloat::Request> req,
+                                 std::shared_ptr<ff_msgs::GetFloat::Response> res) {
+  res->data = globals_.octomap.GetMapInflation();
+  res->success = true;
   return true;
 }
 
-bool MapperNodelet::ResetMap(std_srvs::Trigger::Request &req,
-                             std_srvs::Trigger::Response &res) {
+bool MapperComponent::ResetMap(const std::shared_ptr<std_srvs::Trigger::Request> req,
+                             std::shared_ptr<std_srvs::Trigger::Response> res) {
   globals_.octomap.ResetMap();
-  res.success = true;
-  res.message = "Map has been reset!";
+  res->success = true;
+  res->message = "Map has been reset!";
   return true;
 }
 
-bool MapperNodelet::GetFreeMapCallback(ff_msgs::GetMap::Request &req,
-                                       ff_msgs::GetMap::Response &res) {
+bool MapperComponent::GetFreeMapCallback(const std::shared_ptr<ff_msgs::GetMap::Request> req,
+                                       std::shared_ptr<ff_msgs::GetMap::Response> res) {
   visualization_msgs::MarkerArray om, fm;
   sensor_msgs::PointCloud2 oc, fc;
 
-  globals_.octomap.InflatedVisMarkers(&om, &fm, &oc, &fc);
+  globals_.octomap.InflatedVisMarkers(GetTimeNow(), &om, &fm, &oc, &fc);
 
-  res.points = fc;
-  res.resolution = globals_.octomap.GetResolution();
-  res.free = true;
+  res->points = fc;
+  res->resolution = globals_.octomap.GetResolution();
+  res->free = true;
 
   return true;
 }
-bool MapperNodelet::GetObstacleMapCallback(ff_msgs::GetMap::Request &req,
-                                       ff_msgs::GetMap::Response &res) {
+bool MapperComponent::GetObstacleMapCallback(const std::shared_ptr<ff_msgs::GetMap::Request> req,
+                                       std::shared_ptr<ff_msgs::GetMap::Response> res) {
   visualization_msgs::MarkerArray om, fm;
   sensor_msgs::PointCloud2 oc, fc;
 
-  globals_.octomap.InflatedVisMarkers(&om, &fm, &oc, &fc);
+  globals_.octomap.InflatedVisMarkers(GetTimeNow(), &om, &fm, &oc, &fc);
 
-  res.points = oc;
-  res.resolution = globals_.octomap.GetResolution();
-  res.free = false;
+  res->points = oc;
+  res->resolution = globals_.octomap.GetResolution();
+  res->free = false;
 
   return true;
 }

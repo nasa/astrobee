@@ -21,15 +21,18 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <ros/ros.h>
 #include <Eigen/Dense>
 
 #include <complex>
 #include <iostream>
 #include <vector>
 
-#include "ff_msgs/ControlState.h"
-#include "ff_msgs/Segment.h"
+#include "ff_msgs/msg/control_state.hpp"
+#include "ff_msgs/msg/segment.hpp"
+namespace ff_msgs {
+typedef msg::ControlState ControlState;
+typedef msg::Segment Segment;
+}  // namespace ff_msgs
 
 namespace polynomials {
 
