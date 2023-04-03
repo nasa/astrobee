@@ -77,7 +77,7 @@ rclcpp_components_register_nodes(executive "executive::Executive")
 
 ## Declare a C++ executable: data_to_disk_pub
 add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
-ament_target_dependencies(data_to_disk_pub rclcpp ff_common ff_msgs)
+ament_target_dependencies(data_to_disk_pub rclcpp ff_common ff_msgs Boost)
 target_link_libraries(data_to_disk_pub executive gflags)
 
 ## Declare a C++ executable: ekf_switch_mux
@@ -146,7 +146,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install C++ executables
-#install(TARGETS data_to_disk_pub DESTINATION bin)
+install(TARGETS data_to_disk_pub DESTINATION bin)
 #install(TARGETS ekf_switch_mux DESTINATION bin)
 #install(TARGETS plan_pub DESTINATION bin)
 #install(TARGETS simple_move DESTINATION bin)

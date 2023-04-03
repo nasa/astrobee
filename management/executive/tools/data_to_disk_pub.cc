@@ -24,6 +24,7 @@
 #include <ff_msgs/msg/compressed_file_ack.hpp>
 #include <ff_msgs/msg/command_constants.hpp>
 #include <ff_msgs/msg/command_stamped.hpp>
+#include <ff_util/ff_timer.h>
 
 #include <boost/filesystem.hpp>
 
@@ -71,20 +72,20 @@ void on_connect() {  // NOLINT
 }
 
 void on_cf_ack(ff_msgs::msg::CompressedFileAck::SharedPtr const cf_ack) {
-  ROS_INFO("ack received: sending set data to disk command");
+  FF_INFO("ack received: sending set data to disk command");
   // compressed file ack is latched so we need to check the timestamp to make
   // sure this plan is being acked
   if (data_pub_time < cf_ack->header.stamp) {
     ff_msgs::msg::CommandStamped cmd;
     cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_DATA_TO_DISK;
     cmd.subsys_name = "Astrobee";
-    command_pub.publish(cmd);
+    command_pub->publish(cmd);
     ros::shutdown();
   }
 }
 
 void TimerCallback() {
-  if (data_to_disk_pub.get_subscription_count() > 0) {
+  if (data_to_disk_pub->get_subscription_count() > 0) {
     on_connect();
     data_sub_connected_timer.stop();
   }
@@ -106,7 +107,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  cf.header.seq = 1;
   cf.header.frame_id = "world";
 
   // Load the plan
