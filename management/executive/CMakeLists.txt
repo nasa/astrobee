@@ -98,10 +98,9 @@ target_link_libraries(plan_pub executive gflags)
 #  executive gflags ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: zones_pub
-#add_executable(zones_pub tools/zones_pub.cc)
-#add_dependencies(zones_pub ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(zones_pub
-#  executive gflags ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(zones_pub tools/zones_pub.cc)
+ament_target_dependencies(zones_pub rclcpp ff_common ff_msgs Boost)
+target_link_libraries(zones_pub executive gflags)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
