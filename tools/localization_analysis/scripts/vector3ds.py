@@ -18,6 +18,7 @@
 # under the License.
 
 import numpy as np
+
 import vector3d
 
 

@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef FF_UTIL_FF_NAMES_H_
-#define FF_UTIL_FF_NAMES_H_
+#ifndef FF_COMMON_FF_NAMES_H_
+#define FF_COMMON_FF_NAMES_H_
 
 // UNIVERSAL ///////////////////////////////////////////////////////////////////
 
@@ -450,4 +450,4 @@
 
 #define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
 
-#endif  // FF_UTIL_FF_NAMES_H_
+#endif  // FF_COMMON_FF_NAMES_H_

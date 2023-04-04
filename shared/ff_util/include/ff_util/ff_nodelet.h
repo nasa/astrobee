@@ -33,7 +33,7 @@
 #include <ff_msgs/Trigger.h>
 
 #include <ff_util/ff_faults.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <map>
 #include <string>

@@ -38,7 +38,7 @@
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PerchState.h>
 #include <ff_util/ff_flight.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // Gflags
 DEFINE_bool(dock, false, "Send dock command");

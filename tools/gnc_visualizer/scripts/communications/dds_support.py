@@ -21,6 +21,8 @@ from os import path as osPath
 from sys import path as sysPath
 from time import sleep
 
+from pkg_resources import get_distribution, parse_version
+
 from data_support import (
     ControlState,
     EkfState,
@@ -31,7 +33,6 @@ from data_support import (
     Quaternion,
     Vector3,
 )
-from pkg_resources import get_distribution, parse_version
 
 try:
     import rticonnextdds_connector as rti

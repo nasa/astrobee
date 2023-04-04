@@ -21,8 +21,9 @@ import bisect
 import math
 
 import numpy as np
-import poses
 import scipy.spatial.transform
+
+import poses
 
 
 # Assumes poses_a and poses_b are sorted in time
