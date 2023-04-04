@@ -26,7 +26,7 @@
 #include <ff_msgs/AckStamped.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_msgs/CommandStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <vector>
 
 // Test access control

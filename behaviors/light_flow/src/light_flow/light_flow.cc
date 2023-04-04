@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <ff_hw_msgs/ConfigureLED.h>
 #include <ff_hw_msgs/ConfigureLEDGroup.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <jsoncpp/json/allocator.h>
 #include <jsoncpp/json/json.h>
 #include <jsoncpp/json/value.h>

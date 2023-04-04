@@ -17,7 +17,7 @@
  */
 
 #include <ff_common/utils.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_analysis/graph_bag.h>
 #include <localization_analysis/parameter_reader.h>
 #include <localization_analysis/utilities.h>
