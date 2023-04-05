@@ -4,14 +4,31 @@
 
 namespace cpu_mem_monitor {
 
+FF_DEFINE_LOGGER("cpu_mem_monitor");
+
 namespace {
 constexpr char kProcStat[] = "/proc/stat";
 constexpr char SysCpuPath[] = "/sys/devices/system/cpu";
 constexpr char SysThermalPath[] = "/sys/class/thermal";
 }  // namespace
 
-CpuMemMonitor::CpuMemMonitor() :
-  ff_util::FreeFlyerNodelet(),
+std::string getHostfromURI(std::string uri) {
+  std::size_t uri_begin = uri.find_first_of("/");
+  std::size_t uri_end = uri.find_last_of(":");
+  if (std::string::npos != uri_begin && std::string::npos != uri_end &&
+      uri_begin <= uri_end) {
+    uri.erase(uri.begin() + uri_end, uri.end());
+    uri.erase(uri.begin(), uri.begin() + uri_begin + 2);
+    return uri;
+  } else {
+    FF_ERROR_STREAM("Invalid URI, returning ");
+    return {};
+  }
+}
+
+// TODO(bcoltin): figure out how to use name specified in launch file?
+CpuMemMonitor::CpuMemMonitor(const rclcpp::NodeOptions & options) :
+  ff_util::FreeFlyerComponent(options, "cpu_mem_monitor"),
   pub_queue_size_(10),
   update_freq_hz_(1),
   temp_fault_triggered_(false),
@@ -27,7 +44,7 @@ CpuMemMonitor::CpuMemMonitor() :
 CpuMemMonitor::~CpuMemMonitor() {
 }
 
-void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
+void CpuMemMonitor::Initialize(NodeHandle & nh) {
   std::string err_msg;
   // First three letters of the node name specifies processor
   processor_name_ = GetName().substr(0, 3);
@@ -37,74 +54,71 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
     return;
   }
 
-  reload_params_timer_ = nh->createTimer(ros::Duration(1),
-      [this](ros::TimerEvent e) {
+  reload_params_timer_.createTimer(1.0, [this]() {
       config_params_.CheckFilesUpdated(std::bind(&CpuMemMonitor::ReadParams, this));},
-      false,
-      true);
+      nh, false, true);
 
   // All state messages are latching
-  cpu_state_pub_ = nh->advertise<ff_msgs::CpuStateStamped>(
-                                            TOPIC_MANAGEMENT_CPU_MONITOR_STATE,
-                                            pub_queue_size_);
+  cpu_state_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::msg::CpuStateStamped,
+                   TOPIC_MANAGEMENT_CPU_MONITOR_STATE, pub_queue_size_);
   // All state messages are latching
-  mem_state_pub_ = nh->advertise<ff_msgs::MemStateStamped>(
-                                            TOPIC_MANAGEMENT_MEM_MONITOR_STATE,
-                                            pub_queue_size_);
+  mem_state_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::msg::MemStateStamped,
+                   TOPIC_MANAGEMENT_MEM_MONITOR_STATE, pub_queue_size_);
 
   // Timer for asserting the cpu load too high fault
-  assert_cpu_load_fault_timer_ = nh->createTimer(
-                            ros::Duration(assert_load_high_fault_timeout_sec_),
-                            &CpuMemMonitor::AssertCPULoadHighFaultCallback,
-                            this,
+  assert_cpu_load_fault_timer_.createTimer(
+                            assert_load_high_fault_timeout_sec_,
+                            std::bind(&CpuMemMonitor::AssertCPULoadHighFaultCallback, this),
+                            nh,
                             true,
                             false);
 
   // Timer for clearing the cpu load too high fault
-  clear_cpu_load_fault_timer_ = nh->createTimer(
-                              ros::Duration(clear_load_high_fault_timeout_sec_),
-                              &CpuMemMonitor::ClearCPULoadHighFaultCallback,
-                              this,
+  clear_cpu_load_fault_timer_.createTimer(
+                              clear_load_high_fault_timeout_sec_,
+                              std::bind(&CpuMemMonitor::ClearCPULoadHighFaultCallback, this),
+                              nh,
                               true,
                               false);
 
   // Timer for asserting the memory load too high fault
-  assert_mem_load_fault_timer_ = nh->createTimer(
-                            ros::Duration(assert_load_high_fault_timeout_sec_),
-                            &CpuMemMonitor::AssertMemLoadHighFaultCallback,
-                            this,
+  assert_mem_load_fault_timer_.createTimer(
+                            assert_load_high_fault_timeout_sec_,
+                            std::bind(&CpuMemMonitor::AssertMemLoadHighFaultCallback, this),
+                            nh,
                             true,
                             false);
 
   // Timer for clearing the memory load too high fault
-  clear_mem_load_fault_timer_ = nh->createTimer(
-                              ros::Duration(clear_load_high_fault_timeout_sec_),
-                              &CpuMemMonitor::ClearMemLoadHighFaultCallback,
-                              this,
+  clear_mem_load_fault_timer_.createTimer(
+                              clear_load_high_fault_timeout_sec_,
+                              std::bind(&CpuMemMonitor::ClearMemLoadHighFaultCallback, this),
+                              nh,
                               true,
                               false);
 
   // Timer for updating PID values of interest nodes
-  pid_timer_ = nh->createTimer(ros::Duration(1 / update_pid_hz_),
-                               &CpuMemMonitor::GetPIDs,
-                               this,
+  pid_timer_.createTimer(1 / update_pid_hz_,
+                               std::bind(&CpuMemMonitor::GetPIDs, this),
+                               nh,
                                false,
                                true);
 
   // Timer for checking cpu and memory stats. Timer is not one shot and start it right away
-  stats_timer_ = nh->createTimer(ros::Duration(1 / update_freq_hz_),
-                                 &CpuMemMonitor::PublishStatsCallback,
-                                 this,
+  stats_timer_.createTimer(1 / update_freq_hz_,
+                                 std::bind(&CpuMemMonitor::PublishStatsCallback, this),
+                                 nh,
                                  false,
                                  true);
 
   // Initialize host name, get own URI
-  XmlRpc::XmlRpcValue args, result, payload;
-  args.setSize(2);
-  args[0] = ros::this_node::getName();
-  args[1] = ros::this_node::getName();
-  ros::master::execute("lookupNode", args, result, payload, true);
-  monitor_host_ = getHostfromURI(result[2]);
+  // TODO(bcoltin): find ros2 equivalent
+  // XmlRpc::XmlRpcValue args, result, payload;
+  // args.setSize(2);
+  // args[0] = ros::this_node::getName();
+  // args[1] = ros::this_node::getName();
+  // ros::master::execute("lookupNode", args, result, payload, true);
+  // monitor_host_ = getHostfromURI(result[2]);
   if (monitor_host_.empty()) {
     FF_ERROR_STREAM("URI of the memory monitor not valid");
     return;
@@ -138,11 +152,11 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   cpu_state_msg_.avg_loads.resize(5);
 
   // Load locatioms won't change
-  cpu_state_msg_.load_fields[0] = ff_msgs::CpuStateStamped::NICE;
-  cpu_state_msg_.load_fields[1] = ff_msgs::CpuStateStamped::USER;
-  cpu_state_msg_.load_fields[2] = ff_msgs::CpuStateStamped::SYS;
-  cpu_state_msg_.load_fields[3] = ff_msgs::CpuStateStamped::VIRT;
-  cpu_state_msg_.load_fields[4] = ff_msgs::CpuStateStamped::TOTAL;
+  cpu_state_msg_.load_fields[0] = ff_msgs::msg::CpuStateStamped::NICE;
+  cpu_state_msg_.load_fields[1] = ff_msgs::msg::CpuStateStamped::USER;
+  cpu_state_msg_.load_fields[2] = ff_msgs::msg::CpuStateStamped::SYS;
+  cpu_state_msg_.load_fields[3] = ff_msgs::msg::CpuStateStamped::VIRT;
+  cpu_state_msg_.load_fields[4] = ff_msgs::msg::CpuStateStamped::TOTAL;
 
   // Create as many cpu states as the number of cpus the freq class found
   cpu_state_msg_.cpus.resize(ncpus_);
@@ -263,14 +277,14 @@ bool CpuMemMonitor::ReadParams() {
     }
     std::string name;
     if (node.GetStr("name", &name)) {
-      NODELET_DEBUG_STREAM("Read node " << name);
+      FF_DEBUG_STREAM("Read node " << name);
       nodes_pid_.insert(std::pair<std::string, int>(name, 0));
     }
   }
   return true;
 }
 
-void CpuMemMonitor::AssertCPULoadHighFaultCallback(ros::TimerEvent const& te) {
+void CpuMemMonitor::AssertCPULoadHighFaultCallback() {
   // Stop timer so we don't trigger the fault over and over again
   assert_cpu_load_fault_timer_.stop();
   std::string err_msg = "CPU average load is " +
@@ -282,14 +296,14 @@ void CpuMemMonitor::AssertCPULoadHighFaultCallback(ros::TimerEvent const& te) {
   load_fault_state_ = ASSERTED;
 }
 
-void CpuMemMonitor::ClearCPULoadHighFaultCallback(ros::TimerEvent const& te) {
+void CpuMemMonitor::ClearCPULoadHighFaultCallback() {
   // Stop timer so we don't try to clear the fault over and over again
   clear_cpu_load_fault_timer_.stop();
   this->ClearFault(ff_util::LOAD_TOO_HIGH);
   load_fault_state_ = CLEARED;
 }
 
-void CpuMemMonitor::AssertMemLoadHighFaultCallback(ros::TimerEvent const& te) {
+void CpuMemMonitor::AssertMemLoadHighFaultCallback() {
   // Stop timer so we don't trigger the fault over and over again
   assert_mem_load_fault_timer_.stop();
   std::string err_msg = "Memory average load is " +
@@ -301,34 +315,36 @@ void CpuMemMonitor::AssertMemLoadHighFaultCallback(ros::TimerEvent const& te) {
   load_fault_state_ = ASSERTED;
 }
 
-void CpuMemMonitor::ClearMemLoadHighFaultCallback(ros::TimerEvent const& te) {
+void CpuMemMonitor::ClearMemLoadHighFaultCallback() {
   // Stop timer so we don't try to clear the fault over and over again
   clear_mem_load_fault_timer_.stop();
   this->ClearFault(ff_util::MEMORY_USAGE_TOO_HIGH);
   load_fault_state_ = CLEARED;
 }
 
-void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
+void CpuMemMonitor::GetPIDs() {
   // Go through all the node list and get the PID
-  XmlRpc::XmlRpcValue args, result, payload;
+  // XmlRpc::XmlRpcValue args, result, payload;
   std::map<std::string, int>::iterator it;
   for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
     // Look for PID if not already on the list
     if (it->second == 0) {
+      // TODO(bcoltin): find ROS2 equivalent
       // Check if the node is being executed in this computer
       // Get URI of the node
-      args.setSize(2);
-      args[0] = ros::this_node::getName();
-      args[1] = it->first;
-      if (!ros::master::execute("lookupNode", args, result, payload, true)) {
-        it->second = -1;
-        continue;
-      }
-      std::string node_host = getHostfromURI(result[2]);
-      if (node_host.empty()) {
-        it->second = -1;
-        continue;
-      }
+      // args.setSize(2);
+      // args[0] = ros::this_node::getName();
+      // args[1] = it->first;
+      // if (!ros::master::execute("lookupNode", args, result, payload, true)) {
+      //   it->second = -1;
+      //   continue;
+      // }
+      // std::string node_host = getHostfromURI(result[2]);
+      // if (node_host.empty()) {
+      //   it->second = -1;
+      //   continue;
+      // }
+      std::string node_host;
 
       // If it is not in the same cpu
       if (node_host != monitor_host_) {
@@ -377,7 +393,7 @@ int CpuMemMonitor::CollectCPUStats() {
            total, idle_all, system_all, virtual_all = 0;
   uint64_t total_period, user_period, nice_period, steal_period,
                 guest_period, system_all_period;
-  uint64_t total_period_all;
+  uint64_t total_period_all = 0;
 
   uint32_t cpuid = 0;
   char buffer[256];
@@ -539,7 +555,7 @@ int CpuMemMonitor::CollectCPUStats() {
   }
 
   // Add time stamp
-  cpu_state_msg_.header.stamp = ros::Time::now();
+  cpu_state_msg_.header.stamp = GetTimeNow();
   return 0;
 }
 
@@ -662,7 +678,7 @@ int CpuMemMonitor::CollectMemStats() {
   }
 
   // Send mem stats
-  mem_state_msg_.header.stamp = ros::Time::now();
+  mem_state_msg_.header.stamp = GetTimeNow();
   return 0;
 }
 
@@ -705,29 +721,32 @@ void CpuMemMonitor::AssertMemStats() {
   }
 }
 
-void CpuMemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
+void CpuMemMonitor::PublishStatsCallback() {
   // Get cpu stats
   if (CollectCPUStats() < 0) {
-    NODELET_FATAL("CPU node unable to get load stats!");
+    FF_FATAL("CPU node unable to get load stats!");
     return;
   }
   // Assert cpu stats
   AssertMemStats();
   // Publish CPU stats
-  cpu_state_pub_.publish(cpu_state_msg_);
+  cpu_state_pub_->publish(cpu_state_msg_);
 
 
   // Collect Memory stats
   if (CollectMemStats() < 0) {
-    NODELET_FATAL("Memory node unable to get load stats!");
+    FF_FATAL("Memory node unable to get load stats!");
     return;
   }
   // Assert memory stats
   AssertMemStats();
   // Publish memory stats
-  mem_state_pub_.publish(mem_state_msg_);
+  mem_state_pub_->publish(mem_state_msg_);
 }
 
 }  // namespace cpu_mem_monitor
 
-PLUGINLIB_EXPORT_CLASS(cpu_mem_monitor::CpuMemMonitor, nodelet::Nodelet)
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Declare the plugin
+RCLCPP_COMPONENTS_REGISTER_NODE(cpu_mem_monitor::CpuMemMonitor)
