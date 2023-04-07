@@ -1,7 +1,5 @@
   - add parameter reader! (A)
       - add others!
-	  vision_common
-          graph vio
           graph localizer
           ros graph vio
           ros graph localizer 

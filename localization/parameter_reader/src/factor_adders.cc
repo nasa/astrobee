@@ -19,7 +19,6 @@
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 #include <parameter_reader/factor_adders.h>
-#include <parameter_reader/vision_common.h>
 
 namespace parameter_reader {
 namespace fa = factor_adders;
