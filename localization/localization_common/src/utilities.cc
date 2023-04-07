@@ -36,9 +36,10 @@ gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::strin
   return GtPose(body_T_sensor);
 }
 
-gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name) {
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name,
+                           const std::string& prefix) {
   Eigen::Vector3d vec;
-  mc::config_read_vector(&config, config_name.c_str(), &vec);
+  mc::config_read_vector(&config, (prefix + config_name).c_str(), &vec);
   return vec;
 }
 

@@ -49,7 +49,8 @@ namespace localization_common {
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name,
                            const std::string& prefix = "");
 
-gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name);
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name,
+                           const std::string& prefix = "");
 
 gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
                                     const std::string& prefix = "");

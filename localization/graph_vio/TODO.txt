@@ -1,7 +1,6 @@
   - add parameter reader! (A)
       - add others!
-          nodes
-          node adders
+	  vision_common
           graph vio
           graph localizer
           ros graph vio
@@ -10,6 +9,8 @@
 
       - fail if parameter not read!!
       - how to unit test these??
+         - make fake files, make sure parameters written to files match loaded params!
+		- or.... just use actualy graph loc params file?
 
   - need to update imu augmentor to subscribe to both odom and loc! (B)
       - extrapolate loc with odom!
