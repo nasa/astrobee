@@ -19,6 +19,7 @@
 #define PARAMETER_READER_NODE_ADDERS_H_
 
 #include <config_reader/config_reader.h>
+#include <node_adders/combined_nav_state_node_adder.h>
 #include <node_adders/combined_nav_state_node_adder_model_params.h>
 #include <node_adders/pose_node_adder_params.h>
 #include <node_adders/timestamped_node_adder_model_params.h>
@@ -36,6 +37,10 @@ void LoadTimestampedNodeAdderModelParams(config_reader::ConfigReader& config,
                                          node_adders::TimestampedNodeAdderModelParams& params,
                                          const std::string& prefix = "");
 
+void LoadCombinedNavStateNodeAdderParams(config_reader::ConfigReader& config,
+                                              node_adders::CombinedNavStateNodeAdder::Params& params,
+                                              const std::string& prefix = "");
+
 void LoadCombinedNavStateNodeAdderModelParams(config_reader::ConfigReader& config,
                                               node_adders::CombinedNavStateNodeAdderModelParams& params,
                                               const std::string& prefix = "");
@@ -48,9 +53,9 @@ template <typename NodeType>
 void LoadBaseTimestampedNodeAdderParams(config_reader::ConfigReader& config,
                                         node_adders::TimestampedNodeAdderParams<NodeType>& params,
                                         const std::string& prefix) {
+  // Note, starting measurement and time should be set elsewhere, typically using measurements
   LOAD_PARAM(params.huber_k, config, prefix);
   LOAD_PARAM(params.add_priors, config, prefix);
-  LOAD_PARAM(params.starting_time, config, prefix);
   LOAD_PARAM(params.ideal_duration, config, prefix);
   LOAD_PARAM(params.min_num_states, config, prefix);
   LOAD_PARAM(params.max_num_states, config, prefix);

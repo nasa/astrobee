@@ -4,7 +4,7 @@
       - fail if parameter not read!!
       - how to unit test these??
          - make fake files, make sure parameters written to files match loaded params!
-		- or.... just use actualy graph loc params file?
+		- or.... just use actualy graph loc params file? (do this!! read and create graph vio/ graph loc configs, make sure they are read correctly!)
 
   - need to update imu augmentor to subscribe to both odom and loc! (B)
       - extrapolate loc with odom!

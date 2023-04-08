@@ -19,6 +19,7 @@
 #ifndef NODE_ADDERS_TIMESTAMPED_NODE_ADDER_H_
 #define NODE_ADDERS_TIMESTAMPED_NODE_ADDER_H_
 
+#include <localization_common/utilities.h>
 #include <node_adders/sliding_window_node_adder.h>
 #include <node_adders/timestamped_node_adder_model.h>
 #include <node_adders/timestamped_node_adder_params.h>

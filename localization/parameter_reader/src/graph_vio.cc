@@ -30,12 +30,12 @@ namespace mc = msg_conversions;
 
 void LoadGraphVIOParams(config_reader::ConfigReader& config, gv::GraphVIOParams& params,
                               const std::string& prefix) {
-  LoadStandstillFactorAdderParams(params.standstill_factor_adder, config, prefix);
-  LoadVoSmartProjectionFactorAdderParams(params.vo_smart_projection_factor_adder, config, prefix);
-  LoadCombinedNavStateNodeAdder::Params(params.combined_nav_state_node_adder, config, prefix);
-  LoadCombinedNavStateNodeAdderModelParams(params.combined_nav_state_node_adder_model, config, prefix);
-  LoadNonlinearOptimizerParams(params.nonlinear_optimizer, config, prefix);
-  LoadSlidingWindowGraphOptimizerParams(params.sliding_window_graph_optimizer, config, prefix);
-  LoadStandstillParams(params.standstill, config, prefix);
+  LoadStandstillFactorAdderParams(config, params.standstill_factor_adder, prefix);
+  LoadVoSmartProjectionFactorAdderParams(config, params.vo_smart_projection_factor_adder, prefix);
+  LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix);
+  LoadCombinedNavStateNodeAdderModelParams(config, params.combined_nav_state_node_adder_model, prefix);
+  LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix);
+  LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix);
+  LoadStandstillParams(config, params.standstill, prefix);
 }
 }  // namespace parameter_reader

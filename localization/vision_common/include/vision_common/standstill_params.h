@@ -31,13 +31,14 @@ struct StandstillParams {
 
  private:
   // Serialization function
-  friend class boost::serialization::access;
+  // TODO(rsoussan): Fix this, causing compile error
+  /*friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_NVP(min_num_points_per_track);
     ar& BOOST_SERIALIZATION_NVP(duration);
     ar& BOOST_SERIALIZATION_NVP(max_avg_distance_from_mean);
-  }
+  }*/
 };
 }  // namespace vision_common
 
