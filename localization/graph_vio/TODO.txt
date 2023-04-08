@@ -1,8 +1,5 @@
   - add parameter reader! (A)
       - add others!
-          ros graph vio
-          ros graph localizer 
-          ....
 
       - fail if parameter not read!!
       - how to unit test these??
