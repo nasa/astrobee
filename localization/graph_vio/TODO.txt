@@ -1,6 +1,5 @@
   - add parameter reader! (A)
       - add others!
-          graph localizer
           ros graph vio
           ros graph localizer 
           ....

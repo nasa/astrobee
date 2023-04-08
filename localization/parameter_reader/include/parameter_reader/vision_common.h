@@ -19,6 +19,8 @@
 #define PARAMETER_READER_VISION_COMMON_H_
 
 #include <config_reader/config_reader.h>
+#include <vision_common/feature_tracker_params.h>
+#include <vision_common/spaced_feature_tracker_params.h>
 #include <vision_common/standstill_params.h>
 
 #include <string>
@@ -27,6 +29,11 @@ namespace parameter_reader {
 void LoadStandstillParams(config_reader::ConfigReader& config, vision_common::StandstillParams& params,
                          const std::string& prefix = "");
 
+void LoadFeatureTrackerParams(config_reader::ConfigReader& config, vision_common::FeatureTrackerParams& params,
+                         const std::string& prefix = "");
+
+void LoadSpacedFeatureTrackerParams(config_reader::ConfigReader& config,
+                                    vision_common::SpacedFeatureTrackerParams& params, const std::string& prefix = "");
 }  // namespace parameter_reader
 
 #endif  // PARAMETER_READER_VISION_COMMON_H_

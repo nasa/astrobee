@@ -23,9 +23,21 @@ namespace parameter_reader {
 namespace mc = msg_conversions;
 namespace vc = vision_common;
 
-void LoadStandstillParams(config_reader::ConfigReader& config, vc::StandstillParams& params, const std::string& prefix) {
+void LoadStandstillParams(config_reader::ConfigReader& config, vc::StandstillParams& params,
+                          const std::string& prefix) {
   LOAD_PARAM(params.min_num_points_per_track, config, prefix);
   LOAD_PARAM(params.duration, config, prefix);
   LOAD_PARAM(params.max_avg_distance_from_mean, config, prefix);
+}
+
+void LoadFeatureTrackerParams(config_reader::ConfigReader& config, vc::FeatureTrackerParams& params,
+                              const std::string& prefix) {
+  LOAD_PARAM(params.remove_undetected_feature_tracks, config, prefix);
+}
+
+void LoadSpacedFeatureTrackerParams(config_reader::ConfigReader& config, vc::SpacedFeatureTrackerParams& params,
+                                    const std::string& prefix) {
+  LoadFeatureTrackerParams(config, params, prefix);
+  LOAD_PARAM(params.measurement_spacing, config, prefix);
 }
 }  // namespace parameter_reader
