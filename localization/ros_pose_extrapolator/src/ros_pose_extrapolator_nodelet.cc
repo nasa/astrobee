@@ -17,17 +17,17 @@
  */
 
 #include <ff_util/ff_names.h>
-#include <imu_augmentor/imu_augmentor_nodelet.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <ros_pose_extrapolater/ros_pose_extrapolater_nodelet.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 
-namespace imu_augmentor {
+namespace ros_pose_extrapolater {
 namespace lc = localization_common;
 
-ImuAugmentorNodelet::ImuAugmentorNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true) {
+RosPoseExtrapolatorNodelet::RosPoseExtrapolatorNodelet() : ff_util::FreeFlyerNodelet(NODE_POSE_EXTR, true) {
   imu_nh_.setCallbackQueue(&imu_queue_);
   loc_nh_.setCallbackQueue(&loc_queue_);
   heartbeat_.node = GetName();
@@ -36,7 +36,7 @@ ImuAugmentorNodelet::ImuAugmentorNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_
   last_heartbeat_time_ = ros::Time::now();
 }
 
-void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
+void RosPoseExtrapolatorNodelet::Initialize(ros::NodeHandle* nh) {
   // Setup the platform name
   platform_name_ = GetPlatform();
   platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
@@ -45,34 +45,35 @@ void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
   Run();
 }
 
-void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
+void RosPoseExtrapolatorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  imu_sub_ = imu_nh_.subscribe(TOPIC_HARDWARE_IMU, 100, &ImuAugmentorNodelet::ImuCallback, this,
+  imu_sub_ = imu_nh_.subscribe(TOPIC_HARDWARE_IMU, 100, &RosPoseExtrapolatorNodelet::ImuCallback, this,
                                ros::TransportHints().tcpNoDelay());
   // Use the imu nh so that speed mode changes arrive in order wrt IMU msgs
-  flight_mode_sub_ = imu_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &ImuAugmentorNodelet::FlightModeCallback, this);
-  state_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &ImuAugmentorNodelet::LocalizationStateCallback, this,
+  flight_mode_sub_ =
+    imu_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosPoseExtrapolatorNodelet::FlightModeCallback, this);
+  state_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &RosPoseExtrapolatorNodelet::LocalizationStateCallback, this,
                                  ros::TransportHints().tcpNoDelay());
 }
 
-void ImuAugmentorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  imu_augmentor_wrapper_.ImuCallback(*imu_msg);
+void RosPoseExtrapolatorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
+  ros_pose_extrapolater_wrapper_.ImuCallback(*imu_msg);
 }
 
-void ImuAugmentorNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
-  imu_augmentor_wrapper_.FlightModeCallback(*mode);
+void RosPoseExtrapolatorNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
+  ros_pose_extrapolater_wrapper_.FlightModeCallback(*mode);
 }
 
-void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg) {
-  imu_augmentor_wrapper_.LocalizationStateCallback(*loc_msg);
+void RosPoseExtrapolatorNodelet::LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg) {
+  ros_pose_extrapolater_wrapper_.LocalizationStateCallback(*loc_msg);
 }
 
-boost::optional<ff_msgs::EkfState> ImuAugmentorNodelet::PublishLatestImuAugmentedLocalizationState() {
-  const auto latest_imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
+boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorNodelet::PublishLatestImuAugmentedLocalizationState() {
+  const auto latest_imu_augmented_loc_msg = ros_pose_extrapolater_wrapper_.LatestImuAugmentedLocalizationMsg();
   if (!latest_imu_augmented_loc_msg) {
     LogDebugEveryN(100, "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.");
     return boost::none;
@@ -84,7 +85,7 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorNodelet::PublishLatestImuAugmente
   return latest_imu_augmented_loc_msg;
 }
 
-void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg) {
+void RosPoseExtrapolatorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg) {
   // Publish pose
   geometry_msgs::PoseStamped pose_msg;
   pose_msg.header = loc_msg.header;
@@ -114,14 +115,14 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
   transform_pub_.sendTransform(transform_msg);
 }
 
-void ImuAugmentorNodelet::PublishHeartbeat() {
+void RosPoseExtrapolatorNodelet::PublishHeartbeat() {
   heartbeat_.header.stamp = ros::Time::now();
   if ((heartbeat_.header.stamp - last_heartbeat_time_).toSec() < 1.0) return;
   heartbeat_pub_.publish(heartbeat_);
   last_heartbeat_time_ = heartbeat_.header.stamp;
 }
 
-void ImuAugmentorNodelet::Run() {
+void RosPoseExtrapolatorNodelet::Run() {
   ros::Rate rate(100);
   while (ros::ok()) {
     imu_queue_.callAvailable();
@@ -134,6 +135,6 @@ void ImuAugmentorNodelet::Run() {
     rate.sleep();
   }
 }
-}  // namespace imu_augmentor
+}  // namespace ros_pose_extrapolater
 
-PLUGINLIB_EXPORT_CLASS(imu_augmentor::ImuAugmentorNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(ros_pose_extrapolater::RosPoseExtrapolatorNodelet, nodelet::Nodelet);

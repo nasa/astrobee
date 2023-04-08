@@ -15,15 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_PARAMS_H_
-#define IMU_AUGMENTOR_IMU_AUGMENTOR_PARAMS_H_
+#ifndef ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
+#define ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
 
 #include <imu_integration/imu_integrator_params.h>
 
-namespace imu_augmentor {
-struct ImuAugmentorParams : imu_integration::ImuIntegratorParams {
+namespace ros_pose_extrapolator {
+struct RosPoseExtrapolatorParams : imu_integration::ImuIntegratorParams {
   bool standstill_enabled;
 };
-}  // namespace imu_augmentor
+}  // namespace ros_pose_extrapolator
 
-#endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_PARAMS_H_
+#endif  // ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_

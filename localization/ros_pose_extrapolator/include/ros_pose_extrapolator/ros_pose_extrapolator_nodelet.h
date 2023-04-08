@@ -15,15 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_NODELET_H_
-#define IMU_AUGMENTOR_IMU_AUGMENTOR_NODELET_H_
+#ifndef ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_NODELET_H_
+#define ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_NODELET_H_
 
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_util/ff_nodelet.h>
-#include <imu_augmentor/imu_augmentor_wrapper.h>
+#include <ros_pose_extrapolator/ros_pose_extrapolator_wrapper.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -35,10 +35,10 @@
 
 #include <string>
 
-namespace imu_augmentor {
-class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
+namespace ros_pose_extrapolator {
+class RosPoseExtrapolatorNodelet : public ff_util::FreeFlyerNodelet {
  public:
-  ImuAugmentorNodelet();
+  RosPoseExtrapolatorNodelet();
 
  private:
   void Initialize(ros::NodeHandle* nh) final;
@@ -59,7 +59,7 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishHeartbeat();
 
-  imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
+  ros_pose_extrapolator::RosPoseExtrapolatorWrapper ros_pose_extrapolator_wrapper_;
   std::string platform_name_;
   ros::NodeHandle imu_nh_, loc_nh_;
   ros::CallbackQueue imu_queue_, loc_queue_;
@@ -71,6 +71,6 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
   ros::Time last_heartbeat_time_;
   boost::optional<ros::Time> last_state_msg_time_;
 };
-}  // namespace imu_augmentor
+}  // namespace ros_pose_extrapolator
 
-#endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_NODELET_H_
+#endif  // ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_NODELET_H_

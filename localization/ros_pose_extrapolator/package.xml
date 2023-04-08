@@ -1,8 +1,8 @@
 <package>
-  <name>imu_augmentor</name>
+  <name>ros_pose_extrapolator</name>
   <version>1.0.0</version>
   <description>
-    Imu augmentor package
+    Ros pose extrapolator package
   </description>
   <license>
     Apache License, Version 2.0

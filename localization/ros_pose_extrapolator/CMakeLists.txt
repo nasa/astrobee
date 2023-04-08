@@ -16,7 +16,7 @@
 #under the License.
 
 cmake_minimum_required(VERSION 3.0)
-project(imu_augmentor)
+project(ros_pose_extrapolator)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -61,21 +61,21 @@ include_directories(
 
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
-  src/imu_augmentor_nodelet.cc
-  src/imu_augmentor_wrapper.cc
+  src/ros_pose_extrapolator_nodelet.cc
+  src/ros_pose_extrapolator_wrapper.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_imu_augmentor_wrapper
-    test/test_imu_augmentor_wrapper.test
-    test/test_imu_augmentor_wrapper.cc
+  add_rostest_gtest(test_ros_pose_extrapolator_wrapper
+    test/test_ros_pose_extrapolator_wrapper.test
+    test/test_ros_pose_extrapolator_wrapper.cc
     test/test_utilities.cc
   )
-  target_link_libraries(test_imu_augmentor_wrapper
-    imu_augmentor ${catkin_LIBRARIES} 
+  target_link_libraries(test_ros_pose_extrapolator_wrapper
+    ros_pose_extrapolator ${catkin_LIBRARIES} 
   )
 endif()
 

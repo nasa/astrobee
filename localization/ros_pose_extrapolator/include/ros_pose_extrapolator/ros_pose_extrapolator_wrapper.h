@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
-#define IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
+#ifndef ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_WRAPPER_H_
+#define ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_WRAPPER_H_
 
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/FlightMode.h>
@@ -34,12 +34,12 @@
 #include <string>
 #include <utility>
 
-namespace imu_augmentor {
-class ImuAugmentorWrapper {
+namespace ros_pose_extrapolator {
+class RosPoseExtrapolatorWrapper {
  public:
-  explicit ImuAugmentorWrapper(const std::string& graph_config_path_prefix = "");
+  explicit RosPoseExtrapolatorWrapper(const std::string& graph_config_path_prefix = "");
 
-  explicit ImuAugmentorWrapper(const ImuAugmentorParams& params);
+  explicit RosPoseExtrapolatorWrapper(const RosPoseExtrapolatorParams& params);
 
   void LocalizationStateCallback(const ff_msgs::GraphState& loc_msg);
 
@@ -53,7 +53,7 @@ class ImuAugmentorWrapper {
   boost::optional<ff_msgs::EkfState> LatestImuAugmentedLocalizationMsg();
 
  private:
-  void Initialize(const ImuAugmentorParams& params);
+  void Initialize(const RosPoseExtrapolatorParams& params);
 
   bool LatestImuAugmentedCombinedNavStateAndCovariances(
     localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
@@ -63,15 +63,15 @@ class ImuAugmentorWrapper {
 
   bool standstill() const;
 
-  std::unique_ptr<ImuIntegrator> imu_augmentor_;
+  std::unique_ptr<ImuIntegrator> imu_integrator;
   boost::optional<localization_common::CombinedNavState> latest_combined_nav_state_;
   boost::optional<localization_common::CombinedNavState> latest_imu_augmented_combined_nav_state_;
   boost::optional<localization_common::CombinedNavStateCovariances> latest_covariances_;
   boost::optional<ff_msgs::GraphState> latest_loc_msg_;
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;
-  ImuAugmentorParams params_;
+  RosPoseExtrapolatorParams params_;
   boost::optional<bool> standstill_;
   localization_common::RateTimer loc_state_timer_ = localization_common::RateTimer("Loc State Msg");
 };
-}  // namespace imu_augmentor
-#endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
+}  // namespace ros_pose_extrapolator
+#endif  // ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_WRAPPER_H_

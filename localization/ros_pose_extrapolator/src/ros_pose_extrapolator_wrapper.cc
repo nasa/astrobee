@@ -17,7 +17,7 @@
  */
 
 #include <config_reader/config_reader.h>
-#include <imu_augmentor/imu_augmentor_wrapper.h>
+#include <ros_pose_extrapolater/ros_pose_extrapolater_wrapper.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -25,13 +25,13 @@
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
-namespace imu_augmentor {
+namespace ros_pose_extrapolater {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_prefix) {
+RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
@@ -41,17 +41,17 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
     LogFatal("Failed to read config files.");
   }
 
-  ImuAugmentorParams params;
+  RosPoseExtrapolatorParams params;
   ii::LoadImuIntegratorParams(config, params);
-  params.standstill_enabled = mc::LoadBool(config, "imu_augmentor_standstill");
+  params.standstill_enabled = mc::LoadBool(config, "ros_pose_extrapolater_standstill");
   Initialize(params);
 }
 
-ImuAugmentorWrapper::ImuAugmentorWrapper(const ImuAugmentorParams& params) { Initialize(params); }
+RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const RosPoseExtrapolatorParams& params) { Initialize(params); }
 
-void ImuAugmentorWrapper::Initialize(const ImuAugmentorParams& params) {
+void RosPoseExtrapolatorWrapper::Initialize(const RosPoseExtrapolatorParams& params) {
   params_ = params;
-  imu_augmentor_.reset(new ImuAugmentor(params_));
+  ros_pose_extrapolater_.reset(new RosPoseExtrapolator(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
   // only parameter needed.
@@ -60,7 +60,7 @@ void ImuAugmentorWrapper::Initialize(const ImuAugmentorParams& params) {
   preintegration_helper_.reset(new gtsam::TangentPreintegration(preintegration_params, gtsam::imuBias::ConstantBias()));
 }
 
-void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
+void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
   loc_state_timer_.RecordAndVlogEveryN(10, 2);
   const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
   if (loc_state_elapsed_time && *loc_state_elapsed_time >= 2) {
@@ -75,7 +75,7 @@ void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& l
   standstill_ = loc_msg.standstill;
 }
 
-bool ImuAugmentorWrapper::standstill() const {
+bool RosPoseExtrapolatorWrapper::standstill() const {
   if (!params_.standstill_enabled) return false;
   // If uninitialized, return not at standstill
   // TODO(rsoussan): Is this the appropriate behavior?
@@ -83,17 +83,17 @@ bool ImuAugmentorWrapper::standstill() const {
   return *standstill_;
 }
 
-void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
-  imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
+void RosPoseExtrapolatorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
+  ros_pose_extrapolater_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
 }
 
-void ImuAugmentorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
-  imu_augmentor_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
+void RosPoseExtrapolatorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
+  ros_pose_extrapolater_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
-ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
-  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_ ||
+RosPoseExtrapolatorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
+  if (!latest_combined_nav_state_ || !latest_covariances_ || !ros_pose_extrapolater_ ||
       !latest_imu_augmented_combined_nav_state_) {
     LogError(
       "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.");
@@ -102,7 +102,7 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
 
   if (standstill()) {
     LogDebugEveryN(100, "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.");
-    const auto latest_timestamp = imu_augmentor_->LatestTime();
+    const auto latest_timestamp = ros_pose_extrapolater_->LatestTime();
     if (!latest_timestamp) {
       LogError("LatestImuAugmentedCombinedNavStateAndCovariances: Failed to get latest timestamp.");
       return boost::none;
@@ -113,10 +113,10 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
                                                                             *latest_covariances_};
   }
 
-  imu_augmentor_->ExtrapolateLatestWithResets(*latest_imu_augmented_combined_nav_state_);
+  ros_pose_extrapolater_->ExtrapolateLatestWithResets(*latest_imu_augmented_combined_nav_state_);
   // Only remove measurements up to the latest_combined_nav_state timestamp so when a new combined
   // nav state is received from the localizer IMU measurements can still be added to this
-  imu_augmentor_->RemoveOldMeasurements(latest_combined_nav_state_->timestamp());
+  ros_pose_extrapolater_->RemoveOldMeasurements(latest_combined_nav_state_->timestamp());
   if (!latest_imu_augmented_combined_nav_state_) {
     LogError("LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.");
     return boost::none;
@@ -126,7 +126,7 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
                                                                           *latest_covariances_};
 }
 
-boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg() {
+boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestImuAugmentedLocalizationMsg() {
   if (!latest_loc_msg_) {
     LogDebugEveryN(50, "LatestImuAugmentedLocalizationMsg: No latest loc msg available.");
     return boost::none;
@@ -158,7 +158,7 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
                                        latest_imu_augmented_loc_msg);
 
   // Add latest bias corrected acceleration and angular velocity to loc msg
-  const auto latest_imu_measurement = imu_augmentor_->LatestMeasurement();
+  const auto latest_imu_measurement = ros_pose_extrapolater_->LatestMeasurement();
   if (!latest_imu_measurement) {
     LogError("LatestImuAugmentedLocalizationMsg: Failed to get latest measurement.");
     return boost::none;
@@ -181,4 +181,4 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   mc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);
   return latest_imu_augmented_loc_msg;
 }
-}  // namespace imu_augmentor
+}  // namespace ros_pose_extrapolater

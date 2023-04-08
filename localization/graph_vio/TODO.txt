@@ -1,20 +1,29 @@
-  - add parameter reader! (A)
-      - add others!
-
-      - fail if parameter not read!!
-      - how to unit test these??
-         - make fake files, make sure parameters written to files match loaded params!
-		- or.... just use actualy graph loc params file? (do this!! read and create graph vio/ graph loc configs, make sure they are read correctly!)
+  - convert velocity from odom frame to global frame before writing ekf message?? (A) 
+    - is velocity in global frame or body frame??
+	- global frame! need to convert from odom frame to world frame!!
+			- keep track of odom_T_world in imu_augmentor!
+				- use world_T_body and odom_T_body at same timestamp!
+				- need to convert in graph bag tool as well before integrating!
 
   - need to update imu augmentor to subscribe to both odom and loc! (B)
+      - call pose extrapolator
+      - subscribe to odom
       - extrapolate loc with odom!
+	- add pose interpolator??
       - then extrapolate this with imu data!
-      - rename!
+      - add tests?
+      - add ros_pose_extrapolator
 
-  - convert velocity from odom frame to global frame before writing ekf message?? (C) 
-    - is velocity in global frame or body frame??
+- add graph vio to graph bag! (C)
+  - run_graph_Bag, plot_graph_bag
+  - use graph bag???? 
+    - copy graph bag and run for VIO only?? Or modify current graph bag tool??
+      - (probably modify current tool?)
 
-   - test in sim! (D)
+  - add parameter reader! (D)
+       - test: make graph loc/vio params files, make sure they are read correctly!
+
+   - test in sim! (E)
 
   - graph vio:
     - add better way of getting relative covariance??
@@ -48,11 +57,6 @@
 - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
   - add support for this in timestamped_set? (updating old values)
 
-- add graph vio to graph bag!
-  - run_graph_Bag, plot_graph_bag
-  - use graph bag???? 
-    - copy graph bag and run for VIO only?? Or modify current graph bag tool??
-      - (probably modify current tool?)
 - how to add a second measurement to combined nav node update model????? (AE)
   - why is this needed???
     - fan rate!!!!!!
@@ -62,7 +66,3 @@
     - is this actually necessary? graph vio in AstroLoc worked fine...
  - rename pimpredict in other packages to extrapolate 
   - tools: loc rvz plugins, imu bias tester
-- update imu_augmentor, make sure it compiles!
-  - add tests?
-- rename imu_augmentor to ros_imu_augmentor
-
