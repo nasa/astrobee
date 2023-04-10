@@ -21,24 +21,26 @@
 #include <gflags/gflags_completions.h>
 
 // Include ROS
-#include <ros/ros.h>
+#include <ff_common/ff_names.h>
+#include <ff_common/ff_ros.h>
+#include <ff_common/init.h>
 
 #include <tf2_ros/transform_listener.h>
 
-#include <ff_msgs/AckCompletedStatus.h>
-#include <ff_msgs/AckStamped.h>
-#include <ff_msgs/AckStatus.h>
-#include <ff_msgs/AgentStateStamped.h>
-#include <ff_msgs/CommandArg.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_msgs/DockAction.h>
-#include <ff_msgs/DockState.h>
-#include <ff_msgs/FaultState.h>
-#include <ff_msgs/MotionAction.h>
-#include <ff_msgs/PerchState.h>
+#include <ff_msgs/msg/ack_completed_status.hpp>
+#include <ff_msgs/msg/ack_stamped.hpp>
+#include <ff_msgs/msg/ack_status.hpp>
+#include <ff_msgs/msg/agent_state_stamped.hpp>
+#include <ff_msgs/msg/command_arg.hpp>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/command_stamped.hpp>
+#include <ff_msgs/msg/dock_action.hpp>
+#include <ff_msgs/msg/dock_state.hpp>
+#include <ff_msgs/msg/fault_state.hpp>
+#include <ff_msgs/msg/motion_action.hpp>
+#include <ff_msgs/msg/perch_state.hpp>
+
 #include <ff_util/ff_flight.h>
-#include <ff_common/ff_names.h>
 
 // Gflags
 DEFINE_bool(dock, false, "Send dock command");
@@ -76,9 +78,9 @@ bool get_face_forward, get_op_limits, get_planner, get_state, get_faults;
 bool reset_bias, reset_ekf, set_check_zones, set_face_forward, set_planner;
 bool set_op_limits, send_mob_command, mob_command_finished;
 
-geometry_msgs::TransformStamped tfs;
+geometry_msgs::msg::TransformStamped tfs;
 
-ros::Publisher cmd_pub;
+Publisher<ff_msgs::msg::CommandStamped> cmd_pub;
 
 uint8_t modeMove = 0, modeGetInfo = 0;
 
@@ -93,7 +95,8 @@ bool Finished() {
   return false;
 }
 
-void AgentStateCallback(ff_msgs::AgentStateStampedConstPtr const& state) {
+void AgentStateCallback(
+                      ff_msgs::msg::AgentStateStamped::SharedPtr const state) {
   if (get_face_forward) {
     get_face_forward = false;
     if (state->holonomic_enabled) {
@@ -126,19 +129,19 @@ void AgentStateCallback(ff_msgs::AgentStateStampedConstPtr const& state) {
     get_state = false;
     std::string msg = "\nOperating State: ";
     switch (state->operating_state.state) {
-      case ff_msgs::OpState::READY:
+      case ff_msgs::msg::OpState::READY:
         msg += "Ready\n";
         break;
-      case ff_msgs::OpState::PLAN_EXECUTION:
+      case ff_msgs::msg::OpState::PLAN_EXECUTION:
         msg += "Plan Execution\n";
         break;
-      case ff_msgs::OpState::TELEOPERATION:
+      case ff_msgs::msg::OpState::TELEOPERATION:
         msg += "Teleoperation\n";
         break;
-      case ff_msgs::OpState::AUTO_RETURN:
+      case ff_msgs::msg::OpState::AUTO_RETURN:
         msg += "Auto Return\n";
         break;
-      case ff_msgs::OpState::FAULT:
+      case ff_msgs::msg::OpState::FAULT:
         msg += "Fault\n";
         break;
       default:
@@ -147,49 +150,52 @@ void AgentStateCallback(ff_msgs::AgentStateStampedConstPtr const& state) {
 
     msg += "Mobility State: ";
     switch (state->mobility_state.state) {
-      case ff_msgs::MobilityState::DRIFTING:
+      case ff_msgs::msg::MobilityState::DRIFTING:
         msg += "Drifting";
         break;
-      case ff_msgs::MobilityState::STOPPING:
+      case ff_msgs::msg::MobilityState::STOPPING:
         if (state->mobility_state.sub_state == 0) {
           msg += "Stopped";
         } else {
           msg += "Stopping";
         }
         break;
-      case ff_msgs::MobilityState::FLYING:
+      case ff_msgs::msg::MobilityState::FLYING:
         msg += "Flying";
         break;
-      case ff_msgs::MobilityState::DOCKING:
-        if (state->mobility_state.sub_state == ff_msgs::DockState::DOCKED) {
+      case ff_msgs::msg::MobilityState::DOCKING:
+        if (state->mobility_state.sub_state ==
+                                              ff_msgs::msg::DockState::DOCKED) {
           msg += "Docked";
         } else if (state->mobility_state.sub_state <
-                                                  ff_msgs::DockState::DOCKED) {
+                                              ff_msgs::msg::DockState::DOCKED) {
           msg += "Undocking (on step ";
           msg += std::to_string(state->mobility_state.sub_state * -1);
           msg += " of ";
-          msg += std::to_string(((ff_msgs::DockState::UNDOCKING_MAX_STATE * -1)
+          msg +=
+            std::to_string(((ff_msgs::msg::DockState::UNDOCKING_MAX_STATE * -1)
                                                                           - 1));
           msg += ")";
         } else {
           msg += "Docking (on step ";
-          msg += std::to_string((ff_msgs::DockState::DOCKING_MAX_STATE -
+          msg += std::to_string((ff_msgs::msg::DockState::DOCKING_MAX_STATE -
                                  state->mobility_state.sub_state));
-          msg += " of " + std::to_string(ff_msgs::DockState::DOCKING_MAX_STATE);
+          msg += " of ";
+          msg += std::to_string(ff_msgs::msg::DockState::DOCKING_MAX_STATE);
           msg += ")";
         }
         break;
-      case ff_msgs::MobilityState::PERCHING:
+      case ff_msgs::msg::MobilityState::PERCHING:
         if (state->mobility_state.sub_state == 0) {
           msg += "Perched";
         } else if (state->mobility_state.sub_state < 0) {
           msg += "Unperching (on step " + (state->mobility_state.sub_state *
                                                                             -1);
-          msg += " of " + (ff_msgs::PerchState::UNPERCHING_MAX_STATE * -1);
+          msg += " of " + (ff_msgs::msg::PerchState::UNPERCHING_MAX_STATE * -1);
           msg += ")";
         } else {
           msg += "Perching (on step " + state->mobility_state.sub_state;
-          msg += " of " + ff_msgs::PerchState::PERCHING_MAX_STATE;
+          msg += " of " + ff_msgs::msg::PerchState::PERCHING_MAX_STATE;
           msg += ")";
         }
         break;
@@ -200,11 +206,11 @@ void AgentStateCallback(ff_msgs::AgentStateStampedConstPtr const& state) {
   }
 
   if (Finished()) {
-    ros::shutdown();
+    rclcpp::shutdown();
   }
 }
 
-void FaultStateCallback(ff_msgs::FaultStateConstPtr const& state) {
+void FaultStateCallback(ff_msgs::msg::FaultState::SharedPtr const state) {
   get_faults = false;
 
   // Output faults
@@ -228,38 +234,39 @@ bool SendMobilityCommand() {
   cmd.subsys_name = "Astrobee";
 
   if (FLAGS_dock) {
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_DOCK;
-    cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_DOCK;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_DOCK;
+    cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_DOCK;
 
     // Dock has one argument
     cmd.args.resize(1);
-    cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
+    cmd.args[0].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_INT;
     cmd.args[0].i = FLAGS_berth;
   }
 
   if (FLAGS_move) {
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
-    cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
+    cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF;
 
     // Move command has 4 arguements
     cmd.args.resize(4);
 
     // Set frame
-    cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+    cmd.args[0].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_STRING;
     if (FLAGS_relative) {
-      cmd.args[0].s = (FLAGS_ns.empty() ? "body" : FLAGS_ns + "/" + std::string(FRAME_NAME_BODY));
+      cmd.args[0].s = (FLAGS_ns.empty() ? "body" : FLAGS_ns + "/" +
+                                                  std::string(FRAME_NAME_BODY));
     } else {
       cmd.args[0].s = "world";
     }
 
     // Set tolerance. Currently not used but needs to be in the command
-    cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+    cmd.args[2].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d;
     cmd.args[2].vec3d[0] = 0;
     cmd.args[2].vec3d[1] = 0;
     cmd.args[2].vec3d[2] = 0;
 
     // Initialize position to be the current position if not a relative move
-    cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+    cmd.args[1].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d;
     if (FLAGS_relative) {
       cmd.args[1].vec3d[0] = 0;
       cmd.args[1].vec3d[1] = 0;
@@ -293,7 +300,7 @@ bool SendMobilityCommand() {
     }
 
     // Parse and set the attitude - roll, pitch then yaw
-    cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
+    cmd.args[3].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_MAT33f;
     if (FLAGS_att.empty()) {
       if (FLAGS_relative) {
         cmd.args[3].mat33f[0] = 0;
@@ -351,13 +358,13 @@ bool SendMobilityCommand() {
   }
 
   if (FLAGS_stop) {
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_STOP_ALL_MOTION;
-    cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_STOP_ALL_MOTION;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_STOP_ALL_MOTION;
+    cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_STOP_ALL_MOTION;
   }
 
   if (FLAGS_undock) {
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_UNDOCK;
-    cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_UNDOCK;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_UNDOCK;
+    cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_UNDOCK;
   }
 
   cmd_pub.publish(cmd);
@@ -369,12 +376,11 @@ bool SendMobilityCommand() {
 }
 
 bool SendResetBias() {
-  ff_msgs::CommandStamped cmd;
-  cmd.header.stamp = ros::Time::now();
+  ff_msgs::msg::CommandStamped cmd;
   cmd.subsys_name = "Astrobee";
 
-  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_INITIALIZE_BIAS;
-  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_INITIALIZE_BIAS;
+  cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_INITIALIZE_BIAS;
+  cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_INITIALIZE_BIAS;
 
   cmd_pub.publish(cmd);
   // Change to false so we don't send the command again
@@ -384,12 +390,11 @@ bool SendResetBias() {
 }
 
 bool SendResetEkf() {
-  ff_msgs::CommandStamped cmd;
-  cmd.header.stamp = ros::Time::now();
+  ff_msgs::msg::CommandStamped cmd;
   cmd.subsys_name = "Astrobee";
 
-  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_RESET_EKF;
-  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_RESET_EKF;
+  cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_RESET_EKF;
+  cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_RESET_EKF;
 
   cmd_pub.publish(cmd);
   // Change to false so we don't send the command again
@@ -399,16 +404,15 @@ bool SendResetEkf() {
 }
 
 bool SendSetCheckZones() {
-  ff_msgs::CommandStamped cmd;
-  cmd.header.stamp = ros::Time::now();
+  ff_msgs::msg::CommandStamped cmd;
   cmd.subsys_name = "Astrobee";
 
-  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_CHECK_ZONES;
-  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_SET_CHECK_ZONES;
+  cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_CHECK_ZONES;
+  cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_SET_CHECK_ZONES;
 
   // Set check zones has one argument
   cmd.args.resize(1);
-  cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_BOOL;
+  cmd.args[0].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_BOOL;
   if (FLAGS_set_check_zones == "on") {
     cmd.args[0].b = true;
   } else {
@@ -423,19 +427,18 @@ bool SendSetCheckZones() {
 }
 
 bool SendSetFaceForward() {
-  ff_msgs::CommandStamped cmd;
-  cmd.header.stamp = ros::Time::now();
+  ff_msgs::msg::CommandStamped cmd;
   cmd.subsys_name = "Astrobee";
 
-  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_HOLONOMIC_MODE;
+  cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_HOLONOMIC_MODE;
   // For this example only, we will set the command id to the name command
   // This not standard so please don't do it. This should be a unique id,
   // usually a combination of username and timestamp
-  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_SET_HOLONOMIC_MODE;
+  cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_SET_HOLONOMIC_MODE;
 
   // Set holonomic has one argument
   cmd.args.resize(1);
-  cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_BOOL;
+  cmd.args[0].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_BOOL;
   if (FLAGS_set_face_forward == "on") {
     // Holonomic means don't fly face forward so we need to set holonomic to
     // false when we want to face forward
@@ -452,43 +455,42 @@ bool SendSetFaceForward() {
 }
 
 bool SendSetOpLimits() {
-  ff_msgs::CommandStamped cmd;
-  cmd.header.stamp = ros::Time::now();
+  ff_msgs::msg::CommandStamped cmd;
   cmd.subsys_name = "Astrobee";
 
-  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_OPERATING_LIMITS;
-  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_SET_OPERATING_LIMITS;
+  cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_OPERATING_LIMITS;
+  cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_SET_OPERATING_LIMITS;
 
   // Set op limits has seven arguments
   cmd.args.resize(7);
 
   // Set profile name
-  cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+  cmd.args[0].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_STRING;
   cmd.args[0].s = "user_profile";
 
   // Set flight mode
-  cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+  cmd.args[1].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_STRING;
   cmd.args[1].s = FLAGS_mode;
 
   // Set desired limits
   // Target Linear Velocity
-  cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_FLOAT;
+  cmd.args[2].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT;
   cmd.args[2].f = FLAGS_vel;
 
   // Target Linear Acceleration
-  cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_FLOAT;
+  cmd.args[3].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT;
   cmd.args[3].f = FLAGS_accel;
 
   // Target Angular Velocity
-  cmd.args[4].data_type = ff_msgs::CommandArg::DATA_TYPE_FLOAT;
+  cmd.args[4].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT;
   cmd.args[4].f = FLAGS_omega;
 
   // Target Angular Acceleration
-  cmd.args[5].data_type = ff_msgs::CommandArg::DATA_TYPE_FLOAT;
+  cmd.args[5].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT;
   cmd.args[5].f = FLAGS_alpha;
 
   // Set collision distance
-  cmd.args[6].data_type = ff_msgs::CommandArg::DATA_TYPE_FLOAT;
+  cmd.args[6].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_FLOAT;
   cmd.args[6].f = FLAGS_collision_distance;
   if (cmd.args[6].f == -1) {
     cmd.args[6].f = 0.25;
@@ -502,16 +504,15 @@ bool SendSetOpLimits() {
 }
 
 bool SendSetPlanner() {
-  ff_msgs::CommandStamped cmd;
-  cmd.header.stamp = ros::Time::now();
+  ff_msgs::msg::CommandStamped cmd;
   cmd.subsys_name = "Astrobee";
 
-  cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_PLANNER;
-  cmd.cmd_id = ff_msgs::CommandConstants::CMD_NAME_SET_PLANNER;
+  cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_PLANNER;
+  cmd.cmd_id = ff_msgs::msg::CommandConstants::CMD_NAME_SET_PLANNER;
 
   // Set planner has one argument
   cmd.args.resize(1);
-  cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+  cmd.args[0].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_STRING;
   cmd.args[0].s = FLAGS_set_planner;
 
   cmd_pub.publish(cmd);
@@ -558,10 +559,11 @@ bool SendNextCommand() {
   return true;
 }
 
-void AckCallback(ff_msgs::AckStampedConstPtr const& ack) {
-  if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
+void AckCallback(ff_msgs::msg::AckStampedConstPtr const& ack) {
+  if (ack->completed_status.status == ff_msgs::msg::AckCompletedStatus::NOT) {
     return;
-  } else if (ack->completed_status.status == ff_msgs::AckCompletedStatus::OK) {
+  } else if (ack->completed_status.status ==
+                                        ff_msgs::msg::AckCompletedStatus::OK) {
     std::cout << "\n" << ack->cmd_id << " command completed successfully!\n";
     // Check if the mobility command was sent and if it was, we can say the
     // mobility command was finished since we only send one command at a time
@@ -571,29 +573,30 @@ void AckCallback(ff_msgs::AckStampedConstPtr const& ack) {
     }
 
     if (!SendNextCommand()) {
-      ros::shutdown();
+      rclcpp::shutdown();
       return;
     }
   } else if (ack->completed_status.status ==
-                                        ff_msgs::AckCompletedStatus::CANCELED) {
+                                  ff_msgs::msg::AckCompletedStatus::CANCELED) {
     std::cout << "\n" << ack->cmd_id << " command was cancelled. This may have";
     std::cout << " been due to a fault in the system or if someone had issued ";
     std::cout << "another command. Aborting!\n";
-    ros::shutdown();
+    rclcpp::shutdown();
     return;
   } else {
     // Command failed due to bad syntax or an actual failure
     std::cout << "\n" << ack->cmd_id << " command failed! " << ack->message;
     std::cout << "\n";
-    ros::shutdown();
+    rclcpp::shutdown();
     return;
   }
   if (Finished()) {
-    ros::shutdown();
+    rclcpp::shutdown();
   }
 }
 
-void MoveFeedbackCallback(ff_msgs::MotionActionFeedbackConstPtr const& fb) {
+void MoveFeedbackCallback(
+                        ff_msgs::msg::MotionActionFeedbackConstPtr const& fb) {
   std::cout << '\r' << std::flush;
   std::cout << std::fixed << std::setprecision(2)
     << "pos: x: " << fb->feedback.progress.setpoint.pose.position.x
@@ -605,26 +608,25 @@ void MoveFeedbackCallback(ff_msgs::MotionActionFeedbackConstPtr const& fb) {
     << " w: " << fb->feedback.progress.setpoint.pose.orientation.w;
 }
 
-// TODO(Katie) Finish me
-void DockFeedbackCallback(ff_msgs::DockActionFeedbackConstPtr const& fb) {
-  if (fb->feedback.state.state > ff_msgs::DockState::INITIALIZING) {
+void DockStateCallback(ff_msgs::msg::DockState::SharedPtr const state) {
+  if (state->state > ff_msgs::msg:::DockState::INITIALIZING) {
     std::cout << "Astrobee failed to un/dock and is trying to recover.\n\n";
-  } else if (fb->feedback.state.state < ff_msgs::DockState::DOCKED) {
-    std::cout << "Undocking " << (fb->feedback.state.state * -1) << " (of " <<
-      ((ff_msgs::DockState::UNDOCKING_MAX_STATE * -1) - 1) << ")\n";
-  } else if (fb->feedback.state.state < ff_msgs::DockState::UNKNOWN &&
-             fb->feedback.state.state > ff_msgs::DockState::DOCKED) {
+  } else if (state->state < ff_msgs::msg::DockState::DOCKED) {
+    std::cout << "Undocking " << (state->state * -1) << " (of " <<
+      ((ff_msgs::msg::DockState::UNDOCKING_MAX_STATE * -1) - 1) << ")\n";
+  } else if (state->state < ff_msgs::msg::DockState::UNKNOWN &&
+             state->state > ff_msgs::msg::DockState::DOCKED) {
     std::cout << "Docking " <<
-      std::to_string((ff_msgs::DockState::DOCKING_MAX_STATE -
-      fb->feedback.state.state + 1)) << " (of " <<
-      ff_msgs::DockState::DOCKING_MAX_STATE << ")\n";
+      std::to_string((ff_msgs::msg::DockState::DOCKING_MAX_STATE -
+      state->state + 1)) << " (of " <<
+      ff_msgs::msg::DockState::DOCKING_MAX_STATE << ")\n";
   }
 }
 
 // Main entry point for application
 int main(int argc, char** argv) {
   // Initialize a ros node
-  ros::init(argc, argv, "simple_move", ros::init_options::AnonymousName);
+  rclcpp::init(argc, argv, "simple_move", rclcpp::init_options::AnonymousName);
 
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun executive simple_move <opts>");
@@ -721,23 +723,34 @@ int main(int argc, char** argv) {
   }
 
   // Create a node handle
-  ros::NodeHandle nh(std::string("/") + FLAGS_ns);
+  NodeHandle nh(std::string("/") + FLAGS_ns);
 
   // TF2 Subscriber
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener(tf_buffer);
 
   // Initialize publishers
-  cmd_pub = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10);
+  cmd_pub = FF_CREATE_PUBLISHER(nh,
+                                ff_msgs::CommandStamped,
+                                TOPIC_COMMAND,
+                                10);
 
   // Initialize subscribers
-  ros::Subscriber ack_sub, agent_state_sub, fault_state_sub, dock_sub, move_sub;
-  ack_sub = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback);
+  Subscriber<ff_msgs::msg::AckStamped> ack_sub = FF_CREATE_SUBSCRIBER(nh,
+                                ff_msgs::msg::AckStamped,
+                                TOPIC_MANAGEMENT_ACK,
+                                10,
+                                std::bind(&AckCallback, std::placeholders::_1));
+  Subscriber<ff_msgs::msg::AgentStateStamped> agent_state_sub;
+  Subscriber<ff_msgs::msg::FaultState> fault_state_sub;
+  Subscriber<ff_msgs::msg::DockState> dock_sub;
+  Subscriber<ff_msgs::msg::?> move_sub;
 
   // Hacky time out
   int count = 0;
+  std::chrono::nanoseconds ns(200000000);
   while (ack_sub.getNumPublishers() == 0) {
-    ros::Duration(0.2).sleep();
+    rclcpp::sleep_for(ns);
     // Only wait 2 seconds
     if (count == 9) {
       std::cout << "No publisher for acks topics. This tool will not work ";
@@ -799,14 +812,14 @@ int main(int argc, char** argv) {
   if (FLAGS_dock || FLAGS_undock) {
     std::string topic_name = ACTION_BEHAVIORS_DOCK;
     topic_name += "/feedback";
-    dock_sub = nh.subscribe(topic_name, 10, &DockFeedbackCallback);
+    dock_sub = nh.subscribe(topic_name, 10, &DockStateCallback);
     // Hacky time out
     int dock_count = 0;
     while (dock_sub.getNumPublishers() == 0) {
       ros::Duration(0.2).sleep();
       // Only wait 2 seconds
       if (dock_count == 9) {
-        std::cout << "No publisher for dock feedback. This tool will not work ";
+        std::cout << "No publisher for dock state. This tool will not work ";
         std::cout << "without this.\n\n";
         return 1;
       }

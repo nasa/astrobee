@@ -40,7 +40,7 @@ void AckCallback(ff_msgs::msg::AckStamped::SharedPtr const Ack) {
       FF_INFO("Move command is being executed and has not completed.");
       return;  // Return so we don't shut down prematurely
     } else if (Ack->completed_status.status ==
-                                        ff_msgs::msg:::AckCompletedStatus::OK) {
+                                        ff_msgs::msg::AckCompletedStatus::OK) {
       // Command completed successfully
       FF_INFO("Move command completed successfully!");
     } else {  // Command failed
@@ -82,7 +82,8 @@ int main(int argc, char** argv) {
 
   // Command id needs to be a unique id that you will use make sure the command
   // was executed, usually a combination of username and timestamp
-  unique_cmd_id = "guest_science" + std::to_string(nh->get_clock()->now());
+  unique_cmd_id = "guest_science" +
+                              std::to_string(nh->get_clock()->now().seconds());
   move_cmd.cmd_id = unique_cmd_id;
 
   // Source of the command, set to guest_science so that the system knows that
@@ -101,20 +102,20 @@ int main(int argc, char** argv) {
   move_cmd.args[0].s = "world";
 
   // Set location where you want Astrobee to go to
-  move_cmd.args[1].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d;
+  move_cmd.args[1].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3D;
   move_cmd.args[1].vec3d[0] = atof(argv[1]);  // x
   move_cmd.args[1].vec3d[1] = atof(argv[2]);  // y
   move_cmd.args[1].vec3d[2] = atof(argv[3]);  // z (This axis may not currently work
 
   // Tolerance not used! If you want to set the tolerance, you need to use the
   // set operational limits command. I set tolerance to 0
-  move_cmd.args[2].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3d;
+  move_cmd.args[2].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_VEC3D;
   move_cmd.args[2].vec3d[0] = 0;
   move_cmd.args[2].vec3d[1] = 0;
   move_cmd.args[2].vec3d[2] = 0;
 
   // Target attitude, quaternion, only the first 4 values are used
-  move_cmd.args[3].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_MAT33f;
+  move_cmd.args[3].data_type = ff_msgs::msg::CommandArg::DATA_TYPE_MAT33F;
   move_cmd.args[3].mat33f[0] = 0;
   move_cmd.args[3].mat33f[1] = 0;
   move_cmd.args[3].mat33f[2] = 0;
@@ -129,6 +130,6 @@ int main(int argc, char** argv) {
   cmd_publisher->publish(move_cmd);
 
   FF_INFO("waiting for executive to execute the command...");
-  rclcpp::spin();
+  rclcpp::spin(nh);
   return 0;
 }
