@@ -120,8 +120,7 @@ void Fam::UpdateCOM(const Eigen::Vector3f & com) {
   Eigen::Matrix<float, 6, 12> thrust2forcetorque;
   thrust2forcetorque << thrust2force_, thrust2torque_;
   forcetorque2thrust_ = Eigen::MatrixXf::Identity(12, 6);
-  Eigen::JacobiSVD<Eigen::MatrixXf> svd(thrust2forcetorque, Eigen::ComputeThinU | Eigen::ComputeThinV);
-  forcetorque2thrust_ = svd.solve(forcetorque2thrust_);
+  forcetorque2thrust_ = pseudoInverse(thrust2forcetorque);
 }
 
 void Fam::CalcThrustMatrices(const Eigen::Vector3f & force, const Eigen::Vector3f & torque,
