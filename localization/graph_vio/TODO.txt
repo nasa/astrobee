@@ -1,32 +1,30 @@
-  - convert velocity from odom frame to global frame before writing ekf message?? (A) 
-    - is velocity in global frame or body frame??
-	- global frame! need to convert from odom frame to world frame!!
-			- keep track of odom_T_world in imu_augmentor!
-				- use world_T_body and odom_T_body at same timestamp!
-				- need to convert in graph bag tool as well before integrating!
+- add parameter loading back to ros_graph_vio and ros_graph_loc!
 
-  - need to update imu augmentor to subscribe to both odom and loc! (B)
-      - call pose extrapolator
-      - subscribe to odom
-      - extrapolate loc with odom!
-	- add pose interpolator??
-      - then extrapolate this with imu data!
-      - add tests?
-      - add ros_pose_extrapolator
+  - need to update ros pose extrapolator to subscribe to both odom and loc! (A)
 
 - add graph vio to graph bag! (C)
   - run_graph_Bag, plot_graph_bag
   - use graph bag???? 
     - copy graph bag and run for VIO only?? Or modify current graph bag tool??
       - (probably modify current tool?)
+    - need to convert velocity frame in graph bag tool as well before integrating!
 
-  - add parameter reader! (D)
-       - test: make graph loc/vio params files, make sure they are read correctly!
+  unit tests:
+	parametre reader: make graph loc/vio params files, make sure they are read correctly!
+	ros_pose_extrapolator: update existing tests
+        ros_graph_vio: imu bias initializatoin? state changes? etc?
+        graph_vio: standstill code? others?
+        graph_localizer: system tests?
 
    - test in sim! (E)
 
   - graph vio:
     - add better way of getting relative covariance??
+	- improve pose interpolator covariance calcualtion (relative and interpolated?)
+	- others?
+
+  ros_pose_extrapolator:
+    - improve covariances!! use loc covariance! use relative covariance!
 
   - add sanity checkers to loc!
     - drift wrt vl measurements

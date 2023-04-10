@@ -20,7 +20,8 @@
 
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/FlightMode.h>
-#include <ff_msgs/GraphState.h>
+#include <ff_msgs/GraphLocState.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_util/ff_nodelet.h>
 #include <ros_pose_extrapolator/ros_pose_extrapolator_wrapper.h>
@@ -49,7 +50,9 @@ class RosPoseExtrapolatorNodelet : public ff_util::FreeFlyerNodelet {
 
   void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
 
-  void LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg);
+  void LocalizationStateCallback(const ff_msgs::GraphLocState::ConstPtr& graph_loc_state_msg);
+
+  void GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg);
 
   boost::optional<ff_msgs::EkfState> PublishLatestImuAugmentedLocalizationState();
 

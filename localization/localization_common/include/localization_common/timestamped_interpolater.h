@@ -30,20 +30,27 @@
 #include <vector>
 
 namespace localization_common {
+// Provides interpolation functions that extends a timestamp set for interpolatable objects.
 template <typename T>
 class TimestampedInterpolater : public TimestampedSet<T> {
  public:
   TimestampedInterpolater() = default;
   TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects);
 
+  // Returns the interpolated object (or exact object if timestamps match) at the provided timestamp.
   boost::optional<T> Interpolate(const Time timestamp) const;
 
+  // Interpolates two objects given an alpha [0,1], where alpha = 0 should return object a,
+  // alpha = 1 should return object b, and otherwise should return the appropriate combination
+  // of object a and b.
   // This needs to be specialized
   T Interpolate(const T& a, const T& b, const double alpha) const;
 
+  // Returns the relative object given timestamps a and b.
   boost::optional<T> Relative(const Time timestamp_a, const Time timestamp_b) const;
 
-  // This needs to be specialized
+  // Computes a relative object given objects a and b.
+  // This needs to be specialized.
   T Relative(const T& a, const T& b) const;
 
  private:

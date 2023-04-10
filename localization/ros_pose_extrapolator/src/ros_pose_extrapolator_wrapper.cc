@@ -17,15 +17,15 @@
  */
 
 #include <config_reader/config_reader.h>
-#include <ros_pose_extrapolater/ros_pose_extrapolater_wrapper.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
+#include <ros_pose_extrapolator/ros_pose_extrapolator_wrapper.h>
 
-namespace ros_pose_extrapolater {
+namespace ros_pose_extrapolator {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -43,7 +43,7 @@ RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const std::string& graph_
 
   RosPoseExtrapolatorParams params;
   ii::LoadImuIntegratorParams(config, params);
-  params.standstill_enabled = mc::LoadBool(config, "ros_pose_extrapolater_standstill");
+  params.standstill_enabled = mc::LoadBool(config, "ros_pose_extrapolator_standstill");
   Initialize(params);
 }
 
@@ -51,7 +51,7 @@ RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const RosPoseExtrapolator
 
 void RosPoseExtrapolatorWrapper::Initialize(const RosPoseExtrapolatorParams& params) {
   params_ = params;
-  ros_pose_extrapolater_.reset(new RosPoseExtrapolator(params_));
+  imu_integrator_.reset(new ii::ImuIntegrator(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
   // only parameter needed.
@@ -60,19 +60,32 @@ void RosPoseExtrapolatorWrapper::Initialize(const RosPoseExtrapolatorParams& par
   preintegration_helper_.reset(new gtsam::TangentPreintegration(preintegration_params, gtsam::imuBias::ConstantBias()));
 }
 
-void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
+void RosPoseExtrapolatorWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
+  latest_vio_msg_ = graph_vio_state_msg;
+  const auto& latest_state_msg = graph_vio_state_msg.combined_nav_states.combined_nav_states.back();
+    const auto latest_vio_state_ = lc::CombinedNavStateFromMsg(latest_state_msg);
+    const auto latest_vio_covariances_ = lc::CombinedNavStateCovariancesFromMsg(latest_state_msg);
+      // TODO(rsoussan): Add more than just the latest state?
+    pose_interpolator_.Add(latest_vio_state_.timestamp(), latest_vio_state_.pose());
+    standstill_ = graph_vio_state_msg.standstill;
+}
+
+void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphLocState& loc_msg) {
   loc_state_timer_.RecordAndVlogEveryN(10, 2);
   const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
-  if (loc_state_elapsed_time && *loc_state_elapsed_time >= 2) {
-    LogError("LocalizationStateCallback: More than 2 seconds elapsed between loc state msgs.");
+  if (loc_state_elapsed_time && *loc_state_elapsed_time >= 10) {
+    LogError("LocalizationStateCallback: More than 10 seconds elapsed between loc state msgs.");
   }
 
-  latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
-  latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
-  // Reset imu augmented state so IMU data is added starting with the most recent combined nav state's biases
-  latest_imu_augmented_combined_nav_state_ = latest_combined_nav_state_;
+  latest_world_T_body_ = lc::PoseFromMsg(loc_msg);
+  latest_loc_time_ = lc::TimeFromMsg(loc_msg);
   latest_loc_msg_ = loc_msg;
-  standstill_ = loc_msg.standstill;
+  // TODO(rsoussan): Handle covariances
+  // Remove old measurements no longer needed for extrapolation.
+  // IMU data doesn't need lower bound estimate for extrapolation.
+  imu_integrator_->RemoveOldMeasurements(*latest_loc_time_);
+  // Odom interpolator needs lower bound estimate for interpolation of first pose.
+  odom_interpolator_->RemoveBelowLowerBoundValues(*latest_loc_time_);
 }
 
 bool RosPoseExtrapolatorWrapper::standstill() const {
@@ -84,92 +97,104 @@ bool RosPoseExtrapolatorWrapper::standstill() const {
 }
 
 void RosPoseExtrapolatorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
-  ros_pose_extrapolater_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
+  imu_integrator_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
 }
 
 void RosPoseExtrapolatorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
-  ros_pose_extrapolater_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
+  imu_integrator_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
-RosPoseExtrapolatorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
-  if (!latest_combined_nav_state_ || !latest_covariances_ || !ros_pose_extrapolater_ ||
-      !latest_imu_augmented_combined_nav_state_) {
+RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
+  // Ensure data exists to create an extrapolated state and that the loc time
+  // is bounded by odom estimates so it can be extrapolated with no gaps.
+  if (!latest_world_T_body_ || !imu_integrator_ || !latest_loc_time_ ||
+      !odom_interpolator.WithinBounds(*latest_loc_time)) {
     LogError(
-      "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.");
+      "LatestExtrapolatedStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
   }
 
-  if (standstill()) {
-    LogDebugEveryN(100, "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.");
-    const auto latest_timestamp = ros_pose_extrapolater_->LatestTime();
-    if (!latest_timestamp) {
-      LogError("LatestImuAugmentedCombinedNavStateAndCovariances: Failed to get latest timestamp.");
-      return boost::none;
-    }
-    const lc::CombinedNavState latest_timestamp_combined_nav_state(
-      latest_combined_nav_state_->nav_state(), latest_combined_nav_state_->bias(), *latest_timestamp);
-    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{latest_timestamp_combined_nav_state,
-                                                                            *latest_covariances_};
-  }
-
-  ros_pose_extrapolater_->ExtrapolateLatestWithResets(*latest_imu_augmented_combined_nav_state_);
-  // Only remove measurements up to the latest_combined_nav_state timestamp so when a new combined
-  // nav state is received from the localizer IMU measurements can still be added to this
-  ros_pose_extrapolater_->RemoveOldMeasurements(latest_combined_nav_state_->timestamp());
-  if (!latest_imu_augmented_combined_nav_state_) {
-    LogError("LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.");
+  const auto latest_loc_time_odom_T_body = odom_interpolator.Interpolate(*latest_loc_time_);
+  if (!latest_loc_time_odom_T_body) {
+    LogError("LatestExtrapolatedStateAndCovariances: Failed to get odom_T_body for provided loc time.");
     return boost::none;
   }
-  // TODO(rsoussan): propogate uncertainties from imu augmentor
-  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_imu_augmented_combined_nav_state_,
-                                                                          *latest_covariances_};
+  const gtsam::Pose3 world_T_odom = *latest_world_T_body_ * (*latest_loc_time_odom_T_body).inverse();
+
+  // Extrapolate VIO data with IMU measurements.
+  // Don't add IMU data if at standstill to avoid adding noisy IMU measurements to
+  // extrapolated state.
+  auto extrapolated_latest_vio_state =
+    Standstill() ? latest_vio_state_ : imu_integrator_->ExtrapolateLatest(*latest_vio_state_);
+  if (!extrapolated_latest_vio_state_) {
+    LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
+    return boost::none;
+  }
+
+  // Use loc pose to correct extrapolated VIO estimate
+  const gtsam::Pose3 extrapolated_world_T_body = world_T_odom * extrapolated_latest_vio_state->pose();
+  // Rotate body velocity from odom frame to world frame.
+  const gtsam::Vector3 extrapolated_world_F_body_velocity =
+    world_T_odom.linear() * extrapolated_latest_vio_state->velocity();
+  // Use latest bias estimate and use latest IMU time as extrapolated timestamp.
+  // Even if at standstill, the timestamp should be the latest one available.
+  const lc::CombinedNavState extrapolated_state(extrapolated_world_T_body, extrapolated_world_F_body_velocity,
+                                                extrapolated_latest_vio_state->bias(),
+                                                imu_integrator_->Latest()->timestamp);
+
+  // TODO(rsoussan): propogate uncertainties from imu integrator and odom_interpolator
+  // TODO(rsoussan): how to get covariances???? Use odom ones for now???
+  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{extrapolated_state,
+                                                                          *latest_vio_covariances_};
 }
 
-boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestImuAugmentedLocalizationMsg() {
-  if (!latest_loc_msg_) {
-    LogDebugEveryN(50, "LatestImuAugmentedLocalizationMsg: No latest loc msg available.");
+boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestExtrapolatedLocalizationMsg() {
+  if (!latest_loc_msg_ || !latest_vio_msg_) {
+    LogDebugEveryN(50, "LatestExtrapolatedLocalizationMsg: No latest loc msg available.");
     return boost::none;
   }
 
-  const auto latest_imu_augmented_combined_nav_state_and_covariances =
-    LatestImuAugmentedCombinedNavStateAndCovariances();
-  if (!latest_imu_augmented_combined_nav_state_and_covariances) {
-    LogError("LatestImuAugmentedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
+  const auto latest_extrapolated_state_and_covariances =
+    LatestExtrapolatedStateAndCovariances();
+  if (!latest_extrapolated_state_and_covariances) {
+    LogError("LatestExtrapolatedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
     return boost::none;
   }
 
   // Get feature counts and other info from latest_loc_msg
-  ff_msgs::EkfState latest_imu_augmented_loc_msg;
-  latest_imu_augmented_loc_msg.header = latest_loc_msg_->header;
-  latest_imu_augmented_loc_msg.child_frame_id = latest_loc_msg_->child_frame_id;
-  latest_imu_augmented_loc_msg.confidence = latest_loc_msg_->confidence;
+  ff_msgs::EkfState latest_extrapolated_loc_msg;
+  latest_extrapolated_loc_msg.header = latest_loc_msg_->header;
+  latest_extrapolated_loc_msg.child_frame_id = latest_loc_msg_->child_frame_id;
+    // Controller can't handle a confidence other than 0.  TODO(rsoussan): switch back when this is fixed.
+  latest_extrapolated_loc_msg.confidence = 0;
   // Prevent overflow of uin8_t
-  latest_imu_augmented_loc_msg.of_count =
-    latest_loc_msg_->num_of_factors <= 255 ? latest_loc_msg_->num_of_factors : 255;
-  latest_imu_augmented_loc_msg.ml_count =
+  latest_extrapolated_loc_msg.of_count =
+    latest_vio_msg_->num_of_factors <= 255 ? latest_vio_msg_->num_of_factors : 255;
+  latest_extrapolated_loc_msg.ml_count =
     latest_loc_msg_->num_ml_projection_factors <= 255 ? latest_loc_msg_->num_ml_projection_factors : 255;
-  latest_imu_augmented_loc_msg.estimating_bias = latest_loc_msg_->estimating_bias;
+  latest_extrapolated_loc_msg.estimating_bias = latest_vio_msg_->estimating_bias;
 
   // Update nav state and covariances with latest imu measurements
-  lc::CombinedNavStateToMsg(latest_imu_augmented_combined_nav_state_and_covariances->first,
-                            latest_imu_augmented_loc_msg);
-  lc::CombinedNavStateCovariancesToMsg(latest_imu_augmented_combined_nav_state_and_covariances->second,
-                                       latest_imu_augmented_loc_msg);
+  lc::CombinedNavStateToMsg(latest_extrapolated_state_and_covariances->first,
+                            latest_extrapolated_loc_msg);
+  lc::CombinedNavStateCovariancesToMsg(latest_extrapolated_state_and_covariances->second,
+                                       latest_extrapolated_loc_msg);
 
   // Add latest bias corrected acceleration and angular velocity to loc msg
-  const auto latest_imu_measurement = ros_pose_extrapolater_->LatestMeasurement();
+  const auto latest_imu_measurement = imu_integrator_->Latest();
   if (!latest_imu_measurement) {
-    LogError("LatestImuAugmentedLocalizationMsg: Failed to get latest measurement.");
+    LogError("LatestExtrapolatedLocalizationMsg: Failed to get latest measurement.");
     return boost::none;
   }
-  const auto& latest_bias = latest_imu_augmented_combined_nav_state_and_covariances->first.bias();
-  auto latest_bias_corrected_acceleration = latest_bias.correctAccelerometer(latest_imu_measurement->acceleration);
+  const auto& latest_bias = latest_extrapolated_state_and_covariances->first.bias();
+  auto latest_bias_corrected_acceleration =
+    latest_bias.correctAccelerometer(latest_imu_measurement->value.acceleration);
   const auto latest_bias_corrected_angular_velocity =
-    latest_bias.correctGyroscope(latest_imu_measurement->angular_velocity);
+    latest_bias.correctGyroscope(latest_imu_measurement->value.angular_velocity);
   // Correct for gravity if needed
   if (!params_.gravity.isZero()) {
-    const gtsam::Pose3& global_T_body_latest = latest_imu_augmented_combined_nav_state_and_covariances->first.pose();
+    const gtsam::Pose3& global_T_body_latest = latest_extrapolated_state_and_covariances->first.pose();
     latest_bias_corrected_acceleration = lc::RemoveGravityFromAccelerometerMeasurement(
       params_.gravity, params_.body_T_imu, global_T_body_latest, latest_bias_corrected_acceleration);
   }
@@ -177,8 +202,8 @@ boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestImuAugmente
   const auto corrected_measurements = preintegration_helper_->correctMeasurementsBySensorPose(
     latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
 
-  mc::VectorToMsg(corrected_measurements.first, latest_imu_augmented_loc_msg.accel);
-  mc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);
-  return latest_imu_augmented_loc_msg;
+  mc::VectorToMsg(corrected_measurements.first, latest_extrapolated_loc_msg.accel);
+  mc::VectorToMsg(corrected_measurements.second, latest_extrapolated_loc_msg.omega);
+  return latest_extrapolated_loc_msg;
 }
-}  // namespace ros_pose_extrapolater
+}  // namespace ros_pose_extrapolator

@@ -19,12 +19,12 @@
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-#include <ros_pose_extrapolater/ros_pose_extrapolater_nodelet.h>
+#include <ros_pose_extrapolator/ros_pose_extrapolator_nodelet.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 
-namespace ros_pose_extrapolater {
+namespace ros_pose_extrapolator {
 namespace lc = localization_common;
 
 RosPoseExtrapolatorNodelet::RosPoseExtrapolatorNodelet() : ff_util::FreeFlyerNodelet(NODE_POSE_EXTR, true) {
@@ -61,28 +61,32 @@ void RosPoseExtrapolatorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 }
 
 void RosPoseExtrapolatorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  ros_pose_extrapolater_wrapper_.ImuCallback(*imu_msg);
+  ros_pose_extrapolator_wrapper_.ImuCallback(*imu_msg);
 }
 
 void RosPoseExtrapolatorNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
-  ros_pose_extrapolater_wrapper_.FlightModeCallback(*mode);
+  ros_pose_extrapolator_wrapper_.FlightModeCallback(*mode);
+}
+
+void RosGraphLocalizerNodelet::GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg) {
+  ros_pose_extrapolator_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
 }
 
 void RosPoseExtrapolatorNodelet::LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg) {
-  ros_pose_extrapolater_wrapper_.LocalizationStateCallback(*loc_msg);
+  ros_pose_extrapolator_wrapper_.LocalizationStateCallback(*loc_msg);
 }
 
-boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorNodelet::PublishLatestImuAugmentedLocalizationState() {
-  const auto latest_imu_augmented_loc_msg = ros_pose_extrapolater_wrapper_.LatestImuAugmentedLocalizationMsg();
-  if (!latest_imu_augmented_loc_msg) {
-    LogDebugEveryN(100, "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.");
+boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorNodelet::PublishLatestExtrapolatedLocalizationState() {
+  const auto latest_extrapolated_loc_msg = ros_pose_extrapolator_wrapper_.LatestExtrapolatedLocalizationMsg();
+  if (!latest_extrapolated_loc_msg) {
+    LogDebugEveryN(100, "PublishLatestExtrapolatedLocalizationState: Failed to get latest imu augmented loc msg.");
     return boost::none;
   }
   // Avoid sending repeat messages
-  if (last_state_msg_time_ && (latest_imu_augmented_loc_msg->header.stamp == *last_state_msg_time_)) return boost::none;
-  state_pub_.publish(*latest_imu_augmented_loc_msg);
-  last_state_msg_time_ = latest_imu_augmented_loc_msg->header.stamp;
-  return latest_imu_augmented_loc_msg;
+  if (last_state_msg_time_ && (latest_extrapolated_loc_msg->header.stamp == *last_state_msg_time_)) return boost::none;
+  state_pub_.publish(*latest_extrapolated_loc_msg);
+  last_state_msg_time_ = latest_extrapolated_loc_msg->header.stamp;
+  return latest_extrapolated_loc_msg;
 }
 
 void RosPoseExtrapolatorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg) {
@@ -127,7 +131,7 @@ void RosPoseExtrapolatorNodelet::Run() {
   while (ros::ok()) {
     imu_queue_.callAvailable();
     loc_queue_.callAvailable();
-    const auto loc_msg = PublishLatestImuAugmentedLocalizationState();
+    const auto loc_msg = PublishLatestExtrapolatedLocalizationState();
     if (loc_msg) {
       PublishPoseAndTwistAndTransform(*loc_msg);
     }
@@ -135,6 +139,6 @@ void RosPoseExtrapolatorNodelet::Run() {
     rate.sleep();
   }
 }
-}  // namespace ros_pose_extrapolater
+}  // namespace ros_pose_extrapolator
 
-PLUGINLIB_EXPORT_CLASS(ros_pose_extrapolater::RosPoseExtrapolatorNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(ros_pose_extrapolator::RosPoseExtrapolatorNodelet, nodelet::Nodelet);
