@@ -68,11 +68,11 @@ void RosPoseExtrapolatorNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPt
   ros_pose_extrapolator_wrapper_.FlightModeCallback(*mode);
 }
 
-void RosGraphLocalizerNodelet::GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg) {
+void RosPoseExtrapolatorNodelet::GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg) {
   ros_pose_extrapolator_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
 }
 
-void RosPoseExtrapolatorNodelet::LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg) {
+void RosPoseExtrapolatorNodelet::LocalizationStateCallback(const ff_msgs::GraphLocState::ConstPtr& loc_msg) {
   ros_pose_extrapolator_wrapper_.LocalizationStateCallback(*loc_msg);
 }
 

@@ -54,7 +54,7 @@ class RosPoseExtrapolatorNodelet : public ff_util::FreeFlyerNodelet {
 
   void GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg);
 
-  boost::optional<ff_msgs::EkfState> PublishLatestImuAugmentedLocalizationState();
+  boost::optional<ff_msgs::EkfState> PublishLatestExtrapolatedLocalizationState();
 
   void PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg);
 

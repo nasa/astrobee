@@ -15,16 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
-#define ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
 
-#include <imu_integration/imu_integrator_params.h>
+#include <parameter_reader/imu_integration.h>
+#include <parameter_reader/ros_pose_extrapolator.h>
+#include <msg_conversions/msg_conversions.h>
 
-namespace ros_pose_extrapolator {
-struct RosPoseExtrapolatorParams {
-  imu_integration::ImuIntegratorParams imu_integrator;
-  bool standstill_enabled;
-};
-}  // namespace ros_pose_extrapolator
+namespace parameter_reader {
+namespace mc = msg_conversions;
+namespace rp = ros_pose_extrapolator;
 
-#endif  // ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
+void LoadRosPoseExtrapolatorParams(config_reader::ConfigReader& config, rp::RosPoseExtrapolatorParams& params,
+                              const std::string& prefix) {
+  LoadImuIntegratorParams(config, params.imu_integrator, prefix);
+  LOAD_PARAM(params.standstill_enabled, config, prefix);
+}
+}  // namespace parameter_reader

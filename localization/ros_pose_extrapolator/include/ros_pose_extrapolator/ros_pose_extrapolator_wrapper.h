@@ -20,12 +20,15 @@
 
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/FlightMode.h>
-#include <ff_msgs/GraphState.h>
+#include <ff_msgs/GraphLocState.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <imu_integration/imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/pose_interpolater.h>
 #include <localization_common/rate_timer.h>
 #include <localization_measurements/imu_measurement.h>
+#include <ros_pose_extrapolator/ros_pose_extrapolator_params.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
@@ -73,7 +76,7 @@ class RosPoseExtrapolatorWrapper {
   // Returns if currently in standstill. Uses latest VIO measurement to determine this.
   bool standstill() const;
 
-  std::unique_ptr<ImuIntegrator> imu_integrator_;
+  std::unique_ptr<imu_integration::ImuIntegrator> imu_integrator_;
   boost::optional<ff_msgs::GraphLocState> latest_loc_msg_;
   boost::optional<ff_msgs::GraphVIOState> latest_vio_msg_;
   boost::optional<gtsam::Pose3> latest_world_T_body_;
@@ -84,7 +87,7 @@ class RosPoseExtrapolatorWrapper {
   RosPoseExtrapolatorParams params_;
   boost::optional<bool> standstill_;
   localization_common::RateTimer loc_state_timer_ = localization_common::RateTimer("Loc State Msg");
-  localization_common::PoseInterpolator odom_interpolator_;
+  localization_common::PoseInterpolater odom_interpolator_;
 };
 }  // namespace ros_pose_extrapolator
 #endif  // ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_WRAPPER_H_
