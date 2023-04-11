@@ -14,16 +14,17 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+cmake_minimum_required(VERSION 3.5)
+project(planner_qp)
 # this flag is needed by CGAL
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
-set(NASA ON CACHE BOOL "Use NASA's wonderful build system on all traj_opt packages" FORCE)
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
+# set(NASA ON CACHE BOOL "Use NASA's wonderful build system on all traj_opt packages" FORCE)
 
 # QP planner
 add_subdirectory(traj_opt_basic)
-add_subdirectory(traj_opt_pro)
-add_subdirectory(traj_opt_msgs)
-add_subdirectory(traj_opt_ros)
+# add_subdirectory(traj_opt_pro)
+# add_subdirectory(traj_opt_msgs)
+# add_subdirectory(traj_opt_ros)
 
-add_subdirectory(planner_qp)
+# add_subdirectory(planner_qp)
