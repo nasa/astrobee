@@ -16,41 +16,46 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_ANALYSIS_GRAPH_LOCALIZER_SIMULATOR_H_
-#define LOCALIZATION_ANALYSIS_GRAPH_LOCALIZER_SIMULATOR_H_
+#ifndef LOCALIZATION_ANALYSIS_GRAPH_VIO_SIMULATOR_H_
+#define LOCALIZATION_ANALYSIS_GRAPH_VIO_SIMULATOR_H_
 
-#include <ff_msgs/GraphVIOState.h>
-#include <ff_msgs/VisualLandmarks.h>
-#include <localization_analysis/graph_localizer_simulator_params.h>
-#include <graph_localizer/graph_localizer_wrapper.h>
+#include <ff_msgs/Feature2dArray.h>
+#include <ff_msgs/FlightMode.h>
+#include <localization_analysis/graph_vio_simulator_params.h>
+#include <graph_vio/graph_vio_wrapper.h>
 #include <localization_common/time.h>
+
+#include <sensor_msgs/Imu.h>
 
 #include <string>
 #include <vector>
 
 namespace localization_analysis {
-// Buffers msgs and passes these to the graph localizer after a simluated 
+// Buffers msgs and passes these to the graph VIO after a simluated 
 // optimization time occurs (as set in the params). Enables a set optimization time
 // to be simulated regardless of the hardware used for offline replay. 
-class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
+class GraphVIOSimulator : public graph_vio::GraphVIOWrapper {
  public:
-  GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params, const std::string& graph_config_path_prefix);
-  
-  void BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg);
+  GraphVIOSimulator(const GraphVIOSimulatorParams& params, const std::string& graph_config_path_prefix);
 
-  void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+  void BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg);
 
-  void BufferARVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+  void BufferImuMsg(const sensor_msgs::Imu& imu_msg);
+
+  void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
+
+  void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   bool AddMeasurementsAndUpdateIfReady(const localization_common::Time& current_time);
 
  private:
-  std::vector<ff_msgs::GraphVIOState> vio_msg_buffer_;
-  std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
-  std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;
+  std::vector<ff_msgs::Feature2dArray> of_msg_buffer_;
+  std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
+  std::vector<sensor_msgs::Imu> imu_msg_buffer_;
+  std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;
-  GraphLocalizerSimulatorParams params_;
+  GraphVIOSimulatorParams params_;
 };
 }  // namespace localization_analysis
 
-#endif  // LOCALIZATION_ANALYSIS_GRAPH_LOCALIZER_SIMULATOR_H_
+#endif  // LOCALIZATION_ANALYSIS_GRAPH_VIO_SIMULATOR_H_

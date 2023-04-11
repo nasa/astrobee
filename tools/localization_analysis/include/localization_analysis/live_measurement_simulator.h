@@ -41,6 +41,8 @@
 #include <utility>
 
 namespace localization_analysis {
+// Buffers sensor messages and passes them to the localizer or VIO once the simulated delay for each message has 
+// passed. Creates optical flow and sparse mapping msgs from image msgs if desired.
 class LiveMeasurementSimulator {
  public:
   explicit LiveMeasurementSimulator(const LiveMeasurementSimulatorParams& params);

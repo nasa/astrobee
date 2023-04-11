@@ -15,24 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef LOCALIZATION_ANALYSIS_GRAPH_BAG_PARAMS_H_
-#define LOCALIZATION_ANALYSIS_GRAPH_BAG_PARAMS_H_
-
-#include <camera/camera_params.h>
-
-#include <gtsam/geometry/Pose3.h>
-
-#include <memory>
+#ifndef LOCALIZATION_ANALYSIS_GRAPH_VIO_SIMULATOR_PARAMS_H_
+#define LOCALIZATION_ANALYSIS_GRAPH_VIO_SIMULATOR_PARAMS_H_
 
 namespace localization_analysis {
-struct GraphBagParams {
-  bool save_optical_flow_images;
-  bool log_relative_time;
-  std::unique_ptr<camera::CameraParameters> nav_cam_params;
-  gtsam::Pose3 body_T_nav_cam;
-  int ar_min_num_landmarks;
-  int sparse_mapping_min_num_landmarks;
+struct GraphVIOSimulatorParams {
+  // Simulated optimization time. Messages that are received during optimization
+  // are added once this duration has passed.
+  double optimization_time;
 };
 }  // namespace localization_analysis
 
-#endif  // LOCALIZATION_ANALYSIS_GRAPH_BAG_PARAMS_H_
+#endif  // LOCALIZATION_ANALYSIS_GRAPH_VIO_SIMULATOR_PARAMS_H_

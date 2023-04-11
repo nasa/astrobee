@@ -16,15 +16,16 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_ANALYSIS_GRAPH_BAG_H_
-#define LOCALIZATION_ANALYSIS_GRAPH_BAG_H_
+#ifndef LOCALIZATION_ANALYSIS_OFFLINE_REPLAY_H_
+#define LOCALIZATION_ANALYSIS_OFFLINE_REPLAY_H_
 
 #include <camera/camera_params.h>
 #include <localization_analysis/graph_localizer_simulator.h>
-#include <localization_analysis/graph_bag_params.h>
-#include <imu_bias_tester/imu_bias_tester_wrapper.h>
+#include <localization_analysis/graph_vio_simulator.h>
+#include <localization_analysis/offline_replay_params.h>
+// #include <imu_bias_tester/imu_bias_tester_wrapper.h>
 #include <localization_analysis/live_measurement_simulator.h>
-#include <imu_augmentor/imu_augmentor_wrapper.h>
+#include <ros_pose_extrapolator/ros_pose_extrapolator_wrapper.h>
 
 #include <rosbag/bag.h>
 #include <sensor_msgs/Image.h>
@@ -35,29 +36,31 @@
 
 namespace localization_analysis {
 // Reads through a bag file and passes relevant messages to graph localizer
-// wrapper.  Uses LiveMeasurementSimulator which contains its own instances of sensor parsers (lk_optical_flow,
-// localizer (for sparse map matching)) and passes output to graph localizer
-// wrapper so this does not require a ROS core and can parse bags more quickly. Saves output to a new bagfile.
-class GraphBag {
+// and VIO wrappers.  Uses the LiveMeasurementSimulator which contains its own instances of sensor parsers (lk_optical_flow,
+// localizer (for sparse map matching)) with optional measurement delays and passes the output of these sensor 
+// parses to the respective graph objects.
+// This tool avoids using rosbag play and ROS core and enables parsing bags more quickly. Saves output to a new bagfile.
+class OfflineReplay {
  public:
-  GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
+  OfflineReplay(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
            const std::string& results_bag, const std::string& output_stats_file, const bool use_image_features = true,
            const std::string& graph_config_path_prefix = "");
   void Run();
 
  private:
-  void InitializeGraph();
+  void InitializeGraphs();
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const GraphLocalizerSimulator& graph_localizer);
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
+  std::unique_ptr<GraphVIOSimulator> graph_vio_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
-  imu_bias_tester::ImuBiasTesterWrapper imu_bias_tester_wrapper_;
-  imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
+  // imu_bias_tester::ImuBiasTesterWrapper imu_bias_tester_wrapper_;
+  ros_pose_extrapolator::RosPoseExtrapolatorWrapper pose_extrapolator_wrapper_;
   std::string output_stats_file_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
-  GraphBagParams params_;
+  OfflineReplayParams params_;
 };
 }  // end namespace localization_analysis
 
-#endif  // LOCALIZATION_ANALYSIS_GRAPH_BAG_H_
+#endif  // LOCALIZATION_ANALYSIS_OFFLINE_REPLAY_H_

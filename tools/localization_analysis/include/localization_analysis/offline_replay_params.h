@@ -15,17 +15,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef LOCALIZATION_ANALYSIS_MESSAGE_BUFFER_PARAMS_H_
-#define LOCALIZATION_ANALYSIS_MESSAGE_BUFFER_PARAMS_H_
+#ifndef LOCALIZATION_ANALYSIS_OFFLINE_REPLAY_PARAMS_H_
+#define LOCALIZATION_ANALYSIS_OFFLINE_REPLAY_PARAMS_H_
+
+#include <camera/camera_params.h>
+
+#include <gtsam/geometry/Pose3.h>
+
+#include <memory>
 
 namespace localization_analysis {
-struct MessageBufferParams {
-  // Only make message available once this delay has passed.
-  double msg_delay;
-  // Some message providers drop messages too close together in time. Drop all messages < min_msg_spacing from each
-  // other.
-  double min_msg_spacing;
+struct OfflineReplayParams {
+  // Save images with optical flow feature tracks to the output bagfile.
+  bool save_optical_flow_images;
+  // Log the relative time since the start of the bagfile. 
+  bool log_relative_time;
+  std::unique_ptr<camera::CameraParameters> nav_cam_params;
+  gtsam::Pose3 body_T_nav_cam;
+  // Min number of ar landmarks for an AR msg to be valid.
+  int ar_min_num_landmarks;
+  // Min number of sparse mapping landmarks for a Sparse Mapping msg to be valid.
+  int sparse_mapping_min_num_landmarks;
 };
 }  // namespace localization_analysis
 
-#endif  // LOCALIZATION_ANALYSIS_MESSAGE_BUFFER_PARAMS_H_
+#endif  // LOCALIZATION_ANALYSIS_OFFLINE_REPLAY_PARAMS_H_

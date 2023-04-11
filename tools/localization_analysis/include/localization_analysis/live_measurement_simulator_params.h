@@ -31,6 +31,7 @@ struct LiveMeasurementSimulatorParams {
   MessageBufferParams vl;
   MessageBufferParams ar;
   MessageBufferParams img;
+  MessageBufferParams vio;
   std::string bag_name;
   std::string map_file;
   std::string image_topic;

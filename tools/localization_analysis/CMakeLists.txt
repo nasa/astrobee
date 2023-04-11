@@ -62,10 +62,11 @@ if (USE_ROS)
   add_library(${PROJECT_NAME}
     src/bag_imu_filterer.cc
     src/depth_odometry_adder.cc
-    src/graph_bag.cc
     src/graph_localizer_simulator.cc
+    src/graph_vio_simulator.cc
     src/imu_bias_tester_adder.cc
     src/live_measurement_simulator.cc
+    src/offline_replay.cc
     src/parameter_reader.cc
     src/sparse_mapping_pose_adder.cc
     src/utilities.cc
@@ -91,10 +92,10 @@ if (USE_ROS)
   target_link_libraries(run_depth_odometry_adder
     ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-  ## Declare a C++ executable: run_graph_bag
-  add_executable(run_graph_bag tools/run_graph_bag.cc)
-  add_dependencies(run_graph_bag ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(run_graph_bag
+  ## Declare a C++ executable: run_offline_replay
+  add_executable(run_offline_replay tools/run_offline_replay.cc)
+  add_dependencies(run_offline_replay ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_offline_replay
     ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
   ## Declare a C++ executable: run_imu_bias_tester_adder
@@ -123,14 +124,14 @@ install(TARGETS ${PROJECT_NAME}
 # Install C++ executables
 install(TARGETS run_bag_imu_filterer DESTINATION bin)
 install(TARGETS run_depth_odometry_adder DESTINATION bin)
-install(TARGETS run_graph_bag DESTINATION bin)
+install(TARGETS run_offline_replay DESTINATION bin)
 install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
 install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/convert_depth_msg share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_bag_imu_filterer share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_depth_odometry_adder share/${PROJECT_NAME}
-  COMMAND ln -s ../../bin/run_graph_bag share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_offline_replay share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_imu_bias_tester_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
