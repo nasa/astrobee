@@ -71,7 +71,9 @@ class RosGraphVIOWrapper {
 
   // Creates a GraphVIOState msg using the history
   // of nav states and covariances in graph_vio.
-  ff_msgs::GraphVIOState GraphVIOStateMsg() const;
+  // Returns boost::none if no states available or no changes
+  // have occured since last msg.
+  boost::optional<ff_msgs::GraphVIOState> GraphVIOStateMsg();
 
  private:
   // Initialize the graph if the IMU bias is initialized.
@@ -80,6 +82,7 @@ class RosGraphVIOWrapper {
   std::unique_ptr<graph_vio::GraphVIO> graph_vio_;
   graph_vio::GraphVIOParams params_;
   ImuBiasInitializer imu_bias_initializer_;
+  boost::optional<localization_common::Time> latest_msg_time_;
 };
 }  // namespace ros_graph_vio
 

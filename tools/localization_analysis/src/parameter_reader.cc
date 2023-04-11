@@ -39,22 +39,29 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("of", config, params.of);
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);
+  LoadMessageBufferParams("img", config, params.vio);
+  LoadMessageBufferParams("vio", config, params.vio);
   params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
+  params.use_image_features = mc::LoadBool(config, "use_image_features");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;
 }
 
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
-  params.optimization_time = mc::LoadDouble(config, "optimization_time");
+  params.optimization_time = mc::LoadDouble(config, "loc_optimization_time");
 }
 
-void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
+void LoadGraphVIOSimulatorParams(config_reader::ConfigReader& config, GraphVIOSimulatorParams& params) {
+  params.optimization_time = mc::LoadDouble(config, "vio_optimization_time");
+}
+
+void LoadOfflineReplayParams(config_reader::ConfigReader& config, OfflineReplayParams& params) {
   params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
   params.log_relative_time = mc::LoadBool(config, "log_relative_time");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
-  params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "loc_adder_min_num_matches");
-  params.ar_min_num_landmarks = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "sparse_mapping_min_num_landmarks");
+  params.ar_min_num_landmarks = mc::LoadInt(config, "ar_min_num_landmarks");
 }
 }  // namespace localization_analysis

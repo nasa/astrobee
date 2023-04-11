@@ -36,10 +36,10 @@
 
 namespace localization_analysis {
 // Reads through a bag file and passes relevant messages to graph localizer
-// and VIO wrappers.  Uses the LiveMeasurementSimulator which contains its own instances of sensor parsers (lk_optical_flow,
-// localizer (for sparse map matching)) with optional measurement delays and passes the output of these sensor 
-// parses to the respective graph objects.
-// This tool avoids using rosbag play and ROS core and enables parsing bags more quickly. Saves output to a new bagfile.
+// and VIO wrappers.  Uses the LiveMeasurementSimulator which contains its own instances of sensor parsers
+// (lk_optical_flow, localizer (for sparse map matching)) with optional measurement delays and passes the output of
+// these sensor parses to the respective graph objects. This tool avoids using rosbag play and ROS core and enables
+// parsing bags more quickly. Saves output to a new bagfile.
 class OfflineReplay {
  public:
   OfflineReplay(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
@@ -49,8 +49,8 @@ class OfflineReplay {
 
  private:
   void InitializeGraphs();
-  void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                  const GraphLocalizerSimulator& graph_localizer);
+  /*void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
+                                  const GraphLocalizerSimulator& graph_localizer);*/
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<GraphVIOSimulator> graph_vio_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;

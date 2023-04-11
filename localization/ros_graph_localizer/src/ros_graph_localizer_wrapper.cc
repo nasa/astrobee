@@ -126,10 +126,13 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
   last_vio_msg_time_ = boost::none;
 }
 
-ff_msgs::GraphLocState RosGraphLocalizerWrapper::GraphLocStateMsg() const {
+boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateMsg() {
+  const auto latest_timestamp = *(graph_localizer_->pose_nodes().LatestTimestamp());
+  // Avoid sending repeat msgs.
+  if (latest_msg_time_ && *latest_msg_time_ == latest_timestamp) return boost::none;
+  latest_msg_time_ = latest_timestamp;
   ff_msgs::GraphLocState msg;
   const auto latest_pose = *(graph_localizer_->pose_nodes().LatestNode());
-  const auto latest_timestamp = *(graph_localizer_->pose_nodes().LatestTimestamp());
   const auto latest_keys = graph_localizer_->pose_nodes().Keys(latest_timestamp);
   const auto latest_pose_covariance = *(graph_localizer_->Covariance(latest_keys[0]));
   lc::PoseToMsg(latest_pose, msg.pose.pose);

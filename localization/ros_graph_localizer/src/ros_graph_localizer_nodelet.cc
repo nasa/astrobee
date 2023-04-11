@@ -120,7 +120,7 @@ bool RosGraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs
 
 void RosGraphLocalizerNodelet::PublishGraphLocalizerState() {
   const auto msg = ros_graph_localizer_wrapper_.GraphLocStateMsg();
-  graph_loc_pub_.publish(msg);
+  if (msg)  graph_loc_pub_.publish(*msg);
 }
 
 /*void RosGraphLocalizerNodelet::PublishLocalizerGraph() {

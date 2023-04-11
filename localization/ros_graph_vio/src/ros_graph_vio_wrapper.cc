@@ -62,7 +62,7 @@ void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
                                              *(imu_bias_initializer_.Bias()), imu_measurement.timestamp);
     params_.combined_nav_state_node_adder.start_node = initial_state;
     params_.combined_nav_state_node_adder.starting_time = initial_state.timestamp();
-    params_.combined_nav_state_node_adder.starting_measurement = imu_measurement;
+    params_.combined_nav_state_node_adder.start_measurement = imu_measurement;
     graph_vio_.reset(new graph_vio::GraphVIO(params_));
     LogDebug("ImuCallback: Initialized Graph.");
   }
@@ -105,23 +105,28 @@ void RosGraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
   graph_vio_.reset();
 }
 
-ff_msgs::GraphVIOState RosGraphVIOWrapper::GraphVIOStateMsg() const {
-  ff_msgs::GraphVIOState msg;
-  if (!Initialized()) return msg;
+boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
+  if (!Initialized()) return boost::none;
   const auto& nodes = graph_vio_->combined_nav_state_nodes();
-  for (const auto& time : nodes.Timestamps()) {
+  const auto times = nodes.Timestamps();
+  // Avoid sending repeat msgs
+  if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) return boost::none;
+  const lc::Time latest_time = times.back();
+  latest_msg_time_ = latest_time;
+  ff_msgs::GraphVIOState msg;
+  for (const auto& time : times) {
     const auto combined_nav_state = nodes.Node(time);
     const auto keys = nodes.Keys(time);
     if (!combined_nav_state || keys.empty() || keys.size() != 3) {
       LogError("CombinedNavStateArrayMsg: Failed to get combined nav state and keys.");
-      return msg;
+      return boost::none;
     }
     const auto pose_covariance = graph_vio_->Covariance(keys[0]);
     const auto velocity_covariance = graph_vio_->Covariance(keys[1]);
     const auto imu_bias_covariance = graph_vio_->Covariance(keys[2]);
     if (!pose_covariance || !velocity_covariance || !imu_bias_covariance) {
       LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
-      return msg;
+      return boost::none;
     }
     msg.combined_nav_states.combined_nav_states.push_back(
       lc::CombinedNavStateToMsg(*combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));

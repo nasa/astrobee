@@ -56,7 +56,8 @@ class RosGraphLocalizerWrapper {
 
   // Creates graph loc state msg using latest pose and graph information
   // in graph localizer.
-  ff_msgs::GraphLocState GraphLocStateMsg() const;
+  // Returns boost::none if no state is available or no changes have occured since last msg.
+  boost::optional<ff_msgs::GraphLocState> GraphLocStateMsg();
 
  private:
   // Initialize the graph
@@ -66,6 +67,7 @@ class RosGraphLocalizerWrapper {
   graph_localizer::GraphLocalizerParams params_;
   localization_common::TimestampedSet<ff_msgs::GraphVIOState> vio_measurement_buffer_;
   boost::optional<localization_common::Time> last_vio_msg_time_;
+  boost::optional<localization_common::Time> latest_msg_time_;
 };
 }  // namespace ros_graph_localizer
 

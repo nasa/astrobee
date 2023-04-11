@@ -30,9 +30,10 @@
 
 namespace localization_analysis {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
+/*void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                        const camera::CameraParameters& camera_params, cv::Mat& feature_track_image) {
   for (const auto& feature_track : feature_tracks) {
     const auto& points = feature_track.second->points();
@@ -55,13 +56,13 @@ void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
         const auto& point2 = std::next(point_it)->second.image_point;
         const auto distorted_previous_point = Distort(point1, camera_params);
         const auto distorted_current_point = Distort(point2, camera_params);
-        cv::circle(feature_track_image, distorted_current_point, 2 /* Radius*/, cv::Scalar(0, 255, 255), -1 /*Filled*/,
+        cv::circle(feature_track_image, distorted_current_point, 2, cv::Scalar(0, 255, 255), -1,
                    8);
         cv::line(feature_track_image, distorted_current_point, distorted_previous_point, color, 2, 8, 0);
       }
     } else {
-      cv::circle(feature_track_image, Distort(points.cbegin()->second.image_point, camera_params), 2 /* Radius*/, color,
-                 -1 /*Filled*/, 8);
+      cv::circle(feature_track_image, Distort(points.cbegin()->second.image_point, camera_params), 2, color,
+                 -1, 8);
     }
     // Draw feature id at most recent point
     cv::putText(feature_track_image, std::to_string(points.crbegin()->second.feature_id),
@@ -75,7 +76,7 @@ void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
   for (const auto smart_factor : smart_factors) {
     const auto& point = smart_factor->measured().back();
     const auto distorted_point = Distort(point, camera_params);
-    cv::circle(feature_track_image, distorted_point, 15 /* Radius*/, cv::Scalar(200, 100, 0), -1 /*Filled*/, 8);
+    cv::circle(feature_track_image, distorted_point, 15, cv::Scalar(200, 100, 0), -1, 8);
   }
 }
 
@@ -111,7 +112,7 @@ std::vector<const SmartFactor*> SmartFactors(const graph_localizer::GraphLocaliz
     }
   }
   return smart_factors;
-}
+}*/
 
 bool string_ends_with(const std::string& str, const std::string& ending) {
   if (str.length() >= ending.length()) {
@@ -121,7 +122,29 @@ bool string_ends_with(const std::string& str, const std::string& ending) {
   }
 }
 
-void SaveImuBiasTesterPredictedStates(const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states,
+geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header) {
+  geometry_msgs::PoseStamped pose_msg;
+  pose_msg.header = header;
+  mc::EigenPoseToMsg(global_T_body, pose_msg.pose);
+  return pose_msg;
+}
+
+geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const lc::Time time) {
+  std_msgs::Header header;
+  lc::TimeToHeader(time, header);
+  header.frame_id = "world";
+  return PoseMsg(global_T_body, header);
+}
+
+geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::Time time) {
+  return PoseMsg(lc::EigenPose(global_T_body), time);
+}
+
+geometry_msgs::PoseStamped PoseMsg(const lm::TimestampedPose& timestamped_pose) {
+  return PoseMsg(timestamped_pose.pose, timestamped_pose.time);
+}
+
+/*void SaveImuBiasTesterPredictedStates(const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states,
                                       rosbag::Bag& bag) {
   for (const auto& state : imu_bias_tester_predicted_states) {
     geometry_msgs::PoseStamped pose_msg;
@@ -133,5 +156,5 @@ void SaveImuBiasTesterPredictedStates(const std::vector<lc::CombinedNavState>& i
     lc::TimeToHeader(state.timestamp(), velocity_msg.header);
     SaveMsg(velocity_msg, TOPIC_IMU_BIAS_TESTER_VELOCITY, bag);
   }
-}
+}*/
 }  // namespace localization_analysis

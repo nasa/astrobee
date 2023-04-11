@@ -22,8 +22,8 @@
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <localization_analysis/graph_vio_simulator_params.h>
-#include <graph_vio/graph_vio_wrapper.h>
 #include <localization_common/time.h>
+#include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
 #include <sensor_msgs/Imu.h>
 
@@ -31,10 +31,10 @@
 #include <vector>
 
 namespace localization_analysis {
-// Buffers msgs and passes these to the graph VIO after a simluated 
+// Buffers msgs and passes these to the graph VIO after a simluated
 // optimization time occurs (as set in the params). Enables a set optimization time
-// to be simulated regardless of the hardware used for offline replay. 
-class GraphVIOSimulator : public graph_vio::GraphVIOWrapper {
+// to be simulated regardless of the hardware used for offline replay.
+class GraphVIOSimulator : public ros_graph_vio::RosGraphVIOWrapper {
  public:
   GraphVIOSimulator(const GraphVIOSimulatorParams& params, const std::string& graph_config_path_prefix);
 
@@ -44,13 +44,13 @@ class GraphVIOSimulator : public graph_vio::GraphVIOWrapper {
 
   void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
 
-  void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
+  // void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   bool AddMeasurementsAndUpdateIfReady(const localization_common::Time& current_time);
 
  private:
   std::vector<ff_msgs::Feature2dArray> of_msg_buffer_;
-  std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
+  // std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;

@@ -22,15 +22,15 @@ namespace localization_analysis {
 namespace lc = localization_common;
 GraphVIOSimulator::GraphVIOSimulator(const GraphVIOSimulatorParams& params,
                                                  const std::string& graph_config_path_prefix)
-    : GraphVIOWrapper(graph_config_path_prefix), params_(params) {}
+    : RosGraphVIOWrapper(graph_config_path_prefix), params_(params) {}
 
 void GraphVIOSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg) {
   of_msg_buffer_.emplace_back(feature_array_msg);
 }
 
-void GraphVIOSimulator::BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+/*void GraphVIOSimulator::BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg) {
   depth_odometry_msg_buffer_.emplace_back(depth_odometry_msg);
-}
+}*/
 
 void GraphVIOSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
 
@@ -59,10 +59,10 @@ bool GraphVIOSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_
   imu_msg_buffer_.clear();
   /*for (const auto& depth_odometry_msg : depth_odometry_msg_buffer_) {
     DepthOdometryCallback(depth_odometry_msg);
-  }*/
-  depth_odometry_msg_buffer_.clear();
+  }
+  depth_odometry_msg_buffer_.clear();*/
   for (const auto& of_msg : of_msg_buffer_) {
-    OpticalFlowCallback(of_msg);
+    FeaturePointsCallback(of_msg);
   }
   of_msg_buffer_.clear();
 

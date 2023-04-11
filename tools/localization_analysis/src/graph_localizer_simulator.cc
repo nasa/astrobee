@@ -22,7 +22,7 @@ namespace localization_analysis {
 namespace lc = localization_common;
 GraphLocalizerSimulator::GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params,
                                                  const std::string& graph_config_path_prefix)
-    : GraphLocalizerWrapper(graph_config_path_prefix), params_(params) {}
+    : RosGraphLocalizerWrapper(graph_config_path_prefix), params_(params) {}
 
 void GraphLocalizerSimulator::BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
   vio_msg_buffer_.emplace_back(graph_vio_state_msg);
@@ -51,12 +51,12 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
   vio_msg_buffer_.clear();
 
   for (const auto& vl_msg : vl_msg_buffer_) {
-    VLVisualLandmarksCallback(vl_msg);
+    SparseMapVisualLandmarksCallback(vl_msg);
   }
   vl_msg_buffer_.clear();
 
   for (const auto& ar_msg : ar_msg_buffer_) {
-    ARVisualLandmarksCallback(ar_msg);
+    // ARVisualLandmarksCallback(ar_msg);
   }
   ar_msg_buffer_.clear();
 

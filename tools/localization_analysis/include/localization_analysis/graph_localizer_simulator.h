@@ -22,20 +22,20 @@
 #include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_analysis/graph_localizer_simulator_params.h>
-#include <graph_localizer/graph_localizer_wrapper.h>
 #include <localization_common/time.h>
+#include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
 
 #include <string>
 #include <vector>
 
 namespace localization_analysis {
-// Buffers msgs and passes these to the graph localizer after a simluated 
+// Buffers msgs and passes these to the graph localizer after a simluated
 // optimization time occurs (as set in the params). Enables a set optimization time
-// to be simulated regardless of the hardware used for offline replay. 
-class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
+// to be simulated regardless of the hardware used for offline replay.
+class GraphLocalizerSimulator : public ros_graph_localizer::RosGraphLocalizerWrapper {
  public:
   GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params, const std::string& graph_config_path_prefix);
-  
+
   void BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg);
 
   void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);

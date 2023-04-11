@@ -1,17 +1,13 @@
-- need to update ros pose extrapolator to subscribe to both odom and loc! (A)
-  - add param reader for ros pose extrapolator!
-      
+- add graph vio to graph bag! (A)
+  - finish offline replay tool!
+     - add graph vio state message to graph loc wrapper! (AA)
+  - run_graph_Bag, plot_graph_bag
+  - need to convert velocity frame in graph bag tool as well before integrating!
+
 - remove circular dependencies in param reader? (B)
    - move loading ros_xxx params to those ros packages? 
    - add pose_extrapolator package?
    - add parameter loading back to ros_graph_vio, ros_graph_loc, and ros_pose_extrapolator!
-
-- add graph vio to graph bag! (C)
-  - run_graph_Bag, plot_graph_bag
-  - use graph bag???? 
-    - copy graph bag and run for VIO only?? Or modify current graph bag tool??
-      - (probably modify current tool?)
-    - need to convert velocity frame in graph bag tool as well before integrating!
 
   unit tests:
 	parametre reader: make graph loc/vio params files, make sure they are read correctly! (D)

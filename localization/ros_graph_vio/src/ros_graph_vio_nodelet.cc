@@ -129,11 +129,11 @@ void RosGraphVIONodelet::ResetAndEnableVIO() {
 
 void RosGraphVIONodelet::PublishGraphVIOState() {
   auto msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
-  if (msg.combined_nav_states.combined_nav_states.empty()) {
+  if (!msg) {
     LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
     return;
   }
-  graph_vio_state_pub_.publish(msg);
+  graph_vio_state_pub_.publish(*msg);
 }
 
 void RosGraphVIONodelet::PublishReset() const {
