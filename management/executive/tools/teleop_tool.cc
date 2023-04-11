@@ -27,6 +27,8 @@
 
 #include <tf2_ros/transform_listener.h>
 
+#include <ff_msgs/action/dock.hpp>
+#include <ff_msgs/action/motion.hpp>
 #include <ff_msgs/msg/ack_completed_status.hpp>
 #include <ff_msgs/msg/ack_stamped.hpp>
 #include <ff_msgs/msg/ack_status.hpp>
@@ -34,10 +36,9 @@
 #include <ff_msgs/msg/command_arg.hpp>
 #include <ff_msgs/msg/command_constants.hpp>
 #include <ff_msgs/msg/command_stamped.hpp>
-#include <ff_msgs/msg/dock_action.hpp>
 #include <ff_msgs/msg/dock_state.hpp>
+#include <ff_msgs/msg/ekf_state.hpp>
 #include <ff_msgs/msg/fault_state.hpp>
-#include <ff_msgs/msg/motion_action.hpp>
 #include <ff_msgs/msg/perch_state.hpp>
 
 #include <ff_util/ff_flight.h>
@@ -559,7 +560,7 @@ bool SendNextCommand() {
   return true;
 }
 
-void AckCallback(ff_msgs::msg::AckStampedConstPtr const& ack) {
+void AckCallback(ff_msgs::msg::AckStamped::SharedPtr const& ack) {
   if (ack->completed_status.status == ff_msgs::msg::AckCompletedStatus::NOT) {
     return;
   } else if (ack->completed_status.status ==
@@ -595,17 +596,16 @@ void AckCallback(ff_msgs::msg::AckStampedConstPtr const& ack) {
   }
 }
 
-void MoveFeedbackCallback(
-                        ff_msgs::msg::MotionActionFeedbackConstPtr const& fb) {
+void EkfStateCallback(ff_msgs::msg::EkfState::SharedPtr const state) {
   std::cout << '\r' << std::flush;
   std::cout << std::fixed << std::setprecision(2)
-    << "pos: x: " << fb->feedback.progress.setpoint.pose.position.x
-    << " y: " << fb->feedback.progress.setpoint.pose.position.y
-    << " z: " << fb->feedback.progress.setpoint.pose.position.z
-    << " att: x: " << fb->feedback.progress.setpoint.pose.orientation.x
-    << " y: " << fb->feedback.progress.setpoint.pose.orientation.y
-    << " z: " << fb->feedback.progress.setpoint.pose.orientation.z
-    << " w: " << fb->feedback.progress.setpoint.pose.orientation.w;
+    << "pos: x: " << state->pose.position.x
+    << " y: " << state->pose.position.y
+    << " z: " << state->pose.position.z
+    << " att: x: " << state->pose.orientation.x
+    << " y: " << state->pose.orientation.y
+    << " z: " << state->pose.orientation.z
+    << " w: " << state->pose.orientation.w;
 }
 
 void DockStateCallback(ff_msgs::msg::DockState::SharedPtr const state) {
@@ -744,7 +744,7 @@ int main(int argc, char** argv) {
   Subscriber<ff_msgs::msg::AgentStateStamped> agent_state_sub;
   Subscriber<ff_msgs::msg::FaultState> fault_state_sub;
   Subscriber<ff_msgs::msg::DockState> dock_sub;
-  Subscriber<ff_msgs::msg::?> move_sub;
+  Subscriber<ff_msgs::msg::EkfState> ekf_sub;
 
   // Hacky time out
   int count = 0;
@@ -764,11 +764,12 @@ int main(int argc, char** argv) {
   if (FLAGS_get_pose || FLAGS_move) {
     std::string ns = FLAGS_ns;
     // Wait for transform listener to start up
-    ros::Duration(1.0).sleep();
+    std::chrono::nanoseconds ns(1000000000);
+    rclcpp::sleep_for(ns);
     try {
       tfs = tf_buffer.lookupTransform(std::string(FRAME_NAME_WORLD),
           (ns.empty() ? "body" : ns + "/" + std::string(FRAME_NAME_BODY)),
-          ros::Time(0));
+          rclcpp::Time(0));
     } catch (tf2::TransformException &ex) {
       std::cout << "Could not query the pose of robot: " << ex.what() << "\n\n";
       return 1;
