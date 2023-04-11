@@ -79,10 +79,9 @@ class RosPoseExtrapolatorWrapper {
   std::unique_ptr<imu_integration::ImuIntegrator> imu_integrator_;
   boost::optional<ff_msgs::GraphLocState> latest_loc_msg_;
   boost::optional<ff_msgs::GraphVIOState> latest_vio_msg_;
-  boost::optional<gtsam::Pose3> latest_world_T_body_;
-  boost::optional<localization_common::Time> latest_loc_time_;
-  boost::optional<localization_common::CombinedNavState> latest_vio_state_;
+  boost::optional<localization_common::CombinedNavState> latest_extrapolated_vio_state_;
   boost::optional<localization_common::CombinedNavStateCovariances> latest_vio_state_covariances_;
+  boost::optional<gtsam::Pose3> world_T_odom_;
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;
   RosPoseExtrapolatorParams params_;
   boost::optional<bool> standstill_;

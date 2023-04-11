@@ -1,14 +1,10 @@
-- add parameter loading back to ros_graph_vio and ros_graph_loc!
-
 - need to update ros pose extrapolator to subscribe to both odom and loc! (A)
   - add param reader for ros pose extrapolator!
-  - store latest state and only imu extrapolator from this!
-	- avoids repeated imu extrapolation
-        - reset when receive new vio state (don't need to for loc since loc just calculates world_T_odom
-        - calculate world_T_odom in loc callback?
       
-- remove circular dependencies in param reader?
+- remove circular dependencies in param reader? (B)
    - move loading ros_xxx params to those ros packages? 
+   - add pose_extrapolator package?
+   - add parameter loading back to ros_graph_vio, ros_graph_loc, and ros_pose_extrapolator!
 
 - add graph vio to graph bag! (C)
   - run_graph_Bag, plot_graph_bag
@@ -18,7 +14,7 @@
     - need to convert velocity frame in graph bag tool as well before integrating!
 
   unit tests:
-	parametre reader: make graph loc/vio params files, make sure they are read correctly!
+	parametre reader: make graph loc/vio params files, make sure they are read correctly! (D)
 	ros_pose_extrapolator: update existing tests
         ros_graph_vio: imu bias initializatoin? state changes? etc?
         graph_vio: standstill code? others?

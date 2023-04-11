@@ -62,29 +62,40 @@ void RosPoseExtrapolatorWrapper::Initialize(const RosPoseExtrapolatorParams& par
 void RosPoseExtrapolatorWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
   latest_vio_msg_ = graph_vio_state_msg;
   const auto& latest_state_msg = graph_vio_state_msg.combined_nav_states.combined_nav_states.back();
-    latest_vio_state_ = lc::CombinedNavStateFromMsg(latest_state_msg);
+    const auto latest_vio_state = lc::CombinedNavStateFromMsg(latest_state_msg);
     latest_vio_state_covariances_ = lc::CombinedNavStateCovariancesFromMsg(latest_state_msg);
+    // Reset extrapolated vio state when receive new VIO message so IMU extrapolation
+    // restarts using this state.
+    latest_extrapolated_vio_state_ = latest_vio_state;
       // TODO(rsoussan): Add more than just the latest state?
-    odom_interpolator_.Add(latest_vio_state_->timestamp(), lc::EigenPose(latest_vio_state_->pose()));
+    odom_interpolator_.Add(latest_vio_state.timestamp(), lc::EigenPose(latest_vio_state.pose()));
     standstill_ = graph_vio_state_msg.standstill;
+  // Remove old measurements no longer needed for extrapolation.
+  imu_integrator_->RemoveOldValues(latest_vio_state.timestamp());
 }
 
 void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphLocState& loc_msg) {
   loc_state_timer_.RecordAndVlogEveryN(10, 2);
   const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
   if (loc_state_elapsed_time && *loc_state_elapsed_time >= 10) {
-    LogError("LocalizationStateCallback: More than 10 seconds elapsed between loc state msgs.");
+    LogWarning("LocalizationStateCallback: More than 10 seconds elapsed between loc state msgs.");
   }
 
-  latest_world_T_body_ = lc::PoseFromMsg(loc_msg.pose.pose);
-  latest_loc_time_ = lc::TimeFromHeader(loc_msg.header);
   latest_loc_msg_ = loc_msg;
-  // TODO(rsoussan): Handle covariances
-  // Remove old measurements no longer needed for extrapolation.
-  // IMU data doesn't need lower bound estimate for extrapolation.
-  imu_integrator_->RemoveOldValues(*latest_loc_time_);
+  const auto world_T_body = lc::PoseFromMsg(loc_msg.pose.pose);
+  // TODO(rsoussan): Store and use loc covariances
+  const auto loc_timestamp = lc::TimeFromHeader(loc_msg.header);
   // Odom interpolator needs lower bound estimate for interpolation of first pose.
-  odom_interpolator_.RemoveBelowLowerBoundValues(*latest_loc_time_);
+  odom_interpolator_.RemoveBelowLowerBoundValues(loc_timestamp);
+  // Update world_T_odom estimate. Fix drift in odometry by getting odom_T_body
+  // at the same timestamp as world_T_body and computing offset wrt world frame.
+  const auto loc_timestamp_odom_T_body = odom_interpolator_.Interpolate(loc_timestamp);
+  if (!loc_timestamp_odom_T_body) {
+    LogError("LocalizationStateCallback: Failed to get odom_T_body for provided loc time.");
+    return;
+  }
+  const auto loc_timestamp_body_T_odom = lc::GtPose(*loc_timestamp_odom_T_body).inverse();
+  world_T_odom_ = world_T_body * loc_timestamp_body_T_odom;
 }
 
 bool RosPoseExtrapolatorWrapper::standstill() const {
@@ -105,41 +116,31 @@ void RosPoseExtrapolatorWrapper::FlightModeCallback(const ff_msgs::FlightMode& f
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
-  // Ensure data exists to create an extrapolated state and that the loc time
-  // is bounded by odom estimates so it can be extrapolated with no gaps.
-  if (!latest_world_T_body_ || !imu_integrator_ || !latest_loc_time_ ||
-      !odom_interpolator_.WithinBounds(*latest_loc_time_)) {
+  if (!world_T_odom_ || !latest_extrapolated_vio_state_) {
     LogError(
       "LatestExtrapolatedStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
   }
 
-  const auto latest_loc_time_odom_T_body = odom_interpolator_.Interpolate(*latest_loc_time_);
-  if (!latest_loc_time_odom_T_body) {
-    LogError("LatestExtrapolatedStateAndCovariances: Failed to get odom_T_body for provided loc time.");
-    return boost::none;
-  }
-  const gtsam::Pose3 world_T_odom = *latest_world_T_body_ * (lc::GtPose(*latest_loc_time_odom_T_body)).inverse();
-
-  // Extrapolate VIO data with IMU measurements.
+  // Extrapolate VIO data with latest IMU measurements.
   // Don't add IMU data if at standstill to avoid adding noisy IMU measurements to
   // extrapolated state.
-  auto extrapolated_latest_vio_state =
-    standstill() ? latest_vio_state_ : imu_integrator_->ExtrapolateLatest(*latest_vio_state_);
-  if (!extrapolated_latest_vio_state) {
+  if (!standstill())
+    latest_extrapolated_vio_state_ = imu_integrator_->ExtrapolateLatest(*latest_extrapolated_vio_state_);
+  if (!latest_extrapolated_vio_state_) {
     LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
     return boost::none;
   }
 
-  // Use loc pose to correct extrapolated VIO estimate
-  const gtsam::Pose3 extrapolated_world_T_body = world_T_odom * extrapolated_latest_vio_state->pose();
+  // Convert from odom frame to world frame
+  const gtsam::Pose3 extrapolated_world_T_body = (*world_T_odom_) * latest_extrapolated_vio_state_->pose();
   // Rotate body velocity from odom frame to world frame.
   const gtsam::Vector3 extrapolated_world_F_body_velocity =
-    world_T_odom.rotation() * extrapolated_latest_vio_state->velocity();
+    world_T_odom_->rotation() * latest_extrapolated_vio_state_->velocity();
   // Use latest bias estimate and use latest IMU time as extrapolated timestamp.
   // Even if at standstill, the timestamp should be the latest one available.
   const lc::CombinedNavState extrapolated_state(extrapolated_world_T_body, extrapolated_world_F_body_velocity,
-                                                extrapolated_latest_vio_state->bias(),
+                                                latest_extrapolated_vio_state_->bias(),
                                                 imu_integrator_->Latest()->timestamp);
 
   // TODO(rsoussan): propogate uncertainties from imu integrator and odom_interpolator
