@@ -29,22 +29,24 @@ find_package(Eigen3 REQUIRED)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  nodelet
   ff_util
   imu_integration
   localization_common
   localization_measurements
+  nodelet
+  parameter_reader
 )
 
 catkin_package(
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} gtsam 
   CATKIN_DEPENDS
-    nodelet
     ff_util
     imu_integration
     localization_common
     localization_measurements
+    nodelet
+    parameter_reader
 )
 
 ###########

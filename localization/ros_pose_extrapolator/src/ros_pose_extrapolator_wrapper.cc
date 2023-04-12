@@ -23,6 +23,7 @@
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
+#include <ros_pose_extrapolator/parameter_reader.h>
 #include <ros_pose_extrapolator/ros_pose_extrapolator_wrapper.h>
 
 namespace ros_pose_extrapolator {
@@ -42,7 +43,7 @@ RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const std::string& graph_
   }
 
   RosPoseExtrapolatorParams params;
-  // LoadRosPoseExtrapolatorParams(config, params);
+  LoadRosPoseExtrapolatorParams(config, params);
   Initialize(params);
 }
 

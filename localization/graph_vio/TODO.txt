@@ -4,7 +4,6 @@
 
 - remove circular dependencies in param reader? (B)
    - move loading ros_xxx params to those ros packages? 
-	- ros_graph_loc
 	- ros_pose_extr 
    - add pose_extrapolator package?
 

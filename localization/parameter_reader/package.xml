@@ -19,7 +19,6 @@
   <build_depend>node_adders</build_depend>
   <build_depend>graph_vio</build_depend>
   <build_depend>graph_localizer</build_depend>
-  <build_depend>ros_pose_extrapolator</build_depend>
   <build_depend>vision_common</build_depend>
   <build_depend>graph_optimizer</build_depend>
   <build_depend>sliding_window_graph_optimizer</build_depend>
@@ -28,8 +27,8 @@
   <run_depend>node_adders</run_depend>
   <run_depend>graph_vio</run_depend>
   <run_depend>graph_localizer</run_depend>
-  <run_depend>ros_pose_extrapolator</run_depend>
   <run_depend>vision_common</run_depend>
   <run_depend>graph_optimizer</run_depend>
   <run_depend>sliding_window_graph_optimizer</run_depend>
 </package>
+
