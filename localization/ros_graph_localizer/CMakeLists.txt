@@ -29,10 +29,11 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   ff_msgs
   graph_localizer
-  msg_conversions
-  nodelet
   localization_common
   localization_measurements
+  msg_conversions
+  nodelet
+  parameter_reader
 )
 
 catkin_package(
@@ -48,6 +49,7 @@ catkin_package(
     localization_measurements
     msg_conversions
     nodelet
+    parameter_reader
 )
 
 ###########

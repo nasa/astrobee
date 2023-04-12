@@ -15,18 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef PARAMETER_READER_ROS_GRAPH_LOCALIZER_H_
-#define PARAMETER_READER_ROS_GRAPH_LOCALIZER_H_
 
-#include <config_reader/config_reader.h>
-#include <ros_graph_localizer/ros_graph_localizer_nodelet_params.h>
+#include <msg_conversions/msg_conversions.h>
+#include <ros_graph_localizer/parameter_reader.h>
 
-#include <string>
+namespace ros_graph_localizer {
+namespace mc = msg_conversions;
 
-namespace parameter_reader {
-void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config,
-                                        ros_graph_localizer::RosGraphLocalizerNodeletParams& params,
-                                        const std::string& prefix = "");
-}  // namespace parameter_reader
-
-#endif  // PARAMETER_READER_ROS_GRAPH_LOCALIZER_H_
+void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,
+                              const std::string& prefix) {
+  LOAD_PARAM(params.max_graph_vio_state_buffer_size, config, prefix);
+  LOAD_PARAM(params.max_vl_matched_projections_buffer_size, config, prefix);
+}
+}  // namespace ros_graph_localizer

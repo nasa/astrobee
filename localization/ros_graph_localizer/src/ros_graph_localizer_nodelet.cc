@@ -17,10 +17,10 @@
  */
 
 #include <ff_util/ff_names.h>
-// #include <graph_localizer/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
+#include <ros_graph_localizer/parameter_reader.h>
 #include <ros_graph_localizer/ros_graph_localizer_nodelet.h>
 
 #include <std_msgs/Empty.h>
@@ -39,8 +39,7 @@ RosGraphLocalizerNodelet::RosGraphLocalizerNodelet() : ff_util::FreeFlyerNodelet
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  // TODO(rsoussan): put this back!!
-  // LoadGraphLocalizerNodeletParams(config, params_);
+  LoadRosGraphLocalizerNodeletParams(config, params_);
   last_heartbeat_time_ = ros::Time::now();
 }
 

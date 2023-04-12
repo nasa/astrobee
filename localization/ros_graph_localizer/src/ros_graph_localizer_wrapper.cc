@@ -21,6 +21,7 @@
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
+#include <parameter_reader/graph_localizer.h>
 #include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
 
 #include <Eigen/Core>
@@ -30,6 +31,7 @@ namespace gl = graph_localizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
+namespace pr = parameter_reader;
 
 RosGraphLocalizerWrapper::RosGraphLocalizerWrapper(const std::string& graph_config_path_prefix) {
   LoadConfigs(graph_config_path_prefix);
@@ -45,8 +47,7 @@ void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  // TODO(rsoussan): put this back!!
-  // LoadGraphLocalizerParams(config, params_);
+  pr::LoadGraphLocalizerParams(config, params_);
 }
 
 void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
