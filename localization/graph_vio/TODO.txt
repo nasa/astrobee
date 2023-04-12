@@ -1,14 +1,12 @@
+parametre reader: make graph loc/vio params files, make sure they are read correctly! (AA)
+
 - add graph vio to graph bag! (A)
   - plot_graph_bag
   - need to convert velocity frame in graph bag tool as well before integrating!
 
-- remove circular dependencies in param reader? (B)
-   - move loading ros_xxx params to those ros packages? 
-	- ros_pose_extr 
-   - add pose_extrapolator package?
+ - add pose_extrapolator package?
 
   unit tests:
-	parametre reader: make graph loc/vio params files, make sure they are read correctly! (D)
 	ros_pose_extrapolator: update existing tests
         ros_graph_vio: imu bias initializatoin? state changes? etc?
         graph_vio: standstill code? others?
