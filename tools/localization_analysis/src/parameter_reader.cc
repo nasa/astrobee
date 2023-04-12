@@ -33,6 +33,7 @@ void LoadMessageBufferParams(const std::string& message_type, config_reader::Con
 void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, const std::string& bag_name,
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params) {
+  // Note using image features is set in the offline replay tool
   LoadMessageBufferParams("imu", config, params.imu);
   LoadMessageBufferParams("flight_mode", config, params.flight_mode);
   LoadMessageBufferParams("depth_odometry", config, params.depth_odometry);
@@ -42,7 +43,6 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("img", config, params.vio);
   LoadMessageBufferParams("vio", config, params.vio);
   params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
-  params.use_image_features = mc::LoadBool(config, "use_image_features");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;

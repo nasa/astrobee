@@ -1,7 +1,5 @@
 - add graph vio to graph bag! (A)
-  - finish offline replay tool!
-     - add graph vio state message to graph loc wrapper! (AA)
-  - run_graph_Bag, plot_graph_bag
+  - plot_graph_bag
   - need to convert velocity frame in graph bag tool as well before integrating!
 
 - remove circular dependencies in param reader? (B)
