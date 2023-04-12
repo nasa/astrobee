@@ -29,6 +29,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   ff_msgs
   graph_vio
+  parameter_reader
   msg_conversions
   nodelet
   localization_common
@@ -46,6 +47,7 @@ catkin_package(
     graph_vio
     localization_common
     localization_measurements
+    parameter_reader
     msg_conversions
     nodelet
 )

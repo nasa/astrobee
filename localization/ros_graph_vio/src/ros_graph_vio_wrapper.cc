@@ -21,6 +21,8 @@
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
+#include <parameter_reader/graph_vio.h>
+#include <ros_graph_vio/parameter_reader.h>
 #include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
 #include <Eigen/Core>
@@ -29,6 +31,7 @@ namespace ros_graph_vio {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
+namespace pr = parameter_reader;
 
 RosGraphVIOWrapper::RosGraphVIOWrapper(const std::string& graph_config_path_prefix) {
   LoadConfigs(graph_config_path_prefix);
@@ -44,8 +47,10 @@ void RosGraphVIOWrapper::LoadConfigs(const std::string& graph_config_path_prefix
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  // TODO(rsoussan): put this back!!
-  // LoadGraphVIOParams(config, params_);
+  pr::LoadGraphVIOParams(config, params_);
+  ImuBiasInitializerParams imu_bias_initializer_params;
+  LoadImuBiasInitializerParams(config, imu_bias_initializer_params);
+  imu_bias_initializer_.reset(new ImuBiasInitializer(imu_bias_initializer_params));
 }
 
 void RosGraphVIOWrapper::FeaturePointsCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
@@ -54,12 +59,12 @@ void RosGraphVIOWrapper::FeaturePointsCallback(const ff_msgs::Feature2dArray& fe
 
 void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   const auto imu_measurement = lm::ImuMeasurement(imu_msg);
-  imu_bias_initializer_.AddImuMeasurement(imu_measurement);
-  if (!Initialized() && imu_bias_initializer_.Bias()) {
+  imu_bias_initializer_->AddImuMeasurement(imu_measurement);
+  if (!Initialized() && imu_bias_initializer_->Bias()) {
     // Set initial nav state. Use bias from initializer and
     // assume zero initial velocity. Set pose initial to identity.
     const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                             *(imu_bias_initializer_.Bias()), imu_measurement.timestamp);
+                                             *(imu_bias_initializer_->Bias()), imu_measurement.timestamp);
     params_.combined_nav_state_node_adder.start_node = initial_state;
     params_.combined_nav_state_node_adder.starting_time = initial_state.timestamp();
     params_.combined_nav_state_node_adder.start_measurement = imu_measurement;
@@ -73,7 +78,7 @@ void RosGraphVIOWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mo
   const auto fan_speed_mode = lm::ConvertFanSpeedMode(flight_mode.speed);
   // TODO(rsoussan): Add support for fan speed mode in graph vio
   // if (Initialized()) graph_vio_->SetFanSpeedMode(fan_speed_mode_);
-  imu_bias_initializer_.AddFanSpeedModeMeasurement(fan_speed_mode);
+  imu_bias_initializer_->AddFanSpeedModeMeasurement(fan_speed_mode);
 }
 
 void RosGraphVIOWrapper::Update() {
@@ -89,19 +94,19 @@ void RosGraphVIOWrapper::ResetVIO() {
     return;
   }
   const auto latest_combined_nav_state = graph_vio_->combined_nav_state_nodes().LatestNode();
-  imu_bias_initializer_.UpdateBias(latest_combined_nav_state->bias());
+  imu_bias_initializer_->UpdateBias(latest_combined_nav_state->bias());
   graph_vio_.reset();
 }
 
 void RosGraphVIOWrapper::ResetBiasesAndVIO() {
   LogInfo("ResetBiasAndVIO: Resetting biases and vio.");
-  imu_bias_initializer_.Reset();
+  imu_bias_initializer_->Reset();
   graph_vio_.reset();
 }
 
 void RosGraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
   LogInfo("ResetBiasAndVIO: Resetting biases from file and resetting vio.");
-  imu_bias_initializer_.LoadFromFile();
+  imu_bias_initializer_->LoadFromFile();
   graph_vio_.reset();
 }
 

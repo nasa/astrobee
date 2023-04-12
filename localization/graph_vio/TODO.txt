@@ -4,8 +4,9 @@
 
 - remove circular dependencies in param reader? (B)
    - move loading ros_xxx params to those ros packages? 
+	- ros_graph_loc
+	- ros_pose_extr 
    - add pose_extrapolator package?
-   - add parameter loading back to ros_graph_vio, ros_graph_loc, and ros_pose_extrapolator!
 
   unit tests:
 	parametre reader: make graph loc/vio params files, make sure they are read correctly! (D)

@@ -17,10 +17,10 @@
  */
 
 #include <ff_util/ff_names.h>
-// #include <graph_vio/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
+#include <ros_graph_vio/parameter_reader.h>
 #include <ros_graph_vio/ros_graph_vio_nodelet.h>
 
 #include <std_msgs/Empty.h>
@@ -39,8 +39,7 @@ RosGraphVIONodelet::RosGraphVIONodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  // TODO(rsoussan): put this back!!
-  // LoadGraphVIONodeletParams(config, params_);
+  LoadRosGraphVIONodeletParams(config, params_);
   last_heartbeat_time_ = ros::Time::now();
 }
 

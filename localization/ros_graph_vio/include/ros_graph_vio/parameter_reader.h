@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef PARAMETER_READER_ROS_GRAPH_VIO_H_
-#define PARAMETER_READER_ROS_GRAPH_VIO_H_
+#ifndef ROS_GRAPH_VIO_PARAMETER_READER_H_
+#define ROS_GRAPH_VIO_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
 #include <ros_graph_vio/imu_bias_initializer_params.h>
@@ -24,12 +24,12 @@
 
 #include <string>
 
-namespace parameter_reader {
-void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ros_graph_vio::ImuBiasInitializerParams& params,
+namespace ros_graph_vio {
+void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasInitializerParams& params,
                               const std::string& prefix = "");
 
-void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, ros_graph_vio::RosGraphVIONodeletParams& params,
+void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
                               const std::string& prefix = "");
-}  // namespace parameter_reader
+}  // namespace ros_graph_vio
 
-#endif  // PARAMETER_READER_ROS_GRAPH_VIO_H_
+#endif  // ROS_GRAPH_VIO_PARAMETER_READER_H_

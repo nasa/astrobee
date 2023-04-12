@@ -80,8 +80,8 @@ class RosGraphVIOWrapper {
   void Initialize();
 
   std::unique_ptr<graph_vio::GraphVIO> graph_vio_;
+  std::unique_ptr<ImuBiasInitializer> imu_bias_initializer_;
   graph_vio::GraphVIOParams params_;
-  ImuBiasInitializer imu_bias_initializer_;
   boost::optional<localization_common::Time> latest_msg_time_;
 };
 }  // namespace ros_graph_vio

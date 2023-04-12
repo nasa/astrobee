@@ -24,6 +24,8 @@
 
 namespace ros_graph_vio {
 namespace lm = localization_measurements;
+ImuBiasInitializer::ImuBiasInitializer(const ImuBiasInitializerParams& params) : params_(params) {}
+
 void ImuBiasInitializer::AddFanSpeedModeMeasurement(const lm::FanSpeedMode fan_speed_mode) {
   imu_bias_filter_->SetFanSpeedMode(fan_speed_mode);
 }

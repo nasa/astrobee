@@ -16,24 +16,24 @@
  * under the License.
  */
 
-#include <parameter_reader/imu_integration.h>
-#include <parameter_reader/ros_graph_vio.h>
 #include <msg_conversions/msg_conversions.h>
+#include <parameter_reader/imu_integration.h>
+#include <ros_graph_vio/parameter_reader.h>
 
-namespace parameter_reader {
+namespace ros_graph_vio {
 namespace mc = msg_conversions;
-namespace rv = ros_graph_vio;
+namespace pr = parameter_reader;
 
-void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, rv::ImuBiasInitializerParams& params,
+void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasInitializerParams& params,
                               const std::string& prefix) {
-  LoadImuFilterParams(config, params.filter, prefix);
+  pr::LoadImuFilterParams(config, params.filter, prefix);
   LOAD_PARAM(params.imu_bias_filename, config, prefix);
   LOAD_PARAM(params.num_bias_estimation_measurements, config, prefix);
 }
 
-void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, rv::RosGraphVIONodeletParams& params,
+void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
                               const std::string& prefix) {
   LOAD_PARAM(params.max_imu_buffer_size, config, prefix);
   LOAD_PARAM(params.max_feature_point_buffer_size, config, prefix);
 }
-}  // namespace parameter_reader
+}  // namespace ros_graph_vio

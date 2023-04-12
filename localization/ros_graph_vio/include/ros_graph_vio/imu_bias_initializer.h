@@ -36,6 +36,9 @@ namespace ros_graph_vio {
 // change, so gravity is considered a constant IMU bias that contributes to the estimated IMU bias.
 class ImuBiasInitializer {
  public:
+  // Construct with params.
+  explicit ImuBiasInitializer(const ImuBiasInitializerParams& params);
+
   // Add fan speed mode measurement for IMU bias filter.
   void AddFanSpeedModeMeasurement(const localization_measurements::FanSpeedMode fan_speed_mode);
 

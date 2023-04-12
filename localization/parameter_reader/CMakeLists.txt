@@ -29,7 +29,6 @@ find_package(catkin2 REQUIRED COMPONENTS
   graph_localizer
   localization_common
   node_adders
-  ros_graph_vio
   ros_graph_localizer
   ros_pose_extrapolator
   sliding_window_graph_optimizer
@@ -45,7 +44,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS factor_adders graph_optimizer sliding_window_graph_optimizer graph_vio graph_localizer ros_graph_vio ros_graph_localizer ros_pose_extrapolator vision_common localization_common node_adders 
+  CATKIN_DEPENDS factor_adders graph_optimizer sliding_window_graph_optimizer graph_vio graph_localizer ros_graph_localizer ros_pose_extrapolator vision_common localization_common node_adders 
 )
 
 ###########
