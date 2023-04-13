@@ -7,6 +7,7 @@
 import sys
 
 import numpy as np
+import rosbag
 import rospy
 from ff_msgs.msg import VisualLandmarks
 from tf.transformations import *
@@ -103,6 +104,17 @@ class Activity_DBGenerator:
         rospy.Subscriber("/loc/ml/features", VisualLandmarks, self.callback)
         rospy.spin()
 
+    def read_from_bag(self, bag_name, file):
+        print("Reading from bag...")
+
+        bag = rosbag.Bag(bag_name)
+
+        for topic, msg, t in bag.read_messages(topics=["/loc/ml/features"]):
+            self.callback(msg)
+
+        self.close_file()
+        print("...Done!")
+
 
 if __name__ == "__main__":
 
@@ -110,13 +122,34 @@ if __name__ == "__main__":
 
         if len(sys.argv) < 5:
             print(
-                "Usage: activity_db_generator.py <activity date> <map name> <activity name> <location to save>"
+                "Usage: activity_db_generator.py <activity date> <map name> <activity name> <location to save> <bag_name>"
             )
             print("       <activity date>    = 'YYYYMMDD'")
             print("       <map name>         = 'mapName'")
             print("       <activity name>    = 'activityName'")
             print("       <location to save> = '/location/to/save/'")
+            print(" *optional* <bag_name> = '/location/bag'")
             sys.exit(1)
+
+        elif len(sys.argv) == 6:
+            activity_date = sys.argv[1]
+            map_name = sys.argv[2]
+            activity_name = sys.argv[3]
+            location_name = sys.argv[4]
+            output_filename = (
+                location_name
+                + activity_date
+                + "_"
+                + map_name
+                + "_"
+                + activity_name
+                + "_db.csv"
+            )
+            bag_name = sys.argv[5]
+
+            obj = Activity_DBGenerator()
+            obj.open_file(output_filename, activity_name, map_name, activity_date)
+            obj.read_from_bag(bag_name, output_filename)
 
         else:
             activity_date = sys.argv[1]
@@ -133,9 +166,9 @@ if __name__ == "__main__":
                 + "_db.csv"
             )
 
-        obj = Activity_DBGenerator()
-        obj.open_file(output_filename, activity_name, map_name, activity_date)
-        obj.listener()
+            obj = Activity_DBGenerator()
+            obj.open_file(output_filename, activity_name, map_name, activity_date)
+            obj.listener()
 
     except KeyboardInterrupt:
         print("\n <-CTRL-C EXIT: USER manually exited!->")

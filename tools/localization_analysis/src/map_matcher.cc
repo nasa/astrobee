@@ -31,13 +31,18 @@ namespace localization_analysis {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map_file, const std::string& image_topic,
-                       const std::string& output_bag_name, const std::string& config_prefix)
+                       const std::string& output_bag_name, const std::string& config_prefix,
+                       const std::string& save_noloc_imgs)
     : input_bag_(input_bag_name, rosbag::bagmode::Read),
       output_bag_(output_bag_name, rosbag::bagmode::Write),
+      nonloc_bag_(),
       image_topic_(image_topic),
       map_(map_file, true),
       map_feature_matcher_(&map_),
-      config_prefix_(config_prefix) {
+      config_prefix_(config_prefix),
+      feature_averager_("Total number of features detected"),
+      match_count_(0),
+      image_count_(0) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
   lc::LoadGraphLocalizerConfig(config, config_prefix);
@@ -46,6 +51,9 @@ MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map
   }
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
   sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
+  if (!save_noloc_imgs.empty()) {
+    nonloc_bag_.open(save_noloc_imgs, rosbag::bagmode::Write);
+  }
 }
 
 // TODO(rsoussan): Use common code with graph_bag
@@ -68,11 +76,14 @@ void MapMatcher::AddMapMatches() {
   std::vector<std::string> topics;
   topics.push_back(std::string("/") + image_topic_);
   rosbag::View view(input_bag_, rosbag::TopicQuery(topics));
+  image_count_ = view.size();
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), image_topic_)) {
       sensor_msgs::ImageConstPtr image_msg = msg.instantiate<sensor_msgs::Image>();
       ff_msgs::VisualLandmarks vl_msg;
       if (GenerateVLFeatures(image_msg, vl_msg)) {
+        match_count_++;
+        feature_averager_.Update(vl_msg.landmarks.size());
         const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES, timestamp, vl_msg);
         if (graph_localizer::ValidVLMsg(vl_msg, sparse_mapping_min_num_landmarks_)) {
@@ -82,8 +93,18 @@ void MapMatcher::AddMapMatches() {
             graph_localizer::PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
           output_bag_.write(std::string("/") + TOPIC_SPARSE_MAPPING_POSE, timestamp, pose_msg);
         }
+      } else if (nonloc_bag_.isOpen()) {
+        const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
+        nonloc_bag_.write(std::string("/") + image_topic_, timestamp, image_msg);
       }
     }
   }
+}
+
+void MapMatcher::LogResults() {
+  std::stringstream ss;
+  ss << "Localized " << match_count_ << " / " << image_count_ << " images with mean of " << feature_averager_.average()
+     << " features";
+  ROS_INFO_STREAM(ss.str());
 }
 }  // namespace localization_analysis
