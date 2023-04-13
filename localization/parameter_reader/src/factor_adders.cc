@@ -76,8 +76,8 @@ void LoadVoSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
   LOAD_PARAM(params.scale_noise_with_num_points, config, prefix);
   LOAD_PARAM(params.noise_scale, config, prefix);
   // TODO(rsoussan): make not necessarily nav cam specific?
-  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform", prefix);
-  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam", prefix)));
+  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "nav_cam_noise_stddev", prefix));
   LoadSmartProjectionParams(config, params.smart_factor, prefix);
 }
@@ -85,13 +85,13 @@ void LoadVoSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
 void LoadSmartProjectionParams(config_reader::ConfigReader& config, gtsam::SmartProjectionParams& params,
                                const std::string& prefix) {
   // Load params
-  const bool rotation_only_fallback = mc::LoadBool(config, "smart_projection_rotation_only_fallback");
-  const bool enable_EPI = mc::LoadBool(config, "smart_projection_enable_EPI");
-  const double landmark_distance_threshold = mc::LoadDouble(config, "smart_projection_landmark_distance_threshold");
+  const bool rotation_only_fallback = mc::LoadBool(config, "rotation_only_fallback", prefix);
+  const bool enable_EPI = mc::LoadBool(config, "enable_EPI", prefix);
+  const double landmark_distance_threshold = mc::LoadDouble(config, "landmark_distance_threshold", prefix);
   const double dynamic_outlier_rejection_threshold =
-    mc::LoadDouble(config, "smart_projection_dynamic_outlier_rejection_threshold");
-  const double retriangulation_threshold = mc::LoadDouble(config, "smart_projection_retriangulation_threshold", prefix);
-  const bool verbose_cheirality = mc::LoadBool(config, "smart_projection_verbose_cheirality", prefix);
+    mc::LoadDouble(config, "dynamic_outlier_rejection_threshold", prefix);
+  const double retriangulation_threshold = mc::LoadDouble(config, "retriangulation_threshold", prefix);
+  const bool verbose_cheirality = mc::LoadBool(config, "verbose_cheirality", prefix);
 
   // Set Params
   params.verboseCheirality = verbose_cheirality;

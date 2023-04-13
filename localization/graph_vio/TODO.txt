@@ -1,4 +1,5 @@
 parametre reader: make graph loc/vio params files, make sure they are read correctly! (AA)
+- do same for ros_graph_vio, ros_graph_loc, ros_pose_extrapolator!!! (AB)
 
 - add graph vio to graph bag! (A)
   - plot_graph_bag
