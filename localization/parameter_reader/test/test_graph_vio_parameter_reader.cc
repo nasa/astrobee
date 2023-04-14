@@ -37,12 +37,6 @@ class GraphVIOParameterReaderTest : public ::testing::Test {
     lc::SetEnvironmentConfigs();
     config_reader::ConfigReader config;
     lc::LoadGraphVIOConfig(config);
-    config.AddFile("transforms.config");
-    config.AddFile("cameras.config");
-    config.AddFile("geometry.config");
-    if (!config.ReadFiles()) {
-      LogFatal("Failed to read config files.");
-    }
     pr::LoadGraphVIOParams(config, params_);
   }
 

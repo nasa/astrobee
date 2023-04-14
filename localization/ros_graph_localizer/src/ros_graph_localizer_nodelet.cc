@@ -36,9 +36,6 @@ RosGraphLocalizerNodelet::RosGraphLocalizerNodelet() : ff_util::FreeFlyerNodelet
 
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config);
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
-  }
   LoadRosGraphLocalizerNodeletParams(config, params_);
   last_heartbeat_time_ = ros::Time::now();
 }

@@ -77,6 +77,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_graph_vio_parameter_reader
     ${PROJECT_NAME} ${catkin_LIBRARIES}
   )
+  add_rostest_gtest(test_graph_localizer_parameter_reader
+    test/test_graph_localizer_parameter_reader.test
+    test/test_graph_localizer_parameter_reader.cc
+  )
+  target_link_libraries(test_graph_localizer_parameter_reader
+    ${PROJECT_NAME} ${catkin_LIBRARIES}
+  )
 endif() 
 
 #############

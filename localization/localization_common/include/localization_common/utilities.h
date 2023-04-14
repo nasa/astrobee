@@ -69,8 +69,7 @@ void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::st
 
 void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& path_prefix = "");
 
-void SetEnvironmentConfigs(const std::string& world = "iss",
-                           const std::string& robot_config_file = "bumble.config");
+void SetEnvironmentConfigs(const std::string& world = "iss", const std::string& robot_config_file = "bumble.config");
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 

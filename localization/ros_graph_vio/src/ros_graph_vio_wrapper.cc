@@ -40,13 +40,6 @@ RosGraphVIOWrapper::RosGraphVIOWrapper(const std::string& graph_config_path_pref
 void RosGraphVIOWrapper::LoadConfigs(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
   lc::LoadGraphVIOConfig(config, graph_config_path_prefix);
-  config.AddFile("transforms.config");
-  config.AddFile("cameras.config");
-  config.AddFile("geometry.config");
-
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
-  }
   pr::LoadGraphVIOParams(config, params_);
   ImuBiasInitializerParams imu_bias_initializer_params;
   LoadImuBiasInitializerParams(config, imu_bias_initializer_params);

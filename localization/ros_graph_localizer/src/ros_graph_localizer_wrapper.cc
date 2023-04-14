@@ -40,13 +40,6 @@ RosGraphLocalizerWrapper::RosGraphLocalizerWrapper(const std::string& graph_conf
 void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
-  config.AddFile("transforms.config");
-  config.AddFile("cameras.config");
-  config.AddFile("geometry.config");
-
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
-  }
   pr::LoadGraphLocalizerParams(config, params_);
 }
 

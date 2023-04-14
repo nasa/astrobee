@@ -68,6 +68,12 @@ gtsam::Pose3 PoseFromMsgWithExtrinsics(const geometry_msgs::Pose& pose, const gt
 
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
   config.AddFile((path_prefix + "localization/graph_localizer.config").c_str());
+  config.AddFile("transforms.config");
+  config.AddFile("cameras.config");
+  config.AddFile("geometry.config");
+  if (!config.ReadFiles()) {
+    LogFatal("Failed to read config files.");
+  }
   LogDebug("LoadGraphLocalizerConfig: Loaded graph localizer config.");
 }
 
@@ -75,11 +81,16 @@ void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& 
   config.AddFile((path_prefix + "localization/graph_vio.config").c_str());
   config.AddFile((path_prefix + "localization/imu_integrator.config").c_str());
   config.AddFile((path_prefix + "localization/imu_filter.config").c_str());
+  config.AddFile("transforms.config");
+  config.AddFile("cameras.config");
+  config.AddFile("geometry.config");
+  if (!config.ReadFiles()) {
+    LogFatal("Failed to read config files.");
+  }
   LogDebug("LoadGraphVIOConfig: Loaded graph VIO config.");
 }
 
-void SetEnvironmentConfigs(const std::string& world,
-                           const std::string& robot_config_file) {
+void SetEnvironmentConfigs(const std::string& world, const std::string& robot_config_file) {
   const std::string astrobee_configs_path = ros::package::getPath("astrobee");
   const std::string full_robot_config_file = "config/robots/" + robot_config_file;
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
