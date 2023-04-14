@@ -29,8 +29,8 @@ namespace mc = msg_conversions;
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, gl::GraphLocalizerParams& params,
                               const std::string& prefix) {
-  LoadLocFactorAdderParams(config, params.sparse_map_loc_factor_adder, prefix + "fa_loc_sm_");
-  LoadPoseNodeAdderParams(config, params.pose_node_adder, prefix + "na_pose_");
+  LoadLocFactorAdderParams(config, params.sparse_map_loc_factor_adder, prefix + "gl_fa_loc_sm_");
+  LoadPoseNodeAdderParams(config, params.pose_node_adder, prefix + "gl_na_pose_");
   // LoadTimestampedNodeAdderModelParams(config, params.pose_node_adder_model, prefix + "na_pose_model_");
   // LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix + "op_nl_");
   // LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix + "go_sw_");

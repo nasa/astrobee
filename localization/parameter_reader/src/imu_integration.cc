@@ -28,27 +28,27 @@ namespace lc = localization_common;
 namespace mc = msg_conversions;
 
 void LoadImuFilterParams(config_reader::ConfigReader& config, ii::ImuFilterParams& params, const std::string& prefix) {
-  LOAD_PARAM(params.quiet_accel, config, prefix);
-  LOAD_PARAM(params.quiet_ang_vel, config, prefix);
-  LOAD_PARAM(params.nominal_accel, config, prefix);
-  LOAD_PARAM(params.nominal_ang_vel, config, prefix);
-  LOAD_PARAM(params.aggressive_accel, config, prefix);
-  LOAD_PARAM(params.aggressive_ang_vel, config, prefix);
+  LOAD_PARAM(params.quiet_accel, config, prefix + "if_");
+  LOAD_PARAM(params.quiet_ang_vel, config, prefix + "if_");
+  LOAD_PARAM(params.nominal_accel, config, prefix + "if_");
+  LOAD_PARAM(params.nominal_ang_vel, config, prefix + "if_");
+  LOAD_PARAM(params.aggressive_accel, config, prefix + "if_");
+  LOAD_PARAM(params.aggressive_ang_vel, config, prefix + "if_");
 }
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ii::ImuIntegratorParams& params,
                              const std::string& prefix) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector", prefix);
   // Nullify gravity factor if ignore_gravity set to true.
-  const bool ignore_gravity = mc::LoadBool(config, "ignore_gravity", prefix);
+  const bool ignore_gravity = mc::LoadBool(config, "ignore_gravity", prefix + "ii_");
   if (ignore_gravity) params.gravity = gtsam::Vector3::Zero();
-  params.body_T_imu = lc::LoadTransform(config, "imu_transform", prefix);
-  LoadImuFilterParams(config, params.filter, prefix);
-  LOAD_PARAM(params.gyro_sigma, config, prefix);
-  LOAD_PARAM(params.accel_sigma, config, prefix);
-  LOAD_PARAM(params.accel_bias_sigma, config, prefix);
-  LOAD_PARAM(params.gyro_bias_sigma, config, prefix);
-  LOAD_PARAM(params.integration_variance, config, prefix);
-  LOAD_PARAM(params.bias_acc_omega_int, config, prefix);
+  params.body_T_imu = lc::LoadTransform(config, "imu_transform");
+  LoadImuFilterParams(config, params.filter);
+  LOAD_PARAM(params.gyro_sigma, config, prefix + "ii_");
+  LOAD_PARAM(params.accel_sigma, config, prefix + "ii_");
+  LOAD_PARAM(params.accel_bias_sigma, config, prefix + "ii_");
+  LOAD_PARAM(params.gyro_bias_sigma, config, prefix + "ii_");
+  LOAD_PARAM(params.integration_variance, config, prefix + "ii_");
+  LOAD_PARAM(params.bias_acc_omega_int, config, prefix + "ii_");
 }
 }  // namespace parameter_reader

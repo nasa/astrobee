@@ -29,13 +29,13 @@ namespace gv = graph_vio;
 namespace mc = msg_conversions;
 
 void LoadGraphVIOParams(config_reader::ConfigReader& config, gv::GraphVIOParams& params, const std::string& prefix) {
-  LoadStandstillFactorAdderParams(config, params.standstill_factor_adder, prefix + "fa_standstill_");
-  LoadVoSmartProjectionFactorAdderParams(config, params.vo_smart_projection_factor_adder, "fa_vo_");
-  LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix + "na_cns_");
+  LoadStandstillFactorAdderParams(config, params.standstill_factor_adder, prefix + "gv_fa_standstill_");
+  LoadVoSmartProjectionFactorAdderParams(config, params.vo_smart_projection_factor_adder, "gv_fa_vo_");
+  LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix + "gv_na_cns_");
   LoadCombinedNavStateNodeAdderModelParams(config, params.combined_nav_state_node_adder_model,
-                                           prefix + "na_cns_model_");
-  LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix + "op_nl_");
-  LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix + "go_sw_");
-  LoadStandstillParams(config, params.standstill, prefix + "standstill_");
+                                           prefix + "gv_na_cns_model_");
+  LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix + "gv_op_nl_");
+  LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix + "gv_go_sw_");
+  LoadStandstillParams(config, params.standstill, prefix + "gv_standstill_");
 }
 }  // namespace parameter_reader
