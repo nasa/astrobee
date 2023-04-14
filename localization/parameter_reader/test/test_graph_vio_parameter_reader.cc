@@ -155,6 +155,30 @@ TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderModelParams) {
   EXPECT_EQ(params.imu_integrator.filter.aggressive_ang_vel, "ButterO1S125Lp3N46_66");
 }
 
+TEST_F(GraphVIOParameterReaderTest, NonlinearOptimizerParams) {
+  const auto& params = params_.nonlinear_optimizer;
+  EXPECT_EQ(params.marginals_factorization, "qr");
+  EXPECT_EQ(params.max_iterations, 4);
+  EXPECT_EQ(params.verbose, false);
+  EXPECT_EQ(params.use_ceres_params, false);
+}
+
+TEST_F(GraphVIOParameterReaderTest, SlidingWindowGraphOptimizerParams) {
+  const auto& params = params_.sliding_window_graph_optimizer;
+  EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
+  EXPECT_EQ(params.log_stats_on_destruction, false);
+  EXPECT_EQ(params.print_after_optimization, false);
+  EXPECT_EQ(params.add_marginal_factors, false);
+  EXPECT_EQ(params.slide_window_before_optimization, true);
+}
+
+TEST_F(GraphVIOParameterReaderTest, StandstillParams) {
+  const auto& params = params_.standstill;
+  EXPECT_EQ(params.min_num_points_per_track, 4);
+  EXPECT_NEAR(params.duration, 1, 1e-6);
+  EXPECT_NEAR(params.max_avg_distance_from_mean, 0.075, 1e-6);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

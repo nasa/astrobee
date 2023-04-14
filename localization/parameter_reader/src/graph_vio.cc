@@ -34,8 +34,8 @@ void LoadGraphVIOParams(config_reader::ConfigReader& config, gv::GraphVIOParams&
   LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix + "na_cns_");
   LoadCombinedNavStateNodeAdderModelParams(config, params.combined_nav_state_node_adder_model,
                                            prefix + "na_cns_model_");
-  // LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix);
-  // LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix);
-  // LoadStandstillParams(config, params.standstill, prefix);
+  LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix + "op_nl_");
+  LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix + "go_sw_");
+  LoadStandstillParams(config, params.standstill, prefix + "standstill_");
 }
 }  // namespace parameter_reader
