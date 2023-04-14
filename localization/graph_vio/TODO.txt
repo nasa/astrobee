@@ -1,5 +1,13 @@
 parametre reader: make graph loc/vio params files, make sure they are read correctly! (AA)
-- do same for ros_graph_vio, ros_graph_loc, ros_pose_extrapolator!!! (AB)
+  - finish graph vio param loading!
+    - opt, sliding window, standstill
+   - do graph loc!
+    - do ros_graph_vio
+    - ros_graph_loc
+    - ros_pose_extrapolator
+- how to avoid overlapping config names???
+  - opt for graph loc, graph vio, etc?
+    - add prefix? gl/gv/rgl/rgv/rpe?
 
 - add graph vio to graph bag! (A)
   - plot_graph_bag

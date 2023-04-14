@@ -73,6 +73,8 @@ void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::st
 
 void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
   config.AddFile((path_prefix + "localization/graph_vio.config").c_str());
+  config.AddFile((path_prefix + "localization/imu_integrator.config").c_str());
+  config.AddFile((path_prefix + "localization/imu_filter.config").c_str());
   LogDebug("LoadGraphVIOConfig: Loaded graph VIO config.");
 }
 

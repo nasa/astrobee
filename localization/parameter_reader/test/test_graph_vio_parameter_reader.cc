@@ -20,11 +20,13 @@
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
+#include <node_adders/utilities.h>
 
 #include <gtest/gtest.h>
 
 namespace lc = localization_common;
 namespace gv = graph_vio;
+namespace na = node_adders;
 namespace pr = parameter_reader;
 
 class GraphVIOParameterReaderTest : public ::testing::Test {
@@ -93,6 +95,64 @@ TEST_F(GraphVIOParameterReaderTest, VOFactorAdderParams) {
   EXPECT_EQ(params.smart_factor.verboseCheirality, false);
   EXPECT_NEAR(params.smart_factor.retriangulationThreshold, 1e-5, 1e-6);
   EXPECT_EQ(params.smart_factor.degeneracyMode, gtsam::DegeneracyMode::HANDLE_INFINITY);
+}
+
+TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderParams) {
+  const auto& params = params_.combined_nav_state_node_adder;
+  EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
+  EXPECT_EQ(params.add_priors, true);
+  EXPECT_NEAR(params.ideal_duration, 3.25, 1e-6);
+  EXPECT_EQ(params.min_num_states, 3);
+  EXPECT_EQ(params.max_num_states, 20);
+  // Check noise
+  constexpr double kTranslationStddev = 0.1;
+  constexpr double kQuaternionStddev = 0.2;
+  const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << kTranslationStddev, kTranslationStddev,
+                                                kTranslationStddev, kQuaternionStddev, kQuaternionStddev,
+                                                kQuaternionStddev)
+                                                 .finished());
+  constexpr double kVelocityStddev = 0.3;
+  const gtsam::Vector3 velocity_prior_noise_sigmas(
+    (gtsam::Vector(3) << kVelocityStddev, kVelocityStddev, kVelocityStddev).finished());
+  constexpr double kAccelBiasStddev = 0.4;
+  constexpr double kGyroBiasStddev = 0.5;
+  const gtsam::Vector6 bias_prior_noise_sigmas((gtsam::Vector(6) << kAccelBiasStddev, kAccelBiasStddev,
+                                                kAccelBiasStddev, kGyroBiasStddev, kGyroBiasStddev, kGyroBiasStddev)
+                                                 .finished());
+  const auto pose_noise = lc::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params.huber_k);
+  const auto velocity_noise =
+    lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+               params.huber_k);
+  const auto bias_noise = lc::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params.huber_k);
+  EXPECT_MATRIX_NEAR(na::Covariance(pose_noise), na::Covariance(params.start_noise_models[0]), 1e-6);
+  EXPECT_MATRIX_NEAR(na::Covariance(velocity_noise), na::Covariance(params.start_noise_models[1]), 1e-6);
+  EXPECT_MATRIX_NEAR(na::Covariance(bias_noise), na::Covariance(params.start_noise_models[2]), 1e-6);
+}
+
+TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderModelParams) {
+  const auto& params = params_.combined_nav_state_node_adder_model;
+  EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
+  // IMU Integrator
+  EXPECT_MATRIX_NEAR(params.imu_integrator.gravity, Eigen::Vector3d::Zero(), 1e-6);
+  // Taken using current nav cam extrinsics
+  const gtsam::Pose3 expected_body_T_imu(gtsam::Rot3(0.000, 0.70710678118, 0.70710678118, 0),
+                                         gtsam::Point3(0.0386, 0.0247, -0.01016));
+  EXPECT_MATRIX_NEAR(params.imu_integrator.body_T_imu, expected_body_T_imu, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.gyro_sigma, 0.00001, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.accel_sigma, 0.00015, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.accel_bias_sigma, 0.0077, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.gyro_bias_sigma, 0.0001, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.integration_variance, 0.0001, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.bias_acc_omega_int, 0.000015, 1e-6);
+  // IMU filter
+  EXPECT_EQ(params.imu_integrator.filter.quiet_accel, "ButterO3S125Lp3N33_33");
+  EXPECT_EQ(params.imu_integrator.filter.quiet_ang_vel, "ButterO1S125Lp3N33_33");
+  EXPECT_EQ(params.imu_integrator.filter.nominal_accel, "ButterO3S125Lp3N41_66");
+  EXPECT_EQ(params.imu_integrator.filter.nominal_ang_vel, "ButterO1S125Lp3N41_66");
+  EXPECT_EQ(params.imu_integrator.filter.aggressive_accel, "ButterO3S125Lp3N46_66");
+  EXPECT_EQ(params.imu_integrator.filter.aggressive_ang_vel, "ButterO1S125Lp3N46_66");
 }
 
 // Run all the tests that were declared with TEST()

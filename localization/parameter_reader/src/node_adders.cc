@@ -66,7 +66,9 @@ void LoadCombinedNavStateNodeAdderParams(config_reader::ConfigReader& config,
 void LoadCombinedNavStateNodeAdderModelParams(config_reader::ConfigReader& config,
                                               na::CombinedNavStateNodeAdderModelParams& params,
                                               const std::string& prefix) {
-  LoadImuIntegratorParams(config, params.imu_integrator, prefix);
+  // Don't use prefix for IMU integrator params since these come from their own
+  // config file.
+  LoadImuIntegratorParams(config, params.imu_integrator);
   LoadTimestampedNodeAdderModelParams(config, params, prefix);
 }
 

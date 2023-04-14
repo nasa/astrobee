@@ -31,8 +31,9 @@ namespace mc = msg_conversions;
 void LoadGraphVIOParams(config_reader::ConfigReader& config, gv::GraphVIOParams& params, const std::string& prefix) {
   LoadStandstillFactorAdderParams(config, params.standstill_factor_adder, prefix + "fa_standstill_");
   LoadVoSmartProjectionFactorAdderParams(config, params.vo_smart_projection_factor_adder, "fa_vo_");
-  // LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix);
-  // LoadCombinedNavStateNodeAdderModelParams(config, params.combined_nav_state_node_adder_model, prefix);
+  LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix + "na_cns_");
+  LoadCombinedNavStateNodeAdderModelParams(config, params.combined_nav_state_node_adder_model,
+                                           prefix + "na_cns_model_");
   // LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix);
   // LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix);
   // LoadStandstillParams(config, params.standstill, prefix);
