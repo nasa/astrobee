@@ -24,9 +24,8 @@
 #include <string>
 
 namespace ros_pose_extrapolator {
-void LoadRosPoseExtrapolatorParams(config_reader::ConfigReader& config,
-                                        RosPoseExtrapolatorParams& params,
-                                        const std::string& prefix = "");
+void LoadRosPoseExtrapolatorParams(config_reader::ConfigReader& config, RosPoseExtrapolatorParams& params,
+                                   const std::string& prefix = "");
 }  // namespace ros_pose_extrapolator
 
 #endif  // ROS_POSE_EXTRAPOLATOR_PARAMETER_READER_H_

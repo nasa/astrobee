@@ -27,10 +27,10 @@
 
 namespace parameter_reader {
 void LoadStandstillParams(config_reader::ConfigReader& config, vision_common::StandstillParams& params,
-                         const std::string& prefix = "");
+                          const std::string& prefix = "");
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, vision_common::FeatureTrackerParams& params,
-                         const std::string& prefix = "");
+                              const std::string& prefix = "");
 
 void LoadSpacedFeatureTrackerParams(config_reader::ConfigReader& config,
                                     vision_common::SpacedFeatureTrackerParams& params, const std::string& prefix = "");

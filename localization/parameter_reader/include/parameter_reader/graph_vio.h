@@ -25,7 +25,7 @@
 
 namespace parameter_reader {
 void LoadGraphVIOParams(config_reader::ConfigReader& config, graph_vio::GraphVIOParams& params,
-                              const std::string& prefix = "");
+                        const std::string& prefix = "");
 }  // namespace parameter_reader
 
 #endif  // PARAMETER_READER_GRAPH_VIO_H_

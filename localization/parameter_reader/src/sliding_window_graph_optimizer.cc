@@ -25,8 +25,8 @@ namespace go = graph_optimizer;
 namespace mc = msg_conversions;
 namespace sw = sliding_window_graph_optimizer;
 
-void LoadSlidingWindowGraphOptimizerParams(config_reader::ConfigReader& config, sw::SlidingWindowGraphOptimizerParams& params,
-                              const std::string& prefix) {
+void LoadSlidingWindowGraphOptimizerParams(config_reader::ConfigReader& config,
+                                           sw::SlidingWindowGraphOptimizerParams& params, const std::string& prefix) {
   LoadGraphOptimizerParams(config, params, prefix);
   LOAD_PARAM(params.add_marginal_factors, config, prefix);
   LOAD_PARAM(params.slide_window_before_optimization, config, prefix);

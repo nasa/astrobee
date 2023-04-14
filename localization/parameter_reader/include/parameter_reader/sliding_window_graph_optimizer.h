@@ -24,8 +24,9 @@
 #include <string>
 
 namespace parameter_reader {
-void LoadSlidingWindowGraphOptimizerParams(config_reader::ConfigReader& config, sliding_window_graph_optimizer::SlidingWindowGraphOptimizerParams& params,
-                              const std::string& prefix = "");
+void LoadSlidingWindowGraphOptimizerParams(config_reader::ConfigReader& config,
+                                           sliding_window_graph_optimizer::SlidingWindowGraphOptimizerParams& params,
+                                           const std::string& prefix = "");
 }  // namespace parameter_reader
 
 #endif  // PARAMETER_READER_SLIDING_WINDOW_GRAPH_OPTIMIZER_H_

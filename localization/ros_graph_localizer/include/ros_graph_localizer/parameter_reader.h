@@ -24,8 +24,7 @@
 #include <string>
 
 namespace ros_graph_localizer {
-void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config,
-                                        RosGraphLocalizerNodeletParams& params,
+void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,
                                         const std::string& prefix = "");
 }  // namespace ros_graph_localizer
 

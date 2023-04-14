@@ -26,7 +26,7 @@
 
 namespace parameter_reader {
 void LoadImuFilterParams(config_reader::ConfigReader& config, imu_integration::ImuFilterParams& params,
-                           const std::string& prefix = "");
+                         const std::string& prefix = "");
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, imu_integration::ImuIntegratorParams& params,
                              const std::string& prefix = "");

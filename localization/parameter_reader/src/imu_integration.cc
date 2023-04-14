@@ -27,18 +27,17 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 
-void LoadImuFilterParams(config_reader::ConfigReader& config, ii::ImuFilterParams& params,
-                              const std::string& prefix) {
-LOAD_PARAM(params.quiet_accel, config, prefix);
-LOAD_PARAM(params.quiet_ang_vel, config, prefix);
-LOAD_PARAM(params.nominal_accel, config, prefix);
-LOAD_PARAM(params.nominal_ang_vel, config, prefix);
-LOAD_PARAM(params.aggressive_accel, config, prefix);
-LOAD_PARAM(params.aggressive_ang_vel, config, prefix);
+void LoadImuFilterParams(config_reader::ConfigReader& config, ii::ImuFilterParams& params, const std::string& prefix) {
+  LOAD_PARAM(params.quiet_accel, config, prefix);
+  LOAD_PARAM(params.quiet_ang_vel, config, prefix);
+  LOAD_PARAM(params.nominal_accel, config, prefix);
+  LOAD_PARAM(params.nominal_ang_vel, config, prefix);
+  LOAD_PARAM(params.aggressive_accel, config, prefix);
+  LOAD_PARAM(params.aggressive_ang_vel, config, prefix);
 }
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ii::ImuIntegratorParams& params,
-                              const std::string& prefix) {
+                             const std::string& prefix) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector", prefix);
   // Nullify gravity factor if ignore_gravity set to true.
   const bool ignore_gravity = mc::LoadBool(config, "ignore_gravity", prefix);

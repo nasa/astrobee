@@ -26,10 +26,10 @@
 
 namespace ros_graph_vio {
 void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasInitializerParams& params,
-                              const std::string& prefix = "");
+                                  const std::string& prefix = "");
 
 void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
-                              const std::string& prefix = "");
+                                  const std::string& prefix = "");
 }  // namespace ros_graph_vio
 
 #endif  // ROS_GRAPH_VIO_PARAMETER_READER_H_

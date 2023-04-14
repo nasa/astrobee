@@ -25,14 +25,14 @@ namespace mc = msg_conversions;
 namespace pr = parameter_reader;
 
 void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasInitializerParams& params,
-                              const std::string& prefix) {
+                                  const std::string& prefix) {
   pr::LoadImuFilterParams(config, params.filter, prefix);
   LOAD_PARAM(params.imu_bias_filename, config, prefix);
   LOAD_PARAM(params.num_bias_estimation_measurements, config, prefix);
 }
 
 void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
-                              const std::string& prefix) {
+                                  const std::string& prefix) {
   LOAD_PARAM(params.max_imu_buffer_size, config, prefix);
   LOAD_PARAM(params.max_feature_point_buffer_size, config, prefix);
 }

@@ -38,15 +38,15 @@ void LoadTimestampedNodeAdderModelParams(config_reader::ConfigReader& config,
                                          const std::string& prefix = "");
 
 void LoadCombinedNavStateNodeAdderParams(config_reader::ConfigReader& config,
-                                              node_adders::CombinedNavStateNodeAdder::Params& params,
-                                              const std::string& prefix = "");
+                                         node_adders::CombinedNavStateNodeAdder::Params& params,
+                                         const std::string& prefix = "");
 
 void LoadCombinedNavStateNodeAdderModelParams(config_reader::ConfigReader& config,
                                               node_adders::CombinedNavStateNodeAdderModelParams& params,
                                               const std::string& prefix = "");
 
 void LoadPoseNodeAdderParams(config_reader::ConfigReader& config, node_adders::PoseNodeAdderParams& params,
-                              const std::string& prefix = "");
+                             const std::string& prefix = "");
 
 // Implementation
 template <typename NodeType>

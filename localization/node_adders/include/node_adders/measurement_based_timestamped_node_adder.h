@@ -35,14 +35,12 @@ class MeasurementBasedTimestampedNodeAdder
   using Params = MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>;
   // Construct using nodes. Creates timestamped nodes interally.
   MeasurementBasedTimestampedNodeAdder(
-    const Params& params,
-    const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
+    const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<nodes::Nodes> nodes);
 
   // Construct using already constructed timestamped nodes.
   MeasurementBasedTimestampedNodeAdder(
-    const Params& params,
-    const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
+    const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<TimestampedNodesType> timestamped_nodes);
 
   void AddMeasurement(const MeasurementType& measurement);
@@ -72,8 +70,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
                                      MeasurementBasedTimestampedNodeAdderModelType>::
   MeasurementBasedTimestampedNodeAdder(
-    const Params& params,
-    const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
+    const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<nodes::Nodes> nodes)
     : Base(params, node_adder_model_params, std::move(nodes)) {
   // Store start measurement so future relative estimates can be computed wrt this
@@ -85,8 +82,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
                                      MeasurementBasedTimestampedNodeAdderModelType>::
   MeasurementBasedTimestampedNodeAdder(
-    const Params& params,
-    const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
+    const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<TimestampedNodesType> timestamped_nodes)
     : Base(params, node_adder_model_params, std::move(timestamped_nodes)) {
   // Store start measurement so future relative estimates can be computed wrt this
