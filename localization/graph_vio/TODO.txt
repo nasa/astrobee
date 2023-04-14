@@ -1,8 +1,5 @@
 parametre reader: make graph loc/vio params files, make sure they are read correctly! (AA)
-    - do ros_graph_vio (AA)
-      - add config loader
-      - load params for imu bias initializer and nodelet
-    - ros_graph_loc
+    - ros_graph_loc (AA)
     - ros_pose_extrapolator
 - how to avoid overlapping config names???
   - opt for graph loc, graph vio, etc?
