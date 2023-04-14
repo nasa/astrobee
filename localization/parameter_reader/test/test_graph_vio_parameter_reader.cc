@@ -105,17 +105,17 @@ TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderParams) {
   EXPECT_EQ(params.min_num_states, 3);
   EXPECT_EQ(params.max_num_states, 20);
   // Check noise
-  constexpr double kTranslationStddev = 0.1;
-  constexpr double kQuaternionStddev = 0.2;
+  constexpr double kTranslationStddev = 0.02;
+  constexpr double kQuaternionStddev = 0.01;
   const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << kTranslationStddev, kTranslationStddev,
                                                 kTranslationStddev, kQuaternionStddev, kQuaternionStddev,
                                                 kQuaternionStddev)
                                                  .finished());
-  constexpr double kVelocityStddev = 0.3;
+  constexpr double kVelocityStddev = 0.01;
   const gtsam::Vector3 velocity_prior_noise_sigmas(
     (gtsam::Vector(3) << kVelocityStddev, kVelocityStddev, kVelocityStddev).finished());
-  constexpr double kAccelBiasStddev = 0.4;
-  constexpr double kGyroBiasStddev = 0.5;
+  constexpr double kAccelBiasStddev = 0.001;
+  constexpr double kGyroBiasStddev = 0.001;
   const gtsam::Vector6 bias_prior_noise_sigmas((gtsam::Vector(6) << kAccelBiasStddev, kAccelBiasStddev,
                                                 kAccelBiasStddev, kGyroBiasStddev, kGyroBiasStddev, kGyroBiasStddev)
                                                  .finished());
@@ -137,7 +137,7 @@ TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderModelParams) {
   // IMU Integrator
   EXPECT_MATRIX_NEAR(params.imu_integrator.gravity, Eigen::Vector3d::Zero(), 1e-6);
   // Taken using current nav cam extrinsics
-  const gtsam::Pose3 expected_body_T_imu(gtsam::Rot3(0.000, 0.70710678118, 0.70710678118, 0),
+  const gtsam::Pose3 expected_body_T_imu(gtsam::Rot3(0.70710678118, 0, 0, 0.70710678118),
                                          gtsam::Point3(0.0386, 0.0247, -0.01016));
   EXPECT_MATRIX_NEAR(params.imu_integrator.body_T_imu, expected_body_T_imu, 1e-6);
   EXPECT_NEAR(params.imu_integrator.gyro_sigma, 0.00001, 1e-6);
