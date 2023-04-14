@@ -73,6 +73,27 @@ TEST_F(GraphLocalizerParameterReaderTest, SparseMapLocFactorAdderParams) {
   EXPECT_NEAR(0.1, expected_sigma, 1e-6);
 }
 
+TEST_F(GraphLocalizerParameterReaderTest, PoseNodeAdderParams) {
+  const auto& params = params_.pose_node_adder;
+  EXPECT_NEAR(params.starting_prior_translation_stddev, 0.02, 1e-6);
+  EXPECT_NEAR(params.starting_prior_quaternion_stddev, 0.01, 1e-6);
+  std::vector<gtsam::SharedNoiseModel> start_noise_models;
+  constexpr double kTranslationStddev = 0.02;
+  constexpr double kQuaternionStddev = 0.01;
+  const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << kTranslationStddev, kTranslationStddev,
+                                                kTranslationStddev, kQuaternionStddev, kQuaternionStddev,
+                                                kQuaternionStddev)
+                                                 .finished());
+  const auto pose_noise = lc::Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params.huber_k);
+  EXPECT_MATRIX_NEAR(na::Covariance(pose_noise), na::Covariance(params.start_noise_models[0]), 1e-6);
+  EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
+  EXPECT_EQ(params.add_priors, true);
+  EXPECT_NEAR(params.ideal_duration, 20, 1e-6);
+  EXPECT_EQ(params.min_num_states, 3);
+  EXPECT_EQ(params.max_num_states, 20);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

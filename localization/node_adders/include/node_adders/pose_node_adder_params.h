@@ -32,10 +32,6 @@ namespace node_adders {
 struct PoseNodeAdderParams
     : public MeasurementBasedTimestampedNodeAdderParams<localization_measurements::TimestampedPoseWithCovariance,
                                                         gtsam::Pose3> {
-  void Initialize() {
-    SetStartNoiseModels();
-    SetStartMeasurement();
-  }
   void SetStartMeasurement() {
     const localization_common::PoseCovariance starting_covariance = Covariance(start_noise_models[0]);
     start_measurement = localization_measurements::TimestampedPoseWithCovariance(

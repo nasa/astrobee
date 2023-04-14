@@ -61,7 +61,7 @@ class PoseNodeAdderTest : public ::testing::Test {
   void RandomInitialize() {
     params_.start_node = lc::RandomPose();
     params_.starting_time = lc::RandomDouble();
-    params_.Initialize();
+    params_.SetStartMeasurement();
     pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_, std::make_shared<no::Nodes>()));
     pose_node_adder_->AddInitialNodesAndPriors(factors_);
   }
@@ -74,7 +74,7 @@ class PoseNodeAdderTest : public ::testing::Test {
   void ZeroInitialize() {
     params_.start_node = gtsam::Pose3::identity();
     params_.starting_time = 0.0;
-    params_.Initialize();
+    params_.SetStartMeasurement();
     pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_, std::make_shared<no::Nodes>()));
     pose_node_adder_->AddInitialNodesAndPriors(factors_);
   }
@@ -497,7 +497,7 @@ TEST_F(PoseNodeAdderTest, NewStartTimeDurationViolation) {
   params_.max_num_states = 10;
   params_.starting_time = 0.0;
   params_.ideal_duration = 1.5;
-  params_.Initialize();
+  params_.SetStartMeasurement();
   pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_, std::make_shared<no::Nodes>()));
   AddMeasurements();
   // Empty nodes, so expect invalid oldest time
@@ -543,7 +543,7 @@ TEST_F(PoseNodeAdderTest, NewStartTimeMinMaxStatesViolation) {
   params_.max_num_states = 3;
   params_.starting_time = 0.0;
   params_.ideal_duration = 100;
-  params_.Initialize();
+  params_.SetStartMeasurement();
   pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_, std::make_shared<no::Nodes>()));
   const auto& nodes = pose_node_adder_->nodes();
   AddMeasurements();
@@ -594,7 +594,7 @@ TEST_F(PoseNodeAdderTest, SlideWindow) {
   params_.min_num_states = 2;
   params_.max_num_states = 5;
   params_.ideal_duration = 1.5;
-  params_.Initialize();
+  params_.SetStartMeasurement();
   pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_, std::make_shared<no::Nodes>()));
   pose_node_adder_->AddInitialNodesAndPriors(factors_);
 

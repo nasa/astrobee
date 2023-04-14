@@ -74,12 +74,10 @@ void LoadCombinedNavStateNodeAdderModelParams(config_reader::ConfigReader& confi
 
 void LoadPoseNodeAdderParams(config_reader::ConfigReader& config, na::PoseNodeAdderParams& params,
                              const std::string& prefix) {
-  // TODO(rsoussan): add prefix for these?
   LOAD_PARAM(params.starting_prior_translation_stddev, config, prefix);
   LOAD_PARAM(params.starting_prior_quaternion_stddev, config, prefix);
+  params.SetStartNoiseModels();
   LoadBaseTimestampedNodeAdderParams<gtsam::Pose3>(config, params, prefix);
-  params.start_node = lc::LoadTransform(config, "start_node", prefix);
-  // Set noise and starting pose based on stddevs and loaded values
-  params.Initialize();
+  // Load start node from measurements
 }
 }  // namespace parameter_reader
