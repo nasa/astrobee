@@ -39,6 +39,8 @@ RosGraphVIOWrapper::RosGraphVIOWrapper(const std::string& graph_config_path_pref
 
 void RosGraphVIOWrapper::LoadConfigs(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
+  config.AddFile("localization/imu_bias_initializer.config");
+  config.AddFile("localization/imu_filter.config");
   lc::LoadGraphVIOConfig(config, graph_config_path_prefix);
   pr::LoadGraphVIOParams(config, params_);
   ImuBiasInitializerParams imu_bias_initializer_params;

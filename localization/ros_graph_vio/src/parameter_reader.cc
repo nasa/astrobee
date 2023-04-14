@@ -26,7 +26,7 @@ namespace pr = parameter_reader;
 
 void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasInitializerParams& params,
                                   const std::string& prefix) {
-  pr::LoadImuFilterParams(config, params.filter, prefix);
+  pr::LoadImuFilterParams(config, params.filter);
   LOAD_PARAM(params.imu_bias_filename, config, prefix);
   LOAD_PARAM(params.num_bias_estimation_measurements, config, prefix);
 }

@@ -35,7 +35,10 @@ RosGraphVIONodelet::RosGraphVIONodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   config_reader::ConfigReader config;
-  lc::LoadGraphVIOConfig(config);
+  config.AddFile("localization/ros_graph_vio.config");
+  if (!config.ReadFiles()) {
+    LogFatal("Failed to read config files.");
+  }
   LoadRosGraphVIONodeletParams(config, params_);
   last_heartbeat_time_ = ros::Time::now();
 }
