@@ -34,7 +34,13 @@ namespace mc = msg_conversions;
 
 RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
-  lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
+  config.AddFile("localization/imu_filter.config");
+  config.AddFile("localization/imu_integrator.config");
+  config.AddFile("localization/ros_pose_extrapolator.config");
+  config.AddFile("transforms.config");
+  if (!config.ReadFiles()) {
+    LogFatal("Failed to read config files.");
+  }
   RosPoseExtrapolatorParams params;
   LoadRosPoseExtrapolatorParams(config, params);
   Initialize(params);

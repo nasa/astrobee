@@ -26,7 +26,7 @@ namespace pr = parameter_reader;
 
 void LoadRosPoseExtrapolatorParams(config_reader::ConfigReader& config, RosPoseExtrapolatorParams& params,
                                    const std::string& prefix) {
-  pr::LoadImuIntegratorParams(config, params.imu_integrator, prefix);
-  LOAD_PARAM(params.standstill_enabled, config, prefix);
+  pr::LoadImuIntegratorParams(config, params.imu_integrator);
+  LOAD_PARAM(params.standstill_enabled, config, prefix + "rpe_");
 }
 }  // namespace ros_pose_extrapolator
