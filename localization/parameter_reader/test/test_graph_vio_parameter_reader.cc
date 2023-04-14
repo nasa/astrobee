@@ -32,6 +32,7 @@ class GraphVIOParameterReaderTest : public ::testing::Test {
   GraphVIOParameterReaderTest() {}
 
   void SetUp() final {
+    lc::SetEnvironmentConfigs();
     config_reader::ConfigReader config;
     lc::LoadGraphVIOConfig(config);
       config.AddFile("transforms.config");
@@ -74,10 +75,16 @@ TEST_F(GraphVIOParameterReaderTest, VOFactorAdderParams) {
   EXPECT_EQ(params.scale_noise_with_num_points, true);
   EXPECT_NEAR(params.noise_scale, 2.0, 1e-6);
   // Taken using current nav cam extrinsics
-  const gtsam::Pose3 expected_body_T_cam
-  EXPECT_MATRIX_NEAR(body_T_cam, , 1e-6);
-  /*  boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
-    gtsam::SharedIsotropic cam_noise;*/
+  const gtsam::Pose3 expected_body_T_cam(gtsam::Rot3(0.500, 0.500, 0.500, 0.500),
+                                         gtsam::Point3(0.1177, -0.0422, -0.0826));
+  EXPECT_MATRIX_NEAR(params.body_T_cam, expected_body_T_cam, 1e-6);
+  // Taken using current nav cam intrinsics, undistorted with no skew so only expected
+  // non-zero focal lengths
+  gtsam::Vector5 expected_intrinsics;
+  expected_intrinsics = (gtsam::Vector(5) << 608.8073, 607.61439, 0, 0, 0).finished();
+  EXPECT_MATRIX_NEAR(params.cam_intrinsics->vector(), expected_intrinsics, 1e-6);
+  const double expected_sigma = dynamic_cast<gtsam::noiseModel::Isotropic*>(params.cam_noise.get())->sigma();
+  EXPECT_NEAR(0.1, expected_sigma, 1e-6);
   // Smart Factor
   EXPECT_NEAR(params.smart_factor.triangulation.rankTolerance, 1e-9, 1e-6);
   EXPECT_NEAR(params.smart_factor.triangulation.landmarkDistanceThreshold, 500, 1e-6);

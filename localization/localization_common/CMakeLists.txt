@@ -23,6 +23,7 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
+  astrobee
 	camera
 	config_reader
 	msg_conversions
@@ -42,6 +43,7 @@ catkin_package(
   INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam
   CATKIN_DEPENDS
+    astrobee
     camera
     config_reader
     msg_conversions

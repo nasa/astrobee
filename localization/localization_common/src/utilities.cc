@@ -23,6 +23,7 @@
 
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
+#include <ros/package.h>
 
 #include <cstdlib>
 #include <string>
@@ -75,11 +76,13 @@ void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& 
   LogDebug("LoadGraphVIOConfig: Loaded graph VIO config.");
 }
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
+void SetEnvironmentConfigs(const std::string& world,
                            const std::string& robot_config_file) {
+  const std::string astrobee_configs_path = ros::package::getPath("astrobee");
+  const std::string full_robot_config_file = "config/robots/" + robot_config_file;
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
-  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/" + robot_config_file).c_str(), true);
+  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/" + full_robot_config_file).c_str(), true);
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 

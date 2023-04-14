@@ -66,12 +66,14 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::St
 
 void LoadVoSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                             fa::VoSmartProjectionFactorAdderParams& params, const std::string& prefix) {
+  LoadFactorAdderParams(config, params, prefix);
   LoadSpacedFeatureTrackerParams(config, params.spaced_feature_tracker, prefix);
   LOAD_PARAM(params.max_num_factors, config, prefix);
   LOAD_PARAM(params.min_num_points_per_factor, config, prefix);
   LOAD_PARAM(params.max_num_points_per_factor, config, prefix);
   LOAD_PARAM(params.min_avg_distance_from_mean, config, prefix);
   LOAD_PARAM(params.robust, config, prefix);
+  LOAD_PARAM(params.rotation_only_fallback, config, prefix);
   LOAD_PARAM(params.fix_invalid_factors, config, prefix);
   LOAD_PARAM(params.scale_noise_with_num_points, config, prefix);
   LOAD_PARAM(params.noise_scale, config, prefix);
