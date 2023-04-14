@@ -94,6 +94,30 @@ TEST_F(GraphLocalizerParameterReaderTest, PoseNodeAdderParams) {
   EXPECT_EQ(params.max_num_states, 20);
 }
 
+TEST_F(GraphLocalizerParameterReaderTest, PoseNodeAdderModelParams) {
+  const auto& params = params_.pose_node_adder_model;
+  EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
+}
+
+TEST_F(GraphLocalizerParameterReaderTest, NonlinearOptimizerParams) {
+  const auto& params = params_.nonlinear_optimizer;
+  EXPECT_EQ(params.marginals_factorization, "qr");
+  EXPECT_EQ(params.max_iterations, 10);
+  EXPECT_EQ(params.verbose, false);
+  EXPECT_EQ(params.use_ceres_params, false);
+}
+
+TEST_F(GraphLocalizerParameterReaderTest, SlidingWindowGraphOptimizerParams) {
+  const auto& params = params_.sliding_window_graph_optimizer;
+  EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
+  EXPECT_EQ(params.log_stats_on_destruction, false);
+  EXPECT_EQ(params.print_after_optimization, false);
+  EXPECT_EQ(params.add_marginal_factors, false);
+  EXPECT_EQ(params.slide_window_before_optimization, true);
+}
+
+TEST_F(GraphLocalizerParameterReaderTest, OtherParams) { EXPECT_NEAR(params_.max_vio_measurement_gap, 3, 1e-6); }
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

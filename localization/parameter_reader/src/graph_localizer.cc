@@ -31,9 +31,9 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, gl::GraphLoca
                               const std::string& prefix) {
   LoadLocFactorAdderParams(config, params.sparse_map_loc_factor_adder, prefix + "gl_fa_loc_sm_");
   LoadPoseNodeAdderParams(config, params.pose_node_adder, prefix + "gl_na_pose_");
-  // LoadTimestampedNodeAdderModelParams(config, params.pose_node_adder_model, prefix + "na_pose_model_");
-  // LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix + "op_nl_");
-  // LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix + "go_sw_");
-  // LOAD_PARAM(params.max_vio_measurement_gap, config, prefix);
+  LoadTimestampedNodeAdderModelParams(config, params.pose_node_adder_model, prefix + "gl_na_pose_model_");
+  LoadNonlinearOptimizerParams(config, params.nonlinear_optimizer, prefix + "gl_op_nl_");
+  LoadSlidingWindowGraphOptimizerParams(config, params.sliding_window_graph_optimizer, prefix + "gl_go_sw_");
+  LOAD_PARAM(params.max_vio_measurement_gap, config, prefix + "gl_");
 }
 }  // namespace parameter_reader

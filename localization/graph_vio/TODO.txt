@@ -1,6 +1,4 @@
 parametre reader: make graph loc/vio params files, make sure they are read correctly! (AA)
-   - do graph loc!
-      - pose node model, nonlinear opt, slidng window opt
     - do ros_graph_vio
     - ros_graph_loc
     - ros_pose_extrapolator
