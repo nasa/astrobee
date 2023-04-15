@@ -16,8 +16,12 @@
 # under the License.
 
 cmake_minimum_required(VERSION 3.0)
-
 project(traj_opt_pro)
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations  -Werror=return-type")
 
 ############################ Optional Build Params #############################
@@ -39,9 +43,11 @@ if(INTEL_MKL)
 endif()
 
 ## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  traj_opt_basic
-)
+find_package(ament_cmake REQUIRED)
+find_package(traj_opt_basic REQUIRED)
+# find_package(catkin2 REQUIRED COMPONENTS
+#   traj_opt_basic
+# )
 
 find_package(Eigen3 REQUIRED)
 
@@ -49,11 +55,11 @@ find_package(Eigen3 REQUIRED)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../../cmake")
 find_package(OpenCV331 REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES
-    traj_opt_pro fancy_custom_backend ${OpenCV_LIBRARIES}
-)
+# catkin_package(
+#   INCLUDE_DIRS include
+#   LIBRARIES
+#     traj_opt_pro fancy_custom_backend ${OpenCV_LIBRARIES}
+# )
 
 
 ###########
@@ -68,7 +74,7 @@ include_directories(
 )
 
 # Add libraries
-add_library(traj_opt_pro
+add_library(${PROJECT_NAME} SHARED
   src/polynomial_basis.cpp
   src/trajectory_solver.cpp)
 
@@ -76,14 +82,17 @@ if(BUILD_GUROBI)
   add_library(gurobi_backend
     src/gurobi_solver.cpp
     src/gurobi_trajectory.cpp )
-  target_link_libraries(gurobi_backend traj_opt_pro ${GUROBI_LIBRARIES})
+  target_link_libraries(gurobi_backend ${PROJECT_NAME} ${GUROBI_LIBRARIES})
 endif()
 
 add_library(fancy_custom_backend
   src/nonlinear_polynomial.cpp
   src/nonlinear_solver.cpp
   src/nonlinear_trajectory.cpp)
-target_link_libraries(fancy_custom_backend traj_opt_pro ${OpenCV_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(fancy_custom_backend ${PROJECT_NAME} ${OpenCV_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} traj_opt_basic)
 
 #############
 ## Install ##
@@ -102,3 +111,5 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+ament_package()

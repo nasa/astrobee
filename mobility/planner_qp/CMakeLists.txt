@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 cmake_minimum_required(VERSION 3.5)
-project(planner_qp)
+project(planner_qp_main)
 # this flag is needed by CGAL
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
@@ -23,8 +23,8 @@ project(planner_qp)
 
 # QP planner
 add_subdirectory(traj_opt_basic)
-# add_subdirectory(traj_opt_pro)
-# add_subdirectory(traj_opt_msgs)
+add_subdirectory(traj_opt_pro)
+add_subdirectory(traj_opt_msgs)
 # add_subdirectory(traj_opt_ros)
 
 # add_subdirectory(planner_qp)

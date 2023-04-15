@@ -22,10 +22,9 @@ project(traj_opt_basic)
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations  -Werror=return-type" )
-set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC -Wno-deprecated-declarations  -Werror=return-type" )
 
-find_package(ament_cmake REQUIRED COMPONENTS)
+find_package(ament_cmake REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -34,6 +33,7 @@ find_package(Boost REQUIRED)
 ###########
 ## Build ##
 ###########
+
 # Specify additional locations of header files
 include_directories(
   include
@@ -57,9 +57,11 @@ ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ## Install ##
 #############
 
+ament_export_include_directories(include)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME} 
-  EXPORT traj_opt_basic
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -72,3 +74,5 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+ament_package()
