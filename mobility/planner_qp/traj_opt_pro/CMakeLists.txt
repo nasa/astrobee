@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(traj_opt_pro)
 
 # Default to C++14
@@ -44,6 +44,8 @@ endif()
 
 ## Find catkin macros and libraries
 find_package(ament_cmake REQUIRED)
+
+find_package(rclcpp REQUIRED)
 find_package(traj_opt_basic REQUIRED)
 # find_package(catkin2 REQUIRED COMPONENTS
 #   traj_opt_basic
@@ -71,6 +73,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIR}
+  ${traj_opt_basic_INCLUDE_DIRS}
 )
 
 # Add libraries
@@ -91,7 +94,7 @@ add_library(fancy_custom_backend
   src/nonlinear_trajectory.cpp)
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
-target_link_libraries(fancy_custom_backend ${PROJECT_NAME} ${OpenCV_LIBRARIES})
+target_link_libraries(fancy_custom_backend ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${traj_opt_basic_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} traj_opt_basic)
 
 #############
@@ -106,8 +109,8 @@ install(TARGETS ${PROJECT_NAME} fancy_custom_backend
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )

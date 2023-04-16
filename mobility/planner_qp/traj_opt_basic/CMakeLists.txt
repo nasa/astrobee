@@ -40,22 +40,27 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
+  ${traj_opt_basic_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME} SHARED
 	src/msg_traj.cpp
 	src/polynomial_basis.cpp
-	src/trajectory.cpp)
-# target_link_libraries(traj_opt_basic ${catkin_LIBRARIES})
+	src/trajectory.cpp
+)
+# target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} rclcpp)
-ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+target_link_libraries(${PROJECT_NAME} ${traj_opt_basic_LIBRARIES})
+# ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 #############
 ## Install ##
 #############
+
+ament_export_dependencies(
+)
 
 ament_export_include_directories(include)
 
@@ -69,7 +74,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
+install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
