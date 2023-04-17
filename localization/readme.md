@@ -13,11 +13,34 @@ If you are using the localizer or mapping pipeline in academic work, please cite
 
 # Graph-based localization
 Various packages exist for graph-based localization. The optimizers package provides nonlinear and ISAM2 based optimizers that are used by the graph_optimizer and sliding_window_graph_optimizer packages that perform graph-based optimization using GTSAM. 
-The graph_optimizer package uses node_adders and factor_adders for node and factor creation and a provided optimizer for optimization, while the sliding_window_graph_optimizer uses sliding_window_node_adders for node creation and maintiains a graph with a windowed duration moving in time. 
+The graph_optimizer package uses node_adders and factor_adders for node and factor creation and a provided optimizer for optimization.
+
+<p align="center">
+<img src="./doc/images/graph_optimizer.png" width="330">
+</p>
+
+The sliding_window_graph_optimizer uses sliding_window_node_adders for node creation and maintiains a graph with a windowed duration moving in time. 
+
+<p align="center">
+<img src="./doc/images/sliding_window_graph_optimizer.png" width="330">
+</p>
+
 The node_adders create nodes (optimization states) and relative factors for a set of types (i.e. pose/velocity/bias) given timestamped measurements (i.e. relative odometry or IMU). 
 Node adders add nodes and relative factors when instructed by factor adders, which generate factors for specific measurements (i.e. map-based localization measurements or visual odometry measurements) at certain timestamps.
 The graph_vio package performs VIO using image-based feature track measurements and estimates pose, velocity, and IMU bias values at each timestamp.
+
+<p align="center">
+<img src="./doc/images/graph_vio.png" width="330">
+</p>
+
 The graph_localizer package uses relative odometry measurements along with map-based localization measurements to perform localization for poses at each timestamp.
+
+
+<p align="center">
+<img src="./doc/images/graph_localizer.png" width="330">
+</p>
+
+
 Finally, the ros_graph_localizer and ros_graph_vio packages wrap each of these object with ROS for live or offline usage with ROS message types, and the ros_pose_extrapolator performs extrapolation of localization poses using relative odometry and interpolated IMU data.
 TODO(rsoussan): Add images to help explain these ideas.
 
