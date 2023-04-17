@@ -59,10 +59,10 @@
 #include <ff_msgs/SetZones.h>
 #include <ff_msgs/UnloadLoadNodelet.h>
 #include <ff_msgs/Zone.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/config_client.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_flight.h>
-#include <ff_util/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 #include <ff_util/ff_service.h>
 

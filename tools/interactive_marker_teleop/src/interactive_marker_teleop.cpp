@@ -46,7 +46,7 @@ InteractiveMarkerTeleop::InteractiveMarkerTeleop(ros::NodeHandle& nh) : nh(nh) {
 
   snapMarkerToAstrobee();
   // publish and acknowledge command actions
-  cmd_publisher_ = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10, true);
+  cmd_publisher_ = nh.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 10);
   // ack_subscriber_ = nh.subscribe(TOPIC_MANAGEMENT_ACK, 10, &AckCallback); // TODO(jdekarske) status goes in the
   // marker text
 }

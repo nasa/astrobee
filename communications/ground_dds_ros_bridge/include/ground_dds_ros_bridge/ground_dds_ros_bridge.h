@@ -36,7 +36,7 @@
 #include "ground_dds_ros_bridge/ros_command.h"
 #include "ground_dds_ros_bridge/ros_sub_rapid_pub.h"
 
-#include "ff_util/ff_names.h"
+#include "ff_common/ff_names.h"
 
 // SoraCore Includes
 #include "knDds/DdsSupport.h"

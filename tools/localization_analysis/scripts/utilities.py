@@ -16,6 +16,7 @@
 # under the License.
 
 import numpy as np
+
 import pose
 import poses
 

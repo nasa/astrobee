@@ -19,7 +19,7 @@
 #include <ground_truth_localizer/ground_truth_localizer_nodelet.h>
 #include <ground_truth_localizer/utilities.h>
 #include <ff_msgs/EkfState.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_common/utilities.h>
 
 #include <glog/logging.h>

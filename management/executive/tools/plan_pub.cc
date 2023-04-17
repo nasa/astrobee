@@ -24,7 +24,7 @@
 #include <ff_msgs/CompressedFile.h>
 #include <ff_msgs/CompressedFileAck.h>
 #include <ff_msgs/PlanStatusStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <boost/filesystem.hpp>
 
@@ -164,8 +164,7 @@ int main(int argc, char** argv) {
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;
 
   std::string sub_topic_command = TOPIC_COMMAND;
-  command_pub = n.advertise<ff_msgs::CommandStamped>(
-                                                    sub_topic_command, 5, true);
+  command_pub = n.advertise<ff_msgs::CommandStamped>(sub_topic_command, 5);
 
   ros::Subscriber cf_ack_sub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10,
                                            &on_cf_ack);

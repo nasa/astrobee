@@ -19,7 +19,7 @@
 #include <marker_tracking_node/marker_tracker.h>
 
 #include <ff_msgs/CameraRegistration.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <marker_tracking/marker_detector.h>
 #include <msg_conversions/msg_conversions.h>
 

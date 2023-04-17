@@ -1,0 +1,170 @@
+diff --git a/include/DBoW2/TemplatedDatabase.h b/include/DBoW2/TemplatedDatabase.h
+index 96cbe8e..10fe5b4 100644
+--- a/include/DBoW2/TemplatedDatabase.h
++++ b/include/DBoW2/TemplatedDatabase.h
+@@ -16,6 +16,7 @@
+ #include <string>
+ #include <list>
+ #include <set>
++#include <iomanip>
+ 
+ #include "TemplatedVocabulary.h"
+ #include "QueryResults.h"
+@@ -223,6 +224,13 @@ public:
+   virtual void load(const cv::FileStorage &fs, 
+     const std::string &name = "database");
+ 
++  /**
++   * Estimates memory usage of the database.
++   * @param partsOutput Statistics concerning parts of the data structure will be appended to this vector.
++   * @return Estimated total usage.
++   */
++  size_t reportMemoryUsage(std::vector<std::pair<std::string, size_t> >& partsOutput);
++
+ protected:
+   
+   /// Query with L1 scoring
+@@ -1345,6 +1353,64 @@ std::ostream& operator<<(std::ostream &os,
+ 
+ // --------------------------------------------------------------------------
+ 
++template<class TDescriptor, class F>
++size_t TemplatedDatabase<TDescriptor,F>::reportMemoryUsage(std::vector<std::pair<std::string, size_t> >& partsOutput)
++{
++  typedef std::pair<std::string, size_t> PartsEntry;
++
++#define FF_REPORT(field) \
++  partsOutput.push_back(PartsEntry(#field, field));
++#define FF_COMMENT(label) \
++  partsOutput.push_back(PartsEntry("*" label, 0));
++
++  FF_COMMENT("  DBow database:");
++
++  size_t num_rows = m_ifile.size();
++  FF_REPORT(num_rows);
++
++  size_t num_ifpairs = 0;
++  for (typename InvertedFile::const_iterator it = m_ifile.begin(); it != m_ifile.end(); it++) {
++    num_ifpairs += it->size();
++  }
++  FF_REPORT(num_ifpairs);
++
++  FF_COMMENT("");
++
++  // typedef std::list<IFPair> IFRow;
++  // typedef std::vector<IFRow> InvertedFile;
++  const size_t list_bytes_per_node = 2 * sizeof(void *);
++  size_t m_ifile_bytes = m_ifile.size() * sizeof(std::list<IFPair>);
++  for (typename InvertedFile::const_iterator it = m_ifile.begin(); it != m_ifile.end(); it++) {
++    m_ifile_bytes += it->size() * (list_bytes_per_node + sizeof(IFPair));
++  }
++  FF_REPORT(m_ifile_bytes);
++
++
++  // class FeatureVector: public std::map<NodeId, std::vector<unsigned int> >
++  // typedef std::vector<FeatureVector> DirectFile;
++  // some of this is platform- and data-dependent, just rough approximation
++  const size_t map_node_bytes = sizeof(int) + 3 * sizeof(void *); // red/black tree node ~overhead
++  size_t m_dfile_bytes = m_dfile.size() * sizeof(FeatureVector);
++  for (typename DirectFile::const_iterator it = m_dfile.begin(); it != m_dfile.end(); it++) {
++    m_dfile_bytes += it->size()
++      * (map_node_bytes + sizeof(NodeId) + sizeof(std::vector<unsigned int>));
++    for (typename FeatureVector::const_iterator jt = it->begin(); jt != it->end(); jt++) {
++      m_dfile_bytes += jt->second.size() * sizeof(unsigned int);
++    }
++  }
++  FF_REPORT(m_dfile_bytes);
++
++  FF_COMMENT("");
++  size_t m_voc_bytes  = m_voc->reportMemoryUsage(partsOutput);
++
++#undef FF_REPORT
++#undef FF_COMMENT
++
++  return m_ifile_bytes + m_dfile_bytes + m_voc_bytes;
++}
++
++// --------------------------------------------------------------------------
++
+ } // namespace DBoW2
+ 
+ #endif
+diff --git a/include/DBoW2/TemplatedVocabulary.h b/include/DBoW2/TemplatedVocabulary.h
+index 53a0e30..55d2dec 100644
+--- a/include/DBoW2/TemplatedVocabulary.h
++++ b/include/DBoW2/TemplatedVocabulary.h
+@@ -17,6 +17,7 @@
+ #include <fstream>
+ #include <string>
+ #include <algorithm>
++#include <iomanip>
+ #include <opencv2/core.hpp>
+ 
+ #include "FeatureVector.h"
+@@ -30,6 +31,7 @@ namespace DBoW2 {
+ /// @param TDescriptor class of descriptor
+ /// @param F class of descriptor functions
+ template<class TDescriptor, class F>
++
+ /// Generic Vocabulary
+ class TemplatedVocabulary
+ {		
+@@ -266,6 +268,13 @@ public:
+    */
+   virtual int stopWords(double minWeight);
+ 
++  /**
++   * Estimates memory usage of the vocabulary.
++   * @param partsOutput Statistics concerning parts of the data structure will be appended to this vector.
++   * @return Estimated total usage.
++   */
++  virtual size_t reportMemoryUsage(std::vector<std::pair<std::string, size_t> >& partsOutput);
++
+ protected:
+ 
+   /// Pointer to descriptor
+@@ -1524,6 +1533,44 @@ std::ostream& operator<<(std::ostream &os,
+   return os;
+ }
+ 
++// --------------------------------------------------------------------------
++
++template<class TDescriptor, class F>
++size_t TemplatedVocabulary<TDescriptor,F>::reportMemoryUsage(std::vector<std::pair<std::string, size_t> >& partsOutput)
++{
++  typedef std::pair<std::string, size_t> PartsEntry;
++
++#define FF_REPORT(field) \
++  partsOutput.push_back(PartsEntry(#field, field));
++#define FF_COMMENT(label) \
++  partsOutput.push_back(PartsEntry("*" label, 0));
++
++  FF_COMMENT("  DBow vocabulary:");
++
++  size_t num_nodes = m_nodes.size();
++  FF_REPORT(num_nodes);
++
++  size_t num_words = m_words.size();
++  FF_REPORT(num_words);
++
++  FF_COMMENT("");
++
++  size_t m_nodes_bytes = m_nodes.size() * sizeof(Node);
++  for (typename std::vector<Node>::const_iterator it = m_nodes.begin(); it != m_nodes.end(); it++) {
++    m_nodes_bytes += it->children.size() * sizeof(NodeId);
++  }
++  FF_REPORT(m_nodes_bytes);
++
++  size_t m_words_bytes = m_words.size() * sizeof(Node*);
++  FF_REPORT(m_words_bytes);
++
++#undef FF_REPORT
++#undef FF_COMMENT
++
++  return m_nodes_bytes + m_words_bytes;
++}
++
++
+ } // namespace DBoW2
+ 
+ #endif

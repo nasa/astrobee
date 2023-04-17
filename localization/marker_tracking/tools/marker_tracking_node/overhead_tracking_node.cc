@@ -22,7 +22,7 @@
 #include <marker_tracking/arxmlio.h>
 #include <msg_conversions/msg_conversions.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // Needed by ALVAR headers
 #ifndef CV__ENABLE_C_API_CTORS

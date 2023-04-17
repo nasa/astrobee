@@ -28,7 +28,7 @@
 
 // FSW includes
 #include <msg_conversions/msg_conversions.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_serialization.h>
