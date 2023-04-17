@@ -7,6 +7,10 @@ Performs sliding-window graph based visual-intertial odometry (VIO) using a VOSm
 For more information on the theory behind the GraphVIO and the factors used, please see our paper: 
 * Ryan Soussan, Varsha Kumar, Brian Coltin, and Trey Smith, "Astroloc: An efficient and robust localizer for a free-flying robot", Int. Conf. on Robotics and Automation (ICRA), 2022. [Link](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9811919 "Link")
 
+<p align="center">
+<img src="../doc/images/graph_vio.png" width="550">
+</p>
+
 # Graph Optimization Structure 
 ## Factor Adders
 * VoSmartProjectionFactorAdder
