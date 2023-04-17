@@ -16,13 +16,13 @@ Various packages exist for graph-based localization. The optimizers package prov
 The graph_optimizer package uses node_adders and factor_adders for node and factor creation and a provided optimizer for optimization.
 
 <p align="center">
-<img src="./doc/images/graph_optimizer.png" width="330">
+<img src="./doc/images/graph_optimizer.png" width="550">
 </p>
 
 The sliding_window_graph_optimizer uses sliding_window_node_adders for node creation and maintiains a graph with a windowed duration moving in time. 
 
 <p align="center">
-<img src="./doc/images/sliding_window_graph_optimizer.png" width="330">
+<img src="./doc/images/sliding_window_graph_optimizer.png" width="550">
 </p>
 
 The node_adders create nodes (optimization states) and relative factors for a set of types (i.e. pose/velocity/bias) given timestamped measurements (i.e. relative odometry or IMU). 
@@ -30,14 +30,14 @@ Node adders add nodes and relative factors when instructed by factor adders, whi
 The graph_vio package performs VIO using image-based feature track measurements and estimates pose, velocity, and IMU bias values at each timestamp.
 
 <p align="center">
-<img src="./doc/images/graph_vio.png" width="330">
+<img src="./doc/images/graph_vio.png" width="550">
 </p>
 
 The graph_localizer package uses relative odometry measurements along with map-based localization measurements to perform localization for poses at each timestamp.
 
 
 <p align="center">
-<img src="./doc/images/graph_localizer.png" width="330">
+<img src="./doc/images/graph_localizer.png" width="550">
 </p>
 
 
