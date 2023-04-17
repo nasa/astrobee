@@ -91,10 +91,9 @@ ament_target_dependencies(simple_move rclcpp ff_common ff_msgs Boost)
 target_link_libraries(simple_move executive gflags)
 
 ## Declare a C++ executable: teleop_tool
-#add_executable(teleop_tool tools/teleop_tool.cc)
-#add_dependencies(teleop_tool ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(teleop_tool
-#  executive gflags ${catkin_LIBRARIES})
+add_executable(teleop_tool tools/teleop_tool.cc)
+ament_target_dependencies(teleop_tool rclcpp ff_common ff_msgs Boost)
+target_link_libraries(teleop_tool executive gflags)
 
 ## Declare a C++ executable: zones_pub
 add_executable(zones_pub tools/zones_pub.cc)
