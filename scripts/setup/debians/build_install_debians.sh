@@ -33,9 +33,9 @@ case $dist in
   xenial)
     echo "Ubuntu 16 detected"
     ;;
-  #bionic|focal)
-  #  build_list+=( opencv )
-  #  ;;&
+  bionic|focal)
+    build_list+=( opencv )
+    ;;&
   bionic)
     echo "Ubuntu 18 detected"
      # jps3d deps
