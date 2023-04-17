@@ -1,16 +1,19 @@
-\page imuaugmentor Imu Augmentor
+\page rosposeextrapolator Ros Pose Extrapolator
 
 # Package Overview
-The imu augmentor extrapolates a localization estimate with imu data.  This is useful in order to "catch up" the latest localization estimate to current time, for use with a planner or other module.  The imu augmentor uses an ImuIntegrator object to maintain a history of imu measurements and integrate up to the most recent imu measurement.  Imu biases are reset on receival of localization estimates to more accurately integrate measurements. 
+Extrapolates localization estimates using relative odometry and IMU measurements. 
+The ros pose extrapolator wrapper takes ros messages, convers these to localization measurements, performs the required extrapolation. The ros pose extrapolatornodelet handles live subscribing and publishing to ros topics.
 
-## Ros Node
-The ros node subscribes to the localization estimate and publishes an updated imu augmented localization estimate.  It also fills in the latest acceleration and angular velocity.  The augmentor also publishes the latest pose and twist as respective messages. 
+## RosPoseExtrapolatorWrapper
+Converts ROS messages to localization measurements and extrapolates localization estimates using relative odometry and interpolated IMU measurements. 
+
+## RosPoseExtrapolatorNodelet
+Subscribes to ROS messages for online use and publishes localization messages and TFs. Contains a RosPoseExtrapolatorWrapper and passes messages to this.
 
 # Inputs
 * `/hw/imu`
-* `graph_loc/state`
+* `graph_localizer/state`
+* `graph_vio/state`
 
 # Outputs
-* `gnc/ekf`
-* `loc/pose`
-* `loc/twist`
+* `gnc/Ekf` (message named Ekf for historical reasons)

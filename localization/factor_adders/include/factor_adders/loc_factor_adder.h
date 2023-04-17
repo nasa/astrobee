@@ -31,6 +31,8 @@
 #include <vector>
 
 namespace factor_adders {
+// SingleMeasurementBasedFactorAdder that adds either loc projection factors and loc pose priors for given matched
+// projection measurements.
 template <typename PoseNodeAdderType>
 class LocFactorAdder
     : public SingleMeasurementBasedFactorAdder<localization_measurements::MatchedProjectionsMeasurement> {

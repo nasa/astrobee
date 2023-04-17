@@ -1,13 +1,10 @@
-parametre reader: make graph loc/vio params files, make sure they are read correctly! (AA)
-    - ros_graph_loc (AA)
-    - ros_pose_extrapolator
-- how to avoid overlapping config names???
-  - opt for graph loc, graph vio, etc?
-    - add prefix? gl/gv/rgl/rgv/rpe?
-
 - add graph vio to graph bag! (A)
   - plot_graph_bag
-  - need to convert velocity frame in graph bag tool as well before integrating!
+    - plot graph vio!!!! (AAA)
+    - plot graph loc!
+    - plot velocities and biases!
+      - need to convert velocity frame in graph bag tool as well before integrating!
+    - plot extrapolated states!
 
  - add pose_extrapolator package?
 

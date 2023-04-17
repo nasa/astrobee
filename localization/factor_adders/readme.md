@@ -1,20 +1,22 @@
 \page factoradders Factor Adders
 
 # Package Overview
-The factor adders package provides a set of factor adders for various measurement types for use with a graph optimizer. See the GraphOptimizer package for more information on their usage.
+The factor adders package provides a set of factor adders that add factors to a graph optimizer given a range of timestamps. 
 
-## FactorAdders
-### LocFactorAdder
-The LocFactorAdder takes map-based image feature measurements and generates either LocProjectionFactors or LocPoseFactors, depeneding on if the LocProjectionFactors suffered cheirality errors or not.
+## FactorAdder
+Base class for adding factors given a timestamp range.
 
-### ProjectionFactorAdder
-The ProjectionFactorAdder creates bundle-adjustment ProjectionFactors for tracked image features. (Not currently used).
+## MeasurementBasedFactorAdder
+Extends the FactorAdder and stores measurements in a buffer before using these for factor creation.
 
-### RotationFactorAdder
-The RotationFactorAdder generates a relative rotation using tracked image features in two successive images.  (Not currently used).
+## SingleMeasurementBasedFactorAdder
+MeasurementBasedFactorAdder that adds factors using single measurements at a time for measurements in a provided time range. 
 
-### SmartProjectionCumulativeFactorAdder
-The SmartProjectionCumulativeFactorAdder generates visual odometry smart factors using image feature tracks.  It contains options for the minimum disparity allowed for feature tracks, minimum separation in image space for added feature tracks, whether to use a rotation-only factor if created smart factors suffer from cheirality errors, and more. It can generate factors using maximally spaced measurements in time to include a longer history of measurements while including only a maximum number of total measurements or only include measurements from a given set with a set spacing (toggle these with the use\_allowed\_timestamps option).  
+## LocFactorAdder
+SingleMeasurementBasedFactorAdder that takes map-based image feature measurements and generates either LocProjectionFactors or LocPoseFactors. Optionally adds loc pose factors as a fallback for projection factors that suffer cheirality errors. Uses a pose node adder for required node creation.
+
+### VOSmartProjectionFactorAdder
+Generates visual odometry smart factors using image feature tracks.  Downsamples measurements as desired for smart factors. See gtsam::SmartProjectionPoseFactor for more information on smart factors. Uses a pose node adder for required node creation.
 
 ### StandstillFactorAdder
-The StandstillFactorAdder creates a zero velocity prior and zero tranform between factor for successive CombinedNavState nodes when standstill is detected.  Standstill detection checks for a minimum average disparity for image feature tracks over time.
+Creates a zero velocity prior and a zero tranform between factor for successive nodes when standstill is detected. Uses a pose and velocity node adder for required node creation. 

@@ -23,16 +23,12 @@ If you are using the localizer or mapping pipeline in academic work, please cite
 
 \subpage graphoptimizer
 
-\subpage graphvalues
-
 \subpage graphvio
 
 \subpage groundtruthlocalizer
 
 \subpage handrail
 
-\subpage imuaugmentor
- 
 \subpage imuintegration
 
 \subpage interestpoint
@@ -47,13 +43,25 @@ If you are using the localizer or mapping pipeline in academic work, please cite
 
 \subpage markertracking
 
-\subpage nodeupdaters 
+\subpage nodeadders
+
+\subpage nodes
 
 \subpage opticalflow
 
 \subpage optimizationcommon 
 
+\subpage optimizers 
+
 \subpage pointcloudcommon 
+
+\subpage rosgraphlocalizer 
+
+\subpage rosgraphvio 
+
+\subpage rosposeextrapolator 
+
+\subpage slidingwindowgraphoptimizer 
 
 \subpage sparsemapping
 
