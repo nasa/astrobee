@@ -20,8 +20,7 @@
 
 namespace localization_analysis {
 namespace lc = localization_common;
-GraphVIOSimulator::GraphVIOSimulator(const GraphVIOSimulatorParams& params,
-                                                 const std::string& graph_config_path_prefix)
+GraphVIOSimulator::GraphVIOSimulator(const GraphVIOSimulatorParams& params, const std::string& graph_config_path_prefix)
     : RosGraphVIOWrapper(graph_config_path_prefix), params_(params) {}
 
 void GraphVIOSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg) {

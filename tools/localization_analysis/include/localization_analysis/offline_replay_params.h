@@ -28,7 +28,7 @@ namespace localization_analysis {
 struct OfflineReplayParams {
   // Save images with optical flow feature tracks to the output bagfile.
   bool save_optical_flow_images;
-  // Log the relative time since the start of the bagfile. 
+  // Log the relative time since the start of the bagfile.
   bool log_relative_time;
   std::unique_ptr<camera::CameraParameters> nav_cam_params;
   gtsam::Pose3 body_T_nav_cam;

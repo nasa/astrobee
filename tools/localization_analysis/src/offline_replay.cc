@@ -43,8 +43,8 @@ namespace lc = localization_common;
 namespace mc = msg_conversions;
 
 OfflineReplay::OfflineReplay(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                   const std::string& results_bag, const std::string& output_stats_file, const bool use_image_features,
-                   const std::string& graph_config_path_prefix)
+                             const std::string& results_bag, const std::string& output_stats_file,
+                             const bool use_image_features, const std::string& graph_config_path_prefix)
     : results_bag_(results_bag, rosbag::bagmode::Write),
       // imu_bias_tester_wrapper_(graph_config_path_prefix),
       pose_extrapolator_wrapper_(graph_config_path_prefix),
@@ -138,8 +138,7 @@ void OfflineReplay::Run() {
         const gtsam::Pose3 sparse_mapping_global_T_body =
           lc::PoseFromMsgWithExtrinsics(vl_msg->pose, params_.body_T_nav_cam.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
-        SaveMsg(PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE,
-                results_bag_);
+        SaveMsg(PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE, results_bag_);
       }
     }
     /*const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);

@@ -472,8 +472,6 @@ int main(int argc, char** argv) {
     "view-images,v", po::bool_switch(&view_images)->default_value(false),
     "View images with projected features and error ratios for each provided image in the image directory. "
     "Helpful for tuning the error ratio or visualizing rotation movement while the script is running.")(
-    "config-path,c", po::value<std::string>()->required(),
-    "Full path to astrobee/src/astrobee directory location, e.g. ~/astrobee/src/astrobee.")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "robot config file");
   po::positional_options_description p;
@@ -493,13 +491,12 @@ int main(int argc, char** argv) {
   }
 
   const std::string image_directory = vm["image-directory"].as<std::string>();
-  const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
-  lc::SetEnvironmentConfigs(config_path, "iss", robot_config_file);
+  lc::SetEnvironmentConfigs(robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   if (!config.ReadFiles()) {
