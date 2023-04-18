@@ -100,25 +100,25 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
         // Turn on optical flow
         if (!OpticalFlow(curr_->second.RequiresOpticalFlow())) {
           AssertFault(ff_util::INITIALIZATION_FAILED,
-            "Could not initialize optical flow for the default pipeline");
+            "Could not initialize optical flow for the default pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Enable the pipeline
         if (!curr_->second.Toggle(true)) {
           AssertFault(ff_util::INITIALIZATION_FAILED,
-            "Could not enable teh default pipeline");
+            "Could not enable teh default pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Try and switch to the pipeline
         if (!SwitchFilterInput(curr_->second.GetMode())) {
           AssertFault(ff_util::INITIALIZATION_FAILED,
-            "Could not switch to the default pipeline");
+            "Could not switch to the default pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Now start using the new pipeline
         if (!curr_->second.Use(true)) {
           AssertFault(ff_util::INITIALIZATION_FAILED,
-            "Could not start using the default pipeline");
+            "Could not start using the default pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Now return the correct default state
@@ -139,7 +139,7 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
         // really do anything except issue a fault...
         if (curr_ == fall_) {
           AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
-            "Currently on fallback pipeline and it is unstable");
+            "Currently on fallback pipeline and it is unstable", GetTimeNow());
           ResetTimer(timer_recovery_);
           return STATE::UNSTABLE;
         }
@@ -148,37 +148,37 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
         // Turn on optical flow
         if (fall_->second.RequiresOpticalFlow() && !OpticalFlow(true)) {
           AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
-            "Could not toggle optical flow on begin");
+            "Could not toggle optical flow on begin", GetTimeNow());
           return STATE::DISABLED;
         }
         // Enable the pipeline
         if (!fall_->second.Toggle(true)) {
           AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
-            "Could not enable fallback pipeline");
+            "Could not enable fallback pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Try and switch to the pipeline
         if (!SwitchFilterInput(fall_->second.GetMode())) {
           AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
-            "Could not switch to fallback pipeline");
+            "Could not switch to fallback pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Now start using the new pipeline
         if (!fall_->second.Use(true)) {
           AssertFault(ff_util::INITIALIZATION_FAILED,
-            "Could not start using the default pipeline");
+            "Could not start using the default pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Disable the active the pipeline
         if (!curr_->second.Toggle(false)) {
           AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
-            "Could not disable fallback pipeline");
+            "Could not disable fallback pipeline", GetTimeNow());
           return STATE::DISABLED;
         }
         // Turn off optical flow if it's not required
         if (!OpticalFlow(fall_->second.RequiresOpticalFlow())) {
           AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
-            "Could not toggle optical flow on end");
+            "Could not toggle optical flow on end", GetTimeNow());
           return STATE::DISABLED;
         }
         // Set all pipelines to fallback
@@ -384,24 +384,24 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
     cfg_.AddFile("localization/localization_manager.config");
     if (!cfg_.Initialize(nh))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                  "Could not start config server");
+                  "Could not start config server", GetTimeNow());
 
     // Read and configure the pipelines
     config_reader::ConfigReader::Table pipelines(cfg_.GetConfigReader(), "pipelines");
     for (int i = 0; i < pipelines.GetSize(); i++) {
       config_reader::ConfigReader::Table pipeline;
       if (!pipelines.GetTable(i + 1, &pipeline))
-        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get pipeline");
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get pipeline", GetTimeNow());
       // Get mandatory fields
       std::string id;
       if (!pipeline.GetStr("id", &id))
-        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get id");
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get id", GetTimeNow());
       std::string name;
       if (!pipeline.GetStr("name", &name))
-        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get name");
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get name", GetTimeNow());
       int mode;
       if (!pipeline.GetInt("ekf_input", &mode))
-        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get ekf_input");
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get ekf_input", GetTimeNow());
 
       // Allocate the pipeline
       Pipeline & p = pipelines_.emplace(id,
@@ -415,19 +415,19 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
             int max_confidence = 0;
             if (!pipeline.GetInt("max_confidence", &max_confidence)) {
               AssertFault(ff_util::INITIALIZATION_FAILED,
-                            "Could not get max confidence");
+                            "Could not get max confidence", GetTimeNow());
             }
 
             bool optical_flow = false;
             if (!pipeline.GetBool("optical_flow", &optical_flow)) {
               AssertFault(ff_util::INITIALIZATION_FAILED,
-                          "Could not get optical flow");
+                          "Could not get optical flow", GetTimeNow());
             }
 
             double timeout = 1.0;
             if (!pipeline.GetReal("timeout", &timeout)) {
               AssertFault(ff_util::INITIALIZATION_FAILED,
-                          "Could not get timeout");
+                          "Could not get timeout", GetTimeNow());
             }
 
             // Set a filter need
@@ -443,7 +443,7 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
           double enable_timeout = 1.0;
           if (!pipeline.GetReal("enable_timeout", &enable_timeout)) {
             AssertFault(ff_util::INITIALIZATION_FAILED,
-                        "Could not get enable_timeout");
+                        "Could not get enable_timeout", GetTimeNow());
           }
 
           // Set an enable need
@@ -458,7 +458,7 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
           double reg_timeout = 1.0;
           if (!pipeline.GetReal("reg_timeout", &reg_timeout)) {
             AssertFault(ff_util::INITIALIZATION_FAILED,
-                        "Could not get reg_timeout");
+                        "Could not get reg_timeout", GetTimeNow());
           }
 
           // Set an enable need
@@ -473,13 +473,13 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
           double feat_timeout = 1.0;
           if (!pipeline.GetReal("feat_timeout", &feat_timeout)) {
             AssertFault(ff_util::INITIALIZATION_FAILED,
-                        "Could not get feat_timeout");
+                        "Could not get feat_timeout", GetTimeNow());
           }
 
           int feat_threshold = 0;
           if (!pipeline.GetInt("feat_threshold", &feat_threshold)) {
             AssertFault(ff_util::INITIALIZATION_FAILED,
-                        "Could not get feat_threshold");
+                        "Could not get feat_threshold", GetTimeNow());
           }
 
           // Set a feature need
@@ -494,13 +494,13 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
           double depth_timeout = 1.0;
           if (!pipeline.GetReal("depth_timeout", &depth_timeout)) {
             AssertFault(ff_util::INITIALIZATION_FAILED,
-                        "Could not get depth_timeout");
+                        "Could not get depth_timeout", GetTimeNow());
           }
 
           int depth_threshold = 0;
           if (!pipeline.GetInt("depth_threshold", &depth_threshold)) {
             AssertFault(ff_util::INITIALIZATION_FAILED,
-                        "Could not get depth_threshold");
+                        "Could not get depth_threshold", GetTimeNow());
           }
 
           // Set a feature need
@@ -513,18 +513,18 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
     std::string pipeline;
     if (!cfg_.Get<std::string>("fallback", pipeline))
       AssertFault(ff_util::INITIALIZATION_FAILED,
-        "No valid fallback pipeline specfified in the localization manager");
+        "No valid fallback pipeline specfified in the localization manager", GetTimeNow());
     fall_ = pipelines_.find(pipeline);
     if (fall_ == pipelines_.end())
       AssertFault(ff_util::INITIALIZATION_FAILED,
-        "Fallback pipeline specified in config does not exist");
+        "Fallback pipeline specified in config does not exist", GetTimeNow());
     if (!cfg_.Get<std::string>("pipeline", pipeline))
       AssertFault(ff_util::INITIALIZATION_FAILED,
-        "No valid default pipeline specfified in the localization manager");
+        "No valid default pipeline specfified in the localization manager", GetTimeNow());
     curr_ = pipelines_.find(pipeline);
     if (curr_ == pipelines_.end())
       AssertFault(ff_util::INITIALIZATION_FAILED,
-        "Default pipeline specified in config does not exist");
+        "Default pipeline specified in config does not exist", GetTimeNow());
     goal_ = curr_;
 
     // Initialize all pipelines in the system
@@ -535,7 +535,7 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
         std::bind(&LocalizationManagerComponent::ConnectedCallback, this),
         std::bind(&LocalizationManagerComponent::TimeoutCallback, this))) {
         AssertFault(ff_util::INITIALIZATION_FAILED,
-          std::string("Could not init pipeline: ") + pipeline.first);
+          std::string("Could not init pipeline: ") + pipeline.first, GetTimeNow());
       }
     }
 
@@ -632,7 +632,7 @@ class LocalizationManagerComponent : public ff_util::FreeFlyerComponent {
   void TimeoutCallback() {
     FF_DEBUG_STREAM("TimeoutCallback()");
     AssertFault(ff_util::INITIALIZATION_FAILED,
-      "One of the manager or pipeline services failed to appear");
+      "One of the manager or pipeline services failed to appear", GetTimeNow());
   }
 
   // Called when a user manually updates the internal state

@@ -491,18 +491,18 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
     cfg_.AddFile("behaviors/arm.config");
     if (!cfg_.Initialize(nh))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                  "Could not start config server");
+                  "Could not start config server", GetTimeNow());
 
     // Read the configuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
     if (!cfg->GetTable(GetName().c_str(), &joints))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Cannot read LUA file");
+                         "Cannot read LUA file", GetTimeNow());
     std::string name;
     if (!joints.GetStr("pan", &name))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Cannot read PAN joint");
+                         "Cannot read PAN joint", GetTimeNow());
     joints_[PAN].name = name;
     joints_[PAN].generic = "pan";
     joints_[PAN].tol = cfg_.Get<double>("tol_pan");
@@ -511,7 +511,7 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
     dictionary_[name] = PAN;
     if (!joints.GetStr("tilt", &name))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Cannot read TILT joint");
+                         "Cannot read TILT joint", GetTimeNow());
     joints_[TILT].name = name;
     joints_[TILT].generic = "tilt";
     joints_[TILT].tol = cfg_.Get<double>("tol_tilt");
@@ -520,7 +520,7 @@ class ArmComponent : public ff_util::FreeFlyerComponent {
     dictionary_[name] = TILT;
     if (!joints.GetStr("gripper", &name))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Cannot read GRIPPER joint");
+                         "Cannot read GRIPPER joint", GetTimeNow());
     joints_[GRIPPER].name = name;
     joints_[GRIPPER].generic = "gripper";
     joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");

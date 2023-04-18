@@ -125,7 +125,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       [this](FSM::Event const& event) -> FSM::State {
         if (!Control(IDLE))
           AssertFault(ff_util::INITIALIZATION_FAILED,
-                      "Cannot call Idle() action");
+                      "Cannot call Idle() action", GetTimeNow());
         return STATE::IDLE;
       });
     // [1]
@@ -475,7 +475,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     cfg_.AddFile("mobility/choreographer.config");
     if (!cfg_.Initialize(nh)) {
       AssertFault(ff_util::INITIALIZATION_FAILED,
-                  "Could not start config server");
+                  "Could not start config server", GetTimeNow());
       return;
     }
 
@@ -485,7 +485,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     // Get the default flight mode, it will be published later
     if (!ff_util::FlightUtil::GetInitialFlightMode(flight_mode_)) {
       AssertFault(ff_util::INITIALIZATION_FAILED,
-                  "Problem with initial flight mode");
+                  "Problem with initial flight mode", GetTimeNow());
       return;
     }
 
@@ -493,7 +493,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     geometry_msgs::InertiaStamped msg;
     if (!ff_util::FlightUtil::GetInertiaConfig(msg)) {
       AssertFault(ff_util::INITIALIZATION_FAILED,
-                  "Problem with default inertia");
+                  "Problem with default inertia", GetTimeNow());
       return;
     }
 
