@@ -1,9 +1,15 @@
+astrobee (0.17.1) testing; urgency=medium
+
+  * Multiple bug fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 03 Apr 2023 10:59:33 -0700
+
 astrobee (0.17.0) testing; urgency=medium
 
   * Full compatibility and debians built for Ubuntu 20
   * Deleted all simulink autocode for ctl and fam
 
- -- Marina Moreira <mgouveia@ubuntu>  Thu, 16 Feb 2023 09:43:41 -0800
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 16 Feb 2023 09:43:41 -0800
 
 astrobee (0.16.7) testing; urgency=medium
 

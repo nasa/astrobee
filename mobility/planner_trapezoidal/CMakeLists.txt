@@ -25,18 +25,25 @@ endif()
 
 set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
-## Find amend and libraries
+set(dependencies
+  rclcpp
+  rclcpp_components
+  ff_common
+  ff_util
+  ff_msgs
+  choreographer
+  tf2_geometry_msgs
+  #mapper
+)
+
+## Find ament and libraries
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 
-find_package(ff_common REQUIRED)
-find_package(ff_util REQUIRED)
-find_package(ff_msgs REQUIRED)
+foreach(dep ${dependencies})
+  find_package(${dep} REQUIRED)
+endforeach()
 
-find_package(choreographer REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-# find_package(mapper REQUIRED)
+
 
 ## System dependencies are found with CMake's conventions
 find_package(PCL REQUIRED COMPONENTS common)
@@ -81,12 +88,11 @@ install(TARGETS ${PROJECT_NAME}
   EXPORT planner_trapezoidal
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}
+install(DIRECTORY include
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
@@ -96,5 +102,9 @@ install(DIRECTORY include/${PROJECT_NAME}
 install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
   PATTERN ".svn" EXCLUDE)
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(${dependencies})
 
 ament_package()
