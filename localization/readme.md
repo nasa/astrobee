@@ -33,6 +33,7 @@ The graph_localizer package uses relative odometry measurements along with map-b
 ## Ros Wrappers
 The ros_graph_localizer and ros_graph_vio packages wrap GraphVIO and GraphLocalizer objects with ROS for live or offline usage with ROS message types, and the ros_pose_extrapolator performs extrapolation of localization poses using relative odometry and interpolated IMU data.
 
+# Packages
 \subpage camera
 
 \subpage depthodometry
