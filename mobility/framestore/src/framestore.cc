@@ -120,7 +120,7 @@ class FrameStore : public ff_util::FreeFlyerComponent {
   // Deal with a fault in a responsible manner
   void InitFault(std::string const& msg ) {
     FF_ERROR_STREAM(msg);
-    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg, GetTimeNow());
     return;
   }
 

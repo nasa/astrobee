@@ -497,7 +497,7 @@ class PerchComponent : public ff_util::FreeFlyerComponent {
     cfg_.AddFile("behaviors/perch.config");
     if (!cfg_.Initialize(nh))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
-                         "Could not load config");
+                         "Could not load config", GetTimeNow());
 
     // Setup the platform name
     platform_name_ = GetPlatform();

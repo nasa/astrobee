@@ -177,7 +177,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     if (!GetParams()) {
       FF_ERROR("PMC Actuator: Failed to get parameters.");
       AssertFault(ff_util::INITIALIZATION_FAILED,
-                  "Could not get PMC parameters");
+                  "Could not get PMC parameters", GetTimeNow());
     }
 
     // If we specify a frame name different to our sensor tag name
