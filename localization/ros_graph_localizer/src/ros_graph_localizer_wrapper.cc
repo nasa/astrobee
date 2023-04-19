@@ -49,10 +49,10 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
   // Ensure vio data exists before msg time so no gaps occur between first
   // sparse map measurement and future interpolated vio measurements.
   if (!Initialized() && !vio_measurement_buffer_.empty()) {
-    const auto latest_vio_measurement_time = vio_measurement_buffer_.Latest()->timestamp;
-    if (msg_time > latest_vio_measurement_time) {
+    const auto oldest_vio_measurement_time = vio_measurement_buffer_.Oldest()->timestamp;
+    if (msg_time < oldest_vio_measurement_time) {
       LogError(
-        "SparseMapVisualLandmarksCallback: Initial vl msg time more recent than latest buffered vio time, failed to "
+        "SparseMapVisualLandmarksCallback: Initial vl msg time older than oldest buffered vio time, failed to "
         "initialize graph localizer.");
       return;
     }
@@ -61,6 +61,7 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
     params_.pose_node_adder.start_node = world_T_body;
     params_.pose_node_adder.starting_time = msg_time;
     params_.pose_node_adder.SetStartMeasurement();
+    LogInfo("SparseMapVisualLandmarksCallback: Initializing localizer with vl msg.");
     graph_localizer_.reset(new gl::GraphLocalizer(params_));
     // Only need the first vio measurement before the initial vl msg time
     // to ensure valid pose interpolation.
@@ -69,7 +70,8 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
       GraphVIOStateCallback(it->second);
     }
     vio_measurement_buffer_.Clear();
-  } else {  // Otherwise add measurement to graph
+  } else if (Initialized()) {  // Otherwise add measurement to graph
+    LogError("adding sparse map measurement to localizer!!!");
     graph_localizer_->AddSparseMapMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   }

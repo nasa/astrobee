@@ -172,7 +172,7 @@ void OfflineReplay::Run() {
     if (updated_vio_graph) {
       const auto vio_msg = graph_vio_simulator_->GraphVIOStateMsg();
       if (!vio_msg) {
-        LogWarningEveryN(50, "Run: Failed to get vio msg.");
+        LogWarningEveryN(200, "Run: Failed to get vio msg.");
       } else {
         // pose_extrapolator_wrapper_.GraphVIOStateCallback(*vio_msg);
         // TODO(rsoussan): Pass this to live measurement simulator? allow for simulated delay?
@@ -186,7 +186,7 @@ void OfflineReplay::Run() {
       // Pass latest loc state to imu augmentor if it is available.
       const auto localization_msg = graph_localizer_simulator_->GraphLocStateMsg();
       if (!localization_msg) {
-        LogWarningEveryN(50, "Run: Failed to get localization msg.");
+        LogWarningEveryN(200, "Run: Failed to get localization msg.");
       } else {
         // pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
