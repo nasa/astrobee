@@ -74,6 +74,29 @@ TEST_F(OfflineReplayParameterReaderTest, LiveMeasurementSimulatorParams) {
   EXPECT_EQ(params.save_optical_flow_images, false);
 }
 
+TEST_F(OfflineReplayParameterReaderTest, GraphLocalizerSimulatorParams) {
+  const auto& params = graph_localizer_simulator_params_;
+  EXPECT_NEAR(params.optimization_time, 0.05, 1e-6);
+}
+
+TEST_F(OfflineReplayParameterReaderTest, GraphVIOSimulatorParams) {
+  const auto& params = graph_vio_simulator_params_;
+  EXPECT_NEAR(params.optimization_time, 0.3, 1e-6);
+}
+
+TEST_F(OfflineReplayParameterReaderTest, OfflineReplayParams) {
+  const auto& params = offline_replay_params_;
+  EXPECT_EQ(params.save_optical_flow_images, false);
+  EXPECT_EQ(params.log_relative_time, false);
+  EXPECT_EQ(params.ar_min_num_landmarks, 5);
+  EXPECT_EQ(params.sparse_mapping_min_num_landmarks, 5);
+  // Taken using current nav cam extrinsics
+  const gtsam::Pose3 expected_body_T_cam(gtsam::Rot3(0.500, 0.500, 0.500, 0.500),
+                                         gtsam::Point3(0.1177, -0.0422, -0.0826));
+  EXPECT_MATRIX_NEAR(params.body_T_nav_cam, expected_body_T_cam, 1e-6);
+  // TODO(rsoussan): Check nav_cam_params
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
