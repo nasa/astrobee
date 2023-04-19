@@ -30,12 +30,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : SlidingWindowGraphOptimizer(params.sliding_window_graph_optimizer,
                                   std::make_unique<op::NonlinearOptimizer>(params.nonlinear_optimizer)),
       params_(params) {
-  // Initialize node adders
+  // Initialize sliding window node adders
   pose_node_adder_ =
     std::make_shared<na::PoseNodeAdder>(params_.pose_node_adder, params_.pose_node_adder_model, nodes());
+  AddSlidingWindowNodeAdder(pose_node_adder_);
   // Initialize factor adders
   sparse_map_loc_factor_adder_ =
     std::make_shared<fa::LocFactorAdder<na::PoseNodeAdder>>(params_.sparse_map_loc_factor_adder, pose_node_adder_);
+  AddFactorAdder(sparse_map_loc_factor_adder_);
 }
 
 void GraphLocalizer::AddPoseMeasurement(const lm::TimestampedPoseWithCovariance& pose_measurement) {

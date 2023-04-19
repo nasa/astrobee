@@ -33,14 +33,17 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
                                   std::make_unique<op::NonlinearOptimizer>(params.nonlinear_optimizer)),
       params_(params),
       standstill_(false) {
-  // Initialize node adders
+  // Initialize sliding window node adders
   combined_nav_state_node_adder_ = std::make_shared<na::CombinedNavStateNodeAdder>(
     params_.combined_nav_state_node_adder, params_.combined_nav_state_node_adder_model, nodes());
+  AddSlidingWindowNodeAdder(combined_nav_state_node_adder_);
   // Initialize factor adders
   vo_smart_projection_factor_adder_ = std::make_shared<fa::VoSmartProjectionFactorAdder<na::CombinedNavStateNodeAdder>>(
     params_.vo_smart_projection_factor_adder, combined_nav_state_node_adder_);
+  AddFactorAdder(vo_smart_projection_factor_adder_);
   standstill_factor_adder_ = std::make_shared<fa::StandstillFactorAdder<na::CombinedNavStateNodeAdder>>(
     params_.standstill_factor_adder, combined_nav_state_node_adder_);
+  AddFactorAdder(standstill_factor_adder_);
 }
 
 void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {

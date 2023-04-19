@@ -1,5 +1,9 @@
 - add graph vio to graph bag! (A)
-  - fix param loading in offline replay! (AA)
+  - why is graph vio msg not available? (AAAA)
+    - why are graph vio node times empty? (AAA)
+      - why is addmeasurementbasedfactors not being called??? (AAA)
+        - need to register factor and node adders!!!!
+            - check graph vio and graph loc!
   - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
   - plot_graph_bag
     - plot graph vio!!!! (AAA)
