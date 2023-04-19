@@ -472,7 +472,7 @@ int main(int argc, char** argv) {
     "view-images,v", po::bool_switch(&view_images)->default_value(false),
     "View images with projected features and error ratios for each provided image in the image directory. "
     "Helpful for tuning the error ratio or visualizing rotation movement while the script is running.")(
-    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
     "robot config file");
   po::positional_options_description p;
   p.add("image-directory", 1);

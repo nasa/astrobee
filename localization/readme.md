@@ -11,6 +11,9 @@ See the following publications for more details:
 
 If you are using the localizer or mapping pipeline in academic work, please cite the relevant publications above.
 
+# AstroLoc Library Quickstart
+See [Link](doc/astroloc_library_quickstart.pdf) for a tutorial on using the AstroLoc library and an example simple localizer.
+
 # Graph-based localization
 Various packages exist for graph-based localization. The optimizers package provides nonlinear and ISAM2 based optimizers that are used by the graph_optimizer and sliding_window_graph_optimizer packages that perform graph-based optimization using GTSAM. 
 The graph_optimizer package uses node_adders and factor_adders for node and factor creation and a provided optimizer for optimization.
