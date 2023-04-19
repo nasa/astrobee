@@ -1,4 +1,6 @@
 - add graph vio to graph bag! (A)
+  - fix param loading in offline replay! (AA)
+  - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
   - plot_graph_bag
     - plot graph vio!!!! (AAA)
     - plot graph loc!

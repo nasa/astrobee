@@ -55,7 +55,6 @@ OfflineReplay::OfflineReplay(const std::string& bag_name, const std::string& map
   config.AddFile("tools/offline_replay.config");
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   lc::LoadGraphVIOConfig(config, graph_config_path_prefix);
-
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
@@ -176,6 +175,7 @@ void OfflineReplay::Run() {
         LogWarningEveryN(50, "Run: Failed to get vio msg.");
       } else {
         // pose_extrapolator_wrapper_.GraphVIOStateCallback(*vio_msg);
+        // TODO(rsoussan): Pass this to live measurement simulator? allow for simulated delay?
         graph_localizer_simulator_->BufferGraphVIOStateMsg(*vio_msg);
         SaveMsg(*vio_msg, TOPIC_GRAPH_VIO_STATE, results_bag_);
       }

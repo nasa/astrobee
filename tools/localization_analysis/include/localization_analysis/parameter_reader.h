@@ -28,7 +28,8 @@
 #include <string>
 
 namespace localization_analysis {
-void LoadMessageBufferParams(config_reader::ConfigReader& config, MessageBufferParams& params);
+void LoadMessageBufferParams(config_reader::ConfigReader& config, MessageBufferParams& params,
+                             const std::string& prefix = "");
 void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, const std::string& bag_name,
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params);
