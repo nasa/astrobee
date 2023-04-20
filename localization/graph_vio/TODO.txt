@@ -1,8 +1,12 @@
+- when does getting covariance fail?? why is this happening???
+  - in ros_graph_vio??
+- why is graph vio being reset at the end of the bag?
 - avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet!! (AA)
     - add test for this! (AB)
 - slide window num states should be number of nodes, not number of keys!!!!
     - combined nav state node should count as one state!
       - test this!
+- add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
 - standstill factors added using all timestamps (AB)
   - should only spaced ones be used? adds more keys at timestamps between vo stamps!
 - add test to remove nodes using key vector! make sure this works! (AC)

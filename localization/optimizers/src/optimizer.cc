@@ -25,7 +25,11 @@ Optimizer::Optimizer(const OptimizerParams& params) : params_(params) { SetMargi
 
 boost::optional<gtsam::Matrix> Optimizer::Covariance(const gtsam::Key& key) const {
   if (!marginals_) return boost::none;
-  return marginals_->marginalCovariance(key);
+  try {
+    return marginals_->marginalCovariance(key);
+  } catch (...) {
+    return boost::none;
+  }
 }
 
 void Optimizer::CalculateMarginals(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values) {
