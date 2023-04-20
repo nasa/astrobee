@@ -28,6 +28,7 @@ boost::optional<gtsam::Matrix> Optimizer::Covariance(const gtsam::Key& key) cons
   try {
     return marginals_->marginalCovariance(key);
   } catch (...) {
+    LogError("Covariance: Failed to get covariance for key " << key);
     return boost::none;
   }
 }
