@@ -1,9 +1,18 @@
-- add graph vio to graph bag! (A)
-  - why is graph vio msg not available? (AAAA)
-    - why are graph vio node times empty? (AAA)
-      - why is addmeasurementbasedfactors not being called??? (AAA)
-        - need to register factor and node adders!!!!
-            - check graph vio and graph loc!
+- avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet!! (AA)
+    - add test for this! (AB)
+- slide window num states should be number of nodes, not number of keys!!!!
+    - combined nav state node should count as one state!
+      - test this!
+- standstill factors added using all timestamps (AB)
+  - should only spaced ones be used? adds more keys at timestamps between vo stamps!
+- add test to remove nodes using key vector! make sure this works! (AC)
+
+- what timestamp is graph vio initialized to? 
+            - how is it initialized? wait until receive first of msg? (AAB)
+
+  - dont add successive points in smart factors that are too close together
+
+offline replay:
   - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
   - plot_graph_bag
     - plot graph vio!!!! (AAA)
@@ -11,6 +20,10 @@
     - plot velocities and biases!
       - need to convert velocity frame in graph bag tool as well before integrating!
     - plot extrapolated states!
+
+ - add tutorial for simple odometry
+    - use pose and velocity (timestampcombinednode)
+    - use non single measurement factor adder
 
  - add pose_extrapolator package?
 

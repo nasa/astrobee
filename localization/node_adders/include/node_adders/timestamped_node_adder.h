@@ -177,9 +177,16 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
 
       std::vector<gtsam::SharedNoiseModel> prior_noise_models;
       for (const auto& key : keys) {
-        const auto prior_noise = localization_common::Robust(
-          gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
-        prior_noise_models.emplace_back(prior_noise);
+        // If covariance doesn't exist yet (can happen if the new start node hasn't been optimized yet)
+        // revert to the initial start noise for the prior.
+        try {
+          const auto prior_noise = localization_common::Robust(
+            gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(key)), huber_k);
+          prior_noise_models.emplace_back(prior_noise);
+        } catch (...) {
+          prior_noise_models = params_.start_noise_models;
+          break;
+        }
       }
       node_adder_model_.AddPriors(*oldest_node, prior_noise_models, *start_time, *nodes_, factors);
     } else {
