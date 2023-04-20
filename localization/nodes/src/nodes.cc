@@ -31,7 +31,7 @@ bool Nodes::Remove(const gtsam::Key& key) {
 bool Nodes::Remove(const gtsam::KeyVector& keys) {
   bool removed_value = false;
   for (const auto& key : keys) {
-    removed_value = removed_value || Remove(key);
+    removed_value = Remove(key) || removed_value;
   }
   return removed_value;
 }
