@@ -26,8 +26,8 @@ namespace lc = localization_common;
 namespace no = nodes;
 
 TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   EXPECT_EQ(timestamped_nodes.size(), 0);
   EXPECT_TRUE(timestamped_nodes.empty());
 
@@ -97,8 +97,8 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
 }
 
 TEST(TimestampedNodesTester, OldestLatest) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   // No elements
   {
     EXPECT_TRUE(timestamped_nodes.OldestTimestamp() == boost::none);
@@ -209,8 +209,8 @@ TEST(TimestampedNodesTester, OldestLatest) {
 }
 
 TEST(TimestampedNodesTester, LowerAndUpperBounds) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   // No elements
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(1.0);
@@ -360,8 +360,8 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
 }
 
 TEST(TimestampedNodesTester, LowerBoundOrEqual) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   const double node_1 = 1.23;
   const localization_common::Time timestamp_1 = 3.1;
   ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 1);
@@ -389,8 +389,8 @@ TEST(TimestampedNodesTester, LowerBoundOrEqual) {
 }
 
 TEST(TimestampedNodesTester, Closest) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   const double node_1 = 1.23;
   const localization_common::Time timestamp_1 = 3.1;
   ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 1);
@@ -425,8 +425,8 @@ TEST(TimestampedNodesTester, Closest) {
 }
 
 TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   const double t0 = 0;
   const double n0 = lc::RandomDouble();
   const int k0 = 1;
@@ -497,8 +497,8 @@ TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
 
 TEST(TimestampedNodesTester, RemoveOldNodes) {
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    no::TimestampedNodes<double> timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    no::TimestampedNodes<double> timestamped_nodes(values);
     const double t0 = 0;
     const double n0 = lc::RandomDouble();
     const double t1 = 1.001;
@@ -517,8 +517,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
 
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    no::TimestampedNodes<double> timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    no::TimestampedNodes<double> timestamped_nodes(values);
     const double t0 = 0;
     const double n0 = lc::RandomDouble();
     const double t1 = 1.001;
@@ -540,8 +540,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
     EXPECT_EQ(timestamps[2], t3);
   }
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    no::TimestampedNodes<double> timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    no::TimestampedNodes<double> timestamped_nodes(values);
     const double t0 = 0;
     const double n0 = lc::RandomDouble();
     const double t1 = 1.001;
@@ -563,8 +563,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
 
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    no::TimestampedNodes<double> timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    no::TimestampedNodes<double> timestamped_nodes(values);
     const double t0 = 0;
     const double n0 = lc::RandomDouble();
     const double t1 = 1.001;
@@ -585,8 +585,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
 
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    no::TimestampedNodes<double> timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    no::TimestampedNodes<double> timestamped_nodes(values);
     const double t0 = 0;
     const double n0 = lc::RandomDouble();
     const double t1 = 1.001;
@@ -606,8 +606,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
 }
 
 TEST(TimestampedNodesTester, Duration) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   EXPECT_EQ(timestamped_nodes.Duration(), 0);
   ASSERT_EQ(timestamped_nodes.Add(1.0, 1).size(), 1);
   EXPECT_EQ(timestamped_nodes.Duration(), 0);
@@ -618,8 +618,8 @@ TEST(TimestampedNodesTester, Duration) {
 }
 
 TEST(TimestampedNodesTester, Timestamps) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  no::TimestampedNodes<double> timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  no::TimestampedNodes<double> timestamped_nodes(values);
   {
     const auto timestamps = timestamped_nodes.Timestamps();
     EXPECT_EQ(timestamps.size(), 0);

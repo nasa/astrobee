@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef NODES_NODES_H_
-#define NODES_NODES_H_
+#ifndef NODES_VALUES_H_
+#define NODES_VALUES_H_
 
 #include <localization_common/logger.h>
 
@@ -28,18 +28,18 @@
 
 namespace nodes {
 // Wrapper class around GTSAM values.
-// Use one instance of this per graph, and pass the same Nodes shared_pointer
-// to any other specialized Nodes classes used.
-class Nodes {
+// Use one instance of this per graph and pass the same Values shared_pointer
+// to Nodes classes used in the same graph.
+class Values {
  public:
-  explicit Nodes(std::shared_ptr<gtsam::Values> values = std::make_shared<gtsam::Values>());
+  explicit Values(std::shared_ptr<gtsam::Values> values = std::make_shared<gtsam::Values>());
 
-  template <typename NodeType>
-  boost::optional<NodeType> Node(const gtsam::Key& key) const;
+  template <typename ValueType>
+  boost::optional<ValueType> Value(const gtsam::Key& key) const;
 
-  // Returns key for newly added node
-  template <typename NodeType>
-  gtsam::Key Add(const NodeType& node);
+  // Returns key for newly added value
+  template <typename ValueType>
+  gtsam::Key Add(const ValueType& value);
 
   bool Remove(const gtsam::Key& key);
 
@@ -64,28 +64,28 @@ class Nodes {
 };
 
 // Implementation
-template <typename NodeType>
-boost::optional<NodeType> Nodes::Node(const gtsam::Key& key) const {
+template <typename ValueType>
+boost::optional<ValueType> Values::Value(const gtsam::Key& key) const {
   try {
-    return values_->at<NodeType>(key);
+    return values_->at<ValueType>(key);
   } catch (...) {
     return boost::none;
   }
 }
 
-template <typename NodeType>
-gtsam::Key Nodes::Add(const NodeType& node) {
+template <typename ValueType>
+gtsam::Key Values::Add(const ValueType& value) {
   // Since latest_key_ is always incremented when a new key is added,
   // we don't need to worry about it already being in values_.
-  values_->insert(++latest_key_, node);
+  values_->insert(++latest_key_, value);
   return latest_key_;
 }
 
 template <class ARCHIVE>
-void Nodes::serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+void Values::serialize(ARCHIVE& ar, const unsigned int /*version*/) {
   ar& BOOST_SERIALIZATION_NVP(values_);
   ar& BOOST_SERIALIZATION_NVP(latest_key_);
 }
 }  // namespace nodes
 
-#endif  // NODES_NODES_H_
+#endif  // NODES_VALUES_H_

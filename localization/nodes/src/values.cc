@@ -15,20 +15,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 
 namespace nodes {
-Nodes::Nodes(std::shared_ptr<gtsam::Values> values) : values_(std::move(values)), latest_key_(0) {}
+Values::Values(std::shared_ptr<gtsam::Values> values) : values_(std::move(values)), latest_key_(0) {}
 
-bool Nodes::Contains(const gtsam::Key& key) const { return values_->exists(key); }
+bool Values::Contains(const gtsam::Key& key) const { return values_->exists(key); }
 
-bool Nodes::Remove(const gtsam::Key& key) {
+bool Values::Remove(const gtsam::Key& key) {
   if (!Contains(key)) return false;
   values_->erase(key);
   return true;
 }
 
-bool Nodes::Remove(const gtsam::KeyVector& keys) {
+bool Values::Remove(const gtsam::KeyVector& keys) {
   bool removed_value = false;
   for (const auto& key : keys) {
     removed_value = Remove(key) || removed_value;
@@ -36,5 +36,5 @@ bool Nodes::Remove(const gtsam::KeyVector& keys) {
   return removed_value;
 }
 
-size_t Nodes::size() const { return values_->size(); }
+size_t Values::size() const { return values_->size(); }
 }  // namespace nodes

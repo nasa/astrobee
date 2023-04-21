@@ -56,18 +56,18 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/combined_nav_state_nodes.cc
-  src/nodes.cc
+  src/values.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_nodes
-    test/test_nodes.test
-    test/test_nodes.cc
+  add_rostest_gtest(test_values
+    test/test_values.test
+    test/test_values.cc
   )
-  target_link_libraries(test_nodes
+  target_link_libraries(test_values
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_timestamped_nodes

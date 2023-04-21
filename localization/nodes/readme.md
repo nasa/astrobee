@@ -3,8 +3,8 @@
 # Package Overview
 The nodes package provides classes for adding nodes to a graph for optimization. Nodes are equivalent to state parameters that should always be added/removed/updated at the same time. For example, when performing visual-intertial odometry, a single node may contain pose, velocity and IMU bias values. For a simple localization graph, a single node may contain just a pose. For timestamped nodes containing a single type (such as just a pose), use the TimestampedNodes class. For timestamped nodes containing multiple types (such as the pose, velocity bias node), use the TimestampedCombinedNodes class and override the AddNode and GetNode methods. 
 
-## Nodes
-Wrapper around GTSAM values class that enables adding and removing nodes given their key.
+## Values 
+Wrapper around GTSAM values class that enables adding and removing values given their key.
 
 ## TimestampedNodes
 Class that enables adding and removing simple nodes containing a single type given their timestamp.

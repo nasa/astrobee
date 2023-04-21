@@ -26,7 +26,7 @@ class CombinedNavStateNodes : public TimestampedCombinedNodes<localization_commo
   using Base = TimestampedCombinedNodes<localization_common::CombinedNavState>;
 
  public:
-  explicit CombinedNavStateNodes(std::shared_ptr<Nodes> nodes);
+  explicit CombinedNavStateNodes(std::shared_ptr<Values> values);
 
   // For serialization only
   CombinedNavStateNodes() = default;

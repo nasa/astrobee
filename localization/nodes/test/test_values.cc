@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 
@@ -25,79 +25,79 @@
 namespace lc = localization_common;
 namespace no = nodes;
 
-TEST(NodesTester, AddRemove) {
-  no::Nodes nodes;
-  EXPECT_EQ(nodes.size(), 0);
+TEST(ValuesTester, AddRemove) {
+  no::Values values;
+  EXPECT_EQ(values.size(), 0);
 
   // Add element
   const double element_1 = 100.3;
-  const auto key_1 = nodes.Add(element_1);
-  EXPECT_TRUE(nodes.Contains(key_1));
-  EXPECT_FALSE(nodes.Contains(2));
-  EXPECT_EQ(nodes.size(), 1);
+  const auto key_1 = values.Add(element_1);
+  EXPECT_TRUE(values.Contains(key_1));
+  EXPECT_FALSE(values.Contains(2));
+  EXPECT_EQ(values.size(), 1);
   {
-    const auto bad_key_val = nodes.Node<double>(2);
+    const auto bad_key_val = values.Value<double>(2);
     EXPECT_TRUE(bad_key_val == boost::none);
-    const auto bad_type_val = nodes.Node<int>(2);
+    const auto bad_type_val = values.Value<int>(2);
     EXPECT_TRUE(bad_type_val == boost::none);
-    const auto good_val = nodes.Node<double>(key_1);
+    const auto good_val = values.Value<double>(key_1);
     ASSERT_TRUE(good_val != boost::none);
     EXPECT_EQ(good_val, element_1);
   }
 
   // Add element
   const double element_2 = 37.1;
-  const auto key_2 = nodes.Add(element_2);
-  EXPECT_TRUE(nodes.Contains(key_1));
-  EXPECT_TRUE(nodes.Contains(key_2));
-  EXPECT_FALSE(nodes.Contains(300));
-  EXPECT_EQ(nodes.size(), 2);
+  const auto key_2 = values.Add(element_2);
+  EXPECT_TRUE(values.Contains(key_1));
+  EXPECT_TRUE(values.Contains(key_2));
+  EXPECT_FALSE(values.Contains(300));
+  EXPECT_EQ(values.size(), 2);
   {
-    const auto bad_key_val = nodes.Node<double>(3);
+    const auto bad_key_val = values.Value<double>(3);
     EXPECT_TRUE(bad_key_val == boost::none);
-    const auto bad_type_val = nodes.Node<int>(key_2);
+    const auto bad_type_val = values.Value<int>(key_2);
     EXPECT_TRUE(bad_type_val == boost::none);
-    const auto good_val = nodes.Node<double>(key_1);
+    const auto good_val = values.Value<double>(key_1);
     ASSERT_TRUE(good_val != boost::none);
     EXPECT_EQ(good_val, element_1);
   }
   {
-    const auto good_val = nodes.Node<double>(key_2);
+    const auto good_val = values.Value<double>(key_2);
     ASSERT_TRUE(good_val != boost::none);
     EXPECT_EQ(good_val, element_2);
   }
 
   // Remove
-  EXPECT_TRUE(nodes.Remove(key_1));
-  EXPECT_FALSE(nodes.Contains(key_1));
-  EXPECT_TRUE(nodes.Contains(key_2));
-  EXPECT_EQ(nodes.size(), 1);
+  EXPECT_TRUE(values.Remove(key_1));
+  EXPECT_FALSE(values.Contains(key_1));
+  EXPECT_TRUE(values.Contains(key_2));
+  EXPECT_EQ(values.size(), 1);
   {
-    const auto good_val = nodes.Node<double>(key_2);
+    const auto good_val = values.Value<double>(key_2);
     ASSERT_TRUE(good_val != boost::none);
     EXPECT_EQ(good_val, element_2);
   }
 
   // Bad Remove
-  EXPECT_FALSE(nodes.Remove(key_1));
-  EXPECT_FALSE(nodes.Remove(100));
+  EXPECT_FALSE(values.Remove(key_1));
+  EXPECT_FALSE(values.Remove(100));
 
   // Remove
-  EXPECT_TRUE(nodes.Remove(key_2));
-  EXPECT_FALSE(nodes.Contains(key_1));
-  EXPECT_FALSE(nodes.Contains(key_2));
-  EXPECT_EQ(nodes.size(), 0);
+  EXPECT_TRUE(values.Remove(key_2));
+  EXPECT_FALSE(values.Contains(key_1));
+  EXPECT_FALSE(values.Contains(key_2));
+  EXPECT_EQ(values.size(), 0);
   {
-    const auto bad_val = nodes.Node<double>(key_2);
+    const auto bad_val = values.Value<double>(key_2);
     EXPECT_TRUE(bad_val == boost::none);
   }
 }
 
-TEST(NodesTester, Serialization) {
-  const no::Nodes nodes;
-  const auto serialized_nodes = gtsam::serializeBinary(nodes);
-  no::Nodes deserialized_nodes;
-  gtsam::deserializeBinary(serialized_nodes, deserialized_nodes);
+TEST(ValuesTester, Serialization) {
+  const no::Values values;
+  const auto serialized_values = gtsam::serializeBinary(values);
+  no::Values deserialized_values;
+  gtsam::deserializeBinary(serialized_values, deserialized_values);
 }
 
 // Run all the tests that were declared with TEST()

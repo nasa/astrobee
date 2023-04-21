@@ -19,9 +19,9 @@
 #ifndef NODES_TIMESTAMPED_COMBINED_NODES_H_
 #define NODES_TIMESTAMPED_COMBINED_NODES_H_
 
-#include <nodes/nodes.h>
 #include <localization_common/timestamped_set.h>
 #include <localization_common/time.h>
+#include <nodes/values.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
@@ -43,9 +43,9 @@ template <typename NodeType>
 // with CombinedType = false.
 class TimestampedCombinedNodes {
  public:
-  // Nodes should be provided by a graph optimizer and the same nodes
+  // Values should be provided by a graph optimizer and the same values
   // should be passed to all timestamped nodes in the graph.
-  explicit TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes);
+  explicit TimestampedCombinedNodes(std::shared_ptr<Values> values);
 
   // For serialization only
   TimestampedCombinedNodes() = default;
@@ -66,7 +66,7 @@ class TimestampedCombinedNodes {
   // with the provided key if it exists.
   // To return a combined node, use Node(timestamp) instead.
   template <typename T>
-  boost::optional<T> Node(const gtsam::Key& key) const;
+  boost::optional<T> Value(const gtsam::Key& key) const;
 
   // Returns the keys for a timestamped node given the timestamp if it exists.
   // If not, an empty key vector is returned.
@@ -138,7 +138,7 @@ class TimestampedCombinedNodes {
   const gtsam::Values& values() const;
 
  protected:
-  std::shared_ptr<Nodes> nodes_;
+  std::shared_ptr<Values> values_;
 
  private:
   // Removes a node with the provided keys if it exists.
@@ -163,7 +163,8 @@ class TimestampedCombinedNodes {
 
 // Implementation
 template <typename NodeType>
-TimestampedCombinedNodes<NodeType>::TimestampedCombinedNodes(std::shared_ptr<Nodes> nodes) : nodes_(std::move(nodes)) {}
+TimestampedCombinedNodes<NodeType>::TimestampedCombinedNodes(std::shared_ptr<Values> values)
+    : values_(std::move(values)) {}
 
 template <typename NodeType>
 gtsam::KeyVector TimestampedCombinedNodes<NodeType>::Add(const localization_common::Time timestamp,
@@ -189,8 +190,8 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::Node(
 
 template <typename NodeType>
 template <typename T>
-boost::optional<T> TimestampedCombinedNodes<NodeType>::Node(const gtsam::Key& key) const {
-  return nodes_->Node<T>(key);
+boost::optional<T> TimestampedCombinedNodes<NodeType>::Value(const gtsam::Key& key) const {
+  return values_->Value<T>(key);
 }
 
 template <typename NodeType>
@@ -211,7 +212,7 @@ bool TimestampedCombinedNodes<NodeType>::Remove(const localization_common::Time&
 
 template <typename NodeType>
 bool TimestampedCombinedNodes<NodeType>::Remove(const gtsam::KeyVector& keys) {
-  return nodes_->Remove(keys);
+  return values_->Remove(keys);
 }
 
 template <typename NodeType>
@@ -352,7 +353,7 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::ClosestNode(
 
 template <typename NodeType>
 const gtsam::Values& TimestampedCombinedNodes<NodeType>::values() const {
-  return nodes_->values();
+  return values_->values();
 }
 
 template <typename NodeType>
@@ -363,7 +364,7 @@ bool TimestampedCombinedNodes<NodeType>::Contains(const localization_common::Tim
 template <typename NodeType>
 template <class ARCHIVE>
 void TimestampedCombinedNodes<NodeType>::serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-  ar& BOOST_SERIALIZATION_NVP(nodes_);
+  ar& BOOST_SERIALIZATION_NVP(values_);
   ar& BOOST_SERIALIZATION_NVP(timestamp_keys_map_);
 }
 }  // namespace nodes

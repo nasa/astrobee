@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="nodes" type="test_nodes" test-name="test_nodes" />
+  <test pkg="nodes" type="test_values" test-name="test_values" />
 </launch>

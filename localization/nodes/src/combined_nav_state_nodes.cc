@@ -23,21 +23,21 @@
 namespace nodes {
 namespace lc = localization_common;
 
-CombinedNavStateNodes::CombinedNavStateNodes(std::shared_ptr<Nodes> nodes)
-    : TimestampedCombinedNodes<lc::CombinedNavState>(nodes) {}
+CombinedNavStateNodes::CombinedNavStateNodes(std::shared_ptr<Values> values)
+    : TimestampedCombinedNodes<lc::CombinedNavState>(values) {}
 
 gtsam::KeyVector CombinedNavStateNodes::AddNode(const lc::CombinedNavState& combined_nav_state) {
-  const auto key_pose = nodes_->Add(combined_nav_state.pose());
-  const auto key_velocity = nodes_->Add(combined_nav_state.velocity());
-  const auto key_bias = nodes_->Add(combined_nav_state.bias());
+  const auto key_pose = values_->Add(combined_nav_state.pose());
+  const auto key_velocity = values_->Add(combined_nav_state.velocity());
+  const auto key_bias = values_->Add(combined_nav_state.bias());
   return {key_pose, key_velocity, key_bias};
 }
 
 boost::optional<lc::CombinedNavState> CombinedNavStateNodes::GetNode(const gtsam::KeyVector& keys,
                                                                      const lc::Time timestamp) const {
-  const auto pose = Base::Node<gtsam::Pose3>(keys[0]);
-  const auto velocity = Base::Node<gtsam::Velocity3>(keys[1]);
-  const auto bias = Base::Node<gtsam::imuBias::ConstantBias>(keys[2]);
+  const auto pose = Base::Value<gtsam::Pose3>(keys[0]);
+  const auto velocity = Base::Value<gtsam::Velocity3>(keys[1]);
+  const auto bias = Base::Value<gtsam::imuBias::ConstantBias>(keys[2]);
   if (!pose || !velocity || !bias) return boost::none;
   return lc::CombinedNavState(*pose, *velocity, *bias, timestamp);
 }

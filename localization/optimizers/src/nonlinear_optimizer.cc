@@ -51,11 +51,13 @@ bool NonlinearOptimizer::Optimize(const gtsam::NonlinearFactorGraph& factors, gt
   } catch (gtsam::InvalidDenseElimination) {
     LogError("Optimize: Graph optimization failed, invalid dense elimination.");
     return false;
+  } catch (const std::exception& exception) {
+    LogError("Optimize: Graph optimization failed, " << exception.what());
+    return false;
   } catch (...) {
     LogError("Optimize: Graph optimization failed.");
     return false;
   }
-
   return true;
 }
 

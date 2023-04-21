@@ -1,18 +1,17 @@
-- when does getting covariance fail?? why is this happening???
-  - in ros_graph_vio??
-- why is graph vio being reset at the end of the bag?
-- avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet!! (AA)
-    - add test for this! (AB)
-- slide window num states should be number of nodes, not number of keys!!!!
-    - combined nav state node should count as one state!
-      - test this!
-- add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
-- standstill factors added using all timestamps (AB)
-  - should only spaced ones be used? adds more keys at timestamps between vo stamps!
-- add test to remove nodes using key vector! make sure this works! (AC)
+- graph optimizer num nodes should be renamed? (returns num values, not number nodes) (AAC)
+    - build all packages! run all tests!
 
 - what timestamp is graph vio initialized to? 
             - how is it initialized? wait until receive first of msg? (AAB)
+
+- add test for avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet
+- add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
+- add test in sliding window optimizer for removing old measurements from cumulative factors!
+- add test in sliding window optimizer for removing factors with old measurements!
+
+- standstill factors added using all timestamps (AB)
+  - should only spaced ones be used? adds more keys at timestamps between vo stamps!
+- add test to remove nodes using key vector! make sure this works! (AC)
 
   - dont add successive points in smart factors that are too close together
 
@@ -28,6 +27,8 @@ offline replay:
  - add tutorial for simple odometry
     - use pose and velocity (timestampcombinednode)
     - use non single measurement factor adder
+  - add tutorial for simple calibration
+  - add tutorial for simple mapping
 
  - add pose_extrapolator package?
 

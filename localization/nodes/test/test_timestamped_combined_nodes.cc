@@ -37,22 +37,22 @@ class TestCombinedNodes : public no::TimestampedCombinedNodes<CombinedObject> {
   using Base = no::TimestampedCombinedNodes<CombinedObject>;
 
  public:
-  explicit TestCombinedNodes(std::shared_ptr<no::Nodes> nodes) : Base(nodes) {}
+  explicit TestCombinedNodes(std::shared_ptr<no::Values> values) : Base(values) {}
 
   // For serialization only
   TestCombinedNodes() = default;
 
  private:
   gtsam::KeyVector AddNode(const CombinedObject& node) final {
-    const auto key_a = nodes_->Add(node.val_a);
-    const auto key_b = nodes_->Add(node.val_b);
+    const auto key_a = values_->Add(node.val_a);
+    const auto key_b = values_->Add(node.val_b);
     return {key_a, key_b};
   }
 
   boost::optional<CombinedObject> GetNode(const gtsam::KeyVector& keys,
                                           const localization_common::Time timestamp) const final {
-    const auto val_a = nodes_->Node<double>(keys[0]);
-    const auto val_b = nodes_->Node<double>(keys[1]);
+    const auto val_a = values_->Value<double>(keys[0]);
+    const auto val_b = values_->Value<double>(keys[1]);
     if (!val_a || !val_b) return boost::none;
     return CombinedObject(*val_a, *val_b);
   }
@@ -66,8 +66,8 @@ class TestCombinedNodes : public no::TimestampedCombinedNodes<CombinedObject> {
 };
 
 TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   EXPECT_EQ(timestamped_nodes.size(), 0);
   EXPECT_TRUE(timestamped_nodes.empty());
 
@@ -135,8 +135,8 @@ TEST(TimestampedNodesTester, AddRemoveContainsEmptySize) {
   }
 }
 TEST(TimestampedNodesTester, OldestLatest) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   // No elements
   {
     EXPECT_TRUE(timestamped_nodes.OldestTimestamp() == boost::none);
@@ -247,8 +247,8 @@ TEST(TimestampedNodesTester, OldestLatest) {
 }
 
 TEST(TimestampedNodesTester, LowerAndUpperBounds) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   // No elements
   {
     const auto lower_and_upper_bound_timestamps = timestamped_nodes.LowerAndUpperBoundTimestamps(1.0);
@@ -398,8 +398,8 @@ TEST(TimestampedNodesTester, LowerAndUpperBounds) {
 }
 
 TEST(TimestampedNodesTester, LowerBoundOrEqual) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   const CombinedObject node_1 = CombinedObject::Random();
   const localization_common::Time timestamp_1 = 3.1;
   ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
@@ -427,8 +427,8 @@ TEST(TimestampedNodesTester, LowerBoundOrEqual) {
 }
 
 TEST(TimestampedNodesTester, Closest) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   const CombinedObject node_1 = CombinedObject::Random();
   const localization_common::Time timestamp_1 = 3.1;
   ASSERT_EQ(timestamped_nodes.Add(timestamp_1, node_1).size(), 2);
@@ -463,8 +463,8 @@ TEST(TimestampedNodesTester, Closest) {
 }
 
 TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   const double t0 = 0;
   const CombinedObject node_0 = CombinedObject::Random();
   const double t1 = 1.001;
@@ -549,8 +549,8 @@ TEST(TimestampedNodesTester, OldKeysTimestampsAndNodes) {
 
 TEST(TimestampedNodesTester, RemoveOldNodes) {
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    TestCombinedNodes timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    TestCombinedNodes timestamped_nodes(values);
     const double t0 = 0;
     const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
@@ -569,8 +569,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
 
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    TestCombinedNodes timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    TestCombinedNodes timestamped_nodes(values);
     const double t0 = 0;
     const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
@@ -592,8 +592,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
     EXPECT_EQ(timestamps[2], t3);
   }
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    TestCombinedNodes timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    TestCombinedNodes timestamped_nodes(values);
     const double t0 = 0;
     const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
@@ -615,8 +615,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
 
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    TestCombinedNodes timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    TestCombinedNodes timestamped_nodes(values);
     const double t0 = 0;
     const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
@@ -637,8 +637,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
   }
 
   {
-    std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-    TestCombinedNodes timestamped_nodes(nodes);
+    std::shared_ptr<no::Values> values(new no::Values());
+    TestCombinedNodes timestamped_nodes(values);
     const double t0 = 0;
     const CombinedObject node_0 = CombinedObject::Random();
     const double t1 = 1.001;
@@ -658,8 +658,8 @@ TEST(TimestampedNodesTester, RemoveOldNodes) {
 }
 
 TEST(TimestampedNodesTester, Duration) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   const CombinedObject node_1 = CombinedObject::Random();
   const CombinedObject node_2 = CombinedObject::Random();
   const CombinedObject node_3 = CombinedObject::Random();
@@ -673,8 +673,8 @@ TEST(TimestampedNodesTester, Duration) {
 }
 
 TEST(TimestampedNodesTester, Timestamps) {
-  std::shared_ptr<no::Nodes> nodes(new no::Nodes());
-  TestCombinedNodes timestamped_nodes(nodes);
+  std::shared_ptr<no::Values> values(new no::Values());
+  TestCombinedNodes timestamped_nodes(values);
   {
     const auto timestamps = timestamped_nodes.Timestamps();
     EXPECT_EQ(timestamps.size(), 0);

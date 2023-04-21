@@ -26,7 +26,7 @@ class TimestampedNodes : public TimestampedCombinedNodes<NodeType> {
   using Base = TimestampedCombinedNodes<NodeType>;
 
  public:
-  explicit TimestampedNodes(std::shared_ptr<Nodes> nodes);
+  explicit TimestampedNodes(std::shared_ptr<Values> values);
 
   // For serialization only
   TimestampedNodes() = default;
@@ -47,12 +47,12 @@ class TimestampedNodes : public TimestampedCombinedNodes<NodeType> {
 
 // Implementation
 template <typename NodeType>
-TimestampedNodes<NodeType>::TimestampedNodes(std::shared_ptr<Nodes> nodes)
-    : TimestampedCombinedNodes<NodeType>(nodes) {}
+TimestampedNodes<NodeType>::TimestampedNodes(std::shared_ptr<Values> values)
+    : TimestampedCombinedNodes<NodeType>(values) {}
 
 template <typename NodeType>
 gtsam::KeyVector TimestampedNodes<NodeType>::AddNode(const NodeType& node) {
-  const auto key = this->nodes_->Add(node);
+  const auto key = this->values_->Add(node);
   return {key};
 }
 
@@ -60,7 +60,7 @@ template <typename NodeType>
 boost::optional<NodeType> TimestampedNodes<NodeType>::GetNode(const gtsam::KeyVector& keys,
                                                               const localization_common::Time timestamp) const {
   // Assumes keys only has a single key since using non-combined type
-  return Base::template Node<NodeType>(keys[0]);
+  return Base::template Value<NodeType>(keys[0]);
 }
 }  // namespace nodes
 
