@@ -23,7 +23,7 @@
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <optimizers/optimizer.h>
 #include <node_adders/node_adder.h>
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 #include <localization_common/stats_logger.h>
 #include <localization_common/time.h>
 
@@ -45,9 +45,9 @@ namespace graph_optimizer {
 // using image measurements. A VIO graph will solve for Pose/Velocity/IMU Bias (PVB) values at different timestamps, so
 // it will also contain a PVB NodeAdder that creates timestamped PVB nodes for the visual-odometry factors and links
 // these nodes using IMU measurements. See the FactorAdder and NodeAdder packages for more information and different
-// types of FactorAdders and NodeAdders. Maintains a set of nodes used for optimization. All NodeAdders added to the
-// GraphOptimizer should be constructed using the GraphOptimizer's nodes (accessable with the nodes() member function).
-// Acts as a base class for the SlidingWindowGraphOptimizer.
+// types of FactorAdders and NodeAdders. Maintains a set of values used for optimization. All NodeAdders added to the
+// GraphOptimizer should be constructed using the GraphOptimizer's values (accessable with the values() member
+// function). Acts as a base class for the SlidingWindowGraphOptimizer.
 class GraphOptimizer {
  public:
   // Construct GraphOptimizer with provided optimizer.
@@ -92,19 +92,19 @@ class GraphOptimizer {
   // Returns number of factors currently in the graph.
   const int num_factors() const;
 
-  // Returns number of nodes currently in the graph.
-  const int num_nodes() const;
+  // Returns number of values currently in the graph.
+  const int num_values() const;
 
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
 
-  // Returns a shared pointer to the nodes used by the graph optimizer.
+  // Returns a shared pointer to the values used by the graph optimizer.
   // All node adders added to the graph optimizer should be constructed
-  // with these nodes.
-  std::shared_ptr<nodes::Nodes> nodes();
+  // with these values.
+  std::shared_ptr<nodes::Values> values();
 
-  // Returns a const reference to the gtsam Values used within the Nodes object.
-  const gtsam::Values& values() const;
+  // Returns a const reference to the gtsam Values used within the Values object.
+  const gtsam::Values& gtsam_values() const;
 
   // Returns a reference to the stats logger
   localization_common::StatsLogger& stats_logger();
@@ -131,6 +131,9 @@ class GraphOptimizer {
   // Add averagers and timers for logging.
   void AddAveragersAndTimers();
 
+  // Returns a reference to the gtsam Values used within the Values object.
+  gtsam::Values& gtsam_values();
+
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
@@ -138,7 +141,7 @@ class GraphOptimizer {
     ar& BOOST_SERIALIZATION_NVP(params_);
     ar& BOOST_SERIALIZATION_NVP(optimizer_);
     ar& BOOST_SERIALIZATION_NVP(factors_);
-    ar& BOOST_SERIALIZATION_NVP(nodes_);
+    ar& BOOST_SERIALIZATION_NVP(values_);
     ar& BOOST_SERIALIZATION_NVP(factor_adders_);
     ar& BOOST_SERIALIZATION_NVP(node_adders_);
     ar& BOOST_SERIALIZATION_NVP(stats_logger_);
@@ -151,7 +154,7 @@ class GraphOptimizer {
   GraphOptimizerParams params_;
   std::unique_ptr<optimizers::Optimizer> optimizer_;
   gtsam::NonlinearFactorGraph factors_;
-  std::shared_ptr<nodes::Nodes> nodes_;
+  std::shared_ptr<nodes::Values> values_;
   std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;
   std::vector<std::shared_ptr<node_adders::NodeAdder>> node_adders_;
   localization_common::StatsLogger stats_logger_;

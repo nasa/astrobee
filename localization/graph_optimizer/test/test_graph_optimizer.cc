@@ -22,7 +22,7 @@
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
 #include <node_adders/node_adder.h>
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 #include <optimizers/optimizer.h>
 
 #include <gtest/gtest.h>
@@ -39,7 +39,7 @@ namespace op = optimizers;
 // TODO(rsoussan): Unify this with VO factor_adder test
 class SimpleNodeAdder : public na::NodeAdder {
  public:
-  explicit SimpleNodeAdder(std::shared_ptr<no::Nodes> nodes) : nodes_(nodes) {}
+  explicit SimpleNodeAdder(std::shared_ptr<no::Values> values) : values_(values) {}
 
   // Add prior factor and node
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& factors) final {
@@ -54,7 +54,7 @@ class SimpleNodeAdder : public na::NodeAdder {
   }
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
-    nodes_->Add(gtsam::Pose3::identity());
+    values_->Add(gtsam::Pose3::identity());
     return true;
   }
 
@@ -70,7 +70,7 @@ class SimpleNodeAdder : public na::NodeAdder {
   }
 
  private:
-  std::shared_ptr<no::Nodes> nodes_;
+  std::shared_ptr<no::Values> values_;
   const double huber_k = 1.345;
 };
 
@@ -114,7 +114,7 @@ class GraphOptimizerTest : public ::testing::Test {
   void Initialize(const go::GraphOptimizerParams& params) {
     std::unique_ptr<SimpleOptimizer> optimizer(new SimpleOptimizer(DefaultOptimizerParams()));
     graph_optimizer_.reset(new go::GraphOptimizer(params, std::move(optimizer)));
-    node_adder_.reset(new SimpleNodeAdder(graph_optimizer_->nodes()));
+    node_adder_.reset(new SimpleNodeAdder(graph_optimizer_->values()));
     factor_adder_.reset(new SimpleFactorAdder(DefaultFactorAdderParams(), node_adder_));
     graph_optimizer_->AddNodeAdder(node_adder_);
     graph_optimizer_->AddFactorAdder(factor_adder_);
@@ -151,18 +151,18 @@ TEST_F(GraphOptimizerTest, AddFactors) {
   Initialize(params);
   // Node and factor should be added for initial node adder node and prior
   EXPECT_EQ(graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(graph_optimizer_->num_values(), 1);
   // Add first factors
   EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
   EXPECT_EQ(graph_optimizer_->factors().size(), 2);
   EXPECT_EQ(graph_optimizer_->num_factors(), 2);
-  EXPECT_EQ(graph_optimizer_->num_nodes(), 2);
+  EXPECT_EQ(graph_optimizer_->num_values(), 2);
   EXPECT_TRUE(graph_optimizer_->Optimize());
   // Add second factors
   EXPECT_EQ(graph_optimizer_->AddFactors(1, 2), 1);
   EXPECT_EQ(graph_optimizer_->factors().size(), 3);
   EXPECT_EQ(graph_optimizer_->num_factors(), 3);
-  EXPECT_EQ(graph_optimizer_->num_nodes(), 3);
+  EXPECT_EQ(graph_optimizer_->num_values(), 3);
   EXPECT_TRUE(graph_optimizer_->Optimize());
 }
 
@@ -174,7 +174,7 @@ TEST_F(GraphOptimizerTest, Covariance) {
   EXPECT_EQ(graph_optimizer_->AddFactors(0, 1), 1);
   EXPECT_EQ(graph_optimizer_->factors().size(), 2);
   EXPECT_EQ(graph_optimizer_->num_factors(), 2);
-  EXPECT_EQ(graph_optimizer_->num_nodes(), 2);
+  EXPECT_EQ(graph_optimizer_->num_values(), 2);
   EXPECT_TRUE(graph_optimizer_->Optimize());
   const auto keys = node_adder_->Keys(0);
   const auto covariance = graph_optimizer_->Covariance(keys[0]);

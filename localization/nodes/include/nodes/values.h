@@ -50,9 +50,9 @@ class Values {
 
   size_t size() const;
 
-  const gtsam::Values& values() const { return *values_; }
+  const gtsam::Values& gtsam_values() const { return *values_; }
 
-  gtsam::Values& values() { return *values_; }
+  gtsam::Values& gtsam_values() { return *values_; }
 
  private:
   friend class boost::serialization::access;

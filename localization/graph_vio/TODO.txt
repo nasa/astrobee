@@ -29,6 +29,8 @@ offline replay:
     - use non single measurement factor adder
   - add tutorial for simple calibration
   - add tutorial for simple mapping
+    - add examples package! make sure these compile!!!
+      - add unit tests for these!!!!
 
  - add pose_extrapolator package?
 

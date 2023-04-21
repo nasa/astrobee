@@ -135,7 +135,7 @@ class TimestampedCombinedNodes {
   bool Contains(const localization_common::Time timestamp) const;
 
   // Const accessor for internal gtsam values.
-  const gtsam::Values& values() const;
+  const gtsam::Values& gtsam_values() const;
 
  protected:
   std::shared_ptr<Values> values_;
@@ -352,8 +352,8 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::ClosestNode(
 }
 
 template <typename NodeType>
-const gtsam::Values& TimestampedCombinedNodes<NodeType>::values() const {
-  return values_->values();
+const gtsam::Values& TimestampedCombinedNodes<NodeType>::gtsam_values() const {
+  return values_->gtsam_values();
 }
 
 template <typename NodeType>

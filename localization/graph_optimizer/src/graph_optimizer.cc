@@ -32,7 +32,7 @@ namespace op = optimizers;
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<optimizers::Optimizer> optimizer)
     : params_(params),
       optimizer_(std::move(optimizer)),
-      nodes_(new no::Nodes()),
+      values_(new no::Values()),
       stats_logger_(params_.log_stats_on_destruction) {
   AddAveragersAndTimers();
 }
@@ -67,7 +67,7 @@ bool GraphOptimizer::Optimize() {
   // Optimize
   LogDebug("Optimize: Optimizing.");
   optimization_timer_.Start();
-  const bool successful_optimization = optimizer_->Optimize(factors_, nodes_->values());
+  const bool successful_optimization = optimizer_->Optimize(factors_, gtsam_values());
   optimization_timer_.Stop();
 
   // iterations_averager_.Update(optimizer.iterations());
@@ -87,20 +87,22 @@ gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors_; }
 
 const int GraphOptimizer::num_factors() const { return factors_.size(); }
 
-const int GraphOptimizer::num_nodes() const { return nodes_->size(); }
+const int GraphOptimizer::num_values() const { return values_->size(); }
 
 const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
-std::shared_ptr<nodes::Nodes> GraphOptimizer::nodes() { return nodes_; }
+std::shared_ptr<nodes::Values> GraphOptimizer::values() { return values_; }
 
-const gtsam::Values& GraphOptimizer::values() const { return nodes_->values(); }
+const gtsam::Values& GraphOptimizer::gtsam_values() const { return values_->gtsam_values(); }
+
+gtsam::Values& GraphOptimizer::gtsam_values() { return values_->gtsam_values(); }
 
 lc::StatsLogger& GraphOptimizer::stats_logger() { return stats_logger_; }
 
 double GraphOptimizer::TotalGraphError() const {
   double total_error = 0;
   for (const auto& factor : factors_) {
-    const double error = factor->error(nodes_->values());
+    const double error = factor->error(gtsam_values());
     total_error += error;
   }
   return total_error;
@@ -115,7 +117,7 @@ void GraphOptimizer::Print() const {
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
-  factors_.saveGraph(of, nodes_->values());
+  factors_.saveGraph(of, gtsam_values());
 }
 
 boost::optional<const gtsam::Marginals&> GraphOptimizer::marginals() const { return optimizer_->marginals(); }
