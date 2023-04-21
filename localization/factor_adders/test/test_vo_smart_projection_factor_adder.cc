@@ -23,7 +23,7 @@
 #include <localization_measurements/feature_points_measurement.h>
 #include <node_adders/node_adder.h>
 #include <node_adders/utilities.h>
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 #include <vision_common/feature_point.h>
 
 #include <gtest/gtest.h>
@@ -56,15 +56,15 @@ class SimplePoseNodeAdder : public na::NodeAdder {
     return keys;
   }
 
-  const no::Nodes& nodes() const { return nodes_; }
+  const no::Values& values() const { return values_; }
 
-  no::Nodes& nodes() { return nodes_; }
+  no::Values& values() { return values_; }
 
   // Simulate measurement delay for node adder and control end of measurements time.
   double latest_measurement_time_ = 10;
 
  private:
-  no::Nodes nodes_;
+  no::Values values_;
 };
 
 class VoSmartProjectionFactorAdderTest : public ::testing::Test {
@@ -348,7 +348,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, ValidFactor) {
     measurements.emplace_back(measurement);
     const gtsam::Pose3 pose(gtsam::Rot3::identity(), gtsam::Point3(time, time, 0));
     // Add node here since not actually added in simple node adder
-    const auto key = node_adder_->nodes().Add(pose);
+    const auto key = node_adder_->values().Add(pose);
     added_keys.emplace_back(key);
   }
   factor_adder_->AddMeasurement(measurements[0]);
@@ -388,7 +388,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidLastMeasurementFactor) {
     }
     const gtsam::Pose3 pose(rotation, translation);
     // Add node here since not actually added in simple node adder
-    const auto key = node_adder_->nodes().Add(pose);
+    const auto key = node_adder_->values().Add(pose);
     added_keys.emplace_back(key);
   }
 
@@ -431,7 +431,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidMiddleMeasurementFactor) {
     }
     const gtsam::Pose3 pose(rotation, translation);
     // Add node here since not actually added in simple node adder
-    const auto key = node_adder_->nodes().Add(pose);
+    const auto key = node_adder_->values().Add(pose);
     added_keys.emplace_back(key);
   }
 
@@ -474,7 +474,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidLastTwoMeasurementsFactor) {
     }
     const gtsam::Pose3 pose(rotation, translation);
     // Add node here since not actually added in simple node adder
-    const auto key = node_adder_->nodes().Add(pose);
+    const auto key = node_adder_->values().Add(pose);
     added_keys.emplace_back(key);
   }
 
@@ -518,7 +518,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidFirstTwoMeasurementsFactor) {
     }
     const gtsam::Pose3 pose(rotation, translation);
     // Add node here since not actually added in simple node adder
-    const auto key = node_adder_->nodes().Add(pose);
+    const auto key = node_adder_->values().Add(pose);
     added_keys.emplace_back(key);
   }
 

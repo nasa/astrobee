@@ -147,7 +147,7 @@ int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddMeasurementBasedFactors(
   int num_added_factors = 0;
   num_added_factors = AddFactorsUsingDownsampledMeasurements(factors);
   // Attempt to fix broken factors if enabled
-  if (params_.fix_invalid_factors) FixSmartFactors(node_adder_->nodes().values(), factors);
+  if (params_.fix_invalid_factors) FixSmartFactors(node_adder_->values().gtsam_values(), factors);
   return num_added_factors;
 }
 

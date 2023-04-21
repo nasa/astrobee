@@ -23,7 +23,7 @@
 #include <localization_measurements/matched_projections_measurement.h>
 #include <node_adders/node_adder.h>
 #include <node_adders/utilities.h>
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 
 #include <gtsam/geometry/Pose3.h>
 
@@ -43,7 +43,7 @@ class SimplePoseNodeAdder : public na::NodeAdder {
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
     if (!CanAddNode(timestamp)) return false;
-    nodes_.Add(gtsam::Pose3::identity());
+    values_.Add(gtsam::Pose3::identity());
     return true;
   }
 
@@ -60,15 +60,15 @@ class SimplePoseNodeAdder : public na::NodeAdder {
     return keys;
   }
 
-  const no::Nodes& nodes() const { return nodes_; }
+  const no::Values& values() const { return values_; }
 
-  no::Nodes& nodes() { return nodes_; }
+  no::Values& values() { return values_; }
 
   // Simulate measurement delay for node adder and control end of measurements time.
   int latest_measurement_time_ = 10;
 
  private:
-  no::Nodes nodes_;
+  no::Values values_;
 };
 
 class LocFactorAdderTest : public ::testing::Test {
@@ -291,7 +291,7 @@ TEST_F(LocFactorAdderTest, ScaleProjectionNoiseWithLandmarkDistance) {
   factor_adder_->AddMeasurement(measurements_[0]);
   // Add first factors
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), params.max_num_projection_factors);
-  const auto world_T_body = node_adder_->nodes().Node<gtsam::Pose3>(factors_[0]->keys()[0]);
+  const auto world_T_body = node_adder_->values().Value<gtsam::Pose3>(factors_[0]->keys()[0]);
   ASSERT_TRUE(world_T_body != boost::none);
   // Check first factor noise
   {
@@ -341,7 +341,7 @@ TEST_F(LocFactorAdderTest, MinReprojectionError) {
   factor_adder_->AddMeasurement(measurement_0);
   // Add first factors
   EXPECT_EQ(factor_adder_->AddFactors(0, 1, factors_), 1);
-  const auto world_T_body = node_adder_->nodes().Node<gtsam::Pose3>(factors_[0]->keys()[0]);
+  const auto world_T_body = node_adder_->values().Value<gtsam::Pose3>(factors_[0]->keys()[0]);
   ASSERT_TRUE(world_T_body != boost::none);
   double projection_error;
   // Check projection error
