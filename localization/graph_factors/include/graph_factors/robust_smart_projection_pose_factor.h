@@ -72,6 +72,8 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     for (int i = 0; i < this->keys().size(); ++i) {
       if (keys_to_remove.count(this->keys()[i]) == 0) pruned_factor->add(this->measured()[i], this->keys()[i]);
     }
+    // If too few measurements, factor is invalid
+    if (pruned_factor->measured().size() < 2) return nullptr;
     return pruned_factor;
   }
 

@@ -180,10 +180,17 @@ gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::RemoveFactors(const gts
     const auto cumulative_factor = dynamic_cast<const gtsam::CumulativeFactor*>(factor_it->get());
     // TODO(rsoussan): Add function to create factor from keys and measurements that are removed!
     // Return this with removed factors.
+    // Try to remove old keys from cumulative factors
     if (cumulative_factor) {
       *factor_it = cumulative_factor->PrunedCopy(keys_to_remove_set);
-      ++factor_it;
-      continue;
+      // Remove pruned copy if it is invalid
+      if (!(*factor_it)) {
+        factor_it = factors().erase(factor_it);
+        continue;
+      } else {
+        ++factor_it;
+        continue;
+      }
     }
     bool remove_factor = false;
     const auto& factor_keys = (*factor_it)->keys();
