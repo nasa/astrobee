@@ -83,10 +83,10 @@ gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::MarginalFactors(
   }
 
   // Linearize Graph
-  const auto linearized_graph = old_factors.linearize(values());
+  const auto linearized_graph = old_factors.linearize(gtsam_values());
   const auto linear_marginal_factors =
     *(linearized_graph->eliminatePartialMultifrontal(old_keys, eliminate_function).second);
-  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, values());
+  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, gtsam_values());
 }
 
 gtsam::KeyVector SlidingWindowGraphOptimizer::OldKeys(const localization_common::Time oldest_allowed_time) const {

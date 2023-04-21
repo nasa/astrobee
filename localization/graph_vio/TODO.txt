@@ -1,5 +1,12 @@
 - graph optimizer num nodes should be renamed? (returns num values, not number nodes) (AAC)
     - build all packages! run all tests!
+        - sliding graph opt
+        - node adders
+        - factor adders
+        - graph vio
+        - graph loc
+        - ros graph vio/loc/pose extrapolator
+        - loc analysis
 
 - what timestamp is graph vio initialized to? 
             - how is it initialized? wait until receive first of msg? (AAB)

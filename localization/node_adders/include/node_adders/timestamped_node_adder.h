@@ -41,7 +41,7 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
   // Construct using nodes. Creates timestamped nodes interally.
   TimestampedNodeAdder(const TimestampedNodeAdderParams<NodeType>& params,
                        const typename NodeAdderModelType::Params& node_adder_model_params,
-                       std::shared_ptr<nodes::Nodes> nodes);
+                       std::shared_ptr<nodes::Values> values);
 
   // Construct using already constructed timestamped nodes.
   TimestampedNodeAdder(const TimestampedNodeAdderParams<NodeType>& params,
@@ -120,9 +120,9 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::TimestampedNodeAdder(
   const TimestampedNodeAdderParams<NodeType>& params,
-  const typename NodeAdderModelType::Params& node_adder_model_params, std::shared_ptr<nodes::Nodes> nodes)
+  const typename NodeAdderModelType::Params& node_adder_model_params, std::shared_ptr<nodes::Values> values)
     : params_(params),
-      nodes_(std::make_shared<TimestampedNodesType>(nodes)),
+      nodes_(std::make_shared<TimestampedNodesType>(values)),
       node_adder_model_(node_adder_model_params) {}
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>

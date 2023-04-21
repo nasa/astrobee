@@ -26,7 +26,7 @@
 #include <node_adders/pose_node_adder.h>
 #include <node_adders/pose_node_adder_model.h>
 #include <node_adders/pose_node_adder_params.h>
-#include <nodes/nodes.h>
+#include <nodes/values.h>
 #include <optimizers/optimizer.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
 
@@ -96,7 +96,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     sliding_window_graph_optimizer_.reset(
       new sw::SlidingWindowGraphOptimizer(DefaultSlidingWindowGraphOptimizerParams(), std::move(optimizer)));
     std::shared_ptr<no::TimestampedNodes<gtsam::Pose3>> timestamped_pose_nodes(
-      new no::TimestampedNodes<gtsam::Pose3>(sliding_window_graph_optimizer_->nodes()));
+      new no::TimestampedNodes<gtsam::Pose3>(sliding_window_graph_optimizer_->values()));
     pose_node_adder_.reset(
       new na::PoseNodeAdder(DefaultPoseNodeAdderParams(), DefaultPoseNodeAdderModelParams(), timestamped_pose_nodes));
     dummy_node_adder_.reset(new DummySlidingWindowNodeAdder());
@@ -200,7 +200,7 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
 TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 1);
   // Add first measurements
   // Add loc measurement at pose node initial time so no new pose nodes are added.
   AddLocMeasurement(0);
@@ -212,7 +212,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // Pose node duration: 0
   // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // No violations, nothing should be removed.
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 1);
   // Expect 2 factors (prior and measurement on first node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 2);
   EXPECT_SAME_LOC_POSE_FACTOR(1, 0);
@@ -227,7 +227,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // Pose node duration: 1
   // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // No violations, nothing should be removed.
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 2);
   // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
   EXPECT_SAME_LOC_POSE_FACTOR(1, 0);
@@ -247,7 +247,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
   // 1 2
   // Pose node num nodes: 2
   // Pose node duration: 1
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 2);
   // Expect 4 factors (prior and measurement on first node, between factor, measurement on second node)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
   // Pose prior removed then added last
@@ -258,7 +258,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {
 TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 1);
   // Add 3 nodes to populate graph with 4 nodes (max)
   const double time_increment = 0.1;
   for (int i = 1; i <= 3; ++i) {
@@ -272,7 +272,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   // Pose node duration: 0.3
   // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // No violations, nothing should be removed.
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 4);
   // Expect 7 factors (prior, three between factors, 3 measurements)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 7);
   // Violate num nodes limit
@@ -290,7 +290,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowNumNodesViolation) {
   // 0.1, 0.2, 0.3, 0.4
   // Pose node num nodes: 4
   // Pose node duration: 0.3
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 4);
   // Expect 8 factors (prior, three between factors, 4 measurements)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 8);
 }
@@ -299,7 +299,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersNewStartTime) {
   sliding_window_graph_optimizer_->AddSlidingWindowNodeAdder(dummy_node_adder_);
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 1);
   // Add 3 nodes to populate graph with 4 nodes (max)
   const double time_increment = 0.1;
   for (int i = 1; i <= 3; ++i) {
@@ -316,7 +316,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, TwoAddersNewStartTime) {
   // 0.2, 0.3
   // Pose node num nodes: 2
   // Pose node duration: 0.1
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 2);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 2);
   // Expect 3 factors (prior, one between factor, 2 measurements)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 4);
 }
@@ -326,7 +326,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowPruneCumulativeFactor) {
   using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<SmartFactorCalibration>;
   // Initial node and prior should be added for pose node adder
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 1);
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 1);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 1);
   // Add 4 nodes to populate graph with 5 nodes (1 over max)
   const double time_increment = 0.1;
   for (int i = 1; i <= 4; ++i) {
@@ -350,7 +350,7 @@ TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowPruneCumulativeFactor) {
   // Pose node duration: 0.4
   // Pose node limits: duration = 1, min_nodes = 1, max_nodes = 4
   // 1st node should be removed.
-  EXPECT_EQ(sliding_window_graph_optimizer_->num_nodes(), 4);
+  EXPECT_EQ(sliding_window_graph_optimizer_->num_values(), 4);
   // Expect 9 factors (prior, three between factors, 4 measurements, 1 smart factor)
   EXPECT_EQ(sliding_window_graph_optimizer_->num_factors(), 9);
   // Smart factor should be in first index since added before updating graph.
