@@ -35,7 +35,7 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
       standstill_(false) {
   // Initialize sliding window node adders
   combined_nav_state_node_adder_ = std::make_shared<na::CombinedNavStateNodeAdder>(
-    params_.combined_nav_state_node_adder, params_.combined_nav_state_node_adder_model, nodes());
+    params_.combined_nav_state_node_adder, params_.combined_nav_state_node_adder_model, values());
   AddSlidingWindowNodeAdder(combined_nav_state_node_adder_);
   // Initialize factor adders
   vo_smart_projection_factor_adder_ = std::make_shared<fa::VoSmartProjectionFactorAdder<na::CombinedNavStateNodeAdder>>(

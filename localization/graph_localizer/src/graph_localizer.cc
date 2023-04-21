@@ -32,7 +32,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       params_(params) {
   // Initialize sliding window node adders
   pose_node_adder_ =
-    std::make_shared<na::PoseNodeAdder>(params_.pose_node_adder, params_.pose_node_adder_model, nodes());
+    std::make_shared<na::PoseNodeAdder>(params_.pose_node_adder, params_.pose_node_adder_model, values());
   AddSlidingWindowNodeAdder(pose_node_adder_);
   // Initialize factor adders
   sparse_map_loc_factor_adder_ =
