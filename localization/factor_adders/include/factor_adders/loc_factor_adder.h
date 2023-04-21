@@ -149,7 +149,7 @@ int LocFactorAdder<PoseNodeAdderType>::AddLocProjectionFactor(
     LogError("AddLocProjectionFactors: Failed to get pose key.");
     return 0;
   }
-  const auto world_T_body = node_adder_->values().template Value<gtsam::Pose3>(*pose_key);
+  const auto world_T_body = node_adder_->nodes().template Value<gtsam::Pose3>(*pose_key);
   if (!world_T_body) {
     LogError("AddLocProjectionFactors: Failed to get world_T_body at timestamp "
              << matched_projections_measurement.timestamp << ".");

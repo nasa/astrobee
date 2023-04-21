@@ -152,7 +152,8 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     params.ideal_duration = 1;
     params.min_num_states = 1;
     params.max_num_states = 4;
-    params.Initialize();
+    params.SetStartNoiseModels();
+    params.SetStartMeasurement();
     return params;
   }
 
