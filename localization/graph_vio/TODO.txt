@@ -1,11 +1,3 @@
-- graph optimizer num nodes should be renamed? (returns num values, not number nodes) (AAC)
-    - build all packages! run all tests!
-        - ros graph loc/pose extrapolator
-        - loc analysis
-
-- what timestamp is graph vio initialized to? 
-            - how is it initialized? wait until receive first of msg? (AAB)
-
 - add test for avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet
 - add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
 - add test in sliding window optimizer for removing old measurements from cumulative factors!
@@ -17,6 +9,9 @@
 
   - dont add successive points in smart factors that are too close together
 
+- clean up pose measurement!!!!
+  - remove timestamped pose withcovariance? change this to a measurement?
+
 offline replay:
   - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
   - plot_graph_bag
@@ -26,11 +21,12 @@ offline replay:
       - need to convert velocity frame in graph bag tool as well before integrating!
     - plot extrapolated states!
 
- - add tutorial for simple odometry
+ - move tutorials to unit test!!!! (AAAA)
+ - add tutorial for simple odometry (AABB)
     - use pose and velocity (timestampcombinednode)
     - use non single measurement factor adder
-  - add tutorial for simple calibration
-  - add tutorial for simple mapping
+  - add tutorial for simple calibration (AACC)
+  - add tutorial for simple mapping (AADD)
     - add examples package! make sure these compile!!!
       - add unit tests for these!!!!
 
