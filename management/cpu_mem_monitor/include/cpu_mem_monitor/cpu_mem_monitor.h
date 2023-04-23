@@ -20,10 +20,7 @@
 #ifndef CPU_MEM_MONITOR_CPU_MEM_MONITOR_H_
 #define CPU_MEM_MONITOR_CPU_MEM_MONITOR_H_
 
-#include <pluginlib/class_list_macros.h>
-
-#include <ros/ros.h>
-#include <ros/package.h>
+#include <ff_common/ff_ros.h>
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -36,12 +33,12 @@
 
 #include <config_reader/config_reader.h>
 #include <cpu_mem_monitor/cpu.h>
-#include <ff_msgs/CpuState.h>
-#include <ff_msgs/CpuStateStamped.h>
-#include <ff_msgs/MemState.h>
-#include <ff_msgs/MemStateStamped.h>
+#include <ff_msgs/msg/cpu_state.hpp>
+#include <ff_msgs/msg/cpu_state_stamped.hpp>
+#include <ff_msgs/msg/mem_state.hpp>
+#include <ff_msgs/msg/mem_state_stamped.hpp>
 #include <ff_common/ff_names.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
 
 #include <cstdint>
 #include <string>
@@ -50,6 +47,7 @@
 
 namespace cpu_mem_monitor {
 
+
 enum LoadFaultState {
   ASSERTING,
   ASSERTED,
@@ -57,32 +55,32 @@ enum LoadFaultState {
   CLEARED
 };
 
-class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
+class CpuMemMonitor : public ff_util::FreeFlyerComponent {
  public:
   /**
    * CPU Memory monitor allocate, register, initialize model
    */
-  CpuMemMonitor();
+  explicit CpuMemMonitor(const rclcpp::NodeOptions & options);
   /**
    * destruct model
    */
   ~CpuMemMonitor();
 
  protected:
-  virtual void Initialize(ros::NodeHandle *nh);
+  virtual void Initialize(NodeHandle & nh);
   bool ReadParams();
 
  private:
   // Get the PIDs of the nodes to monitor
-  void GetPIDs(ros::TimerEvent const &te);
+  void GetPIDs();
 
   // Assert CPU loads and report if too high
-  void AssertCPULoadHighFaultCallback(ros::TimerEvent const& te);
-  void ClearCPULoadHighFaultCallback(ros::TimerEvent const& te);
+  void AssertCPULoadHighFaultCallback();
+  void ClearCPULoadHighFaultCallback();
 
   // Assert Memory loads and report if too high
-  void AssertMemLoadHighFaultCallback(ros::TimerEvent const& te);
-  void ClearMemLoadHighFaultCallback(ros::TimerEvent const& te);
+  void AssertMemLoadHighFaultCallback();
+  void ClearMemLoadHighFaultCallback();
 
   // Assert the collected CPU and Memory status
   void AssertCpuStats();
@@ -95,7 +93,7 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
   int CollectMemStats();
 
   // Callback to scan and publish the CPU and Memory stats
-  void PublishStatsCallback(ros::TimerEvent const &te);
+  void PublishStatsCallback();
 
  private:
   struct Load {
@@ -120,15 +118,15 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
   };
 
   config_reader::ConfigReader config_params_;
-  ros::Publisher cpu_state_pub_;            // Cpu stats publisher
-  ros::Publisher mem_state_pub_;            // Memory stats publisher
-  ros::Timer reload_params_timer_;          // Ckeck if parameters were updated
-  ros::Timer pid_timer_;                    // Update PIDs
-  ros::Timer stats_timer_;                  // Update stats
-  ros::Timer assert_cpu_load_fault_timer_;  // Check cpu load limits
-  ros::Timer clear_cpu_load_fault_timer_;   // Clear cpu fault timer
-  ros::Timer assert_mem_load_fault_timer_;  // Check memory load limits
-  ros::Timer clear_mem_load_fault_timer_;   // Clear memory fault timer
+  rclcpp::Publisher<ff_msgs::msg::CpuStateStamped>::SharedPtr cpu_state_pub_;
+  rclcpp::Publisher<ff_msgs::msg::MemStateStamped>::SharedPtr mem_state_pub_;
+  ff_util::FreeFlyerTimer reload_params_timer_;          // Ckeck if parameters were updated
+  ff_util::FreeFlyerTimer pid_timer_;                    // Update PIDs
+  ff_util::FreeFlyerTimer stats_timer_;                  // Update stats
+  ff_util::FreeFlyerTimer assert_cpu_load_fault_timer_;  // Check cpu load limits
+  ff_util::FreeFlyerTimer clear_cpu_load_fault_timer_;   // Clear cpu fault timer
+  ff_util::FreeFlyerTimer assert_mem_load_fault_timer_;  // Check memory load limits
+  ff_util::FreeFlyerTimer clear_mem_load_fault_timer_;   // Clear memory fault timer
   int pub_queue_size_;                      // Monitor publishing queue size
   double update_freq_hz_, update_pid_hz_;   // Publishing and PID update frequency
   struct sysinfo mem_info_;                 // Scope memory info from sysinfo
@@ -154,8 +152,8 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
 
 
   // Status messages to publish
-  ff_msgs::CpuStateStamped cpu_state_msg_;
-  ff_msgs::MemStateStamped mem_state_msg_;
+  ff_msgs::msg::CpuStateStamped cpu_state_msg_;
+  ff_msgs::msg::MemStateStamped mem_state_msg_;
 
   // Asserting faults
   LoadFaultState load_fault_state_;
@@ -171,20 +169,6 @@ int ParseLine(char* line) {
   line[i - 3] = '\0';
   i = atoi(p);
   return i;
-}
-
-std::string getHostfromURI(std::string uri) {
-  std::size_t uri_begin = uri.find_first_of("/");
-  std::size_t uri_end = uri.find_last_of(":");
-  if (std::string::npos != uri_begin && std::string::npos != uri_end &&
-      uri_begin <= uri_end) {
-    uri.erase(uri.begin() + uri_end, uri.end());
-    uri.erase(uri.begin(), uri.begin() + uri_begin + 2);
-    return uri;
-  } else {
-    ROS_ERROR_STREAM("Invalid URI, returning ");
-    return {};
-  }
 }
 
 }  // namespace cpu_mem_monitor

@@ -272,11 +272,10 @@ def generate_launch_description():
             #     plugin='sys_monitor::SysMonitor',
             #     name='sys_monitor',
             #     extra_arguments=[{'use_intra_process_comms': True}]),
-            # ComposableNode(
-            #     package='cpu_mem_monitor',
-            #     plugin='cpu_mem_monitor::CpuMemMonitor',
-            #     name='mlp_cpu_mem_monitor',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='cpu_mem_monitor',
+                plugin='cpu_mem_monitor::CpuMemMonitor',
+                name='mlp_cpu_mem_monitor'),
             # ComposableNode(
             #     package='disk_monitor',
             #     plugin='disk_monitor::DiskMonitor',
