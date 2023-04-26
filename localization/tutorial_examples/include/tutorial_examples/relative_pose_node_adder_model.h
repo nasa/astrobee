@@ -33,6 +33,9 @@
 #include <utility>
 
 namespace tutorial_examples {
+// Generates pose nodes and relative factors using interpolated
+// pose measurements. Uses GTSAM pose between factors for
+// relative factors.
 class RelativePoseNodeAdderModel
     : public node_adders::
         BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
@@ -50,14 +53,22 @@ class RelativePoseNodeAdderModel
   explicit RelativePoseNodeAdderModel(const Params& params)
       : Base(params) {}
 
+  // Adds a pose node at the provided timestamp using
+  // the interpolated pose measurement at that timestamp.
+  // TODO(rsoussan): This pose is in the wrong frame!!!!
   gtsam::KeyVector AddNode(
     const localization_common::Time timestamp,
     NodesType& nodes) const final {
     const auto pose = interpolator_.Interpolate(timestamp);
+    // Add pose to nodes container to create a new node in
+    // the graph.
     return nodes.Add(timestamp,
                      localization_common::GtPose(pose->pose));
   }
 
+  // Adds a relative pose factor using the relative pose
+  // between interpolated pose measurements at timestamp
+  // a and b.
   boost::optional<
     std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>>
   RelativeNodeAndNoise(
@@ -73,6 +84,8 @@ class RelativePoseNodeAdderModel
       relative_pose_noise);
   }
 
+  // Buffers a pose measurement for future use for node and
+  // relative factor creation.
   void AddMeasurement(
     const localization_measurements::
       PoseWithCovarianceMeasurement& measurement) {
@@ -83,6 +96,7 @@ class RelativePoseNodeAdderModel
         measurement.covariance));
   }
 
+  // Removes old pose measurements.
   void RemoveMeasurements(
     const localization_common::Time oldest_allowed_time) {
     // Keep lower bound so future measurements can be
@@ -90,6 +104,10 @@ class RelativePoseNodeAdderModel
     interpolator_.RemoveBelowLowerBoundValues(
       oldest_allowed_time);
   }
+
+  // Returns whether a node can be added at the provided
+  // timestamp, which is determined by whether pose measurements
+  // exist that bound that timestamp.
   bool CanAddNode(
     const localization_common::Time timestamp) const final {
     return interpolator_.WithinBounds(timestamp);

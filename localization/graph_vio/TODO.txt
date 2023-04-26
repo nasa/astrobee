@@ -1,4 +1,7 @@
 - add more comments to tutorial code! (AA)
+- issue when creating relative pose nodes??
+  - addNode() function uses interpolated pose to initialize node value, but this is 
+    in the wrong frame!!!!!!
 
 - add more extensive interface test?
   - add measurements in batches? optimize after batch adds?

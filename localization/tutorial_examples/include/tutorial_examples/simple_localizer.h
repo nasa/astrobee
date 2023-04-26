@@ -30,9 +30,16 @@
 #include <tutorial_examples/simple_localizer_params.h>
 
 namespace tutorial_examples {
+// Simple localizer that adds absolute pose factors using
+// absolute pose measurements (for example, from matches to a
+// preexisting map) and adds pose nodes and relative factors
+// using relative pose measurements (for example, from an
+// odometry provider). Uses a sliding window graph optimizer
+// and Levenberg-Marquardt nonlinear optimization.
 class SimpleLocalizer : public sliding_window_graph_optimizer::
                           SlidingWindowGraphOptimizer {
  public:
+  // Initialize and register the node and factor adders.
   explicit SimpleLocalizer(SimpleLocalizerParams& params)
       : SlidingWindowGraphOptimizer(
           params.sliding_window_graph_optimizer,
@@ -49,18 +56,23 @@ class SimpleLocalizer : public sliding_window_graph_optimizer::
     AddFactorAdder(factor_adder_);
   }
 
+  // Adds a relative pose measurement to the relative pose node
+  // adder.
   void AddRelativePoseMeasurement(
     const localization_measurements::
       PoseWithCovarianceMeasurement& measurement) {
     node_adder_->AddMeasurement(measurement);
   }
 
+  // Adds an absolute pose measurement to the absolute pose
+  // factor adder.
   void AddAbsolutePoseMeasurement(
     const localization_measurements::
       PoseWithCovarianceMeasurement& measurement) {
     factor_adder_->AddMeasurement(measurement);
   }
 
+  // Const accessor for optimized pose nodes.
   const nodes::TimestampedNodes<gtsam::Pose3>&
   timestamped_nodes() const {
     return node_adder_->nodes();

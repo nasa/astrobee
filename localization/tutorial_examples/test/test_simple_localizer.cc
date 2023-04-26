@@ -30,6 +30,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace te = tutorial_examples;
 
+// Generate a random pose measurement at the provided timestamp.
 lm::PoseWithCovarianceMeasurement
 RandomPoseWithCovarianceMeasurement(const lc::Time time) {
   return lm::PoseWithCovarianceMeasurement(

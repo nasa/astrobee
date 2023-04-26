@@ -30,11 +30,20 @@
 #include <gtsam/geometry/Pose3.h>
 
 namespace tutorial_examples {
+// Params are templated on the measurement type and node type.
+// Initial values should be provided for these to initialize the
+// first nodes and relative factors in the graph, and these
+// typically come from the first provided measurement.
 using RelativePoseNodeAdderParams =
   node_adders::MeasurementBasedTimestampedNodeAdderParams<
     localization_measurements::PoseWithCovarianceMeasurement,
     gtsam::Pose3>;
 
+// Adds relative pose nodes using provided pose with covariance
+// measurements. The node and relative factor creation is
+// handled by the relative pose node adder model.
+// Since the node used is a single type (gtsam::Pose3), use
+// the TimestampedNodes object as a node container.
 using RelativePoseNodeAdder =
   node_adders::MeasurementBasedTimestampedNodeAdder<
     localization_measurements::PoseWithCovarianceMeasurement,

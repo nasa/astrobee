@@ -34,6 +34,9 @@ namespace tutorial_examples {
 using AbsolutePoseFactorAdderParams =
   factor_adders::FactorAdderParams;
 
+// Adds GTSAM Pose Prior factors for absolute pose measurements.
+// Adds pose nodes using RelativePoseNodeAdder at the same
+// timestamps as the measurements.
 class AbsolutePoseFactorAdder
     : public factor_adders::SingleMeasurementBasedFactorAdder<
         localization_measurements::
@@ -49,6 +52,8 @@ class AbsolutePoseFactorAdder
         node_adder_(node_adder) {}
 
  private:
+  // Creates a pose factor and pose node for the given
+  // measurement.
   int AddFactorsForSingleMeasurement(
     const localization_measurements::
       PoseWithCovarianceMeasurement& measurement,
@@ -58,13 +63,16 @@ class AbsolutePoseFactorAdder
     // First key is pose key
     const auto& pose_key = keys[0];
     const auto pose_noise =
-      gtsam::noiseModel::Isotropic::Sigma(6, 0.1);
+      gtsam::noiseModel::Gaussian::Covariance(
+        measurement.covariance);
     const gtsam::PriorFactor<gtsam::Pose3>::shared_ptr
       pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
         pose_key, measurement.pose, pose_noise));
     factors.push_back(pose_prior_factor);
   }
 
+  // Able to add a factor if the node adder can create a node at
+  // the provided timestamp.
   bool CanAddFactor(
     const localization_common::Time time) const final {
     return node_adder_->CanAddNode(time);
