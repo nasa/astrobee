@@ -35,11 +35,11 @@ class SimpleLocalizer : public sliding_window_graph_optimizer::SlidingWindowGrap
     AddSlidingWindowNodeAdder(node_adder_);
   }
 
-  void AddRelativePoseMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement) {
+  void AddRelativePoseMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement) {
     node_adder_->AddMeasurement(measurement);
   }
 
-  void AddAbsolutePoseMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement) {
+  void AddAbsolutePoseMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement) {
     factor_adder_->AddMeasurement(measurement);
   }
 

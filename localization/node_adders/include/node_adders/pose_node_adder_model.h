@@ -20,7 +20,7 @@
 #define NODE_ADDERS_POSE_NODE_ADDER_MODEL_H_
 
 #include <localization_common/pose_with_covariance_interpolater.h>
-#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <localization_measurements/pose_with_covariance_measurement.h>
 #include <node_adders/between_factor_node_adder_model.h>
 #include <nodes/timestamped_nodes.h>
 
@@ -31,9 +31,9 @@
 
 namespace node_adders {
 class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
-                             localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3> {
+                             localization_measurements::PoseWithCovarianceMeasurement, gtsam::Pose3> {
   using Base =
-    BetweenFactorMeasurementBasedTimestampedNodeAdderModel<localization_measurements::TimestampedPoseWithCovariance,
+    BetweenFactorMeasurementBasedTimestampedNodeAdderModel<localization_measurements::PoseWithCovarianceMeasurement,
                                                            gtsam::Pose3>;
   using NodesType = nodes::TimestampedNodes<gtsam::Pose3>;
 
@@ -45,7 +45,7 @@ class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAd
   gtsam::KeyVector AddNode(const localization_common::Time timestamp, NodesType& nodes) const final;
   boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> RelativeNodeAndNoise(
     const localization_common::Time timestamp_a, const localization_common::Time timestamp_b) const final;
-  void AddMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement);
+  void AddMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement);
   // Keeps lower_bound measurement <= oldest_allowed_time to use for interpolation if needed.
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
   bool CanAddNode(const localization_common::Time timestamp) const final;

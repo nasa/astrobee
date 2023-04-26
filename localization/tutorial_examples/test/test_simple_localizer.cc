@@ -29,8 +29,8 @@ namespace te = tutorial_examples;
 
 // TODO(rsoussan): add special clang format file?
 
-lm::TimestampedPoseWithCovariance RandomPoseMeasurement(const lc::Time time) {
-  return lm::TimestampedPoseWithCovariance(lc::RandomPoseWithCovariance(), time);
+lm::PoseWithCovarianceMeasurement RandomPoseWithCovarianceMeasurement(const lc::Time time) {
+  return lm::PoseWithCovarianceMeasurement(lc::RandomPoseWithCovariance(), time);
 }
 
 TEST(SimpleLocalizerTest, Interface) {
@@ -39,8 +39,8 @@ TEST(SimpleLocalizerTest, Interface) {
   // Add relative and absolute pose measurements at successive
   // timestamps
   for (int i = 0; i < 10; ++i) {
-    localizer.AddRelativePoseMeasurement(RandomPoseMeasurement(i));
-    localizer.AddAbsolutePoseMeasurement(RandomPoseMeasurement(i));
+    localizer.AddRelativePoseMeasurement(RandomPoseWithCovarianceMeasurement(i));
+    localizer.AddAbsolutePoseMeasurement(RandomPoseWithCovarianceMeasurement(i));
   }
 
   localizer.Update();

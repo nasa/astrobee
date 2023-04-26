@@ -21,7 +21,7 @@
 
 #include <factor_adders/single_measurement_based_factor_adder.h>
 #include <localization_common/time.h>
-#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <localization_measurements/pose_with_covariance_measurement.h>
 #include <tutorial_examples/relative_pose_node_adder.h>
 
 #include <gtsam/linear/NoiseModel.h>
@@ -43,13 +43,13 @@ class AbsolutePoseFactorAdder : public factor_adders::SingleMeasurementBasedFact
  private:
   int AddFactorsForSingleMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement,
                                      gtsam::NonlinearFactorGraph& factors) final {
-    node_adder_->AddNode(measurement.time, factors);
-    const auto keys = node_adder_->Keys(measurement.time);
+    node_adder_->AddNode(measurement.timestamp, factors);
+    const auto keys = node_adder_->Keys(measurement.timestamp);
     // First key is pose key
     const auto& pose_key = keys[0];
     const auto pose_noise = gtsam::noiseModel::Isotropic::Sigma(6, 0.1);
     const gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
-      new gtsam::PriorFactor<gtsam::Pose3>(pose_key, localization_common::GtPose(measurement.pose), pose_noise));
+      new gtsam::PriorFactor<gtsam::Pose3>(pose_key, measurement.pose, pose_noise));
     factors.push_back(pose_prior_factor);
   }
 

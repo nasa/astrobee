@@ -19,7 +19,7 @@
 #ifndef TUTORIAL_EXAMPLES_RELATIVE_POSE_NODE_ADDER_H_
 #define TUTORIAL_EXAMPLES_RELATIVE_POSE_NODE_ADDER_H_
 
-#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <localization_measurements/pose_with_covariance_measurement.h>
 #include <node_adders/measurement_based_timestamped_node_adder.h>
 #include <nodes/timestamped_nodes.h>
 #include <tutorial_examples/relative_pose_node_adder_model.h>
@@ -28,11 +28,11 @@
 
 namespace tutorial_examples {
 using RelativePoseNodeAdderParams =
-  node_adders::MeasurementBasedTimestampedNodeAdderParams<localization_measurements::TimestampedPoseWithCovariance,
+  node_adders::MeasurementBasedTimestampedNodeAdderParams<localization_measurements::PoseWithCovarianceMeasurement,
                                                           gtsam::Pose3>;
 
 using RelativePoseNodeAdder =
-  node_adders::MeasurementBasedTimestampedNodeAdder<localization_measurements::TimestampedPoseWithCovariance,
+  node_adders::MeasurementBasedTimestampedNodeAdder<localization_measurements::PoseWithCovarianceMeasurement,
                                                     gtsam::Pose3, nodes::TimestampedNodes<gtsam::Pose3>,
                                                     RelativePoseNodeAdderModel>;
 }  // namespace tutorial_examples

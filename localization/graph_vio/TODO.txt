@@ -1,16 +1,17 @@
-- add test for avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet
-- add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
-- add test in sliding window optimizer for removing old measurements from cumulative factors!
-- add test in sliding window optimizer for removing factors with old measurements!
+- clean up pose measurement!!!! 
+  - remove timestamped pose withcovariance? change this to a measurement?
+ - add tutorial for simple odometry (AABB)
+    - use pose and velocity (timestampcombinednode)
+    - use non single measurement factor adder
+  - add tutorial for simple calibration (AACC)
+  - add tutorial for simple mapping (AADD)
+    - add examples package! make sure these compile!!!
+      - add unit tests for these!!!!
 
 - standstill factors added using all timestamps (AB)
   - should only spaced ones be used? adds more keys at timestamps between vo stamps!
-- add test to remove nodes using key vector! make sure this works! (AC)
 
-  - dont add successive points in smart factors that are too close together
-
-- clean up pose measurement!!!!
-  - remove timestamped pose withcovariance? change this to a measurement?
+- dont add successive points in smart factors that are too close together
 
 offline replay:
   - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
@@ -21,14 +22,7 @@ offline replay:
       - need to convert velocity frame in graph bag tool as well before integrating!
     - plot extrapolated states!
 
- - move tutorials to unit test!!!! (AAAA)
- - add tutorial for simple odometry (AABB)
-    - use pose and velocity (timestampcombinednode)
-    - use non single measurement factor adder
-  - add tutorial for simple calibration (AACC)
-  - add tutorial for simple mapping (AADD)
-    - add examples package! make sure these compile!!!
-      - add unit tests for these!!!!
+- test in sim! (E)
 
  - add pose_extrapolator package?
 
@@ -37,8 +31,12 @@ offline replay:
         ros_graph_vio: imu bias initializatoin? state changes? etc?
         graph_vio: standstill code? others?
         graph_localizer: system tests?
+    - add test for avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet
+    - add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
+    - add test in sliding window optimizer for removing old measurements from cumulative factors!
+    - add test in sliding window optimizer for removing factors with old measurements!
+    - add test to remove nodes using key vector! make sure this works! (AC)
 
-   - test in sim! (E)
 
   - graph vio:
     - add better way of getting relative covariance??

@@ -47,8 +47,8 @@ boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> PoseNodeAdderM
                                                           relative_pose_noise);
 }
 
-void PoseNodeAdderModel::AddMeasurement(const lm::TimestampedPoseWithCovariance& measurement) {
-  pose_interpolater_.Add(measurement.time, measurement.pose_with_covariance);
+void PoseNodeAdderModel::AddMeasurement(const lm::PoseWithCovarianceMeasurement& measurement) {
+  pose_interpolater_.Add(measurement.timestamp, measurement.PoseWithCovariance());
 }
 
 void PoseNodeAdderModel::RemoveMeasurements(const lc::Time oldest_allowed_time) {

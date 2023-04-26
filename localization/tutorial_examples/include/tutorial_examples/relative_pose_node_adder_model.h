@@ -20,7 +20,7 @@
 #define TUTORIAL_EXAMPLES_RELATIVE_POSE_NODE_ADDER_MODEL_H_
 
 #include <localization_common/pose_with_covariance_interpolater.h>
-#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <localization_measurements/pose_with_covariance_measurement.h>
 #include <node_adders/between_factor_node_adder_model.h>
 #include <nodes/timestamped_nodes.h>
 
@@ -31,10 +31,10 @@
 
 namespace tutorial_examples {
 class RelativePoseNodeAdderModel : public node_adders::BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
-                                     localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3> {
+                                     localization_measurements::PoseWithCovarianceMeasurement, gtsam::Pose3> {
  public:
   using Base = node_adders::BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
-    localization_measurements::TimestampedPoseWithCovariance, gtsam::Pose3>;
+    localization_measurements::PoseWithCovarianceMeasurement, gtsam::Pose3>;
   using NodesType = nodes::TimestampedNodes<gtsam::Pose3>;
   using Params = node_adders::TimestampedNodeAdderModelParams;
 
@@ -53,8 +53,10 @@ class RelativePoseNodeAdderModel : public node_adders::BetweenFactorMeasurementB
                                                             relative_pose_noise);
   }
 
-  void AddMeasurement(const localization_measurements::TimestampedPoseWithCovariance& measurement) {
-    interpolator_.Add(measurement.time, measurement.pose_with_covariance);
+  void AddMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement) {
+    interpolator_.Add(measurement.timestamp,
+                      localization_common::PoseWithCovariance(localization_common::EigenPose(measurement.pose),
+                                                              measurement.covariance));
   }
 
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
