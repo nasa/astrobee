@@ -42,7 +42,7 @@ class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraph
   GraphLocalizer() {}
 
   // Adds pose measurement to the pose node adder.
-  void AddPoseMeasurement(const localization_measurements::TimestampedPoseWithCovariance& pose_measurement);
+  void AddPoseMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& pose_measurement);
 
   // Adds sparse map matched projections measurement to loc factor adder.
   void AddSparseMapMatchedProjectionsMeasurement(

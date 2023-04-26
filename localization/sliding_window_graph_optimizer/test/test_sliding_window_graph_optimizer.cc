@@ -118,9 +118,8 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
   }
 
   void AddPoseMeasurement(const double time) {
-    const lm::TimestampedPoseWithCovariance pose_measurement(lc::RandomPoseWithCovariance(), time);
+    const lm::PoseWithCovarianceMeasurement pose_measurement(lc::RandomPoseWithCovariance(), time);
     pose_node_adder_->AddMeasurement(pose_measurement);
-    pose_measurements_.emplace_back(pose_measurement);
   }
 
   sw::SlidingWindowGraphOptimizerParams DefaultSlidingWindowGraphOptimizerParams() {
@@ -195,7 +194,6 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
   std::shared_ptr<na::PoseNodeAdder> pose_node_adder_;
   std::shared_ptr<DummySlidingWindowNodeAdder> dummy_node_adder_;
   std::vector<lm::MatchedProjectionsMeasurement> loc_measurements_;
-  std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
 };
 
 TEST_F(SlidingWindowGraphOptimizerTest, SlideWindowDurationViolation) {

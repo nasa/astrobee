@@ -46,7 +46,7 @@ class PoseNodeAdderTest : public ::testing::Test {
       const lc::Time time = start_time_ + time_increment_ * i;
       const auto pose = lc::Isometry3d(translation, Eigen::Matrix3d::Identity());
       const lc::PoseWithCovariance pose_with_covariance(pose, lc::RandomPoseCovariance());
-      const lm::TimestampedPoseWithCovariance pose_measurement(pose_with_covariance, time);
+      const lm::PoseWithCovarianceMeasurement pose_measurement(pose_with_covariance, time);
       pose_measurements_.emplace_back(pose_measurement);
       timestamps_.emplace_back(time);
     }
@@ -241,7 +241,7 @@ class PoseNodeAdderTest : public ::testing::Test {
   std::unique_ptr<na::PoseNodeAdder> pose_node_adder_;
   na::PoseNodeAdderParams params_;
   na::TimestampedNodeAdderModelParams node_adder_model_params_;
-  std::vector<lm::TimestampedPoseWithCovariance> pose_measurements_;
+  std::vector<lm::PoseWithCovarianceMeasurement> pose_measurements_;
   std::vector<lc::Time> timestamps_;
   gtsam::NonlinearFactorGraph factors_;
 

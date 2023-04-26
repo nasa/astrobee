@@ -40,7 +40,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   AddFactorAdder(sparse_map_loc_factor_adder_);
 }
 
-void GraphLocalizer::AddPoseMeasurement(const lm::TimestampedPoseWithCovariance& pose_measurement) {
+void GraphLocalizer::AddPoseMeasurement(const lm::PoseWithCovarianceMeasurement& pose_measurement) {
   pose_node_adder_->AddMeasurement(pose_measurement);
 }
 

@@ -42,6 +42,8 @@ struct PoseWithCovarianceMeasurement : public Measurement {
     return localization_common::PoseWithCovariance(localization_common::EigenPose(pose), covariance);
   }
 
+  PoseWithCovarianceMeasurement() = default;
+
   gtsam::Pose3 pose;
   PoseCovariance covariance;
 };

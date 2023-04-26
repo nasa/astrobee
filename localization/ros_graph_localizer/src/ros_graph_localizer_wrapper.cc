@@ -98,9 +98,8 @@ void RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
   const auto& latest_combined_nav_state_msg = graph_vio_state_msg.combined_nav_states.combined_nav_states.back();
   const auto latest_combined_nav_state = lc::CombinedNavStateFromMsg(latest_combined_nav_state_msg);
   const auto latest_covariances = lc::CombinedNavStateCovariancesFromMsg(latest_combined_nav_state_msg);
-  const lm::TimestampedPoseWithCovariance pose_measurement(
-    lc::PoseWithCovariance(lc::EigenPose(latest_combined_nav_state.pose()), latest_covariances.pose_covariance()),
-    latest_combined_nav_state.timestamp());
+  const lm::PoseWithCovarianceMeasurement pose_measurement(
+    latest_combined_nav_state.pose(), latest_covariances.pose_covariance(), latest_combined_nav_state.timestamp());
   graph_localizer_->AddPoseMeasurement(pose_measurement);
   last_vio_msg_time_ = timestamp;
 }
