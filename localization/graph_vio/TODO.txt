@@ -1,4 +1,10 @@
- - add tutorial for simple odometry (AABB)
+- add more comments to tutorial code! (AA)
+
+- add more extensive interface test?
+  - add measurements in batches? optimize after batch adds?
+  - add real data? expect certain results?
+ 
+- add tutorial for simple odometry (AABB)
     - use pose and velocity (timestampcombinednode)
     - use non single measurement factor adder
   - add tutorial for simple calibration (AACC)
