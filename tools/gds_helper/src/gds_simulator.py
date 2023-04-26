@@ -211,11 +211,11 @@ def gain_control():
                 + "You are the current controller"
             )
         )
-        eval(input("Press any key to continue"))
+        input("Press Enter to continue")
         return True
     else:
         print(("Astrobee's controller is: " + current_controller + "\n"))
-        eval(input("Press any key to grab control of the robot"))
+        input("Press Enter to grab control of the robot")
 
     # Request and grab control
     print(" > Requesting control")
