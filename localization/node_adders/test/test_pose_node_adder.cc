@@ -81,12 +81,12 @@ class PoseNodeAdderTest : public ::testing::Test {
 
   Eigen::Isometry3d pose(const int index) {
     if (index == -1) return lc::EigenPose(params_.start_node);
-    return pose_measurements_[index].pose_with_covariance.pose;
+    return lc::EigenPose(pose_measurements_[index].pose);
   }
 
   lc::PoseCovariance covariance(const int index) {
     if (index == -1) return na::Covariance(params_.start_noise_models[0]);
-    return pose_measurements_[index].pose_with_covariance.covariance;
+    return pose_measurements_[index].covariance;
   }
 
   lc::Time timestamp(const int index) {
