@@ -1,5 +1,3 @@
-- clean up pose measurement!!!! 
-  - remove timestamped pose withcovariance? change this to a measurement?
  - add tutorial for simple odometry (AABB)
     - use pose and velocity (timestampcombinednode)
     - use non single measurement factor adder

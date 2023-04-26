@@ -30,9 +30,15 @@ using SimpleLocalizerParams = sliding_window_graph_optimizer::SlidingWindowGraph
 class SimpleLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraphOptimizer {
  public:
   explicit SimpleLocalizer(const SimpleLocalizerParams& params) : params_(params) {
-    // Register factor and node adders
-    AddFactorAdder(factor_adder_);
+    // Initialize node and factor adders
+    RelativePoseNodeAdderParams node_adder_params;
+    node_adder_params.start_noise_models.emplace_back(gtsam::noiseModel::Isotropic::Sigma(6, 0.1));
+    node_adder_ =
+      std::make_shared<RelativePoseNodeAdder>(node_adder_params, RelativePoseNodeAdderModel::Params(), values());
+    factor_adder_ = std::make_shared<AbsolutePoseFactorAdder>(AbsolutePoseFactorAdderParams(), node_adder_);
+    // Register node and factor adders
     AddSlidingWindowNodeAdder(node_adder_);
+    AddFactorAdder(factor_adder_);
   }
 
   void AddRelativePoseMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement) {
