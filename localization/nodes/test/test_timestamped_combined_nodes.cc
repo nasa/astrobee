@@ -410,20 +410,24 @@ TEST(TimestampedNodesTester, LowerBoundOrEqual) {
   const localization_common::Time timestamp_3 = 7.88;
   ASSERT_EQ(timestamped_nodes.Add(timestamp_3, node_3).size(), 2);
 
-  const auto too_low_node = timestamped_nodes.LowerBoundOrEqualNode(1.23);
+  const auto too_low_node = timestamped_nodes.LowerBoundOrEqual(1.23);
   EXPECT_TRUE(too_low_node == boost::none);
-  const auto lowest_node = timestamped_nodes.LowerBoundOrEqualNode(4.11);
+  const auto lowest_node = timestamped_nodes.LowerBoundOrEqual(4.11);
   ASSERT_TRUE(lowest_node != boost::none);
-  EXPECT_EQ(*lowest_node, node_1);
-  const auto middle_node = timestamped_nodes.LowerBoundOrEqualNode(6.61);
+  EXPECT_EQ(lowest_node->value, node_1);
+  EXPECT_EQ(lowest_node->timestamp, timestamp_1);
+  const auto middle_node = timestamped_nodes.LowerBoundOrEqual(6.61);
   ASSERT_TRUE(middle_node != boost::none);
-  EXPECT_EQ(*middle_node, node_2);
-  const auto upper_node = timestamped_nodes.LowerBoundOrEqualNode(900);
+  EXPECT_EQ(middle_node->value, node_2);
+  EXPECT_EQ(middle_node->timestamp, timestamp_2);
+  const auto upper_node = timestamped_nodes.LowerBoundOrEqual(900);
   ASSERT_TRUE(upper_node != boost::none);
-  EXPECT_EQ(*upper_node, node_3);
-  const auto equal_node = timestamped_nodes.LowerBoundOrEqualNode(timestamp_2);
+  EXPECT_EQ(upper_node->value, node_3);
+  EXPECT_EQ(upper_node->timestamp, timestamp_3);
+  const auto equal_node = timestamped_nodes.LowerBoundOrEqual(timestamp_2);
   ASSERT_TRUE(equal_node != boost::none);
-  EXPECT_EQ(*equal_node, node_2);
+  EXPECT_EQ(equal_node->value, node_2);
+  EXPECT_EQ(equal_node->timestamp, timestamp_2);
 }
 
 TEST(TimestampedNodesTester, Closest) {

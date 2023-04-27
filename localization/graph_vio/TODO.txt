@@ -3,10 +3,13 @@
     in the wrong frame!!!!!!
       - need to get relative distance to last added node!!!!!!!
         - update test and pose node adder model in code!!!
-          - add test with non zero start pose! make sure node values are still correct! (A)
+          - add test with non zero start pose! make sure node values are still correct! (AB)
           - update nodes tests!! (AA)
-        - update combined nav state adder model???
-        - update node adder tests?
+        - remove relative pose node adder files in tutorial examples, use pose node adder! 
+          - move aboslute pose adder to factor adders! rename??
+          - for vio, use combined nav state adder!
+          - add simple odometry factor adder!
+            - put this in factor adders!
 
 - add more extensive interface test? (AB)
   - add measurements in batches? optimize after batch adds?
