@@ -60,7 +60,6 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
                                                             params_.sparse_map_loc_factor_adder.body_T_cam.inverse());
     params_.pose_node_adder.start_node = world_T_body;
     params_.pose_node_adder.starting_time = msg_time;
-    params_.pose_node_adder.SetStartMeasurement();
     LogInfo("SparseMapVisualLandmarksCallback: Initializing localizer with vl msg.");
     graph_localizer_.reset(new gl::GraphLocalizer(params_));
     // Only need the first vio measurement before the initial vl msg time

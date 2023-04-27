@@ -21,7 +21,7 @@
 #include <localization_common/time.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/pose_with_covariance_measurement.h>
-#include <node_adders/measurement_based_timestamped_node_adder_params.h>
+#include <node_adders/timestamped_node_adder_params.h>
 #include <node_adders/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -29,14 +29,7 @@
 #include <boost/serialization/serialization.hpp>
 
 namespace node_adders {
-struct PoseNodeAdderParams
-    : public MeasurementBasedTimestampedNodeAdderParams<localization_measurements::PoseWithCovarianceMeasurement,
-                                                        gtsam::Pose3> {
-  void SetStartMeasurement() {
-    const localization_common::PoseCovariance starting_covariance = Covariance(start_noise_models[0]);
-    start_measurement =
-      localization_measurements::PoseWithCovarianceMeasurement(start_node, starting_covariance, starting_time);
-  }
+struct PoseNodeAdderParams : public TimestampedNodeAdderParams<gtsam::Pose3> {
   void SetStartNoiseModels() {
     const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << starting_prior_translation_stddev,
                                                   starting_prior_translation_stddev, starting_prior_translation_stddev,

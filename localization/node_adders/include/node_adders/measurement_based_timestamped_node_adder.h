@@ -19,8 +19,8 @@
 #ifndef NODE_ADDERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_ADDER_H_
 #define NODE_ADDERS_MEASUREMENT_BASED_TIMESTAMPED_NODE_ADDER_H_
 
-#include <node_adders/measurement_based_timestamped_node_adder_params.h>
 #include <node_adders/timestamped_node_adder.h>
+#include <node_adders/timestamped_node_adder_params.h>
 
 namespace node_adders {
 
@@ -32,7 +32,7 @@ class MeasurementBasedTimestampedNodeAdder
   using Base = TimestampedNodeAdder<NodeType, TimestampedNodesType, MeasurementBasedTimestampedNodeAdderModelType>;
 
  public:
-  using Params = MeasurementBasedTimestampedNodeAdderParams<MeasurementType, NodeType>;
+  using Params = TimestampedNodeAdderParams<NodeType>;
   // Construct using nodes. Creates timestamped nodes interally.
   MeasurementBasedTimestampedNodeAdder(
     const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
@@ -72,10 +72,7 @@ MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodes
   MeasurementBasedTimestampedNodeAdder(
     const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<nodes::Values> values)
-    : Base(params, node_adder_model_params, std::move(values)) {
-  // Store start measurement so future relative estimates can be computed wrt this
-  AddMeasurement(params.start_measurement);
-}
+    : Base(params, node_adder_model_params, std::move(values)) {}
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedTimestampedNodeAdderModelType>
@@ -84,10 +81,7 @@ MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodes
   MeasurementBasedTimestampedNodeAdder(
     const Params& params, const typename MeasurementBasedTimestampedNodeAdderModelType::Params& node_adder_model_params,
     std::shared_ptr<TimestampedNodesType> timestamped_nodes)
-    : Base(params, node_adder_model_params, std::move(timestamped_nodes)) {
-  // Store start measurement so future relative estimates can be computed wrt this
-  AddMeasurement(params.start_measurement);
-}
+    : Base(params, node_adder_model_params, std::move(timestamped_nodes)) {}
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
           typename MeasurementBasedTimestampedNodeAdderModelType>

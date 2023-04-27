@@ -58,9 +58,11 @@ class PoseNodeAdderTest : public ::testing::Test {
     }
   }
 
-  void RandomInitialize() {
+  void RandomInitialize() { RandomInitialize(lc::RandomDouble()); }
+
+  void RandomInitialize(const lc::Time starting_time) {
     params_.start_node = lc::RandomPose();
-    params_.starting_time = lc::RandomDouble();
+    params_.starting_time = starting_time;
     params_.SetStartMeasurement();
     pose_node_adder_.reset(new na::PoseNodeAdder(params_, node_adder_model_params_, std::make_shared<no::Values>()));
     pose_node_adder_->AddInitialNodesAndPriors(factors_);
@@ -326,6 +328,41 @@ TEST_F(PoseNodeAdderTest, AddInitialNodesAndPriors) {
 
 TEST_F(PoseNodeAdderTest, AddNode) {
   ZeroInitialize();
+  const auto& nodes = pose_node_adder_->nodes();
+  EXPECT_EQ(nodes.size(), 1);
+  EXPECT_EQ(factors_.size(), 1);
+  AddMeasurements();
+  // Add 1st node
+  ASSERT_TRUE(pose_node_adder_->AddNode(timestamps_[0], factors_));
+  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(factors_.size(), 2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  // Add 2nd node
+  ASSERT_TRUE(pose_node_adder_->AddNode(timestamps_[1], factors_));
+  EXPECT_EQ(nodes.size(), 3);
+  EXPECT_EQ(factors_.size(), 3);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  // Add 3rd node
+  ASSERT_TRUE(pose_node_adder_->AddNode(timestamps_[2], factors_));
+  EXPECT_EQ(nodes.size(), 4);
+  EXPECT_EQ(factors_.size(), 4);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
+  // Add 4th node in between 3rd and 4th measurement
+  const lc::Time timestamp_2_3 = (timestamps_[2] + timestamps_[3]) / 2.0;
+  ASSERT_TRUE(pose_node_adder_->AddNode(timestamp_2_3, factors_));
+  EXPECT_EQ(nodes.size(), 5);
+  EXPECT_EQ(factors_.size(), 5);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(0);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(1);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE(2);
+  EXPECT_SAME_NODE_AND_BETWEEN_FACTOR_AND_NOISE_INTERPOLATED(2, 3, 0.5);
+}
+
+TEST_F(PoseNodeAdderTest, AddNodeRandomInitialization) {
+  RandomInitialize(0.0);
   const auto& nodes = pose_node_adder_->nodes();
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_EQ(factors_.size(), 1);
