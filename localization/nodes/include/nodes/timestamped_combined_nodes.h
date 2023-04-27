@@ -111,8 +111,9 @@ class TimestampedCombinedNodes {
   // Returns the closest node in time to the provided timestamp.
   boost::optional<NodeType> ClosestNode(const localization_common::Time timestamp) const;
 
-  // Returns the lower bounded or equal in time node to the provided timestamp.
-  boost::optional<NodeType> LowerBoundOrEqualNode(const localization_common::Time timestamp) const;
+  // Returns the lower bounded or equal in time timestamped node to the provided timestamp.
+  boost::optional<localization_common::TimestampedValue<NodeType>> LowerBoundOrEqual(
+    const localization_common::Time timestamp) const;
 
   // Returns all nodes older than the provided oldest_allowed_timestamp.
   std::vector<NodeType> OldNodes(const localization_common::Time oldest_allowed_timestamp) const;
@@ -288,11 +289,13 @@ TimestampedCombinedNodes<NodeType>::LowerAndUpperBoundNodes(const localization_c
 }
 
 template <typename NodeType>
-boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::LowerBoundOrEqualNode(
+boost::optional<localization_common::TimestampedValue<NodeType>> TimestampedCombinedNodes<NodeType>::LowerBoundOrEqual(
   const localization_common::Time timestamp) const {
   const auto lower_bound_or_equal = timestamp_keys_map_.LowerBoundOrEqual(timestamp);
   if (!lower_bound_or_equal) return boost::none;
-  return Node(*lower_bound_or_equal);
+  const auto node = Node(lower_bound_or_equal->timestamp);
+  if (!node) return boost::none;
+  return localization_common::TimestampedValue<NodeType>(lower_bound_or_equal->timestamp, *node);
 }
 
 template <typename NodeType>

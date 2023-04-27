@@ -25,12 +25,19 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 gtsam::KeyVector PoseNodeAdderModel::AddNode(const lc::Time timestamp, NodesType& nodes) const {
-  const auto pose = pose_interpolater_.Interpolate(timestamp);
-  if (!pose) {
-    LogError("AddNode: Failed to get value.");
+  const auto lower_bound_or_equal_node = nodes.LowerBoundOrEqual(timestamp);
+  if (!lower_bound_or_equal_node) {
+    LogError("AddNode: Failed to get lower bound or equal node.");
     return gtsam::KeyVector();
   }
-  return nodes.Add(timestamp, lc::GtPose(pose->pose));
+  const auto relative_pose = pose_interpolater_.Relative(lower_bound_or_equal_node->timestamp, timestamp);
+  if (!relative_pose) {
+    LogError("RelativeNodeAndNoise: Failed to get relative estimate.");
+    return gtsam::KeyVector();
+  }
+
+  const gtsam::Pose3 extrapolated_pose = lower_bound_or_equal_node->value * lc::GtPose(relative_pose->pose);
+  return nodes.Add(timestamp, extrapolated_pose);
 }
 
 boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> PoseNodeAdderModel::RelativeNodeAndNoise(

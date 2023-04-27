@@ -1,19 +1,29 @@
-- add more comments to tutorial code! (AA)
-- issue when creating relative pose nodes??
+- issue when creating relative pose nodes?? (AA)
   - addNode() function uses interpolated pose to initialize node value, but this is 
     in the wrong frame!!!!!!
+      - need to get relative distance to last added node!!!!!!!
+        - update test and pose node adder model in code!!!
+          - add test with non zero start pose! make sure node values are still correct! (A)
+          - update nodes tests!! (AA)
+        - update combined nav state adder model???
+        - update node adder tests?
 
-- add more extensive interface test?
+- add more extensive interface test? (AB)
   - add measurements in batches? optimize after batch adds?
   - add real data? expect certain results?
  
 - add tutorial for simple odometry (AABB)
     - use pose and velocity (timestampcombinednode)
+      - add comment that these could be from integrated IMU data with no bias, mention to see CombinedNavStateNodeAdder for handling actualy IMU data with optimizing biases.
     - use non single measurement factor adder
   - add tutorial for simple calibration (AACC)
   - add tutorial for simple mapping (AADD)
     - add examples package! make sure these compile!!!
       - add unit tests for these!!!!
+
+- update nodes interface!
+  - remove or update closestnode, lowerandupperboundnodes, oldnodes
+      - remove or return timestamped nodes! (no one uses these...)
 
 - standstill factors added using all timestamps (AB)
   - should only spaced ones be used? adds more keys at timestamps between vo stamps!
