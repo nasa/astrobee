@@ -19,7 +19,11 @@
 #ifndef TRAJ_OPT_ROS_ROS_BRIDGE_H_
 #define TRAJ_OPT_ROS_ROS_BRIDGE_H_
 
-#include <ros/ros.h>
+// Standard includes
+#include <ff_common/ff_ros.h>
+#include <tf2_ros/buffer.h>
+#include <rclcpp/rclcpp.hpp>
+
 #include <traj_opt_basic/traj_data.h>
 #include <traj_opt_msgs/Polynomial.h>
 #include <traj_opt_msgs/Spline.h>
@@ -49,15 +53,15 @@ class TrajRosBridge {
 
   static bool are_subscribers(std::string topic);
 
-  // Use global singleton paradignm.  All these things are private!
-  // Keep your government out of my contructors!
+  // Use global singleton paradigm.  All these things are private!
+  // Keep your government out of my constructors!
  private:
   TrajRosBridge();
   static TrajRosBridge &instance();
-  static ros::Publisher getPub(std::string topic);
-  static ros::Publisher getInfoPub(std::string topic);
-  ros::NodeHandle nh_;
-  std::map<std::string, ros::Publisher> pubs_;
+  static rclcpp::Publisher getPub(std::string topic);
+  static rclcpp::Publisher getInfoPub(std::string topic);
+  rclcpp::NodeHandle nh_;
+  std::map<std::string, rclcpp::Publisher> pubs_;
 };
 
 #endif  // TRAJ_OPT_ROS_ROS_BRIDGE_H_

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>traj_opt_ros</name>
-  <version>0.0.1</version>
+  <version>0.0.0</version>
   <description>
     The traj_opt_ros package
   </description>
@@ -14,13 +14,20 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>catkin_simple</build_depend>
-  <depend>rviz</depend>
-  <depend>traj_opt_basic</depend>
-  <depend>traj_opt_msgs</depend>
-  <depend>roscpp</depend>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>rviz2</build_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>traj_opt_basic</build_depend>
+  <build_depend>traj_opt_msgs</build_depend>
+
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>traj_opt_basic</exec_depend>
+  <exec_depend>traj_opt_msgs</exec_depend>
+
   <export>
-    <rviz plugin="${prefix}/nodelet_plugins.xml"/>
+    <rviz2 plugin="${prefix}/nodelet_plugins.xml"/>
   </export> 
 </package>

@@ -103,9 +103,9 @@ ament_target_dependencies(${PROJECT_NAME} traj_opt_basic)
 
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME} fancy_custom_backend
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Mark cpp header files for installation

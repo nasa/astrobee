@@ -24,14 +24,14 @@ TrajRosBridge &TrajRosBridge::instance() {
   static TrajRosBridge inst;
   return inst;
 }
-ros::Publisher TrajRosBridge::getPub(std::string topic) {
+rclcpp::Publisher TrajRosBridge::getPub(std::string topic) {
   if (instance().pubs_.find(topic) == instance().pubs_.end()) {
     instance().pubs_[topic] =
         instance().nh_.advertise<traj_opt_msgs::Trajectory>(topic, 1);
   }
   return instance().pubs_[topic];
 }
-ros::Publisher TrajRosBridge::getInfoPub(std::string topic) {
+rclcpp::Publisher TrajRosBridge::getInfoPub(std::string topic) {
   if (instance().pubs_.find(topic) == instance().pubs_.end()) {
     instance().pubs_[topic] =
         instance().nh_.advertise<traj_opt_msgs::SolverInfo>(topic, 1);
@@ -40,7 +40,7 @@ ros::Publisher TrajRosBridge::getInfoPub(std::string topic) {
 }
 
 bool TrajRosBridge::are_subscribers(std::string topic) {
-  ros::Publisher pub = getPub(topic);
+  rclcpp::Publisher pub = getPub(topic);
   return pub.getNumSubscribers() > 0;
 }
 
@@ -59,7 +59,7 @@ void TrajRosBridge::publish_msg(const traj_opt::TrajData &data,
 traj_opt_msgs::Trajectory TrajRosBridge::convert(
     const traj_opt::TrajData &data) {
   traj_opt_msgs::Trajectory traj;
-  traj.header.stamp = ros::Time::now();
+  traj.header.stamp = GetTimeNow();
   traj.header.frame_id = "map";
 
   traj.dimension_names = data.dimension_names;

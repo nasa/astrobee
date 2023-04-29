@@ -15,46 +15,42 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(traj_opt_ros)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations  -Werror=return-type -DQT_NO_KEYWORDS")
 
 # Qt Stuff, assume Qt5
 set(CMAKE_AUTOMOC ON)
-
 ## Find catkin macros and libraries
 set(LIBRARIES traj_ros_bridge)
 
+## Find catkin macros and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(traj_opt_basic REQUIRED)
+find_package(traj_opt_msgs REQUIRED)
+
+find_package(Qt5 COMPONENTS Core)
+
 # build rviz plugin if not cross compiling
-if(NOT USE_CTC)
+if(NOT USE_CTC="${USE_CTC}")
+  message("Using CTC")
   set(CMAKE_AUTOMOC ON)
-  find_package(catkin2 COMPONENTS rviz QUIET)
-  if(rviz_QT_VERSION)
-    message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
-    find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
+  # find_package(catkin2 COMPONENTS rviz QUIET)
+  find_package(rviz2 QUIET)
+  if(rviz2_QT_VERSION)
+    message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
+    find_package(Qt5 ${rviz2_QT_VERSION} REQUIRED Core Widgets)
     set(QT_LIBRARIES Qt5::Widgets)
     set(LIBRARIES ${LIBRARIES} traj_opt_ros)
-    set(INCLUDES ${INCLUDES} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+    set(INCLUDES ${INCLUDES} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
   endif()
 endif()
-
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  traj_opt_basic
-  traj_opt_msgs
-)
-
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES
-    ${LIBRARIES}
-  CATKIN_DEPENDS
-    roscpp
-    traj_opt_basic
-    traj_opt_msgs
-)
 
 ###########
 ## Build ##
@@ -62,21 +58,22 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+  ${rviz2_INCLUDE_DIRS}
   ${INCLUDES}
 )
 
 add_library(traj_ros_bridge
   src/ros_bridge.cpp)
-target_link_libraries(traj_ros_bridge ${catkin_LIBRARIES})
+target_link_libraries(traj_ros_bridge ${dependencies})
 
 if (NOT USE_CTC)
-  if(rviz_QT_VERSION)
+  message("Using CTC BUILD")
+  if(rviz2_QT_VERSION)
     add_library(${PROJECT_NAME}
       src/trajectory_visual.cpp
       src/trajectory_display.cpp
       ${MOC_FILES})
-    target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES} ${rviz_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
+    target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${rviz2_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
   endif()
 endif (NOT USE_CTC)
 
@@ -85,31 +82,35 @@ endif (NOT USE_CTC)
 ## Install ##
 #############
 
+target_include_directories(traj_ros_bridge
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 # Mark libraries for installation
 install(TARGETS traj_ros_bridge
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT traj_ros_bridge
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 if (NOT USE_CTC)
-  if(rviz_QT_VERSION)
+  if(rviz2_QT_VERSION)
     install(TARGETS ${PROJECT_NAME}
-      ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-      LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-      RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+      ARCHIVE DESTINATION lib
+      LIBRARY DESTINATION lib
+      RUNTIME DESTINATION bin
     )
   endif()
 endif (NOT USE_CTC)
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
+
+ament_package()

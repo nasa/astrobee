@@ -23,7 +23,7 @@ project(planner_qp_main)
 
 # QP planner
 add_subdirectory(traj_opt_basic)
-# add_subdirectory(traj_opt_pro)
+add_subdirectory(traj_opt_pro)
 add_subdirectory(traj_opt_msgs)
 # add_subdirectory(traj_opt_ros)
 

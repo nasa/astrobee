@@ -20,7 +20,7 @@
 #define MOBILITY_PLANNER_QP_TRAJ_OPT_ROS_SRC_TRAJECTORY_DISPLAY_H_
 
 #ifndef Q_MOC_RUN
-#include <rviz/message_filter_display.h>
+#include <rviz_common/message_filter_display.h>
 #include <traj_opt_msgs/Trajectory.h>
 #include <boost/circular_buffer.hpp>
 #endif
@@ -29,7 +29,7 @@ namespace Ogre {
 class SceneNode;
 }
 
-namespace rviz {
+namespace rviz_common {
 class ColorProperty;
 class FloatProperty;
 class IntProperty;
@@ -44,9 +44,9 @@ namespace traj_opt {
 class TrajectoryVisual;
 
 // BEGIN_TUTORIAL
-// Here we declare our new subclass of rviz::Display.  Every display
+// Here we declare our new subclass of rviz_common::Display.  Every display
 // which can be listed in the "Displays" panel is a subclass of
-// rviz::Display.
+// rviz_common::Display.
 //
 // TrajectoryDisplay will show a 3D arrow showing the direction and magnitude
 // of the TRAJECTORY acceleration vector.  The base of the arrow will be at
@@ -61,7 +61,7 @@ class TrajectoryVisual;
 // idiom for the visuals is that when the objects exist, they appear
 // in the scene, and when they are deleted, they disappear.
 class TrajectoryDisplay
-    : public rviz::MessageFilterDisplay<traj_opt_msgs::Trajectory> {
+    : public rviz_common::MessageFilterDisplay<traj_opt_msgs::Trajectory> {
   Q_OBJECT  // NOLINT
       public
       :  // NOLINT
@@ -99,19 +99,19 @@ class TrajectoryDisplay
   boost::circular_buffer<boost::shared_ptr<TrajectoryVisual> > visuals_;
 
   // User-editable property variables.
-  rviz::ColorProperty* color_property_;
-  rviz::FloatProperty* alpha_property_;
-  rviz::ColorProperty* color_property_v_;
-  rviz::ColorProperty* color_property_a_;
+  rviz_common::ColorProperty* color_property_;
+  rviz_common::FloatProperty* alpha_property_;
+  rviz_common::ColorProperty* color_property_v_;
+  rviz_common::ColorProperty* color_property_a_;
 
-  rviz::BoolProperty* use_v_property_;
-  rviz::BoolProperty* use_a_property_;
+  rviz_common::BoolProperty* use_v_property_;
+  rviz_common::BoolProperty* use_a_property_;
 
-  rviz::FloatProperty* thickness_property_;
-  rviz::IntProperty* history_length_property_;
-  rviz::IntProperty* traj_samples_property_;
-  rviz::IntProperty* tangent_samples_property_;
-  rviz::EnumProperty* style_property_;
+  rviz_common::FloatProperty* thickness_property_;
+  rviz_common::IntProperty* history_length_property_;
+  rviz_common::IntProperty* traj_samples_property_;
+  rviz_common::IntProperty* tangent_samples_property_;
+  rviz_common::EnumProperty* style_property_;
 };
 // END_TUTORIAL
 

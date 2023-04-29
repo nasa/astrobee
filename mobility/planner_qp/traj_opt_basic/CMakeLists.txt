@@ -40,7 +40,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
-  ${traj_opt_basic_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -52,7 +51,6 @@ add_library(${PROJECT_NAME} SHARED
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(${PROJECT_NAME} rclcpp)
-target_link_libraries(${PROJECT_NAME} ${traj_opt_basic_LIBRARIES})
 # ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 #############
