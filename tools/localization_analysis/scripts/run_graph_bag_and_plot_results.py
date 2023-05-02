@@ -34,13 +34,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("map_file", help="Map file.")
-    parser.add_argument("config_path", help="Full path to config path.")
-    parser.add_argument(
-        "-r",
-        "--robot-config",
-        default="config/robots/bumble.config",
-        help="Relative path to robot config.",
-    )
     parser.add_argument(
         "-i",
         "--image-topic",
@@ -50,7 +43,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o", "--output-bagfile", default="results.bag", help="Output bagfile."
     )
-    parser.add_argument("-w", "--world", default="iss")
     parser.add_argument(
         "--generate-image-features",
         dest="use_image_features",
@@ -91,12 +83,6 @@ if __name__ == "__main__":
         + bagfile
         + " "
         + map_file
-        + " "
-        + args.config_path
-        + " -r "
-        + args.robot_config
-        + " -w "
-        + args.world
         + " --use-image-features "
         + (str(args.use_image_features)).lower()
         + " -o "

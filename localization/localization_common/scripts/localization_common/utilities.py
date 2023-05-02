@@ -73,11 +73,40 @@ def load_dataframe(files):
     return dataframe
 
 
-def run_command_and_save_output(command, output_filename, print_command=True):
+def run_command_and_save_output(command, output_filename="", print_command=True):
+
     if print_command:
         print(command)
-    with open(output_filename, "w") as output_file:
-        subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
+
+    if output_filename != "":
+        f = open(output_filename, "w")
+
+    stdout = ""
+    stderr = ""
+    popen = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
+    for stdout_line in iter(popen.stdout.readline, ""):
+        if output_filename != "":
+            f.write(stdout_line)
+        stdout += stdout_line
+
+    popen.stdout.close()
+
+    print(stdout)
+    print(stderr)
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, command)
+
+    if return_code != 0:
+        print(("Failed to run command.\nOutput: ", stdout, "\nError: ", stderr))
+
+    return (return_code, stdout, stderr)
 
 
 def basename(filename):

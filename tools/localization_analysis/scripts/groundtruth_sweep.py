@@ -39,20 +39,14 @@ class GroundtruthParams(object):
         self,
         bagfile,
         base_surf_map,
-        maps_directory,
         loc_map,
-        config_path,
-        world,
         image_topic,
         robot_name,
         use_image_features,
     ):
         self.bagfile = bagfile
         self.base_surf_map = base_surf_map
-        self.maps_directory = maps_directory
         self.loc_map = loc_map
-        self.config_path = config_path
-        self.world = world
         self.image_topic = image_topic
         self.robot_name = robot_name
         self.use_image_features = use_image_features
@@ -71,9 +65,6 @@ def load_params(param_file):
                     row[3],
                     row[4],
                     row[5],
-                    row[6],
-                    row[7],
-                    row[8],
                 )
             )
 
@@ -108,19 +99,11 @@ def run_groundtruth(params):
         + " "
         + params.base_surf_map
         + " "
-        + params.maps_directory
-        + " "
         + params.loc_map
-        + " "
-        + params.config_path
         + " -o "
         + output_directory
-        + " -w "
-        + params.world
         + " -i "
         + params.image_topic
-        + " -r "
-        + params.robot_name
     )
     if not bool(params.use_image_features):
         groundtruth_command += " --generate-image-features"
