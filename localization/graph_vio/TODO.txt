@@ -8,6 +8,8 @@
                   - remove start measurement!!
                       - update tests!
                         - add start measurement manually!
+                  - clean up pose node adder test!!! (AAAAA)
+                    - update other checks!
 
         - remove relative pose node adder files in tutorial examples, use pose node adder! 
           - move aboslute pose adder to factor adders! rename??

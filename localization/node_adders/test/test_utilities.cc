@@ -40,7 +40,6 @@ PoseNodeAdderParams DefaultPoseNodeAdderParams() {
   params.min_num_states = 5;
   params.max_num_states = 20;
   params.SetStartNoiseModels();
-  params.SetStartMeasurement();
   return params;
 }
 
