@@ -19,32 +19,31 @@
  * License.
  */
 
-#ifndef TUTORIAL_EXAMPLES_ABSOLUTE_POSE_FACTOR_ADDER_H_
-#define TUTORIAL_EXAMPLES_ABSOLUTE_POSE_FACTOR_ADDER_H_
+#ifndef TUTORIAL_EXAMPLES_POSE_FACTOR_ADDER_H_
+#define TUTORIAL_EXAMPLES_POSE_FACTOR_ADDER_H_
 
 #include <factor_adders/single_measurement_based_factor_adder.h>
 #include <localization_common/time.h>
 #include <localization_measurements/pose_with_covariance_measurement.h>
-#include <tutorial_examples/relative_pose_node_adder.h>
+#include <node_adders/pose_node_adder.h>
 
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/slam/PriorFactor.h>
 
 namespace tutorial_examples {
-using AbsolutePoseFactorAdderParams =
-  factor_adders::FactorAdderParams;
+using PoseFactorAdderParams = factor_adders::FactorAdderParams;
 
 // Adds GTSAM Pose Prior factors for absolute pose measurements.
-// Adds pose nodes using RelativePoseNodeAdder at the same
+// Adds pose nodes using PoseNodeAdder at the same
 // timestamps as the measurements.
-class AbsolutePoseFactorAdder
+class PoseFactorAdder
     : public factor_adders::SingleMeasurementBasedFactorAdder<
         localization_measurements::
           PoseWithCovarianceMeasurement> {
  public:
-  AbsolutePoseFactorAdder(
-    const AbsolutePoseFactorAdderParams& params,
-    const std::shared_ptr<RelativePoseNodeAdder> node_adder)
+  PoseFactorAdder(
+    const PoseFactorAdderParams& params,
+    const std::shared_ptr<node_adders::PoseNodeAdder> node_adder)
       : factor_adders::SingleMeasurementBasedFactorAdder<
           localization_measurements::
             PoseWithCovarianceMeasurement>(params),
@@ -78,9 +77,9 @@ class AbsolutePoseFactorAdder
     return node_adder_->CanAddNode(time);
   }
 
-  std::shared_ptr<RelativePoseNodeAdder> node_adder_;
-  AbsolutePoseFactorAdderParams params_;
+  std::shared_ptr<node_adders::PoseNodeAdder> node_adder_;
+  PoseFactorAdderParams params_;
 };
 }  // namespace tutorial_examples
 
-#endif  // TUTORIAL_EXAMPLES_ABSOLUTE_POSE_FACTOR_ADDER_H_
+#endif  // TUTORIAL_EXAMPLES_POSE_FACTOR_ADDER_H_

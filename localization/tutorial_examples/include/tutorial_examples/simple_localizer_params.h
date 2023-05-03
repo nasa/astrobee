@@ -22,11 +22,12 @@
 #ifndef TUTORIAL_EXAMPLES_SIMPLE_LOCALIZER_PARAMS_H_
 #define TUTORIAL_EXAMPLES_SIMPLE_LOCALIZER_PARAMS_H_
 
+#include <node_adders/pose_node_adder.h>
+#include <node_adders/pose_node_adder_model.h>
+#include <node_adders/pose_node_adder_params.h>
 #include <optimizers/nonlinear_optimizer_params.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
-#include <tutorial_examples/absolute_pose_factor_adder.h>
-#include <tutorial_examples/relative_pose_node_adder.h>
-#include <tutorial_examples/relative_pose_node_adder_model.h>
+#include <tutorial_examples/pose_factor_adder.h>
 
 namespace tutorial_examples {
 struct SimpleLocalizerParams {
@@ -35,17 +36,17 @@ struct SimpleLocalizerParams {
   // respective header file.
   SimpleLocalizerParams() {
     // Factor Adder
-    absolute_pose_factor_adder.enabled = true;
-    absolute_pose_factor_adder.huber_k = 1.345;
+    pose_factor_adder.enabled = true;
+    pose_factor_adder.huber_k = 1.345;
     // Node Adder
-    relative_pose_node_adder.huber_k = 1.345;
-    relative_pose_node_adder.add_priors = true;
-    relative_pose_node_adder.starting_time = 0.0;
-    relative_pose_node_adder.ideal_duration = 10.0;
-    relative_pose_node_adder.min_num_states = 2;
-    relative_pose_node_adder.max_num_states = 20;
+    pose_node_adder.huber_k = 1.345;
+    pose_node_adder.add_priors = true;
+    pose_node_adder.starting_time = 0.0;
+    pose_node_adder.ideal_duration = 10.0;
+    pose_node_adder.min_num_states = 2;
+    pose_node_adder.max_num_states = 20;
     // Node Adder Model
-    relative_pose_node_adder_model.huber_k = 1.345;
+    pose_node_adder_model.huber_k = 1.345;
     // Nonlinear Optimizer
     nonlinear_optimizer.marginals_factorization = "qr";
     nonlinear_optimizer.max_iterations = 10;
@@ -62,10 +63,9 @@ struct SimpleLocalizerParams {
       .slide_window_before_optimization = true;
   }
 
-  AbsolutePoseFactorAdderParams absolute_pose_factor_adder;
-  RelativePoseNodeAdderParams relative_pose_node_adder;
-  RelativePoseNodeAdderModel::Params
-    relative_pose_node_adder_model;
+  PoseFactorAdderParams pose_factor_adder;
+  node_adders::PoseNodeAdderParams pose_node_adder;
+  node_adders::PoseNodeAdderModel::Params pose_node_adder_model;
   optimizers::NonlinearOptimizerParams nonlinear_optimizer;
   sliding_window_graph_optimizer::
     SlidingWindowGraphOptimizerParams

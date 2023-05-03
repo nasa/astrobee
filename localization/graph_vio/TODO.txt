@@ -1,21 +1,9 @@
 - issue when creating relative pose nodes?? (AA)
-  - addNode() function uses interpolated pose to initialize node value, but this is 
-    in the wrong frame!!!!!!
-      - need to get relative distance to last added node!!!!!!!
-        - update test and pose node adder model in code!!!
-          - add test with non zero start pose! make sure node values are still correct! (AA)
-              - why is this working???? print out node values - > not extrapolated?? (AAA)
-                  - remove start measurement!!
-                      - update tests!
-                        - add start measurement manually!
-                  - clean up pose node adder test!!! (AAAAA)
-                    - update other checks!
-
-        - remove relative pose node adder files in tutorial examples, use pose node adder! 
-          - move aboslute pose adder to factor adders! rename??
-          - for vio, use combined nav state adder!
-          - add simple odometry factor adder!
-            - put this in factor adders!
+  - remove relative pose node adder files in tutorial examples, use pose node adder! (A) 
+  - move aboslute pose adder to factor adders! rename??
+  - for vio, use combined nav state adder!
+  - add simple odometry factor adder!
+     - put this in factor adders!
 
 - add more extensive interface test? (AB)
   - add measurements in batches? optimize after batch adds?

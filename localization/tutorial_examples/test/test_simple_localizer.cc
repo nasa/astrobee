@@ -43,12 +43,9 @@ TEST(SimpleLocalizerTest, Interface) {
   const lc::Time initial_time = 0.0;
   const auto initial_measurement =
     RandomPoseWithCovarianceMeasurement(initial_time);
-  params.relative_pose_node_adder.start_measurement =
-    initial_measurement;
-  params.relative_pose_node_adder.start_node =
-    initial_measurement.pose;
-  params.relative_pose_node_adder.start_noise_models
-    .emplace_back(gtsam::noiseModel::Gaussian::Covariance(
+  params.pose_node_adder.start_node = initial_measurement.pose;
+  params.pose_node_adder.start_noise_models.emplace_back(
+    gtsam::noiseModel::Gaussian::Covariance(
       initial_measurement.covariance));
   te::SimpleLocalizer localizer(params);
 
