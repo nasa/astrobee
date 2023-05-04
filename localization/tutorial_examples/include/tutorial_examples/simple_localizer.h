@@ -22,11 +22,11 @@
 #ifndef TUTORIAL_EXAMPLES_SIMPLE_LOCALIZER_H_
 #define TUTORIAL_EXAMPLES_SIMPLE_LOCALIZER_H_
 
+#include <factor_adders/pose_factor_adder.h>
 #include <localization_measurements/pose_measurement.h>
 #include <node_adders/pose_node_adder.h>
 #include <optimizers/nonlinear_optimizer.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
-#include <tutorial_examples/pose_factor_adder.h>
 #include <tutorial_examples/simple_localizer_params.h>
 
 namespace tutorial_examples {
@@ -49,8 +49,10 @@ class SimpleLocalizer : public sliding_window_graph_optimizer::
     node_adder_ = std::make_shared<node_adders::PoseNodeAdder>(
       params.pose_node_adder, params.pose_node_adder_model,
       values());
-    factor_adder_ = std::make_shared<PoseFactorAdder>(
-      params.pose_factor_adder, node_adder_);
+    factor_adder_ =
+      std::make_shared<factor_adders::PoseFactorAdder<
+        node_adders::PoseNodeAdder>>(params.pose_factor_adder,
+                                     node_adder_);
     // Register node and factor adders
     AddSlidingWindowNodeAdder(node_adder_);
     AddFactorAdder(factor_adder_);
@@ -79,7 +81,9 @@ class SimpleLocalizer : public sliding_window_graph_optimizer::
   }
 
  private:
-  std::shared_ptr<PoseFactorAdder> factor_adder_;
+  std::shared_ptr<
+    factor_adders::PoseFactorAdder<node_adders::PoseNodeAdder>>
+    factor_adder_;
   std::shared_ptr<node_adders::PoseNodeAdder> node_adder_;
 };
 }  // namespace tutorial_examples

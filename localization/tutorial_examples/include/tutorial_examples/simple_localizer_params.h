@@ -22,12 +22,12 @@
 #ifndef TUTORIAL_EXAMPLES_SIMPLE_LOCALIZER_PARAMS_H_
 #define TUTORIAL_EXAMPLES_SIMPLE_LOCALIZER_PARAMS_H_
 
+#include <factor_adders/pose_factor_adder.h>
 #include <node_adders/pose_node_adder.h>
 #include <node_adders/pose_node_adder_model.h>
 #include <node_adders/pose_node_adder_params.h>
 #include <optimizers/nonlinear_optimizer_params.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
-#include <tutorial_examples/pose_factor_adder.h>
 
 namespace tutorial_examples {
 struct SimpleLocalizerParams {
@@ -63,7 +63,7 @@ struct SimpleLocalizerParams {
       .slide_window_before_optimization = true;
   }
 
-  PoseFactorAdderParams pose_factor_adder;
+  factor_adders::PoseFactorAdderParams pose_factor_adder;
   node_adders::PoseNodeAdderParams pose_node_adder;
   node_adders::PoseNodeAdderModel::Params pose_node_adder_model;
   optimizers::NonlinearOptimizerParams nonlinear_optimizer;
