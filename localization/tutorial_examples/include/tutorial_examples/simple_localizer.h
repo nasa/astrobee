@@ -56,17 +56,17 @@ class SimpleLocalizer : public sliding_window_graph_optimizer::
     AddFactorAdder(factor_adder_);
   }
 
-  // Adds a relative pose measurement to the relative pose node
-  // adder.
-  void AddRelativePoseMeasurement(
+  // Adds an odometry pose measurement to the pose node
+  // adder. Assumes the pose is in the odometry frame.
+  void AddOdometryMeasurement(
     const localization_measurements::
       PoseWithCovarianceMeasurement& measurement) {
     node_adder_->AddMeasurement(measurement);
   }
 
-  // Adds an absolute pose measurement to the absolute pose
-  // factor adder.
-  void AddAbsolutePoseMeasurement(
+  // Adds an absolute pose measurement to the pose
+  // factor adder. Assumes the pose is in the world frame.
+  void AddPoseMeasurement(
     const localization_measurements::
       PoseWithCovarianceMeasurement& measurement) {
     factor_adder_->AddMeasurement(measurement);

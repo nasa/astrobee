@@ -1,14 +1,8 @@
-- issue when creating relative pose nodes?? (AA)
-  - remove relative pose node adder files in tutorial examples, use pose node adder! (A) 
-  - move aboslute pose adder to factor adders! rename??
-  - for vio, use combined nav state adder!
-  - add simple odometry factor adder!
+  - move aboslute pose adder to factor adders! rename?? (AAB)
+  - for vio, use combined nav state adder! (AAC)
+  - add simple odometry factor adder! (AAD)
      - put this in factor adders!
 
-- add more extensive interface test? (AB)
-  - add measurements in batches? optimize after batch adds?
-  - add real data? expect certain results?
- 
 - add tutorial for simple odometry (AABB)
     - use pose and velocity (timestampcombinednode)
       - add comment that these could be from integrated IMU data with no bias, mention to see CombinedNavStateNodeAdder for handling actualy IMU data with optimizing biases.
