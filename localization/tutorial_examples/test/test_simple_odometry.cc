@@ -130,9 +130,9 @@ TEST(SimpleOdometryTest, Interface) {
       i);
     imu_measurements.emplace_back(imu_measurement);
     // Motion model for dt = 1.0 sec.
-    velocity += acceleration;
     const gtsam::Pose3 relative_pose = gtsam::Pose3(
-      gtsam::Rot3::identity(), acceleration + velocity);
+      gtsam::Rot3::identity(), 0.5*acceleration + velocity);
+    velocity += acceleration;
     relative_pose_measurements.emplace_back(
       lm::RelativePoseWithCovarianceMeasurement(
         relative_pose, lc::RandomPoseCovariance(), i - 1, i));
