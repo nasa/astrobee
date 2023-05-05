@@ -48,7 +48,9 @@ struct SimpleOdometryParams {
     // Node Adder Model
     combined_nav_state_node_adder_model.huber_k = 1.345;
     combined_nav_state_node_adder_model.imu_integrator.gravity =
-      Eigen::Vector3d(0, 0, -9.81);
+      Eigen::Vector3d::Zero();
+    combined_nav_state_node_adder_model.imu_integrator
+      .body_T_imu = gtsam::Pose3::identity();
     combined_nav_state_node_adder_model.imu_integrator
       .gyro_sigma = 0.01;
     combined_nav_state_node_adder_model.imu_integrator
