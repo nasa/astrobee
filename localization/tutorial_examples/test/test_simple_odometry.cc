@@ -140,7 +140,7 @@ TEST(SimpleOdometryTest, Interface) {
 
   // Add 2 IMU and relative pose measurements to the odometry
   // graph
-  for (int i = 1; i < 3; ++i) {
+  for (int i = 0; i < 2; ++i) {
     odometry.AddImuMeasurement(imu_measurements[i]);
     odometry.AddRelativePoseMeasurement(
       relative_pose_measurements[i]);
