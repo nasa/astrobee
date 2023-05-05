@@ -40,7 +40,7 @@ class SimpleLocalizer : public sliding_window_graph_optimizer::
                           SlidingWindowGraphOptimizer {
  public:
   // Initialize and register the node and factor adders.
-  explicit SimpleLocalizer(SimpleLocalizerParams& params)
+  explicit SimpleLocalizer(const SimpleLocalizerParams& params)
       : SlidingWindowGraphOptimizer(
           params.sliding_window_graph_optimizer,
           std::make_unique<optimizers::NonlinearOptimizer>(

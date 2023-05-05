@@ -1,16 +1,16 @@
-  - move aboslute pose adder to factor adders! rename?? (AAB)
   - for vio, use combined nav state adder! (AAC)
-  - add simple odometry factor adder! (AAD)
-     - put this in factor adders!
+    - add measurement creation! (use motion model with const vel and acc and bias) (AAA)
+    - split simple odom and loc into header and c++ files???
+    - update tutorial with simple loc and odom!
 
-- add tutorial for simple odometry (AABB)
-    - use pose and velocity (timestampcombinednode)
-      - add comment that these could be from integrated IMU data with no bias, mention to see CombinedNavStateNodeAdder for handling actualy IMU data with optimizing biases.
-    - use non single measurement factor adder
   - add tutorial for simple calibration (AACC)
   - add tutorial for simple mapping (AADD)
     - add examples package! make sure these compile!!!
       - add unit tests for these!!!!
+
+- start plotting VIO!
+  - do this separately? make script cleaner!
+- add regression tests?
 
 - update nodes interface!
   - remove or update closestnode, lowerandupperboundnodes, oldnodes
