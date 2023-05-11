@@ -24,33 +24,37 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations  -Werror=return-type -DQT_NO_KEYWORDS")
 
-# Qt Stuff, assume Qt5
+## Qt Stuff, assume Qt5
 set(CMAKE_AUTOMOC ON)
+
 ## Find catkin macros and libraries
 set(LIBRARIES traj_ros_bridge)
 
-## Find catkin macros and libraries
+## Find amend macros and libraries
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+
+find_package(ff_common REQUIRED)
+find_package(ff_util REQUIRED)
 find_package(traj_opt_basic REQUIRED)
 find_package(traj_opt_msgs REQUIRED)
 
 find_package(Qt5 COMPONENTS Core)
 
 # build rviz plugin if not cross compiling
-if(NOT USE_CTC="${USE_CTC}")
-  message("Using CTC")
-  set(CMAKE_AUTOMOC ON)
-  # find_package(catkin2 COMPONENTS rviz QUIET)
-  find_package(rviz2 QUIET)
-  if(rviz2_QT_VERSION)
-    message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
-    find_package(Qt5 ${rviz2_QT_VERSION} REQUIRED Core Widgets)
-    set(QT_LIBRARIES Qt5::Widgets)
-    set(LIBRARIES ${LIBRARIES} traj_opt_ros)
-    set(INCLUDES ${INCLUDES} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
-  endif()
-endif()
+# if(NOT USE_CTC="${USE_CTC}")
+#   # message("Using CTC")
+#   set(CMAKE_AUTOMOC ON)
+#   # find_package(catkin2 COMPONENTS rviz QUIET)
+#   find_package(rviz2 QUIET)
+#   if(rviz2_QT_VERSION)
+#     message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
+#     find_package(Qt5 ${rviz2_QT_VERSION} REQUIRED Core Widgets)
+#     set(QT_LIBRARIES Qt5::Widgets)
+#     set(LIBRARIES ${LIBRARIES} traj_opt_ros)
+#     set(INCLUDES ${INCLUDES} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
+#   endif()
+# endif()
 
 ###########
 ## Build ##
@@ -63,19 +67,22 @@ include_directories(
 )
 
 add_library(traj_ros_bridge
-  src/ros_bridge.cpp)
-target_link_libraries(traj_ros_bridge ${dependencies})
+            src/ros_bridge.cpp)
+target_link_libraries(traj_ros_bridge ff_common ff_util traj_opt_basic traj_opt_msgs)
 
-if (NOT USE_CTC)
-  message("Using CTC BUILD")
-  if(rviz2_QT_VERSION)
-    add_library(${PROJECT_NAME}
-      src/trajectory_visual.cpp
-      src/trajectory_display.cpp
-      ${MOC_FILES})
-    target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${rviz2_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
-  endif()
-endif (NOT USE_CTC)
+# if (NOT USE_CTC)
+#   message("Using CTC BUILD")
+#   if(rviz2_QT_VERSION)
+#     add_library(${PROJECT_NAME}
+#       src/trajectory_visual.cpp
+#       src/trajectory_display.cpp
+#       ${MOC_FILES})
+#     target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${rviz2_DEFAULT_PLUGIN_LIBRARIES} traj_ros_bridge)
+#   endif()
+# endif (NOT USE_CTC)
+
+ament_target_dependencies(traj_ros_bridge ${QT_LIBRARIES} ff_common rclcpp traj_opt_basic traj_opt_msgs)
+ament_export_targets(traj_ros_bridge HAS_LIBRARY_TARGET)
 
 
 #############

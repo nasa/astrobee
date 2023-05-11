@@ -30,6 +30,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(ff_util REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 # Generate messages in the 'msg' folder
@@ -45,6 +46,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES
   builtin_interfaces
   std_msgs
+  ff_util
 
   ADD_LINTER_TESTS
 )

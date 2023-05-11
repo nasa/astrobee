@@ -25,12 +25,20 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <traj_opt_basic/traj_data.h>
-#include <traj_opt_msgs/Polynomial.h>
-#include <traj_opt_msgs/Spline.h>
-#include <traj_opt_msgs/Trajectory.h>
-#include <traj_opt_msgs/SolverInfo.h>
+#include <traj_opt_msgs/msg/polynomial.hpp>
+#include <traj_opt_msgs/msg/spline.hpp>
+#include <traj_opt_msgs/msg/trajectory.hpp>
+#include <traj_opt_msgs/msg/solver_info.hpp>
 #include <string>
 #include <map>
+
+namespace traj_opt_msgs {
+  typedef msg::Polynomial Polynomial;
+  typedef msg::Spline Spline;
+  typedef msg::Trajectory Trajectory;
+  typedef msg::SolverInfo SolverInfo;
+} // namespace traj_opt_msgs
+
 
 class TrajRosBridge {
  public:
@@ -58,10 +66,24 @@ class TrajRosBridge {
  private:
   TrajRosBridge();
   static TrajRosBridge &instance();
-  static rclcpp::Publisher getPub(std::string topic);
-  static rclcpp::Publisher getInfoPub(std::string topic);
-  rclcpp::NodeHandle nh_;
-  std::map<std::string, rclcpp::Publisher> pubs_;
+
+  static rclcpp::Publisher<traj_opt_msgs::Trajectory>::SharedPtr getPub(std::string topic);
+  static rclcpp::Publisher<traj_opt_msgs::SolverInfo>::SharedPtr getInfoPub(std::string topic);
+
+  NodeHandle nh_traj_;
+  NodeHandle nh_info_;
+  std::map<std::string, rclcpp::Publisher<traj_opt_msgs::Trajectory>::SharedPtr> pubs_traj_;
+  std::map<std::string, rclcpp::Publisher<traj_opt_msgs::SolverInfo>::SharedPtr> pubs_info_;
+
+  // static rclcpp::PublisherBase::SharedPtr getPub(std::string topic);
+  // static rclcpp::PublisherBase::SharedPtr getInfoPub(std::string topic);
+
+  // static rclcpp::PublisherBase::SharedPtr getPub(std::string topic);
+  // static rclcpp::PublisherBase::SharedPtr getInfoPub(std::string topic);
+
+  // // rclcpp::node::Node::make_shared nh_("~");
+  // NodeHandle nh_;
+  // std::map<std::string, rclcpp::PublisherBase::SharedPtr> pubs_;
 };
 
 #endif  // TRAJ_OPT_ROS_ROS_BRIDGE_H_
