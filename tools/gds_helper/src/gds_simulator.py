@@ -54,6 +54,7 @@ try:
 except NameError:
     pass
 
+
 class Queue:
     def __init__(self):
         self.items = []
