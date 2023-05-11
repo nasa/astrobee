@@ -17,7 +17,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import _thread
 import getpass
 import os
 import pwd
@@ -43,6 +42,17 @@ from ff_msgs.msg import (
 )
 from std_msgs.msg import Header
 
+# Python2 does not have _thread
+try:
+    import _thread
+except ImportError:
+    import thread as _thread
+
+# Use raw_input if python2
+try:
+    input = raw_input
+except NameError:
+    pass
 
 class Queue:
     def __init__(self):
@@ -292,7 +302,7 @@ def select_app():
 
     # Choose an app
     try:
-        selection = eval(input("\nType the number of app you want to select: "))
+        selection = int(input("\nType the number of app you want to select: "))
     except:
         print(" > Invalid entry")
         time.sleep(1)
@@ -320,12 +330,12 @@ def select_action():
         "f) Exit"
     )
 
-    option = eval(input("\nType an option: "))
+    option = input("\nType an option: ")
     return option
 
 
 def input_thread(a_list):
-    eval(input())
+    input()
     a_list.append(True)
 
 
@@ -418,10 +428,8 @@ def execute_action(selection):
             print_app_cmd(selection)
             print((str(num_cmds + 1) + ")  Exit program"))
 
-            command_str = eval(
-                input(
-                    "\nType the number of the command you wish to send or the command string: "
-                )
+            command_str = input(
+                "\nType the number of the command you wish to send or the command string: "
             )
             try:
                 # Convert to an integer, the number of the command
@@ -472,7 +480,7 @@ def execute_action(selection):
         final_act = ACTION_CONTINUE
 
     if final_act != ACTION_GO_BACK and final_act != ACTION_EXIT:
-        eval(input("\nPress any key to continue"))
+        input("\nPress any key to continue")
 
     return final_act
 
