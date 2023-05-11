@@ -17,9 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import ImuBias
 
-class Vector3d:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+# Class that contains an imu bias and covariance.
+class ImuBiasWithCovariance(ImuBias):
+    def __init__(self, imu_bias, covariance):
+        self.imu_bias = imu_bias 
+        self.covariance = covariance

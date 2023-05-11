@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -15,19 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Forward errors so we can recover failures
-# even when running commands through multiprocessing
-# pooling
-def full_traceback(func):
-    import functools
-    import traceback
+import Velocity
 
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
-            raise type(e)(msg)
-
-    return wrapper
+# Class that contains a velocity and covariance.
+class VelocityWithCovariance(Velocity):
+    def __init__(self, velocity, covariance):
+        self.velocity = velocity 
+        self.covariance = covariance

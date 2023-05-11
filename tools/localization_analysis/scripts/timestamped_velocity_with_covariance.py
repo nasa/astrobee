@@ -17,28 +17,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import numpy as np
-import vector3d
+import VelocityWithCovariance
 
-
-class Vector3ds:
-    def __init__(self):
-        self.xs = []
-        self.ys = []
-        self.zs = []
-
-    def add(self, x, y, z):
-        self.xs.append(x)
-        self.ys.append(y)
-        self.zs.append(z)
-
-    def add_vector3d(self, vector3d):
-        self.xs.append(vector3d.x)
-        self.ys.append(vector3d.y)
-        self.zs.append(vector3d.z)
-
-    def get_vector3d(self, index):
-        return vector3d.Vector3d(self.xs[index], self.ys[index], self.zs[index])
-
-    def get_numpy_vector(self, index):
-        return np.array([self.xs[index], self.ys[index], self.zs[index]])
+# Class that contains a timestamped velocity and covariance.
+class TimestampedVelocityWithCovariance(VelocityWithCovariance):
+    def __init__(self, velocity, covariance, timestamp):
+        self.velocity = velocity 
+        self.covariance = covariance
+        self.timestamp = timestamp

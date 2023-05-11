@@ -17,22 +17,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Pose class that contains an orientation and position and supports pose multiplication.
-class Pose:
-    def __init__(self, orientation, position):
+import Pose
+
+# Class that contains a pose and covariance.
+class PoseWithCovariance(Pose):
+    def __init__(self, orientation, position, covariance):
         self.orientation = orientation
         self.position = position
-        
-    # Right multiply the pose by pose_b and return the resulting pose.
-    def __mul__(self, pose_b):
-        new_orientation = self.orientation * pose_b.orientation
-        new_position = self.orientation.apply(pose_b.position) + self.position
-        return Pose(new_orientation, new_position)
-
-    # Returns the orientation as ZYX euler angles (YPR).
-    def __euler_angles__(self):
-        return self.orientation.as_euler("ZYX", degrees=True)
-
-    # Returns the position.
-    def __position__(self):
-        return self.position 
+        self.covariance = covariance

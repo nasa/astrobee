@@ -17,16 +17,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import vector3ds
+import ImuBiasWithCovariance
 
-
-class ImuMeasurements:
-    def __init__(self):
-        self.accelerations = vector3ds.Vector3ds()
-        self.angular_velocities = vector3ds.Vector3ds()
-        self.times = []
-
-    def add_imu_measurement(self, msg):
-        self.accelerations.add_vector3d(msg.linear_acceleration)
-        self.angular_velocities.add_vector3d(msg.angular_velocity)
-        self.times.append(msg.header.stamp.secs + 1e-9 * msg.header.stamp.nsecs)
+# Class that contains a timestamped imu_bias and covariance.
+class TimestampedImuBiasWithCovariance(ImuBiasWithCovariance):
+    def __init__(self, imu_bias, covariance, timestamp):
+        self.imu_bias = imu_bias 
+        self.covariance = covariance
+        self.timestamp = timestamp

@@ -16,27 +16,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import scipy.spatial.transform
 
+import PoseWithCovariance
 
-class Orientations:
-    def __init__(self):
-        self.yaws = []
-        self.pitches = []
-        self.rolls = []
-
-    def get_euler(self, index):
-        return [self.yaws[index], self.pitches[index], self.rolls[index]]
-
-    def get_rotation(self, index):
-        return scipy.spatial.transform.Rotation.from_euler(
-            "ZYX", self.get_euler(index), degrees=True
-        )
-
-    def add_euler(self, euler_angles):
-        self.add(euler_angles[0], euler_angles[1], euler_angles[2])
-
-    def add(self, yaw, pitch, roll):
-        self.yaws.append(yaw)
-        self.pitches.append(pitch)
-        self.rolls.append(roll)
+# Class that contains a timestamped pose and covariance.
+class TimestampedPoseWithCovariance(PoseWithCovariance):
+    def __init__(self, orientation, position, covariance, timestamp):
+        self.orientation = orientation
+        self.position = position
+        self.covariance = covariance
+        self.timestamp = timestamp

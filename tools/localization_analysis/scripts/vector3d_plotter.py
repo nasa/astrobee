@@ -18,132 +18,12 @@
 # under the License.
 
 import matplotlib
-import poses
-import vector3ds
-
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-def unwrap_in_degrees(angles):
-    return np.rad2deg(np.unwrap(np.deg2rad(angles)))
-
-
+# Class for plotting 3d vector values on the same and separate plots.
 class Vector3dPlotter:
-    def __init__(self, xlabel, ylabel, title, individual_plots):
-        self.xlabel = xlabel
-        self.ylabel = ylabel
-        self.title = title
-        self.individual_plots = individual_plots
-        self.y_vals_vec = []
-
-    def add_pose_position(
-        self,
-        pose,
-        colors=["r", "b", "g"],
-        linestyle="-",
-        linewidth=1,
-        marker=None,
-        markeredgewidth=None,
-        markersize=1,
-    ):
-        position_plotter = Vector3dYVals(
-            pose.pose_type,
-            pose.times,
-            pose.positions.xs,
-            pose.positions.ys,
-            pose.positions.zs,
-            ["Pos. (X)", "Pos. (Y)", "Pos. (Z)"],
-            colors,
-            linestyle,
-            linewidth,
-            marker,
-            markeredgewidth,
-            markersize,
-        )
-        self.add_y_vals(position_plotter)
-
-    def add_pose_orientation(
-        self,
-        pose,
-        colors=["r", "b", "g"],
-        linestyle="-",
-        linewidth=1,
-        marker=None,
-        markeredgewidth=None,
-        markersize=1,
-    ):
-        orientation_plotter = Vector3dYVals(
-            pose.pose_type,
-            pose.times,
-            unwrap_in_degrees(pose.orientations.yaws),
-            unwrap_in_degrees(pose.orientations.rolls),
-            unwrap_in_degrees(pose.orientations.pitches),
-            ["Orientation (Yaw)", "Orientation (Roll)", "Orientation (Pitch)"],
-            colors,
-            linestyle,
-            linewidth,
-            marker,
-            markeredgewidth,
-            markersize,
-        )
-        self.add_y_vals(orientation_plotter)
-
-    def add_y_vals(self, y_vals):
-        self.y_vals_vec.append(y_vals)
-
-    def plot(self, pdf, individual_plots=True):
-        plt.figure()
-        for y_vals in self.y_vals_vec:
-            y_vals.full_plot()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-        if individual_plots:
-            self.plot_xs(pdf)
-            self.plot_ys(pdf)
-            self.plot_zs(pdf)
-
-    def plot_xs(self, pdf):
-        plt.figure()
-        for y_vals in self.y_vals_vec:
-            y_vals.plot_x()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-    def plot_ys(self, pdf):
-        plt.figure()
-        for y_vals in self.y_vals_vec:
-            y_vals.plot_y()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-    def plot_zs(self, pdf):
-        plt.figure()
-        for y_vals in self.y_vals_vec:
-            y_vals.plot_z()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-
-class Vector3dYVals:
     def __init__(
         self,
         name,
@@ -176,11 +56,13 @@ class Vector3dYVals:
         self.markeredgewidth = markeredgewidth
         self.markersize = markersize
 
+    # Plot x, y, and z values on the same plot.
     def full_plot(self):
         self.plot_x()
         self.plot_y()
         self.plot_z()
 
+    # Plot x values to the plot.
     def plot_x(self):
         plt.plot(
             self.x_axis_vals,
@@ -193,6 +75,7 @@ class Vector3dYVals:
             markersize=self.markersize,
         )
 
+    # Plot y values to the plot.
     def plot_y(self):
         plt.plot(
             self.x_axis_vals,
@@ -206,6 +89,7 @@ class Vector3dYVals:
             markersize=self.markersize,
         )
 
+    # Plot z values to the plot.
     def plot_z(self):
         plt.plot(
             self.x_axis_vals,

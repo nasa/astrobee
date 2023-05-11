@@ -1,7 +1,6 @@
-  - for vio, use combined nav state adder! (AAC)
-    - add measurement creation! (use motion model with const vel and acc and bias) (AAA)
-    - split simple odom and loc into header and c++ files???
-    - update tutorial with simple loc and odom!
+- update tutorial with simple loc and odom!
+  - update simple localizer section!
+  - add simple odometry section!
 
   - add tutorial for simple calibration (AACC)
   - add tutorial for simple mapping (AADD)
@@ -9,7 +8,11 @@
       - add unit tests for these!!!!
 
 - start plotting VIO!
-  - do this separately? make script cleaner!
+    - add super init calls to inherited pose states!
+    - finish plot vio script! test! (AA)
+    - add comments!
+    - update readme!
+
 - add regression tests?
 
 - update nodes interface!
