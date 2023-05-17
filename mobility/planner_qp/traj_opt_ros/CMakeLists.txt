@@ -17,6 +17,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(traj_opt_ros)
+
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -24,22 +25,29 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations  -Werror=return-type -DQT_NO_KEYWORDS")
 
-## Qt Stuff, assume Qt5
-set(CMAKE_AUTOMOC ON)
+# ## Qt Stuff, assume Qt5
+# set(CMAKE_AUTOMOC ON)
 
-## Find catkin macros and libraries
-set(LIBRARIES traj_ros_bridge)
+# ## Find catkin macros and libraries
+# set(LIBRARIES traj_ros_bridge)
 
 ## Find amend macros and libraries
+set(dependencies 
+rclcpp
+rclcpp_components
+ff_common
+ff_msgs
+ff_util
+traj_opt_basic
+traj_opt_msgs
+)
+
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-
-find_package(ff_common REQUIRED)
-find_package(ff_util REQUIRED)
-find_package(traj_opt_basic REQUIRED)
-find_package(traj_opt_msgs REQUIRED)
-
 find_package(Qt5 COMPONENTS Core)
+
+foreach(dep ${dependencies})
+  find_package(${dep} REQUIRED)
+endforeach()
 
 # build rviz plugin if not cross compiling
 # if(NOT USE_CTC="${USE_CTC}")
@@ -67,8 +75,14 @@ include_directories(
 )
 
 add_library(traj_ros_bridge
-            src/ros_bridge.cpp)
-target_link_libraries(traj_ros_bridge ff_common ff_util traj_opt_basic traj_opt_msgs)
+  src/ros_bridge.cpp
+)
+
+ament_target_dependencies(traj_ros_bridge ${QT_LIBRARIES} ${dependencies})
+
+target_compile_definitions(traj_ros_bridge PRIVATE "COMPOSITION_BUILDING_DLL")
+target_link_libraries(traj_ros_bridge ${dependencies})
+ament_export_targets(traj_ros_bridge HAS_LIBRARY_TARGET)
 
 # if (NOT USE_CTC)
 #   message("Using CTC BUILD")
@@ -81,18 +95,14 @@ target_link_libraries(traj_ros_bridge ff_common ff_util traj_opt_basic traj_opt_
 #   endif()
 # endif (NOT USE_CTC)
 
-ament_target_dependencies(traj_ros_bridge ${QT_LIBRARIES} ff_common rclcpp traj_opt_basic traj_opt_msgs)
-ament_export_targets(traj_ros_bridge HAS_LIBRARY_TARGET)
-
-
 #############
 ## Install ##
 #############
 
-target_include_directories(traj_ros_bridge
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+# target_include_directories(traj_ros_bridge
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
 
 # Mark libraries for installation
 install(TARGETS traj_ros_bridge
@@ -103,19 +113,19 @@ install(TARGETS traj_ros_bridge
   INCLUDES DESTINATION include
 )
 
-if (NOT USE_CTC)
-  if(rviz2_QT_VERSION)
-    install(TARGETS ${PROJECT_NAME}
-      ARCHIVE DESTINATION lib
-      LIBRARY DESTINATION lib
-      RUNTIME DESTINATION bin
-    )
-  endif()
-endif (NOT USE_CTC)
+# if (NOT USE_CTC)
+#   if(rviz2_QT_VERSION)
+#     install(TARGETS ${PROJECT_NAME}
+#       ARCHIVE DESTINATION lib
+#       LIBRARY DESTINATION lib
+#       RUNTIME DESTINATION bin
+#     )
+#   endif()
+# endif (NOT USE_CTC)
 
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}
-  DESTINATION include
+install(DIRECTORY launch/
+  DESTINATION share/traj_ros_bridge
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )

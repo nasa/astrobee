@@ -65,7 +65,8 @@ void TrajRosBridge::publish_msg(const traj_opt::TrajData &data,
 traj_opt_msgs::Trajectory TrajRosBridge::convert(
     const traj_opt::TrajData &data) {
   traj_opt_msgs::Trajectory traj;
-  traj.header.stamp = GetTimeNow(); //nh_traj_->get_clock()->now(); //
+
+  traj.header.stamp = clock_->now();
   traj.header.frame_id = "map";
 
   traj.dimension_names = data.dimension_names;
