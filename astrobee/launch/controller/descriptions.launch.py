@@ -20,6 +20,7 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
+    [discower_lab_urdf,  discower_lab_robot_description]  = get_urdf('urdf/model.urdf', 'discower_cosmo')
     [granite_urdf,       granite_robot_description]       = get_urdf('urdf/model.urdf', 'astrobee_granite')
     [iss_urdf,           iss_robot_description]           = get_urdf('urdf/model.urdf', 'astrobee_iss')
     [dock_urdf,          dock_robot_description]          = get_urdf('urdf/model.urdf', 'astrobee_dock')
@@ -31,6 +32,17 @@ def generate_launch_description():
     return LaunchDescription([
 
         DeclareLaunchArgument("world"),
+
+        # DISCOWER COSMO robot description
+        Node(
+            package="robot_state_publisher",
+            namespace="discower_cosmo",
+            executable="robot_state_publisher",
+            name="lab_state_publisher",
+            parameters=[{'robot_description': ParameterValue(discower_lab_robot_description) }],
+            arguments=[discower_lab_urdf],
+            condition=LaunchConfigurationEquals("world", "discower")
+        ),
 
         # Granite robot description
         Node(
