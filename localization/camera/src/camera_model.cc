@@ -92,8 +92,10 @@ Eigen::Vector2d CameraModel::ImageCoordinates(const Eigen::Vector3d & p) const {
 }
 
 Eigen::Vector3d CameraModel::Ray(int x, int y) const {
-  return cam_t_global_.rotation().inverse() * Eigen::Vector3d(x / params_.GetFocalVector()[0],
-      y / params_.GetFocalVector()[1], 1.0).normalized();
+  Eigen::Vector2d undistorted;
+  params_.Convert<DISTORTED_C, UNDISTORTED_C>(Eigen::Vector2d(x, y), &undistorted);
+  return cam_t_global_.rotation().inverse() * Eigen::Vector3d(undistorted[0] / params_.GetFocalVector()[0],
+      undistorted[1] / params_.GetFocalVector()[1], 1.0).normalized();
 }
 
 Eigen::Vector3d CameraModel::CameraCoordinates(double x, double y, double z) const {
@@ -104,18 +106,18 @@ Eigen::Vector3d CameraModel::CameraCoordinates(const Eigen::Vector3d & p) const 
   return cam_t_global_ * p;
 }
 
-// TODO(oalexan1): This looks buggy. Because ImageCoordinates()
-// returns an undistorted pixel, it must compare to GetUndistortedHalfSize().
 bool CameraModel::IsInFov(const Eigen::Vector3d & p) const {
   Eigen::Vector3d t = cam_t_global_ * p;
   if (t.z() <= 0.0)
     return false;
-  Eigen::Vector2d camera = ImageCoordinates(p);
-  if (camera.x() < -params_.GetDistortedHalfSize()[0] ||
-      camera.x() >= params_.GetDistortedHalfSize()[0])
+  Eigen::Vector2d undistorted, distorted;
+  undistorted = ImageCoordinates(p);
+  params_.Convert<UNDISTORTED_C, DISTORTED_C>(undistorted, &distorted);
+  if (distorted.x() < -params_.GetDistortedHalfSize()[0] ||
+      distorted.x() >= params_.GetDistortedHalfSize()[0])
     return false;
-  if (camera.y() < -params_.GetDistortedHalfSize()[1] ||
-      camera.y() >= params_.GetDistortedHalfSize()[1])
+  if (distorted.y() < -params_.GetDistortedHalfSize()[1] ||
+      distorted.y() >= params_.GetDistortedHalfSize()[1])
     return false;
   return true;
 }
