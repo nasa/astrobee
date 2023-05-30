@@ -62,6 +62,7 @@ Eigen::Affine3d ros_pose_to_eigen_transform(const geometry_msgs::Pose& p);
 Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform& p);
 geometry_msgs::Pose ros_transform_to_ros_pose(const geometry_msgs::Transform& p);
 geometry_msgs::Pose tf2_transform_to_ros_pose(const tf2::Transform& p);
+geometry_msgs::Pose eigen_transform_to_ros_pose(const Eigen::Affine3d& p);
 geometry_msgs::Transform eigen_transform_to_ros_transform(const Eigen::Affine3d& p);
 tf2::Transform ros_tf_to_tf2_transform(const geometry_msgs::Transform& p);
 tf2::Transform ros_pose_to_tf2_transform(const geometry_msgs::Pose& p);
