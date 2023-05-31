@@ -64,3 +64,9 @@ RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/${ROS_VERSION}/setup.bash\"\n
 # Copy over the ff_msgs
 COPY communications/ff_msgs /src/msgs/src/ff_msgs/ff_msgs/
 COPY communications/ff_hw_msgs /src/msgs/src/ff_msgs/ff_hw_msgs/
+
+
+RUN cd /src/msgs \
+    && export CMAKE_PREFIX_PATH=/opt/ros/${ROS_VERSION} \
+    && catkin init \
+    && catkin build
