@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>traj_opt_basic</name>
-  <version>0.0.1</version>
+  <version>0.0.0</version>
   <description>
   	The traj_opt_basic package
   </description>
@@ -14,7 +14,15 @@
   <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
     Astrobee Flight Software
   </maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>catkin_simple</build_depend>
-  <depend>eigen3</depend>
+
+  <build_depend>ament_cmake</build_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>eigen3</build_depend>
+
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>eigen3</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

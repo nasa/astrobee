@@ -16,18 +16,18 @@
  * under the License.
  */
 
-#include <OGRE/OgreSceneManager.h>
-#include <OGRE/OgreSceneNode.h>
+#include <OgreSceneManager.h>
+#include <OgreSceneNode.h>
 
-#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
 
-#include <rviz/frame_manager.h>
-#include <rviz/load_resource.h>
-#include <rviz/properties/color_property.h>
-#include <rviz/properties/enum_property.h>
-#include <rviz/properties/float_property.h>
-#include <rviz/properties/int_property.h>
-#include <rviz/visualization_manager.h>
+#include <rviz_common/frame_manager.hpp>
+#include <rviz_common/load_resource.hpp>
+#include <rviz_common/properties/color_property.hpp>
+#include <rviz_common/properties/enum_property.hpp>
+#include <rviz_common/properties/float_property.hpp>
+#include <rviz_common/properties/int_property.hpp>
+#include <rviz_common/visualization_manager.hpp>
 
 #include "trajectory_display.h"  // NOLINT()
 #include "trajectory_visual.h"   // NOLINT()
@@ -38,36 +38,36 @@ namespace traj_opt {
 // The constructor must have no arguments, so we can't give the
 // constructor the parameters it needs to fully initialize.
 TrajectoryDisplay::TrajectoryDisplay() {
-  color_property_ = new rviz::ColorProperty("Color", QColor(204, 51, 204),
-                                            "Color of trajectory.", this,
-                                            SLOT(updateColorAndAlpha()));
+  color_property_ = new rviz_common::ColorProperty("Color", QColor(204, 51, 204),
+                                                  "Color of trajectory.", this,
+                                                  SLOT(updateColorAndAlpha()));
 
-  alpha_property_ = new rviz::FloatProperty(
+  alpha_property_ = new rviz_common::FloatProperty(
       "Alpha", 1.0, "0 is fully transparent, 1.0 is fully opaque.", this,
       SLOT(updateColorAndAlpha()));
-  color_property_v_ = new rviz::ColorProperty(
+  color_property_v_ = new rviz_common::ColorProperty(
       "Velocity Color", QColor(20, 251, 204), "Color of velocity.", this,
       SLOT(updateColorAndAlpha()));
-  color_property_a_ = new rviz::ColorProperty(
+  color_property_a_ = new rviz_common::ColorProperty(
       "Acceleration Color", QColor(241, 21, 24), "Color of acceleration.", this,
       SLOT(updateColorAndAlpha()));
 
   thickness_property_ =
-      new rviz::FloatProperty("Line Thickness", 0.1,
-                              "Does nothing for Sikang style trajectories "
-                              "because lines are always 1px in Ogre api",
-                              this, SLOT(updateScale()));
+      new rviz_common::FloatProperty("Line Thickness", 0.1,
+                                    "Does nothing for Sikang style trajectories "
+                                   "because lines are always 1px in Ogre api",
+                                    this, SLOT(updateScale()));
   thickness_property_->setMin(0.01);
   thickness_property_->setMax(3.00);
 
   use_v_property_ =
-      new rviz::BoolProperty("Plot Velocity", true, "Turns arrow/lines on/off",
-                             this, SLOT(updateSampleLength()));
-  use_a_property_ = new rviz::BoolProperty("Plot Acceleration", false,
-                                           "Turns arrow/lines on/off", this,
-                                           SLOT(updateSampleLength()));
+      new rviz_common::BoolProperty("Plot Velocity", true, "Turns arrow/lines on/off",
+                                   this, SLOT(updateSampleLength()));
+  use_a_property_ = new rviz_common::BoolProperty("Plot Acceleration", false,
+                                                 "Turns arrow/lines on/off", this,
+                                                 SLOT(updateSampleLength()));
 
-  history_length_property_ = new rviz::IntProperty(
+  history_length_property_ = new rviz_common::IntProperty(
       "History Length", 1,
       "Number of prior trajectories to display. Warning!! "
       "Setting this too high is not recommended, it will "
@@ -76,21 +76,21 @@ TrajectoryDisplay::TrajectoryDisplay() {
   history_length_property_->setMin(1);
   history_length_property_->setMax(150);
 
-  traj_samples_property_ = new rviz::IntProperty(
+  traj_samples_property_ = new rviz_common::IntProperty(
       "Trajectory Samples", 50, "Number of samples used to draw trajectory",
       this, SLOT(updateSampleLength()));
   traj_samples_property_->setMin(10);
   traj_samples_property_->setMax(500);
 
   tangent_samples_property_ =
-      new rviz::IntProperty("Tangent Samples", 25,
-                            "Number of samples used to draw velocity and "
-                            "acceleration arrows or lines",
-                            this, SLOT(updateSampleLength()));
+      new rviz_common::IntProperty("Tangent Samples", 25,
+                                  "Number of samples used to draw velocity and "
+                                  "acceleration arrows or lines",
+                                  this, SLOT(updateSampleLength()));
   tangent_samples_property_->setMin(10);
   tangent_samples_property_->setMax(500);
 
-  style_property_ = new rviz::EnumProperty(
+  style_property_ = new rviz_common::EnumProperty(
       "Style", "Mike",
       "Mike style trajectories are plotted with cylinders and spheres. Tangent "
       "velocity/acceleration is plotted with arrows. Sikang style trajectories "
@@ -105,7 +105,7 @@ TrajectoryDisplay::TrajectoryDisplay() {
   style_property_->addOption("SE3", 3);
 }
 
-// After the top-level rviz::Display::initialize() does its own setup,
+// After the top-level rviz_common::Display::initialize() does its own setup,
 // it calls the subclass's onInitialize() function.  This is where we
 // instantiate all the workings of the class.  We make sure to also
 // call our immediate super-class's onInitialize() function, since it
@@ -124,7 +124,7 @@ void TrajectoryDisplay::onInitialize() {
   updateColorAndAlpha();
   updateSampleLength();
   //  this->setIcon(
-  //  rviz::loadPixmap("package://traj_opt_msgs/icons/classes/Trajectory.svg",true)
+  //  rviz_common::loadPixmap("package://traj_opt_msgs/icons/classes/Trajectory.svg",true)
   //  );
 }
 
@@ -190,7 +190,7 @@ void TrajectoryDisplay::updateSampleLength() {
 // This is our callback to handle an incoming message.
 void TrajectoryDisplay::processMessage(
     const traj_opt_msgs::Trajectory::ConstPtr &msg) {
-  // Here we call the rviz::FrameManager to get the transform from the
+  // Here we call the rviz_common::FrameManager to get the transform from the
   // fixed frame to the frame in the header of this Trajectory message.  If
   // it fails, we can't do anything else so we return.
   Ogre::Quaternion orientation;
@@ -245,4 +245,4 @@ void TrajectoryDisplay::randomizeColor() {}
 // Tell pluginlib about this class.  It is important to do this in
 // global scope, outside our package's namespace.
 #include <pluginlib/class_list_macros.h>  // NOLINT()
-PLUGINLIB_EXPORT_CLASS(traj_opt::TrajectoryDisplay, rviz::Display)
+PLUGINLIB_EXPORT_CLASS(traj_opt::TrajectoryDisplay, rviz_common::Display)

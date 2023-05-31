@@ -42,7 +42,7 @@ class Basis {
 
   // evaluates ith element of basis at x where x is normalized to 0 to 1
   virtual decimal_t evaluate(decimal_t x, uint i) const = 0;
-  // innerproduct bewtween ith and jth basis functions
+  // innerproduct between ith and jth basis functions
   virtual decimal_t innerproduct(uint i, uint j) const = 0;
 
   virtual uint dim();
