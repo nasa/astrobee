@@ -34,3 +34,15 @@ jobs:
       run: |
         docker cp $(docker create --rm astrobee/astrobee:latest-msgs-jar-ubuntu16.04):/src/msgs/devel/share/maven/ .
         find maven -name *.jar
+
+    - name: Log in to registry
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+        echo "GITHUB_HEAD_REF: ${GITHUB_HEAD_REF}"
+        echo "GITHUB_REF: ${GITHUB_REF}"
+        echo ${{ steps.vars.outputs.short_ref }}
+        echo ${{ github.head_ref }}
+
+    # - name: Push Docker image
+    #   run: |
+    #     if [ "${{ github.repository_owner }}" = "nasa" ]; then docker push ghcr.io/${{ github.repository_owner }}/isaac:latest-astrobee-ubuntu16.04; fi;
