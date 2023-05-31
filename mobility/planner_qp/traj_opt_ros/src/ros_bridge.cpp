@@ -20,9 +20,9 @@
 #include <ff_util/ff_component.h>
 #include <string>
 
-TrajRosBridge::TrajRosBridge(){
-  nh_traj_ = std::make_shared<rclcpp::Node>("~","~");
-  nh_info_ = std::make_shared<rclcpp::Node>("~","~");
+TrajRosBridge::TrajRosBridge() {
+  nh_traj_ = std::make_shared<rclcpp::Node>("~", "~");
+  nh_info_ = std::make_shared<rclcpp::Node>("~", "~");
   // rclcpp::Node n("~");
   // nh_ = std::shared_ptr(n);
 }

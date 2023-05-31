@@ -39,7 +39,7 @@ namespace traj_opt_msgs {
   typedef msg::Spline Spline;
   typedef msg::Trajectory Trajectory;
   typedef msg::SolverInfo SolverInfo;
-} // namespace traj_opt_msgs
+}  // namespace traj_opt_msgs
 
 
 class TrajRosBridge {
@@ -78,7 +78,6 @@ class TrajRosBridge {
   NodeHandle nh_info_;
   std::map<std::string, rclcpp::Publisher<traj_opt_msgs::Trajectory>::SharedPtr> pubs_traj_;
   std::map<std::string, rclcpp::Publisher<traj_opt_msgs::SolverInfo>::SharedPtr> pubs_info_;
-
 };
 
 #endif  // TRAJ_OPT_ROS_ROS_BRIDGE_H_
