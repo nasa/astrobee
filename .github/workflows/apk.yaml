@@ -20,7 +20,7 @@ jobs:
                                  --build-arg UBUNTU_VERSION=16.04
                                  --build-arg ROS_VERSION=kinetic
                                  --build-arg PYTHON=''
-                                 -t astrobee/astrobee:astrobee-msgs-ubuntu16.04
+                                 -t astrobee/astrobee:msgs-ubuntu16.04
 
     - name: Build image astrobee/astrobee:latest-msgs-jar-ubuntu16.04
       run: docker build astrobee -f astrobee/scripts/docker/build_msgs_jar.Dockerfile
