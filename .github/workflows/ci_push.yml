@@ -2,7 +2,9 @@ name: Build, test and push packages CI
 
 on:
   push:
-    branches: [ 'develop' ]
+    branches-ignore:
+      - gh-pages
+      - ros2
 
 jobs:
 
@@ -20,9 +22,23 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Build, test, push docker
-      run: ./scripts/docker/build.sh --xenial --remote
-                                     --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee push_astrobee
+      run: >
+        push_arg="";
+        revision="latest";
+        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then \
+        
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+            push_arg="push_astrobee"
+          fi;
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            revision="v${VERSION}";
+            push_arg="push_astrobee_base push_astrobee"
+          fi;
+        fi;
+        ./scripts/docker/build.sh --xenial --remote --revision ${revision}
+                                     --owner ghcr.io/${{ github.repository_owner }}
+                                     astrobee test_astrobee ${push_arg}
 
   build-bionic:
 
@@ -38,9 +54,22 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Build, test, push docker
-      run: ./scripts/docker/build.sh --bionic --remote
+      run: >
+        push_arg="";
+        revision="latest";
+        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then \
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+            push_arg="push_astrobee"
+          fi;
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            revision="v${VERSION}";
+            push_arg="push_astrobee_base push_astrobee"
+          fi;
+        fi;
+        ./scripts/docker/build.sh --bionic --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee push_astrobee
+                                     astrobee test_astrobee ${push_arg}
 
   build-focal:
 
@@ -56,6 +85,19 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Build, test, push docker
-      run: ./scripts/docker/build.sh --focal --remote
+      run: >
+        push_arg="";
+        revision="latest";
+        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then \
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+            push_arg="push_astrobee"
+          fi;
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            revision="v${VERSION}";
+            push_arg="push_astrobee_base push_astrobee"
+          fi;
+        fi;
+        ./scripts/docker/build.sh --focal --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee push_astrobee
+                                     astrobee test_astrobee ${push_arg}

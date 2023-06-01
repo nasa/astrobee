@@ -28,7 +28,7 @@ jobs:
                               --build-arg ROS_VERSION=kinetic
                               --build-arg PYTHON=''
                               --build-arg REPO=astrobee
-                              -t astrobee/astrobee:latest-msgs-jar-ubuntu16.04
+                              -t ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar
 
     - name: Copy jar files
       run: |
@@ -38,11 +38,18 @@ jobs:
     - name: Log in to registry
       run: |
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-        echo "GITHUB_HEAD_REF: ${GITHUB_HEAD_REF}"
-        echo "GITHUB_REF: ${GITHUB_REF}"
-        echo ${{ steps.vars.outputs.short_ref }}
-        echo ${{ github.head_ref }}
 
-    # - name: Push Docker image
-    #   run: |
-    #     if [ "${{ github.repository_owner }}" = "nasa" ]; then docker push ghcr.io/${{ github.repository_owner }}/isaac:latest-astrobee-ubuntu16.04; fi;
+        echo "head_ref: ${{ github.head_ref }}"
+
+    - name: Push Docker image if master or develop
+      run: >
+        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then \
+          if [[ "${{ github.head_ref }}" = "develop" ]]; then 
+            docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar;
+          fi;
+          if [[ "${{ github.head_ref }}" = "master" ]]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            docker tag ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-msgs-jar
+            docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-msgs-jar;
+          fi;
+        fi;

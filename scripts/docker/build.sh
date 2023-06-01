@@ -100,6 +100,9 @@ while [ "$1" != "" ]; do
         --owner )                  owner=$2
                                    shift
                                    ;;
+        --revision )               revision=$2
+                                   shift
+                                   ;;
         --dry-run )                dry_run="true"
                                    ;;
         -- )                       shift
@@ -258,8 +261,10 @@ if [ "$astrobee_quick" = "true" ]; then
     build astrobee_quick "${revision}-" "quick-"
 fi
 
+# When we publish the base, we always want it
+# to rewrite the latest for future use
 if [ "$push_astrobee_base" = "true" ]; then
-    push astrobee_base "${revision}-" "base-"
+    push astrobee_base "latest-" "base-"
 fi
 
 if [ "$push_astrobee" = "true" ]; then
