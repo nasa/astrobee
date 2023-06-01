@@ -35,8 +35,6 @@ jobs:
       run: |
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-        echo "head_ref: ${{ github.head_ref }}"
-
     - name: Push Docker image if master or develop
       run: >
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then \

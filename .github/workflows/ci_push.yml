@@ -25,9 +25,9 @@ jobs:
       run: >
         push_arg="";
         revision="latest";
+        build_arg="astrobee";
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
-            build_arg="astrobee";
             push_arg="push_astrobee";
           fi;
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
@@ -38,7 +38,7 @@ jobs:
           fi;
         fi;
         ./scripts/docker/build.sh --xenial --remote --revision ${revision}
-                                     --owner ghcr.io/${{ github.repository_owner }}
+                                     --owner ${{ github.repository_owner }}
                                      ${build_arg} test_astrobee ${push_arg};
 
   build-bionic:
@@ -58,9 +58,9 @@ jobs:
       run: >
         push_arg="";
         revision="latest";
+        build_arg="astrobee";
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
-            build_arg="astrobee";
             push_arg="push_astrobee";
           fi;
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
@@ -91,9 +91,9 @@ jobs:
       run: >
         push_arg="";
         revision="latest";
+        build_arg="astrobee";
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
-            build_arg="astrobee";
             push_arg="push_astrobee";
           fi;
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
