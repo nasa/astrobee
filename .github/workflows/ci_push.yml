@@ -27,17 +27,19 @@ jobs:
         revision="latest";
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
-            push_arg="push_astrobee"
+            build_arg="astrobee";
+            push_arg="push_astrobee";
           fi;
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
-            push_arg="push_astrobee_base push_astrobee"
+            build_arg="astrobee_base astrobee";
+            push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
         ./scripts/docker/build.sh --xenial --remote --revision ${revision}
                                      --owner ghcr.io/${{ github.repository_owner }}
-                                     astrobee test_astrobee ${push_arg};
+                                     ${build_arg} test_astrobee ${push_arg};
 
   build-bionic:
 
@@ -58,17 +60,19 @@ jobs:
         revision="latest";
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
-            push_arg="push_astrobee"
+            build_arg="astrobee";
+            push_arg="push_astrobee";
           fi;
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
-            push_arg="push_astrobee_base push_astrobee"
+            build_arg="astrobee_base astrobee";
+            push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
         ./scripts/docker/build.sh --bionic --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee ${push_arg};
+                                     ${build_arg} test_astrobee ${push_arg};
 
   build-focal:
 
@@ -89,14 +93,16 @@ jobs:
         revision="latest";
         if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
-            push_arg="push_astrobee"
+            build_arg="astrobee";
+            push_arg="push_astrobee";
           fi;
           if [[ "${{ github.head_ref }}" = "develop" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
-            push_arg="push_astrobee_base push_astrobee"
+            build_arg="astrobee_base astrobee";
+            push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
         ./scripts/docker/build.sh --focal --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee ${push_arg};
+                                     ${build_arg} test_astrobee ${push_arg};

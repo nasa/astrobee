@@ -146,9 +146,8 @@ done
 
 if [[ "$build_astrobee_base" == "true" \
           && "$remote" == "true" ]]; then
-    echo "Error: --remote doesn't make sense when first target is astrobee_base."
-    echo "Run with -h for help."
-    exit 1
+    echo "Warning: --remote doesn't make sense when first target is astrobee_base."
+    echo "It will be ignored."
 fi
 
 ######################################################################
