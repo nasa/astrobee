@@ -26,11 +26,11 @@ jobs:
         push_arg="";
         revision="latest";
         build_arg="astrobee";
-        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+        if [[ "${{ github.repository_owner }}" == "nasa" ]]; then
+          if [[ "${{ github.head_ref }}" == "develop" ]]; then
             push_arg="push_astrobee";
           fi;
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+          if [[ "${{ github.head_ref }}" == "master" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
             build_arg="astrobee_base astrobee";
@@ -59,11 +59,11 @@ jobs:
         push_arg="";
         revision="latest";
         build_arg="astrobee";
-        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+        if [[ "${{ github.repository_owner }}" == "nasa" ]]; then
+          if [[ "${{ github.head_ref }}" == "develop" ]]; then
             push_arg="push_astrobee";
           fi;
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+          if [[ "${{ github.head_ref }}" == "master" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
             build_arg="astrobee_base astrobee";
@@ -92,11 +92,11 @@ jobs:
         push_arg="";
         revision="latest";
         build_arg="astrobee";
-        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+        if [[ "${{ github.repository_owner }}" == "nasa" ]]; then
+          if [[ "${{ github.head_ref }}" == "develop" ]]; then
             push_arg="push_astrobee";
           fi;
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then
+          if [[ "${{ github.head_ref }}" == "master" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
             build_arg="astrobee_base astrobee";

@@ -35,13 +35,19 @@ jobs:
       run: |
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
+        echo "GITHUB_HEAD_REF: ${GITHUB_HEAD_REF}"
+        echo "GITHUB_REF: ${GITHUB_REF}"
+        echo "short_ref: ${{ steps.vars.outputs.short_ref }}"
+        echo "head_ref: ${{ github.head_ref }}"
+        echo "ref: ${{ github.ref }}"
+
     - name: Push Docker image if master or develop
       run: >
-        if [[ "${{ github.repository_owner }}" = "nasa" ]]; then \
-          if [[ "${{ github.head_ref }}" = "develop" ]]; then 
+        if [[ "${{ github.repository_owner }}" == "nasa" ]]; then
+          if [[ "${{ github.head_ref }}" == "develop" ]]; then 
             docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar;
           fi;
-          if [[ "${{ github.head_ref }}" = "master" ]]; then
+          if [[ "${{ github.head_ref }}" == "master" ]]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             docker tag ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-msgs-jar
             docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-msgs-jar;
