@@ -55,8 +55,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,o:,d"
-longopts="help,xenial,bionic,focal,remote,owner:,dry-run"
+shortopts="h,x,b,f,r,o:,v:,d"
+longopts="help,xenial,bionic,focal,remote,owner:,revision:,dry-run"
 opts=$(getopt -a -n build.sh --options "$shortops" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
