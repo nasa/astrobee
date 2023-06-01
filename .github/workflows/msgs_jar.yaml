@@ -9,21 +9,17 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: Checkout Astrobee
-      uses: actions/checkout@v2
-      with:
-        repository: nasa/astrobee
-        path: astrobee/
+    - uses: actions/checkout@v3
 
     - name: Build image astrobee/astrobee:msgs-ubuntu16.04
-      run: docker build astrobee -f astrobee/scripts/docker/astrobee_msgs.Dockerfile
+      run: docker build . -f ./scripts/docker/astrobee_msgs.Dockerfile
                                  --build-arg UBUNTU_VERSION=16.04
                                  --build-arg ROS_VERSION=kinetic
                                  --build-arg PYTHON=''
                                  -t astrobee/astrobee:msgs-ubuntu16.04
 
     - name: Build image astrobee/astrobee:latest-msgs-jar-ubuntu16.04
-      run: docker build astrobee -f astrobee/scripts/docker/build_msgs_jar.Dockerfile
+      run: docker build . -f ./scripts/docker/build_msgs_jar.Dockerfile
                               --build-arg UBUNTU_VERSION=16.04
                               --build-arg ROS_VERSION=kinetic
                               --build-arg PYTHON=''
