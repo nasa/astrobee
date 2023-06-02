@@ -26,20 +26,21 @@ jobs:
         revision="latest";
         build_arg="astrobee";
         push_arg="";
-        if [ "${{ github.repository_owner }}" == "nasa" ]; then
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
+        if [ $branch == "nasa" ]; then
           if [ "${{ github.head_ref }}" == "develop" ]; then
             push_arg="push_astrobee";
           fi;
-          if [ "${{ github.head_ref }}" == "master" ]; then
+          if [ $branch == "master" ]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
             build_arg="astrobee_base astrobee";
             push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
-        echo "./scripts/docker/build.sh --xenial --remote --revision ${revision}
+        ./scripts/docker/build.sh --xenial --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     ${build_arg} test_astrobee ${push_arg}";
+                                     ${build_arg} test_astrobee ${push_arg};
 
   build-bionic:
 
@@ -59,20 +60,21 @@ jobs:
         revision="latest";
         build_arg="astrobee";
         push_arg="";
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
         if [ "${{ github.repository_owner }}" == "nasa" ]; then
-          if [ "${{ github.head_ref }}" == "develop" ]; then
+          if [ $branch == "develop" ]; then
             push_arg="push_astrobee";
           fi;
-          if [ "${{ github.head_ref }}" == "master" ]; then
+          if [ $branch == "master" ]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
             build_arg="astrobee_base astrobee";
             push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
-        echo "./scripts/docker/build.sh --bionic --remote --revision ${revision}
+        ./scripts/docker/build.sh --bionic --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     ${build_arg} test_astrobee ${push_arg}";
+                                     ${build_arg} test_astrobee ${push_arg};
 
   build-focal:
 
@@ -92,17 +94,18 @@ jobs:
         revision="latest";
         build_arg="astrobee";
         push_arg="";
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
         if [ "${{ github.repository_owner }}" == "nasa" ]; then
-          if [ "${{ github.head_ref }}" == "develop" ]; then
+          if [ $branch == "develop" ]; then
             push_arg="push_astrobee";
           fi;
-          if [ "${{ github.head_ref }}" == "master" ]; then
+          if [ $branch == "master" ]; then
             export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
             revision="v${VERSION}";
             build_arg="astrobee_base astrobee";
             push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
-        echo "./scripts/docker/build.sh --focal --remote --revision ${revision}
+        ./scripts/docker/build.sh --focal --remote --revision ${revision}
                                      --owner ${{ github.repository_owner }}
-                                     ${build_arg} test_astrobee ${push_arg}";
+                                     ${build_arg} test_astrobee ${push_arg};
