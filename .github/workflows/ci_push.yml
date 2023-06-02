@@ -38,9 +38,11 @@ jobs:
             push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
-        ./scripts/docker/build.sh --xenial --remote --revision ${revision}
-                                     --owner ${{ github.repository_owner }}
-                                     ${build_arg} test_astrobee ${push_arg};
+        command="./scripts/docker/build.sh --xenial --remote --revision ${revision} \
+                                     --owner ${{ github.repository_owner }} \
+                                     ${build_arg} test_astrobee ${push_arg}";
+        echo "$command";
+        eval "$command";
 
   build-bionic:
 
@@ -72,9 +74,11 @@ jobs:
             push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
-        ./scripts/docker/build.sh --bionic --remote --revision ${revision}
-                                     --owner ${{ github.repository_owner }}
-                                     ${build_arg} test_astrobee ${push_arg};
+        command="./scripts/docker/build.sh --bionic --remote --revision ${revision} \
+                                     --owner ${{ github.repository_owner }} \
+                                     ${build_arg} test_astrobee ${push_arg}";
+        echo "$command";
+        eval "$command";
 
   build-focal:
 
@@ -106,6 +110,8 @@ jobs:
             push_arg="push_astrobee_base push_astrobee";
           fi;
         fi;
-        ./scripts/docker/build.sh --focal --remote --revision ${revision}
-                                     --owner ${{ github.repository_owner }}
-                                     ${build_arg} test_astrobee ${push_arg};
+        command="./scripts/docker/build.sh --focal --remote --revision ${revision} \
+                                     --owner ${{ github.repository_owner }} \
+                                     ${build_arg} test_astrobee ${push_arg}";
+        echo "$command";
+        eval "$command";
