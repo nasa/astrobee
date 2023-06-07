@@ -471,6 +471,8 @@ void SparseMap::Save(const std::string & protobuf_file) const {
 
   if (vocab_db_.binary_db != NULL)
     map.set_vocab_db(sparse_mapping_protobuf::Map::BINARYDB);
+  if (vocab_db_.float_db != NULL)
+    map.set_vocab_db(sparse_mapping_protobuf::Map::FLOATDB);
 
   map.set_histogram_equalization(histogram_equalization_);
 
@@ -548,7 +550,7 @@ void SparseMap::Save(const std::string & protobuf_file) const {
       LOG(FATAL) << "Failed to write landmark to file.";
   }
 
-  if (vocab_db_.binary_db != NULL)
+  if (vocab_db_.binary_db != NULL || vocab_db_.float_db != NULL)
     vocab_db_.SaveProtobuf(output);
 
   delete output;
