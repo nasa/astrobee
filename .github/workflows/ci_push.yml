@@ -28,7 +28,7 @@ jobs:
         push_arg="";
         branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
         if [ "${{ github.repository_owner }}" == "nasa" ]; then
-          if [ "${{ github.head_ref }}" == "develop" ]; then
+          if [ $branch == "develop" ]; then
             push_arg="push_astrobee";
           fi;
           if [ $branch == "master" ]; then
