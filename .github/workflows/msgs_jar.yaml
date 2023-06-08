@@ -5,7 +5,7 @@ name: Build jar messages
 on: ['push', 'pull_request']
 
 jobs:
-  install_dependencies:
+  build-jar-msgs:
     runs-on: ubuntu-20.04
 
     steps:
@@ -30,8 +30,10 @@ jobs:
       run: |
         docker cp $(docker create --rm ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar):/src/msgs/devel/share/maven/ .
         find maven -name *.jar
-
-    - uses: actions/upload-artifact@v3
+    
+    - name: Upload .jar messages artifact
+      if: ${{ github.event_name == 'push' }}
+      uses: actions/upload-artifact@v3
       with:
         name: jar-msgs
         path: maven/**/*.jar
