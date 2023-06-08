@@ -20,6 +20,7 @@ Output Python data structure as a Lua table constructor.
 """
 
 import sys
+from typing import Any, Dict, List, Tuple, Union
 
 try:
     from cStringIO import StringIO  # fmt: skip
@@ -31,63 +32,52 @@ if sys.version_info.major > 2:
     basestring = (str, bytes)
 
 
-def q(s):
-    return '"%s"' % s
+def q(s: str) -> str:
+    return f'"{s}"'
 
 
-def ind(lvl):
+def ind(lvlL: int) -> str:
     return " " * (lvl * 2)
 
 
-def dumpStream(out, d, lvl=0):
+def dumpStream(out: StringIO, d: Any, lvl: int = 0) -> None:
+    lines = []
     def w(s):
-        out.write(s)
+        out.append(s)
 
     if isinstance(d, basestring):
-
         w(q(d))
     # fmt: skip
 
     elif isinstance(d, (list, tuple)):
         if d:
-            w("{\n")
-            n = len(d)
-            for i, elt in enumerate(d):
+            w("{")
+            for elt in d:
                 w(ind(lvl + 1))
                 dumpStream(out, elt, lvl + 1)
-                if i < n - 1:
-                    w(",")
-                w("\n")
-            w(ind(lvl))
-            w("}")
+                w(",")
+            w(ind(lvl) + "}")
         else:
             w("{}")
 
     elif isinstance(d, dict):
         if d:
             w("{\n")
-            n = len(d)
-            keys = list(d.keys())
-            keys.sort()
-            for i, k in enumerate(keys):
+            keys = sorted(d.keys())
+            for k in keys:
                 v = d[k]
                 w(ind(lvl + 1))
                 w(k)
                 w("=")
                 dumpStream(out, v, lvl + 1)
-                if i < n - 1:
-                    w(",")
-                w("\n")
-            w(ind(lvl))
-            w("}")
         else:
             w("{}")
-
     else:
         w(str(d))
+    out.write("\n".join(lines))
 
 
-def dumps(d):
+def dumps(d: Any) -> str:
     out = StringIO()
     dumpStream(out, d, 0)
     return out.getvalue()

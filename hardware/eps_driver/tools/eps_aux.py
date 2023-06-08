@@ -11,7 +11,7 @@ def callback(data):
             aux = c.value
         if c.name.find("SYSTEM_I") >= 0:
             system = c.value
-    print(("system= %.3fA | aux= %.3fA " % (system, aux)))
+    print(f"system= {system:.3f}A | aux= {aux:.3f}A")
 
 
 def listener():
