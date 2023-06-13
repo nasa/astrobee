@@ -34,7 +34,7 @@
 #include <config_reader/config_reader.h>
 #include <ff_msgs/DiskState.h>
 #include <ff_msgs/DiskStateStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <memory>

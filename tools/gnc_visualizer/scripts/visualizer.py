@@ -572,7 +572,7 @@ class Visualizer(QtGui.QMainWindow):
         result = QtGui.QFileDialog.getOpenFileName(
             self,
             "Open Plan",
-            ASTROBEE_ROOT + "/gnc/matlab/scenarios",
+            ASTROBEE_ROOT,
             "Plans (*.fplan)",
         )
         if result != None:

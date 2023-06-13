@@ -10,7 +10,7 @@
 
 scriptdir=`dirname $0`
 
-graph_names="ff_nodelet gnc_autocode pmc_actuator_nodelet sparse_mapping \
+graph_names="ff_nodelet pmc_actuator_nodelet sparse_mapping \
                 executive dds_ros_bridge gazebo_sensor_plugin_perch_cam"
 
 BUILD_PATH=${BUILD_PATH:-${HOME}/astrobee_build/native}

@@ -8,6 +8,6 @@ opt/astrobee/version.txt
 opt/astrobee/.catkin
 opt/astrobee/bin/*
 opt/astrobee/lib/*.so
-opt/astrobee/lib/python2.7/*
+opt/astrobee/lib/python*/*
 opt/astrobee/lib/astrobee/*
 opt/astrobee/share/*

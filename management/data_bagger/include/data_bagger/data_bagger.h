@@ -32,7 +32,7 @@
 #include <ff_msgs/EnableRecording.h>
 #include <ff_msgs/SetDataToDisk.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <pluginlib/class_list_macros.h>

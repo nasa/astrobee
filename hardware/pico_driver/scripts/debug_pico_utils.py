@@ -31,10 +31,11 @@ import itertools
 import logging
 
 import numpy as np
-import pico_utils as pico
 import rosbag
 from matplotlib import collections as mc
 from matplotlib import pyplot as plt
+
+import pico_utils as pico
 
 
 def plot_xy_grid_many(inbag_path, verbose=False, fast=False, cam=pico.DEFAULT_CAM):

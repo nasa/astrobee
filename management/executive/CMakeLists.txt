@@ -37,7 +37,7 @@ find_package(cmake_modules REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 # Find jsoncpp
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(JsonCpp REQUIRED)
 
 catkin_package(
@@ -92,12 +92,6 @@ target_link_libraries(executive sequencer ${Boost_SYSTEM_LIBRARY} ${catkin_LIBRA
 add_executable(data_to_disk_pub tools/data_to_disk_pub.cc)
 add_dependencies(data_to_disk_pub ${catkin_EXPORTED_TARGETS})
 target_link_libraries(data_to_disk_pub
-  executive gflags ${catkin_LIBRARIES})
-
-## Declare a C++ executable: ekf_switch_mux
-add_executable(ekf_switch_mux tools/ekf_switch_mux.cc)
-add_dependencies(ekf_switch_mux ${catkin_EXPORTED_TARGETS})
-target_link_libraries(ekf_switch_mux
   executive gflags ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: plan_pub
@@ -160,14 +154,12 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS data_to_disk_pub DESTINATION bin)
-install(TARGETS ekf_switch_mux DESTINATION bin)
 install(TARGETS plan_pub DESTINATION bin)
 install(TARGETS simple_move DESTINATION bin)
 install(TARGETS teleop_tool DESTINATION bin)
 install(TARGETS zones_pub DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/data_to_disk_pub share/${PROJECT_NAME}
-  COMMAND ln -s ../../bin/ekf_switch_mux share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/plan_pub share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/simple_move share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/teleop_tool share/${PROJECT_NAME}

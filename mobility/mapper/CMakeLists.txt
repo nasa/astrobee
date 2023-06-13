@@ -36,7 +36,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   octomap
 )
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Octomap REQUIRED)
 
 # Find Eigen3

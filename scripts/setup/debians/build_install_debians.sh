@@ -22,7 +22,7 @@
 set -e
 
 debian_loc=$(dirname "$(readlink -f "$0")")
-dist=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+dist=$(. /etc/os-release && echo $UBUNTU_CODENAME)
 build_list=()
 
 sudo apt-get install -y devscripts equivs libproj-dev

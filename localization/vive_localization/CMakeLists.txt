@@ -37,7 +37,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 
 # Find OpenCV3
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV 3.3.1 REQUIRED)
 
 # Non-linear optimizer
