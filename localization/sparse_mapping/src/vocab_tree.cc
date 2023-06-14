@@ -65,10 +65,99 @@
 #pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
 #pragma GCC diagnostic push
 #include <DBoW2/DBoW2.h>      // BoW db that works with both float and binary descriptors
+#include <DBoW2/FSurf64.h>
 #pragma GCC diagnostic pop
 
 #include <vector>
 #include <string>
+
+using namespace std;  // NOLINT (trying to modify this as little as possible)
+
+// stolen from file (this doesn't link for some reason?)
+namespace DBoW2 {
+
+// --------------------------------------------------------------------------
+
+void FSurf64::meanValue(const std::vector<FSurf64::pDescriptor> &descriptors,
+  FSurf64::TDescriptor &mean) {
+  mean.resize(0);
+  mean.resize(FSurf64::L, 0);
+
+  float s = descriptors.size();
+
+  vector<FSurf64::pDescriptor>::const_iterator it;
+  for (it = descriptors.begin(); it != descriptors.end(); ++it) {
+    const FSurf64::TDescriptor &desc = **it;
+    for (int i = 0; i < FSurf64::L; i += 4) {
+      mean[i  ] += desc[i  ] / s;
+      mean[i+1] += desc[i+1] / s;
+      mean[i+2] += desc[i+2] / s;
+      mean[i+3] += desc[i+3] / s;
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+
+double FSurf64::distance(const FSurf64::TDescriptor &a, const FSurf64::TDescriptor &b) {
+  double sqd = 0.;
+  for (int i = 0; i < FSurf64::L; i += 4) {
+    sqd += (a[i  ] - b[i  ])*(a[i  ] - b[i  ]);
+    sqd += (a[i+1] - b[i+1])*(a[i+1] - b[i+1]);
+    sqd += (a[i+2] - b[i+2])*(a[i+2] - b[i+2]);
+    sqd += (a[i+3] - b[i+3])*(a[i+3] - b[i+3]);
+  }
+  return sqd;
+}
+
+// --------------------------------------------------------------------------
+
+std::string FSurf64::toString(const FSurf64::TDescriptor &a) {
+  stringstream ss;
+  for (int i = 0; i < FSurf64::L; ++i) {
+    ss << a[i] << " ";
+  }
+  return ss.str();
+}
+
+// --------------------------------------------------------------------------
+
+void FSurf64::fromString(FSurf64::TDescriptor &a, const std::string &s) {
+  a.resize(FSurf64::L);
+
+  stringstream ss(s);
+  for (int i = 0; i < FSurf64::L; ++i) {
+    ss >> a[i];
+  }
+}
+
+// --------------------------------------------------------------------------
+
+void FSurf64::toMat32F(const std::vector<TDescriptor> &descriptors,
+    cv::Mat &mat) {
+  if (descriptors.empty()) {
+    mat.release();
+    return;
+  }
+
+  const int N = descriptors.size();
+  const int L = FSurf64::L;
+
+  mat.create(N, L, CV_32F);
+
+  for (int i = 0; i < N; ++i) {
+    const TDescriptor& desc = descriptors[i];
+    float *p = mat.ptr<float>(i);
+    for (int j = 0; j < L; ++j, ++p) {
+      *p = desc[j];
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+
+}  // namespace DBoW2
+
 
 namespace sparse_mapping {
 
@@ -109,6 +198,46 @@ class BinaryDB : public BriefDatabase {
        BriefDatabase(voc, flag, val){}
 };
 
+typedef ProtobufVocabulary<DBoW2::FSurf64::TDescriptor, DBoW2::FSurf64> FloatVocabulary;
+typedef ProtobufDatabase<DBoW2::FSurf64::TDescriptor, DBoW2::FSurf64> SurfDatabase;
+
+// Thin wrappers around DBoW2 databases, to avoid exposing the
+// originals in the header file for compilation speed.
+class FloatDB : public SurfDatabase {
+ public:
+  explicit FloatDB(google::protobuf::io::ZeroCopyInputStream* input) : SurfDatabase(input) {}
+  FloatDB(FloatVocabulary const& voc, bool flag, int val):
+       SurfDatabase(voc, flag, val){}
+};
+
+template<class TDescriptor>
+std::string toBytes(const TDescriptor &a) {
+  std::ostringstream out(std::stringstream::out | std::stringstream::binary);
+  out.write((const char*)a.desc, a.size);
+  return out.str();
+}
+
+template<class TDescriptor>
+void fromBytes(TDescriptor &a, const std::string &s) {
+  if ((unsigned int)a.size != s.size())
+    a.Initialize(s.size());
+  memcpy(a.desc, s.c_str(), s.size());
+}
+
+// this is all a big hack
+template<>
+void fromBytes<std::vector<float> >(std::vector<float> &a, const std::string &s) {
+  a.resize(s.size() / sizeof(float));
+  memcpy(a.data(), s.c_str(), s.size());
+}
+
+template<>
+std::string toBytes<std::vector<float> >(const std::vector<float> &a) {
+  std::ostringstream out(std::stringstream::out | std::stringstream::binary);
+  out.write((const char*)a.data(), a.size() * sizeof(float));
+  return out.str();
+}
+
 template<class TDescriptor, class F>
 void ProtobufVocabulary<TDescriptor, F>::LoadProtobuf(google::protobuf::io::ZeroCopyInputStream* input) {
   // C++ is a dumb language, we have to put this in front of all member variables inherited from
@@ -148,7 +277,7 @@ void ProtobufVocabulary<TDescriptor, F>::LoadProtobuf(google::protobuf::io::Zero
     this->m_nodes[nid].weight = weight;
     this->m_nodes[pid].children.push_back(nid);
 
-    F::fromBytes(this->m_nodes[nid].descriptor, d);
+    fromBytes(this->m_nodes[nid].descriptor, d);
   }
 
   // words
@@ -227,7 +356,7 @@ void ProtobufVocabulary<TDescriptor, F>::SaveProtobuf(google::protobuf::io::Zero
       node.set_node_id(child.id);
       node.set_parent_id(pid);
       node.set_weight(child.weight);
-      node.set_feature(F::toBytes(child.descriptor));
+      node.set_feature(toBytes(child.descriptor));
       if (!WriteProtobufTo(node, output)) {
         LOG(FATAL) << "Failed to write db node to file.";
       }
@@ -285,7 +414,7 @@ void ProtobufDatabase<TDescriptor, F>::SaveProtobuf(google::protobuf::io::ZeroCo
 
 // Constructor and destructor for VocabDB
 VocabDB::VocabDB():
-  binary_db(NULL), m_num_nodes(0) {
+  binary_db(NULL), float_db(NULL), m_num_nodes(0) {
 }
 VocabDB::~VocabDB() {
   ResetDB(this);
@@ -294,6 +423,8 @@ VocabDB::~VocabDB() {
 void VocabDB::SaveProtobuf(google::protobuf::io::ZeroCopyOutputStream* output) const {
   if (binary_db != NULL) {
     binary_db->SaveProtobuf(output);
+  } else if (float_db != NULL) {
+    float_db->SaveProtobuf(output);
   } else {
     LOG(ERROR) << "Unsupported database type.";
   }
@@ -304,6 +435,9 @@ void VocabDB::LoadProtobuf(google::protobuf::io::ZeroCopyInputStream* input, int
   if (db_type == sparse_mapping_protobuf::Map::BINARYDB) {
     binary_db = new BinaryDB(input);
     m_num_nodes = binary_db->size();
+  } else if (db_type == sparse_mapping_protobuf::Map::FLOATDB) {
+    float_db = new FloatDB(input);
+    m_num_nodes = float_db->size();
   } else {
     LOG(ERROR) << "Using unsupported database type.";
   }
@@ -336,6 +470,10 @@ void ResetDB(VocabDB* db) {
   if (db->binary_db != NULL) {
     delete db->binary_db;
     db->binary_db = NULL;
+  }
+  if (db->float_db != NULL) {
+    delete db->float_db;
+    db->float_db = NULL;
   }
 }
 
@@ -382,6 +520,9 @@ void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
              std::vector<int> * indices) {
   indices->clear();
 
+  if (vocab_db->binary_db == NULL && vocab_db->float_db == NULL)
+    return;
+
   if (vocab_db->binary_db != NULL) {
     assert(IsBinaryDescriptor(descriptor));
     BinaryDB & db = *(vocab_db->binary_db);  // shorten
@@ -400,8 +541,22 @@ void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
       indices->push_back(ret[j].Id);
     }
   } else {
-    // no database specified
-    return;
+    assert(!IsBinaryDescriptor(descriptor));
+    FloatDB & db = *(vocab_db->float_db);  // shorten
+
+    std::vector<DBoW2::FSurf64::TDescriptor> descriptors_vec;
+    for (int r = 0; r < descriptors.rows; r++) {
+      DBoW2::FSurf64::TDescriptor descriptor;
+      MatDescrToVec(descriptors.row(r), &descriptor);
+      descriptors_vec.push_back(descriptor);
+    }
+
+    DBoW2::QueryResults ret;
+    db.query(descriptors_vec, ret, num_similar);
+
+    for (size_t j = 0; j < ret.size(); j++) {
+      indices->push_back(ret[j].Id);
+    }
   }
 
   return;
@@ -417,7 +572,28 @@ void BuildDBforDBoW2(SparseMap* map, std::string const& descriptor,
   int num_features = 0;
 
   if (!IsBinaryDescriptor(descriptor)) {
-    LOG(ERROR) << "Using unsupported vocabulary database type.";
+    std::vector<std::vector<DBoW2::FSurf64::TDescriptor > > features;
+    for (int cid = 0; cid < num_frames; cid++) {
+      int num_keys = map->GetFrameKeypoints(cid).outerSize();
+      num_features += num_keys;
+      std::vector<DBoW2::FSurf64::TDescriptor> descriptors;
+      for (int i = 0; i < num_keys; i++) {
+        cv::Mat row = map->GetDescriptor(cid, i);
+        DBoW2::FSurf64::TDescriptor descriptor;
+        MatDescrToVec(row, &descriptor);
+        descriptors.push_back(descriptor);
+      }
+      features.push_back(descriptors);
+    }
+    FloatVocabulary voc(branching_factor, depth, weight, score);
+    voc.create(features);
+
+    FloatDB* db = new FloatDB(voc, false, 0);
+    for (size_t i = 0; i < features.size(); i++)
+      db->add(features[i]);
+
+    map->vocab_db_.float_db = db;
+    map->vocab_db_.m_num_nodes = db->size();
   } else {
     // Binary descriptors. For each image, copy them from a CV matrix
     // to a vector of vectors. Also extract individual bits from
