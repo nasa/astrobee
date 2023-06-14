@@ -872,9 +872,11 @@ def create_plots(
             )
         elif len(graph_localization_states.times) > 0:
             add_other_loc_plots(
-                pdf, graph_localization_states, graph_localization_states, sparse_mapping_poses,
+                pdf,
+                graph_localization_states,
+                graph_localization_states,
+                sparse_mapping_poses,
                 ar_tag_poses,
-
             )
         if has_depth_odom:
             depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(
