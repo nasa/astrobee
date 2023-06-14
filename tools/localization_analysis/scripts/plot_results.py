@@ -104,6 +104,9 @@ def add_graph_plots(
     orientation_plotter.add_pose_orientation(graph_localization_states)
     orientation_plotter.plot(pdf)
 
+    if len(graph_localization_states.times) == 0:
+        return
+
     # Imu Augmented Loc vs. Loc
     position_plotter = vector3d_plotter.Vector3dPlotter(
         "Time (s)", "Position (m)", "Graph vs. IMU Augmented Graph Position", True
@@ -867,9 +870,11 @@ def create_plots(
                 sparse_mapping_poses,
                 ar_tag_poses,
             )
-        else:
+        elif len(graph_localization_states.times) > 0:
             add_other_loc_plots(
-                pdf, graph_localization_states, graph_localization_states
+                pdf, graph_localization_states, graph_localization_states, sparse_mapping_poses,
+                ar_tag_poses,
+
             )
         if has_depth_odom:
             depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(

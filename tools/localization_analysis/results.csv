@@ -1,0 +1,12 @@
+rmse,0.02223592997076043
+orientation_rmse,0.014439809825783571
+integrated_rmse,0.036124483626381716
+rel_rmse,0.02892175714834411
+rel_orientation_rmse,0.01689468156099405
+rel_integrated_rmse,0.023760211093031655
+imu_augmented_rmse,0.01909813576341352
+imu_augmented_orientation_rmse,0.016061346181761867
+imu_augmented_integrated_rmse,0.07223932449464295
+rel_imu_augmented_rmse,0.029713320157916855
+rel_imu_augmented_orientation_rmse,0.01803531904369424
+rel_imu_augmented_integrated_rmse,0.025856844417313004

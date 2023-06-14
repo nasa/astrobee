@@ -46,7 +46,7 @@ then
 
   # Add these packages to the apt sources (we remove them later, so apt update succeeds)
 
-  NO_TUNNEL=${NO_TUNNEL:-0} # Override this with 1 before invoking if the tunnel is not desired
+  NO_TUNNEL=1 # Override this with 1 before invoking if the tunnel is not desired
  
   if [ "${NO_TUNNEL}" -eq 1 ]; then
       echo "Getting the custom Debian without tunnel"

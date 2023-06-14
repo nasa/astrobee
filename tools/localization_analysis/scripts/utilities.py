@@ -61,6 +61,9 @@ def integrate_velocities(localization_states):
         for velocity, delta_t in zip(localization_states.velocities.zs, delta_times)
     ]
 
+    if len(localization_states.times) == 0:
+        return localization_states
+
     return add_increments_to_absolute_pose(
         x_increments,
         y_increments,
