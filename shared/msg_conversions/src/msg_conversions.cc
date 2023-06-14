@@ -270,6 +270,13 @@ geometry_msgs::Pose tf2_transform_to_ros_pose(const tf2::Transform& p) {
   return transform;
 }
 
+geometry_msgs::Pose eigen_transform_to_ros_pose(const Eigen::Affine3d& p) {
+  geometry_msgs::Pose transform;
+  transform.position = eigen_to_ros_point(p.translation());
+  transform.orientation = eigen_to_ros_quat((Eigen::Quaterniond)p.linear());
+  return transform;
+}
+
 geometry_msgs::Transform eigen_transform_to_ros_transform(const Eigen::Affine3d& p) {
   geometry_msgs::Transform transform;
   transform.translation = eigen_to_ros_vector(p.translation());
