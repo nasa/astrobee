@@ -26,6 +26,7 @@
 #include <image_transport/image_transport.h>
 
 #include <vector>
+#include <iostream>
 
 namespace localization_analysis {
 namespace lc = localization_common;
