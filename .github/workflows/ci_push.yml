@@ -2,7 +2,9 @@ name: Build, test and push packages CI
 
 on:
   push:
-    branches: [ 'develop' ]
+    branches-ignore:
+      - gh-pages
+      - ros2
 
 jobs:
 
@@ -20,9 +22,27 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Build, test, push docker
-      run: ./scripts/docker/build.sh --xenial --remote
-                                     --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee push_astrobee
+      run: >
+        revision="latest";
+        build_arg="astrobee";
+        push_arg="";
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
+        if [ "${{ github.repository_owner }}" == "nasa" ]; then
+          if [ $branch == "develop" ]; then
+            push_arg="push_astrobee";
+          fi;
+          if [ $branch == "master" ]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            revision="v${VERSION}";
+            build_arg="astrobee_base astrobee";
+            push_arg="push_astrobee_base push_astrobee";
+          fi;
+        fi;
+        command="./scripts/docker/build.sh --xenial --remote --revision ${revision} \
+                                     --owner ${{ github.repository_owner }} \
+                                     ${build_arg} test_astrobee ${push_arg}";
+        echo "$command";
+        eval "$command";
 
   build-bionic:
 
@@ -38,9 +58,27 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Build, test, push docker
-      run: ./scripts/docker/build.sh --bionic --remote
-                                     --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee push_astrobee
+      run: >
+        revision="latest";
+        build_arg="astrobee";
+        push_arg="";
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
+        if [ "${{ github.repository_owner }}" == "nasa" ]; then
+          if [ $branch == "develop" ]; then
+            push_arg="push_astrobee";
+          fi;
+          if [ $branch == "master" ]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            revision="v${VERSION}";
+            build_arg="astrobee_base astrobee";
+            push_arg="push_astrobee_base push_astrobee";
+          fi;
+        fi;
+        command="./scripts/docker/build.sh --bionic --remote --revision ${revision} \
+                                     --owner ${{ github.repository_owner }} \
+                                     ${build_arg} test_astrobee ${push_arg}";
+        echo "$command";
+        eval "$command";
 
   build-focal:
 
@@ -56,6 +94,24 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
     - name: Build, test, push docker
-      run: ./scripts/docker/build.sh --focal --remote
-                                     --owner ${{ github.repository_owner }}
-                                     astrobee test_astrobee push_astrobee
+      run: >
+        revision="latest";
+        build_arg="astrobee";
+        push_arg="";
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
+        if [ "${{ github.repository_owner }}" == "nasa" ]; then
+          if [ $branch == "develop" ]; then
+            push_arg="push_astrobee";
+          fi;
+          if [ $branch == "master" ]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            revision="v${VERSION}";
+            build_arg="astrobee_base astrobee";
+            push_arg="push_astrobee_base push_astrobee";
+          fi;
+        fi;
+        command="./scripts/docker/build.sh --focal --remote --revision ${revision} \
+                                     --owner ${{ github.repository_owner }} \
+                                     ${build_arg} test_astrobee ${push_arg}";
+        echo "$command";
+        eval "$command";

@@ -55,8 +55,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,o:,d"
-longopts="help,xenial,bionic,focal,remote,owner:,dry-run"
+shortopts="h,x,b,f,r,o:,v:,d"
+longopts="help,xenial,bionic,focal,remote,owner:,revision:,dry-run"
 opts=$(getopt -a -n build.sh --options "$shortops" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -98,6 +98,9 @@ while [ "$1" != "" ]; do
         --remote )                 remote="true"
                                    ;;
         --owner )                  owner=$2
+                                   shift
+                                   ;;
+        --revision )               revision=$2
                                    shift
                                    ;;
         --dry-run )                dry_run="true"
@@ -143,9 +146,8 @@ done
 
 if [[ "$build_astrobee_base" == "true" \
           && "$remote" == "true" ]]; then
-    echo "Error: --remote doesn't make sense when first target is astrobee_base."
-    echo "Run with -h for help."
-    exit 1
+    echo "Warning: --remote doesn't make sense when first target is astrobee_base."
+    echo "It will be ignored."
 fi
 
 ######################################################################
@@ -258,8 +260,10 @@ if [ "$astrobee_quick" = "true" ]; then
     build astrobee_quick "${revision}-" "quick-"
 fi
 
+# When we publish the base, we always want it
+# to rewrite the latest for future use
 if [ "$push_astrobee_base" = "true" ]; then
-    push astrobee_base "${revision}-" "base-"
+    push astrobee_base "latest-" "base-"
 fi
 
 if [ "$push_astrobee" = "true" ]; then

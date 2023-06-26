@@ -1,0 +1,57 @@
+# Check for lint error and auto correct them
+
+name: Build jar messages
+
+on: ['push', 'pull_request']
+
+jobs:
+  build-jar-msgs:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build image astrobee/astrobee:msgs-ubuntu16.04
+      run: docker build . -f ./scripts/docker/astrobee_msgs.Dockerfile
+                                 --build-arg UBUNTU_VERSION=16.04
+                                 --build-arg ROS_VERSION=kinetic
+                                 --build-arg PYTHON=''
+                                 -t astrobee/astrobee:msgs-ubuntu16.04
+
+    - name: Build image astrobee/astrobee:latest-msgs-jar-ubuntu16.04
+      run: docker build . -f ./scripts/docker/build_msgs_jar.Dockerfile
+                              --build-arg UBUNTU_VERSION=16.04
+                              --build-arg ROS_VERSION=kinetic
+                              --build-arg PYTHON=''
+                              --build-arg REPO=astrobee
+                              -t ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar
+
+    - name: Copy jar files
+      run: |
+        docker cp $(docker create --rm ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar):/src/msgs/devel/share/maven/ .
+        find maven -name *.jar
+    
+    - name: Upload .jar messages artifact
+      if: ${{ github.event_name == 'push' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: jar-msgs
+        path: maven/**/*.jar
+
+    - name: Log in to registry
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+    - name: Push Docker image if master or develop
+      run: >
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}};
+        if [[ "${{ github.repository_owner }}" == "nasa" ]]; then
+          if [[ $branch == "develop" ]]; then 
+            docker push ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar;
+          fi;
+          if [[ $branch == "master" ]]; then
+            export VERSION=`grep -w -m 1 "Release" RELEASE.md | awk '{print $3}'`;
+            docker tag ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-msgs-jar
+            docker push ghcr.io/${{ github.repository_owner }}/astrobee:v${VERSION}-msgs-jar;
+          fi;
+        fi;
