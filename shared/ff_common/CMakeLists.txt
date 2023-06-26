@@ -67,10 +67,8 @@ endif()
 ## Install ##
 #############
 
-ament_export_include_directories(include)
-
 # Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}
+install(DIRECTORY include
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
@@ -81,8 +79,12 @@ install(TARGETS ${PROJECT_NAME}
   EXPORT ff_common
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(rclcpp std_msgs)
+
 
 ament_package()

@@ -101,10 +101,7 @@ if __name__ == "__main__":
         help="List of bags to convert. If none provided, all bags in the current directory are used.",
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        help="path for output bag",
-        default="debayer_{inbag}",
+        "-o", "--output", help="path for output bag", default="debayer_{inbag}"
     )
     parser.add_argument(
         "-l",
@@ -170,7 +167,7 @@ if __name__ == "__main__":
         # Check if input bag exists
         if not os.path.isfile(inbag_path):
             print(("Bag file " + inbag_path + " does not exist."))
-            sys.exit()
+            sys.exit(1)
         output_bag_name = args.output.format(inbag=inbag_path)
 
         # Check if output bag already exists

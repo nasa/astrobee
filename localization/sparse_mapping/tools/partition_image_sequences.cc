@@ -181,11 +181,11 @@ Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::Camera
     cv::putText(projection_img,
                 "ratio: " + std::to_string(error_ratio) + ", rot: " + std::to_string(mean_rotation_corrected_error) +
                   ", of: " + std::to_string(mean_optical_flow_error),
-                cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), CV_FONT_NORMAL, 0.9, cv_color, 4,
-                cv::LINE_AA);
+                cv::Point(projection_img.cols / 2 - 320, projection_img.rows - 20), cv::FONT_HERSHEY_SIMPLEX, 0.9,
+                cv_color, 4, cv::LINE_AA);
     if (result.Rotation())
       cv::putText(projection_img, "Removing", cv::Point(projection_img.cols / 2 - 100, projection_img.rows - 200),
-                  CV_FONT_NORMAL, 2, cv_color, 4, cv::LINE_AA);
+                  cv::FONT_HERSHEY_SIMPLEX, 2, cv_color, 4, cv::LINE_AA);
     cv::Mat resized_projection_img;
     cv::resize(projection_img, resized_projection_img, cv::Size(projection_img.cols * 2, projection_img.rows * 2));
     cv::imshow("ratio_image", resized_projection_img);
