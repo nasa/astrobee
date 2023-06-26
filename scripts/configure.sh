@@ -91,11 +91,14 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>] [-n <profile 
  [-k <use ccache if available>] [-K <do not use ccache>]\
  [-v <with VIVE>] [-V <without VIVE>]\
  [-t <with integration tests, requires gpu>] [-T <without integration test>]\
- [-g <print debug information only>] [-z autogen_path] [-Z <without autogen>]"
+ [-g <print debug information only>] [-z autogen_path] [-Z <without autogen>]\
+ [-s <run DISCOWER simulation>] [-S <run without DISCOWER sim]\
+ [-x <run on DISCOWER hardware>] [-X <run without DISCOWER hardware]
+ "
 #[-t make_target]
 
 # options to parse
-optstring="hlan:p:w:B:cCdDrRfFkKvVtTgz:Z"
+optstring="hlan:p:w:B:cCdDrRfFkKvVtTsSxXgz:Z"
 
 # Print the script usage
 print_usage()
@@ -202,6 +205,14 @@ parse_args()
         "T") enable_integration_testing=" -DENABLE_INTEGRATION_TESTING=off"
          ;;
         "g") debug_mode=1
+         ;;
+        "s") discower=1
+         ;;
+        "S") discower=0
+         ;;
+        "x") discower_hw=1
+         ;;
+        "X") discower_hw=0
          ;;
         "z") autogen_path="${OPTARG}/"
          ;;
@@ -393,6 +404,62 @@ EOF
     echo "(to suppress alias that invokes autogen, run \\${build_cmd} instead of ${build_cmd})"
 
     exit 0
+fi
+
+if [ $discower == 1 ] ; then
+
+    if [[ "${ROS_VERSION}" == "2" ]]; then
+        build_cmd=colcon
+        extras_cmd="build --packages-select"
+        source_folder=install
+    else
+        echo "DISCOWER option is only compatible with ROS2 Humble and up."
+        exit 1
+    fi
+
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        shell="zsh"
+    elif [[ "$SHELL" == *"bash"* ]]; then
+        shell="bash"
+    elif [[ "$SHELL" == *"sh"* ]]; then
+        shell="sh"
+    else
+        echo "Shell not supported!"
+        exit 1
+    fi
+
+    # Add our cmake to paths and bashrc
+    grep -qF 'source /opt/ros/'$ros_version'/setup.bash' ~/.bashrc || echo 'source /opt/ros/'$ros_version'/setup.bash' >> ~/.bashrc
+    cmake_astrobee_path=`catkin locate -s`/cmake
+    grep -qF ${cmake_astrobee_path} ~/.bashrc || {
+    echo -e '\n' >> ~/.bashrc
+    echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.bashrc
+    }
+    source ~/.bashrc
+
+    shell="$SHELL"
+    if [[ ${shell}  == *"zsh"* ]]; then
+        echo "Setting .zshrc with environment variables..."
+        grep -qF 'source /opt/ros/'$ros_version'/setup.zsh' ~/.zshrc || echo 'source /opt/ros/'$ros_version'/setup.zsh' >> ~/.zshrc
+        grep -qF ${cmake_astrobee_path} ~/.zshrc || {
+            echo -e '\n' >> ~/.zshrc
+            echo 'if [[ ":$CMAKE_PREFIX_PATH:" != *":'${cmake_astrobee_path}':"* ]]; then CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:+"$CMAKE_PREFIX_PATH:"}'${cmake_astrobee_path}'"; fi' >> ~/.zshrc
+        }
+        source ~/.zshrc
+    fi
+
+    if [ $native_build == 1 ] ; then
+        echo "Configuring for DISCOWER native Linux..."
+        pkgs=`cat $confdir/build/config/discowerNative.lst`
+    elif [ $discower_hw == 1 ] ; then
+        echo "Configuring for DISCOWER hardware..."
+        pkgs=`cat $confdir/build/config/discowerNative.lst`
+    else
+        echo "Neither -l or -x were provided."
+        exit 1
+    fi
+    echo ${build_cmd} ${extras_cmd} ${pkgs}
+    ${build_cmd} ${extras_cmd} ${pkgs}
 fi
 
 if [[ "${ROS_VERSION}" == "1" ]]; then
