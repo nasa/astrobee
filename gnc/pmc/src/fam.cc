@@ -121,6 +121,7 @@ void Fam::UpdateCOM(const Eigen::Vector3f & com) {
   thrust2force_ = -fam_nozzle_orientations.transpose();
   Eigen::Matrix<float, 6, 12> thrust2forcetorque;
   thrust2forcetorque << thrust2force_, thrust2torque_;
+  forcetorque2thrust_ = Eigen::MatrixXf::Identity(12, 6);
   forcetorque2thrust_ = pseudoInverse(thrust2forcetorque);
 }
 

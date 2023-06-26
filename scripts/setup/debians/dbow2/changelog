@@ -1,3 +1,9 @@
+libdbow2 (0.1-6) unstable; urgency=medium
+
+  * Added reportMemoryUsage() methods.
+
+ -- Trey Smith <nospam@nospam.org>  Thu, 16 Mar 2023 13:31:16 -0500
+
 libdbow2 (0.1-5) unstable; urgency=medium
 
   * Ros moved opencv library which broke build, fixed it.
