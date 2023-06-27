@@ -688,8 +688,14 @@ bool Localize(cv::Mat const& test_descriptors,
       indices.push_back(cid);
   }
 
+  if (detector_name == "SURF") {
+    early_break_landmarks = 100000;
+  } else {
+    google::SetCommandLineOption("num_min_localization_inliers", "10");
+  }
+
   // To turn on verbose localization for debugging
-  google::SetCommandLineOption("verbose_localization", "true");
+  // google::SetCommandLineOption("verbose_localization", "true");
 
   // Find matches to each image in map. Do this in two passes. First,
   // find matches to all map images, then keep only num_similar
@@ -720,7 +726,8 @@ bool Localize(cv::Mat const& test_descriptors,
                 << similarity_rank[i] << "\n";
     total += similarity_rank[i];
     if (total >= early_break_landmarks)
-      break;
+      std::cout << "total " << total << " early break landmarks " << early_break_landmarks << std::endl;
+    break;
   }
 
   std::vector<Eigen::Vector2d> observations;
