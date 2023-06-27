@@ -50,7 +50,7 @@ DEFINE_int32(max_surf_features, 5000,
              "Maximum number of features to be computed using SURF.");
 DEFINE_double(min_surf_threshold, 1.1,
               "Minimum threshold for feature detection using SURF.");
-DEFINE_double(default_surf_threshold, 10,
+DEFINE_double(default_surf_threshold, 400,
               "Default threshold for feature detection using SURF.");
 DEFINE_double(max_surf_threshold, 1000,
               "Maximum threshold for feature detection using SURF.");

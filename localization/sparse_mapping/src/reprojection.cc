@@ -31,7 +31,7 @@
 #include <thread>
 #include <unordered_map>
 
-DEFINE_uint64(num_min_localization_inliers, 3,
+DEFINE_uint64(num_min_localization_inliers, 100,
               "If fewer than this many number of inliers, localization has failed.");
 
 namespace sparse_mapping {

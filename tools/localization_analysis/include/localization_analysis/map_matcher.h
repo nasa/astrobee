@@ -39,7 +39,7 @@ class MapMatcher {
   void AddMapMatches();
   void LogResults();
 
- private:
+//  private: // change later
   bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
 
   rosbag::Bag input_bag_;
