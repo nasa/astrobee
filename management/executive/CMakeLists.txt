@@ -94,12 +94,6 @@ add_dependencies(data_to_disk_pub ${catkin_EXPORTED_TARGETS})
 target_link_libraries(data_to_disk_pub
   executive gflags ${catkin_LIBRARIES})
 
-## Declare a C++ executable: ekf_switch_mux
-add_executable(ekf_switch_mux tools/ekf_switch_mux.cc)
-add_dependencies(ekf_switch_mux ${catkin_EXPORTED_TARGETS})
-target_link_libraries(ekf_switch_mux
-  executive gflags ${catkin_LIBRARIES})
-
 ## Declare a C++ executable: plan_pub
 add_executable(plan_pub tools/plan_pub.cc)
 add_dependencies(plan_pub ${catkin_EXPORTED_TARGETS})
@@ -160,14 +154,12 @@ install(FILES nodelet_plugins.xml
 
 # Install C++ executables
 install(TARGETS data_to_disk_pub DESTINATION bin)
-install(TARGETS ekf_switch_mux DESTINATION bin)
 install(TARGETS plan_pub DESTINATION bin)
 install(TARGETS simple_move DESTINATION bin)
 install(TARGETS teleop_tool DESTINATION bin)
 install(TARGETS zones_pub DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/data_to_disk_pub share/${PROJECT_NAME}
-  COMMAND ln -s ../../bin/ekf_switch_mux share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/plan_pub share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/simple_move share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/teleop_tool share/${PROJECT_NAME}
