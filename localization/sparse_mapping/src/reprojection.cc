@@ -31,7 +31,7 @@
 #include <thread>
 #include <unordered_map>
 
-DEFINE_uint64(num_min_localization_inliers, 100,
+DEFINE_uint64(num_min_localization_inliers, 10,
               "If fewer than this many number of inliers, localization has failed.");
 
 namespace sparse_mapping {
@@ -398,7 +398,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 
   // TODO(bcoltin): Return some sort of confidence?
   if (best_inliers < FLAGS_num_min_localization_inliers) {
-    std::cout << FLAGS_num_min_localization_inliers<< std::endl;
+    if (verbose)
+      std::cout << "num best inliers " << best_inliers <<
+      " num min localization inliers " << FLAGS_num_min_localization_inliers<< std::endl;
     return 2;
   }
 
