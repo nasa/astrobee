@@ -34,3 +34,6 @@ sudo touch $arssrc
 #sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
 
 sudo apt-key add $scriptdir/../../submodules/platform/rootfs/multistrap/keys/astrobee.key || exit 1
+
+# Import ssl certificate for access to astrobee.ndc.nasa.gov
+$scriptdir/../../submodules/platform/tools/add_local_certs.sh

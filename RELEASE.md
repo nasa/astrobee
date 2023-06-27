@@ -1,5 +1,9 @@
 # Releases
 
+# Release 0.17.1
+
+  * Multiple bug fixes
+
 # Release 0.17.0
 
   * Full compatibility and debians built for Ubuntu 20

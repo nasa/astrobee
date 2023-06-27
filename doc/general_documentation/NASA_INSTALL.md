@@ -32,9 +32,9 @@ This is the typical case for all wired computers in ARC TI, and simplifies
 your life greatly.
 
 Verify that you are in this situation with the command below should succeed
-(remove the Release.gpg file after being fetched).
+(certificate will be added later; remove the Release.gpg file after being fetched).
 
-    wget -v http://astrobee.ndc.nasa.gov/software/dists/xenial/Release.gpg
+    wget -v --no-check-certificate http://astrobee.ndc.nasa.gov/software/dists/xenial/Release.gpg
 
 Before running the scripts in `scripts/setup` below, set this variable:
 
@@ -234,7 +234,7 @@ will copy all products into this directory.
 Once the installation has completed, copy the install directory to the robot.
 This script assumes that you are connected to the Astrobee network, as it uses
 rsync to copy the install directory to `~/armhf` on the two processors. It 
-takes the robot name as an argument. Here we use `p4d'.
+takes the robot name as an argument. Here we use `p4d`.
 
     pushd $ASTROBEE_WS
     ./src/scripts/install_to_astrobee.sh $INSTALL_PATH p4d
