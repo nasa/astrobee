@@ -94,25 +94,6 @@ target_link_libraries(sparse_mapping
 
 
 if (NOT USE_CTC)
-## Declare a C++ executable: profiling
-add_executable(profiling test/profiling.cc)
-add_dependencies(profiling ${catkin_EXPORTED_TARGETS})
-target_link_libraries(profiling
-  sparse_mapping gflags glog ${catkin_LIBRARIES})
-
-## Declare a C++ executable: sanity_check
-add_executable(sanity_check test/sanity_check.cc)
-add_dependencies(sanity_check ${catkin_EXPORTED_TARGETS})
-target_link_libraries(sanity_check
-  sparse_mapping gflags glog ${catkin_LIBRARIES})
-
-## Declare a C++ executable: test_matches
-add_executable(test_matches test/test_matches.cc)
-add_dependencies(test_matches ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_matches
-  sparse_mapping gflags glog ${catkin_LIBRARIES})
-
-
 ## Declare a C++ executable: build_map
 add_executable(build_map tools/build_map.cc)
 add_dependencies(build_map ${catkin_EXPORTED_TARGETS})
