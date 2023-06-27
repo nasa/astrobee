@@ -74,12 +74,6 @@ if (USE_ROS)
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
   target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-  ## Declare a C++ executable: sanity_check 
-  add_executable(sanity_check tools/sanity_check.cc)
-  add_dependencies(sanity_check ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(sanity_check
-    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
-
   ## Declare a C++ executable: convert_depth_msg 
   add_executable(convert_depth_msg tools/convert_depth_msg.cc)
   add_dependencies(convert_depth_msg ${catkin_EXPORTED_TARGETS})
@@ -139,7 +133,6 @@ install(TARGETS run_depth_odometry_adder DESTINATION bin)
 install(TARGETS run_graph_bag DESTINATION bin)
 install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
 install(TARGETS run_map_matcher DESTINATION bin)
-install(TARGETS sanity_check DESTINATION bin)
 install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/convert_depth_msg share/${PROJECT_NAME}
@@ -148,7 +141,6 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/run_graph_bag share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_imu_bias_tester_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_map_matcher share/${PROJECT_NAME}
-  COMMAND ln -s ../../bin/sanity_check share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
   OUTPUT_QUIET

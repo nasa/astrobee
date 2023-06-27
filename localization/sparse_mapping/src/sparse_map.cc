@@ -688,10 +688,14 @@ bool Localize(cv::Mat const& test_descriptors,
       indices.push_back(cid);
   }
 
+  // If detector is SURF and parameters have not been set from commandline,
+  // then set them to SURF defaults.
+  // This is different from BRISK defaults.
   if (detector_name == "SURF") {
-    early_break_landmarks = 100000;
-  } else {
-    google::SetCommandLineOption("num_min_localization_inliers", "10");
+    if (gflags::GetCommandLineFlagInfoOrDie("early_break_landmarks").is_default)
+      early_break_landmarks = 100000;
+    if (gflags::GetCommandLineFlagInfoOrDie("num_min_localization_inliers").is_default)
+      google::SetCommandLineOption("num_min_localization_inliers", "100");
   }
 
   // To turn on verbose localization for debugging

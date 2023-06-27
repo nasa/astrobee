@@ -70,16 +70,7 @@
 
 #include <vector>
 #include <string>
-
-// OpenCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/xfeatures2d/nonfree.hpp>
-#include <opencv2/xfeatures2d.hpp>
-#include <opencv2/imgproc.hpp>
-
-#include <boost/filesystem.hpp>
+#include <cmath>
 
 using namespace std;  // NOLINT (trying to modify this as little as possible)
 
@@ -453,6 +444,10 @@ void VocabDB::LoadProtobuf(google::protobuf::io::ZeroCopyInputStream* input, int
   }
 }
 
+int countPlaceValues(int number) {
+    return number == 0 ? 1 : std::floor(std::log10(std::abs(number))) + 1;
+}
+
 void BuildDB(std::string const& map_file,
                              std::string const& descriptor,
                              int depth, int branching_factor, int restarts) {
@@ -464,7 +459,9 @@ void BuildDB(std::string const& map_file,
   int total_features = 0;
   for (size_t cid = 0; cid < map.GetNumFrames(); cid++)
     total_features += map.GetFrameKeypoints(cid).outerSize();
-  while (pow(branching_factor, depth) < total_features) {
+
+  // increase num words to be the same order of magnitude as num features
+  while (countPlaceValues(pow(branching_factor, depth)) < countPlaceValues(total_features)) {
     depth++;
     LOG(WARNING) << "Database not large enough, increasing depth.";
   }
@@ -572,60 +569,33 @@ void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
   return;
 }
 
-std::string getFilenameFromPath(const std::string& path) {
-    size_t slashPos = path.find_last_of("/\\");
-    if (slashPos != std::string::npos) {
-        return path.substr(slashPos + 1);
-    }
-    return path;
-}
-
 void BuildDBforDBoW2(SparseMap* map, std::string const& descriptor,
                      int depth, int branching_factor,
                      int restarts) {
   int num_frames = map->GetNumFrames();
-  depth = 6;
   const DBoW2::WeightingType weight = DBoW2::TF_IDF;
   const DBoW2::ScoringType score = DBoW2::L1_NORM;
   int num_features = 0;
 
   if (!IsBinaryDescriptor(descriptor)) {
-    std::string dir_path = "/srv/novus_1/amoravar/data/images/latest_map_imgs/2020-09-24/";
-    cv::Ptr<cv::Feature2D> fdetector = cv::xfeatures2d::SURF::create(400, 4, 2, false);
     std::vector<std::vector<DBoW2::FSurf64::TDescriptor > > features;
     for (int cid = 0; cid < num_frames; cid++) {
-      // int num_keys = map->GetFrameKeypoints(cid).outerSize();
-      // num_features += num_keys;
-      std::vector<DBoW2::FSurf64::TDescriptor> descriptors;
-      // for (int i = 0; i < num_keys; i++) {
-      //   cv::Mat row = map->GetDescriptor(cid, i);
-      //   DBoW2::FSurf64::TDescriptor descriptor;
-      //   MatDescrToVec(row, &descriptor);
-      //   descriptors.push_back(descriptor);
-      // }
-      std::string img_name = dir_path + getFilenameFromPath(map->GetFrameFilename(cid));
-      cv::Mat image = cv::imread(img_name, 0);
-      cv::Mat hist_image;
-      cv::Mat mask;
-      vector<cv::KeyPoint> keypoints;
-      cv::Mat descriptors_mat;
-      if (image.empty()) {
-        std::cout << img_name << " " << cid << std::endl;
-        continue;
-      }
-      cv::equalizeHist(image, hist_image);
-      fdetector->detectAndCompute(hist_image, mask, keypoints, descriptors_mat);
-      int num_keys = descriptors_mat.rows;
+      int num_keys = map->GetFrameKeypoints(cid).outerSize();
       num_features += num_keys;
+      std::vector<DBoW2::FSurf64::TDescriptor> descriptors;
       for (int i = 0; i < num_keys; i++) {
+        cv::Mat row = map->GetDescriptor(cid, i);
         DBoW2::FSurf64::TDescriptor descriptor;
-        MatDescrToVec(descriptors_mat.row(i), &descriptor);
+        MatDescrToVec(row, &descriptor);
         descriptors.push_back(descriptor);
       }
       features.push_back(descriptors);
     }
-    LOG(INFO) << "Number of features: " << num_features;
     FloatVocabulary voc(branching_factor, depth, weight, score);
+    if (countPlaceValues(num_features) > 7) {
+      LOG(WARNING) << "Using " << num_features << " features to build vocabulary. "
+                    << "This may be too many for the vocab to build.\n";  
+    }
     voc.create(features);
 
     FloatDB* db = new FloatDB(voc, false, 0);
