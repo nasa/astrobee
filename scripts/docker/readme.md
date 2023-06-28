@@ -6,11 +6,11 @@ Before running these instructions, make sure you visit the main Astrobee INSTALL
 - Check the system requirements.
 - Follow the Docker-option install steps 1-2, install Docker and check out the Astrobee Robot Software (ARS).
 
-# Option 1: Using Visual Studio Code (experimental!)
+# Option 1: Using Visual Studio Code
 
 You may find it helpful to use VSCode's Docker integration to help you interactively develop inside a Docker container.
 
-Our team is tentatively moving in the direction of encouraging all developers to work this way, but our VSCode approach is still considered highly experimental and could change a lot.
+Our team is tentatively moving in the direction of encouraging all developers using docker to work this way, but our VSCode approach is still considered highly experimental and could change a lot.
 
 ## Install VSCode and the Dev Containers plugin
 
@@ -62,14 +62,6 @@ This runs inside the Docker container:
 
 ```bash
 catkin build
-catkin build --make-args tests
-catkin build --make-args test
-source devel/setup.bash
-catkin_test_results build
-```
-
-For testing, you can alternatively use the script to produces better debug output if there is a failed test:
-```bash
 ./scripts/run_tests.sh
 ```
 

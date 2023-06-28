@@ -51,7 +51,7 @@ development). We do not support running Astrobee Robot Software on 32-bit system
 
 There is also experimental support for using the Visual Studio Code Dev Containers plugin to access an integrated development environment running inside the Docker container!
 
-For much more discussion, see: \subpage install-docker.
+For much more discussion, see: \subpage install-docker
 
 ## Option 2: Install in your native OS / Virtual Machine
 
