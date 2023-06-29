@@ -100,11 +100,13 @@ namespace interest_point {
         break;
     }
     if (keypoints->size() < min_features_)
-      LOG(WARNING) << "Max retries reached. Found " << keypoints->size() << " keypoints which is less than min of " min_features_ 
-      << " keypoints. Consider decreasing the default threshold.";
+      LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
+                   << " keypoints which is less than min of " min_features_
+                   << " keypoints. Consider decreasing the default threshold.";
     else if (keypoints->size() > max_features_)
-      LOG(WARNING) << "Max retries reached. Found " << keypoints->size() << " keypoints which exeeds max of " max_features_ 
-      << " keypoints. Consider increasing the default threshold.";
+      LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
+                   << " keypoints which exeeds max of " max_features_
+                   << " keypoints. Consider increasing the default threshold.";
     ComputeImpl(image, keypoints, keypoints_description);
   }
 
