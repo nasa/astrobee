@@ -15,6 +15,7 @@ ff_hw_msgs
 ff_msgs
 ff_common
 ff_util
+framestore
 jsonloader
 config_reader
 camera
