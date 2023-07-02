@@ -1,7 +1,19 @@
 astrobee
+astrobee_dock
+astrobee_gazebo
+astrobee_granite
+astrobee_handrail_21_5
+astrobee_handrail_30
+astrobee_handrail_41_5
+astrobee_handrail_8_5
+astrobee_iss
+astrobee_state_publisher
+discower_description
+description
 ff_hw_msgs
 ff_msgs
 ff_common
+ff_util
 jsonloader
 config_reader
 camera
@@ -9,5 +21,3 @@ msg_conversions
 pmc
 ctl
 fam
-ff_util
-astrobee_gazebo
