@@ -152,8 +152,6 @@
   </xacro:if>
 
   <!-- GRANITE-SPECIFIC OPTIONS -->
-  <xacro:if value="${world == 'granite'}">
-    <xacro:include filename="$(find discower_description)/urdf/model_carriage.urdf.xacro" />
-  </xacro:if>
+  <xacro:include filename="$(find discower_description)/urdf/model_carriage.urdf.xacro" />
 
 </robot>

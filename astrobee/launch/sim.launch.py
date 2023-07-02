@@ -70,7 +70,7 @@ def generate_launch_description():
         launch_arg("honey", default_value="false", description="Insert honey robot"),
         launch_arg("bumble", default_value="false", description="Insert bumble robot"),
         launch_arg("queen", default_value="false", description="Insert queen robot"),
-        launch_arg("honey_pose",  default_value="11 -7 4.8 0 0 0",  description="Overwrite honey's pose"),
+        launch_arg("honey_pose",  default_value="1 1 1 0 0 0",  description="Overwrite honey's pose"),
         launch_arg("bumble_pose", default_value="11 -4 4.8 0 0 0",  description="Overwrite bumble's pose"),
         launch_arg("queen_pose",  default_value="11 -10 4.8 0 0 0", description="Use to overwrite queen's pose"),
         # Make sure all environment variables are set for controller
