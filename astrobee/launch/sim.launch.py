@@ -38,7 +38,7 @@ def generate_launch_description():
         launch_arg("mlp",     default_value="local", description="MLP IP address"),
         launch_arg("rec",     default_value="",      description="Record local data "),
         launch_arg("dds",     default_value="true",  description="Enable DDS"),
-        launch_arg("gtloc",   default_value="false", description="Use Ground Truth Localizer"),
+        launch_arg("gtloc",   default_value="true", description="Use Ground Truth Localizer"),
         launch_arg("perch",   default_value="false", description="Start in the perch position"),
         # General options
         launch_arg("gviz",   default_value="false",  description="Start GNC visualizer"),
@@ -64,7 +64,7 @@ def generate_launch_description():
                            condition=LaunchConfigurationEquals("world", "iss")),
         launch_arg("pose", default_value="0 0 -0.7 0 0 0",
                            condition=LaunchConfigurationEquals("world", "granite")),
-        launch_arg("pose", default_value="0 0 0 0 0 0",
+        launch_arg("pose", default_value="1 1 1 0 0 0",
                            condition=LaunchConfigurationEquals("world", "discower")),
         # Multi-robot simulation
         launch_arg("honey", default_value="false", description="Insert honey robot"),
