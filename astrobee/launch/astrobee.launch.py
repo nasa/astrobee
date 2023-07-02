@@ -21,11 +21,12 @@ from utilities.utilities import *
 
 def generate_launch_description():
     if LaunchConfigurationEquals("world", "discower"):
+        print("YAY ON DISCOWER")
         robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'discower_description'),
                                      ' world:="',      LaunchConfiguration('world'),
                                      '" top_aft:="',   LaunchConfiguration('top_aft'),
                                      '" bot_aft:="',   LaunchConfiguration('bot_aft'),
-                                     '" bot_front:="', LaunchConfiguration('bot_front'), 
+                                     '" bot_front:="', LaunchConfiguration('bot_front'),
                                      '" ns:="_',       LaunchConfiguration('ns'),
                                      '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
     else:
@@ -33,7 +34,7 @@ def generate_launch_description():
                                      ' world:="',      LaunchConfiguration('world'),
                                      '" top_aft:="',   LaunchConfiguration('top_aft'),
                                      '" bot_aft:="',   LaunchConfiguration('bot_aft'),
-                                     '" bot_front:="', LaunchConfiguration('bot_front'), 
+                                     '" bot_front:="', LaunchConfiguration('bot_front'),
                                      '" ns:="_',       LaunchConfiguration('ns'),
                                      '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
 
@@ -71,11 +72,11 @@ def generate_launch_description():
 
         # Set the TF prefix, create a robot description and joint state publisher
         Node(
-            package="robot_state_publisher",
-            namespace=LaunchConfiguration('ns'),
-            executable="robot_state_publisher",
-            name="robot_state_publisher",
-            parameters=[{'robot_description': ParameterValue(robot_description) }],
+                    package="robot_state_publisher",
+                    # namespace=LaunchConfiguration('ns'),
+                    executable="robot_state_publisher",
+                    name=LaunchConfiguration('ns'),
+                    parameters=[{'robot_description': ParameterValue(robot_description) }],
         ),
 
         # If we need to load synthetic drivers (we are not running on a real robot)
@@ -96,11 +97,6 @@ def generate_launch_description():
                 ),
 
                 # LLP
-        #       <!-- Connect and update environment variables if required -->
-        #       <machine unless="$(eval arg('llp')=='local')" timeout="10"
-        #                name="llp" address="$(arg llp)" user="astrobee" password="astrobee"
-        #                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
-        #       </machine>
                 IncludeLaunchDescription(
                     get_launch_file("launch/robot/LLP.launch.py"),
                     launch_arguments={
@@ -116,11 +112,6 @@ def generate_launch_description():
                 ),
 
                 # MLP
-        #       <!-- Connect and update environment variables if required -->
-        #       <machine unless="$(eval arg('mlp')=='local')" timeout="10"
-        #                name="mlp" address="$(arg mlp)" user="astrobee" password="astrobee"
-        #                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
-        #       </machine>
                 IncludeLaunchDescription(
                     get_launch_file("launch/robot/MLP.launch.py"),
                     launch_arguments={
