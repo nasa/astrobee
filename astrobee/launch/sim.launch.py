@@ -64,7 +64,7 @@ def generate_launch_description():
                            condition=LaunchConfigurationEquals("world", "iss")),
         launch_arg("pose", default_value="0 0 -0.7 0 0 0",
                            condition=LaunchConfigurationEquals("world", "granite")),
-        launch_arg("pose", default_value="1 1 1 0 0 0",
+        launch_arg("pose", default_value="1 1 0.7 3.14 0 0",
                            condition=LaunchConfigurationEquals("world", "discower")),
         # Multi-robot simulation
         launch_arg("honey", default_value="false", description="Insert honey robot"),

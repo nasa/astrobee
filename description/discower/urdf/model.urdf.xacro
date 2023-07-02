@@ -121,7 +121,7 @@
   <xacro:include filename="$(find discower_description)/urdf/model_flashlights.urdf.xacro" />
   <xacro:include filename="$(find discower_description)/urdf/model_speed_cam.urdf.xacro" />
   <xacro:include filename="$(find discower_description)/urdf/model_signal_lights.urdf.xacro" />
-  <xacro:include filename="$(find discower_description)/urdf/model_sitl.urdf.xacro" />
+  <!-- <xacro:include filename="$(find discower_description)/urdf/model_sitl.urdf.xacro" /> -->
 
   <!-- Monitors -->
   <xacro:include filename="$(find discower_description)/urdf/model_monitors.urdf.xacro" />

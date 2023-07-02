@@ -20,13 +20,22 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
-                        ' world:="',      LaunchConfiguration('world'),
-                        '" top_aft:="',   LaunchConfiguration('top_aft'),
-                        '" bot_aft:="',   LaunchConfiguration('bot_aft'),
-                        '" bot_front:="', LaunchConfiguration('bot_front'), 
-                        '" ns:="_',       LaunchConfiguration('ns'),
-                        '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
+    if LaunchConfigurationEquals("world", "discower"):
+        robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'discower_description'),
+                                     ' world:="',      LaunchConfiguration('world'),
+                                     '" top_aft:="',   LaunchConfiguration('top_aft'),
+                                     '" bot_aft:="',   LaunchConfiguration('bot_aft'),
+                                     '" bot_front:="', LaunchConfiguration('bot_front'), 
+                                     '" ns:="_',       LaunchConfiguration('ns'),
+                                     '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
+    else:
+        robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
+                                     ' world:="',      LaunchConfiguration('world'),
+                                     '" top_aft:="',   LaunchConfiguration('top_aft'),
+                                     '" bot_aft:="',   LaunchConfiguration('bot_aft'),
+                                     '" bot_front:="', LaunchConfiguration('bot_front'), 
+                                     '" ns:="_',       LaunchConfiguration('ns'),
+                                     '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
 
     return LaunchDescription([
         # Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
