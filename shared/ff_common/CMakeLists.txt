@@ -68,7 +68,7 @@ endif()
 #############
 
 # Mark cpp header files for installation
-install(DIRECTORY include
+install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
