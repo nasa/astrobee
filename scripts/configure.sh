@@ -410,7 +410,7 @@ if [ $discower == 1 ] ; then
 
     if [[ "${ROS_VERSION}" == "2" ]]; then
         build_cmd=colcon
-        extras_cmd="build --packages-select"
+        extras_cmd="build  --executor sequential --packages-select"
         source_folder=install
     else
         echo "DISCOWER option is only compatible with ROS2 Humble and up."
