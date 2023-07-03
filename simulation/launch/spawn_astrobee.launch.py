@@ -15,32 +15,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""
+TODO I think this needs to be X Y Z and not pose....
+"""
 
 from utilities.utilities import *
 
-
-def read_pose(context, *args, **kwargs):
-    pose_arg = LaunchConfiguration("pose")
-    pose = str(pose_arg.perform(context)).split(" ")
-
-    return [
-        DeclareLaunchArgument('x', default_value=pose[0]),
-        DeclareLaunchArgument('y', default_value=pose[1]),
-        DeclareLaunchArgument('z', default_value=pose[2]),
-        DeclareLaunchArgument('R', default_value=pose[3]),
-        DeclareLaunchArgument('P', default_value=pose[4]),
-        DeclareLaunchArgument('Y', default_value=pose[5]),
-    ]
+# def read_pose(context, *args, **kwargs):
+#     pose_arg = LaunchConfiguration("pose")
+#     pose = str(pose_arg.perform(context)).split(" ")
+#     print("Got pose: ", pose, " for ", LaunchConfiguration("ns").perform(context))
+#     return ["-x", pose[0], "-y", pose[1], "-z", pose[2],
+#             "-R", pose[3], "-P", pose[4], "-Y", pose[5]]
 
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("ns",    default_value=""),     # Robot namespace
         DeclareLaunchArgument("pose"),                        # Robot pose
-        OpaqueFunction(function=read_pose),
         DeclareLaunchArgument("robot_description"),           # Robot description
 
         Node(
-            package='gazebo_ros',
+            package='astrobee_gazebo',
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
@@ -50,14 +45,13 @@ def generate_launch_description():
             condition=LaunchConfigurationEquals("ns", "")
         ),
         Node(
-            package='gazebo_ros',
+            package='astrobee_gazebo',
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
             namespace=LaunchConfiguration("ns"),
             arguments=["-topic", "robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0", "-robot_namespace", LaunchConfiguration("ns"),
-                        "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
-                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
+                       "-pose", LaunchConfiguration("pose")],
             condition=LaunchConfigurationNotEquals("ns", "")
         )
 
