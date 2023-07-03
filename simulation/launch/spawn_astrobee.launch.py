@@ -54,7 +54,8 @@ def generate_launch_description():
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
-            arguments=["-topic", "/robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0",
+            namespace=LaunchConfiguration("ns"),
+            arguments=["-topic", "robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0", "-robot_namespace", LaunchConfiguration("ns"),
                         "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
                         "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
             condition=LaunchConfigurationNotEquals("ns", "")
