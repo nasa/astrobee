@@ -19,7 +19,7 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    print("Putting robot in place...")
+
     return LaunchDescription([
         DeclareLaunchArgument("ns",    default_value=""),     # Robot namespace
         DeclareLaunchArgument("pose"),                        # Robot pose

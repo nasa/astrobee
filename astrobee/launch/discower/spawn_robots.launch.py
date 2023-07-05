@@ -20,7 +20,6 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    print("Geeting Discower Platform")
     robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'discower_description'),
                                 ' world:="',      LaunchConfiguration('world'),
                                 '" top_aft:="',   LaunchConfiguration('top_aft'),

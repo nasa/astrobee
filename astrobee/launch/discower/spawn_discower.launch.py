@@ -20,7 +20,7 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    print("DISCOWER")
+
     return LaunchDescription([
         launch_arg("robot",  description="Robot name"),
         launch_arg("world",  description="World name"),

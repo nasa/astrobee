@@ -185,7 +185,7 @@ def generate_launch_description():
         #         "queen" : LaunchConfiguration("queen"),                        # Default robot pose
         #         "queen_pose" : LaunchConfiguration("queen_pose"),              # Default robot pose
         #     }.items(),
-        #     condition=IfCondition(PythonExpression([' "discower"!=', world])),
+        #     condition=LaunchConfigurationNotEquals("world", "discower"),
         # ),
         IncludeLaunchDescription(
             get_launch_file("launch/discower/spawn_discower.launch.py"),
@@ -210,9 +210,10 @@ def generate_launch_description():
                 "orion_pose" : LaunchConfiguration("orion_pose"),               # Default robot pose
                 "apollo" : LaunchConfiguration("apollo"),                       # Default robot pose
                 "apollo_pose" : LaunchConfiguration("apollo_pose"),             # Default robot pose
-                "leo" : LaunchConfiguration("leo"),                        # Default robot pose
-                "leo_pose" : LaunchConfiguration("leo_pose"),              # Default robot pose
+                "leo" : LaunchConfiguration("leo"),                             # Default robot pose
+                "leo_pose" : LaunchConfiguration("leo_pose"),                   # Default robot pose
             }.items(),
+            condition=LaunchConfigurationEquals("world", "discower"),
         ),
         ]
     )
