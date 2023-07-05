@@ -76,11 +76,11 @@ def generate_launch_description():
         launch_arg("queen_pose",  default_value="11 -10 4.8 0 0 0", description="Overwrite queen's pose"),
 
         launch_arg("orion", default_value="true", description="Insert Orion robot"),
-        launch_arg("apollo", default_value="false", description="Insert Apollo robot"),
-        launch_arg("leo", default_value="false", description="Insert Leo robot"),
+        launch_arg("apollo", default_value="true", description="Insert Apollo robot"),
+        launch_arg("leo", default_value="true", description="Insert Leo robot"),
         launch_arg("orion_pose",  default_value="0.5 0.0 0 0 0 0", description="Overwrite orion's pose"),
         launch_arg("apollo_pose",  default_value="1 1 0 0 0 0", description="Overwrite apollo's pose"),
-        launch_arg("leo_pose",  default_value="1 1.5 0 0 0 0", description="Overwrite leo's pose"),
+        launch_arg("leo_pose",  default_value="0.5 1 0 0 0 0", description="Overwrite leo's pose"),
         # Make sure all environment variables are set for controller
         # Override the robot and world environment variables all the time. The
         # environment variables are the default if they are set. So in this
@@ -213,7 +213,6 @@ def generate_launch_description():
                 "leo" : LaunchConfiguration("leo"),                             # Default robot pose
                 "leo_pose" : LaunchConfiguration("leo_pose"),                   # Default robot pose
             }.items(),
-            condition=LaunchConfigurationEquals("world", "discower"),
         ),
         ]
     )
