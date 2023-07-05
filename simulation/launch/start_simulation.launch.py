@@ -27,6 +27,7 @@ def generate_launch_description():
         DeclareLaunchArgument("speed",   default_value="1"),
         DeclareLaunchArgument("debug",   default_value="false"),
         DeclareLaunchArgument("physics",   default_value="ode"),
+        DeclareLaunchArgument("paused",   default_value="true"),
 
 
         SetEnvironmentVariable(name='GAZEBO_RESOURCE_PATH', value="/usr/share/gazebo-11"),
@@ -42,6 +43,7 @@ def generate_launch_description():
                                 'verbose': LaunchConfiguration('debug'),   # Debug a node set
                                 'physics': LaunchConfiguration('physics'), # SIM IP address
                                 'extra_gazebo_args': config_file,
+                                'paused': LaunchConfiguration('paused'),
                                 }.items(),
         ),
         IncludeLaunchDescription(

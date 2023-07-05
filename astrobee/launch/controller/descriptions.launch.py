@@ -40,7 +40,7 @@ def generate_launch_description():
             executable="robot_state_publisher",
             name="lab_state_publisher",
             parameters=[{'robot_description': ParameterValue(discower_lab_robot_description) }],
-            arguments=[discower_lab_urdf],
+            arguments=[discower_lab_urdf, "-topic /discower_cosmo"],
             condition=LaunchConfigurationEquals("world", "discower")
         ),
 

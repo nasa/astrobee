@@ -20,15 +20,29 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
-                                 ' world:="',      LaunchConfiguration('world'),
-                                 '" top_aft:="',   LaunchConfiguration('top_aft'),
-                                 '" bot_aft:="',   LaunchConfiguration('bot_aft'),
-                                 '" bot_front:="', LaunchConfiguration('bot_front'),
-                                 '" ns:="_',       LaunchConfiguration('ns'),
-                                 '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
-
+    robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'discower_description'),
+                                ' world:="',      LaunchConfiguration('world'),
+                                '" top_aft:="',   LaunchConfiguration('top_aft'),
+                                '" bot_aft:="',   LaunchConfiguration('bot_aft'),
+                                '" bot_front:="', LaunchConfiguration('bot_front'),
+                                '" ns:="_',       LaunchConfiguration('ns'),
+                                '" prefix:="',    LaunchConfiguration('ns'), '/"' ])
     return LaunchDescription([
+        # Make sure all environment variables are set for controller
+        # Override the robot and world environment variables all the time. The
+        # environment variables are the default if they are set. So in this
+        # case we are overriding the environment variables with themselves.
+        # Ros launch arguments override the environment variable which is what
+        # this will do.
+        SetEnvironmentVariable(name="ASTROBEE_ROBOT", value=os.getenv("ASTROBEE_ROBOT", LaunchConfiguration("robot"))),
+        SetEnvironmentVariable(name="ASTROBEE_WORLD", value=os.getenv("ASTROBEE_WORLD", LaunchConfiguration("world"))),
+        SetEnvironmentVariable(name="ASTROBEE_CONFIG_DIR",    value=os.getenv("ASTROBEE_CONFIG_DIR",    get_path("config"))),
+        SetEnvironmentVariable(name="ASTROBEE_RESOURCE_DIR",  value=os.getenv("ASTROBEE_RESOURCE_DIR",  get_path("resources"))),
+        SetEnvironmentVariable(name="ROSCONSOLE_CONFIG_FILE", value=os.getenv("ROSCONSOLE_CONFIG_FILE", get_path("resources/logging.config"))),
+        # Declare our global logging format
+        SetEnvironmentVariable(name="RCUTILS_CONSOLE_OUTPUT_FORMAT",
+            value="[{severity} {time}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})"),
+
         # Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
         # Set world and world correctly; environment variable over rule default -->
         DeclareLaunchArgument("robot", default_value=os.getenv("ASTROBEE_ROBOT", "p4d")),
@@ -55,33 +69,27 @@ def generate_launch_description():
         DeclareLaunchArgument("bot_front", default_value="empty"),        # Payload bays
 
         # Simulation options only -->
-        DeclareLaunchArgument("pose", default_value="0 0 0 0 0 0"),  # Initial pose (sim only)
+        DeclareLaunchArgument("pose",      default_value="0 0 0 0 0 0"),  # Initial pose (sim only)
 
         # Path to the bag file
         DeclareLaunchArgument("bag", default_value=""),
 
         # Set the TF prefix, create a robot description and joint state publisher
         Node(
-                    package="robot_state_publisher",
-                    executable="robot_state_publisher",
-                    namespace=LaunchConfiguration('ns'),
-                    output="screen",
-                    parameters=[{'robot_description': ParameterValue(robot_description) }],
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            namespace=LaunchConfiguration('ns'),
+            output="screen",
+            parameters=[{'robot_description': ParameterValue(robot_description) }],
         ),
 
         # If we need to load synthetic drivers (we are not running on a real robot)
-        # TODO(asymingt) - pass nodes, spurn and extra into gazebo
         IncludeLaunchDescription(
-            get_launch_file("launch/controller/synthetic.launch.py"),
+            get_launch_file("launch/spawn_discower.launch.py", "astrobee_gazebo"),
             launch_arguments={
-                "world": LaunchConfiguration("world"),     # Don't start driver nodes
-                "ns"   : LaunchConfiguration("ns"),        # Prevent node
-                "sim"  : LaunchConfiguration("sim"),       # Launch node group
-                "pose" : LaunchConfiguration("pose"),      # Inject extra nodes
-                "bag"  : LaunchConfiguration("bag"),       # Debug a node set
-                "robot_description"  : robot_description,  # Robot description
-            }.items(), 
-            condition=UnlessCondition(LaunchConfiguration("drivers"))
+                "ns"  : LaunchConfiguration("ns"),
+                "pose": LaunchConfiguration("pose")
+            }.items(),
         ),
         GroupAction(
             actions=[PushRosNamespace(LaunchConfiguration('ns')),
@@ -112,12 +120,8 @@ def generate_launch_description():
                         "output" : LaunchConfiguration("output"), 
                         "gtloc"  : LaunchConfiguration("gtloc"),   # Use Ground Truth Localizer
                     }.items(),
-                    condition=LaunchConfigurationNotEquals("llp", "disabled")
+                    condition=LaunchConfigurationNotEquals("mlp", "disabled")
                 ),
             ]),
         ],
     )
-
-
-
-

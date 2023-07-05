@@ -25,7 +25,7 @@
       </camera>
     </gui>
 
-    <gravity>0 0 9.80665</gravity>
+    <gravity>0 0 -9.80665</gravity>
     <magnetic_field>0 0 0</magnetic_field>
     <atmosphere type='adiabatic'/>
     <spherical_coordinates>

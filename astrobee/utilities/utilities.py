@@ -23,6 +23,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import DeclareLaunchArgument as launch_arg
 from launch.actions import (
     ExecuteProcess,
+    GroupAction,
     IncludeLaunchDescription,
     OpaqueFunction,
     SetEnvironmentVariable,
@@ -42,7 +43,7 @@ from launch.substitutions import (
     PythonExpression,
     TextSubstitution,
 )
-from launch_ros.actions import ComposableNodeContainer, Node
+from launch_ros.actions import ComposableNodeContainer, Node, PushRosNamespace
 from launch_ros.descriptions import ComposableNode, ParameterValue
 
 

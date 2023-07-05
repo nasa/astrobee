@@ -10,5 +10,3 @@
 [submodule "description/media"]
 	path = description/media
 	url = https://github.com/DISCOWER/astrobee_media.git
-	branch = ros2
-	shallow = true

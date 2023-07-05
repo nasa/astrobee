@@ -15,28 +15,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""
-TODO I think this needs to be X Y Z and not pose....
-"""
-
 from utilities.utilities import *
 
 
 def generate_launch_description():
+
     return LaunchDescription([
         DeclareLaunchArgument("ns",    default_value=""),     # Robot namespace
         DeclareLaunchArgument("pose"),                        # Robot pose
-        DeclareLaunchArgument("robot_description"),           # Robot description
 
-        Node(
-            package='astrobee_gazebo',
-            executable='spawn_entity.py',
-            name='spawn_astrobee',
-            output='screen',
-            arguments=["-topic", "/robot_description", "-entity", "bsharp", "-timeout", "30.0", "-robot_namespace", LaunchConfiguration("ns"),
-                       "-pose", LaunchConfiguration("pose")],
-            condition=LaunchConfigurationEquals("ns", "")
-        ),
         Node(
             package='astrobee_gazebo',
             executable='spawn_entity.py',
@@ -44,8 +31,6 @@ def generate_launch_description():
             output='screen',
             namespace=LaunchConfiguration("ns"),
             arguments=["-topic", "robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0", "-robot_namespace", LaunchConfiguration("ns"),
-                       "-pose", LaunchConfiguration("pose")],
-            condition=LaunchConfigurationNotEquals("ns", "")
-        )
-
+                       "-pose", LaunchConfiguration("pose")]
+        ),
     ])

@@ -9,3 +9,9 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /src && mkdir /src/astrobee
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
+    -t robbyrussell
+RUN echo source /opt/ros/rolling/setup.zsh >> /root/.zshrc
+RUN echo source /src/astrobee/install/setup.zsh >> /root/.zshrc
+CMD [ "zsh" ]
+ENV MAKEFLAGS="-j4"

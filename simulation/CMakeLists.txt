@@ -290,6 +290,12 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION include/${PROJECT_NAME}
 )
 
+install(
+  PROGRAMS
+    scripts/spawn_entity.py
+    DESTINATION lib/${PROJECT_NAME}/
+)
+
 # Mark launch files for installation
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
