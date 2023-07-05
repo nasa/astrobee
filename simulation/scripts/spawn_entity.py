@@ -22,18 +22,16 @@ import math
 import os
 import sys
 from urllib.parse import SplitResult, urlsplit
-from lxml import etree as ElementTree
 
+import rclpy
 from gazebo_msgs.msg import ModelStates
-from gazebo_msgs.srv import DeleteEntity
 
 # from gazebo_msgs.srv import SetModelConfiguration
-from gazebo_msgs.srv import SpawnEntity
+from gazebo_msgs.srv import DeleteEntity, SpawnEntity
 from geometry_msgs.msg import Pose
-import rclpy
+from lxml import etree as ElementTree
 from rclpy.node import Node
-from rclpy.qos import QoSDurabilityPolicy
-from rclpy.qos import QoSProfile
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from std_msgs.msg import String
 from std_srvs.srv import Empty
 
@@ -236,6 +234,9 @@ class SpawnEntityNode(Node):
                 return 1
         # Load entity XML published on topic specified
         elif self.args.topic:
+            print("---------------------")
+            print("          TOPIC      ")
+            print(": ", self.args.topic)
             self.get_logger().info(
                 "Loading entity published on topic %s" % self.args.topic
             )
@@ -293,9 +294,6 @@ class SpawnEntityNode(Node):
         # Form requested Pose from arguments
         initial_pose = Pose()
         if hasattr(self.args, "pose"):
-            print("------------------------ POSE ---------------------- ")
-            print("------------------------ POSE ---------------------- ")
-            print("------------------------ POSE ---------------------- ")
             print(self.args.pose)
             pose = self.args.pose[0].split(" ")
 
@@ -477,6 +475,9 @@ def main(args=sys.argv):
     rclpy.init(args=args)
     args_without_ros = rclpy.utilities.remove_ros_args(args)
     spawn_entity_node = SpawnEntityNode(args_without_ros)
+    print("-----------------------")
+    print("-----------------------")
+    print("-----------------------")
     spawn_entity_node.get_logger().info("Spawn Entity started")
     exit_code = spawn_entity_node.run()
     sys.exit(exit_code)
