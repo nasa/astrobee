@@ -34,15 +34,16 @@ def add_plots(
     position_plotter = vector3d_plotter.Vector3dPlotter(
         "Time (s)", "Position (m)", "Groundtruth vs. Sparse Mapping Position", True
     )
-    position_plotter.add_pose_position(
-        brisk_poses,
-        linestyle="None",
-        colors = ["b", "b", "b"],
-        marker="o",
-        markeredgewidth=0.1,
-        markersize=1.5,
-        name="BRISK"
-    )
+    if brisk_poses:
+        position_plotter.add_pose_position(
+            brisk_poses,
+            linestyle="None",
+            colors = ["b", "b", "b"],
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+            name="BRISK"
+        )
     position_plotter.add_pose_position(
         surf_poses,
         linestyle="None",
@@ -53,30 +54,32 @@ def add_plots(
         name="SURF"
     )
 
-    position_plotter.add_pose_position(
-        groundtruth_poses,
-        linestyle="None",
-        colors = ["g", "g", "g"],
-        marker="o",
-        markeredgewidth=0.1,
-        markersize=1.5,
-        name="Groundtruth"
-    )
+    if groundtruth_poses:
+        position_plotter.add_pose_position(
+            groundtruth_poses,
+            linestyle="None",
+            colors = ["g", "g", "g"],
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+            name="Groundtruth"
+        )
     position_plotter.plot(pdf)
 
     # orientations
     orientation_plotter = vector3d_plotter.Vector3dPlotter(
         "Time (s)", "Orientation (deg)", "Groundtruth vs. Sparse Mapping Orientation", True
     )
-    orientation_plotter.add_pose_orientation(
-        brisk_poses,
-        linestyle="None",
-        marker="o",
-        colors = ["b", "b", "b"],
-        markeredgewidth=0.1,
-        markersize=1.5,
-        name="BRISK"
-    )
+    if brisk_poses:
+        orientation_plotter.add_pose_orientation(
+            brisk_poses,
+            linestyle="None",
+            marker="o",
+            colors = ["b", "b", "b"],
+            markeredgewidth=0.1,
+            markersize=1.5,
+            name="BRISK"
+        )
     orientation_plotter.add_pose_orientation(
         surf_poses,
         linestyle="None",
@@ -86,15 +89,16 @@ def add_plots(
         markersize=1.5,
         name="SURF"
     )
-    orientation_plotter.add_pose_orientation(
-        groundtruth_poses,
-        linestyle="None",
-        marker="o",
-        colors = ["g", "g", "g"],
-        markeredgewidth=0.1,
-        markersize=1.5,
-        name="Groundtruth"
-    )
+    if groundtruth_poses:
+        orientation_plotter.add_pose_orientation(
+            groundtruth_poses,
+            linestyle="None",
+            marker="o",
+            colors = ["g", "g", "g"],
+            markeredgewidth=0.1,
+            markersize=1.5,
+            name="Groundtruth"
+        )
     orientation_plotter.plot(pdf)
 
 # Groundtruth bag must have the same start time as other bagfile, otherwise RMSE calculations will be flawed
@@ -105,28 +109,26 @@ def create_plots(
     output_pdf_file,
 ):
     surf_bag = rosbag.Bag(surf_bagfile)
-    brisk_bag = rosbag.Bag(brisk_bagfile) if brisk_bagfile else surf_bag
-    groundtruth_bag = rosbag.Bag(groundtruth_bagfile)
+    brisk_bag = rosbag.Bag(brisk_bagfile) if brisk_bagfile else None
+    groundtruth_bag = rosbag.Bag(groundtruth_bagfile) if groundtruth_bagfile else None
     bag_start_time = surf_bag.get_start_time()
 
     surf_poses = poses.Poses("Sparse Mapping", "/sparse_mapping/pose")
-    brisk_poses = poses.Poses("Sparse Mapping", "/sparse_mapping/pose")
-    groundtruth_poses = poses.Poses("Sparse Mapping", "/sparse_mapping/pose")
+    brisk_poses = poses.Poses("Sparse Mapping", "/sparse_mapping/pose") if brisk_bag else None
+    groundtruth_poses = poses.Poses("Sparse Mapping", "/sparse_mapping/pose")  if groundtruth_bagfile else None
     surf_vec_of_poses = [surf_poses]
-    brisk_vec_of_poses = [brisk_poses]
-    groundtruth_vec_of_poses = [groundtruth_poses]
+    brisk_vec_of_poses = [brisk_poses] if brisk_bag else None
+    groundtruth_vec_of_poses = [groundtruth_poses]  if groundtruth_bagfile else None
     load_pose_msgs(surf_vec_of_poses, surf_bag, bag_start_time)
-    load_pose_msgs(brisk_vec_of_poses, brisk_bag, bag_start_time)
-    load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
+    load_pose_msgs(brisk_vec_of_poses, brisk_bag, bag_start_time) if brisk_bag else None
+    load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)  if groundtruth_bagfile else None
 
     surf_bag.close()
-    brisk_bag.close()
-    groundtruth_bag.close()
+    if brisk_bag is not None:
+        brisk_bag.close()
+    if groundtruth_bag is not None:
+        groundtruth_bag.close()
 
-    # print("Loaded " + str(len(surf_poses)) + " surf poses.")
-    # print("Loaded " + str(len(brisk_poses)) + " brisk poses.")
-    # print("Loaded " + str(len(groundtruth_poses)) + " groundtruth poses.")
-    print("loaded")
     with PdfPages(output_pdf_file) as pdf:
         add_plots(
             pdf,
@@ -149,6 +151,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-g",
         "--groundtruth-bagfile",
+        default=None,
         help="bagfile containing groundtruth poses to use as a comparison for poses in the input bagfile. If none provided, sparse mapping poses are used as groundtruth from the input bagfile if available.",
     )
     parser.add_argument("--output-file", default="output.pdf", help="Output pdf file.")

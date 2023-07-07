@@ -31,6 +31,8 @@
 // same settings!
 // TODO(oalexan1): Ideally the settings used here must be saved in the
 // map file, for the localize executable to read them from there.
+DEFINE_bool(verbose, false,
+            "If true, print out information about the localization process.");
 DEFINE_int32(hamming_distance, 90,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(goodness_ratio, 0.8,
@@ -99,14 +101,16 @@ namespace interest_point {
       else
         break;
     }
-    if (keypoints->size() < min_features_)
-      LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
-                   << " keypoints which is less than min of " min_features_
-                   << " keypoints. Consider decreasing the default threshold.";
-    else if (keypoints->size() > max_features_)
-      LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
-                   << " keypoints which exeeds max of " max_features_
-                   << " keypoints. Consider increasing the default threshold.";
+    if (FLAGS_verbose) {
+      if (keypoints->size() < min_features_)
+        LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
+                    << " keypoints which is less than min of " << min_features_
+                    << " keypoints. Consider decreasing the default threshold.";
+      else if (keypoints->size() > max_features_)
+        LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
+                    << " keypoints which exeeds max of " << max_features_
+                    << " keypoints. Consider increasing the default threshold.";
+    }
     ComputeImpl(image, keypoints, keypoints_description);
   }
 

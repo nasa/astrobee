@@ -34,6 +34,8 @@ int main(int argc, char** argv) {
   std::string world;
   std::string config_path_prefix;
   std::string save_noloc_imgs;
+  std::string verbose;
+  std::string num_iterations;
   po::options_description desc("Matches images to provided map and saves matches features and poses to a new bag file");
   desc.add_options()("help,h", "produce help message")("bagfile,b", po::value<std::string>()->required(),
                                                        "Input bagfile containing image messages.")(
@@ -47,7 +49,9 @@ int main(int argc, char** argv) {
     "Output bagfile, defaults to input_bag + _map_matches.bag")(
     "config-path-prefix,p", po::value<std::string>(&config_path_prefix)->default_value(""), "Config path prefix")
     ("save-noloc-imgs,s", po::value<std::string>(&save_noloc_imgs)->default_value("")->implicit_value(""),
-     "Save non-localized images to a bag, defaults to input_bag + _nonloc_imgs.bag");
+     "Save non-localized images to a bag, defaults to input_bag + _nonloc_imgs.bag")(
+    "verbose,v", po::value<std::string>(&verbose)->default_value("")->implicit_value(""), "Verbose mode")(
+    "num_ransac_iterations,n", po::value<std::string>(&num_iterations)->default_value("1000"), "Number of RANSAC iterations");
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);
@@ -93,6 +97,17 @@ int main(int argc, char** argv) {
     save_noloc_imgs =
       boost::filesystem::current_path().string() + "/" + input_bag_path.stem().string() + "_nonloc_imgs.bag";
   }
+
+  if (!vm["verbose"].defaulted() && !vm["verbose"].empty()) {
+    google::SetCommandLineOption("verbose_localization", "true");
+  }
+
+  if (!vm["num_ransac_iterations"].defaulted() && !vm["num_ransac_iterations"].empty()) {
+    google::SetCommandLineOption("num_ransac_iterations", num_iterations.data());
+  }
+
+
+
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
   localization_analysis::MapMatcher map_matcher(input_bag, map_file, image_topic, output_bagfile, config_path_prefix,

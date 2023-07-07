@@ -729,9 +729,11 @@ bool Localize(cv::Mat const& test_descriptors,
                 << all_matches[i].size() << " "
                 << similarity_rank[i] << "\n";
     total += similarity_rank[i];
-    if (total >= early_break_landmarks)
-      std::cout << "total " << total << " early break landmarks " << early_break_landmarks << std::endl;
-    break;
+    if (total >= early_break_landmarks) {
+      if (FLAGS_verbose_localization)
+        std::cout << "total " << total << " early break landmarks " << early_break_landmarks << std::endl;
+      break;
+    }
   }
 
   std::vector<Eigen::Vector2d> observations;
