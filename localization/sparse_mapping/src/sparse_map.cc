@@ -24,7 +24,7 @@
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/tensor.h>
-#include <errno.h> // change later
+#include <errno.h>  // change later
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <opencv2/highgui/highgui.hpp>
