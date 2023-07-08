@@ -24,6 +24,7 @@
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/tensor.h>
+#include <errno.h> // change later
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -272,8 +273,10 @@ void SparseMap::DetectFeatures() {
 void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   sparse_mapping_protobuf::Map map;
   int input_fd = open(protobuf_file.c_str(), O_RDONLY);
-  if (input_fd < 0)
+  if (input_fd < 0) {
+    std::cout <<" Error code "<< errno << std::endl;
     LOG(FATAL) << "Failed to open map file: " << protobuf_file;
+  }
 
   google::protobuf::io::ZeroCopyInputStream* input =
     new google::protobuf::io::FileInputStream(input_fd);
