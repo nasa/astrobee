@@ -100,3 +100,4 @@ tags
 .vscode
 
 submodules/
+tools/localization_analysis/scripts/
