@@ -60,7 +60,7 @@ def add_graph_plots(
     graph_localization_states,
     imu_augmented_graph_localization_poses,
 ):
-    colors = ["r", "b", "g", "k", "c", "m", "y"]
+    colors = ["r", "b", "g"]
     position_plotter = vector3d_plotter.Vector3dPlotter(
         "Time (s)", "Position (m)", "Graph vs. Sparse Mapping Position", True
     )

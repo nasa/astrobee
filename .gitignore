@@ -101,3 +101,5 @@ tags
 
 submodules/
 tools/localization_analysis/scripts/
+localization/sparse_mapping/scripts/
+localization/sparse_mapping/tools/
