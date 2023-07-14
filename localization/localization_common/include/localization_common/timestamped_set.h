@@ -25,6 +25,7 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/version.hpp>
 
 #include <map>
 #include <utility>

@@ -47,6 +47,7 @@ find_package(visualization_msgs REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
+  ${CMAKE_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
