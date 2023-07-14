@@ -594,7 +594,7 @@ void BuildDBforDBoW2(SparseMap* map, std::string const& descriptor,
     FloatVocabulary voc(branching_factor, depth, weight, score);
     if (countPlaceValues(num_features) > 7) {
       LOG(WARNING) << "Using " << num_features << " features to build vocabulary. "
-                    << "This may be too many for the vocab to build.\n";  
+                   << "This may be too many for the vocab to build.\n";
     }
     voc.create(features);
 
