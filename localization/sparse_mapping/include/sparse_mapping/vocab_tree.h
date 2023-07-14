@@ -76,6 +76,7 @@ namespace sparse_mapping {
     // - DBoW2 binary descriptors (e.g., BRISK, BRIEF)
     // Only one of these is active at one time.
     BinaryDB  * binary_db;
+    FloatDB   * float_db;
 
     int m_num_nodes;
     VocabDB();

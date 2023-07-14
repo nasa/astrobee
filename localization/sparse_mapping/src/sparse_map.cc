@@ -24,6 +24,7 @@
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/tensor.h>
+#include <errno.h>  // change later
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -272,8 +273,10 @@ void SparseMap::DetectFeatures() {
 void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   sparse_mapping_protobuf::Map map;
   int input_fd = open(protobuf_file.c_str(), O_RDONLY);
-  if (input_fd < 0)
+  if (input_fd < 0) {
+    std::cout <<" Error code "<< errno << std::endl;
     LOG(FATAL) << "Failed to open map file: " << protobuf_file;
+  }
 
   google::protobuf::io::ZeroCopyInputStream* input =
     new google::protobuf::io::FileInputStream(input_fd);
@@ -471,6 +474,8 @@ void SparseMap::Save(const std::string & protobuf_file) const {
 
   if (vocab_db_.binary_db != NULL)
     map.set_vocab_db(sparse_mapping_protobuf::Map::BINARYDB);
+  if (vocab_db_.float_db != NULL)
+    map.set_vocab_db(sparse_mapping_protobuf::Map::FLOATDB);
 
   map.set_histogram_equalization(histogram_equalization_);
 
@@ -548,7 +553,7 @@ void SparseMap::Save(const std::string & protobuf_file) const {
       LOG(FATAL) << "Failed to write landmark to file.";
   }
 
-  if (vocab_db_.binary_db != NULL)
+  if (vocab_db_.binary_db != NULL || vocab_db_.float_db != NULL)
     vocab_db_.SaveProtobuf(output);
 
   delete output;
@@ -686,6 +691,16 @@ bool Localize(cv::Mat const& test_descriptors,
       indices.push_back(cid);
   }
 
+  // If detector is SURF and parameters have not been set from commandline,
+  // then set them to SURF defaults.
+  // This is different from BRISK defaults.
+  if (detector_name == "SURF") {
+    if (gflags::GetCommandLineFlagInfoOrDie("early_break_landmarks").is_default)
+      early_break_landmarks = 100000;
+    if (gflags::GetCommandLineFlagInfoOrDie("num_min_localization_inliers").is_default)
+      google::SetCommandLineOption("num_min_localization_inliers", "100");
+  }
+
   // To turn on verbose localization for debugging
   // google::SetCommandLineOption("verbose_localization", "true");
 
@@ -717,8 +732,11 @@ bool Localize(cv::Mat const& test_descriptors,
                 << all_matches[i].size() << " "
                 << similarity_rank[i] << "\n";
     total += similarity_rank[i];
-    if (total >= early_break_landmarks)
+    if (total >= early_break_landmarks) {
+      if (FLAGS_verbose_localization)
+        std::cout << "total " << total << " early break landmarks " << early_break_landmarks << std::endl;
       break;
+    }
   }
 
   std::vector<Eigen::Vector2d> observations;

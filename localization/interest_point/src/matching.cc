@@ -31,6 +31,8 @@
 // same settings!
 // TODO(oalexan1): Ideally the settings used here must be saved in the
 // map file, for the localize executable to read them from there.
+DEFINE_bool(verbose, false,
+            "If true, print out information about the localization process.");
 DEFINE_int32(hamming_distance, 90,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(goodness_ratio, 0.8,
@@ -50,7 +52,7 @@ DEFINE_int32(max_surf_features, 5000,
              "Maximum number of features to be computed using SURF.");
 DEFINE_double(min_surf_threshold, 1.1,
               "Minimum threshold for feature detection using SURF.");
-DEFINE_double(default_surf_threshold, 10,
+DEFINE_double(default_surf_threshold, 400,
               "Default threshold for feature detection using SURF.");
 DEFINE_double(max_surf_threshold, 1000,
               "Maximum threshold for feature detection using SURF.");
@@ -98,6 +100,16 @@ namespace interest_point {
         TooMany();
       else
         break;
+    }
+    if (FLAGS_verbose) {
+      if (keypoints->size() < min_features_)
+        LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
+                    << " keypoints which is less than min of " << min_features_
+                    << " keypoints. Consider decreasing the default threshold.";
+      else if (keypoints->size() > max_features_)
+        LOG(WARNING) << "Max retries reached. Found " << keypoints->size()
+                    << " keypoints which exeeds max of " << max_features_
+                    << " keypoints. Consider increasing the default threshold.";
     }
     ComputeImpl(image, keypoints, keypoints_description);
   }
