@@ -17,18 +17,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=libgtsam
-ORIG_TAR=libgtsam_4.1.0.orig.tar.gz
-DEB_DIR=gtsam
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+PACKAGE_NAME=gtsam
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
 git clone --quiet https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch 4.1rc 2>&1 || exit 1
 cd $PACKAGE_NAME
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../$DEB_DIR debian
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
-cd ..
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$1 \
+      -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF \
+      -DGTSAM_USE_SYSTEM_EIGEN=ON \
+      -DGTSAM_WITH_TBB=OFF \
+      -DGTSAM_BUILD_TESTS=OFF \
+      -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
+      -DGTSAM_BUILD_WRAP=OFF \
+      -DGTSAM_BUILD_DOCS=OFF \
+      -DGTSAM_INSTALL_CPPUNITLITE=OFF \
+      -DGTSAM_BUILD_UNSTABLE=OFF \
+      -DCMAKE_BUILD_TYPE=Release .. || exit 1
+make || exit 1
+make install || exit 1
+cd ../..

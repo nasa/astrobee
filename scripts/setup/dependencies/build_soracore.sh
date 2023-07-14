@@ -31,8 +31,9 @@ if [ -d $PACKAGE_NAME ]; then
 fi
 git clone https://github.com/marinagmoreira/soraCore.git --branch catkin_build $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../$DEB_DIR debian
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
-cd ..
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$1 -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-allow-multiple-definition" -DMIRO_BUILD_WITH_QT5=true .. || exit 1
+make || exit 1
+make install || exit 1
+cd ../..

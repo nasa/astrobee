@@ -21,18 +21,16 @@
 # cannot be shared. This debian build is only useful for NASA maintenence
 # of this repo.
 
-PACKAGE_NAME=libmiro
-ORIG_TAR=libmiro_0.3.2.orig.tar.gz
-DEB_DIR=miro
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+PACKAGE_NAME=miro
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
 git clone --quiet https://github.com/hhutz/Miro.git --branch catkin_build $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../$DEB_DIR debian
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
-cd ..
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$1 .. || exit 1
+make || exit 1
+make install || exit 1
+cd ../..

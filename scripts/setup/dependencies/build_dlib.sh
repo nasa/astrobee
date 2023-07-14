@@ -1,17 +1,16 @@
 #!/bin/bash
 
-PACKAGE_NAME=libdbowdlib
-ORIG_TAR=libdbowdlib_0.1.orig.tar.gz
-DEB_DIR=dlib
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+PACKAGE_NAME=dbowdlib
+
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
 git clone --quiet https://github.com/ana-GT/DLib.git $PACKAGE_NAME --branch v1.1-free-opencv4 2>&1 || exit 1
 cd $PACKAGE_NAME
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../$DEB_DIR debian
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
-cd ..
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$1 .. || exit 1
+make || exit 1
+make install || exit 1
+cd ../..

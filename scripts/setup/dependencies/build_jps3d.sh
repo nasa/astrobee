@@ -17,10 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=libjps3d
-ORIG_TAR=libjps3d_0.1.orig.tar.gz
-DEB_DIR=jps3d
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+PACKAGE_NAME=jps3d
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
@@ -29,8 +26,9 @@ fi
 git clone --quiet https://github.com/bcoltin/jps3d.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
 git checkout --quiet 85e6b22171478684119a119c45dbf6b42653d828 2>&1
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../$DEB_DIR debian
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
-cd ..
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$1 -DUSE_ROS=OFF -DBUILD_SHARED_LIBS=TRUE .. || exit 1
+make || exit 1
+make install || exit 1
+cd ../..

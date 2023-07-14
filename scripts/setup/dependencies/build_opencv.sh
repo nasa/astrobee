@@ -17,10 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=libopencv
-ORIG_TAR=libopencv4.2.0_4.2.0.orig.tar.gz
-DEB_DIR=opencv
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+PACKAGE_NAME=opencv
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
@@ -28,10 +25,21 @@ fi
 git clone --quiet https://github.com/opencv/opencv.git --branch 4.2.0 $PACKAGE_NAME/opencv 2>&1 || exit 1
 git clone --quiet https://github.com/opencv/opencv_contrib.git --branch 4.2.0 $PACKAGE_NAME/contrib 2>&1 || exit 1
 cd $PACKAGE_NAME/opencv
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-cp -r ../../$DEB_DIR debian
-rm -r .github
-dch -l"+$DIST" -D"$DIST" "Set distribution '$DIST' for local build"
-debuild -us -uc || exit 1
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$1 -DCMAKE_BUILD_TYPE=RELEASE \
+	-DINSTALL_C_EXAMPLES=ON \
+	-DINSTALL_PYTHON_EXAMPLES=ON \
+	-DOPENCV_GENERATE_PKGCONFIG=ON \
+	-DOPENCV_EXTRA_MODULES_PATH="$(CURDIR)/../../contrib/modules" \
+	-DBUILD_EXAMPLES=ON \
+	-DOPENCV_ENABLED_NONFREE=YES \
+	-DENABLE_PRECOMPILED_HEADERS=OFF \
+  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="$(LDFLAGS)" \
+		-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON \
+		-DWITH_V4L=OFF \
+		-DWITH_LIBV4L=OFF \
+		-DWITH_CUDA=OFF .. || exit 1
+make || exit 1
+make install || exit 1
 cd ../..
-mv $PACKAGE_NAME/libopencv*{.deb,.debian.tar.xz,.orig.tar.gz,.dsc} .
