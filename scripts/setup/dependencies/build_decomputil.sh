@@ -22,12 +22,12 @@ PACKAGE_NAME=decomputil
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/bcoltinnasa/DecompUtil.git $PACKAGE_NAME 2>&1 || exit 1
+git clone https://github.com/bcoltinnasa/DecompUtil.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
 git checkout --quiet 5d652b8d144c8075b272094fb95b90ab9ff0e48e 2>&1
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$1 -DUSE_ROS=FALSE -DBUILD_SHARED_LIBS=TRUE .. || exit 1
-make || exit 1
+make -j$(nproc) || exit 1
 make install || exit 1
 cd ../..

@@ -22,11 +22,11 @@ PACKAGE_NAME=dbow2
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/dorian3d/DBoW2.git $PACKAGE_NAME --branch v1.1-free 2>&1 || exit 1
+git clone https://github.com/dorian3d/DBoW2.git $PACKAGE_NAME --branch v1.1-free 2>&1 || exit 1
 cd $PACKAGE_NAME
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$1 .. || exit 1
-make || exit 1
+make -j$(nproc) || exit 1
 make install || exit 1
 cd ../..

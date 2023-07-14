@@ -26,11 +26,11 @@ PACKAGE_NAME=miro
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/hhutz/Miro.git --branch catkin_build $PACKAGE_NAME 2>&1 || exit 1
+git clone https://github.com/hhutz/Miro.git --branch catkin_build $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$1 .. || exit 1
-make || exit 1
+make -j$(nproc) || exit 1
 make install || exit 1
 cd ../..

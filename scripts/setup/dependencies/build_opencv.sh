@@ -22,8 +22,8 @@ PACKAGE_NAME=opencv
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/opencv/opencv.git --branch 4.2.0 $PACKAGE_NAME/opencv 2>&1 || exit 1
-git clone --quiet https://github.com/opencv/opencv_contrib.git --branch 4.2.0 $PACKAGE_NAME/contrib 2>&1 || exit 1
+git clone https://github.com/opencv/opencv.git --branch 4.2.0 $PACKAGE_NAME/opencv 2>&1 || exit 1
+git clone https://github.com/opencv/opencv_contrib.git --branch 4.2.0 $PACKAGE_NAME/contrib 2>&1 || exit 1
 cd $PACKAGE_NAME/opencv
 mkdir build
 cd build
@@ -31,15 +31,15 @@ cmake -DCMAKE_INSTALL_PREFIX=$1 -DCMAKE_BUILD_TYPE=RELEASE \
 	-DINSTALL_C_EXAMPLES=ON \
 	-DINSTALL_PYTHON_EXAMPLES=ON \
 	-DOPENCV_GENERATE_PKGCONFIG=ON \
-	-DOPENCV_EXTRA_MODULES_PATH="$(CURDIR)/../../contrib/modules" \
+	-DOPENCV_EXTRA_MODULES_PATH="$(pwd)/../../contrib/modules" \
 	-DBUILD_EXAMPLES=ON \
 	-DOPENCV_ENABLED_NONFREE=YES \
 	-DENABLE_PRECOMPILED_HEADERS=OFF \
-  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="$(LDFLAGS)" \
-		-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON \
-		-DWITH_V4L=OFF \
-		-DWITH_LIBV4L=OFF \
-		-DWITH_CUDA=OFF .. || exit 1
-make || exit 1
+  	-DCMAKE_SHARED_LINKER_FLAGS_RELEASE="$(LDFLAGS)" \
+	-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON \
+	-DWITH_V4L=OFF \
+	-DWITH_LIBV4L=OFF \
+	-DWITH_CUDA=OFF .. || exit 1
+make -j$(nproc)|| exit 1
 make install || exit 1
-cd ../..
+cd ../../..

@@ -22,7 +22,9 @@ PACKAGE_NAME=gtsam
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch 4.1rc 2>&1 || exit 1
+
+# Check if it is installed already
+git clone https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch 4.2a9 2>&1 || exit 1
 cd $PACKAGE_NAME
 mkdir build
 cd build
@@ -37,6 +39,6 @@ cmake -DCMAKE_INSTALL_PREFIX=$1 \
       -DGTSAM_INSTALL_CPPUNITLITE=OFF \
       -DGTSAM_BUILD_UNSTABLE=OFF \
       -DCMAKE_BUILD_TYPE=Release .. || exit 1
-make || exit 1
+make -j$(nproc) || exit 1
 make install || exit 1
 cd ../..

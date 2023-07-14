@@ -1,4 +1,4 @@
-#/bin/bash -e
+#!/bin/bash -e
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -20,6 +20,25 @@
 # Install the dependencies needed for the debians. Build and install flight
 # software debians.
 set -e
+default_folder="$HOME/.local"
+
+# Get the location of the debian build scripts
+if [ $# -eq 0 ]
+  then
+    dest_folder=$default_folder
+    echo "Installing dependencies to $dest_folder"
+  else
+    dest_folder=$1
+    echo "Installing dependencies to $dest_folder"
+fi
+
+# Check if ~/.local exists
+if [ -d "$dest_folder" ] 
+then
+    echo "$dest_folder exists."
+else
+    mkdir $dest_folder
+fi
 
 debian_loc=$(dirname "$(readlink -f "$0")")
 dist=$(. /etc/os-release && echo $UBUNTU_CODENAME)
@@ -34,9 +53,9 @@ case $dist in
     build_list+=( opencv )
     ;;&
   jammy)
-    build_list+=( opencv )
-    sudo apt-get install -y libvtk7.1p
+    # build_list+=( opencv )
     echo "Ubuntu 22 detected"
+    sudo apt-get install -y libvtk7.1p
     ;;
   focal)
     echo "Ubuntu 20 detected"
@@ -44,22 +63,61 @@ case $dist in
     sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
     ;;
   *)
-    echo "No supported distribution detected. \n
-          Source installation possible only for Ubuntu 20 and 22."
+    echo "No supported distribution detected. Source installation possible only for Ubuntu 20 and 22."
     exit 1
 esac
 
+# Update PATH
+if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
+  echo "PATH is set."
+else
+  echo "Setting PATH in $HOME/.zshrc"
+  if [[ "$SHELL" == *"zsh"* ]]; then
+    echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.zshrc
+  else
+    echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.bashrc
+  fi
+fi
+
+# Update LD Library Path
+if [[ ":$LD_LIBRARY_PATH:" == *":$HOME/.local/lib:"* ]]; then
+  echo "LD_LIBRARY_PATH is set."
+else
+  echo "Setting LD_LIBRARY_PATH."
+  if [[ "$SHELL" == *"zsh"* ]]; then
+    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib" >> $HOME/.zshrc
+  else
+    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib" >> $HOME/.bashrc
+  fi
+fi
+
+
+if [[ ":$CPATH:" == *":$HOME/.local:"* ]]; then
+  echo "CPATH is set."
+else
+  echo "Setting CPATH."
+  if [[ "$SHELL" == *"zsh"* ]]; then
+    echo "export CPATH=$CPATH:$HOME/.local" >> $HOME/.zshrc
+    echo "source $HOME/.zshrc and run this script again."
+    exit 0
+  else
+    echo "export CPATH=$CPATH:$HOME/.local" >> $HOME/.bashrc
+    echo "source $HOME/.bashrc and run this script again."
+    exit 0
+  fi
+fi
+
 # Add public debians to build list
-build_list+=( dlib dbow2 gtsam decomputil jps3d openmvg ) # alvar
+build_list+=( dlib dbow2 gtsam decomputil jps3d openmvg )
 # If restricted rti-dev debian is present, add miro and soracore as well
 dpkg-query -W -f='${Status}\n' rti-dev 2>&1 | grep -q "install ok installed" &&
 echo "Package rti-dev exists. Including miro and soracore to build list..." &&
 build_list+=( miro soracore )
+echo "Building the following packages: ${build_list[@]} in $debian_loc"
 
-export DEBEMAIL="nospam@nospam.org"
 for pkg in ${build_list[@]}
 do
-  cd ${debian_loc}/$pkg &&
+  echo "Installing $pkg"
   cd ${debian_loc} &&
-  ./build_${pkg}.sh &&
+  ./build_${pkg}.sh $dest_folder
 done

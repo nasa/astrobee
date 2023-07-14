@@ -17,19 +17,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=libopenmvg
-ORIG_TAR=libopenmvg_1.1.orig.tar.gz
-DEB_DIR=openmvg
-DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
+PACKAGE_NAME=openmvg
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/openMVG/openMVG.git $PACKAGE_NAME --branch v1.1 2>&1 || exit 1
-cd $PACKAGE_NAME
+git clone https://github.com/openMVG/openMVG.git $PACKAGE_NAME --branch v1.1 2>&1 || exit 1
+cd $PACKAGE_NAME/src
+git submodule update -i
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$1 .. || exit 1
-make || exit 1
+make -j$(nproc) || exit 1 
 make install || exit 1
-cd ../..
+cd ../../..

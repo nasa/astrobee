@@ -34,6 +34,6 @@ cd $PACKAGE_NAME
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$1 -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-allow-multiple-definition" -DMIRO_BUILD_WITH_QT5=true .. || exit 1
-make || exit 1
+make -j$(nproc) || exit 1
 make install || exit 1
 cd ../..
