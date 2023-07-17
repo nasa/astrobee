@@ -42,6 +42,7 @@ find_package(ff_util REQUIRED)
 find_package(localization_common REQUIRED)
 find_package(ff_common REQUIRED)
 find_package(camera REQUIRED)
+find_package(GTSAM REQUIRED)
 
 
 
@@ -52,6 +53,9 @@ find_package(camera REQUIRED)
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIRS}
+  ${CMAKE_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${GTSAM_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -61,7 +65,7 @@ add_library(${PROJECT_NAME} SHARED
 )
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${Boost_LIBRARIES} ${GTSAM_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components ff_msgs ff_util localization_common std_srvs)
 rclcpp_components_register_nodes(${PROJECT_NAME} "ground_truth_localizer::GroundTruthLocalizerComponent")
 

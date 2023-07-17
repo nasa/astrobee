@@ -61,7 +61,7 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
   ${pcl_conversions_INCLUDE_DIRS}
-  ${CMAKE_INCLUDE_DIRS}
+  ${CMAKE_INCLUDE_DIRS} 
 )
 
 # Declare C++ libraries
