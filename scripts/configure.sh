@@ -413,7 +413,7 @@ if [ $discower == 1 ] ; then
 
     if [[ "${ROS_VERSION}" == "2" ]]; then
         build_cmd=colcon
-        extras_cmd="build --symlink-install --executor sequential  --cmake-args -DCMAKE_INCLUDE_DIRS=~/.local --packages-select "
+        extras_cmd="build --symlink-install --executor sequential  --cmake-args -DCMAKE_INCLUDE_DIRS=~/.local/include --packages-select "
         source_folder=install
     else
         echo "DISCOWER option is only compatible with ROS2 Humble and up."

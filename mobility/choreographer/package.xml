@@ -38,6 +38,8 @@
   <exec_depend>jsonloader</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>
+
+  <depend>pcl_conversions</depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>

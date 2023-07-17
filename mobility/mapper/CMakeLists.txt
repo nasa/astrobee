@@ -35,6 +35,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(ff_util REQUIRED)
 find_package(ff_msgs REQUIRED)
+find_package(pcl_msgs REQUIRED)
 
 find_package(visualization_msgs REQUIRED)
 find_package(octomap REQUIRED)
@@ -76,7 +77,7 @@ add_library(${PROJECT_NAME} SHARED
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "COMPOSITION_BUILDING_DLL")
 target_link_libraries(${PROJECT_NAME} ${OCTOMAP_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components std_srvs ff_msgs ff_util visualization_msgs octomap)
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components std_srvs ff_msgs ff_util visualization_msgs octomap pcl_msgs)
 rclcpp_components_register_nodes(${PROJECT_NAME} "mapper::MapperComponent")
 
 

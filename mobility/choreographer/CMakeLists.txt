@@ -39,6 +39,7 @@ find_package(jsonloader REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
 ###########
 ## Build ##
@@ -47,6 +48,7 @@ find_package(visualization_msgs REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
+  ${pcl_conversions_INCLUDE_DIRS}
   ${CMAKE_INCLUDE_DIRS}
 )
 
@@ -57,7 +59,7 @@ add_library(choreographer SHARED
 )
 target_compile_definitions(choreographer
   PRIVATE "COMPOSITION_BUILDING_DLL")
-ament_target_dependencies(choreographer rclcpp rclcpp_components ff_common ff_util ff_msgs ff_hw_msgs jsonloader geometry_msgs nav_msgs visualization_msgs)
+ament_target_dependencies(choreographer rclcpp rclcpp_components ff_common ff_util ff_msgs ff_hw_msgs jsonloader geometry_msgs nav_msgs visualization_msgs pcl_conversions)
 rclcpp_components_register_nodes(choreographer "choreographer::ChoreographerComponent")
 
 #if(CATKIN_ENABLE_TESTING)
