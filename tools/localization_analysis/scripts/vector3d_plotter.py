@@ -48,9 +48,11 @@ class Vector3dPlotter:
         marker=None,
         markeredgewidth=None,
         markersize=1,
+        name=None,
     ):
+        name = pose.pose_type if name is None else name
         position_plotter = Vector3dYVals(
-            pose.pose_type,
+            name,
             pose.times,
             pose.positions.xs,
             pose.positions.ys,
@@ -74,9 +76,11 @@ class Vector3dPlotter:
         marker=None,
         markeredgewidth=None,
         markersize=1,
-    ):
+        name=None,
+    ):  
+        name = pose.pose_type if name is None else name
         orientation_plotter = Vector3dYVals(
-            pose.pose_type,
+            name,
             pose.times,
             unwrap_in_degrees(pose.orientations.yaws),
             unwrap_in_degrees(pose.orientations.rolls),

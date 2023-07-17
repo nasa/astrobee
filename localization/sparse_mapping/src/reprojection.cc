@@ -397,8 +397,12 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
               << best_inliers << " inliers\n";
 
   // TODO(bcoltin): Return some sort of confidence?
-  if (best_inliers < FLAGS_num_min_localization_inliers)
+  if (best_inliers < FLAGS_num_min_localization_inliers) {
+    if (verbose)
+      std::cout << "num best inliers " << best_inliers <<
+      " num min localization inliers " << FLAGS_num_min_localization_inliers<< std::endl;
     return 2;
+  }
 
   std::vector<size_t> inliers;
   CountInliers(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
