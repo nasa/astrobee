@@ -36,6 +36,36 @@ def natural_sort(l):
     return sorted(l, key=alphanum_key)
 
 
+def run_command_and_print_output(command, print_command=True):
+    if print_command:
+        print(command)
+
+    stdout = ""
+    stderr = ""
+    popen = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
+    for stdout_line in iter(popen.stdout.readline, ""):
+        stdout += stdout_line
+
+    popen.stdout.close()
+
+    print(stdout)
+    print(stderr)
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, command)
+
+    if return_code != 0:
+        print(("Failed to run command.\nOutput: ", stdout, "\nError: ", stderr))
+
+    return (return_code, stdout, stderr)
+
+
 def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=False):
     # Find bagfiles with bag prefix in current directory, fail if none found
     bag_names = [
@@ -60,28 +90,37 @@ def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=Fa
 
     sorted_bag_names = natural_sort(bag_names)
 
-    topics = None
-    if only_loc_topics:
-        topics = [
-            "/hw/imu",
-            "/loc/of/features",
-            "/loc/ml/features",
-            "/loc/ar/features",
-            "/mgt/img_sampler/nav_cam/image_record",
-            "/graph_loc/state",
-            "/gnc/ekf",
-            "/sparse_mapping/pose",
-            "/mob/flight_mode",
-            "/beh/inspection/feedback",
-            "/beh/inspection/goal",
-            "/beh/inspection/result",
-        ]
+    merge_bags_command = (
+        "rosrun localization_node merge_bags "
+        + sorted_bag_names
+        + " -output_bag "
+        + merged_bag_name
+    )
 
-    with rosbag.Bag(merged_bag_name, "w") as merged_bag:
-        for sorted_bag_name in sorted_bag_names:
-            with rosbag.Bag(sorted_bag_name, "r") as sorted_bag:
-                for topic, msg, t in sorted_bag.read_messages(topics):
-                    merged_bag.write(topic, msg, t)
+    if only_loc_topics:
+        merge_bags_command += (
+            " -save_topics"
+            + " '/hw/imu"
+            + " /loc/of/features"
+            + " /loc/ml/features"
+            + " /loc/ar/features"
+            + " /mgt/img_sampler/nav_cam/image_record"
+            + " /graph_loc/state"
+            + " /gnc/ekf"
+            + " /sparse_mapping/pose"
+            + " /mob/flight_mode"
+            + " /beh/inspection/feedback"
+            + " /beh/inspection/goal"
+            + " /beh/inspection/result'"
+        )
+
+    # with rosbag.Bag(merged_bag_name, "w") as merged_bag:
+    #     for sorted_bag_name in sorted_bag_names:
+    #         with rosbag.Bag(sorted_bag_name, "r") as sorted_bag:
+    #             for topic, msg, t in sorted_bag.read_messages(topics):
+    #                 merged_bag.write(topic, msg, t)
+
+    run_command_and_print_output(merge_bags_command)
 
 
 if __name__ == "__main__":
