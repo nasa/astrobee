@@ -63,7 +63,7 @@ Vagrantfile.local
 # Folders that probably shouldn't be checked in
 install
 .vagrant
-scripts/setup/dependencies/*/
+scripts/setup/sources/*/
 /build
 arm_build
 arm_build_release
