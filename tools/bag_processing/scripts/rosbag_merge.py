@@ -112,12 +112,6 @@ def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=Fa
             + " /beh/inspection/result'"
         )
 
-    # with rosbag.Bag(merged_bag_name, "w") as merged_bag:
-    #     for sorted_bag_name in sorted_bag_names:
-    #         with rosbag.Bag(sorted_bag_name, "r") as sorted_bag:
-    #             for topic, msg, t in sorted_bag.read_messages(topics):
-    #                 merged_bag.write(topic, msg, t)
-
     run_command_and_print_output(merge_bags_command)
 
 
