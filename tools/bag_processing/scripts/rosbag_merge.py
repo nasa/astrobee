@@ -24,9 +24,8 @@ import argparse
 import os
 import re
 import string
+import subprocess
 import sys
-
-import rosbag
 
 
 # https://stackoverflow.com/a/4836734
@@ -89,12 +88,11 @@ def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=Fa
         merged_bag_name = input_bag_prefix + ".merged.bag"
 
     sorted_bag_names = natural_sort(bag_names)
-
     merge_bags_command = (
         "rosrun localization_node merge_bags "
-        + sorted_bag_names
+        + " ".join(sorted_bag_names)
         + " -output_bag "
-        + merged_bag_name
+        + str(merged_bag_name)
     )
 
     if only_loc_topics:
